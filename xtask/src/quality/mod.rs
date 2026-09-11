@@ -141,6 +141,15 @@ pub fn run(args: QualityArgs) -> Result<(), Box<dyn Error>> {
         .waybill_bin
         .clone()
         .unwrap_or_else(|| root.join("target/release/waybill"));
+    // Order matters: build BEFORE checking existence. The reverse order makes
+    // the harness tell the operator to run the exact command it was just
+    // taught to run itself, on precisely the tree where that is least helpful
+    // (a fresh clone with no target/ at all).
+    if !explicit_bin {
+        ensure_binary_current(&root)?;
+    }
+    // Now only reachable via --waybill-bin, which is the one path that can
+    // still legitimately point at something missing.
     if !waybill_bin.exists() {
         return Err(format!(
             "waybill binary not found at {}. Build it with:\n    cargo build --release -p waybill --bin waybill",
@@ -148,13 +157,10 @@ pub fn run(args: QualityArgs) -> Result<(), Box<dyn Error>> {
         )
         .into());
     }
-    if !explicit_bin {
-        ensure_binary_current(&root)?;
-    }
 
     let scratch = tempfile::tempdir()?;
-    let gomodcache = scratch.path().join("gomodcache");
-    std::fs::create_dir_all(&gomodcache)?;
+    let isolated_home = scratch.path().join("isolated-home");
+    std::fs::create_dir_all(&isolated_home)?;
     let docs_dir = scratch.path().join("docs");
     std::fs::create_dir_all(&docs_dir)?;
 
@@ -169,7 +175,7 @@ pub fn run(args: QualityArgs) -> Result<(), Box<dyn Error>> {
             &cache_root,
             &waybill_bin,
             &docs_dir,
-            &gomodcache,
+            &isolated_home,
             &sbomqs_bin,
             args.timeout_secs.unwrap_or_else(|| t.effective_timeout(corpus.default_timeout_secs)),
             args.refresh,
@@ -220,7 +226,7 @@ fn measure_one(
     cache_root: &Path,
     waybill_bin: &Path,
     docs_dir: &Path,
-    gomodcache: &Path,
+    isolated_home: &Path,
     sbomqs_bin: &Path,
     timeout_secs: u64,
     refresh: bool,
@@ -236,7 +242,7 @@ fn measure_one(
     };
 
     let (wall_ms, doc_path) = match measure::scan(
-        waybill_bin, t, &checkout, docs_dir, gomodcache, timeout_secs,
+        waybill_bin, t, &checkout, docs_dir, isolated_home, timeout_secs,
     ) {
         measure::ScanOutcome::Ok { wall_ms, document } => (wall_ms, document),
         measure::ScanOutcome::Failed { detail } => {

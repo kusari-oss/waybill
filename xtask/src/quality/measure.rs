@@ -25,7 +25,7 @@ pub fn scan(
     target: &Target,
     checkout: &Path,
     out_dir: &Path,
-    gomodcache: &Path,
+    isolated_home: &Path,
     timeout_secs: u64,
 ) -> ScanOutcome {
     let doc = out_dir.join(format!("{}.cdx.json", target.name));
@@ -44,21 +44,33 @@ pub fn scan(
         .arg(target.name.as_str())
         .arg("--root-version")
         .arg(target.pin.short())
-        // C-4.4: pin the Go module-cache discovery chain to an empty
-        // per-run directory so edge counts do not drift with whatever the
-        // host happens to have cached (research R2).
+        // C-4.4: give every scan an empty home directory so measurements
+        // describe the repository under test and not the host's caches.
         //
-        // ALL THREE are required. waybill's discovery in
+        // ALL THREE are required for Go: waybill's module-cache discovery in
         // golang/graph_resolver.rs falls back $GOMODCACHE -> $GOPATH ->
-        // $HOME/go/pkg/mod, so pinning only the first lets a warm host
-        // cache leak in through the others. Observed 2026-09-11: a
-        // developer machine with a 16 GB module cache measured go-cobra at
-        // depth 2 and go-kubernetes at 1752 edges, while a clean CI runner
-        // produced flat graphs (depth 1, 490 edges) from the identical
-        // commit. The CI numbers were the honest ones.
-        .env("GOMODCACHE", gomodcache)
-        .env("GOPATH", gomodcache)
-        .env("HOME", gomodcache)
+        // $HOME/go/pkg/mod, so pinning only the first lets a warm host cache
+        // leak in through the others. Observed 2026-09-11: a developer
+        // machine with a 16 GB module cache measured go-cobra at depth 2 and
+        // go-kubernetes at 1752 edges, while a clean CI runner produced flat
+        // graphs (depth 1, 490 edges) from the identical commit.
+        //
+        // Redirecting HOME is BROADER than Go. It also removes m663's
+        // local-cache-probe resolver (~/.m2, ~/.cargo, ...) and m108's
+        // fingerprint cache under ~/.cache/waybill/. That is intentional —
+        // a regression detector must not read host state — but it means
+        // these measurements are a COLD-CACHE FLOOR for every ecosystem,
+        // not just Go. Verified 2026-09-11 across all 18 corpus targets:
+        // only the two Go targets moved (5 of 108 metrics).
+        //
+        // Note the three variables do NOT address the same directory:
+        // GOPATH=<d> makes Go look in <d>/pkg/mod, and HOME=<d> means
+        // <d>/go/pkg/mod — neither is <d> itself. Harmless while all three
+        // are empty, but a trap if anyone later pre-populates this scratch
+        // dir expecting all three to see it.
+        .env("GOMODCACHE", isolated_home)
+        .env("GOPATH", isolated_home)
+        .env("HOME", isolated_home)
         .stdout(Stdio::null())
         .stderr(Stdio::piped());
     // C-4.3: no tier filter, no --file-inventory override. The corpus
