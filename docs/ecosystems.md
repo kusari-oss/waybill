@@ -9,7 +9,7 @@ diving into the [architecture docs](architecture/overview.md).
 | Ecosystem | Detection source | Dep-graph source | Hash source | Enrichment (deps.dev / CD) | Status |
 |---|---|---|---|---|---|
 | [apk](#apk) | `/lib/apk/db/installed` | DB (direct `D:` only) | — | — / — | Implemented |
-| [cargo](#cargo) | `Cargo.lock` v3/v4 | Lockfile (full tree) | Lockfile `checksum` | ✓ / ✓ | Implemented |
+| [cargo](#cargo) | `Cargo.lock` v1-v4 | Lockfile (full tree) | Lockfile `checksum` / legacy `[metadata]` | ✓ / ✓ | Implemented |
 | [deb](#deb) | `/var/lib/dpkg/status` + `.list` files | DB (`Depends:`) | Per-file SHA-256 (deep hash) or `.md5sums` fallback | — / Planned | Implemented |
 | [gem](#gem) | `Gemfile.lock` + `specifications/*.gemspec` | Lockfile indent-6 | — | — / ✓ | Implemented |
 | [golang](#golang) | `go.mod` / `go.sum` + module cache; `runtime/debug.BuildInfo` for binaries | Cache walker (source); **none** (binaries) | `go.sum` H1 (Merkle trie, not CDX) | ✓ / ✓ | Implemented |
@@ -574,8 +574,11 @@ hashes Waybill can use.
 
 **Module:** `waybill-cli/src/scan_fs/package_db/cargo.rs`
 
-**Detection:** `Cargo.lock` v3 and v4 parser. v1/v2 are refused (they
-pre-date the reproducible-lockfile guarantee).
+**Detection:** `Cargo.lock` v1-v4 parser, including versionless legacy
+lockfiles. Legacy `[root]` entries, version-qualified dependencies, and
+SHA-256 checksums from `[metadata]` are preserved alongside modern
+per-package checksums. Scanning does not require regenerating old lockfiles.
+Unknown format versions report the affected path and version.
 
 **PURL format:** `pkg:cargo/<name>@<version>`. No namespace (crates.io is
 flat).

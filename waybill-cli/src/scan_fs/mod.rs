@@ -520,8 +520,8 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
             {
                 saw_golang_authoritative = true;
             }
-            // Cargo ecosystem completeness: Cargo.lock v3/v4 resolves
-            // every transitive dep to an exact version + SHA-256, so
+            // Cargo ecosystem completeness: Cargo.lock resolves
+            // every transitive dep to an exact version, so
             // any source-tier entry marks the ecosystem complete.
             if !saw_cargo_authoritative
                 && e.purl.ecosystem() == "cargo"

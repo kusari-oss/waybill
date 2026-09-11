@@ -63,7 +63,7 @@ idiom. The coverage matrix:
 | Ecosystem | Module | Primary source | Dep-graph source | Notes |
 |---|---|---|---|---|
 | apk | `apk.rs` | `/lib/apk/db/installed` stanzas (P/V/A/D keys) | DB (direct `D:` only) | Alpine apk |
-| cargo | `cargo.rs` | `Cargo.lock` v3/v4 | Lockfile | v1/v2 rejected |
+| cargo | `cargo.rs` | `Cargo.lock` v1-v4 | Lockfile | Includes legacy roots and metadata checksums |
 | deb | `dpkg.rs` + `copyright.rs` + `file_hashes.rs` | `/var/lib/dpkg/status` + per-file `.list` manifests | DB (`Depends:`) | Optional deep per-file SHA-256 |
 | gem | `gem.rs` | `Gemfile.lock` indent structure + `specifications/*.gemspec` | Lockfile indent-6 | Gemspec walker catches stdlib gems |
 | golang | `golang.rs` + `go_binary.rs` | `go.mod` / `go.sum` / `$GOMODCACHE/cache/download/<escaped>/@v/<v>.mod` walker; `runtime/debug.BuildInfo` for Go 1.18+ binaries | Cache walker (source); **none** for binaries | Pre-1.18 binaries: `buildinfo-status=unsupported` |
