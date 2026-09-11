@@ -35,6 +35,17 @@ because the run produced no quality data at all.
 **C-2.1** — The report is written **before** the exit-code decision, so a failing run still
 leaves a report behind (FR-029).
 
+**C-2.2** — Before measuring, the harness runs
+`cargo build --release -p waybill --bin waybill`, so the corpus can never measure a stale
+binary. The report stamps provenance from `git rev-parse HEAD` of the *source tree*, so a stale
+binary would silently attribute one build's numbers to a different commit — and those numbers
+can end up committed as authored ranges. Cargo also keys off mtime for path dependencies, so a
+`git checkout` can still trigger a redundant rebuild — but cargo *rebuilds* where a hand-rolled
+staleness check could only *refuse*, so the operator is never blocked. A genuine no-op costs
+under a second. An explicit `--waybill-bin <path>` skips the
+rebuild, since passing it is a statement of intent to measure a specific binary built elsewhere.
+A failed build aborts the run rather than falling back to whatever artifact is on disk.
+
 ## C-3 — Fetch behaviour
 
 ```
@@ -64,8 +75,12 @@ the run (FR-007).
 **C-4.2** — Only this subprocess is timed (FR-009).
 **C-4.3** — No tier filter and no `--file-inventory` override is passed. The corpus measures
 waybill as an ordinary user invokes it (research R5).
-**C-4.4** — `$GOMODCACHE` is pinned to an empty per-run directory so Go edge counts do not drift
-with whatever the host happens to have cached (research R2).
+**C-4.4** — `$GOMODCACHE`, `$GOPATH` **and** `$HOME` are all pinned to the same empty per-run
+directory so Go edge counts do not drift with whatever the host happens to have cached
+(research R2). All three are required: waybill's module-cache discovery falls back
+`$GOMODCACHE` → `$GOPATH` → `$HOME/go/pkg/mod`, so pinning only the first lets a warm host
+cache leak in through the others — the defect that made the first real CI run disagree with
+local measurements on both Go targets.
 
 ## C-5 — Scoring invocation
 

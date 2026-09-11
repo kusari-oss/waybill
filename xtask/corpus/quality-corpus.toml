@@ -15,8 +15,11 @@
 #       pinned SHA + --offline + no sampling means the only thing that moves
 #       them is a waybill change. Verified identical across two runs and
 #       across sbomqs v2.0.5 and v2.0.6.
-#   max_depth  -1 / +4. Asymmetric on purpose: a DEEPER graph is an
-#       improvement and should not fail the job, but a collapse should.
+#   max_depth  -1 / +4, but never below 1. Asymmetric on purpose: a DEEPER
+#       graph is an improvement and should not fail the job, while a collapse
+#       should. A min of 0 would assert nothing -- an edgeless graph satisfies
+#       it -- so a target observed at depth 1 is bounded at 1, which together
+#       with `flat = true` pins it at exactly one level.
 #   sbomqs  +/-0.5. The whole corpus sits in a 5.81..7.70 band, so a
 #       percentage band would be meaningless here. Scores were byte-identical
 #       between sbomqs v2.0.5 and v2.0.6.
@@ -47,17 +50,27 @@ name      = "go-cobra"
 url       = "https://github.com/spf13/cobra"
 sha       = "a655097faf7d54f78933a815984b9919d51a05d2"  # v1.9.1
 ecosystem = "go"
-# Observed 2026-09-04 (offline, sbomqs v2.0.6):
-#   wall=202ms sbomqs=7.59 pkgs=7 files=0 edges=7 depth=2 flat=false
+# Observed 2026-09-11 (offline, sbomqs v2.0.6, waybill 0.7.0):
+#   wall=500ms sbomqs=7.59 pkgs=7 files=0 edges=7 depth=1 flat=true
 #   waybill self-report: complete
+# Re-measured 2026-09-11 against waybill 0.7.0 with the Go module-cache
+# discovery chain fully isolated ($GOMODCACHE + $GOPATH + $HOME all pinned to an
+# empty scratch dir). The PREVIOUS numbers assumed a warm module cache: waybill
+# falls back $GOMODCACHE -> $GOPATH -> $HOME/go/pkg/mod, and the authoring machine
+# had 16 GB of modules, so transitive edges were resolved that no clean runner can
+# see. These bounds describe the COLD-CACHE FLOOR, which is what a deterministic
+# regression detector must bound -- NOT the ceiling of waybill's Go capability. A
+# real build with a warm cache legitimately resolves more (m055 / m091 / m160).
+# NOTE: waybill self-reports graph-completeness `complete` on this flat graph --
+# the divergence the independent flatness metric exists to catch (research R3).
 [targets.expect]
 pkgs      = { min = 4, max = 10 }
 files     = { min = 0, max = 3 }
 edges     = { min = 4, max = 10 }
-max_depth = { min = 1, max = 6 }
+max_depth = { min = 1, max = 5 }
 sbomqs    = { min = 7.09, max = 8.09 }
 wall_ms   = { min = 5, max = 3000 }
-flat      = false
+flat      = true
 
 [[targets]]
 name      = "go-kubernetes"
@@ -65,19 +78,29 @@ url       = "https://github.com/kubernetes/kubernetes"
 sha       = "157e582fcc3ebba3c22b16721f49d6890f784c1f"  # v1.37.0
 ecosystem = "go"
 timeout_secs = 900  # ~100s observed; headroom for a cold runner
-# Observed 2026-09-04 (offline, sbomqs v2.0.6):
-#   wall=100700ms sbomqs=7.04 pkgs=456 files=330 edges=1752 depth=3 flat=false
-#   waybill self-report: partial
+# Observed 2026-09-11 (offline, sbomqs v2.0.6, waybill 0.7.0):
+#   wall=36509ms sbomqs=7.04 pkgs=456 files=330 edges=490 depth=1 flat=true
+#   waybill self-report: complete
 # Deliberate large-repository benchmark: ~100s, roughly 75% of total scan time.
 # wall_ms is an order-of-magnitude guard only -- see the header note.
+# Re-measured 2026-09-11 against waybill 0.7.0 with the Go module-cache
+# discovery chain fully isolated ($GOMODCACHE + $GOPATH + $HOME all pinned to an
+# empty scratch dir). The PREVIOUS numbers assumed a warm module cache: waybill
+# falls back $GOMODCACHE -> $GOPATH -> $HOME/go/pkg/mod, and the authoring machine
+# had 16 GB of modules, so transitive edges were resolved that no clean runner can
+# see. These bounds describe the COLD-CACHE FLOOR, which is what a deterministic
+# regression detector must bound -- NOT the ceiling of waybill's Go capability. A
+# real build with a warm cache legitimately resolves more (m055 / m091 / m160).
+# NOTE: waybill self-reports graph-completeness `complete` on this flat graph --
+# the divergence the independent flatness metric exists to catch (research R3).
 [targets.expect]
 pkgs      = { min = 410, max = 502 }
 files     = { min = 297, max = 363 }
-edges     = { min = 1576, max = 1928 }
-max_depth = { min = 2, max = 7 }
+edges     = { min = 441, max = 539 }
+max_depth = { min = 1, max = 5 }
 sbomqs    = { min = 6.54, max = 7.54 }
 wall_ms   = { min = 5, max = 2000000 }
-flat      = false
+flat      = true
 
 [[targets]]
 name      = "rust-ripgrep"
@@ -130,7 +153,7 @@ ecosystem = "npm"
 pkgs      = { min = 38, max = 48 }
 files     = { min = 0, max = 4 }
 edges     = { min = 38, max = 48 }
-max_depth = { min = 0, max = 5 }
+max_depth = { min = 1, max = 5 }
 sbomqs    = { min = 5.31, max = 6.31 }
 wall_ms   = { min = 5, max = 1000 }
 flat      = true
@@ -206,7 +229,7 @@ ecosystem = "pip"
 pkgs      = { min = 8, max = 14 }
 files     = { min = 337, max = 413 }
 edges     = { min = 347, max = 425 }
-max_depth = { min = 0, max = 5 }
+max_depth = { min = 1, max = 5 }
 sbomqs    = { min = 5.37, max = 6.37 }
 wall_ms   = { min = 5, max = 30000 }
 flat      = true
@@ -227,7 +250,7 @@ ecosystem = "pip"
 pkgs      = { min = 100, max = 124 }
 files     = { min = 162, max = 200 }
 edges     = { min = 1, max = 7 }
-max_depth = { min = 0, max = 5 }
+max_depth = { min = 1, max = 5 }
 sbomqs    = { min = 5.41, max = 6.41 }
 wall_ms   = { min = 5, max = 50000 }
 flat      = true
@@ -247,7 +270,7 @@ ecosystem = "uv"
 pkgs      = { min = 26, max = 32 }
 files     = { min = 0, max = 4 }
 edges     = { min = 27, max = 33 }
-max_depth = { min = 0, max = 5 }
+max_depth = { min = 1, max = 5 }
 sbomqs    = { min = 6.29, max = 7.29 }
 wall_ms   = { min = 5, max = 500 }
 flat      = true
@@ -282,7 +305,7 @@ ecosystem = "maven"
 pkgs      = { min = 31, max = 39 }
 files     = { min = 9, max = 15 }
 edges     = { min = 28, max = 36 }
-max_depth = { min = 0, max = 5 }
+max_depth = { min = 1, max = 5 }
 sbomqs    = { min = 6.06, max = 7.06 }
 wall_ms   = { min = 5, max = 3000 }
 flat      = true
@@ -356,7 +379,7 @@ ecosystem = "cmake"
 pkgs      = { min = 16, max = 22 }
 files     = { min = 0, max = 4 }
 edges     = { min = 17, max = 23 }
-max_depth = { min = 0, max = 5 }
+max_depth = { min = 1, max = 5 }
 sbomqs    = { min = 6.07, max = 7.07 }
 wall_ms   = { min = 5, max = 3000 }
 flat      = true

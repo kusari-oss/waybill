@@ -32,9 +32,16 @@ else
     feature_args=()
 fi
 
+# `${feature_args[*]:-}` rather than `${feature_args[*]}`: under `set -u`,
+# bash 3.2 treats the expansion of an EMPTY array as an unbound variable and
+# aborts. macOS still ships bash 3.2 (Apple froze it in 2007 over the GPLv3
+# licence change), so without the `:-` this script dies on line 38 before
+# running a single check — on the default, non-eBPF path, on every Mac.
+# Bash 4.4+ (every Linux CI runner) is unaffected, which is why CI never
+# caught it. See https://github.com/kusari-oss/waybill — reported 2026-09-04.
 steps=(
-    "cargo +stable clippy --workspace --all-targets ${feature_args[*]} -- -D warnings"
-    "cargo +stable test --workspace ${feature_args[*]}"
+    "cargo +stable clippy --workspace --all-targets ${feature_args[*]:-} -- -D warnings"
+    "cargo +stable test --workspace ${feature_args[*]:-}"
 )
 
 for cmd in "${steps[@]}"; do
