@@ -11,22 +11,6 @@ fn fixture(sub: &str) -> PathBuf {
         .join(sub)
 }
 
-fn run_scan(path: &Path) -> Output {
-    let bin = env!("CARGO_BIN_EXE_waybill");
-    let tmp = tempfile::NamedTempFile::new().expect("tempfile");
-    Command::new(bin)
-        .arg("--offline")
-        .arg("sbom")
-        .arg("scan")
-        .arg("--path")
-        .arg(path)
-        .arg("--output")
-        .arg(tmp.path())
-        .arg("--no-deep-hash")
-        .output()
-        .expect("waybill should run")
-}
-
 fn run_scan_with_output(path: &Path) -> (Output, tempfile::TempDir, PathBuf) {
     let bin = env!("CARGO_BIN_EXE_waybill");
     let tmp = tempfile::tempdir().expect("tempdir");
@@ -129,40 +113,123 @@ fn scan_cargo_v3_git_source_carries_source_type_property() {
     assert_eq!(source_type, "git");
 }
 
-// --- T070: v1 / v2 refusal --------------------------------------------
+// Legacy lockfiles must contribute components, not abort the scan.
 
 #[test]
-fn scan_cargo_v1_lockfile_refuses_with_actionable_error() {
-    let output = run_scan(&fixture("lockfile-v1-refused"));
-    assert!(
-        !output.status.success(),
-        "v1 lockfile scan should exit non-zero, got status {}",
-        output.status,
-    );
-    let stderr = String::from_utf8_lossy(&output.stderr);
-    assert!(
-        stderr.contains("Cargo.lock v1/v2 not supported"),
-        "stderr missing refusal message: {stderr}",
-    );
-    assert!(
-        stderr.contains("cargo ≥1.53"),
-        "stderr missing remediation hint: {stderr}",
-    );
+fn scan_cargo_warns_once_per_lockfile_on_read_or_parse_failure() {
+    for (body, warning) in [
+        (&b"[[package]\n"[..], "Cargo.lock parse failed"),
+        (&b"\xff"[..], "Cargo.lock read failed"),
+    ] {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let lock_path = dir.path().join("Cargo.lock");
+        std::fs::write(&lock_path, body).expect("invalid lockfile");
+        let (output, _tmp, _sbom_path) = run_scan_with_output(dir.path());
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert!(output.status.success(), "scan failed: {stderr}");
+        let warnings: Vec<_> = stderr.lines().filter(|line| line.contains(warning)).collect();
+        assert_eq!(warnings.len(), 1, "expected one diagnostic: {stderr}");
+        assert!(
+            warnings[0].contains(&lock_path.display().to_string()),
+            "diagnostic must identify the lockfile: {stderr}",
+        );
+    }
 }
 
 #[test]
-fn scan_cargo_v2_lockfile_refuses_with_actionable_error() {
-    let output = run_scan(&fixture("lockfile-v2-refused"));
+fn scan_cargo_v1_lockfile_emits_components() {
+    let (output, _tmp, sbom_path) = run_scan_with_output(&fixture("lockfile-v1-refused"));
     assert!(
-        !output.status.success(),
-        "v2 lockfile scan should exit non-zero, got status {}",
-        output.status,
+        output.status.success(),
+        "v1 scan failed: {}",
+        String::from_utf8_lossy(&output.stderr),
     );
-    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(cargo_purls(&sbom_path).contains(&"pkg:cargo/anyhow@1.0.0".to_string()));
+}
+
+#[test]
+fn scan_cargo_v2_lockfile_emits_components() {
+    let (output, _tmp, sbom_path) = run_scan_with_output(&fixture("lockfile-v2-refused"));
     assert!(
-        stderr.contains("Cargo.lock v1/v2 not supported"),
-        "stderr missing refusal message: {stderr}",
+        output.status.success(),
+        "v2 scan failed: {}",
+        String::from_utf8_lossy(&output.stderr),
     );
+    assert!(cargo_purls(&sbom_path).contains(&"pkg:cargo/anyhow@1.0.0".to_string()));
+}
+
+#[test]
+fn scan_cargo_nested_legacy_and_modern_lockfiles_preserves_graph_and_hashes() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let v1_dir = dir.path().join("third_party/legacy-v1");
+    let v2_dir = dir.path().join("third_party/legacy-v2");
+    std::fs::create_dir_all(&v1_dir).expect("v1 directory");
+    std::fs::create_dir_all(&v2_dir).expect("v2 directory");
+    let checksum = "1234567890abcdef".repeat(4);
+    let v1 = format!(r#"
+[root]
+name = "legacy-app"
+version = "0.1.0"
+dependencies = ["legacy-dep 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)"]
+
+[[package]]
+name = "legacy-dep"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = ["legacy-leaf 2.0.0 (registry+https://github.com/rust-lang/crates.io-index)"]
+
+[[package]]
+name = "legacy-leaf"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[metadata]
+"checksum legacy-dep 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "{checksum}"
+"checksum legacy-leaf 2.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "{checksum}"
+"#);
+    let v2 = format!(r#"
+[[package]]
+name = "v2-dep"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "{checksum}"
+"#);
+    let modern = r#"
+version = 4
+[[package]]
+name = "modern-dep"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+"#;
+    std::fs::write(dir.path().join("Cargo.lock"), modern).expect("modern lockfile");
+    std::fs::write(v1_dir.join("Cargo.lock"), &v1).expect("v1 lockfile");
+    std::fs::write(v2_dir.join("Cargo.lock"), &v2).expect("v2 lockfile");
+    let (output, _tmp, sbom_path) = run_scan_with_output(dir.path());
+    assert!(output.status.success(), "scan failed: {}", String::from_utf8_lossy(&output.stderr));
+    let sbom: serde_json::Value = serde_json::from_str(
+        &std::fs::read_to_string(sbom_path).expect("SBOM"),
+    ).expect("JSON");
+    let components = sbom["components"].as_array().expect("components");
+    let component = |purl: &str| {
+        components.iter().find(|c| c["purl"] == purl).expect("component present")
+    };
+    component("pkg:cargo/modern-dep@1.0.0");
+    for purl in ["pkg:cargo/legacy-dep@1.0.0", "pkg:cargo/legacy-leaf@2.0.0", "pkg:cargo/v2-dep@1.0.0"] {
+        assert!(component(purl)["hashes"].as_array().expect("hashes").iter()
+            .any(|h| h["alg"] == "SHA-256" && h["content"] == checksum));
+    }
+    let dependencies = sbom["dependencies"].as_array().expect("dependencies");
+    for (from, to) in [
+        ("pkg:cargo/legacy-app@0.1.0", "pkg:cargo/legacy-dep@1.0.0"),
+        ("pkg:cargo/legacy-dep@1.0.0", "pkg:cargo/legacy-leaf@2.0.0"),
+    ] {
+        assert!(dependencies.iter().any(|edge| {
+            edge["ref"] == component(from)["bom-ref"]
+                && edge["dependsOn"].as_array().is_some_and(|targets| targets.contains(&component(to)["bom-ref"]))
+        }), "missing edge {from} -> {to}");
+    }
+    assert_eq!(std::fs::read_to_string(v1_dir.join("Cargo.lock")).expect("v1 unchanged"), v1);
+    assert_eq!(std::fs::read_to_string(v2_dir.join("Cargo.lock")).expect("v2 unchanged"), v2);
 }
 
 // ---------------------------------------------------------------------------

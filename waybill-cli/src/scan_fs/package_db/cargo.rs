@@ -1,20 +1,13 @@
 //! Read Cargo/Rust package metadata from `Cargo.lock`.
 //!
-//! Supported formats (FR-040, R9):
+//! Supported formats:
 //!
+//! - **v1**: versionless lockfiles, optional legacy `[root]` entry, and
+//!   checksums keyed by full package identity in `[metadata]`.
+//! - **v2**: versionless lockfiles with per-package checksums.
 //! - **v3** (Cargo ≥ 1.53): `[[package]]` blocks with `name`, `version`,
 //!   `source`, `checksum`, `dependencies`.
-//! - **v4** (Cargo ≥ 1.78): same shape, but the `[metadata]` table is
-//!   gone — checksums live on the `[[package]]` entries themselves.
-//!
-//! Fail-closed formats:
-//!
-//! - **v1** (Cargo 1.x pre-dates the `version = N` header; the lockfile
-//!   has a top-level `[root]` table instead). Returns
-//!   [`CargoError::LockfileUnsupportedVersion`] with `version = 1`.
-//! - **v2** (Cargo 1.x early Stable): Returns the same error with
-//!   `version = 2`. Users regenerate via `cargo generate-lockfile` on
-//!   any Rust ≥ 1.53.
+//! - **v4**: the same package fields as v3.
 //!
 //! Source-kind classification (R10):
 //! - `source = "registry+https://..."` → registry crate. Gets SHA-256
@@ -45,11 +38,10 @@ use crate::scan_fs::walk_registry::{
 };
 use std::sync::{Arc, Mutex};
 
-/// Errors the cargo reader can raise. Only `LockfileUnsupportedVersion`
-/// is fatal (FR-040 + CLI contract, mirroring the npm v1 refusal).
+/// Unknown lockfile versions are fatal rather than silently losing dependencies.
 #[derive(Debug, thiserror::Error)]
 pub enum CargoError {
-    #[error("Cargo.lock v1/v2 not supported; regenerate with cargo ≥1.53")]
+    #[error("unsupported Cargo.lock format version {version} at {path}; supported versions: 1-4")]
     LockfileUnsupportedVersion { path: PathBuf, version: u64 },
 }
 
@@ -305,12 +297,47 @@ pub(crate) fn build_and_run(
 // Cargo.lock shape (serde deserialization)
 // ---------------------------------------------------------------------------
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, Default, serde::Deserialize)]
 struct CargoLock {
     #[serde(default)]
     version: Option<u64>,
     #[serde(default)]
     package: Vec<CargoPackage>,
+    #[serde(default)]
+    root: Option<CargoPackage>,
+    #[serde(default)]
+    metadata: BTreeMap<String, toml::Value>,
+}
+
+impl CargoLock {
+    fn normalize(mut self, path: &Path) -> Result<Self, CargoError> {
+        if let Some(version) = self.version {
+            if !(1..=4).contains(&version) {
+                return Err(CargoError::LockfileUnsupportedVersion {
+                    path: path.to_path_buf(),
+                    version,
+                });
+            }
+        }
+        if let Some(root) = self.root.take() {
+            self.package.push(root);
+        }
+        for pkg in &mut self.package {
+            if pkg.checksum.is_none() {
+                if let Some(source) = &pkg.source {
+                    // v1 keys include the source to disambiguate registries and git.
+                    let key = format!("checksum {} {} ({source})", pkg.name, pkg.version);
+                    pkg.checksum = self
+                        .metadata
+                        .get(&key)
+                        .and_then(toml::Value::as_str)
+                        .filter(|checksum| *checksum != "<none>")
+                        .map(str::to_owned);
+                }
+            }
+        }
+        Ok(self)
+    }
 }
 
 #[derive(Debug, serde::Deserialize)]
@@ -1296,8 +1323,8 @@ fn compute_cargo_build_set(
 // Reader
 // ---------------------------------------------------------------------------
 
-/// Parse one `Cargo.lock` file. Emits typed error for v1/v2; otherwise
-/// returns the flattened entry list for v3/v4. When `prod_set` is
+/// Parse one `Cargo.lock` file into a flattened entry list for v1-v4.
+/// Unknown versions return a typed error. When `prod_set` is
 /// non-empty (a Cargo.toml was found alongside the lockfile), entries
 /// whose `(name, version)` is NOT in the set are tagged
 /// `is_dev = Some(true)` per milestone 051. When `prod_set` is empty
@@ -1313,7 +1340,10 @@ fn parse_lockfile(
 ) -> Result<Vec<PackageDbEntry>, CargoError> {
     let text = match std::fs::read_to_string(path) {
         Ok(t) => t,
-        Err(_) => return Ok(Vec::new()),
+        Err(e) => {
+            tracing::warn!(path = %path.display(), error = %e, "Cargo.lock read failed");
+            return Ok(Vec::new());
+        }
     };
     let doc: CargoLock = match toml::from_str(&text) {
         Ok(d) => d,
@@ -1326,26 +1356,7 @@ fn parse_lockfile(
             return Ok(Vec::new());
         }
     };
-    // Absent version field → pre-v3 (v1 or v2). Cargo never wrote a
-    // `version = ` key before v3; its absence IS the signal.
-    match doc.version {
-        None => {
-            // Could be v1 (has `[root]`) or v2 (has `[[package]]` but no
-            // version). Both refuse per FR-040.
-            let version_hint = if text.contains("[root]") { 1 } else { 2 };
-            return Err(CargoError::LockfileUnsupportedVersion {
-                path: path.to_path_buf(),
-                version: version_hint,
-            });
-        }
-        Some(v) if v < 3 => {
-            return Err(CargoError::LockfileUnsupportedVersion {
-                path: path.to_path_buf(),
-                version: v,
-            });
-        }
-        _ => {}
-    }
+    let doc = doc.normalize(path)?;
     let source_path = path.to_string_lossy().into_owned();
     let mut out: Vec<PackageDbEntry> = Vec::new();
     for pkg in &doc.package {
@@ -1440,8 +1451,8 @@ fn parse_lockfile(
 }
 
 /// Public entry point — walks `rootfs` for `Cargo.lock` files, parses
-/// each, and returns the flattened entry list. v1/v2 at any root
-/// short-circuits with the typed error.
+/// each, and returns the flattened entry list. Unknown format versions
+/// short-circuit with the typed error.
 ///
 /// Milestone 051: per-lockfile, parses sibling/workspace `Cargo.toml`
 /// files to identify dev/build deps, BFS-expands the prod closure
@@ -1932,8 +1943,9 @@ fn hex_encode(bytes: &[u8]) -> String {
 /// prod-set BFS — needs raw `[[package]] dependencies = [...]` edges
 /// before the per-entry classification + drop logic runs.
 ///
-/// Returns `Ok(None)` on read/parse failure (warn-and-skip), `Err` on
-/// fatal v1/v2 lockfile-version refusal.
+/// Returns `Ok(None)` on read/parse failure, `Err` on an unsupported
+/// lockfile version. Silent by design: multiple passes call this helper;
+/// the once-per-lockfile diagnostic belongs in `parse_lockfile`.
 fn parse_lockfile_doc(path: &Path) -> Result<Option<CargoLock>, CargoError> {
     let text = match std::fs::read_to_string(path) {
         Ok(t) => t,
@@ -1943,20 +1955,7 @@ fn parse_lockfile_doc(path: &Path) -> Result<Option<CargoLock>, CargoError> {
         Ok(d) => d,
         Err(_) => return Ok(None),
     };
-    match doc.version {
-        None => {
-            let version_hint = if text.contains("[root]") { 1 } else { 2 };
-            Err(CargoError::LockfileUnsupportedVersion {
-                path: path.to_path_buf(),
-                version: version_hint,
-            })
-        }
-        Some(v) if v < 3 => Err(CargoError::LockfileUnsupportedVersion {
-            path: path.to_path_buf(),
-            version: v,
-        }),
-        _ => Ok(Some(doc)),
-    }
+    doc.normalize(path).map(Some)
 }
 
 /// Milestone 114: delegates to the shared `scan_fs::walk::safe_walk`
@@ -2191,11 +2190,11 @@ authors = []
     fn lockfile_unsupported_version_display_matches_contract() {
         let err = CargoError::LockfileUnsupportedVersion {
             path: PathBuf::from("/tmp/Cargo.lock"),
-            version: 2,
+            version: 5,
         };
         assert_eq!(
             err.to_string(),
-            "Cargo.lock v1/v2 not supported; regenerate with cargo ≥1.53"
+            "unsupported Cargo.lock format version 5 at /tmp/Cargo.lock; supported versions: 1-4"
         );
     }
 
@@ -2270,26 +2269,60 @@ source = "git+https://github.com/me/my-fork?branch=main#abc123"
     }
 
     #[test]
-    fn v1_lockfile_refused_with_contract_error() {
+    fn parses_v1_root_dependencies_and_metadata_checksums() {
         let dir = tempfile::tempdir().unwrap();
         // v1 lockfiles have [root] and no version = field.
         let body = r#"
 [root]
 name = "app"
 version = "0.1.0"
-dependencies = []
+dependencies = ["x 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)"]
+
+[[package]]
+name = "x"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = ["x 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)"]
+
+[[package]]
+name = "x"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "fork"
+version = "0.1.0"
+source = "git+https://example.com/fork#abc123"
+
+[metadata]
+"checksum x 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "0000000000000000000000000000000000000000000000000000000000000001"
+"checksum x 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "0000000000000000000000000000000000000000000000000000000000000002"
+"checksum x 0.1.0 (registry+https://other.example/index)" = "0000000000000000000000000000000000000000000000000000000000000003"
+"checksum fork 0.1.0 (git+https://example.com/fork#abc123)" = "<none>"
 "#;
         let path = write_lockfile(dir.path(), body);
-        match parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new()) {
-            Err(CargoError::LockfileUnsupportedVersion { version, .. }) => {
-                assert_eq!(version, 1);
-            }
-            other => panic!("expected v1 refusal, got {other:?}"),
+        let doc = parse_lockfile_doc(&path).unwrap().unwrap();
+        let prod = compute_cargo_prod_set(&doc, &HashSet::from(["app".to_string()]));
+        assert_eq!(prod.len(), 3, "legacy root participates in transitive traversal");
+        let entries = parse_lockfile(&path, &prod, &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new()).unwrap();
+        assert_eq!(entries.len(), 4);
+        let app = entries.iter().find(|e| e.name == "app").unwrap();
+        assert_eq!(app.depends, ["x 0.1.0"]);
+        assert_eq!(app.source_type.as_deref(), Some("workspace"));
+        for (version, digit) in [("0.1.0", "1"), ("0.2.0", "2")] {
+            let entry = entries.iter().find(|e| e.name == "x" && e.version == version).unwrap();
+            assert_eq!(entry.hashes, vec![ContentHash::sha256(&format!("{digit:0>64}")).unwrap()]);
+            assert_eq!(entry.lifecycle_scope, Some(waybill_common::resolution::LifecycleScope::Runtime));
         }
+        let first = entries.iter().find(|e| e.name == "x" && e.version == "0.1.0").unwrap();
+        assert_eq!(first.depends, ["x 0.2.0"]);
+        let fork = entries.iter().find(|e| e.name == "fork").unwrap();
+        assert!(fork.hashes.is_empty());
+        assert_eq!(fork.source_type.as_deref(), Some("git"));
     }
 
     #[test]
-    fn v2_lockfile_refused_with_contract_error() {
+    fn parses_v2_inline_checksums() {
         let dir = tempfile::tempdir().unwrap();
         // v2 lockfiles have [[package]] but no version = key.
         let body = r#"
@@ -2299,12 +2332,66 @@ version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0000000000000000000000000000000000000000000000000000000000000000"
 "#;
+        for header in ["", "version = 1\n", "version = 2\n"] {
+            let path = write_lockfile(dir.path(), &format!("{header}{body}"));
+            let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new()).unwrap();
+            assert_eq!(entries.len(), 1);
+            assert_eq!(entries[0].purl.as_str(), "pkg:cargo/x@0.1.0");
+            assert_eq!(entries[0].hashes, vec![ContentHash::sha256(&"0".repeat(64)).unwrap()]);
+        }
+    }
+
+    #[test]
+    fn legacy_metadata_does_not_override_inline_checksum_or_invent_hashes() {
+        let dir = tempfile::tempdir().unwrap();
+        let body = r#"
+[[package]]
+name = "inline"
+version = "1.0.0"
+source = "registry+https://example.com/index"
+checksum = "0000000000000000000000000000000000000000000000000000000000000001"
+
+[[package]]
+name = "missing"
+version = "1.0.0"
+source = "registry+https://example.com/index"
+
+[[package]]
+name = "invalid"
+version = "1.0.0"
+source = "registry+https://example.com/index"
+
+[[package]]
+name = "none"
+version = "1.0.0"
+source = "registry+https://example.com/index"
+
+[metadata]
+"checksum inline 1.0.0 (registry+https://example.com/index)" = "0000000000000000000000000000000000000000000000000000000000000002"
+"checksum invalid 1.0.0 (registry+https://example.com/index)" = "not-a-hash"
+"checksum none 1.0.0 (registry+https://example.com/index)" = "<none>"
+"unrelated" = { value = true }
+"checksum wrong-version 2.0.0 (registry+https://example.com/index)" = "0000000000000000000000000000000000000000000000000000000000000003"
+"#;
         let path = write_lockfile(dir.path(), body);
-        match parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new()) {
-            Err(CargoError::LockfileUnsupportedVersion { version, .. }) => {
-                assert_eq!(version, 2);
+        let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new()).unwrap();
+        assert_eq!(entries.len(), 4);
+        assert_eq!(entries[0].hashes, vec![ContentHash::sha256(&format!("{:0>64}", "1")).unwrap()]);
+        assert!(entries[1..].iter().all(|entry| entry.hashes.is_empty()));
+    }
+
+    #[test]
+    fn unknown_lockfile_version_reports_path_and_version() {
+        let dir = tempfile::tempdir().unwrap();
+        for version in [0, 5] {
+            let path = write_lockfile(dir.path(), &format!("version = {version}\n"));
+            for err in [
+                parse_lockfile_doc(&path).unwrap_err(),
+                parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new()).unwrap_err(),
+            ] {
+                assert!(err.to_string().contains(&path.display().to_string()));
+                assert!(matches!(err, CargoError::LockfileUnsupportedVersion { version: actual, .. } if actual == version));
             }
-            other => panic!("expected v2 refusal, got {other:?}"),
         }
     }
 
@@ -2441,17 +2528,16 @@ checksum = "0a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393"
     }
 
     #[test]
-    fn read_v1_propagates_error() {
+    fn read_v1_emits_legacy_root() {
         let dir = tempfile::tempdir().unwrap();
         std::fs::write(
             dir.path().join("Cargo.lock"),
             "[root]\nname = \"x\"\nversion = \"0.1.0\"\ndependencies = []\n",
         )
         .unwrap();
-        assert!(matches!(
-            read(dir.path(), false, &Default::default()),
-            Err(CargoError::LockfileUnsupportedVersion { version: 1, .. })
-        ));
+        let entries = read(dir.path(), false, &Default::default()).unwrap().entries;
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].purl.as_str(), "pkg:cargo/x@0.1.0");
     }
 
     // ---- Milestone 051 — Cargo.toml dev/build classification ----
@@ -2665,6 +2751,7 @@ foo = { package = "real-name", version = "1" }
         let lock = CargoLock {
             version: Some(3),
             package: vec![lock_pkg("foo", "1.0.0", &[])],
+            ..Default::default()
         };
         let mut direct = HashSet::new();
         direct.insert("foo".to_string());
@@ -2682,6 +2769,7 @@ foo = { package = "real-name", version = "1" }
                 lock_pkg("b", "2.0.0", &["c 3.0.0"]),
                 lock_pkg("c", "3.0.0", &[]),
             ],
+            ..Default::default()
         };
         let mut direct = HashSet::new();
         direct.insert("a".to_string());
@@ -2705,6 +2793,7 @@ foo = { package = "real-name", version = "1" }
                 lock_pkg("dev-only", "1.0.0", &["shared 1.0.0"]),
                 lock_pkg("shared", "1.0.0", &[]),
             ],
+            ..Default::default()
         };
         let mut direct = HashSet::new();
         direct.insert("a".to_string());
@@ -2719,6 +2808,7 @@ foo = { package = "real-name", version = "1" }
         let lock = CargoLock {
             version: Some(3),
             package: vec![lock_pkg("foo", "1.0.0", &[])],
+            ..Default::default()
         };
         let prod = compute_cargo_prod_set(&lock, &HashSet::new());
         assert!(prod.is_empty());

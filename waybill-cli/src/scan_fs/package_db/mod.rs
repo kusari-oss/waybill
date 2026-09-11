@@ -2046,8 +2046,7 @@ pub fn read_all(
     // deps.dev enrichment path.
     // Milestone 664 US2 T044: nuget splice from shared-walker pilot.
     out.extend(std::mem::take(&mut shared_pilot.nuget));
-    // Cargo is fail-closed on v1/v2 lockfiles (FR-040), mirroring the
-    // npm v1 refusal pattern.
+    // Cargo supports v1-v4 and fails closed on unknown format versions.
     //
     // Milestone 134: the cargo reader now also returns per-collision
     // `DivergenceRecord`s. They land in `diagnostics.divergence_records`

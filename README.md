@@ -265,7 +265,7 @@ summary below.
 | **deb**           | `/var/lib/dpkg/status`              | —                                                                           | Full (via `Depends:`)              |
 | **apk**           | `/lib/apk/db/installed`             | —                                                                           | Direct only (apk encodes no transitive) |
 | **rpm**           | `/var/lib/rpm/rpmdb.sqlite` + `.rpm`| —                                                                           | Full (via `REQUIRES`). BDB opt-in via `--include-legacy-rpmdb`. |
-| **cargo**         | —                                   | `Cargo.lock` v3/v4                                                          | Full                                |
+| **cargo**         | —                                   | `Cargo.lock` v1-v4                                                          | Full                                |
 | **gem**           | —                                   | `Gemfile.lock` (indent-6 edges), `specifications/*.gemspec`                 | Full                                |
 | **golang (src)**  | —                                   | `go.mod` + `go.sum` + `$GOMODCACHE/`                                        | Full when cache warm                |
 | **golang (bin)**  | —                                   | `runtime/debug.BuildInfo` (Go 1.18+ ELF/Mach-O/PE)                          | Modules only (BuildInfo has no edges) |
