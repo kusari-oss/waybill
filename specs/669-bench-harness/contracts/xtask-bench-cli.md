@@ -18,6 +18,20 @@ Runs the full matrix, writes `target/bench/run-<git-sha>.json`, prints a Markdow
 - `--filter <pattern>` — glob-match fixture names (FR-006). Multiple `--filter` flags = union of matches.
 - `--baseline <path>` — compute a RegressionDiff against the named baseline file. Exits non-zero if any dimension breach ≥ threshold. Default: no comparison (FR-020 capture-only mode).
 - `--threshold <fraction>` — override the default 0.25 regression threshold. Only accepted with `--baseline`.
+  - **Noise floor (added by issue #833).** The threshold is a ratio, so at small absolute
+    values it reports host jitter as a code change. `WallClockMs` and `MaxRssKb` therefore
+    also carry an absolute floor — 200 ms and 50 MiB respectively — and a dimension whose
+    baseline **and** subject both fall below its floor is skipped regardless of
+    `--threshold`. Requiring both sides keeps a move from inside the band to well outside
+    it (120 ms → 10 s) gating. `OutputBytes` and `ComponentCount` have no floor: they are
+    deterministic for a fixed fixture and binary, so a small absolute change is real signal.
+    Consequence worth stating plainly — every current fixture measures peak RSS between
+    2.5 MB and 18 MB, so `MaxRssKb` gates nothing today. That is deliberate: a dimension
+    observed swinging from -73.6% to +222.8% within a single run cannot support a 25% gate
+    at any threshold. It re-activates without code change if a fixture grows past the floor.
+    This is distinct from `assert_baseline_is_comparable`, which refuses *cross-host-class*
+    comparison; the floor addresses within-class noise at small magnitudes, which that
+    guard cannot see.
 - `--output <path>` — override the default `target/bench/run-<git-sha>.json` location.
 - `--fixtures-dir <path>` — override the fixture-cache location. Defaults to `$WAYBILL_FIXTURES_DIR` (m090 env), then `~/.cache/waybill/fixtures/<pinned-sha>/`.
 - `--per-fixture-timeout-sec <N>` — override the default 5-minute per-fixture timeout (Q3). Accepted range: 60-3600.
