@@ -14,6 +14,9 @@
 //   for investigation per data-model.md §5 Dimension doc-string).
 // Negative deltas ≥ threshold in absolute magnitude on any dimension
 // are recorded as improvements (informational, never a failure).
+//
+// WallClockMs and MaxRssKb additionally carry an absolute noise floor
+// (#833) — below it, a percentage delta measures the host, not the code.
 
 use std::collections::HashMap;
 
@@ -37,6 +40,13 @@ use crate::bench::schema::{
 /// meaningfully large (>0 for count, >0 for bytes). We treat
 /// zero-baseline as "no signal" and skip the percentage_delta
 /// computation to avoid divide-by-zero + false regressions.
+///
+/// Threshold alone is not sufficient. `WallClockMs` and `MaxRssKb` also
+/// carry an absolute noise floor (see `noise_floor`): a dimension whose
+/// baseline AND subject both sit below it is skipped, because a ratio
+/// computed over values that small reports host jitter as a code change.
+/// `OutputBytes` and `ComponentCount` have no floor — they are
+/// deterministic for a fixed fixture and binary.
 pub fn compare(subject: &BenchRun, baseline: &BenchRun, threshold: f64) -> RegressionDiff {
     let subject_ix = index_results(&subject.results);
     let baseline_ix = index_results(&baseline.results);
@@ -91,6 +101,41 @@ fn index_results(rs: &[BenchResult]) -> HashMap<(String, Mode), &BenchResult> {
         .collect()
 }
 
+/// Wall-clock below this is dominated by process spawn and reap, not by
+/// anything waybill does. Issue #833: `cargo-workspace-medium` was gated
+/// as a +100% regression on a 50ms → 100ms move.
+const WALL_CLOCK_FLOOR_MS: f64 = 200.0;
+
+/// Peak RSS below this is dominated by allocator and scheduler behaviour.
+/// Issue #833: one bench run reported `MaxRssKb` deltas from -73.6% to
+/// +222.8% across fixtures simultaneously, and the baseline disagreed with
+/// itself — 18540 KB vs 4884 KB for two modes of the same fixture. Every
+/// current fixture measures between 2.5 MB and 18 MB, so in practice this
+/// floor stops `MaxRssKb` gating anything today. That is deliberate: a
+/// dimension whose noise exceeds its signal cannot support a 25% gate at
+/// any threshold. It re-activates on its own if a fixture ever grows large
+/// enough for peak RSS to carry signal.
+const MAX_RSS_FLOOR_KB: f64 = 51_200.0;
+
+/// Absolute magnitude below which a percentage delta is not evidence.
+///
+/// Returns `None` for dimensions that are deterministic for a fixed
+/// fixture and binary — `OutputBytes` and `ComponentCount` do not vary
+/// with host load, so a small absolute change there is real signal (one
+/// component appearing on a seven-component fixture is a 14% shift worth
+/// seeing). Only the two host-sensitive dimensions get a floor; they are
+/// the same two that `assert_baseline_is_comparable` already describes as
+/// non-portable across host classes. That guard catches cross-class
+/// comparison; this floor catches within-class noise at small magnitudes,
+/// which is the case it cannot see.
+fn noise_floor(dim: Dimension) -> Option<f64> {
+    match dim {
+        Dimension::WallClockMs => Some(WALL_CLOCK_FLOOR_MS),
+        Dimension::MaxRssKb => Some(MAX_RSS_FLOOR_KB),
+        Dimension::OutputBytes | Dimension::ComponentCount => None,
+    }
+}
+
 /// Populate `regressions` and `improvements` for one overlapping
 /// fixture-mode pair across all 4 dimensions.
 fn classify_dimensions(
@@ -112,6 +157,15 @@ fn classify_dimensions(
         // and we don't want to flag a subject-only value as regression.
         if bv == 0.0 {
             continue;
+        }
+        // Skip when the whole measurement sits inside the noise band.
+        // Requires BOTH sides below the floor: a move from inside the
+        // band to well outside it (400ms -> 10s) is still a regression
+        // and still gates.
+        if let Some(floor) = noise_floor(dim) {
+            if sv < floor && bv < floor {
+                continue;
+            }
         }
         let delta = (sv - bv) / bv;
         if delta >= threshold {
@@ -234,6 +288,89 @@ mod tests {
         assert!(diff.improvements[0].percentage_delta < -0.39);
         assert!(diff.improvements[0].percentage_delta > -0.41);
         assert!(diff.regressions.is_empty());
+    }
+
+    #[test]
+    fn noise_floor_suppresses_tiny_wall_clock_delta() {
+        // #833: the exact row that gated the lane red — 50ms -> 100ms.
+        // A doubling on paper, process-spawn jitter in reality.
+        let baseline = run(
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            vec![result("cargo-workspace-medium", Mode::Default, 50, 47000, 82000, 234)],
+        );
+        let subject = run(
+            "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            vec![result("cargo-workspace-medium", Mode::Default, 100, 47000, 82000, 234)],
+        );
+        let diff = compare(&subject, &baseline, 0.25);
+        assert!(
+            diff.regressions.is_empty(),
+            "50ms -> 100ms is below the wall-clock floor; got {:?}",
+            diff.regressions,
+        );
+    }
+
+    #[test]
+    fn noise_floor_suppresses_small_magnitude_rss_swing() {
+        // #833: go-module-medium read +222.8% while other fixtures in the
+        // same run read -73.6%. Both sides are a few MB.
+        let baseline = run(
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            vec![result("go-module-medium", Mode::Default, 300, 2512, 82000, 234)],
+        );
+        let subject = run(
+            "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            vec![result("go-module-medium", Mode::Default, 300, 8108, 82000, 234)],
+        );
+        let diff = compare(&subject, &baseline, 0.25);
+        assert!(
+            diff.regressions.is_empty(),
+            "2.5MB -> 8MB is below the RSS floor; got {:?}",
+            diff.regressions,
+        );
+        assert!(diff.improvements.is_empty());
+    }
+
+    #[test]
+    fn noise_floor_does_not_mask_a_real_regression() {
+        // The floor requires BOTH sides below it. A run that starts inside
+        // the noise band and ends far outside it is still a regression --
+        // otherwise the floor would hide the failures worth catching.
+        let baseline = run(
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            vec![result("cargo-medium", Mode::Default, 120, 4000, 82000, 234)],
+        );
+        let subject = run(
+            "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            vec![result("cargo-medium", Mode::Default, 10_000, 900_000, 82000, 234)],
+        );
+        let diff = compare(&subject, &baseline, 0.25);
+        let dims: Vec<_> = diff.regressions.iter().map(|e| e.dimension).collect();
+        assert!(
+            dims.contains(&Dimension::WallClockMs),
+            "120ms -> 10s must still gate; got {dims:?}",
+        );
+        assert!(
+            dims.contains(&Dimension::MaxRssKb),
+            "4MB -> 900MB must still gate; got {dims:?}",
+        );
+    }
+
+    #[test]
+    fn deterministic_dimensions_have_no_floor() {
+        // A single component appearing on a small fixture is real signal,
+        // not host noise, so ComponentCount is gated at any magnitude.
+        let baseline = run(
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            vec![result("tiny", Mode::Default, 300, 47000, 100, 4)],
+        );
+        let subject = run(
+            "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            vec![result("tiny", Mode::Default, 300, 47000, 100, 7)],
+        );
+        let diff = compare(&subject, &baseline, 0.25);
+        assert_eq!(diff.regressions.len(), 1);
+        assert_eq!(diff.regressions[0].dimension, Dimension::ComponentCount);
     }
 
     #[test]
