@@ -294,8 +294,12 @@ The canonical source-of-truth for project principles is
 [`.specify/memory/constitution.md`](.specify/memory/constitution.md).
 Twelve principles to be aware of:
 
-- **I. Pure Rust, Zero C** — no FFI, no `libbpf` bindings, no C
-  toolchains in the build pipeline. `aya` provides the eBPF stack.
+- **I. Pure Rust, Statically Linked** — waybill authors no C
+  anywhere; `aya` provides the eBPF stack. A third-party crate that
+  vendors and compiles C is allowed only when no viable pure-Rust
+  equivalent exists and it links statically — say in the PR what you
+  evaluated and rejected. Released binaries must not pick up a
+  dynamic dependency on a host C library.
 - **II. eBPF-Only Observation** — eBPF tracing is the trust-rooted
   dependency-discovery path; external sources (lockfiles, registries)
   only ENRICH what was observed.

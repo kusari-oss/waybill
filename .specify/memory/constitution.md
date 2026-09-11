@@ -2,6 +2,130 @@
   ============================================================
   SYNC IMPACT REPORT
   ============================================================
+  Version change: 2.1.0 → 3.0.0
+  Bump rationale: MAJOR — Principle I is REDEFINED, which the
+  Governance section names explicitly as a MAJOR trigger
+  ("Principle removed, redefined, or made incompatible with
+  prior interpretation"). Conduct that v2.1.0 forbids without
+  exception — depending on a crate that compiles vendored C —
+  becomes permissible under stated conditions. Any plan or
+  review that previously rejected a dependency by citing
+  Principle I alone must be re-reasoned against the new test.
+  This is the constitution's first MAJOR bump since ratification.
+
+  Renamed principle:
+    - I. Pure Rust, Zero C → I. Pure Rust, Statically Linked
+
+  What changed normatively:
+    - First-party code: UNCHANGED and still absolute. waybill
+      authors no C anywhere — main codebase, build scripts, or
+      eBPF. `aya` remains the only kernel-compatibility path.
+    - Third-party dependencies: RELAXED. A crate that vendors
+      and compiles C MAY now be adopted when no viable pure-Rust
+      equivalent exists, provided the adopting PR records the
+      alternatives it rejected.
+    - New hard constraint replacing the old one: such a
+      dependency MUST link statically, and released binaries
+      MUST NOT acquire a dynamic-link dependency beyond an
+      explicitly enumerated per-OS platform baseline (Linux:
+      libc/libm/libpthread/libdl/librt + loader; macOS:
+      libSystem, OS-supplied /usr/lib dylibs, /System/Library
+      frameworks; Windows: UCRT + System32 DLLs). The baseline
+      is spelled out rather than left to judgment because
+      waybill's current macOS binary already links libiconv,
+      CoreFoundation and CoreServices — a vague boundary would
+      have made the shipping product ambiguously non-compliant
+      on the day this amendment merged. Linking against a
+      host-supplied third-party library (OpenSSL, libbpf,
+      libgit2, libxml2, libz) stays forbidden outright, and
+      `*-sys` crates MUST be pinned to vendored/static mode with
+      pkg-config probing disabled.
+    - A C compiler in the BUILD environment is now explicitly
+      permitted; v2.1.0 banned "C compiler toolchains ... in the
+      build pipeline".
+
+  Why now: the 2026-09-10 evaluation of `sigstore/sigstore-rust`
+  measured the cost the ban was assumed to be avoiding and found
+  it negative. `aws-lc-sys` compiles ~400 vendored C files and
+  links statically; cold release builds were FASTER than the
+  incumbent pure-Rust stack (ubuntu-latest 90s vs 104s;
+  windows-latest MSVC 209s vs 234s) and 212s on Windows with
+  NASM removed from PATH, ruling out a hidden assembler
+  requirement. Runtime cost is zero because the linkage is
+  static. The ban was therefore costing capability — see the
+  SBOM Author Signature element in Principle V, whose keyless
+  path has been carried on a maintained fork of `sigstore-rs`
+  since milestone 222 — to avoid a penalty that does not exist.
+
+  Modified sections:
+    - Principle I: retitled and rewritten (first-party half
+      unchanged; third-party half relaxed; static-linkage
+      requirement added; rationale replaced and evidence cited).
+    - Strict Boundaries item 3: "No C code" → "No first-party C,
+      no dynamic linkage against host C libraries".
+    - Version field: 2.1.0 → 3.0.0.
+    - Last Amended field: 2026-07-30 → 2026-09-10.
+
+  Added sections: none.
+  Removed sections: none.
+
+  Templates requiring updates:
+    - .specify/templates/plan-template.md          ✅ no update needed
+                                                    (Constitution Check
+                                                    is generic; cites no
+                                                    principle by number)
+    - .specify/templates/spec-template.md          ✅ no update needed
+    - .specify/templates/tasks-template.md         ✅ no update needed
+    - .specify/templates/agent-file-template.md    ✅ no update needed
+    - .specify/templates/checklist-template.md     ✅ no update needed
+    - .specify/templates/constitution-template.md  ✅ no update needed
+    - CONTRIBUTING.md                              ✅ updated — the
+                                                    principle-summary
+                                                    bullet restated the
+                                                    old absolute ban
+    - CLAUDE.md                                    ✅ no update needed
+                                                    (Principle I appears
+                                                    only inside
+                                                    auto-generated
+                                                    per-milestone Active
+                                                    Technologies lines,
+                                                    which are historical
+                                                    records of what those
+                                                    milestones did and
+                                                    remain accurate)
+
+  Deferred / follow-up TODOs:
+    - TODO(LINKAGE_CI_GATE): the static-linkage requirement is
+      today verified by review, not by machinery. A release-lane
+      check asserting the built binaries carry no unexpected
+      DT_NEEDED (Linux), LC_LOAD_DYLIB (macOS) or import-table
+      (Windows) entries beyond the platform baseline would make
+      it enforceable. Tracked as a follow-up issue; deliberately
+      NOT a merge blocker for this amendment, because the
+      amendment narrows what is permitted at review time and the
+      gate only automates it.
+    - TODO(SIGSTORE_TRUST_ROOT_REVISIT): the `[patch.crates-io]`
+      comment in the workspace `Cargo.toml` justifies both the
+      vendored Sigstore trust keys and the `kusari-sandbox`
+      fork partly on Principle I grounds (the
+      `sigstore-trust-root-*` feature pulls `aws-lc-rs` via
+      `tough`). That justification no longer holds on its own.
+      Whether to retire the vendored keys, the fork, or both is
+      an engineering decision with its own risk profile and is
+      NOT settled by this amendment; it is left to the
+      sigstore-rust adoption milestone.
+    - 319 files under `specs/` cite Principle I. They are
+      completed per-milestone plans asserting facts about work
+      already shipped ("zero new Cargo dependencies"), which
+      remain true. Per Governance step 3 they were reviewed;
+      none is an ACTIVE plan and none requires amendment.
+  ============================================================
+-->
+
+<!--
+  ============================================================
+  SYNC IMPACT REPORT
+  ============================================================
   Version change: 2.0.0 → 2.1.0
   Bump rationale: MINOR — Principle V (Specification Compliance)
   first bullet's normative content materially updated: the
@@ -205,18 +329,70 @@
 
 ## Core Principles
 
-### I. Pure Rust, Zero C
+### I. Pure Rust, Statically Linked
 
-All code — kernel-space eBPF programs and user-space application
-alike — MUST be written exclusively in Rust. The `aya` framework
-provides the eBPF toolchain. No C source files, no `libbpf`
-bindings, and no C compiler toolchains are permitted in the build
-pipeline.
+**First-party code.** All code waybill itself authors — kernel-space
+eBPF programs and user-space application alike — MUST be written
+exclusively in Rust. The `aya` framework provides the eBPF toolchain.
+No C source files, no `libbpf` bindings, and no FFI shims of waybill's
+own authorship are permitted, in the main codebase or in build scripts.
+This half of the principle is absolute.
 
-**Rationale**: A single-language stack eliminates FFI bugs,
-guarantees memory safety across the entire call graph, and
-removes the C toolchain as a supply-chain attack surface —
-critical for a tool whose purpose is supply-chain integrity.
+**Third-party dependencies.** Pure Rust is a strong preference, not an
+absolute bar:
+
+- A crate that vendors and compiles C during its build MAY be adopted
+  ONLY when no viable pure-Rust equivalent exists. The adopting PR MUST
+  record which alternatives were evaluated and why each was rejected.
+- Every such dependency MUST link statically. Released binaries MUST
+  NOT acquire a dynamic-link dependency beyond the target's **platform
+  baseline**, defined as the set of libraries the operating system
+  itself ships and guarantees:
+  - **Linux**: `libc`, `libm`, `libpthread`, `libdl`, `librt`, and the
+    dynamic loader.
+  - **macOS**: `/usr/lib/libSystem.B.dylib`, the OS-supplied dylibs
+    under `/usr/lib` (e.g. `libiconv`), and frameworks under
+    `/System/Library/Frameworks` (e.g. CoreFoundation, CoreServices,
+    Security).
+  - **Windows**: the Universal CRT and DLLs shipped in `System32`.
+
+  Anything outside that set MUST be statically linked or not depended
+  on. The baseline is deliberately concrete rather than a judgment
+  call, because a vague boundary is unenforceable — waybill's current
+  macOS binary links four of the entries above, and a looser wording
+  would leave reviewers guessing whether that was compliant.
+- Linking against a library the host is expected to supply — OpenSSL,
+  `libbpf`, `libgit2`, `libxml2`, `libz` and the like — is forbidden
+  whether or not a pure-Rust alternative exists. A `*-sys` crate that
+  can fall back to system discovery MUST be configured so it cannot:
+  vendored/static feature on, `pkg-config` probing off.
+- A C compiler in the *build* environment is permitted, because every
+  platform waybill releases for already provides one. It is not a
+  licence to author C.
+
+**Rationale**: The original absolute ban conflated two distinct risks
+and over-served one of them. Preferring Rust is still right: it
+eliminates FFI bugs, keeps memory safety across the call graph, and
+narrows the toolchain's supply-chain surface. But the property
+operators actually depend on is that `waybill` is a single
+self-contained binary that runs wherever it is copied — and that
+property is destroyed by *dynamic* linkage, not by a vendored C source
+tree compiled into a static archive at build time. A statically linked
+vendored dependency ships inside the artifact, is enumerated by
+waybill's own SBOM, and is version-pinned in `Cargo.lock`. A
+dynamically linked one is resolved from the host at load time and is
+none of those things — which is precisely the failure mode a
+supply-chain tool must not have.
+
+The 2026-09-10 evaluation of `sigstore/sigstore-rust` supplied the
+measurement that retired the cost argument. Its `aws-lc-sys`
+dependency compiles roughly 400 vendored C files and links them
+statically; cold release builds came in *faster* than the incumbent
+pure-Rust stack — 90s vs 104s on `ubuntu-latest`, 209s vs 234s on
+`windows-latest` MSVC — and 212s on Windows with NASM removed from
+`PATH`, so it carries no hidden assembler requirement either. The ban
+was costing real capability (see Principle V's SBOM Author Signature
+element) to avoid a penalty that measurement showed does not exist.
 
 ### II. eBPF-Only Observation
 
@@ -540,9 +716,14 @@ optional modes:
    eBPF `uprobes`. Certificate injection, proxy servers, and
    traffic interception outside eBPF are forbidden.
 
-3. **No C code.** Not in the main codebase, not in build
-   scripts, not in vendored dependencies. The `aya` crate
-   provides all kernel compatibility (Principle I).
+3. **No first-party C, no dynamic linkage against host C
+   libraries.** waybill MUST NOT author C — not in the main
+   codebase, not in build scripts, not in the eBPF programs; the
+   `aya` crate provides all kernel compatibility. Third-party
+   crates MAY vendor and compile C under the conditions set out in
+   Principle I, but released binaries MUST NOT gain a dynamic-link
+   dependency on any C library beyond the platform baseline.
+   Narrowed from "No C code" in 3.0.0.
 
 4. **No `.unwrap()` in production.** Test code may use
    `.unwrap()` for brevity; production code MUST use proper
@@ -652,4 +833,4 @@ changes do not violate any principle. Violations require
 either a code fix or a constitution amendment — never silent
 deviation.
 
-**Version**: 2.1.0 | **Ratified**: 2026-04-15 | **Last Amended**: 2026-07-30
+**Version**: 3.0.0 | **Ratified**: 2026-04-15 | **Last Amended**: 2026-09-10
