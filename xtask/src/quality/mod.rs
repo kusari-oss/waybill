@@ -133,6 +133,10 @@ pub fn run(args: QualityArgs) -> Result<(), Box<dyn Error>> {
         .cache_dir
         .clone()
         .unwrap_or_else(|| default_cache_root(&root));
+    // An explicit --waybill-bin is a statement of intent: the operator is
+    // measuring a binary they built elsewhere, so the staleness check below
+    // is skipped for it.
+    let explicit_bin = args.waybill_bin.is_some();
     let waybill_bin = args
         .waybill_bin
         .clone()
@@ -143,6 +147,9 @@ pub fn run(args: QualityArgs) -> Result<(), Box<dyn Error>> {
             waybill_bin.display()
         )
         .into());
+    }
+    if !explicit_bin {
+        ensure_binary_current(&root)?;
     }
 
     let scratch = tempfile::tempdir()?;
@@ -338,6 +345,45 @@ fn default_cache_root(_root: &Path) -> PathBuf {
         }
     }
     PathBuf::from(".waybill-quality-cache")
+}
+
+/// Rebuild `waybill` so the corpus cannot measure a stale binary.
+///
+/// The report stamps provenance from `git rev-parse HEAD` of the *source tree*,
+/// so measuring a previously built artifact would silently attribute one
+/// build's numbers to a different commit — and those numbers can end up
+/// committed as authored ranges.
+///
+/// This delegates to cargo rather than comparing timestamps by hand. Cargo
+/// also keys off mtime for path dependencies, so a `git checkout` that
+/// rewrites a file with identical content still triggers a rebuild — the
+/// difference is that cargo REBUILDS where a hand-rolled check could only
+/// REFUSE. The operator is never blocked and never has to run a command and
+/// re-invoke; a redundant rebuild costs time, not a failed run. A genuine
+/// no-op costs under a second.
+///
+/// An explicit `--waybill-bin` skips this entirely: passing it is a statement
+/// of intent to measure a specific binary built elsewhere.
+fn ensure_binary_current(root: &Path) -> Result<(), Box<dyn Error>> {
+    // Reuse the cargo that invoked xtask so a toolchain override is honoured.
+    let cargo = std::env::var("CARGO").unwrap_or_else(|_| "cargo".to_string());
+    let status = Command::new(&cargo)
+        .args(["build", "--release", "-p", "waybill", "--bin", "waybill"])
+        .current_dir(root)
+        // Inherit stdio: a real rebuild takes minutes and silence looks hung.
+        .status()
+        .map_err(|e| -> Box<dyn Error> {
+            format!("could not run `{cargo} build` to refresh the waybill binary: {e}").into()
+        })?;
+    if !status.success() {
+        return Err(format!(
+            "`{cargo} build --release -p waybill --bin waybill` failed, so the corpus would \
+             have measured a stale binary. Fix the build first, or pass --waybill-bin <path> \
+             to measure a binary built elsewhere."
+        )
+        .into());
+    }
+    Ok(())
 }
 
 fn git_head(root: &Path) -> Option<String> {

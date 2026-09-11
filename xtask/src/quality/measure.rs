@@ -44,10 +44,21 @@ pub fn scan(
         .arg(target.name.as_str())
         .arg("--root-version")
         .arg(target.pin.short())
-        // C-4.4: pin $GOMODCACHE to an empty per-run directory so Go edge
-        // counts do not drift with whatever the host happens to have
-        // cached (research R2).
+        // C-4.4: pin the Go module-cache discovery chain to an empty
+        // per-run directory so edge counts do not drift with whatever the
+        // host happens to have cached (research R2).
+        //
+        // ALL THREE are required. waybill's discovery in
+        // golang/graph_resolver.rs falls back $GOMODCACHE -> $GOPATH ->
+        // $HOME/go/pkg/mod, so pinning only the first lets a warm host
+        // cache leak in through the others. Observed 2026-09-11: a
+        // developer machine with a 16 GB module cache measured go-cobra at
+        // depth 2 and go-kubernetes at 1752 edges, while a clean CI runner
+        // produced flat graphs (depth 1, 490 edges) from the identical
+        // commit. The CI numbers were the honest ones.
         .env("GOMODCACHE", gomodcache)
+        .env("GOPATH", gomodcache)
+        .env("HOME", gomodcache)
         .stdout(Stdio::null())
         .stderr(Stdio::piped());
     // C-4.3: no tier filter, no --file-inventory override. The corpus

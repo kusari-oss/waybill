@@ -47,17 +47,25 @@ name      = "go-cobra"
 url       = "https://github.com/spf13/cobra"
 sha       = "a655097faf7d54f78933a815984b9919d51a05d2"  # v1.9.1
 ecosystem = "go"
-# Observed 2026-09-04 (offline, sbomqs v2.0.6):
-#   wall=202ms sbomqs=7.59 pkgs=7 files=0 edges=7 depth=2 flat=false
+# Observed 2026-09-11 (offline, sbomqs v2.0.6, waybill 0.7.0):
+#   wall=500ms sbomqs=7.59 pkgs=7 files=0 edges=7 depth=1 flat=true
 #   waybill self-report: complete
+# Re-measured 2026-09-11 against waybill 0.7.0 with the Go module-cache
+# discovery chain fully isolated ($GOMODCACHE + $GOPATH + $HOME all pinned to an
+# empty scratch dir). The PREVIOUS numbers here were contaminated: waybill falls
+# back $GOMODCACHE -> $GOPATH -> $HOME/go/pkg/mod, and the authoring machine had a
+# 16 GB warm module cache, so transitive edges were resolved that no clean runner
+# can see. These bounds describe waybill's genuine OFFLINE behaviour.
+# NOTE: waybill self-reports graph-completeness `complete` on this flat graph --
+# the divergence the independent flatness metric exists to catch (research R3).
 [targets.expect]
 pkgs      = { min = 4, max = 10 }
 files     = { min = 0, max = 3 }
 edges     = { min = 4, max = 10 }
-max_depth = { min = 1, max = 6 }
+max_depth = { min = 0, max = 5 }
 sbomqs    = { min = 7.09, max = 8.09 }
 wall_ms   = { min = 5, max = 3000 }
-flat      = false
+flat      = true
 
 [[targets]]
 name      = "go-kubernetes"
@@ -65,19 +73,27 @@ url       = "https://github.com/kubernetes/kubernetes"
 sha       = "157e582fcc3ebba3c22b16721f49d6890f784c1f"  # v1.37.0
 ecosystem = "go"
 timeout_secs = 900  # ~100s observed; headroom for a cold runner
-# Observed 2026-09-04 (offline, sbomqs v2.0.6):
-#   wall=100700ms sbomqs=7.04 pkgs=456 files=330 edges=1752 depth=3 flat=false
-#   waybill self-report: partial
+# Observed 2026-09-11 (offline, sbomqs v2.0.6, waybill 0.7.0):
+#   wall=36509ms sbomqs=7.04 pkgs=456 files=330 edges=490 depth=1 flat=true
+#   waybill self-report: complete
 # Deliberate large-repository benchmark: ~100s, roughly 75% of total scan time.
 # wall_ms is an order-of-magnitude guard only -- see the header note.
+# Re-measured 2026-09-11 against waybill 0.7.0 with the Go module-cache
+# discovery chain fully isolated ($GOMODCACHE + $GOPATH + $HOME all pinned to an
+# empty scratch dir). The PREVIOUS numbers here were contaminated: waybill falls
+# back $GOMODCACHE -> $GOPATH -> $HOME/go/pkg/mod, and the authoring machine had a
+# 16 GB warm module cache, so transitive edges were resolved that no clean runner
+# can see. These bounds describe waybill's genuine OFFLINE behaviour.
+# NOTE: waybill self-reports graph-completeness `complete` on this flat graph --
+# the divergence the independent flatness metric exists to catch (research R3).
 [targets.expect]
 pkgs      = { min = 410, max = 502 }
 files     = { min = 297, max = 363 }
-edges     = { min = 1576, max = 1928 }
-max_depth = { min = 2, max = 7 }
+edges     = { min = 441, max = 539 }
+max_depth = { min = 0, max = 5 }
 sbomqs    = { min = 6.54, max = 7.54 }
 wall_ms   = { min = 5, max = 2000000 }
-flat      = false
+flat      = true
 
 [[targets]]
 name      = "rust-ripgrep"
