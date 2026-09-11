@@ -56,6 +56,19 @@ git -C <dir> checkout FETCH_HEAD
 ```
 
 **C-3.1** — No `--recurse-submodules`. Nested sub-repositories stay empty by design (research R6).
+
+**C-3.3** — Git LFS smudging is disabled (`GIT_LFS_SKIP_SMUDGE=1`) on every git invocation the
+fetcher makes. Same rationale as C-3.1: without it, a checkout contains real content on a host
+with `git-lfs` installed and 131-byte pointer files on a host without it, so the fixture is not
+reproducible and no bound authored against it is meaningful. Observed on `pants-backend-ai`,
+which stores `*.bin` / `*.so` under LFS — GitHub runners ship git-lfs, so CI measured 317 pkgs /
+45 files against an author's 271 / 59 and the lane failed nightly from 2026-09-09 (issue #832).
+Pinning smudge off matches the authored bounds; verified on `ubuntu-latest` that
+`GIT_LFS_SKIP_SMUDGE=1` reproduces 271 / 59 exactly, so no re-baseline is required.
+
+Consequence worth stating: corpus measurements describe the repository's **tracked source**, not
+its LFS payload. A target whose interesting content lives in LFS will under-report, and that is
+the deliberate trade for reproducibility.
 **C-3.2** — A successful checkout drops a marker file; its presence is the cache-hit test.
 **C-3.3** — A fetch failure marks that target `unmeasurable`, continues with the rest, and fails
 the run (FR-007).
