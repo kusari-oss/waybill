@@ -325,7 +325,9 @@ pub fn run_matrix(
 /// Best-effort `uname -srmn` capture on Unix. On non-Unix hosts,
 /// emits `<os>-<arch>` per std::env::consts. Never returns Err —
 /// this is metadata, not correctness.
-fn read_uname_srmn() -> String {
+/// Widened to `pub(crate)` for milestone 780's comparative harness, which
+/// must classify hosts by the same rule rather than inventing a second one.
+pub(crate) fn read_uname_srmn() -> String {
     #[cfg(unix)]
     {
         Command::new("uname")
@@ -350,7 +352,9 @@ fn read_uname_srmn() -> String {
 /// - Reference: Linux x86_64 GitHub-hosted runner class.
 /// - Noisy: macOS runners per m094 (loaded VMs, spawn jitter).
 /// - Other: everything else — treat as unknown-noise.
-fn classify_noise(uname: &str) -> NoiseClass {
+///
+/// Widened to `pub(crate)` for milestone 780. See `read_uname_srmn`.
+pub(crate) fn classify_noise(uname: &str) -> NoiseClass {
     let lower = uname.to_lowercase();
     if lower.contains("linux") && lower.contains("x86_64") {
         NoiseClass::Reference

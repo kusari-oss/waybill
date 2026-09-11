@@ -1,0 +1,47 @@
+# Milestone 780 — comparative benchmark tool set (EXAMPLE).
+#
+# Copy to `tools.local.toml`, which is gitignored, and replace the
+# placeholders with the tools you actually have installed.
+#
+#   cp xtask/compare/tools.example.toml xtask/compare/tools.local.toml
+#
+# THIS FILE NAMES NO SPECIFIC COMPETING TOOL, AND MUST NOT.
+# The repository is public. `tool-a` / `tool-b` are placeholders and a test
+# asserts they stay that way (FR-015, SC-006). Put real tool names only in
+# your local copy.
+#
+# Substitutions available in `argv`:
+#   {target}  absolute path to the tree being scanned
+#   {out}     absolute path the tool must write its CycloneDX JSON to
+
+[[tools]]
+id = "waybill"
+argv = [
+    "target/release/waybill", "--offline", "sbom", "scan",
+    "--path", "{target}",
+    "--format", "cyclonedx-json",
+    "--output", "{out}",
+    "--no-deep-hash",
+]
+version_argv = ["target/release/waybill", "--version"]
+# "offline" | "enriched" — whether this invocation contacts a third-party
+# service. Drives the authoritative/indicative split: enriched TIMINGS are
+# indicative only, while enriched COVERAGE stays authoritative.
+# There is no default. An unset value is rejected rather than assumed,
+# because silently treating an enriched run as offline would present a
+# third party's latency as our measurement.
+network = "offline"
+
+[[tools]]
+id = "tool-a"
+argv = ["some-tool", "scan", "{target}", "--output", "{out}"]
+version_argv = ["some-tool", "--version"]
+network = "offline"
+
+# The same tool in a second mode is a SEPARATE entry with a distinct id.
+# Modes are never merged into one row (FR-010).
+[[tools]]
+id = "tool-a-enriched"
+argv = ["some-tool", "scan", "{target}", "--enrich", "--output", "{out}"]
+version_argv = ["some-tool", "--version"]
+network = "enriched"

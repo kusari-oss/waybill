@@ -4,4 +4,5 @@
 // the bench module. The binary entry lives in `src/main.rs`.
 
 pub mod bench;
+pub mod compare;
 pub mod quality;
