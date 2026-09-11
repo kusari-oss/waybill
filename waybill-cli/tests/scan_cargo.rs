@@ -116,6 +116,27 @@ fn scan_cargo_v3_git_source_carries_source_type_property() {
 // Legacy lockfiles must contribute components, not abort the scan.
 
 #[test]
+fn scan_cargo_warns_once_per_lockfile_on_read_or_parse_failure() {
+    for (body, warning) in [
+        (&b"[[package]\n"[..], "Cargo.lock parse failed"),
+        (&b"\xff"[..], "Cargo.lock read failed"),
+    ] {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let lock_path = dir.path().join("Cargo.lock");
+        std::fs::write(&lock_path, body).expect("invalid lockfile");
+        let (output, _tmp, _sbom_path) = run_scan_with_output(dir.path());
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert!(output.status.success(), "scan failed: {stderr}");
+        let warnings: Vec<_> = stderr.lines().filter(|line| line.contains(warning)).collect();
+        assert_eq!(warnings.len(), 1, "expected one diagnostic: {stderr}");
+        assert!(
+            warnings[0].contains(&lock_path.display().to_string()),
+            "diagnostic must identify the lockfile: {stderr}",
+        );
+    }
+}
+
+#[test]
 fn scan_cargo_v1_lockfile_emits_components() {
     let (output, _tmp, sbom_path) = run_scan_with_output(&fixture("lockfile-v1-refused"));
     assert!(

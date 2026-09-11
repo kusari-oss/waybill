@@ -1338,9 +1338,25 @@ fn parse_lockfile(
     activated_names: &HashSet<String>,
     root_names: &HashSet<String>,
 ) -> Result<Vec<PackageDbEntry>, CargoError> {
-    let Some(doc) = parse_lockfile_doc(path)? else {
-        return Ok(Vec::new());
+    let text = match std::fs::read_to_string(path) {
+        Ok(t) => t,
+        Err(e) => {
+            tracing::warn!(path = %path.display(), error = %e, "Cargo.lock read failed");
+            return Ok(Vec::new());
+        }
     };
+    let doc: CargoLock = match toml::from_str(&text) {
+        Ok(d) => d,
+        Err(e) => {
+            tracing::warn!(
+                path = %path.display(),
+                error = %e,
+                "Cargo.lock parse failed — emitting zero cargo components",
+            );
+            return Ok(Vec::new());
+        }
+    };
+    let doc = doc.normalize(path)?;
     let source_path = path.to_string_lossy().into_owned();
     let mut out: Vec<PackageDbEntry> = Vec::new();
     for pkg in &doc.package {
@@ -1927,26 +1943,17 @@ fn hex_encode(bytes: &[u8]) -> String {
 /// prod-set BFS — needs raw `[[package]] dependencies = [...]` edges
 /// before the per-entry classification + drop logic runs.
 ///
-/// Returns `Ok(None)` on read/parse failure (warn-and-skip), `Err` on
-/// an unsupported lockfile version.
+/// Returns `Ok(None)` on read/parse failure, `Err` on an unsupported
+/// lockfile version. Silent by design: multiple passes call this helper;
+/// the once-per-lockfile diagnostic belongs in `parse_lockfile`.
 fn parse_lockfile_doc(path: &Path) -> Result<Option<CargoLock>, CargoError> {
     let text = match std::fs::read_to_string(path) {
         Ok(t) => t,
-        Err(e) => {
-            tracing::warn!(path = %path.display(), error = %e, "Cargo.lock read failed");
-            return Ok(None);
-        }
+        Err(_) => return Ok(None),
     };
     let doc: CargoLock = match toml::from_str(&text) {
         Ok(d) => d,
-        Err(e) => {
-            tracing::warn!(
-                path = %path.display(),
-                error = %e,
-                "Cargo.lock parse failed — emitting zero cargo components",
-            );
-            return Ok(None);
-        }
+        Err(_) => return Ok(None),
     };
     doc.normalize(path).map(Some)
 }
