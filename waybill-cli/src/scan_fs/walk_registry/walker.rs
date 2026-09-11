@@ -725,19 +725,49 @@ mod tests {
     // Contract C10 — descend_into API extension (m664 post-2026-08-23)
     // ------------------------------------------------------------
 
-    static DESCENDER_LOG: Mutex<Vec<String>> = Mutex::new(Vec::new());
-    static NON_DESCENDER_LOG: Mutex<Vec<String>> = Mutex::new(Vec::new());
+    // Milestone 666 pattern, applied here by issue #762. These three
+    // tests previously shared two `static Mutex<Vec<String>>` logs and
+    // `.clear()`ed them on entry. Cargo runs them as parallel threads in
+    // one process, so each test's clear raced the others' assertions:
+    // observed as `descender should see outer.jar; got ["secret.jar"]`
+    // (a sibling test's fixture), then a PoisonError cascade into
+    // whichever test held the lock next. Reproduced on the default lane
+    // on both macOS and linux-x86_64.
+    //
+    // Isolation here is per-RUN, not per-reader-id: `ctx.state::<T>()`
+    // resolves against the registry that test built, so two tests may
+    // reuse a reader_id and still see only their own sink.
 
-    fn cb_descender(path: &std::path::Path, _ctx: &SharedWalkerContext<'_>) {
-        DESCENDER_LOG.lock().unwrap().push(
-            path.file_name().unwrap().to_string_lossy().into_owned(),
-        );
+    /// Fetches the calling test's own sink from the ReaderRegistration
+    /// state slot and records the visited filename. Silent no-op when the
+    /// sink is absent so the dispatch loop is never blocked — matches
+    /// `push_visit_to_sink` above (contracts/test-visit-sink.md §C1).
+    fn push_descend_visit(
+        path: &std::path::Path,
+        ctx: &SharedWalkerContext<'_>,
+        reader_id: ReaderId,
+    ) {
+        let Some(sink) = ctx.state::<Mutex<Vec<String>>>(reader_id) else {
+            return;
+        };
+        sink.lock()
+            .unwrap()
+            .push(path.file_name().unwrap().to_string_lossy().into_owned());
     }
 
-    fn cb_non_descender(path: &std::path::Path, _ctx: &SharedWalkerContext<'_>) {
-        NON_DESCENDER_LOG.lock().unwrap().push(
-            path.file_name().unwrap().to_string_lossy().into_owned(),
-        );
+    // One wrapper per reader_id in use. `FileCallback` is a bare `fn`
+    // pointer with no captures and the dispatch loop does not pass the
+    // reader_id, so it must be baked in per wrapper (§C3).
+    fn cb_descender(path: &std::path::Path, ctx: &SharedWalkerContext<'_>) {
+        push_descend_visit(path, ctx, ReaderId::new("descender"));
+    }
+
+    fn cb_non_descender(path: &std::path::Path, ctx: &SharedWalkerContext<'_>) {
+        push_descend_visit(path, ctx, ReaderId::new("non-descender"));
+    }
+
+    fn cb_visitor(path: &std::path::Path, ctx: &SharedWalkerContext<'_>) {
+        push_descend_visit(path, ctx, ReaderId::new("visitor"));
     }
 
     /// C10 clause 1: a reader that declares `descend_into` for a
@@ -745,7 +775,7 @@ mod tests {
     /// that subtree.
     #[test]
     fn descend_into_allows_requesting_reader() {
-        DESCENDER_LOG.lock().unwrap().clear();
+        let descender: VisitSink = Arc::new(Mutex::new(Vec::new()));
 
         let tmpdir = tempfile::tempdir().unwrap();
         let root = tmpdir.path();
@@ -758,7 +788,7 @@ mod tests {
         let registry = ReaderRegistryBuilder::new()
             .register(ReaderRegistration {
                 reader_id: ReaderId::new("descender"),
-                state: None,
+                state: Some(descender.clone()),
                 patterns: globset_from_patterns(&["**/*.jar"]).unwrap(),
                 on_file: Some(cb_descender),
                 on_dir: None,
@@ -772,7 +802,7 @@ mod tests {
         walker.run();
         let _ = walker.finish();
 
-        let log = DESCENDER_LOG.lock().unwrap();
+        let log = descender.lock().unwrap();
         assert!(
             log.iter().any(|s| s == "outer.jar"),
             "descender should see outer.jar (root-level); got {log:?}",
@@ -789,8 +819,8 @@ mod tests {
     /// that another reader opened via descend_into.
     #[test]
     fn descend_into_scopes_out_non_requesting_readers() {
-        DESCENDER_LOG.lock().unwrap().clear();
-        NON_DESCENDER_LOG.lock().unwrap().clear();
+        let descender: VisitSink = Arc::new(Mutex::new(Vec::new()));
+        let non_descender: VisitSink = Arc::new(Mutex::new(Vec::new()));
 
         let tmpdir = tempfile::tempdir().unwrap();
         let root = tmpdir.path();
@@ -802,7 +832,7 @@ mod tests {
         let registry = ReaderRegistryBuilder::new()
             .register(ReaderRegistration {
                 reader_id: ReaderId::new("descender"),
-                state: None,
+                state: Some(descender.clone()),
                 patterns: globset_from_patterns(&["**/*.txt"]).unwrap(),
                 on_file: Some(cb_descender),
                 on_dir: None,
@@ -810,7 +840,7 @@ mod tests {
             })
             .register(ReaderRegistration {
                 reader_id: ReaderId::new("non-descender"),
-                state: None,
+                state: Some(non_descender.clone()),
                 patterns: globset_from_patterns(&["**/*.txt"]).unwrap(),
                 on_file: Some(cb_non_descender),
                 on_dir: None,
@@ -825,7 +855,7 @@ mod tests {
         let _ = walker.finish();
 
         // Descender sees BOTH files (root-level + target/ subtree).
-        let d_log = DESCENDER_LOG.lock().unwrap();
+        let d_log = descender.lock().unwrap();
         assert!(d_log.iter().any(|s| s == "visible.txt"));
         assert!(
             d_log.iter().any(|s| s == "stale.txt"),
@@ -833,7 +863,7 @@ mod tests {
         );
         // Non-descender sees ONLY the root file — the target/ subtree
         // is scoped-out for it (C10 clause 2, byte-identity guarantee).
-        let n_log = NON_DESCENDER_LOG.lock().unwrap();
+        let n_log = non_descender.lock().unwrap();
         assert!(n_log.iter().any(|s| s == "visible.txt"));
         assert!(
             !n_log.iter().any(|s| s == "stale.txt"),
@@ -846,7 +876,7 @@ mod tests {
     /// dispatch to all readers when the outer scope is unrestricted.
     #[test]
     fn descend_into_absent_preserves_default_behavior() {
-        NON_DESCENDER_LOG.lock().unwrap().clear();
+        let visitor: VisitSink = Arc::new(Mutex::new(Vec::new()));
 
         let tmpdir = tempfile::tempdir().unwrap();
         let root = tmpdir.path();
@@ -857,9 +887,9 @@ mod tests {
         let registry = ReaderRegistryBuilder::new()
             .register(ReaderRegistration {
                 reader_id: ReaderId::new("visitor"),
-                state: None,
+                state: Some(visitor.clone()),
                 patterns: globset_from_patterns(&["**/*.txt"]).unwrap(),
-                on_file: Some(cb_non_descender),
+                on_file: Some(cb_visitor),
                 on_dir: None,
                 descend_into: None,
             })
@@ -871,7 +901,7 @@ mod tests {
         walker.run();
         let _ = walker.finish();
 
-        let log = NON_DESCENDER_LOG.lock().unwrap();
+        let log = visitor.lock().unwrap();
         assert!(
             log.iter().any(|s| s == "file.txt"),
             "C10 clause 3: no descend_into declared, no scoping applied; \
