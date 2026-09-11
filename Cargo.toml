@@ -42,9 +42,18 @@ url = "2"
 # is otherwise unreachable from external crates (Keyring lives in a
 # `pub(crate) mod`), forcing callers onto `SigningContext::production()`
 # which requires the `sigstore-trust-root-*` feature — that feature
-# transitively pulls `aws-lc-rs` via `tough`, violating Constitution
-# Principle I (Pure Rust, Zero C). See specs/222-sigstore-keyless-signing/
-# research.md §R1 + docs/sigstore-trust-keys.md.
+# transitively pulls `aws-lc-rs` via `tough`, which violated Constitution
+# Principle I as it stood in milestone 222 ("Pure Rust, Zero C"). See
+# specs/222-sigstore-keyless-signing/research.md §R1 +
+# docs/sigstore-trust-keys.md.
+#
+# NOTE: that justification has since expired. Constitution v3.0.0
+# redefined Principle I — vendored C is permitted when it links
+# statically and no viable pure-Rust equivalent exists, and `aws-lc-rs`
+# qualifies. The fork and the vendored keys are retained today because
+# they work and replacing them carries its own risk, NOT because policy
+# forbids the alternative. Do not cite Principle I as the reason to keep
+# them.
 #
 # Milestone 779 adds a second patch on the same fork: accept OIDC
 # tokens whose signer identity lives in `sub` rather than `email`, so a
@@ -59,6 +68,38 @@ url = "2"
 # Un-patch when the upstream PRs land + a release ships. Fork lives at
 # kusari-sandbox/sigstore-rs, tag `v0.11.0-waybill-3` (rebase-on-release
 # policy documented in docs/sigstore-trust-keys.md).
+#
+# THE LIKELY REPLACEMENT: sigstore/sigstore-rust, a separate and far more
+# active reimplementation under the same org — 56 substantive commits in
+# the quarter to 2026-09 against sigstore-rs's 3. It solves both halves
+# of what this patch fixes: `sub` required with `email` optional, and
+# Fulcio proof-of-possession instead of a CSR subject, so there is no
+# email-shaped field left to mis-populate. It also ships ambient-
+# credential detection for GitHub Actions, GitLab CI and Buildkite,
+# which milestone 779 hand-wrote for GHA alone. Adopting it would retire
+# this patch, the fork, and a chunk of m779 together.
+#
+# Evaluated 2026-09-10. Its rustls features route to `reqwest/rustls`,
+# which hardcodes `aws-lc-rs` and therefore compiles ~400 vendored C
+# files via `aws-lc-sys`. Under the old Principle I that ended the
+# conversation. Under v3.0.0 it does not: the linkage is static, so the
+# test is met. Measured on CI rather than assumed — cold release builds
+# came in FASTER than the incumbent stack (ubuntu-latest 90s vs 104s;
+# windows-latest MSVC 209s vs 234s), and 212s on Windows with NASM
+# removed from PATH, so there is no hidden assembler requirement either.
+#
+# WHAT REMAINS is engineering, not policy:
+#   1. Without NASM, aws-lc-sys warns "NASM command not found" and
+#      completes anyway, but the build log does not say whether it took
+#      the prebuilt-object path or the slower C-only NO_ASM path. An
+#      adoption should set the `prebuilt-nasm` feature explicitly rather
+#      than inherit a silent fallback.
+#   2. Whether the vendored CTFE keys can also be retired, or whether
+#      sigstore-rust's trust-root handling reintroduces the m222 problem
+#      in a new shape.
+#   3. Re-verifying the m222 and m779 regression tests against the new
+#      API surface — proof-of-possession changes the signing flow, not
+#      just the claim plumbing.
 [patch.crates-io]
 sigstore = { git = "https://github.com/kusari-sandbox/sigstore-rs.git", tag = "v0.11.0-waybill-3" }
 
