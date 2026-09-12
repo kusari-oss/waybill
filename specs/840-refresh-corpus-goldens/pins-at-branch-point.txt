@@ -28,3 +28,27 @@ pants-example-javascript  pants-example-jvm  pants-example-python
 # Goldens deliberately NOT committed here. Phase 3 (T010-T017) requires
 # reading and attributing every diff first; committing them now would be
 # the unverified refresh FR-006/FR-007 forbid.
+
+# T010 — 33 normalised diffs produced from the run-34666830925 artifact.
+#   All 33 carry change; none normalised to empty.
+#
+# T011 — attribution IN PROGRESS. Categories identified so far:
+#
+#   cause                                    where                 evidence
+#   ---------------------------------------- --------------------- --------------------------
+#   tool version alpha.62 -> 0.7.0           all 11 targets        metadata.tools version;
+#                                                                  3 pants targets differ by
+#                                                                  NOTHING ELSE in cdx
+#   same version, embedded in annotator      84x, 83x              annotations[].annotator,
+#                                                                  components[].properties
+#   uv.lock reader emits hashes (m674 #754)  83x python-flask      components gained SHA-256
+#   source-provenance refs (m776 #797)       51x                   externalReferences/externalRefs
+#   content-addressed id cascade             427x                  @graph[].spdxId follows the above
+#   PEP 735 dev-dep groups (#784)            1x python-flask       root dependsOn 12 -> 29,
+#                                                                  all new entries are
+#                                                                  lifecycle-scope=optional
+#
+# NOT yet attributed: remaining spdx-2.3 / spdx-3 singletons
+#   (documentDescribes[0], packages[0].SPDXID, relationships[].relatedSpdxElement,
+#    compositions[0].assemblies on maven-guice, annotations[6].comment on
+#    pants-example-golang). FR-007 blocks the refresh until each is explained.

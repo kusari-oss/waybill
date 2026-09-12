@@ -46,7 +46,7 @@
 
 - [X] T008 [US1] Dispatch `public-corpus.yml` against this branch with `regen_goldens: true`; download the `corpus-goldens-regen` artifact. Do NOT regenerate locally — FR-003. Record the run ID in the PR draft.
 - [X] T009 [US1] Confirm the artifact's target set matches T001's failing set. A target present in one and not the other means the failing set moved between dispatches and T001 must be re-run.
-- [ ] T010 [US1] For each failing target, produce a normalised diff with `cargo run -p xtask -- corpus-diff --target <name> --old-ref HEAD` and save each to the PR draft. Up to thirty-three diffs across eleven targets × three formats — every corpus target is failing (verified run 34666133472).
+- [X] T010 [US1] For each failing target, produce a normalised diff with `cargo run -p xtask -- corpus-diff --target <name> --old-ref HEAD` and save each to the PR draft. Up to thirty-three diffs across eleven targets × three formats — every corpus target is failing (verified run 34666133472).
 - [ ] T011 [US1] Read every diff. Classify each change as a repeated shape (a category) or a singleton. Per `research.md` R4 a singleton is NOT a category and gets its own explanation — folding singletons into a category is how a regression is absorbed into a large benign diff.
 - [ ] T012 [US1] For any target whose diff shows a change inconsistent with accumulated drift, investigate before proceeding. FR-007 blocks the refresh for that target until the change is explained or raised as a defect.
 - [ ] T013 [US1] Apply FR-012 to any target failing for a non-drift reason: repair it in this feature if the fix is small, otherwise remove it from the lane's gating set and open a tracked issue. Regenerating its golden is forbidden — that encodes the fault as expected output.
