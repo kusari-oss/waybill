@@ -7,6 +7,26 @@
 //
 // C-3.1: no --recurse-submodules. pytorch's third_party/ stays empty by
 // design (research R6) — deterministic, therefore rangeable.
+//
+// C-3.3: Git LFS smudging is disabled for the same reason. Whether a
+// checkout contains real content or 131-byte pointer files otherwise
+// depends on whether the host happens to have git-lfs installed, which
+// makes the fixture — and therefore every bound authored against it —
+// non-reproducible across machines.
+//
+// This was not theoretical. `pants-backend-ai` stores *.bin and *.so
+// under LFS. GitHub runners ship git-lfs, so CI smudged them into real
+// ELF binaries and waybill's binary tier emitted 46 extra components
+// (the libraries plus their DT_NEEDED entries and an embedded openssl
+// version), while 14 files moved out of file-tier orphan into
+// binary-tier claimed. Hosts without git-lfs saw pointer files and
+// emitted none of it. The corpus read 317 pkgs / 45 files where its
+// author had measured 271 / 59, and the lane failed every night from
+// 2026-09-09 (issue #832).
+//
+// Pinning smudge OFF matches the authored bounds, so no re-baseline is
+// needed. Verified on ubuntu-latest: GIT_LFS_SKIP_SMUDGE=1 reproduces
+// 271 / 59 exactly.
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -51,6 +71,10 @@ pub fn fetch(cache_root: &Path, target: &Target, refresh: bool) -> Result<FetchO
 fn git(cwd: &Path, args: &[&str]) -> Result<(), String> {
     let out = Command::new("git")
         .args(args)
+        // C-3.3: never smudge LFS pointers. Set on every git invocation
+        // rather than just the checkout, so a future step that also
+        // materialises content cannot silently reintroduce the split.
+        .env("GIT_LFS_SKIP_SMUDGE", "1")
         .current_dir(cwd)
         .output()
         .map_err(|e| format!("git {}: spawn failed: {e}", args.join(" ")))?;
