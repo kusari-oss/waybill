@@ -95,10 +95,15 @@ recorded when more than one occurs.
 
 Implementation obligation this creates: a new document-scope annotation
 needs a matching row in `docs/reference/sbom-format-mapping.md` **and** a
-matching entry in `parity/extractors/mod.rs::EXTRACTORS`, or
-`every_catalog_row_has_an_extractor` and `holistic_parity` both fail.
-Adding the doc row ahead of the emission code is the known way to break
-the build here.
+matching entry in `waybill-cli/src/parity/extractors/mod.rs::EXTRACTORS`
+with a per-format arm in that directory's `cdx.rs`, `spdx2.rs` and
+`spdx3.rs`, or `every_catalog_row_has_an_extractor`
+(`extractors/mod.rs:725`) and `holistic_parity` both fail. Adding the doc
+row ahead of the emission code is the known way to break the build here.
+
+(An earlier draft of this plan gave the path as
+`waybill-cli/src/generate/parity/…`, which does not exist. It was taken
+from a note rather than from the tree; `/speckit-analyze` caught it.)
 
 A second, smaller question falls out of caching: XII.2 requires data be
 annotated with its provenance ("license from deps.dev"). Data served from
@@ -137,7 +142,19 @@ waybill-cli/src/enrich/
 ├── depsdev_source.rs         # MODIFIED — concurrent loop replaces the :273 serial one
 └── progress.rs               # NEW — time-triggered emitter (FR-009/009a)
 
+├── request_key.rs            # NEW — shared request identity + per-ecosystem
+│                             #   name normalisation (C-6.2)
+└── degradation.rs            # NEW — degradation record for FR-017a
+
 waybill-cli/src/cli/scan_cmd.rs   # MODIFIED — new flags; all subordinate to --offline
+
+waybill-cli/src/parity/extractors/     # MODIFIED — mod.rs EXTRACTORS entry plus
+    {mod,cdx,spdx2,spdx3}.rs           #   a per-format arm, for the FR-017a annotation
+docs/reference/sbom-format-mapping.md  # MODIFIED — catalog row, same change as above
+
+waybill-cli/src/generate/cyclonedx/metadata.rs   # MODIFIED — doc-scope annotation emission
+waybill-cli/src/generate/spdx/annotations.rs     #   (SPDX 2.3)
+waybill-cli/src/generate/spdx/v3_annotations.rs  #   (SPDX 3)
 ```
 
 ## Phase sequencing
