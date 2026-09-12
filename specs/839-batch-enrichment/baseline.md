@@ -82,3 +82,63 @@ on 769 components extrapolates to roughly 95 minutes for 7,592 — far
 and warm rates, which is what a partially-warm upstream cache would
 produce. The figure is plausible and not precisely reproducible, which
 is exactly why the criteria are ratios.
+
+---
+
+# T017 — Concurrency checkpoint (Phase 4 Block A)
+
+Measured 2026-09-12, **warm vs warm**, both arms run back to back after
+a discarded warm-up pass, `--no-deps-dev-graph` (SC-001/SC-008 scope).
+Sequential arm is the preserved pre-change release binary, so this is a
+genuine A/B rather than a comparison against a recorded number.
+
+| arm | wall | licensed |
+|---|---|---|
+| sequential (pre-change) | 38.33s | 586 |
+| concurrent, 8-way sliding window | **10.04s** | 586 |
+| concurrent, 24-way (experiment only) | 8.21s | 586 |
+
+**Licence coverage is identical in every arm.** The speed-up is not
+bought by enriching less, which is the failure mode a wall-clock-only
+comparison would hide.
+
+## Result: 3.82×, and SC-008 (≥5×) does not pass
+
+## What the numbers say
+
+**A chunk barrier cost ~16%.** The first implementation used
+`chunks(8)`, which waits for the slowest member of each group before
+starting the next — cost is max-of-8 per group, not mean-of-8. Measured
+3.22×. Replacing it with a sliding window that keeps 8 continuously in
+flight gave 3.82×.
+
+**Our ceiling is not the bottleneck.** Raising it from 8 to 24 — 3×
+the load — bought only 1.22× (10.04s → 8.21s). Effective concurrency is
+~4 at a ceiling of 8 and ~5 at a ceiling of 24. Something server- or
+connection-side is capping it; deps.dev serves HTTP/2 and `reqwest`
+multiplexes over a single connection, which is the leading suspect but
+is **not confirmed**.
+
+The 24-way result is recorded as an experiment and **not adopted**:
+FR-003b makes the ceiling deliberately conservative because deps.dev
+publishes no rate limit, and tripling load for 1.22× is precisely the
+trade that requirement exists to refuse.
+
+## Why the earlier prediction was wrong
+
+`measurements/` recorded 126 req/s at 8-way from a Python harness using
+**8 independent connections**, implying ~7.7×. waybill uses one pooled
+`reqwest` client. The harness measured a different concurrency model
+than the one that shipped, so its figure never described this code.
+Same class of error as quoting a component-level number for a
+system-level criterion — narrower than presented.
+
+## Consequence for SC-008
+
+SC-008 asks ≥5× for the default concurrent path. The measured ceiling
+is ~3.8× at the conservative bound and ~4.7× even at 3× the load. The
+criterion was set from the Python harness figure and is not reachable
+by this path. It needs revising down to what per-component concurrency
+can actually deliver against this service, or the batch path has to
+carry the default — which FR-002 explicitly forbids until v3alpha has
+been exercised against real corpora.

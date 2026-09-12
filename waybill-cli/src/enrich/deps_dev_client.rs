@@ -106,6 +106,16 @@ impl DepsDevClient {
         }
     }
 
+    /// Point the client at a different origin. Test-only — it exists
+    /// so the concurrent fetch path can be exercised against a local
+    /// mock, which is the only way to make workers complete out of
+    /// request order on purpose.
+    #[cfg(test)]
+    pub fn with_base_url(mut self, base_url: impl Into<String>) -> Self {
+        self.base_url = base_url.into();
+        self
+    }
+
     /// Build the URL for a GetVersion request.
     fn version_url(&self, system: &str, name: &str, version: &str) -> String {
         format!(

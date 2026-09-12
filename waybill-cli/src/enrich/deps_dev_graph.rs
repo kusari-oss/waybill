@@ -40,7 +40,11 @@ use super::deps_dev_system::{deps_dev_package_name, deps_dev_system_for};
 /// How many deps.dev requests to run in parallel. deps.dev is
 /// generous but still rate-limited; 8 keeps the scan responsive
 /// without stressing the API.
-const CONCURRENT_REQUESTS: usize = 8;
+/// Milestone 839: shared with the licence path in `depsdev_source`.
+/// One number, not two — deps.dev publishes no rate limit, so the
+/// ceiling is self-imposed and there is no advertised allowance to
+/// tune either path up against independently.
+pub(crate) const CONCURRENT_REQUESTS: usize = 8;
 
 /// Ecosystems this enricher currently covers. Maven is the primary
 /// target (JAR-based discovery misses shaded transitives; local-cache
