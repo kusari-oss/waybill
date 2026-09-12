@@ -292,3 +292,49 @@ pipelining at all, so it pays full round-trip latency per request with
 no overlap; 8-way also benefits from connection reuse. The comparison
 is honest — both arms are the shipped code — but the bound is not a
 theoretical 8× ceiling and should not be read as one.
+
+---
+
+# T040 — Disk cache (US3), MEASURED
+
+2026-09-12. Fresh cache directory per run set, `--enrich-batch`,
+`--no-deps-dev-graph --no-clearly-defined`, 709 enrichable components.
+Request counts come from the phase's own `network_lookups` field, not
+inferred from timing — wall time alone cannot distinguish a cache that
+worked from a fast network.
+
+| scan | phase | network lookups | cache hits |
+|---|---|---|---|
+| 1 (cold cache) | 2,500 ms | **709** | 0 |
+| 2 (warm cache) | **9 ms** | **0** | **709** |
+
+- **SC-005 (repeat scan ≥90% fewer requests): PASS at 100%**
+- Coverage identical across both runs (803 / 584 / 2264).
+
+## The cache is worth more than expected, for a reason worth recording
+
+An earlier note in this feature suggested the cache mattered less once
+batching landed, since the phase would be dominated by local work
+rather than network. That was wrong: 2,500 ms → 9 ms is **278×**,
+because a cache hit skips the local apply work — licence-expression
+parsing, external-reference mapping — as well as the request. The
+in-memory result is reused whole.
+
+So the three tiers are not 10× / 10× / small. Measured on this
+workload they are roughly:
+
+| | phase |
+|---|---|
+| sequential, cold | 30,140 ms |
+| batched, cold | 766–2,500 ms |
+| batched, warm disk cache | **9 ms** |
+
+## Behaviour change: `--offline` now serves the cache
+
+Previously `--offline` returned before enrichment began, so a
+populated cache was unreachable. It now serves what is on disk and
+issues nothing (C-5.1/C-5.2). A local file read is not a network
+request, and the flag's own documentation names air-gapped scanners as
+the use case — which is exactly where a pre-warmed cache is the point.
+Verified by a test asserting zero received requests against a mock
+that would have succeeded had one been issued.

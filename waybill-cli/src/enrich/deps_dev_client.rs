@@ -12,10 +12,10 @@
 
 use std::time::Duration;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 /// Version information from deps.dev GetVersion API.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct VersionInfo {
     pub licenses: Vec<String>,
     #[serde(default)]
@@ -31,7 +31,7 @@ pub struct VersionInfo {
 // staleness risk for data that reaches no output at all.
 
 /// A link associated with a package version.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Link {
     pub label: String,
     pub url: String,
@@ -131,7 +131,7 @@ impl DepsDevClient {
         &self,
         keys: &[super::request_key::EnrichmentKey],
         page_token: Option<String>,
-    ) -> anyhow::Result<super::deps_dev_batch::BatchPage> {
+    ) -> anyhow::Result<(super::deps_dev_batch::BatchPage, Option<u64>)> {
         let url = self.version_batch_url();
         let body = super::deps_dev_batch::build_body(keys, page_token);
         let response = self
@@ -146,7 +146,8 @@ impl DepsDevClient {
             let text = response.text().await.unwrap_or_default();
             anyhow::bail!("deps.dev GetVersionBatch failed: HTTP {status} — {text}");
         }
-        Ok(response.json().await?)
+        let max_age = max_age_of(&response);
+        Ok((response.json().await?, max_age))
     }
 
     /// Build the URL for a GetVersion request.
@@ -213,7 +214,7 @@ impl DepsDevClient {
         system: &str,
         name: &str,
         version: &str,
-    ) -> anyhow::Result<VersionInfo> {
+    ) -> anyhow::Result<(VersionInfo, Option<u64>)> {
         let url = self.version_url(system, name, version);
         tracing::debug!(url = %url, "querying deps.dev for version info");
 
@@ -227,9 +228,24 @@ impl DepsDevClient {
             );
         }
 
+        // Milestone 839 (FR-012a): the service publishes its own
+        // freshness policy on every response. Reading it is more
+        // durable than any interval chosen here — a pinned version is
+        // immutable but deps.dev's record about it is not.
+        let max_age = max_age_of(&response);
         let info: VersionInfo = response.json().await?;
-        Ok(info)
+        Ok((info, max_age))
     }
+}
+
+/// Extract `Cache-Control: max-age` from a response.
+fn max_age_of(response: &reqwest::Response) -> Option<u64> {
+    let raw = response
+        .headers()
+        .get(reqwest::header::CACHE_CONTROL)?
+        .to_str()
+        .ok()?;
+    super::deps_dev_disk_cache::parse_max_age(Some(raw))
 }
 
 /// Percent-encode a URL path segment.

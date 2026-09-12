@@ -51,6 +51,17 @@ impl EnrichmentKey {
         })
     }
 
+
+    /// Stable string form, used as the on-disk cache key input.
+    ///
+    /// `/` and `:` are deliberately NOT the separator: Go names
+    /// contain slashes and Maven names contain colons, so a separator
+    /// drawn from either alphabet could let a name/version boundary
+    /// merge and two distinct packages share an entry. ASCII unit
+    /// separator appears in none of the three fields.
+    pub fn cache_key(&self) -> String {
+        format!("{}\u{1f}{}\u{1f}{}", self.system, self.name, self.version)
+    }
 }
 
 #[cfg(test)]
@@ -106,6 +117,16 @@ mod tests {
 
 
     #[test]
+    fn cache_key_separates_fields_that_share_an_alphabet() {
+        // A separator taken from the name alphabet could let the
+        // name/version boundary merge. These two differ only in where
+        // that boundary falls.
+        let a = EnrichmentKey::from_purl_parts("golang", None, "example.com/a/b", "v1").unwrap();
+        let b = EnrichmentKey::from_purl_parts("golang", None, "example.com/a", "b/v1").unwrap();
+        assert_ne!(a.cache_key(), b.cache_key());
+    }
+
+    #[test]
     fn equal_coordinates_produce_equal_keys() {
         // The property the whole type exists for: every path builds
         // the same key for the same package, so the cache does not
@@ -113,5 +134,6 @@ mod tests {
         let a = EnrichmentKey::from_purl_parts("cargo", None, "serde", "1.0.197").unwrap();
         let b = EnrichmentKey::from_purl_parts("cargo", None, "serde", "1.0.197").unwrap();
         assert_eq!(a, b);
+        assert_eq!(a.cache_key(), b.cache_key());
     }
 }

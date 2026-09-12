@@ -62,6 +62,14 @@ pub struct DepsDevSource {
     /// not; recorded so a slower scan is explicable rather than
     /// mysterious.
     batch_fallbacks: AtomicUsize,
+    /// Milestone 839 (FR-011) — survives across scans, unlike the
+    /// in-memory cache above which dies with the process.
+    disk: std::sync::Arc<super::deps_dev_disk_cache::DepsDevDiskCache>,
+    /// Milestone 839 — coordinates that actually required a network
+    /// lookup, i.e. neither cache could serve them. This is the
+    /// quantity SC-005 is about; wall time alone cannot distinguish a
+    /// cache that worked from a fast network.
+    network_lookups: AtomicUsize,
 }
 
 impl DepsDevSource {
@@ -77,12 +85,29 @@ impl DepsDevSource {
             transport_errors: AtomicUsize::new(0),
             batch: false,
             batch_fallbacks: AtomicUsize::new(0),
+            // Default OFF. A constructor that reaches $HOME makes
+            // every test that builds a source touch the developer's
+            // real cache — shared mutable state across the whole
+            // suite (Constitution VII). The caller that wants
+            // persistence opts in via `with_disk_cache`, which is
+            // exactly one site: the scan command.
+            disk: super::deps_dev_disk_cache::DepsDevDiskCache::open(false, None),
+            network_lookups: AtomicUsize::new(0),
         }
     }
 
     /// Milestone 839 (FR-002) — enable the bulk path for this source.
     pub fn with_batch(mut self, batch: bool) -> Self {
         self.batch = batch;
+        self
+    }
+
+    /// Milestone 839 (FR-011/FR-012b/FR-014) — configure the on-disk
+    /// cache. `enabled = false` is `--enrich-no-cache`: every read
+    /// misses and every write is dropped, with no call site needing to
+    /// know.
+    pub fn with_disk_cache(mut self, enabled: bool, override_max_age: Option<u64>) -> Self {
+        self.disk = super::deps_dev_disk_cache::DepsDevDiskCache::open(enabled, override_max_age);
         self
     }
 
@@ -96,7 +121,7 @@ impl DepsDevSource {
     async fn fetch_chunk_batched(
         &self,
         chunk: &[EnrichmentKey],
-    ) -> Option<Vec<Option<VersionInfo>>> {
+    ) -> Option<(Vec<Option<VersionInfo>>, Option<u64>)> {
         // Match by the echoed request, never by position (C-3.1).
         // The echo is uncanonicalized, and deps.dev normalises names
         // per ecosystem, so the index is built from what we SENT.
@@ -109,14 +134,19 @@ impl DepsDevSource {
         }
         let mut out: Vec<Option<VersionInfo>> = vec![None; chunk.len()];
         let mut token: Option<String> = None;
+        let mut max_age: Option<u64> = None;
         loop {
-            let page = match self.client.get_version_batch(chunk, token.clone()).await {
+            let (page, page_max_age) = match self.client.get_version_batch(chunk, token.clone()).await {
                 Ok(p) => p,
                 Err(e) => {
                     warn!(error = %e, "deps.dev batch request failed — falling back");
                     return None;
                 }
             };
+            // Pages of one logical request share a policy; keep the
+            // first seen so a later page cannot silently extend the
+            // bound this chunk is stored under.
+            max_age = max_age.or(page_max_age);
             for entry in &page.responses {
                 let vk = &entry.request.version_key;
                 let probe = (
@@ -143,7 +173,7 @@ impl DepsDevSource {
             }
             token = Some(page.next_page_token.clone());
         }
-        Some(out)
+        Some((out, max_age))
     }
 
     /// Milestone 839 (FR-003a) — resolve many keys, concurrently.
@@ -177,6 +207,42 @@ impl DepsDevSource {
             }
         }
 
+        // FR-012: disk before network. A hit here is still a hit even
+        // under `--offline` (C-5.2) — reading a local file is not a
+        // request.
+        if self.disk.is_enabled() && !misses.is_empty() {
+            let mut still: Vec<usize> = Vec::with_capacity(misses.len());
+            let mut cache = self.cache.lock().expect("deps.dev cache mutex poisoned");
+            for i in misses {
+                match self.disk.get(&keys[i]) {
+                    Some(record) => {
+                        cache.insert(
+                            (
+                                keys[i].system.to_string(),
+                                keys[i].name.clone(),
+                                keys[i].version.clone(),
+                            ),
+                            record.clone(),
+                        );
+                        out[i] = record;
+                    }
+                    None => still.push(i),
+                }
+            }
+            misses = still;
+        }
+
+        self.network_lookups
+            .fetch_add(misses.len(), Ordering::Relaxed);
+
+        // FR-015 / C-5.1: under `--offline` nothing is issued — not
+        // batch, not per-component, not a revalidation. Whatever the
+        // caches could serve has already been served above; the rest
+        // stays unenriched rather than triggering a fetch (C-5.2).
+        if self.offline {
+            return out;
+        }
+
         // FR-001: bulk path first when enabled. Chunks run
         // concurrently under the same ceiling; a chunk that fails
         // falls through to the per-component path below (C-4.2),
@@ -200,7 +266,8 @@ impl DepsDevSource {
                 for fut in results {
                     let (idxs, got) = fut.await;
                     match got {
-                        Some(vals) => {
+                        Some((vals, max_age)) => {
+                            let bound = self.disk.effective_max_age(max_age);
                             let mut cache =
                                 self.cache.lock().expect("deps.dev cache mutex poisoned");
                             for (&i, v) in idxs.iter().zip(vals) {
@@ -212,6 +279,7 @@ impl DepsDevSource {
                                     ),
                                     v.clone(),
                                 );
+                                self.disk.put(&keys[i], &v, bound);
                                 out[i] = v;
                             }
                             batched_ok += idxs.len();
@@ -266,8 +334,8 @@ impl DepsDevSource {
         while let Some(joined) = set.join_next().await {
             match joined {
                 Ok((i, k, result)) => {
-                    let info = match result {
-                        Ok(info) => Some(info),
+                    let (info, max_age) = match result {
+                        Ok((info, max_age)) => (Some(info), max_age),
                         Err(e) => {
                             self.transport_errors.fetch_add(1, Ordering::Relaxed);
                             debug!(
@@ -277,9 +345,11 @@ impl DepsDevSource {
                                 error = %e,
                                 "deps.dev get_version failed — caching as miss"
                             );
-                            None
+                            (None, None)
                         }
                     };
+                    self.disk
+                        .put(&k, &info, self.disk.effective_max_age(max_age));
                     self.cache
                         .lock()
                         .expect("deps.dev cache mutex poisoned")
@@ -471,8 +541,15 @@ pub async fn enrich_components(
     source: &DepsDevSource,
     components: &mut [ResolvedComponent],
 ) -> (usize, LinkMappingSkips) {
-    if source.offline {
-        debug!("deps.dev enrichment skipped — offline mode active");
+    // Milestone 839 (C-5.2): offline no longer short-circuits the
+    // whole phase. Reading a local cache file is not a network
+    // request, and the `--offline` flag's own documentation names
+    // air-gapped scanners as the use case — which is precisely where a
+    // pre-warmed cache is worth having. `fetch_many` still issues
+    // nothing; it serves what is on disk and leaves the rest
+    // unenriched.
+    if source.offline && !source.disk.is_enabled() {
+        debug!("deps.dev enrichment skipped — offline with no cache to serve from");
         return (0, LinkMappingSkips::default());
     }
     let phase_start = Instant::now();
@@ -550,9 +627,12 @@ pub async fn enrich_components(
     // subtraction-based measurement of this phase is unreliable by
     // construction. It is also what an operator wants to know when a
     // scan feels slow.
+    let network_lookups = source.network_lookups.load(Ordering::Relaxed);
     info!(
         elapsed_ms = phase_start.elapsed().as_millis() as u64,
         attempted,
+        network_lookups,
+        cache_hits = attempted.saturating_sub(network_lookups),
         enriched = enriched_count,
         "deps.dev licence enrichment complete",
     );
@@ -1120,5 +1200,67 @@ mod batch_tests {
             );
         }
         assert!(batched.iter().all(|r| r.is_some()), "the scan completes with full enrichment");
+    }
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod offline_tests {
+    use super::*;
+    use wiremock::matchers::{method, path_regex};
+    use wiremock::{Mock, MockServer, ResponseTemplate};
+
+    /// T039 / C-5.1 + C-5.2. Under `--offline` a populated cache is
+    /// still served — a local file read is not a network request — but
+    /// nothing is issued, and an entry the cache lacks simply stays
+    /// unenriched instead of triggering a fetch.
+    #[tokio::test]
+    async fn offline_serves_cache_and_issues_nothing() {
+        let server = MockServer::start().await;
+        // Any request at all is a failure of C-5.1. Mounting a mock
+        // that would succeed makes the assertion meaningful: if a
+        // request were issued, `absent` would come back enriched.
+        Mock::given(method("GET"))
+            .and(path_regex(r".*"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "licenses": ["SHOULD-NOT-APPEAR"], "links": [],
+            })))
+            .mount(&server)
+            .await;
+
+        let dir = tempfile::tempdir().unwrap();
+        std::env::set_var("WAYBILL_DEPS_DEV_CACHE_DIR", dir.path());
+        let client = DepsDevClient::new(std::time::Duration::from_secs(5))
+            .with_base_url(format!("{}/v3", server.uri()));
+        let source = DepsDevSource::new(client, true).with_disk_cache(true, None);
+
+        let cached = EnrichmentKey::from_purl_parts("cargo", None, "cached", "1.0.0").unwrap();
+        let absent = EnrichmentKey::from_purl_parts("cargo", None, "absent", "1.0.0").unwrap();
+        source.disk.put(
+            &cached,
+            &Some(VersionInfo { licenses: vec!["MIT".into()], links: vec![] }),
+            3600,
+        );
+
+        let keys = vec![cached, absent];
+        let mut p = ProgressReporter::new(keys.len());
+        let got = source.fetch_many(&keys, &mut p).await;
+        std::env::remove_var("WAYBILL_DEPS_DEV_CACHE_DIR");
+
+        assert_eq!(
+            got[0].as_ref().unwrap().licenses,
+            vec!["MIT"],
+            "a cached entry is served under --offline",
+        );
+        assert!(
+            got[1].is_none(),
+            "an uncached entry stays unenriched — a cache miss under --offline must not \
+             become a fetch",
+        );
+        assert_eq!(
+            server.received_requests().await.unwrap().len(),
+            0,
+            "C-5.1: no request of any kind may be issued under --offline",
+        );
     }
 }

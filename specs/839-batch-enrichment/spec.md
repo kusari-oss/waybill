@@ -139,7 +139,7 @@ An operator scans the same repository repeatedly — in a CI loop, while iterati
 - **SC-002**: The number of upstream requests for such a scan falls by at least 98% compared with the per-component path. At the FR-005a size of 100, roughly 7,500 components becomes about 76 requests rather than 7,500 — a 99.0% reduction — so the criterion holds with margin at the size measurement selected.
 - **SC-003**: Licence coverage and source-reference counts for such a scan are identical between the batch and per-component paths.
 - **SC-004**: An operator watching a scan of that size sees evidence of progress within 10 seconds of enrichment beginning, and thereafter at intervals no longer than 10 seconds.
-- **SC-005**: A second scan of an unchanged repository issues at least 90% fewer upstream requests than the first.
+- **SC-005**: A second scan of an unchanged repository issues at least 90% fewer upstream requests than the first. **MEASURED: 100%** (T040; 709 network lookups → 0, phase 2,500ms → 9ms, coverage identical at 803/584/2264).
 - **SC-006**: Every failure mode in Edge Cases yields a completed scan — enrichment may be reduced or absent, but the scan does not fail. "Does not silently under-enrich" is discharged by FR-017a: for each such failure mode, the emitted SBOM carries a document-scope annotation naming the mode and the affected-component count, so a degraded run is distinguishable from a clean one by inspection rather than by comparing component counts against an expectation nobody holds.
 - **SC-007**: No scan issues an upstream request when network access is disabled.
 - **SC-009**: No scan serves cached enrichment data older than the freshness bound the upstream response specified, unless the operator explicitly extended it.
