@@ -26,7 +26,7 @@ re-prioritisation — US1 remains the reported defect.
 
 ## Phase 1: Setup
 
-- [ ] T001 Record the pre-change enrichment baseline — wall-clock time and upstream request count — for a repository of roughly 7,500 enrichable components, and write the numbers into `specs/839-batch-enrichment/baseline.md`. Every SC-001/SC-002/SC-008 claim is measured against this, and reconstructing it after the code changes is impossible.
+- [X] T001 Record the pre-change enrichment baseline — wall-clock time and upstream request count — for a repository of roughly 7,500 enrichable components, and write the numbers into `specs/839-batch-enrichment/baseline.md`. Every SC-001/SC-002/SC-008 claim is measured against this, and reconstructing it after the code changes is impossible. **DONE** — warm sequential 42.52s / cold 445.81s for 769 enrichable components; see `baseline.md`.
 - [ ] T002 Add the new CLI flags to `waybill-cli/src/cli/scan_cmd.rs`: `--enrich-batch`, `--enrich-cache-max-age <secs>`, `--enrich-no-cache`. Document each as subordinate to `--offline`, matching the existing `--no-deps-dev*` doc comments at `scan_cmd.rs:972-1056`. All three live in one file, so this is one task rather than three parallel ones.
 
 ---
@@ -77,7 +77,7 @@ against the T001 baseline.
 
 - [ ] T015 [US1] Replace the serial loop at `waybill-cli/src/enrich/depsdev_source.rs:273-295` with `chunks(CONCURRENT_REQUESTS)` + `tokio::task::JoinSet`, reusing the existing `CONCURRENT_REQUESTS = 8` from `waybill-cli/src/enrich/deps_dev_graph.rs:43` rather than introducing a second constant. deps.dev publishes no rate limit, so there is no advertised allowance to tune against (FR-003b).
 - [ ] T016 [P] [US1] Test that enrichment content is byte-identical between the serial and concurrent paths for a fixed input set, in `waybill-cli/src/enrich/depsdev_source.rs`.
-- [ ] T017 [US1] **Measurement checkpoint.** Record wall time and request count for concurrency alone against the T001 baseline, into `specs/839-batch-enrichment/baseline.md`. Both blocks of this phase claim SC-001; measuring them together makes it impossible to know which earned it — the failure mode recorded in `docs/development/perf-methodology.md`.
+- [ ] T017 [US1] **Measurement checkpoint.** Record wall time and request count for concurrency alone against the T001 baseline, into `specs/839-batch-enrichment/baseline.md`. Both blocks of this phase claim SC-001; measuring them together makes it impossible to know which earned it — the failure mode recorded in `docs/development/perf-methodology.md`. **Both arms MUST be warm** (see `baseline.md` §protocol): deps.dev serves a one-hour edge cache, and a cold-vs-warm comparison fabricates a ~10× improvement out of nothing. Compare against the 42.52s warm sequential baseline, not the 445.81s cold one.
 
 ### Block B — batching (FR-001), behind `--enrich-batch`
 
@@ -92,7 +92,7 @@ against the T001 baseline.
 - [ ] T026 [US1] Implement fallback in `waybill-cli/src/enrich/deps_dev_batch.rs`: on transport error, non-200 or unparseable body, fall back to the **concurrent** per-component path, bounded by the same ceiling (C-4.1/4.2/4.3). Falling back to a sequential path would reproduce #766, which matters because `v3alpha` is documented as liable to change incompatibly.
 - [ ] T027 [P] [US1] Test fallback in `waybill-cli/src/enrich/deps_dev_batch.rs`: an injected batch transport failure produces the same enrichment content as the per-component path for the same input.
 - [ ] T028 [US1] Record the degradation mode from `waybill-cli/src/enrich/degradation.rs` (T006) in `waybill-cli/src/enrich/deps_dev_batch.rs` whenever the batch path falls back, and in `waybill-cli/src/enrich/depsdev_source.rs` when the phase degrades, so the emitted SBOM carries the FR-017a annotation.
-- [ ] T029 [US1] **Measurement checkpoint.** Record batching into `specs/839-batch-enrichment/baseline.md` against both the T001 baseline and the T017 concurrency figure. Verify SC-001 (≤2 min), SC-002 (≥99% fewer requests — expect ~99.8%) and SC-003 (identical licence and source-reference counts) by comparison, not by assertion.
+- [ ] T029 [US1] **Measurement checkpoint.** Record batching into `specs/839-batch-enrichment/baseline.md` against both the T001 baseline and the T017 concurrency figure. Verify SC-001 (≤2 min), SC-002 (≥99% fewer requests — expect ~99.8%) and SC-003 (identical licence and source-reference counts) by comparison, not by assertion. **All arms MUST share cache state**, warm, per `baseline.md` §protocol. Record component and licence counts alongside wall time so a speed-up bought by enriching less is visible.
 
 **Checkpoint**: the reported defect is fixed by both routes — flag on and flag off.
 
@@ -116,7 +116,7 @@ and emits identical enrichment content.
 - [ ] T037 [US3] Implement `--enrich-no-cache` (bypass both read and write) and document cache clearing as removing the directory (FR-014).
 - [ ] T038 [P] [US3] Ensure every cache test points at a per-test temporary directory and never at the real `$HOME` (C-8.5, Constitution Principle VII). A test touching the real cache shares mutable state with the developer's own scans and with every other test.
 - [ ] T039 [US3] Verify `--offline` behaviour (C-5.1/5.2, FR-015, SC-007): cache reads are permitted, no request of any kind is issued, and an expired entry under `--offline` is simply a miss that leaves the component unenriched rather than triggering a fetch.
-- [ ] T040 [US3] **Measurement checkpoint** (SC-005). Scan the same repository twice inside the freshness window and record both request counts into `specs/839-batch-enrichment/baseline.md`; the second must issue at least 90% fewer. Confirm the two SBOMs carry identical enrichment content — a cache that is fast because it is serving the wrong thing would otherwise pass on request count alone.
+- [ ] T040 [US3] **Measurement checkpoint** (SC-005). Scan the same repository twice inside the freshness window and record both request counts into `specs/839-batch-enrichment/baseline.md`; the second must issue at least 90% fewer. Confirm the two SBOMs carry identical enrichment content — a cache that is fast because it is serving the wrong thing would otherwise pass on request count alone. **Both scans MUST be inside the same cache window**, and the run must state whether deps.dev's edge was already warm — otherwise the local cache gets credit for the upstream one.
 
 ---
 
