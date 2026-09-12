@@ -106,7 +106,7 @@ Auto-enabled for `sbom scan --path` so source-tree scans keep the "what would
 be pulled in on build" view; explicit for `--image` when you want the same
 permissive output from a container scan.
 
-See `docs/design-notes.md` for the full artifact-vs-manifest SBOM rationale.
+See `docs/architecture/overview.md` for the full artifact-vs-manifest SBOM rationale.
 
 ### `--include-legacy-rpmdb`
 

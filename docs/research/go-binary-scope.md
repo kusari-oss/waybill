@@ -100,7 +100,7 @@ consistent with trivy/syft than changing the scanner.
 ## Backlog ties
 
 If the scan semantics change, also:
-- Update `docs/design-notes.md` ecosystem table to reflect go.mod Require vs
+- Update `docs/architecture/overview.md` ecosystem table to reflect go.mod Require vs
   go.sum as the primary source.
 - Update fixture tests in `waybill-cli/tests/scan_go.rs` that assert on
   specific go.sum-derived entries.

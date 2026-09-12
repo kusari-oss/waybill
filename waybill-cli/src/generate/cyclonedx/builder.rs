@@ -1306,7 +1306,7 @@ impl CycloneDxBuilder {
             // property to collapse dual-identity components to a
             // single view (e.g. drop the Maven coord when they only
             // want distro-level CVE tracking via the RPM component).
-            // See docs/design-notes.md "Dual-identity: JAR-embedded
+            // See docs/ecosystems.md ("Dual-identity: JAR-embedded
             // Maven coords in RPM-owned artifacts" for rationale.
             if let Some(ref owner) = component.co_owned_by {
                 properties.push(json!({

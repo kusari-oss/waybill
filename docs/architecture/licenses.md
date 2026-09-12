@@ -124,8 +124,7 @@ acknowledgement types because they mean different things.
 
 - **deb / rpm**: declared licenses from DEP-5 / rpm header are the primary
   source; ClearlyDefined doesn't cover deb/apk/rpm well today. See
-  [design-notes deferred item
-  18](../design-notes.md#deferred-sbomqs-score-lift) for the planned
+  [the sbomqs deferred list](licenses.md#deferred-sbomqs-score-lift) for the planned
   ClearlyDefined deb arm (priority next).
 - **apk**: apk's installed DB doesn't carry copyright pointers like dpkg
   does, so apk components still ship with empty `licenses[]`.
@@ -133,7 +132,7 @@ acknowledgement types because they mean different things.
   from manifests; deps.dev backfills missing ones; ClearlyDefined
   contributes concluded licenses. This is where the
   [sbomqs score lift to 8.8/10 on
-  npm](../design-notes.md#sbomqs-scoring-baseline-2026-04-20-post-cd-pass)
+  npm](../architecture/overview.md#sbomqs-scoring-baseline-2026-04-20-post-cd-pass)
   came from.
 
 ## Known limitations
@@ -150,5 +149,27 @@ acknowledgement types because they mean different things.
 - **Supplier extraction** (sbomqs `comp_with_supplier`) isn't done yet.
   Lockfiles don't carry author info; adding `node_modules/` / `.m2`
   walks for supplier would unlock another ~2% of the sbomqs score. See
-  [design-notes deferred item
-  14](../design-notes.md#deferred-sbomqs-score-lift).
+  [the sbomqs deferred list](licenses.md#deferred-sbomqs-score-lift).
+
+### Deferred: sbomqs score lift
+
+Tracked separately because each item has its own design depth. Current source-scan baseline is 7.0–8.8/10 depending on fixture (post-CD enrichment, 2026-04-20).
+
+13. **CDX `comp_no_deprecated_licenses` + `comp_no_restrictive_licenses`** — sbomqs reads these off `concluded_licenses[]`. The `spdx` crate exposes `is_deprecated()` and OSI/copyleft classifications; need to thread that through `SpdxExpression` (e.g. `as_spdx_id_info() -> Option<{id, deprecated, restrictive}>`) so the CDX serializer can emit `properties` flagging each. ~6.4% in Licensing for npm/cargo fixtures.
+14. **Component supplier extraction** — npm `package.json::author.name`, cargo `Cargo.toml::package.authors[0]`, maven `pom.xml::organization`. Lockfile scans currently miss these because lockfiles don't carry author info; adding a node_modules / .m2 walk for the supplier field would unlock `comp_with_supplier` (2.2%). Heuristic for npm scoped packages: treat `@scope` as supplier when `author` absent.
+15. **Component VCS URL externalReferences** — emit `externalReferences[{type: "vcs", url: ...}]` from each ecosystem's manifest (cargo `repository`, npm `repository.url`, maven `<scm>`). Unlocks `comp_with_source_code` (2.2%). Most ecosystems have this in the manifest so it's mostly extraction work.
+16. **SBOM signature** (`sbom_signature` 1.8%) — sign the emitted CDX BOM in-place (CycloneDX defines a `signature` block). Needs key management story (CLI flag for key path? KMS?). Separate from this effort.
+17. ~~**Per-ecosystem manifest hashes** — gem/maven/pypi/go currently emit no per-component hashes.~~ **PARTIALLY DONE 2026-04-20**: maven sidecar (`.jar.sha512` > `.sha256` > `.sha1`) wired into `MavenRepoCache::read_artifact_hash` for both BFS-discovered transitives and direct deps. PyPI `requirements.txt --hash=alg:hex` flags wired through to `PackageDbEntry.hashes`. Remaining: (a) Maven-direct SHA-256 computation when `~/.m2` has the JAR but no SHA-256 sidecar (Maven Central mostly has SHA-1 only — sbomqs penalizes for `comp_with_strong_checksums`); (b) gem CHECKSUMS in bundler 2.5+ when adoption stabilizes; (c) Go: `go.sum` H1 hashes are Merkle trie roots (NOT file SHA-256), would need a custom CDX hash type or to hash the cached `<v>.zip` from `$GOMODCACHE/cache/download/`.
+18. **ClearlyDefined ecosystem expansion — deb (priority)** — current scope is npm/cargo/gem/pypi/maven/golang. The deb arm is the highest-value addition: when a container scan strips `/usr/share/doc/<pkg>/copyright` (common minimization practice), waybill emits zero licenses even when `dpkg/status` is intact. CD's `deb` type pulls license data from Debian's upstream copyright-file server and would fill that gap. Shape: add a `"deb"` arm to `enrich/clearly_defined_coord.rs::build_cd_coord` (type=`deb`, provider=`debian`, namespace=`-`, name=`<pkg>`, revision=`<version>`). Works for both debian and ubuntu since ubuntu packages reuse Debian coords in CD. Other CD types (`composer`, `pod`, `conda`, `nuget`) are separate follow-ups; apk / rpm coverage in CD is thin and not worth the mapping work yet.
+21. **Debian sources.debian.org copyright API (fallback)** — alternative to #18 for deb when CD returns a miss (CD doesn't curate every debian-unstable or backport version). `https://sources.debian.org/copyright/api/package/<name>/<version>/` returns structured copyright data parsed from upstream `debian/copyright`. More work than CD integration (new HTTP client, no existing pattern to copy) but covers versions CD misses. Only worth doing after #18 ships and we measure the actual miss rate on real fixtures; CD probably covers >90% of Debian stable / Ubuntu LTS packages that production scans encounter.
+19. **ClearlyDefined bounded concurrency** — current implementation is sequential per-component (matches `deps.dev`). For scans of 100+ components this can be 10–30 seconds. Concrete optimization: `tokio::task::JoinSet` with 8 in-flight + reqwest connection pool reuse. Deferred until profiling shows it dominates scan time.
+20. **ClearlyDefined harvest endpoint** — CD has `/notices`, `/curations`, search APIs that could enrich provenance further (license texts, attributions, copyright statements). Out of scope for this milestone but unlock more sbomqs categories if added.
+
+---
+
+*Moved here from `docs/architecture/overview.md` when that document was retired (#827). It lives with the doc that referenced it, so the indirection is gone rather than relocated.*
+
+> **Staleness warning.** This list was written 2026-04-20 and at least two entries have
+> since shipped: `sbom_signature` (milestone 777) and `comp_with_source_code` (milestone
+> 776). Treat every entry as needing confirmation before acting on it. It is reproduced
+> here so the references that pointed at it still resolve, not because it is current.

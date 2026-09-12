@@ -375,3 +375,22 @@ by either.
   - US2.3 evidence.occurrences[] (#386)
   - US3 transparency annotations (#390)
   - US4 constitution amendment + this doc (TBD)
+
+## Source-type markers glossary
+
+The `waybill:source-type` property on each CycloneDX component
+distinguishes how a coord was discovered:
+
+| Value | Meaning |
+|---|---|
+| `workspace` | Declared in the scanned project's own manifest (pom.xml, Cargo.toml, etc.). Highest trust — the user directly wrote this dep. |
+| `transitive` | BFS-discovered via local cache / JAR walk. Strong trust — the coord is on-disk locally, its own manifest says it declares these deps. |
+| `declared-not-cached` | deps.dev says this coord is part of the declared tree, but it's not present locally at any version. Lower trust — may not actually be installed. |
+| `analyzed` | JAR walker emitted this from `META-INF/maven/.../pom.properties`. Strong trust — the JAR is on disk. |
+| `git`, `path`, `workspace`, `local` | Cargo/Gem source-kind markers for non-registry packages. |
+
+`waybill:sbom-tier` is a separate axis (`source` / `analyzed` / `deployed` / `design` / `build`) — see `waybill-common/src/resolution.rs` for the full ladder.
+
+---
+
+*Moved here from `docs/architecture/overview.md` when that document was retired (#827). `waybill:source-type` answers "how was this coord discovered"; the tiers above answer "what kind of thing is it". They are independent axes and are easy to confuse, which is why they now sit in one document.*

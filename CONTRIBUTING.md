@@ -237,7 +237,7 @@ the way to maintainer review. The flat-text allow-list is human-
 editable in any editor without schema knowledge.
 
 For the design rationale, see
-[`docs/design-notes.md` § "Filesystem walking pattern (milestone 114)"](docs/design-notes.md#filesystem-walking-pattern-milestone-114).
+[`docs/architecture/scanning.md` § "Shared-walker reader registry"](docs/architecture/scanning.md).
 
 ### Performance benchmarks (opt-in)
 
@@ -363,3 +363,40 @@ a checkbox for this.
 
 By contributing, you agree your contributions are licensed under
 Apache-2.0 (the project's license — see [`LICENSE`](LICENSE)).
+
+## Key code landmarks
+
+### Maven (most complex)
+- `waybill-cli/src/scan_fs/package_db/maven.rs`
+  - `parse_pom_xml` — XML traversal; captures self/parent coords, properties, dependencies, dependencyManagement
+  - `EffectivePom`, `build_effective_pom` — parent-chain walker with memo + cycle guard
+  - `resolve_dep_version`, `resolve_dep_group` — use effective POM for placeholder resolution
+  - `bfs_transitive_poms` — BFS over M2 cache driven from direct-dep seeds
+  - `walk_jar_maven_meta` — JAR-embedded pom walker
+  - `MavenRepoCache::discover` — probes `$HOME/.m2`, `<rootfs>/root/.m2`, etc.
+
+### deps.dev enrichment
+- `waybill-cli/src/enrich/deps_dev_client.rs` — HTTP client; `get_dependency_graph` hits `:dependencies` endpoint
+- `waybill-cli/src/enrich/deps_dev_system.rs` — PURL-ecosystem→system mapping + Maven-aware `deps_dev_package_name`
+- `waybill-cli/src/enrich/deps_dev_graph.rs` — post-scan enricher; substitutes local versions, tags declared-not-cached
+- `waybill-cli/src/enrich/depsdev_source.rs` — existing license enricher (now using the Maven-aware name format)
+
+### Go
+- `waybill-cli/src/scan_fs/package_db/golang.rs`
+  - `GoModCache::discover` — cache-root discovery for source scans
+  - `build_entries_from_go_module` + `cache_lookup_depends` — walks `<cache>/@v/*.mod` files
+  - `escape_module_path` — capital letters → `!x` for cache path lookup
+- `waybill-cli/src/scan_fs/package_db/go_binary.rs`
+  - `decode_buildinfo` — reads inline-format BuildInfo from Go 1.18+ binaries
+  - `detect_is_go` — section lookup via `object` crate, fallback memmem for stripped binaries
+
+### Cache / SQLite
+- `waybill-cli/src/scan_fs/package_db/rpmdb_sqlite/` — pure-Rust SQLite subset reader
+
+### Orchestration
+- `waybill-cli/src/cli/scan_cmd.rs` — wires scan_fs → enrichment → SBOM serialization
+- `waybill-cli/src/scan_fs/mod.rs` — `scan_path` entry, relationship resolution + dangling-target filter
+
+---
+
+*Moved here from `docs/architecture/overview.md` when that document was retired (#827). This is orientation for someone new to the codebase, which is what this file is for.*

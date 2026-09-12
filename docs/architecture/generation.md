@@ -45,7 +45,7 @@ no ecosystem of its own (a raw directory), a synthetic PURL is emitted. This
 is required for sbomqs schema validity — the validator rejects
 metadata.component entries with empty cpe/purl even though the CDX spec
 doesn't require them. See
-[design-notes §CycloneDX 1.6 serialization](../design-notes.md#cyclonedx-16-serialization)
+"CycloneDX 1.6 serialization" below
 for the full rationale.
 
 `metadata.authors`, `metadata.supplier`, and `metadata.licenses` (CC0-1.0)
@@ -150,7 +150,7 @@ lists the bom-refs that depend on it. Three sources of edges:
    from the primary to every "root" component (those that nothing else
    depends on). Without this, sbomqs reports "no dependency graph present"
    even for scans with complete transitive edges. See
-   [design-notes §CycloneDX 1.6 serialization](../design-notes.md#cyclonedx-16-serialization).
+   "CycloneDX 1.6 serialization" below.
 
 ### License shape
 
@@ -187,7 +187,7 @@ don't include them (until bundler 2.5 adoption stabilizes), Go `go.sum` H1
 hashes are Merkle-trie roots (not file SHA-256s, would need a custom CDX
 hash type), and rpmdb doesn't record per-package content hashes. See the
 deferred backlog in
-[design-notes §sbomqs score lift](../design-notes.md#deferred-sbomqs-score-lift)
+[the sbomqs deferred list](licenses.md#deferred-sbomqs-score-lift)
 item 17.
 
 ## How the output gets produced
@@ -204,3 +204,16 @@ difference is the `generation_context` value (`FilesystemScan`,
 `ContainerImageScan`, or `BuildTimeTrace`), which is stamped on
 `metadata.component.properties.waybill:generation-context`. Downstream
 consumers use this to know what evidence produced the SBOM.
+
+### CycloneDX 1.6 serialization
+- **`evidence.identity` is an array** (added 2026-04-20 for sbomqs parse failure): the single-object form was deprecated in CDX 1.5→1.6. Every component emits `identity: [{...}]` with exactly one identity object.
+- **`evidence.identity[].tools` is never emitted**: per CDX 1.6 that field must contain bom-refs to items declared in the BOM (metadata/tools/services/formulation). waybill's previous payload (TLS connection IDs + deps.dev markers) are not tools and don't exist elsewhere in the BOM. Both now land on the component as properties `waybill:source-connection-ids` (comma-joined) and `waybill:deps-dev-match` (`<system>:<name>@<version>`). The `pkg:generic/...` provenance semantics are preserved, just in the CDX-conformant location.
+- **License shape**: components emit `{"license": {"id": "<SPDX-id>"}}` for single-identifier licenses (via `SpdxExpression::as_spdx_id`) and `{"expression": "<expr>"}` for compound expressions. Required for sbomqs's `comp_with_valid_licenses` check.
+- **Component hashes from manifests**: npm's `package-lock.json::integrity` (sha256/sha384/sha512) and Cargo.lock's `checksum` (sha256) flow through `PackageDbEntry.hashes` → `ResolvedComponent.hashes` → `components[].hashes[]`. Other ecosystems (gem/maven/pypi/go) defer for now — see TODO.
+- **`metadata.component` carries synthetic `purl` + `cpe`**: scan subjects emit `pkg:generic/<name>@<version>` and `cpe:2.3:a:waybill:<name>:<version>:*:*:*:*:*:*:*`. Required for sbomqs schema validity (the validator rejects empty cpe/purl on metadata.component even though the spec doesn't require them).
+- **`metadata.authors`, `metadata.supplier`, `metadata.licenses` (CC0-1.0)**: hardcoded SBOM-producer identity + dataLicense.
+- **Trace-integrity counters on `metadata.properties`**: `waybill:trace-integrity-{ring-buffer-overflows,events-dropped,uprobe-attach-failures,kprobe-attach-failures}` instead of attached to a composition (CDX 1.6 compositions schema sets `additionalProperties: false`).
+- **Compositions emit both `assemblies` and `dependencies`** for each `complete` ecosystem record. Plus a separate dep-completeness composition listing the primary's bom-ref under `dependencies` when no integrity issues — needed for sbomqs's `comp_with_dependencies` to credit the primary.
+- **Primary-dependency fallback in `build_dependencies`**: when the scanned project's root entry was filtered out (npm path_key=="", cargo source=None) and no explicit edges connect the metadata.component to anything, synthesize edges from the primary to every "root" component (those nothing else depends on). Without this, sbomqs reports "no dependency graph present" even when transitive edges are populated.
+
+*Moved here from `docs/architecture/overview.md` when that document was retired (#827). It lives with the doc that referenced it, so the indirection is gone rather than relocated.*
