@@ -1,6 +1,6 @@
 # waybill Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-09-09
+Auto-generated from all feature plans. Last updated: 2026-09-11
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -367,6 +367,8 @@ Auto-generated from all feature plans. Last updated: 2026-09-09
 - N/A — the identity is emitted to logs and stdout and printed as a verification command; no caches, no persistence. (779-signing-identity-shapes)
 - Rust stable, workspace toolchain. **`xtask` only** — the shipped waybill binary is untouched. + Existing `xtask` deps only — `clap`, `serde`, `serde_json`, `chrono`, `tempfile`, `sysinfo`, `toml`. **Zero new dependencies**, and deliberately NOT `waybill-common`: an instrument must not share code with its subject, or a normalisation bug would be applied to every tool and to the harness's own self-check alike. (780-comparative-bench-harness)
 - `target/compare/run-<timestamp>.json` (gitignored); operator tool config at `xtask/compare/tools.local.toml` (gitignored). Targets cached via m770's pinned-SHA fetcher. No published output — the repository is public, so committed files and CI artefacts are both world-readable. (780-comparative-bench-harness)
+- Rust stable (workspace toolchain; no nightly). No production source changes — this feature touches test fixtures, a review-time tool under `xtask`, and documentation. + Existing only — `serde_json` (already used by the harness for masked golden serialisation), the m195 harness at `waybill-cli/tests/corpus_harness_195/`, and the `public-corpus.yml` dispatch. **Zero new Cargo dependencies.** (840-refresh-corpus-goldens)
+- Committed goldens at `waybill-cli/tests/fixtures/public_corpus/<target>/{cdx,spdx-2.3,spdx-3}.json`. Unchanged layout. (840-refresh-corpus-goldens)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -460,9 +462,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 840-refresh-corpus-goldens: Added Rust stable (workspace toolchain; no nightly). No production source changes — this feature touches test fixtures, a review-time tool under `xtask`, and documentation. + Existing only — `serde_json` (already used by the harness for masked golden serialisation), the m195 harness at `waybill-cli/tests/corpus_harness_195/`, and the `public-corpus.yml` dispatch. **Zero new Cargo dependencies.**
 - 780-comparative-bench-harness: `xtask compare` — private, deterministic comparison of waybill against operator-nominated SBOM tools. Committed source names no competing tool; results never leave `target/`. Package identity is full PURL including version; truth sets are declared per target and labelled when they are supersets; timing is a within-session interleaved ratio, never a gated absolute. Zero new deps.
 - 779-signing-identity-shapes: GitHub Actions ambient OIDC signing (no helper action / no `SIGSTORE_ID_TOKEN`); `SignerIdentity` classification (email/workload/unrecognized) with the certificate's issuer; emitted verification command; nightly keyless-conformance workflow. sigstore fork bumped to `v0.11.0-waybill-3`. Zero new Cargo dependencies.
-- 778-keyless-cdx-sidecar: Added Rust stable (workspace toolchain inherited from milestones 001–777; no nightly) + Existing only — `sigstore` 0.11 (kusari-sandbox fork) for the keyless flow, `serde`/`serde_json` (document parse + re-serialize at the write boundary), `tracing` (FR-016 summary), `anyhow`/`thiserror`. Dev/test: existing `jsonschema` 0.46 plus milestone 777's shared CycloneDX validator at `waybill-cli/tests/common/cdx_schema.rs`. **Zero new Cargo dependencies** (research R1).
 
 
 <!-- MANUAL ADDITIONS START -->

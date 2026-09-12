@@ -1,0 +1,30 @@
+# T002 — public-corpus pins recorded at branch point of 840-refresh-corpus-goldens
+# commit: 94ad00ccca2406cbc5e2db59e954919c7886a3a3
+
+go-cobra                   a655097faf7d54f78933a815984b9919d51a05d2
+rust-ripgrep               0e8390a66fbcf6eeac1aeb0541b367663a597c79
+npm-express                e99649895f714c9dc9b3538e2cb0f58954f0ecfa
+python-flask               80be49be88b534d2a72ef6bf5ea4aabf89f3305b
+maven-guice                b0e1d0fab0167cd555ab8d262333c1a32db7d492
+image-postgres16           sha256:4c9405bdf36a7a96c5637acec4b39545681f0d2154a7b1e622890607aad6bf56
+pants-example-python       e8cfd79b5e2670b242d2e680515473fa48a2b6b2
+pants-example-django       7da716ffb9af72c9ab5d10d43c221ae7d6469ad9
+pants-example-jvm          675ee75d36f2c1b096b0def51efcfffd02bd1251
+pants-example-golang       048c22e53f0fac68a4b1d49e1c99b8ce6746cf0a
+pants-example-javascript   da76d5dbb407d82c136cfe8f18dc06f3c8a440e5
+
+# T001 — definitive failing set, run 34666133472 (2026-09-12, this branch)
+# ALL ELEVEN corpus targets fail. The 9 "ok" results in that run are
+# harness unit tests (js_filter, manifest), not corpus targets.
+go-cobra  image-postgres16  maven-guice  npm-express  python-flask
+rust-ripgrep  pants-example-django  pants-example-golang
+pants-example-javascript  pants-example-jvm  pants-example-python
+
+# T008 — regeneration dispatched and artifact retrieved.
+#   run:      34666830925 (regen_goldens=true, branch 840-refresh-corpus-goldens)
+#   artifact: corpus-goldens-regen, 11 targets
+# T009 — artifact target set matches T001's failing set exactly (11/11).
+#
+# Goldens deliberately NOT committed here. Phase 3 (T010-T017) requires
+# reading and attributing every diff first; committing them now would be
+# the unverified refresh FR-006/FR-007 forbid.
