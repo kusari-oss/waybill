@@ -3,6 +3,7 @@ use std::process::Command;
 use clap::Parser;
 use xtask::bench;
 use xtask::compare;
+use xtask::corpus_diff;
 use xtask::linkage;
 use xtask::quality;
 
@@ -22,6 +23,9 @@ enum Cli {
     /// Assert a released binary gains no dynamic dependency beyond its
     /// platform baseline (Constitution Principle I; issue #824)
     CheckLinkage(linkage::LinkageArgs),
+    /// Normalise a public-corpus golden diff for human review
+    /// (feature 840; issue #763). Review tool, never a gate.
+    CorpusDiff(corpus_diff::CorpusDiffArgs),
 }
 
 fn main() {
@@ -36,6 +40,7 @@ fn main() {
         Cli::BenchDocs(args) => bench::docs::run(args),
         Cli::Quality(args) => quality::run(args),
         Cli::CheckLinkage(args) => linkage::run(args),
+        Cli::CorpusDiff(args) => corpus_diff::run(args),
     };
     if let Err(err) = result {
         eprintln!("xtask error: {err}");

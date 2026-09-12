@@ -17,7 +17,7 @@
 
 ### User Story 1 - The nightly corpus lane reports real regressions again (Priority: P1)
 
-A maintainer watches the nightly public-corpus lane. Today it fails every night on ten of eleven targets, so nobody reads it — a lane that always fails carries no information, and a genuine regression arriving tomorrow would be indistinguishable from the existing noise.
+A maintainer watches the nightly public-corpus lane. Today it fails every night on all eleven targets, so nobody reads it — a lane that always fails carries no information, and a genuine regression arriving tomorrow would be indistinguishable from the existing noise.
 
 After this change the lane passes, and a future failure means something changed.
 

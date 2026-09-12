@@ -5,7 +5,7 @@
 
 ## Summary
 
-The nightly public-corpus lane fails on ten of eleven targets. The goldens were last written on 2026-07-21 and roughly 147 merges have landed since, at least one of which rewrites nearly every component. A lane that always fails carries no information, so a genuine regression arriving tomorrow would be invisible.
+The nightly public-corpus lane fails on all eleven targets. The goldens were last written on 2026-07-21 and roughly 147 merges have landed since, at least one of which rewrites nearly every component. A lane that always fails carries no information, so a genuine regression arriving tomorrow would be invisible.
 
 Research found that **the generation half of this work already exists**: `public-corpus.yml` has a `regen_goldens` dispatch input that runs the harness with the update flag and uploads the regenerated tree as an artifact, and goldens are written already-masked so a `git diff` is largely normalised for free. The work this feature actually adds is the *verification* half the spec insists on — a review-time ordering normaliser (the one gap masking cannot close), per-target attribution of every delta category, and a deliberate mutation proving the lane can still go red.
 
@@ -21,7 +21,7 @@ Approach: dispatch the existing regen against this branch, download the artifact
 **Project Type**: Test-fixture refresh plus a small review-time tool. Not a product feature.
 **Performance Goals**: N/A. Nothing here runs in the shipped binary.
 **Constraints**: FR-008 — no assertion may be widened, relaxed or disabled to make a target pass. FR-003 — no local golden generation. FR-015 — evidence in the PR, not committed as a document.
-**Scale/Scope**: Ten failing targets × three formats = thirty goldens, against an eleventh passing target left untouched.
+**Scale/Scope**: Eleven failing targets × three formats = up to thirty-three goldens. Every corpus target is currently failing; there is no passing target to leave untouched.
 
 ## Constitution Check
 
@@ -82,7 +82,7 @@ waybill-cli/tests/corpus_harness_195/           # UNCHANGED
 
 Ordered so that nothing is committed before it can be reviewed:
 
-1. **Establish the definitive failing set.** Dispatch the lane read-only against this branch. FR-001 scopes to "currently failing", so the list is observed, not assumed — the ten-of-eleven figure is from an earlier run and may have moved.
+1. **Establish the definitive failing set.** Dispatch the lane read-only against this branch. FR-001 scopes to "currently failing", so the list is observed, not assumed — an earlier figure is from a prior run and may have moved — it did: the definitive dispatch (run 34666133472) shows all eleven failing.
 2. **Build the review-time normaliser** (R3, contracts/). It must exist before the diffs are read, or the first thing anyone sees is the unreviewable raw diff this feature exists to avoid. Its own test: an ordering-only change normalises to an empty diff.
 3. **Dispatch regen; download the artifact.** No local generation (FR-003).
 4. **Normalise and read every per-target diff.** Attribute each delta category against the merge log since `25bfbce` (R4). Anything unattributable stops the refresh for that target (FR-007).

@@ -164,14 +164,17 @@ wrong direction.
 
 ## Open items carried into the plan
 
-- **Which targets, exactly.** The last observed run showed ten failing
-  of eleven. FR-001 scopes to "currently failing", so the definitive
+- **Which targets, exactly.** RESOLVED at implementation: run
+  34666133472 shows all eleven failing. FR-001 scopes to "currently failing", so the definitive
   list comes from a dispatch at implementation time, not from this
   document.
 - **Whether any target fails for a non-drift reason.** Unknown until the
   diffs are read. FR-012 / FR-012a govern the outcome if one is found.
-- **`image-postgres16`.** Currently passing, therefore out of scope by
-  FR-001 — but it is also the only image-tier target, so if it starts
-  failing during this work the cause is likely upstream re-publication
-  rather than emission drift, and R2's hash masking is the relevant
-  context.
+- **`image-postgres16`.** IN scope — it is failing like the rest
+  (verified 2026-09-12, run 34666133472: `layer2-golden-drift` on `cdx`,
+  with the pinned digest unchanged). An earlier draft of this document
+  recorded it as passing; that was a mis-read of the nightly log, since
+  all eleven corpus tests fail and the nine `ok` results are harness
+  unit tests rather than targets. It remains the only image-tier target,
+  so R2's hash masking is still the relevant context when reading its
+  diff.

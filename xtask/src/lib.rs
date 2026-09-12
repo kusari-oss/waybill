@@ -5,5 +5,6 @@
 
 pub mod bench;
 pub mod compare;
+pub mod corpus_diff;
 pub mod linkage;
 pub mod quality;

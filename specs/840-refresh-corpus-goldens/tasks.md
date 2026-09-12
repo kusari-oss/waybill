@@ -19,8 +19,8 @@
 
 ## Phase 1: Setup (Shared Infrastructure)
 
-- [ ] T001 Dispatch `.github/workflows/public-corpus.yml` read-only (`regen_goldens: false`) against branch `840-refresh-corpus-goldens` and record the definitive list of failing target/format pairs in the PR draft. FR-001 scopes to "currently failing", so this list is observed, not inherited from the 2026-09-11 run.
-- [ ] T002 For each failing target, record its pin (commit SHA or image digest) from `xtask/corpus/` config as it stands at branch point, so any later input change is detectable rather than silent.
+- [X] T001 Dispatch `.github/workflows/public-corpus.yml` read-only (`regen_goldens: false`) against branch `840-refresh-corpus-goldens` and record the definitive list of failing target/format pairs in the PR draft. FR-001 scopes to "currently failing", so this list is observed, not inherited from the 2026-09-11 run.
+- [X] T002 For each failing target, record its pin (commit SHA or image digest) from `xtask/corpus/` config as it stands at branch point, so any later input change is detectable rather than silent.
 
 ---
 
@@ -28,11 +28,11 @@
 
 **Blocks both P1 stories.** Diffs must not be read before this exists — the raw diff is the unreviewable artifact this feature exists to avoid, and reading it first anchors the reviewer on noise.
 
-- [ ] T003 Create `xtask/src/corpus_diff/mod.rs` implementing the normaliser per `contracts/xtask-corpus-diff-cli.md` C-1/C-2: accept `--old`/`--new` or `--target`/`--old-ref`, sort unordered collections by a stable total key, apply normalisation symmetrically to both sides, write to stdout, exit 0 regardless of whether differences exist.
-- [ ] T004 Wire `CorpusDiff(corpus_diff::CorpusDiffArgs)` into the `Cli` enum and match arm in `xtask/src/main.rs`, and add `pub mod corpus_diff;` to `xtask/src/lib.rs`.
-- [ ] T005 [P] Add `xtask/src/corpus_diff/tests.rs` covering contract C-5: an ordering-only difference normalises to empty output (C-5.1); a single changed licence still appears (C-5.2); a golden compared with itself is empty (C-5.3).
-- [ ] T006 Add to `xtask/src/corpus_diff/tests.rs` (after T005; same file, so not parallel) a test asserting committed goldens are byte-identical before and after a `corpus-diff` run, enforcing C-2.3/C-5.4. This is the check that catches an accidental write-back, which would make a reordered-but-equal golden compare equal and silently weaken the gate.
-- [ ] T007 Verify the normaliser does NOT re-apply the harness's masking (C-2.4). Goldens are already masked at write time in `waybill-cli/tests/corpus_harness_195/layer2_golden.rs:51`; masking twice risks diverging from what the lane compares.
+- [X] T003 Create `xtask/src/corpus_diff/mod.rs` implementing the normaliser per `contracts/xtask-corpus-diff-cli.md` C-1/C-2: accept `--old`/`--new` or `--target`/`--old-ref`, sort unordered collections by a stable total key, apply normalisation symmetrically to both sides, write to stdout, exit 0 regardless of whether differences exist.
+- [X] T004 Wire `CorpusDiff(corpus_diff::CorpusDiffArgs)` into the `Cli` enum and match arm in `xtask/src/main.rs`, and add `pub mod corpus_diff;` to `xtask/src/lib.rs`.
+- [X] T005 [P] Add `xtask/src/corpus_diff/tests.rs` covering contract C-5: an ordering-only difference normalises to empty output (C-5.1); a single changed licence still appears (C-5.2); a golden compared with itself is empty (C-5.3).
+- [X] T006 Add to `xtask/src/corpus_diff/tests.rs` (after T005; same file, so not parallel) a test asserting committed goldens are byte-identical before and after a `corpus-diff` run, enforcing C-2.3/C-5.4. This is the check that catches an accidental write-back, which would make a reordered-but-equal golden compare equal and silently weaken the gate.
+- [X] T007 Verify the normaliser does NOT re-apply the harness's masking (C-2.4). Goldens are already masked at write time in `waybill-cli/tests/corpus_harness_195/layer2_golden.rs:51`; masking twice risks diverging from what the lane compares.
 
 **Checkpoint**: `cargo test -p xtask --lib corpus_diff` green, and `git status` clean after running the tool against a real golden.
 
@@ -46,7 +46,7 @@
 
 - [ ] T008 [US1] Dispatch `public-corpus.yml` against this branch with `regen_goldens: true`; download the `corpus-goldens-regen` artifact. Do NOT regenerate locally — FR-003. Record the run ID in the PR draft.
 - [ ] T009 [US1] Confirm the artifact's target set matches T001's failing set. A target present in one and not the other means the failing set moved between dispatches and T001 must be re-run.
-- [ ] T010 [US1] For each failing target, produce a normalised diff with `cargo run -p xtask -- corpus-diff --target <name> --old-ref HEAD` and save each to the PR draft. Thirty diffs across ten targets × three formats, per the last observed run.
+- [ ] T010 [US1] For each failing target, produce a normalised diff with `cargo run -p xtask -- corpus-diff --target <name> --old-ref HEAD` and save each to the PR draft. Up to thirty-three diffs across eleven targets × three formats — every corpus target is failing (verified run 34666133472).
 - [ ] T011 [US1] Read every diff. Classify each change as a repeated shape (a category) or a singleton. Per `research.md` R4 a singleton is NOT a category and gets its own explanation — folding singletons into a category is how a regression is absorbed into a large benign diff.
 - [ ] T012 [US1] For any target whose diff shows a change inconsistent with accumulated drift, investigate before proceeding. FR-007 blocks the refresh for that target until the change is explained or raised as a defect.
 - [ ] T013 [US1] Apply FR-012 to any target failing for a non-drift reason: repair it in this feature if the fix is small, otherwise remove it from the lane's gating set and open a tracked issue. Regenerating its golden is forbidden — that encodes the fault as expected output.
@@ -100,7 +100,7 @@
 - [ ] T029 Verify reproducibility (FR-011, SC-004): dispatch regen a second time against the unchanged tree and confirm the output is identical to the committed goldens. A difference means something non-deterministic is unmasked.
 - [ ] T030 If T029 finds non-determinism, fix it in the harness's `mask_nondeterministic` where the gate honours it — NOT in `corpus_diff`, where only human reviewers would see the fix and the lane would keep failing.
 - [ ] T031 Run the full pre-PR gate: `./scripts/pre-pr.sh` must exit 0.
-- [ ] T032 Close #763 with a reference to the merged PR, noting the corrected scope (ten targets, not the five originally reported).
+- [ ] T032 Close #763 with a reference to the merged PR, noting the corrected scope (eleven targets — every one — not the five originally reported).
 
 ---
 
@@ -134,7 +134,7 @@ Phase 1 (Setup)
 - T005 → T006 in Phase 2 are NOT parallel: same file. T007 may run alongside either (it inspects the harness and writes nothing).
 - T025, T026, T027 in Phase 5 — different files. T028 is NOT parallel: it validates the document those three produce, so it runs after them.
 - Phase 5 in parallel with Phases 3–4 entirely.
-- **Not parallel**: reading the thirty diffs (T010–T011). Cross-target comparison is the point (FR-013a); splitting them across people or sessions destroys the signal that one target's delta pattern is unlike its peers.
+- **Not parallel**: reading the thirty-three diffs (T010–T011). Cross-target comparison is the point (FR-013a); splitting them across people or sessions destroys the signal that one target's delta pattern is unlike its peers.
 
 ---
 
@@ -148,4 +148,4 @@ Phase 1 (Setup)
 2. Phases 3–4 land together as the refresh PR. One change, all targets (FR-013).
 3. Phase 5 can land before, with, or after — it blocks nothing.
 
-**Estimated shape**: 32 tasks. The volume is in T010–T011 (thirty diffs to read and classify), which is human judgment and does not parallelise without losing the cross-target signal that makes it worth doing.
+**Estimated shape**: 32 tasks. The volume is in T010–T011 (up to thirty-three diffs to read and classify), which is human judgment and does not parallelise without losing the cross-target signal that makes it worth doing.
