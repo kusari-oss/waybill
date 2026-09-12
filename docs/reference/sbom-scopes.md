@@ -72,7 +72,7 @@ than a real coverage gap. As a rule of thumb:
 For the deeper rationale on why Waybill takes this stance — and
 why class-presence verification deliberately prunes Maven shade-
 relocation ancestors that *aren't actually in the JAR* — see
-[design notes](../design-notes.md)'s "Scope: artifact vs
+[SBOM scopes](../reference/sbom-scopes.md)'s "Scope: artifact vs
 manifest SBOM" section.
 
 ## SBOM interpretation

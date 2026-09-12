@@ -29,7 +29,7 @@
 //   - V8:     version strings buried in stack-trace formatting code;
 //             tend to be non-deterministic across builds. May
 //             require an inline-data scan rather than a string scan.
-// Tracking: `docs/design-notes.md` "Deferred backlog" section.
+// Tracking: `docs/architecture/licenses.md` sbomqs deferred list.
 
 /// One match from the curated scanner. Converted to a
 /// `PackageDbEntry` with `pkg:generic/<library>@<version>` and

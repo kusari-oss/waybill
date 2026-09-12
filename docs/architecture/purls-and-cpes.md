@@ -40,7 +40,7 @@ These apply uniformly across all ecosystems:
    version comparison; `rpm -qa`'s default display omits; the purl-spec RPM
    example never shows `epoch=0`. waybill drops the qualifier when epoch is
    `Some(0)`. See
-   [design-notes §PURL canonicalization](../design-notes.md#purl-canonicalization).
+   "PURL canonicalization" below.
 
 4. **`distro=<vendor>-<version>` across all OS-packaged ecosystems.** deb,
    rpm, and apk all emit the same shape: vendor slug (`debian`, `ubuntu`,
@@ -166,3 +166,9 @@ vendor slugs vary, and some packages have multiple valid CPEs. Emitting
 multiple candidates per component is a practical accommodation — it costs a
 few bytes per component in the SBOM and it unlocks NVD matches that a
 single-heuristic approach would miss.
+
+### PURL canonicalization
+- **Qualifiers sorted alphabetically** (added 2026-04-20): `Purl::new` re-canonicalizes the qualifier section so `?epoch=1&arch=x86_64&distro=fedora-40` becomes `?arch=x86_64&distro=fedora-40&epoch=1`. Required by purl-spec `docs/how-to-build.md` ("Sort this list of qualifier strings lexicographically"). Affects every ecosystem uniformly. Already-sorted inputs pass through unchanged (preserves caller-side `encode_purl_segment` work).
+- **RPM `epoch=0` omitted** (added 2026-04-20): treats `Some(0)` as semantically "no epoch" and drops the qualifier. RPM treats absent and 0 as equivalent for version comparison; `rpm -qa` default display omits; purl-spec rpm example never shows `epoch=0`. Reverses the milestone 005 round-trip-`rpm -qa` decision (see `specs/005-purl-and-scope-alignment/research.md` for the trade-off).
+
+*Moved here from `docs/architecture/overview.md` when that document was retired (#827). It lives with the doc that referenced it, so the indirection is gone rather than relocated.*

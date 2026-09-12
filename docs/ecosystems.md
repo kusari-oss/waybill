@@ -667,7 +667,7 @@ base libs that ship license grants verbatim).
 - ClearlyDefined: **Planned (next priority).** CD's `deb` type curates
   licenses from Debian's upstream copyright-file server and would fill the
   gap for images that strip `/usr/share/doc/<pkg>/copyright`. See
-  [design-notes deferred item 18](design-notes.md#deferred-sbomqs-score-lift).
+  [the sbomqs deferred list](architecture/licenses.md#deferred-sbomqs-score-lift).
 
 ---
 
@@ -696,7 +696,7 @@ edges; gemspecs themselves carry no dep edges.
 **Hashes:** none currently. Bundler 2.5+ emits `CHECKSUMS` sections in
 `Gemfile.lock`; the parser for them is tracked as deferred
 work — see the sbomqs-score-lift items in
-[`design-notes.md`](design-notes.md) (Deferred #17).
+[the sbomqs deferred list](architecture/licenses.md#deferred-sbomqs-score-lift) (Deferred #17).
 
 **Enrichment:**
 - deps.dev: skipped (not in deps.dev's supported ecosystems).
@@ -741,7 +741,7 @@ is cold, edges are populated for root → direct deps only.
 **Hashes:** `go.sum` H1 hashes are Merkle-trie roots, not file SHA-256s,
 so they don't fit CDX's hash-algorithm enum. Component-level `hashes[]` is
 empty today; see
-[design-notes sbomqs deferred item 17](design-notes.md#deferred-sbomqs-score-lift)
+[the sbomqs deferred list](architecture/licenses.md#deferred-sbomqs-score-lift)
 for the plan.
 
 **Build-inclusion clarity (milestone 112):** `go.sum` routinely retains
@@ -873,7 +873,7 @@ is computed in that case.
 
 Maven is the most complex ecosystem. Transitive versions can live in
 parent POMs' `<dependencyManagement>` or be supplied by BOM imports. See
-[design-notes §Dep-graph resolution strategy (Maven)](design-notes.md#dep-graph-resolution-strategy-maven)
+"Dep-graph resolution strategy (Maven)" below
 for the full six-layer strategy.
 
 **Detection (layered):**
@@ -894,7 +894,7 @@ groupId is part of the identity.
 
 **Dep graph:** deps.dev is **authoritative for edge topology** but never
 for versions — local `.m2` always wins on the version dimension. See the
-[deps.dev policy](design-notes.md#depsdev-policy-critical).
+[deps.dev policy](architecture/enrichment.md).
 
 **Hashes:** JAR sidecar `.sha512` > `.sha256` > `.sha1` (Maven Central
 mostly ships SHA-1; sbomqs penalizes for `comp_with_strong_checksums`).
@@ -1672,7 +1672,7 @@ Canonicalization:
   `opensuse`, `amzn`).
 - `epoch=0` omitted (RPM treats absent and 0 equivalently; `rpm -qa`
   default display omits). See the
-  [RPM canonicalization note in design-notes](design-notes.md#purl-canonicalization).
+  [PURL canonicalization](architecture/purls-and-cpes.md).
 
 **Evidence:** `PackageDatabase` / `manifest-analysis` at 0.85, with
 `waybill:evidence-kind = rpmdb-sqlite`.
@@ -2049,7 +2049,7 @@ identity; other entries in the same file still emit.
   rules and CPE candidate strategy.
 - [Enrichment](architecture/enrichment.md) — deps.dev + ClearlyDefined
   wiring.
-- [design-notes.md](design-notes.md) — dated changelog, sharp edges, the
+- [architecture/overview.md](architecture/overview.md) — dated changelog, sharp edges, the
   deferred backlog including per-ecosystem ClearlyDefined expansions and
   sbomqs score-lift items.
 
@@ -2115,3 +2115,42 @@ binary (no source tree) or running without `--fingerprints-corpus`
 see milestone-108 behavior unchanged.
 
 Full design + contracts in [`specs/109-binary-source-purl-binding/`](../specs/109-binary-source-purl-binding/).
+
+## Dep-graph resolution strategy (Maven)
+
+Maven is the most complex — transitive versions can live in parent
+POMs' `<dependencyManagement>` or be supplied by BOM imports. The
+scanner layers sources in this order:
+
+1. **Scanned project `pom.xml`** — direct deps, declared versions.
+2. **JAR-embedded `META-INF/maven/<g>/<a>/pom.xml`** — identity from
+   pom.properties; edges from the embedded pom.xml. Works for
+   deployed containers. Fat/shaded JARs yield one
+   `EmbeddedMavenMeta` per vendored artifact.
+3. **`~/.m2/repository/` cache walker** (BFS) — for each observed
+   coord, fetch its cached `.pom`, extract `<dependencies>`, recurse.
+4. **Parent-POM chain** (`build_effective_pom` in `maven.rs`) —
+   merges `<properties>` and `<dependencyManagement>` up the
+   `<parent>` chain. Required for guava (parent POM declares
+   `jsr305`, `checker-qual`, etc. versions) and jackson-databind
+   (`${jackson.version.core}` resolved in parent). BOM imports
+   (`<type>pom</type><scope>import</scope>`) flattened into the
+   effective `dependencyManagement`. Memoized, cycle-guarded.
+5. **deps.dev `:dependencies` endpoint** (`deps_dev_graph.rs`) —
+   online fallback. Fills shaded-transitive gaps + cold-cache gaps.
+   Tagged `source_type = "declared-not-cached"` distinct from
+   locally-observed coords.
+6. **Empty edges** — final graceful degradation.
+
+*Moved here from `docs/architecture/overview.md` when that document was retired (#827). It lives with the doc that referenced it, so the indirection is gone rather than relocated.*
+
+### Maven
+- **`<exclusions>`** not parsed. If a project excludes a transitive via `<exclusions>` in its pom, waybill still emits the excluded coord as a dep.
+- **Version ranges** (`[1.0,2.0)`) not resolved. Maven picks a specific version at build time; waybill treats the range string as-is.
+- **`<profiles>`** ignored. Profile-conditional deps never emit.
+- **Plugin-section deps** (`<build><plugins>`) ignored — not runtime deps.
+- **POM-less JARs** (older Gradle outputs, OSGi bundles) can't be inspected via `META-INF/maven/` — coord + deps invisible.
+- **Same artifactId across groups** — `scan_fs/mod.rs::normalize_dep_name` keys edges on `(ecosystem, name)` only, so two unrelated artifacts both named `commons` in different groups would conflate. Pre-existing; not made worse by any recent work.
+- **Compositions-level transparency** — currently the `maven` composition is marked `complete` whenever any source-tier Maven coord is seen. Should probably downgrade to `incomplete_first_party_only` when any BFS cache-miss or deps.dev failure occurred during the scan. Deferred.
+
+*Moved here from `docs/architecture/overview.md` when that document was retired (#827). It lives with the doc that referenced it, so the indirection is gone rather than relocated.*

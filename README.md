@@ -163,7 +163,7 @@ per-module metadata to build a proper CycloneDX with:
 - **Real dep-graph edges**, not a flat fan-out. Per-module `go.mod`
   from the module cache drives the Go graph; `Cargo.lock` drives the
   Rust graph; for Maven there's a full layered strategy
-  ([design notes](docs/design-notes.md)) that resolves through
+  ([architecture docs](docs/architecture/overview.md)) that resolves through
   `~/.m2/` caches, parent POMs, BOM imports, and — when needed —
   deps.dev.
 - **CycloneDX evidence blocks** pointing back to the specific file
@@ -399,7 +399,7 @@ format:
   vs `--split`.
 - **[Conformance harness guide](docs/reference/conformance-harness-guide.md)**
   — for external implementers writing cross-format conformance suites.
-- **[Design notes](docs/design-notes.md)** — living architectural
+- **[Architecture overview](docs/architecture/overview.md)** — living architectural
   decisions at the cross-cutting level.
 - **[Changelog](CHANGELOG.md)** — what shipped in which release.
 - **[Specs](specs/)** — per-milestone planning specs

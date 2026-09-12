@@ -3277,8 +3277,7 @@ pub async fn execute(
     } else {
         scan_fs::ScanMode::Path
     };
-    // Dual-SBOM scope auto-detection (see docs/design-notes.md:
-    // "Scope: artifact vs manifest SBOM"). Image scans default to
+    // Dual-SBOM scope auto-detection (see docs/reference/sbom-scopes.md:). Image scans default to
     // strict "artifact" scope (only list components actually on disk);
     // path scans default to permissive "manifest" scope (declared deps
     // in the lockfile / pom.xml / etc. are in scope even without
@@ -3359,7 +3358,7 @@ pub async fn execute(
         // Scan-target filter: the Maven walker uses this to skip
         // emitting the scan target's own primary coord as a component
         // (it represents the SBOM subject, not a dependency). See
-        // `maven::read_with_claims` and docs/design-notes.md "Scan
+        // `maven::read_with_claims` and docs/reference/sbom-scopes.md ("Scan
         // target identity" for rationale.
         Some(&target_name),
         // Milestone 144: pass `--max-rpm-bytes` + `--rpm-distro` through

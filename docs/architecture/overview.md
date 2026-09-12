@@ -116,6 +116,6 @@ These apply throughout the pipeline:
 - [Attestations](attestations.md) — in-toto Statement v1 schema
 
 The running architectural changelog is in
-[`docs/design-notes.md`](../design-notes.md). Anything dated (and most
+[the architecture docs](./overview.md). Anything dated (and most
 ecosystem-specific sharp edges) lives there — this page links into it rather
 than duplicating.

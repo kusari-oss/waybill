@@ -39,9 +39,8 @@ through the `EnrichmentPipeline` / `sbom generate` path. `sbom generate`
 today calls `EnrichmentPipeline::enrich` with only a `LockfileSource`
 registered, so while its `--enrich` flag exists and the lockfile-edge
 behavior works, the deps.dev / ClearlyDefined enrichment does not yet fire
-from trace-mode SBOMs. See
-[design-notes §deps.dev policy (critical)](../design-notes.md#depsdev-policy-critical)
-for the policy that governs when these come together.
+from trace-mode SBOMs. The policy governing when these come together is
+under "DepsDevGraph" below.
 
 Both paths share the same `ResolvedComponent` shape, so any source can be
 moved between paths without touching the component model.
@@ -136,8 +135,7 @@ Sequential per-component today; 5-second timeout; per-scan in-memory cache
 ### 4. DepsDevGraph (`deps_dev_graph.rs`)
 
 Pulls transitive dependency edges from deps.dev's `:dependencies` endpoint.
-Policy (see [design-notes §deps.dev policy
-(critical)](../design-notes.md#depsdev-policy-critical)):
+Policy:
 
 - **deps.dev is authoritative for edge topology** (A→B).
 - **deps.dev is not authoritative for versions.** If deps.dev reports
@@ -151,12 +149,15 @@ Policy (see [design-notes §deps.dev policy
   `tokio::task::JoinSet`.
 - Offline mode short-circuits.
 
-Today wired for **Maven only**. The rationale is in
-[design-notes §Why deps.dev is only wired for
-Maven](../design-notes.md#why-depsdev-is-only-wired-for-maven): cargo /
+Today wired for **Maven only** — `SUPPORTED_ECOSYSTEMS` in
+`deps_dev_graph.rs` is literally `&["maven"]`. The rationale: cargo /
 go-source / npm / ruby local signals already encode the full tree, and
 Maven's shaded-JAR / cold-cache cases are the only places the local scan is
 structurally incomplete.
+
+This is narrower than deps.dev use overall. The *version* enricher
+(`depsdev_source.rs`) queries six ecosystems for licences and source
+links; only the *graph* enricher is Maven-scoped.
 
 ## Pipeline behavior
 

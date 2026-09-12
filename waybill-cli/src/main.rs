@@ -215,7 +215,7 @@ Flag or env var — either one disables. Milestone 112.\
     /// Auto-enabled for `sbom scan --path` so source-tree scans keep
     /// the "what would be pulled in on build" view; explicit for
     /// `--image` when you want the same permissive output from a
-    /// container scan. See docs/design-notes.md "Scope: artifact vs
+    /// container scan. See docs/reference/sbom-scopes.md ("Scope: artifact vs
     /// manifest SBOM" for the full rationale. Common causes of
     /// declared-but-not-shipped: Maven `<scope>provided</scope>` deps
     /// (servlet-api, etc.), JDK-bundled classes, optional deps,

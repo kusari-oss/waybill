@@ -234,7 +234,7 @@ pub(crate) struct MavenRepoCache {
 /// gate on `Rootfs` to avoid leaking host cache contents into the
 /// scanned-image SBOM.
 ///
-/// See docs/design-notes.md "Scope: artifact vs manifest SBOM" for
+/// See docs/reference/sbom-scopes.md for
 /// the broader on-disk-vs-declared framing this supports.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) enum PomSource {
@@ -2724,8 +2724,7 @@ fn bfs_transitive_poms(
             // pre-dual-SBOM behavior and gives source-tree users a
             // "what would be pulled in" view.
             //
-            // See docs/design-notes.md, "Scope: artifact vs manifest
-            // SBOM". TODO(sbom-kind): drive this from the kind flag.
+            // See docs/reference/sbom-scopes.md,. TODO(sbom-kind): drive this from the kind flag.
             if include_declared_deps {
                 if let Some(entry) = build_transitive_entry(
                     &group,
@@ -3044,8 +3043,7 @@ pub fn read(
 /// Read Maven coords from the rootfs.
 ///
 /// `include_declared_deps` gates emission of declared-but-not-on-disk
-/// coords (see docs/design-notes.md, "Scope: artifact vs manifest
-/// SBOM"). When **false** (strict artifact scope, default for image
+/// coords (see docs/reference/sbom-scopes.md,). When **false** (strict artifact scope, default for image
 /// scans): the pom.xml-declared direct-dep loop skips coords whose
 /// JAR isn't in the JAR-walk coord_index AND whose .pom isn't in the
 /// `.m2/repository/` cache; the BFS cache-miss branch in
@@ -3307,7 +3305,7 @@ pub(crate) fn finalize(
     // itself is a real artifact and the dep's transitive edges can still
     // be resolved through it.
     //
-    // See docs/design-notes.md, "Scope: artifact vs manifest SBOM" for
+    // See docs/reference/sbom-scopes.md for
     // the principle; this is the enforcement point for Maven.
     let mut on_disk_coords: HashSet<(String, String)> = HashSet::new();
     for (_src, meta_list, _co_owned) in &jar_meta {
@@ -3401,8 +3399,7 @@ pub(crate) fn finalize(
             // Dual-SBOM gate: in artifact scope (image scan, default),
             // skip pom.xml-declared deps whose coord has no bytes on
             // disk. Manifest scope (path scan, or `--include-declared-deps`)
-            // emits everything. See docs/design-notes.md, "Scope:
-            // artifact vs manifest SBOM".
+            // emits everything. See docs/reference/sbom-scopes.md,.
             //
             // TODO(sbom-kind): when `--sbom-kind {artifact,manifest}`
             // lands, drive this gate from the kind rather than a raw

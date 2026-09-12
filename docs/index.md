@@ -63,7 +63,7 @@ the way it did, or contribute to the pipeline.
   per-format envelope-decode rules and the 7 inherent format-spec asymmetries.
 - [Ecosystems](ecosystems.md) — per-ecosystem coverage matrix for all nine
   supported ecosystems.
-- [Design notes](design-notes.md) — architectural decisions at the
+- [Architecture overview](architecture/overview.md) — architectural decisions at the
   cross-cutting level. Maven layered resolution, source-type markers,
   CycloneDX shape decisions, known limitations.
 - [Design surveys](design/) — point-in-time research + decision docs that
