@@ -1264,3 +1264,73 @@ mod offline_tests {
         );
     }
 }
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod idempotency_tests {
+    use super::*;
+    use crate::enrich::deps_dev_client::Link;
+
+    fn component() -> ResolvedComponent {
+        super::tests::make_component("pkg:cargo/serde@1.0.0")
+    }
+
+    /// Milestone 842. The licence pass now runs twice — once before
+    /// dep-graph expansion and once after, so components the graph
+    /// contributes get licensed too. That is only safe because
+    /// applying the same payload twice is a no-op.
+    ///
+    /// It already was: licences are deduped inline and external
+    /// references by `normalize_external_references`, which
+    /// `apply_version_info` calls on the way out. Nothing was added to
+    /// make this true. The test exists because nothing *asserted* it
+    /// either, and the second pass now depends on it — a future change
+    /// to either dedup would break enrichment silently, duplicating
+    /// references on every already-enriched component.
+    #[test]
+    fn applying_the_same_payload_twice_changes_nothing() {
+        let info = VersionInfo {
+            licenses: vec!["MIT".into(), "Apache-2.0".into()],
+            links: vec![
+                Link { label: "SOURCE_REPO".into(), url: "https://github.com/serde-rs/serde".into() },
+                Link { label: "HOMEPAGE".into(), url: "https://serde.rs".into() },
+            ],
+        };
+        let mut c = component();
+        DepsDevSource::apply_version_info(&mut c, "cargo", &info);
+        let after_first = (c.licenses.len(), c.external_references.len());
+        assert!(after_first.0 > 0 && after_first.1 > 0, "first pass must do something");
+
+        DepsDevSource::apply_version_info(&mut c, "cargo", &info);
+        assert_eq!(
+            (c.licenses.len(), c.external_references.len()),
+            after_first,
+            "second application duplicated data — the post-graph pass would then \
+             duplicate every already-enriched component's references",
+        );
+    }
+
+    /// A component that already carries a reference from another
+    /// source must not get a second copy from deps.dev.
+    #[test]
+    fn an_existing_reference_is_not_duplicated() {
+        let mut c = component();
+        c.external_references.push(ExternalReference {
+            ref_type: "vcs".into(),
+            url: "https://github.com/serde-rs/serde".into(),
+        });
+        let before = c.external_references.len();
+        DepsDevSource::apply_version_info(
+            &mut c,
+            "cargo",
+            &VersionInfo {
+                licenses: vec![],
+                links: vec![Link {
+                    label: "SOURCE_REPO".into(),
+                    url: "https://github.com/serde-rs/serde".into(),
+                }],
+            },
+        );
+        assert_eq!(c.external_references.len(), before);
+    }
+}

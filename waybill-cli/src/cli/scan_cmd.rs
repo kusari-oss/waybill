@@ -3563,10 +3563,14 @@ pub async fn execute(
     // summary emitted after the component set stops changing — they
     // cannot be recovered later because skips never reach the document.
     let mut m776_skips = crate::enrich::depsdev_source::LinkMappingSkips::default();
+    // Milestone 842: hoisted out of the block below so the post-graph
+    // second pass shares it — and therefore shares its in-memory
+    // cache, which is what makes that pass nearly free for every
+    // component already enriched here.
+    let deps_dev_source = DepsDevSource::new(deps_dev_client.clone(), offline)
+        .with_batch(args.enrich_batch)
+        .with_disk_cache(!args.enrich_no_cache, args.enrich_cache_max_age);
     if enrich_cfg.deps_dev {
-        let deps_dev_source = DepsDevSource::new(deps_dev_client.clone(), offline)
-            .with_batch(args.enrich_batch)
-            .with_disk_cache(!args.enrich_no_cache, args.enrich_cache_max_age);
         let (enriched, skips, degradation) =
             enrich_components(&deps_dev_source, &mut components).await;
         // Milestone 839 (FR-017a): carried to the emitters so a
@@ -3648,6 +3652,45 @@ pub async fn execute(
             folded,
             "folded declared-not-cached entries into on-disk twins",
         );
+    }
+
+    // Milestone 842 (#842): licence the components the dep-graph pass
+    // added.
+    //
+    // `enrich_components` above runs over the component set as it
+    // exists BEFORE graph expansion, so everything deps.dev's
+    // dep-graph contributed arrived unenriched — measured on this
+    // repository as maven going 29 -> 171 components with the licensed
+    // count staying at 14. deps.dev has the data; those components
+    // simply never reached the pass.
+    //
+    // Running it a second time rather than moving it: the graph pass
+    // needs the resolved component set, and the dedup + fold above has
+    // to settle before enrichment, or work is spent on entries that
+    // are about to be folded away. The second pass is cheap — the
+    // in-memory cache turns every already-enriched coordinate into a
+    // hit, so only genuinely new components reach the network, and
+    // with batching that is one request per hundred of them.
+    //
+    // `apply_version_info` is idempotent (licences and external
+    // references both dedupe), so re-visiting an enriched component is
+    // a no-op rather than a duplicate.
+    if enrich_cfg.deps_dev && !components.is_empty() {
+        let (second_pass, second_skips, second_degradation) =
+            enrich_components(&deps_dev_source, &mut components).await;
+        if second_pass > 0 {
+            tracing::info!(
+                count = second_pass,
+                "deps.dev licensed components contributed by the dep-graph pass",
+            );
+        }
+        m776_skips.unmapped_label += second_skips.unmapped_label;
+        m776_skips.malformed_url += second_skips.malformed_url;
+        // Counters live on the source, so this record is cumulative
+        // across both passes rather than describing only the second.
+        if let Some(v) = second_degradation.annotation_value() {
+            enrichment_degraded = Some(v);
+        }
     }
 
     // Milestone 191 (#560): second-pass reconciliation, mirroring the
