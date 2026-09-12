@@ -3563,7 +3563,8 @@ pub async fn execute(
     // cannot be recovered later because skips never reach the document.
     let mut m776_skips = crate::enrich::depsdev_source::LinkMappingSkips::default();
     if enrich_cfg.deps_dev {
-        let deps_dev_source = DepsDevSource::new(deps_dev_client.clone(), offline);
+        let deps_dev_source =
+            DepsDevSource::new(deps_dev_client.clone(), offline).with_batch(args.enrich_batch);
         let (enriched, skips) = enrich_components(&deps_dev_source, &mut components).await;
         m776_skips = skips;
         if enriched > 0 {

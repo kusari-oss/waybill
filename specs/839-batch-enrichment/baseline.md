@@ -236,3 +236,59 @@ gets checked.
 
 SC-001 is set at ≥20× against the 38.33s baseline (≤1.92s) — well under
 the ~37× projection, so it records a floor rather than a best case.
+
+---
+
+# T029 — Batch path, MEASURED (not projected)
+
+2026-09-12. Every arm is the **same binary and the same code path**,
+differing only in strategy, and every number comes from an explicit
+`elapsed_ms` emitted by the enrichment phase itself. Nothing here is
+inferred by subtracting one whole-scan run from another.
+
+Config: `--no-deps-dev-graph --no-clearly-defined` (deps.dev licences
+only). 709 enrichable components. Warm; warm-up run discarded.
+
+| enrichment phase | median | samples | vs sequential |
+|---|---|---|---|
+| sequential (bound = 1) | 30,140 ms | 3 | 1× |
+| concurrent, 8-way | **3,524 ms** | 5 | **8.55×** |
+| **batched (`--enrich-batch`)** | **766 ms** | 5 | **39.35×** |
+
+Batched vs concurrent: **4.60×**. Batch detail: `batched=709,
+fell_back=0` — every key resolved in bulk, no fallbacks.
+
+| | components | licensed | externalRefs |
+|---|---|---|---|
+| concurrent | 803 | 584 | 2264 |
+| batched | 803 | 584 | 2264 |
+
+**SC-003 PASS** — identical enrichment content. The speed is not bought
+by enriching less.
+
+## Criteria
+
+- **SC-001** (batch ≥20×): **PASS at 39.35×**
+- **SC-003** (identical coverage): **PASS**
+- **SC-008** (default path ≥5×): **PASS at 8.55×**
+
+## Why the phase timer replaced subtraction
+
+Earlier arms were measured by differencing whole-scan runs against a
+"floor". That floor is not stable: on this repository it moved between
+**5.13s and 23.53s** across runs, because 20 synthetic Go fixtures
+named `example.com/waybill-fixture-*` make the Go toolchain attempt
+real network resolution and 404. Subtracting an unstable floor produced
+three successive wrong speedup figures (3.22×, 3.63×, and a briefly-held
+7.96×). The phase timer removes the subtraction entirely.
+
+**SC-008 was lowered to ≥3.5× on the strength of one of those wrong
+figures and is restored to ≥5× here**, which the measured 8.55× clears.
+
+## Note on concurrency exceeding its bound
+
+8-way measures 8.55×, slightly superlinear. The `bound = 1` arm has no
+pipelining at all, so it pays full round-trip latency per request with
+no overlap; 8-way also benefits from connection reuse. The comparison
+is honest — both arms are the shipped code — but the bound is not a
+theoretical 8× ceiling and should not be read as one.

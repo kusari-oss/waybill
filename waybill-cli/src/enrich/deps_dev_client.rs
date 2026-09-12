@@ -116,6 +116,39 @@ impl DepsDevClient {
         self
     }
 
+    /// Milestone 839 — the bulk endpoint lives on the `v3alpha`
+    /// surface, which the API docs say "may change in incompatible
+    /// ways from time to time". Derived from `base_url` rather than
+    /// hard-coded so the test override reaches it too.
+    fn version_batch_url(&self) -> String {
+        format!("{}/versionbatch", self.base_url.replace("/v3", "/v3alpha"))
+    }
+
+    /// Milestone 839 (FR-001) — fetch up to one page of bulk version
+    /// metadata. Paging is the caller's business; this returns the
+    /// page it got, continuation token included.
+    pub async fn get_version_batch(
+        &self,
+        keys: &[super::request_key::EnrichmentKey],
+        page_token: Option<String>,
+    ) -> anyhow::Result<super::deps_dev_batch::BatchPage> {
+        let url = self.version_batch_url();
+        let body = super::deps_dev_batch::build_body(keys, page_token);
+        let response = self
+            .http
+            .post(&url)
+            .header("Content-Type", "application/json")
+            .body(body)
+            .send()
+            .await?;
+        if !response.status().is_success() {
+            let status = response.status();
+            let text = response.text().await.unwrap_or_default();
+            anyhow::bail!("deps.dev GetVersionBatch failed: HTTP {status} — {text}");
+        }
+        Ok(response.json().await?)
+    }
+
     /// Build the URL for a GetVersion request.
     fn version_url(&self, system: &str, name: &str, version: &str) -> String {
         format!(

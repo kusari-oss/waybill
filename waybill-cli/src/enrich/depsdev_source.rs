@@ -53,6 +53,10 @@ pub struct DepsDevSource {
     /// degraded scan is invisible today. This counter keeps the
     /// distinction the return type discards.
     transport_errors: AtomicUsize,
+    /// Milestone 839 (FR-002) — opt in to the bulk path. Off by
+    /// default: `GetVersionBatch` is on deps.dev's `v3alpha` surface,
+    /// documented as liable to change incompatibly.
+    batch: bool,
 }
 
 impl DepsDevSource {
@@ -66,7 +70,74 @@ impl DepsDevSource {
             offline,
             cache: Mutex::new(HashMap::new()),
             transport_errors: AtomicUsize::new(0),
+            batch: false,
         }
+    }
+
+    /// Milestone 839 (FR-002) — enable the bulk path for this source.
+    pub fn with_batch(mut self, batch: bool) -> Self {
+        self.batch = batch;
+        self
+    }
+
+    /// Milestone 839 (FR-001) — resolve one chunk through the bulk
+    /// endpoint, following pagination.
+    ///
+    /// Returns `None` on any failure, which the caller turns into a
+    /// per-component fallback for that chunk (C-4.1). A chunk is 100
+    /// keys, so a failure costs 100 lookups' worth of speed, not the
+    /// scan (C-4.0 / FR-005c).
+    async fn fetch_chunk_batched(
+        &self,
+        chunk: &[EnrichmentKey],
+    ) -> Option<Vec<Option<VersionInfo>>> {
+        // Match by the echoed request, never by position (C-3.1).
+        // The echo is uncanonicalized, and deps.dev normalises names
+        // per ecosystem, so the index is built from what we SENT.
+        let mut index: HashMap<(String, String, String), usize> = HashMap::new();
+        for (i, k) in chunk.iter().enumerate() {
+            index.insert(
+                (k.system.to_uppercase(), k.name.clone(), k.version.clone()),
+                i,
+            );
+        }
+        let mut out: Vec<Option<VersionInfo>> = vec![None; chunk.len()];
+        let mut token: Option<String> = None;
+        loop {
+            let page = match self.client.get_version_batch(chunk, token.clone()).await {
+                Ok(p) => p,
+                Err(e) => {
+                    warn!(error = %e, "deps.dev batch request failed — falling back");
+                    return None;
+                }
+            };
+            for entry in &page.responses {
+                let vk = &entry.request.version_key;
+                let probe = (
+                    vk.system.to_uppercase(),
+                    vk.name.clone(),
+                    vk.version.clone(),
+                );
+                match index.get(&probe) {
+                    Some(&i) => out[i] = entry.version.clone(),
+                    // An entry we did not ask for. Dropping it is
+                    // right; treating it as positional would corrupt
+                    // a neighbour.
+                    None => debug!(
+                        system = %vk.system, name = %vk.name, version = %vk.version,
+                        "deps.dev batch returned an entry that was not requested",
+                    ),
+                }
+            }
+            // C-2.1/C-2.2: continue while the token is NON-EMPTY. The
+            // service sends "" rather than omitting it, so a presence
+            // check would never terminate.
+            if !page.has_more() {
+                break;
+            }
+            token = Some(page.next_page_token.clone());
+        }
+        Some(out)
     }
 
     /// Milestone 839 (FR-003a) — resolve many keys, concurrently.
@@ -100,8 +171,63 @@ impl DepsDevSource {
             }
         }
 
-        let client = std::sync::Arc::new(self.client.clone());
+        // FR-001: bulk path first when enabled. Chunks run
+        // concurrently under the same ceiling; a chunk that fails
+        // falls through to the per-component path below (C-4.2),
+        // which is concurrent, so a degraded run is slower rather
+        // than a return to the original defect.
         let mut done = keys.len() - misses.len();
+        if self.batch && !misses.is_empty() {
+            let mut still_missing: Vec<usize> = Vec::new();
+            let chunks: Vec<Vec<usize>> = misses
+                .chunks(super::deps_dev_batch::BATCH_SIZE)
+                .map(|c| c.to_vec())
+                .collect();
+            let mut batched_ok = 0usize;
+            for group in chunks.chunks(CONCURRENT_REQUESTS) {
+                let mut results = Vec::new();
+                for idxs in group {
+                    let ks: Vec<EnrichmentKey> =
+                        idxs.iter().map(|&i| keys[i].clone()).collect();
+                    results.push(async move { (idxs.clone(), self.fetch_chunk_batched(&ks).await) });
+                }
+                for fut in results {
+                    let (idxs, got) = fut.await;
+                    match got {
+                        Some(vals) => {
+                            let mut cache =
+                                self.cache.lock().expect("deps.dev cache mutex poisoned");
+                            for (&i, v) in idxs.iter().zip(vals) {
+                                cache.insert(
+                                    (
+                                        keys[i].system.to_string(),
+                                        keys[i].name.clone(),
+                                        keys[i].version.clone(),
+                                    ),
+                                    v.clone(),
+                                );
+                                out[i] = v;
+                            }
+                            batched_ok += idxs.len();
+                            done += idxs.len();
+                        }
+                        None => still_missing.extend(idxs),
+                    }
+                }
+                progress.tick(done, Instant::now());
+            }
+            info!(
+                batched = batched_ok,
+                fell_back = still_missing.len(),
+                "deps.dev bulk enrichment complete",
+            );
+            misses = still_missing;
+            if misses.is_empty() {
+                return out;
+            }
+        }
+
+        let client = std::sync::Arc::new(self.client.clone());
 
         // A sliding window, not `chunks(N)`.
         //
@@ -340,6 +466,7 @@ pub async fn enrich_components(
         debug!("deps.dev enrichment skipped — offline mode active");
         return (0, LinkMappingSkips::default());
     }
+    let phase_start = Instant::now();
     let mut enriched_count = 0usize;
     // Milestone 776 (FR-014b): counted separately on purpose. A rising
     // unmapped count means the upstream label vocabulary moved and a
@@ -407,6 +534,20 @@ pub async fn enrich_components(
             "deps.dev enriched components with new licenses"
         );
     }
+    // Milestone 839: time the phase explicitly rather than leaving it
+    // to be inferred by differencing whole-scan runs. A scan's other
+    // network work is not stable enough to subtract — on this repo the
+    // non-deps.dev floor moved between 5s and 23s across runs — so a
+    // subtraction-based measurement of this phase is unreliable by
+    // construction. It is also what an operator wants to know when a
+    // scan feels slow.
+    info!(
+        elapsed_ms = phase_start.elapsed().as_millis() as u64,
+        attempted,
+        enriched = enriched_count,
+        "deps.dev licence enrichment complete",
+    );
+
     // Milestone 839 (FR-017a): Principles XI and XII.3 require a
     // transparency signal when an enrichment source degrades. Only the
     // total-failure case is classifiable here — a *partial* transport
