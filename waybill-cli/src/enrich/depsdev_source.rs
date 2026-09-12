@@ -23,7 +23,9 @@ pub struct LinkMappingSkips {
     pub malformed_url: usize,
 }
 use super::degradation::{DegradationMode, DegradationRecord};
+use super::progress::ProgressReporter;
 use super::request_key::EnrichmentKey;
+use std::time::Instant;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use super::source::EnrichmentSource;
 
@@ -272,7 +274,6 @@ pub async fn enrich_components(
         debug!("deps.dev enrichment skipped — offline mode active");
         return (0, LinkMappingSkips::default());
     }
-    let mut attempted = 0usize;
     let mut enriched_count = 0usize;
     // Milestone 776 (FR-014b): counted separately on purpose. A rising
     // unmapped count means the upstream label vocabulary moved and a
@@ -281,23 +282,42 @@ pub async fn enrich_components(
     // obscure both.
     let mut unmapped_label_skips = 0usize;
     let mut malformed_url_skips = 0usize;
-    for component in components.iter_mut() {
-        // Milestone 839: the key is built here, by the one helper the
-        // batch path and the on-disk cache also use. Three call sites
-        // that derive identity independently will eventually derive it
-        // differently, and the only symptom is a cache that silently
-        // splits — one path writing entries another never finds.
-        // `from_purl_parts` also absorbs the ecosystem-unsupported and
-        // incomplete-coordinate skips that used to sit inline here.
-        let Some(key) = EnrichmentKey::from_purl_parts(
-            component.purl.ecosystem(),
-            component.purl.namespace(),
-            &component.name,
-            &component.version,
-        ) else {
-            continue;
-        };
-        attempted += 1;
+
+    // Milestone 839: resolve every key before fetching anything.
+    //
+    // Two reasons, and the second is why it is worth a separate pass.
+    // Progress must report completed against a total (US2), and a
+    // total discovered as the loop runs is not a total — it would show
+    // a denominator that grows, which reads as the work getting longer
+    // the longer you wait. And the batch path needs exactly this
+    // shape: the set of lookups, known up front, independent of the
+    // components they will be applied to.
+    //
+    // The key is built by the one helper the batch path and the cache
+    // also use. Three call sites deriving identity independently will
+    // eventually derive it differently, and the symptom is a cache
+    // that silently splits — one path writing entries another never
+    // finds. `from_purl_parts` also absorbs the ecosystem-unsupported
+    // and incomplete-coordinate skips that used to sit inline.
+    let planned: Vec<(usize, EnrichmentKey)> = components
+        .iter()
+        .enumerate()
+        .filter_map(|(idx, c)| {
+            EnrichmentKey::from_purl_parts(
+                c.purl.ecosystem(),
+                c.purl.namespace(),
+                &c.name,
+                &c.version,
+            )
+            .map(|k| (idx, k))
+        })
+        .collect();
+    let attempted = planned.len();
+    let mut progress = ProgressReporter::new(attempted);
+
+    for (done, (idx, key)) in planned.into_iter().enumerate() {
+        progress.tick(done, Instant::now());
+        let component = &mut components[idx];
         let licenses_before = component.licenses.len();
         if let Some(info) = source
             .fetch_version_info(key.system, &key.name, &key.version)

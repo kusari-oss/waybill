@@ -53,11 +53,11 @@ re-prioritisation — US1 remains the reported defect.
 output. Progress appears before the phase ends and conveys how much
 remains.
 
-- [ ] T010 [US2] Create the time-triggered progress emitter in `waybill-cli/src/enrich/progress.rs`: first emission once the phase passes 10 seconds, then at intervals no longer than 10 seconds (FR-009/009a). The trigger is elapsed time, not completed count — a small component count behind a slow endpoint produces the same silence as a large one.
-- [ ] T011 [P] [US2] Unit-test the emitter in `waybill-cli/src/enrich/progress.rs` with an injected clock: nothing emitted below the threshold, first line after it, and continued emission at interval. An injected clock rather than real sleeps, so the test is neither slow nor timing-flaky.
-- [ ] T012 [US2] Wire the emitter into `enrich_components` at `waybill-cli/src/enrich/depsdev_source.rs:273`, reporting completed against a total known before the phase starts, at `tracing` INFO.
-- [ ] T013 [US2] Ensure a zero-enrichable-component phase emits nothing at all (FR-010) — not a `0/0` line, which asserts that nothing happened.
-- [ ] T014 [US2] Verify progress lands on stderr while the SBOM goes to `--output` (`main.rs:288-290` already routes `tracing` to stderr), satisfying US2 scenario 3 without a new writer.
+- [X] T010 [US2] Create the time-triggered progress emitter in `waybill-cli/src/enrich/progress.rs`: first emission once the phase passes 10 seconds, then at intervals no longer than 10 seconds (FR-009/009a). The trigger is elapsed time, not completed count — a small component count behind a slow endpoint produces the same silence as a large one.
+- [X] T011 [P] [US2] Unit-test the emitter in `waybill-cli/src/enrich/progress.rs` with an injected clock: nothing emitted below the threshold, first line after it, and continued emission at interval. An injected clock rather than real sleeps, so the test is neither slow nor timing-flaky.
+- [X] T012 [US2] Wire the emitter into `enrich_components` at `waybill-cli/src/enrich/depsdev_source.rs:273`, reporting completed against a total known before the phase starts, at `tracing` INFO.
+- [X] T013 [US2] Ensure a zero-enrichable-component phase emits nothing at all (FR-010) — not a `0/0` line, which asserts that nothing happened.
+- [X] T014 [US2] Verify progress lands on stderr while the SBOM goes to `--output` (`main.rs:288-290` already routes `tracing` to stderr), satisfying US2 scenario 3 without a new writer. **VERIFIED on a live scan**: first line at elapsed_secs=10, then 20/30/40, `completed=168…689 total=709` on stderr, with the SBOM parsing cleanly at 803 components.
 
 **Checkpoint**: US2 is independently shippable here.
 
