@@ -57,6 +57,7 @@ impl SbomSerializer for CycloneDxJsonSerializer {
             // version through to `metadata.version`. None ⇒
             // pre-m221 hardcoded 1 (FR-009 byte-identity).
             sbom_version: scan.sbom_version,
+            enrichment_degraded: scan.enrichment_degraded.map(str::to_string),
         };
         let builder = CycloneDxBuilder::new(cdx_config)
             .with_os_release_missing_fields(scan.os_release_missing_fields.to_vec())

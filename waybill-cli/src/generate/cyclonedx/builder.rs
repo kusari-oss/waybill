@@ -34,6 +34,8 @@ pub struct CycloneDxConfig {
     /// through to `metadata.version` in the emitted CDX document.
     /// `None` preserves the pre-m221 hardcoded `1` per FR-009.
     pub sbom_version: Option<waybill_common::types::SbomVersion>,
+    /// Milestone 839 (FR-017a) — C158 degradation annotation value.
+    pub enrichment_degraded: Option<String>,
 }
 
 impl Default for CycloneDxConfig {
@@ -44,6 +46,7 @@ impl Default for CycloneDxConfig {
             generation_context: GenerationContext::BuildTimeTrace,
             include_dev: false,
             sbom_version: None,
+            enrichment_degraded: None,
         }
     }
 }
@@ -746,6 +749,7 @@ impl CycloneDxBuilder {
             // document version into the metadata block for the
             // C142 `waybill:sbom-version` property.
             self.config.sbom_version,
+            self.config.enrichment_degraded.as_deref(),
         );
         // Milestone 076 — track per-component identifier matches so
         // we can emit a warn for any selector that matched zero
@@ -2161,6 +2165,7 @@ mod tests {
             include_dev: false,
             // Milestone 221 US4 — test default preserves pre-m221 behavior.
             sbom_version: None,
+            enrichment_degraded: None,
         };
         let builder = CycloneDxBuilder::new(config);
 
@@ -2786,6 +2791,7 @@ mod tests {
             include_dev: false,
             // Milestone 221 US4 — test default preserves pre-m221 behavior.
             sbom_version: None,
+            enrichment_degraded: None,
         })
         .with_identifiers(identifiers)
         .with_root_override(crate::generate::RootComponentOverride {

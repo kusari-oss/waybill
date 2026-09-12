@@ -505,6 +505,13 @@ pub fn annotate_document(
         push(&mut out, "waybill:sbom-version", json!(v.as_u32()));
     }
 
+    // C158 enrichment-degraded — Milestone 839 (FR-017a). Emitted
+    // only when the phase degraded; a clean scan emits nothing, so
+    // byte-identity is preserved on the default path.
+    if let Some(d) = artifacts.enrichment_degraded {
+        push(&mut out, "waybill:enrichment-degraded", json!(d));
+    }
+
     // Milestone 133 US4 (Constitution Strict Boundary §5):
     // `--file-inventory=full` opt-in marker. CDX + SPDX 3 twins.
     if let Some("full") = artifacts.file_inventory_mode {

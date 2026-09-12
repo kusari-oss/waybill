@@ -405,6 +405,7 @@ mod tests {
             // Milestone 221 US4 — test-helper default preserves
             // pre-m221 behavior (no --sbom-version).
             sbom_version: None,
+            enrichment_degraded: None,
             scope_mode: crate::generate::ScopeMode::Artifact,
             source_document_binding: None,
             identifiers: &[],

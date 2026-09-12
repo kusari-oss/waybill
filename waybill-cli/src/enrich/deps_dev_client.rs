@@ -2,8 +2,8 @@
 // JSON deserialization from the deps.dev API but only some fields are
 // then read directly in waybill code (e.g., `VersionInfo::licenses`
 // drives license enrichment and (since milestone 776) `links`
-// -> component externalReferences. `advisory_keys` isn't yet
-// consumed). Rust's dead-code analysis doesn't see through serde, so
+// -> component externalReferences). Rust's dead-code analysis doesn't
+// see through serde, so
 // the un-read fields are flagged. Allow dead_code per-struct to
 // preserve the wire-shape definitions; serde populates everything,
 // and downstream callers may add reads later without re-shaping the
@@ -12,20 +12,26 @@
 
 use std::time::Duration;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 /// Version information from deps.dev GetVersion API.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct VersionInfo {
     pub licenses: Vec<String>,
-    #[serde(default)]
-    pub advisory_keys: Vec<String>,
     #[serde(default)]
     pub links: Vec<Link>,
 }
 
+// Milestone 839 (FR-016a): `advisoryKeys` was deserialised here and
+// read nowhere. deps.dev offers no field mask, so the server sends it
+// regardless — what we control is whether we keep it. Retaining it
+// mattered more once an on-disk cache existed: it is the field most
+// obviously mutable after publication (a CVE lands against an
+// already-published version), so caching it would have created
+// staleness risk for data that reaches no output at all.
+
 /// A link associated with a package version.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Link {
     pub label: String,
     pub url: String,
@@ -100,6 +106,50 @@ impl DepsDevClient {
         }
     }
 
+    /// Point the client at a different origin. Test-only — it exists
+    /// so the concurrent fetch path can be exercised against a local
+    /// mock, which is the only way to make workers complete out of
+    /// request order on purpose.
+    #[cfg(test)]
+    pub fn with_base_url(mut self, base_url: impl Into<String>) -> Self {
+        self.base_url = base_url.into();
+        self
+    }
+
+    /// Milestone 839 — the bulk endpoint lives on the `v3alpha`
+    /// surface, which the API docs say "may change in incompatible
+    /// ways from time to time". Derived from `base_url` rather than
+    /// hard-coded so the test override reaches it too.
+    fn version_batch_url(&self) -> String {
+        format!("{}/versionbatch", self.base_url.replace("/v3", "/v3alpha"))
+    }
+
+    /// Milestone 839 (FR-001) — fetch up to one page of bulk version
+    /// metadata. Paging is the caller's business; this returns the
+    /// page it got, continuation token included.
+    pub async fn get_version_batch(
+        &self,
+        keys: &[super::request_key::EnrichmentKey],
+        page_token: Option<String>,
+    ) -> anyhow::Result<(super::deps_dev_batch::BatchPage, Option<u64>)> {
+        let url = self.version_batch_url();
+        let body = super::deps_dev_batch::build_body(keys, page_token);
+        let response = self
+            .http
+            .post(&url)
+            .header("Content-Type", "application/json")
+            .body(body)
+            .send()
+            .await?;
+        if !response.status().is_success() {
+            let status = response.status();
+            let text = response.text().await.unwrap_or_default();
+            anyhow::bail!("deps.dev GetVersionBatch failed: HTTP {status} — {text}");
+        }
+        let max_age = max_age_of(&response);
+        Ok((response.json().await?, max_age))
+    }
+
     /// Build the URL for a GetVersion request.
     fn version_url(&self, system: &str, name: &str, version: &str) -> String {
         format!(
@@ -164,7 +214,7 @@ impl DepsDevClient {
         system: &str,
         name: &str,
         version: &str,
-    ) -> anyhow::Result<VersionInfo> {
+    ) -> anyhow::Result<(VersionInfo, Option<u64>)> {
         let url = self.version_url(system, name, version);
         tracing::debug!(url = %url, "querying deps.dev for version info");
 
@@ -178,9 +228,24 @@ impl DepsDevClient {
             );
         }
 
+        // Milestone 839 (FR-012a): the service publishes its own
+        // freshness policy on every response. Reading it is more
+        // durable than any interval chosen here — a pinned version is
+        // immutable but deps.dev's record about it is not.
+        let max_age = max_age_of(&response);
         let info: VersionInfo = response.json().await?;
-        Ok(info)
+        Ok((info, max_age))
     }
+}
+
+/// Extract `Cache-Control: max-age` from a response.
+fn max_age_of(response: &reqwest::Response) -> Option<u64> {
+    let raw = response
+        .headers()
+        .get(reqwest::header::CACHE_CONTROL)?
+        .to_str()
+        .ok()?;
+    super::deps_dev_disk_cache::parse_max_age(Some(raw))
 }
 
 /// Percent-encode a URL path segment.

@@ -545,6 +545,12 @@ fn push_document_fields(
         push(out, "waybill:sbom-version", json!(v.as_u32()));
     }
 
+    // C158 enrichment-degraded — Milestone 839 (FR-017a). Emitted
+    // only when the phase degraded.
+    if let Some(d) = scan.enrichment_degraded {
+        push(out, "waybill:enrichment-degraded", json!(d));
+    }
+
     // Milestone 133 US4 (Constitution Strict Boundary §5):
     // `--file-inventory=full` opt-in marker.
     if let Some("full") = scan.file_inventory_mode {

@@ -1,6 +1,6 @@
 # waybill Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-09-11
+Auto-generated from all feature plans. Last updated: 2026-09-12
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -369,6 +369,8 @@ Auto-generated from all feature plans. Last updated: 2026-09-11
 - `target/compare/run-<timestamp>.json` (gitignored); operator tool config at `xtask/compare/tools.local.toml` (gitignored). Targets cached via m770's pinned-SHA fetcher. No published output — the repository is public, so committed files and CI artefacts are both world-readable. (780-comparative-bench-harness)
 - Rust stable (workspace toolchain; no nightly). No production source changes — this feature touches test fixtures, a review-time tool under `xtask`, and documentation. + Existing only — `serde_json` (already used by the harness for masked golden serialisation), the m195 harness at `waybill-cli/tests/corpus_harness_195/`, and the `public-corpus.yml` dispatch. **Zero new Cargo dependencies.** (840-refresh-corpus-goldens)
 - Committed goldens at `waybill-cli/tests/fixtures/public_corpus/<target>/{cdx,spdx-2.3,spdx-3}.json`. Unchanged layout. (840-refresh-corpus-goldens)
+- Rust stable, workspace toolchain. No nightly. + Existing only — `reqwest` (already the deps.dev (839-batch-enrichment)
+- `$HOME/.cache/waybill/deps-dev/`, sibling to the existing (839-batch-enrichment)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -457,14 +459,56 @@ If you open a PR without running these two commands clean, CI will
 reject it. Do not cite a passing per-crate `cargo test` as evidence
 of CI-readiness — they are not equivalent.
 
+## Measure external behaviour before designing around it
+
+When a design depends on how an external service actually behaves —
+page sizes, rate limits, latency, concurrency scaling, response shapes,
+cache semantics — **probe it before committing the number to a spec,
+plan or implementation.** Guessing an initial value while thinking is
+fine and often necessary. Shipping that guess into a requirement, or
+building on it, is not.
+
+A throwaway script against the live API costs minutes. Discovering the
+assumption was wrong after implementation costs the implementation, and
+worse, the wrong number usually still passes every test written around
+it — because the tests were written from the same assumption.
+
+**The rule**: any number in a spec, plan, contract or success criterion
+that describes external behaviour must be traceable to an observation,
+and the artifact must say which. If it cannot be measured yet, express
+it as a ratio against a baseline a task will establish, not as an
+absolute quoted from an unverified source.
+
+**Never present derived arithmetic as measurement.** Extrapolating one
+measured figure through unmeasured assumptions produces a guess, however
+many digits it has. Label predictions as predictions and keep them out
+of tables headed as data.
+
+**Worked example — milestone 839 (#766).** The deps.dev batch endpoint
+accepts up to 5000 entries per request, so the spec chose a batch size
+by reasoning about progress granularity and blast radius. Measurement
+found the endpoint **pages at 100**, undocumented, and that pages are
+serial because each needs the previous page's token. Batches of 500 and
+5000 are therefore 5 and 50 sequential round-trips, measuring ~3× and
+~4× slower than batches of 100 for identical coverage. Two success
+criteria were also an order of magnitude too loose, and the baseline
+they were quoted against could not be reproduced. None of this was
+knowable by reading the API docs; all of it took one afternoon of
+probing. See `specs/839-batch-enrichment/measurements/` for the harness
+and the standard of evidence expected.
+
+Keep the probe. Commit it next to the spec so the finding is
+reproducible and so the next person can re-run it when the service
+changes — an undocumented limit is one that can move without notice.
+
 ## Code Style
 
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 839-batch-enrichment: Added Rust stable, workspace toolchain. No nightly. + Existing only — `reqwest` (already the deps.dev
 - 840-refresh-corpus-goldens: Added Rust stable (workspace toolchain; no nightly). No production source changes — this feature touches test fixtures, a review-time tool under `xtask`, and documentation. + Existing only — `serde_json` (already used by the harness for masked golden serialisation), the m195 harness at `waybill-cli/tests/corpus_harness_195/`, and the `public-corpus.yml` dispatch. **Zero new Cargo dependencies.**
 - 780-comparative-bench-harness: `xtask compare` — private, deterministic comparison of waybill against operator-nominated SBOM tools. Committed source names no competing tool; results never leave `target/`. Package identity is full PURL including version; truth sets are declared per target and labelled when they are supersets; timing is a within-session interleaved ratio, never a gated absolute. Zero new deps.
-- 779-signing-identity-shapes: GitHub Actions ambient OIDC signing (no helper action / no `SIGSTORE_ID_TOKEN`); `SignerIdentity` classification (email/workload/unrecognized) with the certificate's issuer; emitted verification command; nightly keyless-conformance workflow. sigstore fork bumped to `v0.11.0-waybill-3`. Zero new Cargo dependencies.
 
 
 <!-- MANUAL ADDITIONS START -->

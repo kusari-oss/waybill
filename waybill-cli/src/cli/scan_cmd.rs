@@ -1004,6 +1004,47 @@ pub struct ScanArgs {
     #[arg(long)]
     pub no_deps_dev_license: bool,
 
+    /// Milestone 839 (#766) — fetch deps.dev licence metadata in
+    /// bulk via `GetVersionBatch` instead of one request per
+    /// component.
+    ///
+    /// Off by default: `GetVersionBatch` lives on deps.dev's
+    /// `v3alpha` surface, which its own documentation says "may
+    /// change in incompatible ways from time to time". A batch
+    /// failure falls back to the per-component path, so an upstream
+    /// change degrades speed rather than breaking the scan.
+    ///
+    /// Has no effect when `--offline`, `--no-deps-dev` or
+    /// `--no-deps-dev-license` is set — all of those suppress the
+    /// licence path this flag accelerates.
+    #[arg(long)]
+    pub enrich_batch: bool,
+
+    /// Milestone 839 (#766) — accept cached deps.dev enrichment up
+    /// to this many seconds old, overriding the freshness bound the
+    /// upstream response asks for.
+    ///
+    /// By default waybill honours the response's own
+    /// `Cache-Control: max-age`, which deps.dev sets to 3600. That
+    /// is deliberate: a pinned package version is immutable but
+    /// deps.dev's *record about* it is not — licences get corrected,
+    /// source links get added, and Go licences come from a scanner
+    /// whose output moves when the scanner does. deps.dev offers no
+    /// `ETag`, so a stale entry cannot be detected, only re-fetched.
+    ///
+    /// Raising this trades currency for speed. The value is recorded
+    /// in each entry written under it, so entries fetched with a
+    /// longer bound keep it and others are unaffected.
+    #[arg(long, value_name = "SECONDS")]
+    pub enrich_cache_max_age: Option<u64>,
+
+    /// Milestone 839 (#766) — bypass the on-disk deps.dev enrichment
+    /// cache for this scan, neither reading from it nor writing to
+    /// it. Use for a cold measurement. To clear the cache instead,
+    /// remove `~/.cache/waybill/deps-dev/`.
+    #[arg(long)]
+    pub enrich_no_cache: bool,
+
     /// Milestone 102 (FR-016/FR-017): include vendored C/C++
     /// dependencies declared via CMake `add_subdirectory(third_party/...)`
     /// or `add_subdirectory(vendor/...)`. Default OFF — these are
@@ -3514,6 +3555,7 @@ pub async fn execute(
     // offline mode turns the whole pass into a no-op. Failures are
     // warnings, not errors — the scan still produces a valid SBOM if
     // deps.dev is unreachable.
+    let mut enrichment_degraded: Option<String> = None;
     let deps_dev_client = DepsDevClient::new(std::time::Duration::from_secs(5));
     // Milestone 776: `enrich_components` now also maps the deps.dev
     // `links[]` array onto component externalReferences and reports the
@@ -3522,8 +3564,16 @@ pub async fn execute(
     // cannot be recovered later because skips never reach the document.
     let mut m776_skips = crate::enrich::depsdev_source::LinkMappingSkips::default();
     if enrich_cfg.deps_dev {
-        let deps_dev_source = DepsDevSource::new(deps_dev_client.clone(), offline);
-        let (enriched, skips) = enrich_components(&deps_dev_source, &mut components).await;
+        let deps_dev_source = DepsDevSource::new(deps_dev_client.clone(), offline)
+            .with_batch(args.enrich_batch)
+            .with_disk_cache(!args.enrich_no_cache, args.enrich_cache_max_age);
+        let (enriched, skips, degradation) =
+            enrich_components(&deps_dev_source, &mut components).await;
+        // Milestone 839 (FR-017a): carried to the emitters so a
+        // degraded run is distinguishable from a clean one by
+        // inspecting the SBOM, not by comparing component counts
+        // against an expectation nobody holds.
+        enrichment_degraded = degradation.annotation_value();
         m776_skips = skips;
         if enriched > 0 {
             tracing::info!(enriched, "deps.dev added licenses to components");
@@ -4185,6 +4235,7 @@ pub async fn execute(
         // `None` when `--sbom-version` is unset (byte-identity path
         // per FR-009).
         sbom_version: args.sbom_version,
+        enrichment_degraded: enrichment_degraded.as_deref(),
         scope_mode: if effective_include_declared_deps {
             crate::generate::ScopeMode::Manifest
         } else {
@@ -5883,6 +5934,12 @@ mod tests {
             no_oci_cache: false,
             oci_cache_size: None,
             registry_credentials_dir: None,
+            // Milestone 839 — defaults preserve pre-m839 behaviour:
+            // per-component licence fetches, upstream-declared cache
+            // freshness, cache enabled.
+            enrich_batch: false,
+            enrich_cache_max_age: None,
+            enrich_no_cache: false,
             // Milestone 182 — test helper defaults preserve pre-m182
             // behavior (no insecure registries, no additional CAs,
             // full TLS verification). Byte-identity SC-004.

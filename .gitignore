@@ -82,3 +82,7 @@ target/quality/
 #     the committed example uses placeholders only.
 target/compare/
 xtask/compare/*.local.toml
+
+# Python bytecode from spec measurement harnesses
+__pycache__/
+*.pyc
