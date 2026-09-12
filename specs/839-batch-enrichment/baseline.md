@@ -199,3 +199,40 @@ by this path. It needs revising down to what per-component concurrency
 can actually deliver against this service, or the batch path has to
 carry the default — which FR-002 explicitly forbids until v3alpha has
 been exercised against real corpora.
+
+---
+
+# Batch request-layer ceiling (pre-implementation, T029 will verify)
+
+Measured 2026-09-12 on the **same 709 coordinates** the T017 A/B used,
+so the two are directly comparable.
+
+| | wall | requests |
+|---|---|---|
+| sequential (python, 1 connection) | 42.84s | 709 |
+| **batch=100, 8-way (python)** | **0.43s** | **8** |
+
+**100× at the request layer**, 702/709 resolved.
+
+## Projected end-to-end — NOT measured
+
+The request layer is not the scan. A scan also walks, parses and emits,
+which costs 0.48s offline and which no enrichment change touches.
+
+| configuration | today (measured) | projected | ratio |
+|---|---|---|---|
+| licence lookups alone | ~34.3s | 0.43s | ~100× |
+| scan, `--no-deps-dev-graph` | 38.33s | ~1.0s | **~37×** |
+| scan, default (graph on) | ~41s | ~7s | ~6× |
+
+The projections assume the batch path in waybill reaches the same
+request-layer rate the python harness does. **T017 is the reason to
+distrust that assumption**: the harness predicted 7.7× for concurrency
+and waybill delivered 3.8×, because the harness used eight independent
+connections and waybill uses one pooled client. The batch path issues 8
+requests rather than 709, so per-connection limits should matter far
+less — but that is reasoning, not measurement, and T029 is where it
+gets checked.
+
+SC-001 is set at ≥20× against the 38.33s baseline (≤1.92s) — well under
+the ~37× projection, so it records a floor rather than a best case.
