@@ -102,7 +102,64 @@ genuine A/B rather than a comparison against a recorded number.
 bought by enriching less, which is the failure mode a wall-clock-only
 comparison would hide.
 
-## Result: 3.82×, and SC-008 (≥5×) does not pass
+## Result: 3.63×, and SC-008 (≥5×) does not pass
+
+### Corrected measurement (the numbers above are whole-scan, not the licence path)
+
+The table above subtracts the **offline** run as a base. That is wrong:
+`--offline` disables all network, not just deps.dev, so it folds in the
+ClearlyDefined enricher. Isolating properly with
+`--no-deps-dev-graph --no-clearly-defined`, warm, both arms back to back:
+
+| arm | wall | licensed |
+|---|---|---|
+| sequential (pre-change) | 34.83s | 584 |
+| concurrent, 8-way | **9.60s** | 584 |
+
+**3.63×**, coverage identical.
+
+A subtraction attempted mid-investigation gave 7.96× and was wrong.
+ClearlyDefined is a *fallback* enricher — it only queries components
+that still lack a licence — so its cost collapses when deps.dev
+succeeds (5.14s with deps.dev off, 0.13s with it on). The phases are
+not additive and cannot be subtracted from one another. Only a run with
+the other paths actually disabled measures this one.
+
+### The implementation is correct; the ceiling is upstream
+
+Instrumented with an in-flight counter: `max_in_flight=8,
+requests=709`. The sliding window keeps the full bound saturated.
+
+What upstream does with it:
+
+| | ms/req | speedup |
+|---|---|---|
+| python, 1 connection, serial | 60.4 | 1× |
+| **python, 8 separate connections** | **6.7** | **9.1×** |
+| waybill, 8-way over one pooled HTTP/2 connection | 12.9 | 3.8× |
+| waybill, 8-way forced HTTP/1.1 + pool 32 | — | *slower* (11.67s vs 10.04s) |
+| waybill, 24-way | — | 1.22× over 8-way |
+
+Python's sequential rate (60.4 ms) matches waybill's (48.4 ms), so
+network conditions are not the difference. Eight independent
+connections reach 9.1×; one multiplexed connection reaches 3.8×;
+raising our bound 3× buys 1.22×. That pattern points at a per-connection
+server-side limit.
+
+**It is not confirmed.** Forcing HTTP/1.1 with a 32-connection pool
+should have tested it directly and came back *slower*, which the
+per-connection theory does not explain. Either that experiment did not
+actually produce multiple connections, or the mechanism is something
+else. Recorded as unexplained rather than asserted.
+
+### Not adopted
+
+24-way is recorded and rejected: FR-003b makes the bound conservative
+because deps.dev publishes no rate limit, and tripling load for 1.22%
+— 1.22× — is the trade that requirement exists to refuse. Bending the
+ceiling to reach a success criterion invented from a different
+concurrency model would be worse.
+
 
 ## What the numbers say
 
