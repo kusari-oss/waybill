@@ -31,7 +31,7 @@
 - [ ] T003 Create `xtask/src/corpus_diff/mod.rs` implementing the normaliser per `contracts/xtask-corpus-diff-cli.md` C-1/C-2: accept `--old`/`--new` or `--target`/`--old-ref`, sort unordered collections by a stable total key, apply normalisation symmetrically to both sides, write to stdout, exit 0 regardless of whether differences exist.
 - [ ] T004 Wire `CorpusDiff(corpus_diff::CorpusDiffArgs)` into the `Cli` enum and match arm in `xtask/src/main.rs`, and add `pub mod corpus_diff;` to `xtask/src/lib.rs`.
 - [ ] T005 [P] Add `xtask/src/corpus_diff/tests.rs` covering contract C-5: an ordering-only difference normalises to empty output (C-5.1); a single changed licence still appears (C-5.2); a golden compared with itself is empty (C-5.3).
-- [ ] T006 [P] Add a test asserting committed goldens are byte-identical before and after a `corpus-diff` run, enforcing C-2.3/C-5.4. This is the check that catches an accidental write-back, which would make a reordered-but-equal golden compare equal and silently weaken the gate.
+- [ ] T006 Add to `xtask/src/corpus_diff/tests.rs` (after T005; same file, so not parallel) a test asserting committed goldens are byte-identical before and after a `corpus-diff` run, enforcing C-2.3/C-5.4. This is the check that catches an accidental write-back, which would make a reordered-but-equal golden compare equal and silently weaken the gate.
 - [ ] T007 Verify the normaliser does NOT re-apply the harness's masking (C-2.4). Goldens are already masked at write time in `waybill-cli/tests/corpus_harness_195/layer2_golden.rs:51`; masking twice risks diverging from what the lane compares.
 
 **Checkpoint**: `cargo test -p xtask --lib corpus_diff` green, and `git status` clean after running the tool against a real golden.
@@ -71,7 +71,7 @@
 - [ ] T019 [US2] Record which targets exhibit each category, so categories can be compared ACROSS targets per FR-013a. A target exhibiting a category no other target shows is the most likely place for a regression to hide.
 - [ ] T020 [US2] Confirm every category has a named cause. "Expected churn" is not a cause; any category without one returns to T012.
 - [ ] T021 [US2] Write the attribution into the pull request description per FR-015. Do NOT commit it as a document — it describes one moment and would read as current long after it is not, which is the failure mode #827 is currently cleaning up.
-- [ ] T022 [US2] Reference the pull request from the commit message per FR-015a, so the evidence stays reachable from `git log` by someone who does not know it exists.
+- [ ] T022 [US2] Reference the pull request from the commit message per FR-015a, then verify SC-007 by running `git log -1` on the merged commit and confirming the attribution is reachable from what it prints — following only the reference, without prior knowledge that evidence exists.
 - [ ] T023 [US2] Prove the lane still detects change (FR-010, SC-003): introduce a deliberate emission change, dispatch the lane, confirm it fails and names the affected target and format, then revert. Record the failing run ID in the PR. A green lane is not evidence of a working lane — this repo has shipped a schema gate that passed because its `$ref`s resolved to stubs.
 - [ ] T024 [US2] Cover at least one target per format in T023, so a format whose comparison silently no-ops cannot hide behind the other two.
 
@@ -89,16 +89,18 @@
 - [ ] T026 [P] [US3] Ensure the document states the local-generation prohibition and *why*, citing #818 (macOS-recorded baseline vs Linux CI, nine days of phantom failures) and #832 (LFS-dependent fixture, three nights, two wrong diagnoses). The reason is what makes the rule survive contact with someone in a hurry.
 - [ ] T027 [P] [US3] Link the procedure from `CONTRIBUTING.md` where the other maintenance procedures are listed, so it is found without knowing its filename.
 
-**Checkpoint**: Procedure published and discoverable.
+- [ ] T028 [US3] Validate SC-006: have someone who did not perform this refresh — a colleague, or a fresh session with no feature context — read `docs/development/refreshing-corpus-goldens.md` alone and restate the procedure. Record which steps they could not reconstruct and fix those gaps in the document. Self-review does not satisfy this: the author cannot un-know the procedure, which is the one thing the criterion measures.
+
+**Checkpoint**: Procedure published, discoverable, and confirmed followable by someone other than its author.
 
 ---
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T028 Verify reproducibility (FR-011, SC-004): dispatch regen a second time against the unchanged tree and confirm the output is identical to the committed goldens. A difference means something non-deterministic is unmasked.
-- [ ] T029 If T028 finds non-determinism, fix it in the harness's `mask_nondeterministic` where the gate honours it — NOT in `corpus_diff`, where only human reviewers would see the fix and the lane would keep failing.
-- [ ] T030 Run the full pre-PR gate: `./scripts/pre-pr.sh` must exit 0.
-- [ ] T031 Close #763 with a reference to the merged PR, noting the corrected scope (ten targets, not the five originally reported).
+- [ ] T029 Verify reproducibility (FR-011, SC-004): dispatch regen a second time against the unchanged tree and confirm the output is identical to the committed goldens. A difference means something non-deterministic is unmasked.
+- [ ] T030 If T029 finds non-determinism, fix it in the harness's `mask_nondeterministic` where the gate honours it — NOT in `corpus_diff`, where only human reviewers would see the fix and the lane would keep failing.
+- [ ] T031 Run the full pre-PR gate: `./scripts/pre-pr.sh` must exit 0.
+- [ ] T032 Close #763 with a reference to the merged PR, noting the corrected scope (ten targets, not the five originally reported).
 
 ---
 
@@ -129,8 +131,8 @@ Phase 1 (Setup)
 
 ### Parallel Opportunities
 
-- T005, T006 in Phase 2 — different test cases, same new file, so coordinate or write sequentially if editing conflicts.
-- T025, T026, T027 in Phase 5 — different files.
+- T005 → T006 in Phase 2 are NOT parallel: same file. T007 may run alongside either (it inspects the harness and writes nothing).
+- T025, T026, T027 in Phase 5 — different files. T028 is NOT parallel: it validates the document those three produce, so it runs after them.
 - Phase 5 in parallel with Phases 3–4 entirely.
 - **Not parallel**: reading the thirty diffs (T010–T011). Cross-target comparison is the point (FR-013a); splitting them across people or sessions destroys the signal that one target's delta pattern is unlike its peers.
 
@@ -146,4 +148,4 @@ Phase 1 (Setup)
 2. Phases 3–4 land together as the refresh PR. One change, all targets (FR-013).
 3. Phase 5 can land before, with, or after — it blocks nothing.
 
-**Estimated shape**: 31 tasks. The volume is in T010–T011 (thirty diffs to read and classify), which is human judgment and does not parallelise without losing the cross-target signal that makes it worth doing.
+**Estimated shape**: 32 tasks. The volume is in T010–T011 (thirty diffs to read and classify), which is human judgment and does not parallelise without losing the cross-target signal that makes it worth doing.
