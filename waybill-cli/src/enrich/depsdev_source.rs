@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Mutex;
 
-use tracing::{debug, info};
+use tracing::{debug, info, warn};
 
 use waybill_common::resolution::{DepsDevMatch, Relationship, ResolvedComponent};
 use waybill_common::types::license::SpdxExpression;
@@ -22,7 +22,9 @@ pub struct LinkMappingSkips {
     pub unmapped_label: usize,
     pub malformed_url: usize,
 }
+use super::degradation::{DegradationMode, DegradationRecord};
 use super::request_key::EnrichmentKey;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use super::source::EnrichmentSource;
 
 /// An enrichment source backed by the deps.dev v3 API.
@@ -42,6 +44,12 @@ pub struct DepsDevSource {
     /// the "API returned 404 / error" result so we don't re-hit the
     /// same miss for every duplicate component in a single scan.
     cache: Mutex<HashMap<(String, String, String), Option<VersionInfo>>>,
+    /// Milestone 839 (FR-017a): transport failures, counted apart from
+    /// genuine 404s. `fetch_version_info` collapses both into `None`
+    /// so callers can treat them uniformly — which is exactly why a
+    /// degraded scan is invisible today. This counter keeps the
+    /// distinction the return type discards.
+    transport_errors: AtomicUsize,
 }
 
 impl DepsDevSource {
@@ -54,6 +62,7 @@ impl DepsDevSource {
             client,
             offline,
             cache: Mutex::new(HashMap::new()),
+            transport_errors: AtomicUsize::new(0),
         }
     }
 
@@ -74,6 +83,7 @@ impl DepsDevSource {
         let result = match self.client.get_version(system, name, version).await {
             Ok(info) => Some(info),
             Err(e) => {
+                self.transport_errors.fetch_add(1, Ordering::Relaxed);
                 debug!(
                     system = %system,
                     name = %name,
@@ -262,6 +272,7 @@ pub async fn enrich_components(
         debug!("deps.dev enrichment skipped — offline mode active");
         return (0, LinkMappingSkips::default());
     }
+    let mut attempted = 0usize;
     let mut enriched_count = 0usize;
     // Milestone 776 (FR-014b): counted separately on purpose. A rising
     // unmapped count means the upstream label vocabulary moved and a
@@ -286,6 +297,7 @@ pub async fn enrich_components(
         ) else {
             continue;
         };
+        attempted += 1;
         let licenses_before = component.licenses.len();
         if let Some(info) = source
             .fetch_version_info(key.system, &key.name, &key.version)
@@ -306,6 +318,32 @@ pub async fn enrich_components(
             "deps.dev enriched components with new licenses"
         );
     }
+    // Milestone 839 (FR-017a): Principles XI and XII.3 require a
+    // transparency signal when an enrichment source degrades. Only the
+    // total-failure case is classifiable here — a *partial* transport
+    // failure has no mode in the spec's closed vocabulary, so it is
+    // deliberately not invented. Surfaced in the log for now; the
+    // document-scope SBOM annotation lands with T008, which needs the
+    // record threaded through the emission pipeline.
+    let transport_errors = source.transport_errors.load(Ordering::Relaxed);
+    let mut degradation = DegradationRecord::new();
+    if attempted > 0 && transport_errors >= attempted {
+        degradation.record(DegradationMode::WhollyUnavailable);
+        degradation.add_unenriched(attempted);
+    }
+    if let Some(value) = degradation.annotation_value() {
+        warn!(
+            degradation = %value,
+            "deps.dev enrichment degraded — SBOM emitted with reduced enrichment"
+        );
+    } else if transport_errors > 0 {
+        debug!(
+            transport_errors,
+            attempted,
+            "deps.dev enrichment saw transport errors but completed",
+        );
+    }
+
     let skips = LinkMappingSkips {
         unmapped_label: unmapped_label_skips,
         malformed_url: malformed_url_skips,
