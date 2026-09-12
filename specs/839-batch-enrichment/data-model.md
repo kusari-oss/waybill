@@ -36,7 +36,7 @@ One request/response round-trip against `POST /v3alpha/versionbatch`.
 
 | Field | Description |
 |---|---|
-| requests | Approximately **500** by default (FR-005a), for progress granularity and blast radius. Hard service ceiling is **5000**; above that the service returns HTTP 400. |
+| requests | **100** (FR-005a) — the observed response page size. Hard service ceiling is **5000**; above that the service returns HTTP 400, but sizes between 100 and 5000 are worse than 100 because they paginate. |
 | page_token | Empty on the first page; thereafter the previous response's `next_page_token` |
 | responses | One entry per result, each echoing its originating request |
 | next_page_token | **Empty string when exhausted — not absent** |
@@ -48,11 +48,14 @@ One request/response round-trip against `POST /v3alpha/versionbatch`.
 - Paging requires every other request field to be unchanged from the
   initial request, per the API docs. A page-2 request that re-derives its
   body is a correctness bug even when it looks equivalent.
-- Two separate numbers, easily conflated. **5000** is the service's hard
-  limit and must never be exceeded. **~500** is waybill's chosen size,
-  set well below it so the completed count advances often enough to read
-  as progress. Raising the chosen size toward the ceiling would silently
-  degrade US2 while leaving every test green.
+- Three numbers, easily conflated. **5000** is the service's hard limit.
+  **100** is the observed page size and waybill's chosen batch size.
+  Anything in between is the worst of both: accepted by the service, then
+  silently split into serial pages. Measured, batch=500 is ~3× slower than
+  batch=100 and batch=5000 ~4× slower, for identical coverage.
+- The page size is **observed, not documented**. Nothing in the deps.dev
+  API reference states it; it was found by probing (101 in → 100 out plus
+  a token). It may change, which is why pagination stays implemented.
 - Chunking must hold for inputs far larger than any currently tested — a
   repository is free to have 60,000 components.
 

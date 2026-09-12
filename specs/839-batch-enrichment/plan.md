@@ -6,8 +6,10 @@
 ## Summary
 
 Enrichment contacts deps.dev once per component, in sequence. On a
-7,592-component repository that is 7,592 round-trips and ~17 minutes of
-total silence, so operators kill the scan and get no SBOM at all.
+7,592-component repository that is 7,592 round-trips and — per issue #766
+— roughly 17 minutes of total silence, so operators kill the scan and get
+no SBOM at all. (That baseline is not independently reproduced; see
+Performance Goals. T001 settles it before any absolute target is used.)
 
 Three changes, in priority order: batch lookups through
 `POST /v3alpha/versionbatch` behind a flag; make the per-component path —
@@ -22,10 +24,12 @@ record for a pinned version **is** mutable and carries its own one-hour
 this service (R3); it was flagged rather than reinterpreted, and has
 since been reworded from "request" to "retain or persist".
 
-A later clarification round also resized batches from the 5000 ceiling to
-~500 (FR-005a): at the ceiling a large scan is two requests and the
-progress count freezes through each one, which would have had US1's
-batching silently defeat US2's observability while every test passed.
+Batch size is **100**, set by measurement rather than by reasoning
+(`measurements/`). The endpoint pages at 100 and pages are serial, so
+larger batches turn one round-trip into many: batch=500 measures ~3×
+slower than batch=100 and batch=5000 ~4× slower, at identical coverage.
+An earlier clarification had set ~500 from an argument about progress
+granularity; the direction was right, the number and the reason were not.
 
 ## Technical Context
 
@@ -42,16 +46,20 @@ recorded fixtures; no network in tests.
 **Target Platform**: All three host platforms; nothing platform-specific.
 **Project Type**: Single Rust workspace; changes confined to
 `waybill-cli/src/enrich/` plus flag definitions in `cli/scan_cmd.rs`.
-**Performance Goals**: SC-001 ≤2 min enrichment for ~7,500 components
-(from ~17 min); SC-002 ≥99% fewer requests; SC-008 the non-bulk default
-materially faster than 17 min.
+**Performance Goals**: expressed as ratios against the T001 baseline, not
+absolutes — the ~17-minute figure from #766 is not reproduced by
+clean-room measurement (~7 min extrapolated) and the gap is unexplained.
+SC-001 ≥20× with the batch path (measured headroom: ~102×); SC-002 ≥98%
+fewer requests (~99.0% at size 100); SC-008 ≥5× for the default concurrent
+path (measured ~7.7×).
 **Constraints**: FR-003b — concurrency ceiling stays at the existing
 `CONCURRENT_REQUESTS = 8`; deps.dev publishes no rate limit, so there is
 no advertised allowance to tune against (R4). FR-012a — freshness comes
 from the response, not from a constant.
-**Scale/Scope**: Service ceiling is 5000 entries per batch (R2); waybill
-sends ~500 (FR-005a), so a 7,592-component scan is ~16 concurrent
-requests rather than 7,592 serial ones.
+**Scale/Scope**: Service ceiling is 5000 entries per batch, but the
+response pages at 100 (R2, measured), so waybill sends 100 (FR-005a) and a
+7,592-component scan is ~76 concurrent requests rather than 7,592 serial
+ones.
 
 ## Constitution Check
 
@@ -111,9 +119,8 @@ a local cache is still from deps.dev, but it was retrieved at some earlier
 time. Whether the retrieval time belongs in the annotation is a judgment
 the spec should make rather than the implementation.
 
-**Gate result: PASS with one recorded gap.** No violation requires a
-Complexity Tracking entry — the gap is a missing requirement, not an
-architectural exception.
+**Gate result: PASS.** The gap recorded above is closed by FR-017a/b/c.
+No violation requires a Complexity Tracking entry.
 
 ## Project Structure
 

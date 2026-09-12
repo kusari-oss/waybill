@@ -459,6 +459,48 @@ If you open a PR without running these two commands clean, CI will
 reject it. Do not cite a passing per-crate `cargo test` as evidence
 of CI-readiness — they are not equivalent.
 
+## Measure external behaviour before designing around it
+
+When a design depends on how an external service actually behaves —
+page sizes, rate limits, latency, concurrency scaling, response shapes,
+cache semantics — **probe it before committing the number to a spec,
+plan or implementation.** Guessing an initial value while thinking is
+fine and often necessary. Shipping that guess into a requirement, or
+building on it, is not.
+
+A throwaway script against the live API costs minutes. Discovering the
+assumption was wrong after implementation costs the implementation, and
+worse, the wrong number usually still passes every test written around
+it — because the tests were written from the same assumption.
+
+**The rule**: any number in a spec, plan, contract or success criterion
+that describes external behaviour must be traceable to an observation,
+and the artifact must say which. If it cannot be measured yet, express
+it as a ratio against a baseline a task will establish, not as an
+absolute quoted from an unverified source.
+
+**Never present derived arithmetic as measurement.** Extrapolating one
+measured figure through unmeasured assumptions produces a guess, however
+many digits it has. Label predictions as predictions and keep them out
+of tables headed as data.
+
+**Worked example — milestone 839 (#766).** The deps.dev batch endpoint
+accepts up to 5000 entries per request, so the spec chose a batch size
+by reasoning about progress granularity and blast radius. Measurement
+found the endpoint **pages at 100**, undocumented, and that pages are
+serial because each needs the previous page's token. Batches of 500 and
+5000 are therefore 5 and 50 sequential round-trips, measuring ~3× and
+~4× slower than batches of 100 for identical coverage. Two success
+criteria were also an order of magnitude too loose, and the baseline
+they were quoted against could not be reproduced. None of this was
+knowable by reading the API docs; all of it took one afternoon of
+probing. See `specs/839-batch-enrichment/measurements/` for the harness
+and the standard of evidence expected.
+
+Keep the probe. Commit it next to the spec so the finding is
+reproducible and so the next person can re-run it when the service
+changes — an undocumented limit is one that can move without notice.
+
 ## Code Style
 
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions

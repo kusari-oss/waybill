@@ -55,15 +55,16 @@ loop. FR-012b's extend flag exists for operators who choose otherwise.
 
 ## R2 — Batch endpoint shape, limits and pagination
 
-**Decision**: `POST /v3alpha/versionbatch`, chunked at ~500 (well under
-the 5000 ceiling — see FR-005a), paged until `nextPageToken` is empty,
-matched by echoed request key.
+**Decision**: `POST /v3alpha/versionbatch`, chunked at **100** — the
+observed page size (see FR-005a and `measurements/`) — paged until
+`nextPageToken` is empty, matched by echoed request key.
 
 **Evidence** (v3alpha API reference + live probe):
 
 | Property | Value | Source |
 |---|---|---|
 | Max entries per batch | **5000**; more returns HTTP 400 | docs, explicit |
+| **Response page size** | **100**; 101 in returns 100 + token | **measured, undocumented** |
 | Page request field | `pageToken` | docs |
 | Page response field | `nextPageToken` | docs |
 | Paging constraint | "All other request fields must be the same as in the initial request" | docs |

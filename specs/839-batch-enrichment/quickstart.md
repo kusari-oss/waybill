@@ -16,9 +16,10 @@ A scan with enrichment enabled no longer goes silent. Three things moved:
   that finishes faster prints nothing.
 - **Concurrency**, on by default. The per-component path issues requests
   concurrently instead of one at a time.
-- **Batching**, opt-in. Groups lookups into bulk requests of a few hundred
-  each, issued concurrently. A ~7,500-component scan goes from ~7,500
-  requests to roughly 16.
+- **Batching**, opt-in. Groups lookups into requests of 100, issued
+  concurrently. A ~7,500-component scan goes from ~7,500 requests to
+  roughly 76. 100 is not arbitrary — it is the size of a response page, so
+  larger batches get split back into serial round-trips and end up slower.
 
 Enrichment content is unchanged. Same licences, same source links.
 
@@ -84,9 +85,12 @@ rm -rf ~/.cache/waybill/deps-dev/          # clear
 
 ## Measuring the change
 
-The baseline is the **sequential** path as it behaved before this work —
-about 17 minutes for ~7,500 components. Compare against that, not against
-the improved per-component path, or the batch gain will look far smaller
+The baseline is the **sequential** path as it behaved before this work.
+Measure it yourself rather than trusting a quoted figure: issue #766
+reports ~17 minutes for ~7,500 components, and a clean-room measurement of
+the request path extrapolates to ~7 minutes, and the gap is unexplained.
+Compare against your own baseline, and against the *sequential* path — not
+the improved per-component one, or the batch gain will look far smaller
 than it is.
 
 ```bash

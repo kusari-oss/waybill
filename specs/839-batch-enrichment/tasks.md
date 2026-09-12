@@ -36,7 +36,7 @@ re-prioritisation — US1 remains the reported defect.
 - [ ] T003 [P] Create the shared enrichment-request key in `waybill-cli/src/enrich/request_key.rs`, carrying system, name and version with per-ecosystem name normalisation (PyPI per PEP 503, NuGet lowercased, Maven `group:artifact`). Both the batch path and the per-component path must build this identically, or they will populate and miss different cache entries for the same package (contract C-6.2).
 - [ ] T004 [P] Unit-test per-ecosystem normalisation in `waybill-cli/src/enrich/request_key.rs`. A normalisation bug surfaces as a response entry with no data — indistinguishable from "deps.dev does not carry this package" — so it degrades silently and needs its own test rather than being caught downstream.
 - [ ] T005 [P] Remove `advisory_keys` from `VersionInfo` in `waybill-cli/src/enrich/deps_dev_client.rs:21` and from the three test fixtures in `waybill-cli/src/enrich/depsdev_source.rs:412,427,457` (FR-016a). It is parsed and never read; caching it would persist the field most obviously mutable after publication for data that reaches no output.
-- [ ] T006 Create the degradation record in `waybill-cli/src/enrich/degradation.rs` — the set of modes encountered (bulk-unavailable, throttled, wholly-unavailable) plus the count of components left unenriched (FR-017a/b/c). Multiple modes in one run must all be recorded, not just the first.
+- [ ] T006 Create the degradation record in `waybill-cli/src/enrich/degradation.rs` — the set of modes encountered (batch-unavailable, throttled, wholly-unavailable) plus the count of components left unenriched (FR-017a/b/c). Multiple modes in one run must all be recorded, not just the first.
 - [ ] T007 Add the document-scope annotation for the degradation record: a new row in `docs/reference/sbom-format-mapping.md` **and** the matching entry in `waybill-cli/src/parity/extractors/mod.rs::EXTRACTORS`, plus a per-format arm in `waybill-cli/src/parity/extractors/cdx.rs`, `waybill-cli/src/parity/extractors/spdx2.rs` and `waybill-cli/src/parity/extractors/spdx3.rs` — **all in the same change**. Adding the catalog row ahead of the extractors fails `every_catalog_row_has_an_extractor` (`waybill-cli/src/parity/extractors/mod.rs:725`) and `holistic_parity`.
 - [ ] T008 Emit the degradation annotation at document scope across all three formats, following the wiring an existing doc-scope annotation already uses: CDX in `waybill-cli/src/generate/cyclonedx/metadata.rs` (wired from `builder.rs`), SPDX 2.3 in `waybill-cli/src/generate/spdx/annotations.rs` (wired from `document.rs`), SPDX 3 in `waybill-cli/src/generate/spdx/v3_annotations.rs` (wired from `v3_document.rs`). Emit nothing when the phase was not degraded; an explicit "no degradation" marker is noise on every clean scan.
 - [ ] T009 [P] Test the degradation annotation in `waybill-cli/src/enrich/degradation.rs`: a single mode, two modes in one run (FR-017c), and the empty case emitting nothing.
@@ -69,7 +69,7 @@ remains.
 instead of being killed.
 
 **Independent test**: Scan a several-thousand-component repository with
-the bulk path active; licence coverage and source-reference counts match
+the batch path active; licence coverage and source-reference counts match
 the per-component path, and wall time drops by an order of magnitude
 against the T001 baseline.
 
@@ -81,11 +81,11 @@ against the T001 baseline.
 
 ### Block B — batching (FR-001), behind `--enrich-batch`
 
-- [ ] T018 [P] [US1] Define the batch request and response types in `waybill-cli/src/enrich/deps_dev_batch.rs` for `POST /v3alpha/versionbatch`, including `page_token` on the request and `next_page_token` on the response.
-- [ ] T019 [US1] Implement chunking in `waybill-cli/src/enrich/deps_dev_batch.rs` at approximately **500** entries (FR-005a), with **5000** as a hard ceiling that is clamped or rejected, never sent (C-1.1/C-1.1a). These are two different numbers: 5000 is what the service permits, ~500 is what waybill sends so the completed count keeps moving.
-- [ ] T020 [P] [US1] Test chunking in `waybill-cli/src/enrich/deps_dev_batch.rs`: 1,001 requests produce three chunks at the default size, none exceeds it, and a configured size above 5000 is clamped or rejected.
+- [ ] T018 [P] [US1] Define the batch request and response types in `waybill-cli/src/enrich/deps_dev_batch.rs` for `POST /v3alpha/versionbatch`, including `page_token` on the request and `next_page_token` on the response. **First re-verify the response page size** by running `python3 specs/839-batch-enrichment/measurements/pagecheck.py` (FR-005a-i): it was 100 on 2026-09-12, is undocumented, and FR-005a's chosen size depends on it. If it has moved, FR-005a moves with it.
+- [ ] T019 [US1] Implement chunking in `waybill-cli/src/enrich/deps_dev_batch.rs` at **100** entries (FR-005a) — the observed response page size — with **5000** as a hard ceiling that is clamped or rejected, never sent (C-1.1/C-1.1a). Three numbers, easily conflated: 5000 is what the service accepts, 100 is what it returns per page, and 100 is therefore what waybill sends. Anything in between is accepted and then silently split into serial pages, measuring ~3–4× slower for identical coverage.
+- [ ] T020 [P] [US1] Test chunking in `waybill-cli/src/enrich/deps_dev_batch.rs`: 1,001 requests produce eleven chunks at the default size, none exceeds it, and a configured size above 5000 is clamped or rejected. Assert the default equals the page size, so a future change to one forces a deliberate change to the other rather than a silent regression into pagination.
 - [ ] T021 [US1] Implement the pagination loop in `waybill-cli/src/enrich/deps_dev_batch.rs`, continuing while `next_page_token` is **non-empty** and reusing the initial request body verbatim apart from `page_token` (C-2.1/C-2.3).
-- [ ] T022 [P] [US1] Test pagination termination in `waybill-cli/src/enrich/deps_dev_batch.rs`. deps.dev returns `"nextPageToken": ""` on the final page rather than omitting the field, so `Option<String>` yields `Some("")` and a presence check never terminates. Assert that a single-page fixture with an empty token stops after one request, and that a two-page fixture yields the union of both.
+- [ ] T022 [P] [US1] Test pagination termination in `waybill-cli/src/enrich/deps_dev_batch.rs`. At the FR-005a size this path never runs in production, so it must be forced by a fixture — an unexercised defensive path rots, and this one exists only because the page size is undocumented and may move. deps.dev returns `"nextPageToken": ""` on the final page rather than omitting the field, so `Option<String>` yields `Some("")` and a presence check never terminates. Assert that a single-page fixture with an empty token stops after one request, and that a two-page fixture yields the union of both.
 - [ ] T023 [US1] Match responses to requests by the echoed `responses[].request.versionKey`, never by array position (C-3.1). The echo is **uncanonicalized** per the API docs, so match against what was sent rather than re-deriving a key through waybill's own canonicalisation (C-3.2).
 - [ ] T024 [P] [US1] Test identity matching in `waybill-cli/src/enrich/deps_dev_batch.rs` with a fixture mixing a hit, a miss (entry present, `version` absent) and a reordered response: exactly the hit is enriched, the miss is left alone, and neither fails the scan.
 - [ ] T025 [US1] Issue batches concurrently in `waybill-cli/src/enrich/deps_dev_batch.rs`, under the same ceiling as the per-component path (FR-005b/C-1.1b), so finer chunking costs no wall-clock time relative to fewer, larger requests.
@@ -122,7 +122,7 @@ and emits identical enrichment content.
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T041 Sweep every Edge Case in the spec and confirm each yields a completed scan carrying the FR-017a annotation where it degraded (SC-006): bulk endpoint unavailable, oversized batch, paginated response, omitted or reordered entries, upstream throttling, `--offline`, interruption mid-enrichment, zero enrichable components. Tests T027/T035 cover two of these; the rest have no single owning task and would otherwise go unverified.
+- [ ] T041 Sweep every Edge Case in the spec and confirm each yields a completed scan carrying the FR-017a annotation where it degraded (SC-006): batch endpoint unavailable, oversized batch, paginated response, omitted or reordered entries, upstream throttling, `--offline`, interruption mid-enrichment, zero enrichable components. Tests T027/T035 cover two of these; the rest have no single owning task and would otherwise go unverified.
 - [ ] T042 [P] Publish the operator documentation from `specs/839-batch-enrichment/quickstart.md` into `docs/`, including the explanation of why the cache expires after an hour — the one-hour default will otherwise read as an oversight rather than as deps.dev's own stated policy.
 - [ ] T043 Verify SC-004 by observation and record the observed interval in `specs/839-batch-enrichment/baseline.md`: on a scan of ~7,500 components, progress appears within 10 seconds of enrichment beginning and thereafter at intervals no longer than 10 seconds, with the batch path active. This is the criterion that batching at the 5000 ceiling would have broken while every automated test stayed green.
 - [ ] T044 Run the full pre-PR gate — `cargo +stable clippy --workspace --all-targets` and `cargo +stable test --workspace`, both clean — and enumerate the per-suite results rather than grepping for failures.
@@ -199,12 +199,13 @@ Every functional requirement maps to at least one task. Contract clauses
 | FR-003a/b bounded concurrency | T015, T016 |
 | FR-004 / FR-004a fallback, concurrent | T026, T027 |
 | FR-005 service ceiling | T019, T020 |
-| FR-005a ~500 for granularity | T019, T020, T043 |
+| FR-005a batch size 100 (page boundary) | T018, T019, T020 |
+| FR-005a-i re-verify page size | T018, T020 |
 | FR-005b concurrent batches | T025 |
 | FR-005c blast radius | T026 |
 | FR-006 consume all pages | T021, T022 |
 | FR-007 match by identity | T023, T024 |
-| FR-008 bulk ≡ per-component | T016, T027, T029 |
+| FR-008 batch ≡ per-component | T016, T027, T029 |
 | FR-009 / FR-009a time-triggered progress | T010, T011, T012 |
 | FR-010 silent when no work | T013 |
 | FR-011 persistent cache | T030 |
@@ -225,5 +226,5 @@ Every functional requirement maps to at least one task. Contract clauses
 | SC-005 repeat scan ≥90% fewer | T040 |
 | SC-006 every failure mode completes | T041 |
 | SC-007 nothing issued when offline | T039 |
-| SC-008 non-bulk path materially faster | T017 |
+| SC-008 non-batch path materially faster | T017 |
 | SC-009 no stale data served | T032 |
