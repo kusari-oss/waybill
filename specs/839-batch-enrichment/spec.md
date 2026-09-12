@@ -1,0 +1,122 @@
+# Feature Specification: Batched, observable dependency enrichment
+
+**Feature Branch**: `839-batch-enrichment`
+**Created**: 2026-09-11
+**Status**: Draft
+**Input**: User description: "Batch deps.dev version enrichment behind a flag, with progress output and a local disk cache, so large scans stop reading as hangs (issue #766)"
+
+## User Scenarios & Testing *(mandatory)*
+
+### User Story 1 - A large scan finishes in a reasonable time (Priority: P1)
+
+An operator scans a large monorepo without opting out of network enrichment. Today waybill contacts the upstream metadata service once per component, in sequence. On a 7,592-component repository that is 7,592 sequential network round-trips and roughly 17 minutes of wall time. The operator sees no output during that period and reasonably concludes the tool has hung, so they kill it and get no SBOM at all.
+
+After this change, waybill groups those lookups into a small number of bulk requests. The same scan completes in a time the operator will wait for, and the enrichment data — licences and source links — is unchanged.
+
+**Why this priority**: This is the reported defect (#766). It converts a scan that produces nothing into one that produces a fully enriched SBOM. It is also the only story that changes what an operator ultimately *gets* rather than what they *see*.
+
+**Independent Test**: Scan a repository with several thousand components with enrichment enabled and the bulk path active. Confirm the emitted SBOM carries the same licence and source-link coverage as the per-component path, and that wall time falls by at least an order of magnitude.
+
+**Acceptance Scenarios**:
+
+1. **Given** a repository whose scan yields several thousand enrichable components, **When** the operator scans with enrichment enabled and the bulk path active, **Then** an SBOM is produced whose licence coverage and source-reference count match the per-component path for the same input.
+2. **Given** the same repository, **When** the operator compares wall time between the bulk path and the per-component path, **Then** the bulk path is at least ten times faster.
+3. **Given** a scan where the metadata service returns data for only some of the requested components, **When** enrichment completes, **Then** components with data are enriched, components without are left unenriched, and neither case fails the scan.
+
+---
+
+### User Story 2 - The operator can see that work is happening (Priority: P1)
+
+An operator runs any scan whose enrichment phase takes more than a few seconds. waybill reports what it is doing as it goes, so a slow phase is legible as progress rather than as a stall.
+
+Today the final line printed before enrichment is `scan complete`, after which the process is silent until the SBOM is written. That silence is what turned a slow scan into a bug report: the reporter's log ends exactly where enrichment begins.
+
+**Why this priority**: Equal to Story 1, because throughput alone does not fix the reported experience. Any phase that can run long without output will be read as a hang on a large enough input, and the bulk path does not eliminate that possibility — it lowers the threshold at which it occurs. Shipping Story 1 without Story 2 leaves the same failure mode waiting for a bigger repository.
+
+**Independent Test**: Run a scan with enrichment enabled and observe the output stream. Progress must be visible without waiting for the phase to finish, and must convey how much work remains.
+
+**Acceptance Scenarios**:
+
+1. **Given** a scan whose enrichment phase processes more than a threshold number of components, **When** enrichment runs, **Then** waybill emits progress showing work completed against work total, updated as the phase proceeds.
+2. **Given** a scan whose enrichment phase is trivially short, **When** enrichment runs, **Then** waybill does not flood the output with progress noise.
+3. **Given** an operator who has redirected output to a file, **When** the scan runs, **Then** progress output does not corrupt or interleave badly with the rest of the diagnostic stream.
+
+---
+
+### User Story 3 - A repeated scan does not re-fetch unchanged data (Priority: P2)
+
+An operator scans the same repository repeatedly — in a CI loop, while iterating on flags, or across several output formats. Metadata for a *pinned* package version does not change, so waybill reuses what it already retrieved instead of asking again.
+
+**Why this priority**: Lower than P1 because it improves the repeat case rather than fixing the reported defect, and the first scan on a fresh machine is unaffected. It is genuinely valuable — repeated scans are the common development loop — and there is direct precedent in the sibling enricher, which already keeps an on-disk cache.
+
+**Independent Test**: Scan a repository twice with enrichment enabled. The second scan performs materially fewer network requests than the first and produces an identical SBOM.
+
+**Acceptance Scenarios**:
+
+1. **Given** a repository scanned once with enrichment enabled, **When** it is scanned again, **Then** the second scan issues substantially fewer network requests and emits an SBOM with identical enrichment content.
+2. **Given** a cache entry for a package version, **When** that same version is requested again, **Then** the cached value is used, because a pinned version's metadata is immutable.
+3. **Given** an unreadable, corrupt or partially-written cache, **When** a scan runs, **Then** waybill falls back to fetching and the scan succeeds.
+4. **Given** an operator who wants a cold measurement, **When** they request it, **Then** the cache can be bypassed or cleared.
+
+---
+
+### Edge Cases
+
+- The bulk endpoint is unavailable, returns an error, or returns a malformed body. Enrichment must degrade to the existing behaviour rather than failing the scan or silently dropping enrichment for every component.
+- A bulk request exceeds the service's documented maximum entries per request. Requests must be chunked so this cannot occur, including on repositories far larger than any currently tested.
+- A bulk response is paginated. All pages must be consumed, or the scan will silently under-enrich — a failure that produces a plausible-looking SBOM and is therefore worse than an error.
+- A bulk response omits entries that were requested, or returns them in a different order. Responses must be matched to requests by identity rather than by position.
+- The operator passes the flag that disables network access. No enrichment request of any kind may be issued, bulk or otherwise.
+- The scan is interrupted mid-enrichment. No partial or corrupt cache state may be left behind that would poison a later scan.
+- A scan produces zero enrichable components. The phase must be a no-op without emitting progress output or making requests.
+- Enrichment data differs between the bulk and per-component paths for the same package version. The two paths must be verified to agree, since a silent divergence would make SBOM content depend on which path happened to run.
+
+## Requirements *(mandatory)*
+
+### Functional Requirements
+
+- **FR-001**: waybill MUST retrieve version metadata for multiple components in a single upstream request when the bulk path is active.
+- **FR-002**: The bulk path MUST be selectable by the operator via an explicit flag, and MUST NOT be the default until it has been exercised against real corpora.
+- **FR-003**: waybill MUST retain the existing per-component retrieval path, and MUST use it when the bulk path is not selected.
+- **FR-004**: When a bulk request fails, waybill MUST fall back to the per-component path for the affected components and complete the scan successfully.
+- **FR-005**: waybill MUST split bulk requests so that no single request exceeds the upstream service's documented maximum number of entries.
+- **FR-006**: waybill MUST consume all pages of a paginated bulk response before considering enrichment complete.
+- **FR-007**: waybill MUST match bulk responses to their requests by package identity, not by ordering.
+- **FR-008**: Enrichment content produced by the bulk path MUST be identical to that produced by the per-component path for the same set of package versions.
+- **FR-009**: waybill MUST emit progress output during enrichment, reporting completed and total work, when the phase exceeds a threshold amount of work.
+- **FR-010**: waybill MUST NOT emit enrichment progress output when there is no enrichment work to do.
+- **FR-011**: waybill MUST persist retrieved version metadata across scans in a local cache.
+- **FR-012**: waybill MUST use a cached entry in preference to a network request for the same package version.
+- **FR-013**: waybill MUST treat an unreadable or corrupt cache as a cache miss and continue the scan.
+- **FR-014**: waybill MUST provide a way for an operator to bypass or clear the local cache.
+- **FR-015**: waybill MUST NOT issue any enrichment request — bulk, per-component, or cache-refresh — when network access is disabled.
+- **FR-016**: waybill MUST NOT request upstream fields it does not consume.
+- **FR-017**: The scan MUST succeed when enrichment is wholly unavailable, emitting an SBOM without enrichment rather than failing.
+
+### Key Entities
+
+- **Enrichment request**: the identity of one package version for which metadata is sought — ecosystem, name, version.
+- **Enrichment record**: the metadata retrieved for one package version. Today this is licences and source links. Anything not consumed by emission is out of scope per FR-016.
+- **Cache entry**: a stored enrichment record keyed by package version identity. Immutable, because the version it describes is pinned.
+- **Progress report**: completed and total enrichment work at a point in time.
+
+## Success Criteria *(mandatory)*
+
+### Measurable Outcomes
+
+- **SC-001**: A scan of a repository with roughly 7,500 enrichable components completes enrichment in under two minutes, against roughly 17 minutes today.
+- **SC-002**: The number of upstream requests for such a scan falls by at least 99% compared with the per-component path.
+- **SC-003**: Licence coverage and source-reference counts for such a scan are identical between the bulk and per-component paths.
+- **SC-004**: An operator watching a scan of that size sees evidence of progress within 10 seconds of enrichment beginning, and thereafter at intervals no longer than 10 seconds.
+- **SC-005**: A second scan of an unchanged repository issues at least 90% fewer upstream requests than the first.
+- **SC-006**: Every failure mode in Edge Cases yields a completed scan — enrichment may be reduced or absent, but the scan does not fail and does not silently under-enrich without saying so.
+- **SC-007**: No scan issues an upstream request when network access is disabled.
+
+## Assumptions
+
+- The upstream service's bulk interface is currently published under an unstable version label. Story 1 is therefore gated behind an operator flag (FR-002) and paired with a fallback (FR-004) so an upstream change degrades rather than breaks. Promoting it to the default is out of scope for this feature and should follow evidence from real use.
+- "Progress output" means the existing diagnostic stream, not a new interactive UI. Issue #607 proposes per-phase progress diagnostics more broadly; this feature covers the enrichment phase only and should not foreclose that wider design.
+- The local cache stores only data already retrievable from the public upstream service. It is a latency optimisation, not a new source of truth.
+- A *published, shared* cache — one operated by the project and consumed by others — is explicitly **out of scope**. It would make the project a supply-chain intermediary for licence facts, which requires its own design and governance discussion rather than arriving as part of a performance fix.
+- The measurements cited throughout (7,592 components, ~17 minutes, 110 → 5,658 components with licences, 7,571 → 23,810 source references) come from a scan of the repository named in issue #766, taken on 2026-09-11 against the then-current `main`.
+- The reported symptom in #766 is a hang. It is not: the scan completes in about 17 minutes. It is treated here as a defect of equal severity, because every operator kills it and therefore gets no SBOM.
