@@ -66,3 +66,35 @@ both have already gone wrong on sibling artifacts in this repo:
 - **FR-010 / SC-003** (prove the gate still detects). A refresh that
   makes a lane green without confirming it can still go red is
   indistinguishable from disabling it.
+
+
+## Clarification session 2026-09-11
+
+Three questions asked and integrated. All three resolved genuine
+ambiguity rather than confirming defaults:
+
+1. **Non-drift failures contradicted SC-001.** FR-012 forbade
+   regenerating such a target's golden while SC-001 demanded a 100%
+   pass rate — mutually unsatisfiable if such a target exists. Resolved:
+   repair it here or drop it from gating with a tracked issue, and
+   SC-001 now measures "targets it gates". Added FR-012a so a dropped
+   target is visible in lane output, because shrinking coverage to reach
+   100% would otherwise be indistinguishable from earning it.
+
+2. **FR-013 was written with an unresolved "or".** Now decided: one
+   change covering every target. Added FR-013a requiring evidence be
+   comparable ACROSS targets — a target whose delta pattern differs from
+   its peers is the likeliest place for a regression to hide, and that
+   signal only exists when they are reviewed together.
+
+3. **FR-015 required evidence but not a location.** Now the PR
+   description, explicitly not a committed document, with FR-015a
+   requiring the commit to reference the PR so it stays reachable from
+   `git log`. Aligns with #827's retirement of point-in-time documents
+   that read as current long after they aren't.
+
+A terminology pass followed Q1: FR-009 and a Story 1 acceptance scenario
+still said "every target" where SC-001 had become "targets it gates".
+Both corrected, so the spec now uses one term for one concept.
+
+Counts after clarification: 18 FRs, 7 SCs, 0 unresolved markers.
