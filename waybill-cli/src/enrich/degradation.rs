@@ -20,11 +20,18 @@ use std::collections::BTreeSet;
 /// be stable and enumerable.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum DegradationMode {
-    // `BatchUnavailable` and `Throttled` are part of this closed
-    // vocabulary (catalog row C158) but are only *produced* once the
-    // batch path exists — T026/T028. They are added there rather than
-    // carried here unconstructed, because the workspace denies dead
-    // code and a standing `#[allow]` outlives the reason for it.
+    /// The batch endpoint failed and work fell back to the
+    /// per-component path. Enrichment content is unaffected — the
+    /// fallback resolves the same data — so this costs speed, not
+    /// coverage, and is reported with `unenriched=0`. Recorded anyway
+    /// because `v3alpha` is documented as liable to change
+    /// incompatibly, and an operator whose scan got slower deserves to
+    /// know the fast path stopped working rather than guessing.
+    BatchUnavailable,
+    // `Throttled` belongs to this closed vocabulary (catalog row C158)
+    // but has no producer yet: the client surfaces transport errors
+    // without distinguishing HTTP 429, so nothing can honestly set it.
+    // Added when that distinction exists, not before.
     /// Enrichment could not run at all — the service was unreachable
     /// for the whole phase.
     WhollyUnavailable,
@@ -35,6 +42,7 @@ impl DegradationMode {
     /// for any consumer matching on it.
     pub fn as_str(self) -> &'static str {
         match self {
+            Self::BatchUnavailable => "batch-unavailable",
             Self::WhollyUnavailable => "wholly-unavailable",
         }
     }
@@ -127,7 +135,30 @@ mod tests {
 
 
     #[test]
+    fn batch_fallback_costs_speed_not_coverage() {
+        // The fallback resolves the same data, so unenriched stays 0.
+        // Counting those components as unenriched would overstate the
+        // harm and make a successful degradation look like data loss.
+        let mut r = DegradationRecord::new();
+        r.record(DegradationMode::BatchUnavailable);
+        assert_eq!(r.annotation_value().unwrap(), "batch-unavailable;unenriched=0");
+    }
+
+    #[test]
+    fn every_mode_is_recorded_not_just_the_first() {
+        // FR-017c.
+        let mut r = DegradationRecord::new();
+        r.record(DegradationMode::BatchUnavailable);
+        r.record(DegradationMode::WhollyUnavailable);
+        assert_eq!(
+            r.annotation_value().unwrap(),
+            "batch-unavailable,wholly-unavailable;unenriched=0",
+        );
+    }
+
+    #[test]
     fn wire_strings_are_stable() {
+        assert_eq!(DegradationMode::BatchUnavailable.as_str(), "batch-unavailable");
         // These are matched on by downstream tooling; changing one is
         // a breaking change, so pin them.
         assert_eq!(DegradationMode::WhollyUnavailable.as_str(), "wholly-unavailable");

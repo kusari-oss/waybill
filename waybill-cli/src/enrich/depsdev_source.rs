@@ -57,6 +57,11 @@ pub struct DepsDevSource {
     /// default: `GetVersionBatch` is on deps.dev's `v3alpha` surface,
     /// documented as liable to change incompatibly.
     batch: bool,
+    /// Milestone 839 (FR-017a) — batch chunks that failed and fell
+    /// back to the per-component path. Speed degraded, coverage did
+    /// not; recorded so a slower scan is explicable rather than
+    /// mysterious.
+    batch_fallbacks: AtomicUsize,
 }
 
 impl DepsDevSource {
@@ -71,6 +76,7 @@ impl DepsDevSource {
             cache: Mutex::new(HashMap::new()),
             transport_errors: AtomicUsize::new(0),
             batch: false,
+            batch_fallbacks: AtomicUsize::new(0),
         }
     }
 
@@ -211,7 +217,10 @@ impl DepsDevSource {
                             batched_ok += idxs.len();
                             done += idxs.len();
                         }
-                        None => still_missing.extend(idxs),
+                        None => {
+                            self.batch_fallbacks.fetch_add(1, Ordering::Relaxed);
+                            still_missing.extend(idxs);
+                        }
                     }
                 }
                 progress.tick(done, Instant::now());
@@ -557,6 +566,9 @@ pub async fn enrich_components(
     // record threaded through the emission pipeline.
     let transport_errors = source.transport_errors.load(Ordering::Relaxed);
     let mut degradation = DegradationRecord::new();
+    if source.batch_fallbacks.load(Ordering::Relaxed) > 0 {
+        degradation.record(DegradationMode::BatchUnavailable);
+    }
     if attempted > 0 && transport_errors >= attempted {
         degradation.record(DegradationMode::WhollyUnavailable);
         degradation.add_unenriched(attempted);
@@ -960,5 +972,153 @@ mod concurrency_tests {
         assert_eq!(got[0].as_ref().unwrap().licenses, vec!["Apache-2.0"], "cache hit");
         assert_eq!(got[1].as_ref().unwrap().licenses, vec!["MIT"], "network hit");
         assert!(got[2].is_none(), "absent package stays absent, and does not fail the scan");
+    }
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod batch_tests {
+    use super::*;
+    use wiremock::matchers::{body_string_contains, method, path, path_regex};
+    use wiremock::{Mock, MockServer, ResponseTemplate};
+
+    fn src(server: &MockServer, batch: bool) -> DepsDevSource {
+        let client = DepsDevClient::new(std::time::Duration::from_secs(10))
+            .with_base_url(format!("{}/v3", server.uri()));
+        DepsDevSource::new(client, false).with_batch(batch)
+    }
+    fn keys(names: &[&str]) -> Vec<EnrichmentKey> {
+        names
+            .iter()
+            .map(|n| EnrichmentKey::from_purl_parts("cargo", None, n, "1.0.0").unwrap())
+            .collect()
+    }
+    fn entry(name: &str, licence: Option<&str>) -> serde_json::Value {
+        let mut e = serde_json::json!({
+            "request": {"versionKey": {"system": "CARGO", "name": name, "version": "1.0.0"}}
+        });
+        if let Some(l) = licence {
+            e["version"] = serde_json::json!({"licenses": [l], "links": []});
+        }
+        e
+    }
+
+    /// T022 / C-2.4. At the shipped batch size this path never runs in
+    /// production, so it must be forced by a fixture — an unexercised
+    /// defensive path rots, and this one exists only because the page
+    /// size is undocumented and may move.
+    #[tokio::test]
+    async fn pagination_is_followed_to_the_end() {
+        let server = MockServer::start().await;
+        // Second page first: it matches only when the request body
+        // carries the continuation token, so it cannot capture the
+        // initial request. Returns "" — the shape that traps a
+        // presence check.
+        Mock::given(method("POST"))
+            .and(path("/v3alpha/versionbatch"))
+            .and(body_string_contains("PAGE2"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "responses": [entry("b", Some("Apache-2.0"))],
+                "nextPageToken": "",
+            })))
+            .mount(&server)
+            .await;
+        // First page: matches any batch POST, but only once, so the
+        // follow-up request falls through to the mock above.
+        Mock::given(method("POST"))
+            .and(path("/v3alpha/versionbatch"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "responses": [entry("a", Some("MIT"))],
+                "nextPageToken": "PAGE2",
+            })))
+            .up_to_n_times(1)
+            .mount(&server)
+            .await;
+
+        let s = src(&server, true);
+        let k = keys(&["a", "b"]);
+        let mut p = ProgressReporter::new(k.len());
+        let got = s.fetch_many(&k, &mut p).await;
+
+        // `b` only exists on page two. If pagination stopped early —
+        // which a presence check on nextPageToken would do, since the
+        // final token is "" and not absent — this is None.
+        assert_eq!(got[0].as_ref().unwrap().licenses, vec!["MIT"]);
+        assert_eq!(
+            got[1].as_ref().unwrap().licenses,
+            vec!["Apache-2.0"],
+            "second page was not consumed — enrichment stopped early and would have \
+             produced a plausible-looking but under-enriched SBOM",
+        );
+    }
+
+    /// T024 / C-3.1, C-3.3. Responses reordered relative to the
+    /// request, one entry carrying no `version` at all.
+    #[tokio::test]
+    async fn responses_match_by_identity_not_position() {
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/v3alpha/versionbatch"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                // Deliberately reversed, with the middle one absent.
+                "responses": [
+                    entry("z", Some("BSD-3-Clause")),
+                    entry("y", None),
+                    entry("x", Some("MIT")),
+                ],
+                "nextPageToken": "",
+            })))
+            .mount(&server)
+            .await;
+
+        let s = src(&server, true);
+        let k = keys(&["x", "y", "z"]);
+        let mut p = ProgressReporter::new(k.len());
+        let got = s.fetch_many(&k, &mut p).await;
+
+        assert_eq!(got[0].as_ref().unwrap().licenses, vec!["MIT"], "x");
+        assert!(got[1].is_none(), "y has no data upstream and must stay unenriched");
+        assert_eq!(got[2].as_ref().unwrap().licenses, vec!["BSD-3-Clause"], "z");
+    }
+
+    /// T027 / C-4.1, C-4.2, C-4.4. A failing batch must not fail the
+    /// scan, and must produce the same content the per-component path
+    /// would have.
+    #[tokio::test]
+    async fn batch_failure_falls_back_and_content_is_unchanged() {
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/v3alpha/versionbatch"))
+            .respond_with(ResponseTemplate::new(503))
+            .mount(&server)
+            .await;
+        Mock::given(method("GET"))
+            .and(path_regex(r".*/packages/.*/versions/.*"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "licenses": ["MIT"], "links": [],
+            })))
+            .mount(&server)
+            .await;
+
+        let k = keys(&["a", "b", "c"]);
+        let batched = {
+            let s = src(&server, true);
+            let mut p = ProgressReporter::new(k.len());
+            s.fetch_many(&k, &mut p).await
+        };
+        let direct = {
+            let s = src(&server, false);
+            let mut p = ProgressReporter::new(k.len());
+            s.fetch_many(&k, &mut p).await
+        };
+
+        for (i, r) in batched.iter().enumerate() {
+            assert_eq!(
+                r.as_ref().map(|v| v.licenses.clone()),
+                direct[i].as_ref().map(|v| v.licenses.clone()),
+                "fallback content must equal the per-component path for key {i}",
+            );
+        }
+        assert!(batched.iter().all(|r| r.is_some()), "the scan completes with full enrichment");
     }
 }
