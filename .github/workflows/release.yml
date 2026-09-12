@@ -216,6 +216,15 @@ jobs:
       - name: Build userspace binary (cross)
         run: cross build --release --target "$TARGET" --package waybill
 
+      # Issue #824 — Constitution Principle I: a released binary must
+      # gain no dynamic dependency beyond its platform baseline. The
+      # rule was review-enforced only until now, which is how a rule
+      # quietly stops being true: a transitive bump can flip a *-sys
+      # crate from vendored to system-discovered and the first symptom
+      # is an operator's binary failing to start.
+      - name: Check dynamic linkage against the platform baseline
+        run: cargo run --release -p xtask -- check-linkage --binary "target/${TARGET}/release/waybill" --target "$TARGET"
+
       - name: Package tarball
         run: |
           set -euo pipefail
@@ -360,6 +369,15 @@ jobs:
       - name: Build userspace binary (cross)
         run: cross build --release --target "$TARGET" --package waybill
 
+      # Issue #824 — Constitution Principle I: a released binary must
+      # gain no dynamic dependency beyond its platform baseline. The
+      # rule was review-enforced only until now, which is how a rule
+      # quietly stops being true: a transitive bump can flip a *-sys
+      # crate from vendored to system-discovered and the first symptom
+      # is an operator's binary failing to start.
+      - name: Check dynamic linkage against the platform baseline
+        run: cargo run --release -p xtask -- check-linkage --binary "target/${TARGET}/release/waybill" --target "$TARGET"
+
       - name: Package tarball
         run: |
           set -euo pipefail
@@ -464,6 +482,15 @@ jobs:
       - name: Build userspace binary
         run: cargo build --release --target "$TARGET" --package waybill
 
+      # Issue #824 — Constitution Principle I: a released binary must
+      # gain no dynamic dependency beyond its platform baseline. The
+      # rule was review-enforced only until now, which is how a rule
+      # quietly stops being true: a transitive bump can flip a *-sys
+      # crate from vendored to system-discovered and the first symptom
+      # is an operator's binary failing to start.
+      - name: Check dynamic linkage against the platform baseline
+        run: cargo run --release -p xtask -- check-linkage --binary "target/${TARGET}/release/waybill" --target "$TARGET"
+
       - name: Package tarball
         run: |
           set -euo pipefail
@@ -556,6 +583,11 @@ jobs:
 
       - name: Build userspace binary
         run: cargo build --release --target $env:TARGET --package waybill
+
+      # Issue #824 — see the note on the Linux jobs. PE imports are read
+      # by the same xtask command; no dumpbin needed.
+      - name: Check dynamic linkage against the platform baseline
+        run: cargo run --release -p xtask -- check-linkage --binary "target/$env:TARGET/release/waybill.exe" --target $env:TARGET
         shell: pwsh
 
       - name: Package zip

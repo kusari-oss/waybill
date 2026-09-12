@@ -5,4 +5,5 @@
 
 pub mod bench;
 pub mod compare;
+pub mod linkage;
 pub mod quality;

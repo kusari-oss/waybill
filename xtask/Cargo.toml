@@ -7,6 +7,11 @@ edition = "2021"
 clap = { version = "4", features = ["derive"] }
 # Milestone 669: cross-platform peak-RSS measurement for `xtask bench`.
 # Dev-only per FR-015 + SC-009 (zero waybill-runtime dep additions).
+# Issue #824 — parses ELF, Mach-O and PE uniformly, so one linkage
+# check covers every release target and no job needs readelf/otool/
+# dumpbin on PATH. Same version waybill-cli already pins; adds nothing
+# new to the lockfile.
+object = { version = "0.36", default-features = false, features = ["read", "std", "elf", "macho", "pe", "coff"] }
 sysinfo = "0.32"
 # Milestone 669: JSON schema (baseline.json + run.json) round-trip.
 # Dev-only.

@@ -3,6 +3,7 @@ use std::process::Command;
 use clap::Parser;
 use xtask::bench;
 use xtask::compare;
+use xtask::linkage;
 use xtask::quality;
 
 #[derive(Parser)]
@@ -18,6 +19,9 @@ enum Cli {
     BenchDocs(bench::docs::BenchDocsArgs),
     /// Measure SBOM quality across the pinned public-repo corpus (milestone 770)
     Quality(quality::QualityArgs),
+    /// Assert a released binary gains no dynamic dependency beyond its
+    /// platform baseline (Constitution Principle I; issue #824)
+    CheckLinkage(linkage::LinkageArgs),
 }
 
 fn main() {
@@ -31,6 +35,7 @@ fn main() {
         Cli::Compare(args) => compare::run(args),
         Cli::BenchDocs(args) => bench::docs::run(args),
         Cli::Quality(args) => quality::run(args),
+        Cli::CheckLinkage(args) => linkage::run(args),
     };
     if let Err(err) = result {
         eprintln!("xtask error: {err}");
