@@ -19,3 +19,12 @@ pants-example-javascript   da76d5dbb407d82c136cfe8f18dc06f3c8a440e5
 go-cobra  image-postgres16  maven-guice  npm-express  python-flask
 rust-ripgrep  pants-example-django  pants-example-golang
 pants-example-javascript  pants-example-jvm  pants-example-python
+
+# T008 — regeneration dispatched and artifact retrieved.
+#   run:      34666830925 (regen_goldens=true, branch 840-refresh-corpus-goldens)
+#   artifact: corpus-goldens-regen, 11 targets
+# T009 — artifact target set matches T001's failing set exactly (11/11).
+#
+# Goldens deliberately NOT committed here. Phase 3 (T010-T017) requires
+# reading and attributing every diff first; committing them now would be
+# the unverified refresh FR-006/FR-007 forbid.
