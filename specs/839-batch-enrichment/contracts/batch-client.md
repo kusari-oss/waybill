@@ -15,14 +15,26 @@ therefore paired with the behaviour required when it stops holding.
 returns HTTP 400 above that; this is a documented hard limit, not a
 tuning parameter.
 
+**C-1.1a** The *chosen* batch size MUST be approximately **500**, well
+below the ceiling (FR-005a). These are two different numbers and
+conflating them is the hazard: 5000 is what the service permits, 500 is
+what waybill sends. At the ceiling a large scan becomes two requests and
+the progress count freezes for the duration of each, which defeats US2
+while every test still passes.
+
+**C-1.1b** Batches MUST be issued concurrently under the same ceiling as
+the per-component path, so the finer chunking costs no wall-clock time.
+
 **C-1.2** Chunking MUST be driven by the input size, with no assumption
-about a maximum. A 60,000-component repository is 12 chunks, not an error.
+about a maximum. A 60,000-component repository is ~120 chunks, not an
+error.
 
 **C-1.3** A 400 response MUST NOT be retried as a batch. It indicates a
 malformed or oversized request, and retrying it unchanged is a loop.
 
-*Test*: an input of 5001 requests produces two chunks, and the first
-carries exactly 5000.
+*Test*: an input of 1,001 requests produces three chunks at the default
+size, none exceeding it; and a configured size above 5000 is rejected or
+clamped rather than sent.
 
 ---
 
@@ -75,6 +87,9 @@ exactly the hit and leaves the miss untouched.
 ---
 
 ## C-4 — Fallback
+
+**C-4.0** A failed batch costs only its own entries (FR-005c). With the
+FR-005a default that is ~500 components falling back, not 5000.
 
 **C-4.1** On any batch failure — transport error, non-200, unparseable
 body — the affected requests MUST fall back to the per-component path.

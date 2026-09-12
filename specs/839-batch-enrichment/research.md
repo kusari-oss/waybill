@@ -55,8 +55,9 @@ loop. FR-012b's extend flag exists for operators who choose otherwise.
 
 ## R2 — Batch endpoint shape, limits and pagination
 
-**Decision**: `POST /v3alpha/versionbatch`, chunked at 5000, paged until
-`nextPageToken` is empty, matched by echoed request key.
+**Decision**: `POST /v3alpha/versionbatch`, chunked at ~500 (well under
+the 5000 ceiling — see FR-005a), paged until `nextPageToken` is empty,
+matched by echoed request key.
 
 **Evidence** (v3alpha API reference + live probe):
 
@@ -115,9 +116,10 @@ This matters more once caching exists: it is the field most obviously
 mutable after publication, so persisting it would create staleness risk
 for data that reaches no output at all.
 
-**Recommendation to the spec**: reword FR-016 to "MUST NOT retain or
-persist upstream fields it does not consume". Flagged, not applied —
-changing a requirement is not a plan's call.
+**Resolved** (clarify session 2026-09-12, Q6): FR-016 now reads "MUST NOT
+retain or persist upstream fields it does not consume". The plan flagged
+this rather than applying it, because changing a requirement is not a
+plan's call; it was then decided and the spec amended.
 
 ---
 

@@ -36,7 +36,7 @@ One request/response round-trip against `POST /v3alpha/versionbatch`.
 
 | Field | Description |
 |---|---|
-| requests | Up to **5000** enrichment requests. The service returns HTTP 400 above that. |
+| requests | Approximately **500** by default (FR-005a), for progress granularity and blast radius. Hard service ceiling is **5000**; above that the service returns HTTP 400. |
 | page_token | Empty on the first page; thereafter the previous response's `next_page_token` |
 | responses | One entry per result, each echoing its originating request |
 | next_page_token | **Empty string when exhausted — not absent** |
@@ -48,8 +48,12 @@ One request/response round-trip against `POST /v3alpha/versionbatch`.
 - Paging requires every other request field to be unchanged from the
   initial request, per the API docs. A page-2 request that re-derives its
   body is a correctness bug even when it looks equivalent.
-- Chunking at 5000 is not an optimisation but a hard service limit, and
-  it must hold for inputs far larger than any currently tested — a
+- Two separate numbers, easily conflated. **5000** is the service's hard
+  limit and must never be exceeded. **~500** is waybill's chosen size,
+  set well below it so the completed count advances often enough to read
+  as progress. Raising the chosen size toward the ceiling would silently
+  degrade US2 while leaving every test green.
+- Chunking must hold for inputs far larger than any currently tested — a
   repository is free to have 60,000 components.
 
 ---

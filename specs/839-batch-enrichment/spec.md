@@ -12,6 +12,9 @@
 - Q: Is concurrency in scope, or only batching? → A: Both — add bounded concurrency to the per-component path as well (Option A), so the fallback and the no-flag default both improve independently of an unstable upstream surface.
 - Q: What bounds cache entry lifetime? → A: Honour the response's own `Cache-Control: max-age` (Option A), defaulting to one hour when the header is absent, with an operator flag to extend deliberately.
   - Investigated rather than assumed. An earlier draft of this spec asserted that a pinned version's metadata is immutable. **That premise is false** and the evidence is recorded under Assumptions: deps.dev serves `cache-control: public, max-age=3600` on a fully pinned version record, states that it re-scans packages continuously, offers no `ETag`/`Last-Modified` for cheap revalidation, and derives Go licences from a scanner whose output moves when the scanner does.
+- Q: FR-016 cannot be satisfied against this API — how should it read? → A: Reword from "MUST NOT request" to "MUST NOT retain or persist" (Option A). deps.dev offers no field mask on GetVersion or GetVersionBatch, so what is sent is the service's choice; what is kept is waybill's.
+- Q: What does progress report while a batch is in flight? → A: Size batches for progress granularity rather than at the service ceiling (Option D) — roughly 500 entries, issued concurrently. SC-002 still holds at ~99.8%, progress advances naturally, and a failed batch costs 500 components rather than 5000.
+- Q: Must degraded enrichment be annotated in the SBOM? → A: Yes, document-scope (Option B) — one annotation per scan naming the degradation mode and the count of affected components. Closes a Principle XI / XII.3 MUST that no requirement previously carried.
 - Q: Is progress output triggered by work count or by elapsed time? → A: Elapsed time (Option A) — the reported defect is silence over time, not volume of work, so the trigger is measured in the same unit as the complaint. FR-009 and US2's scenarios are reworded from work-count to elapsed time, resolving a tension with SC-004.
 
 ## User Scenarios & Testing *(mandatory)*
@@ -71,11 +74,11 @@ An operator scans the same repository repeatedly — in a CI loop, while iterati
 
 ### Edge Cases
 
-- The bulk endpoint is unavailable, returns an error, or returns a malformed body. Enrichment must degrade to the concurrent per-component path (FR-003a) rather than failing the scan or silently dropping enrichment for every component. Degrading to the *sequential* path would reproduce the defect this feature exists to fix, since the upstream surface is explicitly unstable.
+- The bulk endpoint is unavailable, returns an error, or returns a malformed body. Enrichment must degrade to the concurrent per-component path (FR-003a) rather than failing the scan or silently dropping enrichment for every component. Degrading to the *sequential* path would reproduce the defect this feature exists to fix, since the upstream surface is explicitly unstable. This is a degraded state and MUST be annotated per FR-017a.
 - A bulk request exceeds the service's documented maximum entries per request. Requests must be chunked so this cannot occur, including on repositories far larger than any currently tested.
 - A bulk response is paginated. All pages must be consumed, or the scan will silently under-enrich — a failure that produces a plausible-looking SBOM and is therefore worse than an error.
 - A bulk response omits entries that were requested, or returns them in a different order. Responses must be matched to requests by identity rather than by position.
-- The upstream service throttles or rejects requests issued in parallel. Concurrency introduces a failure mode sequential fetching did not have, so the concurrent path must bound its own request rate and treat a throttling response as retryable rather than as an enrichment failure.
+- The upstream service throttles or rejects requests issued in parallel. Concurrency introduces a failure mode sequential fetching did not have, so the concurrent path must bound its own request rate and treat a throttling response as retryable rather than as an enrichment failure. Throttling that survives retry is a degraded state and MUST be annotated per FR-017a.
 - The operator passes the flag that disables network access. No enrichment request of any kind may be issued, bulk or otherwise.
 - An upstream response carries no `Cache-Control` directive, or one that cannot be parsed. The one-hour default applies; enrichment must not fail and must not fall back to treating the entry as permanent.
 - The scan is interrupted mid-enrichment. No partial or corrupt cache state may be left behind that would poison a later scan.
@@ -93,7 +96,10 @@ An operator scans the same repository repeatedly — in a CI loop, while iterati
 - **FR-003b**: The concurrency limit MUST be bounded and MUST NOT be raised to a level that risks upstream throttling in pursuit of the SC-001 target. deps.dev publishes **no** rate limit and **no** documented throttling semantics, so the ceiling must be chosen conservatively by waybill rather than tuned up against an advertised allowance.
 - **FR-004**: When a bulk request fails, waybill MUST fall back to the per-component path for the affected components and complete the scan successfully.
 - **FR-004a**: The fallback MUST use the concurrent per-component path, not a sequential one.
-- **FR-005**: waybill MUST split bulk requests so that no single request exceeds the upstream service's documented maximum number of entries.
+- **FR-005**: waybill MUST split bulk requests so that no single request exceeds the upstream service's documented maximum number of entries. This is a hard service limit, not a tuning parameter — exceeding it is rejected outright.
+- **FR-005a**: Batch size MUST be chosen for **progress granularity**, well below the service maximum, defaulting to approximately 500 entries. Batching at the ceiling would make a large scan two requests, leaving the completed count frozen for the whole of each one — which reads as a stall and would have batching undermine the very story (US2) that exists to prevent that perception.
+- **FR-005b**: Batches MUST be issued concurrently, under the same bounded ceiling as the per-component path (FR-003b), so that finer chunking costs no wall-clock time relative to fewer, larger requests.
+- **FR-005c**: A failed batch MUST cost only the components in that batch. Smaller batches are therefore also a blast-radius decision, not only a progress one: under FR-004a a failure falls back for 500 components rather than 5000.
 - **FR-006**: waybill MUST consume all pages of a paginated bulk response before considering enrichment complete.
 - **FR-007**: waybill MUST match bulk responses to their requests by package identity, not by ordering.
 - **FR-008**: Enrichment content produced by the bulk path MUST be identical to that produced by the per-component path for the same set of package versions.
@@ -108,9 +114,12 @@ An operator scans the same repository repeatedly — in a CI loop, while iterati
 - **FR-013**: waybill MUST treat an unreadable or corrupt cache as a cache miss and continue the scan.
 - **FR-014**: waybill MUST provide a way for an operator to bypass or clear the local cache.
 - **FR-015**: waybill MUST NOT issue any enrichment request — bulk, per-component, or cache-refresh — when network access is disabled.
-- **FR-016**: waybill MUST NOT request upstream fields it does not consume.
+- **FR-016**: waybill MUST NOT **retain or persist** upstream fields it does not consume. The earlier wording said "MUST NOT request", which this upstream makes impossible: deps.dev publishes no field mask on `GetVersion` or `GetVersionBatch`, so the full record arrives regardless — and the v3alpha record is larger than the v3 one. What is sent is the service's choice; what is kept is waybill's, and with a disk cache that choice becomes durable rather than momentary.
 - **FR-016a**: The `advisoryKeys` field MUST NOT be requested or retained. It is deserialised today at `deps_dev_client.rs:21` and referenced nowhere outside test fixtures, so it already violates FR-016. It is also the field most obviously mutable after publication, so caching it would create staleness risk for data that reaches no output.
 - **FR-017**: The scan MUST succeed when enrichment is wholly unavailable, emitting an SBOM without enrichment rather than failing.
+- **FR-017a**: When the enrichment phase completes in a degraded state, waybill MUST emit a **document-scope** transparency annotation naming the degradation mode — bulk endpoint unavailable, upstream throttled, or enrichment wholly unavailable — and the number of components left unenriched as a result. Constitution Principles XI and XII.3 both require a transparency annotation when an enrichment source degrades; before this requirement, nothing in the spec carried that obligation and a degraded run was indistinguishable from a clean one except by a component count nobody checks.
+- **FR-017b**: The annotation MUST be document-scope, not per-component. It records one fact about the run; attaching it to every affected component would restate that fact thousands of times.
+- **FR-017c**: A scan that degrades in more than one mode MUST record every mode that occurred, not only the first or the last. A run that was throttled *and* lost the bulk endpoint is not adequately described by either alone.
 
 ### Key Entities
 
@@ -118,17 +127,18 @@ An operator scans the same repository repeatedly — in a CI loop, while iterati
 - **Enrichment record**: the metadata retrieved for one package version. Today this is licences and source links. Anything not consumed by emission is out of scope per FR-016.
 - **Cache entry**: a stored enrichment record keyed by package version identity, carrying the time it was retrieved and the freshness bound that applied. Not immutable: the artefact is pinned, the upstream record about it is not.
 - **Progress report**: completed and total enrichment work at a point in time.
+- **Degradation record**: the set of degradation modes encountered during the enrichment phase and the count of components left unenriched by them. One per scan; emitted as a document-scope annotation. Empty means the phase was not degraded, and is emitted as nothing rather than as an explicit "no degradation" marker.
 
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
 - **SC-001**: A scan of a repository with roughly 7,500 enrichable components completes enrichment in under two minutes, against roughly 17 minutes today.
-- **SC-002**: The number of upstream requests for such a scan falls by at least 99% compared with the per-component path.
+- **SC-002**: The number of upstream requests for such a scan falls by at least 99% compared with the per-component path. At the FR-005a default this is comfortably met — roughly 7,500 components becomes about 16 requests rather than 7,500, a 99.8% reduction — so granularity is bought without spending the criterion.
 - **SC-003**: Licence coverage and source-reference counts for such a scan are identical between the bulk and per-component paths.
 - **SC-004**: An operator watching a scan of that size sees evidence of progress within 10 seconds of enrichment beginning, and thereafter at intervals no longer than 10 seconds.
 - **SC-005**: A second scan of an unchanged repository issues at least 90% fewer upstream requests than the first.
-- **SC-006**: Every failure mode in Edge Cases yields a completed scan — enrichment may be reduced or absent, but the scan does not fail and does not silently under-enrich without saying so.
+- **SC-006**: Every failure mode in Edge Cases yields a completed scan — enrichment may be reduced or absent, but the scan does not fail. "Does not silently under-enrich" is discharged by FR-017a: for each such failure mode, the emitted SBOM carries a document-scope annotation naming the mode and the affected-component count, so a degraded run is distinguishable from a clean one by inspection rather than by comparing component counts against an expectation nobody holds.
 - **SC-007**: No scan issues an upstream request when network access is disabled.
 - **SC-009**: No scan serves cached enrichment data older than the freshness bound the upstream response specified, unless the operator explicitly extended it.
 - **SC-008**: A scan of the same repository with the bulk path NOT selected — the default, and the fallback — completes enrichment materially faster than the roughly 17 minutes measured before this change. This is stated separately from SC-001 because an operator who never passes the flag must still stop experiencing the scan as a hang.

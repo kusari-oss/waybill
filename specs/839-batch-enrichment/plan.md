@@ -18,8 +18,14 @@ phase reads as work rather than as a hang. A disk cache follows at P2.
 Research settled two things the spec had wrong or open. The upstream
 record for a pinned version **is** mutable and carries its own one-hour
 `Cache-Control`, so the cache must expire (R1). And the batch API offers
-**no field mask**, so FR-016 as written cannot be satisfied against this
-service (R3) — flagged below rather than quietly reinterpreted.
+**no field mask**, so FR-016 as written could not be satisfied against
+this service (R3); it was flagged rather than reinterpreted, and has
+since been reworded from "request" to "retain or persist".
+
+A later clarification round also resized batches from the 5000 ceiling to
+~500 (FR-005a): at the ceiling a large scan is two requests and the
+progress count freezes through each one, which would have had US1's
+batching silently defeat US2's observability while every test passed.
 
 ## Technical Context
 
@@ -43,8 +49,9 @@ materially faster than 17 min.
 `CONCURRENT_REQUESTS = 8`; deps.dev publishes no rate limit, so there is
 no advertised allowance to tune against (R4). FR-012a — freshness comes
 from the response, not from a constant.
-**Scale/Scope**: Batches capped at 5000 by the service (R2); a
-7,592-component scan is 2 requests.
+**Scale/Scope**: Service ceiling is 5000 entries per batch (R2); waybill
+sends ~500 (FR-005a), so a 7,592-component scan is ~16 concurrent
+requests rather than 7,592 serial ones.
 
 ## Constitution Check
 
@@ -61,11 +68,11 @@ from the response, not from a constant.
 | **VII. Test Isolation** | PASS, with care. The disk cache is per-user shared state, so tests MUST point it at a per-test temp dir, never `$HOME`. Mirrors how `clearly_defined_disk_cache` tests already work. |
 | **VIII. Completeness** | PASS. FR-006 exists precisely to stop partial pagination from under-enriching silently. |
 | **IX. Accuracy** | PASS, and R1 is why. A never-expiring cache would have served stale licence data indefinitely with no signal, which is an accuracy violation dressed as a performance win. |
-| **X. Transparency** | **GAP — see below.** |
-| **XI. Enrichment** | **GAP — see below.** |
-| **XII. External Data Source Enrichment** | PARTIAL. XII.1 (no new components) and XII.4 (trace is authoritative) are untouched. XII.2 (provenance annotation) and XII.3 (degrade with annotation) are the gap. |
+| **X. Transparency** | PASS as of FR-017a. See the gate finding below, which is now closed. |
+| **XI. Enrichment** | PASS as of FR-017a. |
+| **XII. External Data Source Enrichment** | PASS for XII.1/XII.3/XII.4. XII.2's provenance channel is unchanged by this feature; whether a cached value's *retrieval time* belongs in that annotation is recorded as open, low-impact. |
 
-### Gate finding: degraded enrichment must be annotated, and the spec does not require it
+### Gate finding (RESOLVED): degraded enrichment must be annotated
 
 Principle XI: *"If an enrichment source is unavailable, the SBOM MUST
 still be emitted with the enrichment fields omitted **and a transparency
@@ -79,13 +86,19 @@ edge cases produce exactly the degraded state the constitution is talking
 about: batch endpoint unavailable, upstream throttling, enrichment wholly
 unavailable.
 
-This is a constitutional MUST with no requirement behind it, so it is
-recorded here rather than resolved here — amending the spec is not the
-plan's call. **Recommended**: add an FR requiring a document-scope
-transparency annotation whenever the enrichment phase completes in a
-degraded state, naming which mode degraded (bulk-unavailable, throttled,
-wholly-unavailable) and how many components were affected. The
-`EnrichmentProvenance` channel already exists to carry it.
+This was a constitutional MUST with no requirement behind it. Recorded
+here rather than resolved here, since amending the spec is not the plan's
+call — and **subsequently resolved** in the clarify session of
+2026-09-12 as **FR-017a/b/c**: a document-scope annotation naming the
+degradation mode and the affected-component count, with every mode
+recorded when more than one occurs.
+
+Implementation obligation this creates: a new document-scope annotation
+needs a matching row in `docs/reference/sbom-format-mapping.md` **and** a
+matching entry in `parity/extractors/mod.rs::EXTRACTORS`, or
+`every_catalog_row_has_an_extractor` and `holistic_parity` both fail.
+Adding the doc row ahead of the emission code is the known way to break
+the build here.
 
 A second, smaller question falls out of caching: XII.2 requires data be
 annotated with its provenance ("license from deps.dev"). Data served from

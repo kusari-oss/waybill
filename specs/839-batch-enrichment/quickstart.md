@@ -16,7 +16,9 @@ A scan with enrichment enabled no longer goes silent. Three things moved:
   that finishes faster prints nothing.
 - **Concurrency**, on by default. The per-component path issues requests
   concurrently instead of one at a time.
-- **Batching**, opt-in. Groups lookups into requests of up to 5000.
+- **Batching**, opt-in. Groups lookups into bulk requests of a few hundred
+  each, issued concurrently. A ~7,500-component scan goes from ~7,500
+  requests to roughly 16.
 
 Enrichment content is unchanged. Same licences, same source links.
 
