@@ -5146,6 +5146,7 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "clap",
+ "object",
  "serde",
  "serde_json",
  "sysinfo",
