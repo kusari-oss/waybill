@@ -462,6 +462,7 @@ pub fn build_document(
             // the filtered-components view so SPDX emitters see the
             // same value the top-level ScanArtifacts had.
             sbom_version: artifacts.sbom_version,
+            enrichment_degraded: artifacts.enrichment_degraded,
             scope_mode: artifacts.scope_mode,
             go_transitive_coverage: artifacts.go_transitive_coverage,
             go_transitive_fallback_count: artifacts.go_transitive_fallback_count,
@@ -512,6 +513,7 @@ pub fn build_document(
             // the filtered-components view so SPDX emitters see the
             // same value the top-level ScanArtifacts had.
             sbom_version: artifacts.sbom_version,
+            enrichment_degraded: artifacts.enrichment_degraded,
             scope_mode: artifacts.scope_mode,
             go_transitive_coverage: artifacts.go_transitive_coverage,
             go_transitive_fallback_count: artifacts.go_transitive_fallback_count,
@@ -1232,6 +1234,7 @@ mod tests {
             include_source_files: false,
             // Milestone 221 US4 — test default preserves pre-m221 behavior.
             sbom_version: None,
+            enrichment_degraded: None,
             scope_mode: crate::generate::ScopeMode::Artifact,
             source_document_binding: None,
             identifiers: &[],

@@ -187,6 +187,7 @@ pub async fn execute(args: GenerateArgs, offline: bool) -> anyhow::Result<()> {
         // per FR-009. If a future spec adds an equivalent flag on this
         // subcommand, thread it through here.
         sbom_version: None,
+        enrichment_degraded: None,
     };
     let builder = CycloneDxBuilder::new(cdx_config)
         // Milestone 073 — propagate manual identifier flags to the

@@ -3555,6 +3555,7 @@ pub async fn execute(
     // offline mode turns the whole pass into a no-op. Failures are
     // warnings, not errors — the scan still produces a valid SBOM if
     // deps.dev is unreachable.
+    let mut enrichment_degraded: Option<String> = None;
     let deps_dev_client = DepsDevClient::new(std::time::Duration::from_secs(5));
     // Milestone 776: `enrich_components` now also maps the deps.dev
     // `links[]` array onto component externalReferences and reports the
@@ -3566,7 +3567,13 @@ pub async fn execute(
         let deps_dev_source = DepsDevSource::new(deps_dev_client.clone(), offline)
             .with_batch(args.enrich_batch)
             .with_disk_cache(!args.enrich_no_cache, args.enrich_cache_max_age);
-        let (enriched, skips) = enrich_components(&deps_dev_source, &mut components).await;
+        let (enriched, skips, degradation) =
+            enrich_components(&deps_dev_source, &mut components).await;
+        // Milestone 839 (FR-017a): carried to the emitters so a
+        // degraded run is distinguishable from a clean one by
+        // inspecting the SBOM, not by comparing component counts
+        // against an expectation nobody holds.
+        enrichment_degraded = degradation.annotation_value();
         m776_skips = skips;
         if enriched > 0 {
             tracing::info!(enriched, "deps.dev added licenses to components");
@@ -4228,6 +4235,7 @@ pub async fn execute(
         // `None` when `--sbom-version` is unset (byte-identity path
         // per FR-009).
         sbom_version: args.sbom_version,
+        enrichment_degraded: enrichment_degraded.as_deref(),
         scope_mode: if effective_include_declared_deps {
             crate::generate::ScopeMode::Manifest
         } else {

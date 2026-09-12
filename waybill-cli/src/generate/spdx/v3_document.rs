@@ -97,6 +97,7 @@ pub fn build_document(
             include_source_files: scan.include_source_files,
             // Milestone 221 US4 — propagate --sbom-version.
             sbom_version: scan.sbom_version,
+            enrichment_degraded: None,
             scope_mode: scan.scope_mode,
             go_transitive_coverage: scan.go_transitive_coverage,
             go_transitive_fallback_count: scan.go_transitive_fallback_count,

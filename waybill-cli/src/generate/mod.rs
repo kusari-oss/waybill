@@ -76,6 +76,17 @@ pub struct ScanArtifacts<'a> {
     /// `None` preserves the pre-m221 defaults per FR-009: CDX
     /// `metadata.version: 1` and no SPDX annotation.
     pub sbom_version: Option<waybill_common::types::SbomVersion>,
+    /// Milestone 839 (FR-017a) — set when the enrichment phase
+    /// completed in a degraded state. Value is
+    /// `<mode>[,<mode>…];unenriched=<n>`; `None` on a clean scan, which
+    /// emits no annotation at all rather than an explicit "no
+    /// degradation" marker.
+    ///
+    /// Threaded rather than computed in-emitter, unlike
+    /// `graph-completeness`: an emitter cannot observe that deps.dev
+    /// stopped answering, only the enrichment phase can. Constitution
+    /// Principles XI and XII.3 both require this signal.
+    pub enrichment_degraded: Option<&'a str>,
     /// Document-level scope mode. Resolved from
     /// `--include-declared-deps` (with the `--path`/`--image`
     /// auto-default rule). Surfaced in CDX `metadata.lifecycles[]`
@@ -381,6 +392,7 @@ impl<'a> ScanArtifacts<'a> {
             // sub-SBOM in a split-mode fan-out (all fragments describe
             // the same "SBOM revision N").
             sbom_version: self.sbom_version,
+            enrichment_degraded: None,
             scope_mode: self.scope_mode,
             go_transitive_coverage: self.go_transitive_coverage,
             go_transitive_fallback_count: self.go_transitive_fallback_count,

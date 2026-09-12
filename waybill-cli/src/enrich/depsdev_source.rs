@@ -540,7 +540,7 @@ impl EnrichmentSource for DepsDevSource {
 pub async fn enrich_components(
     source: &DepsDevSource,
     components: &mut [ResolvedComponent],
-) -> (usize, LinkMappingSkips) {
+) -> (usize, LinkMappingSkips, DegradationRecord) {
     // Milestone 839 (C-5.2): offline no longer short-circuits the
     // whole phase. Reading a local cache file is not a network
     // request, and the `--offline` flag's own documentation names
@@ -550,7 +550,7 @@ pub async fn enrich_components(
     // unenriched.
     if source.offline && !source.disk.is_enabled() {
         debug!("deps.dev enrichment skipped — offline with no cache to serve from");
-        return (0, LinkMappingSkips::default());
+        return (0, LinkMappingSkips::default(), DegradationRecord::new());
     }
     let phase_start = Instant::now();
     let mut enriched_count = 0usize;
@@ -670,7 +670,7 @@ pub async fn enrich_components(
         unmapped_label: unmapped_label_skips,
         malformed_url: malformed_url_skips,
     };
-    (enriched_count, skips)
+    (enriched_count, skips, degradation)
 }
 
 #[cfg(test)]
@@ -733,7 +733,7 @@ mod tests {
         let client = DepsDevClient::new(Duration::from_secs(1));
         let source = DepsDevSource::new(client, /*offline=*/ true);
         let mut components = vec![make_component("pkg:cargo/serde@1.0.197")];
-        let (n, skips) = enrich_components(&source, &mut components).await;
+        let (n, skips, _deg) = enrich_components(&source, &mut components).await;
         assert_eq!(n, 0);
         // m776: no links were consulted, so both skip counters stay 0.
         assert_eq!((skips.unmapped_label, skips.malformed_url), (0, 0));
@@ -749,7 +749,7 @@ mod tests {
             make_component("pkg:deb/debian/jq@1.6-2.1"),
             make_component("pkg:apk/alpine/musl@1.2.4-r2"),
         ];
-        let (n, skips) = enrich_components(&source, &mut components).await;
+        let (n, skips, _deg) = enrich_components(&source, &mut components).await;
         assert_eq!(n, 0);
         // m776: unsupported ecosystems are skipped before any link
         // handling, so neither counter moves.
