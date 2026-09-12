@@ -55,13 +55,33 @@ pub fn deps_dev_package_name(ecosystem: &str, namespace: Option<&str>, name: &st
                 }
             }
         }
-        "npm" => match namespace {
-            Some(ns) if !ns.is_empty() => {
-                let trimmed = ns.trim_start_matches('@');
-                format!("@{trimmed}/{name}")
+        "npm" => {
+            // `ResolvedComponent.name` for a scoped npm package is
+            // ALREADY the full `@scope/name` — the same shape the Go
+            // arm above guards against. Prepending the namespace
+            // doubled it, and because the namespace arrives
+            // percent-encoded from the PURL (`%40types`, not
+            // `@types`), `trim_start_matches('@')` stripped nothing.
+            // The result was `@%40types/@types/node`, which 404s on
+            // every scoped package — silently, since a 404 is
+            // indistinguishable from "deps.dev has no data".
+            if name.contains('/') {
+                name.to_string()
+            } else {
+                match namespace {
+                    Some(ns) if !ns.is_empty() => {
+                        // Decode before trimming: the scope marker may
+                        // be `@` or `%40` depending on whether the
+                        // caller passes a decoded name or a raw PURL
+                        // segment.
+                        let decoded = ns.replace("%40", "@");
+                        let trimmed = decoded.trim_start_matches('@');
+                        format!("@{trimmed}/{name}")
+                    }
+                    _ => name.to_string(),
+                }
             }
-            _ => name.to_string(),
-        },
+        }
         _ => name.to_string(),
     }
 }
@@ -135,6 +155,48 @@ mod tests {
             deps_dev_package_name("npm", Some("@types"), "node"),
             "@types/node",
         );
+    }
+
+    /// Milestone 841 (#841). The test above passes a SHORT name, which
+    /// is why it never caught this: the scanner passes the FULL scoped
+    /// name, because `ResolvedComponent.name` for npm already carries
+    /// the scope. These are the shapes that actually reach the
+    /// function during a scan.
+    #[test]
+    fn npm_scope_is_not_applied_twice() {
+        // What the scanner really passes: percent-encoded namespace
+        // from the PURL, full scoped name from the component.
+        assert_eq!(
+            deps_dev_package_name("npm", Some("%40types"), "@types/node"),
+            "@types/node",
+            "pre-fix this produced `@%40types/@types/node`, which 404s",
+        );
+        assert_eq!(
+            deps_dev_package_name("npm", Some("@babel"), "@babel/core"),
+            "@babel/core",
+        );
+    }
+
+    /// The scope marker may arrive as `@` or as `%40` depending on
+    /// whether the caller decoded the PURL segment. Both must land on
+    /// the same name, or enrichment succeeds or fails depending on the
+    /// call site.
+    #[test]
+    fn npm_percent_encoded_scope_is_decoded() {
+        assert_eq!(
+            deps_dev_package_name("npm", Some("%40types"), "node"),
+            "@types/node",
+        );
+        assert_eq!(
+            deps_dev_package_name("npm", Some("%40types"), "node"),
+            deps_dev_package_name("npm", Some("@types"), "node"),
+        );
+    }
+
+    #[test]
+    fn npm_unscoped_names_are_untouched() {
+        assert_eq!(deps_dev_package_name("npm", None, "lodash"), "lodash");
+        assert_eq!(deps_dev_package_name("npm", Some(""), "lodash"), "lodash");
     }
 
     #[test]
