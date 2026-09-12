@@ -2,8 +2,8 @@
 // JSON deserialization from the deps.dev API but only some fields are
 // then read directly in waybill code (e.g., `VersionInfo::licenses`
 // drives license enrichment and (since milestone 776) `links`
-// -> component externalReferences. `advisory_keys` isn't yet
-// consumed). Rust's dead-code analysis doesn't see through serde, so
+// -> component externalReferences). Rust's dead-code analysis doesn't
+// see through serde, so
 // the un-read fields are flagged. Allow dead_code per-struct to
 // preserve the wire-shape definitions; serde populates everything,
 // and downstream callers may add reads later without re-shaping the
@@ -19,10 +19,16 @@ use serde::Deserialize;
 pub struct VersionInfo {
     pub licenses: Vec<String>,
     #[serde(default)]
-    pub advisory_keys: Vec<String>,
-    #[serde(default)]
     pub links: Vec<Link>,
 }
+
+// Milestone 839 (FR-016a): `advisoryKeys` was deserialised here and
+// read nowhere. deps.dev offers no field mask, so the server sends it
+// regardless — what we control is whether we keep it. Retaining it
+// mattered more once an on-disk cache existed: it is the field most
+// obviously mutable after publication (a CVE lands against an
+// already-published version), so caching it would have created
+// staleness risk for data that reaches no output at all.
 
 /// A link associated with a package version.
 #[derive(Clone, Debug, Deserialize)]

@@ -22,7 +22,7 @@ pub struct LinkMappingSkips {
     pub unmapped_label: usize,
     pub malformed_url: usize,
 }
-use super::deps_dev_system::deps_dev_system_for;
+use super::request_key::EnrichmentKey;
 use super::source::EnrichmentSource;
 
 /// An enrichment source backed by the deps.dev v3 API.
@@ -271,31 +271,28 @@ pub async fn enrich_components(
     let mut unmapped_label_skips = 0usize;
     let mut malformed_url_skips = 0usize;
     for component in components.iter_mut() {
-        let ecosystem = component.purl.ecosystem();
-        let Some(system) = deps_dev_system_for(ecosystem) else {
+        // Milestone 839: the key is built here, by the one helper the
+        // batch path and the on-disk cache also use. Three call sites
+        // that derive identity independently will eventually derive it
+        // differently, and the only symptom is a cache that silently
+        // splits — one path writing entries another never finds.
+        // `from_purl_parts` also absorbs the ecosystem-unsupported and
+        // incomplete-coordinate skips that used to sit inline here.
+        let Some(key) = EnrichmentKey::from_purl_parts(
+            component.purl.ecosystem(),
+            component.purl.namespace(),
+            &component.name,
+            &component.version,
+        ) else {
             continue;
         };
-        if component.name.is_empty() || component.version.is_empty() {
-            continue;
-        }
-        // deps.dev keys Maven packages by `group:artifact` (and Go by
-        // module path, npm scoped by `@scope/name`). `component.name`
-        // is just the artifact / short name, which for Maven/Go/npm
-        // produces 404s. Format through the helper so the URL is
-        // correct for every supported ecosystem.
-        let name =
-            super::deps_dev_system::deps_dev_package_name(
-                ecosystem,
-                component.purl.namespace(),
-                &component.name,
-            );
         let licenses_before = component.licenses.len();
         if let Some(info) = source
-            .fetch_version_info(system, &name, &component.version)
+            .fetch_version_info(key.system, &key.name, &key.version)
             .await
         {
             let (unmapped, malformed) =
-                DepsDevSource::apply_version_info(component, system, &info);
+                DepsDevSource::apply_version_info(component, key.system, &info);
             unmapped_label_skips += unmapped;
             malformed_url_skips += malformed;
             if component.licenses.len() > licenses_before {
@@ -409,7 +406,6 @@ mod tests {
         c.licenses.push(SpdxExpression::try_canonical("MIT").unwrap());
         let info = VersionInfo {
             licenses: vec!["MIT".into(), "Apache-2.0".into()],
-            advisory_keys: vec![],
             links: vec![],
         };
         DepsDevSource::apply_version_info(&mut c, "cargo", &info);
@@ -424,7 +420,6 @@ mod tests {
         let mut c = make_component("pkg:cargo/foo@1.0.0");
         let info = VersionInfo {
             licenses: vec!["Not a real SPDX token $%^".into()],
-            advisory_keys: vec![],
             links: vec![],
         };
         DepsDevSource::apply_version_info(&mut c, "cargo", &info);
@@ -454,7 +449,7 @@ mod m776_link_mapping_tests {
     }
 
     fn info(links: Vec<super::super::deps_dev_client::Link>) -> VersionInfo {
-        VersionInfo { licenses: vec![], advisory_keys: vec![], links }
+        VersionInfo { licenses: vec![], links }
     }
 
     fn component() -> ResolvedComponent {

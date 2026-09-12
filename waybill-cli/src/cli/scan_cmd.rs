@@ -1004,6 +1004,47 @@ pub struct ScanArgs {
     #[arg(long)]
     pub no_deps_dev_license: bool,
 
+    /// Milestone 839 (#766) — fetch deps.dev licence metadata in
+    /// bulk via `GetVersionBatch` instead of one request per
+    /// component.
+    ///
+    /// Off by default: `GetVersionBatch` lives on deps.dev's
+    /// `v3alpha` surface, which its own documentation says "may
+    /// change in incompatible ways from time to time". A batch
+    /// failure falls back to the per-component path, so an upstream
+    /// change degrades speed rather than breaking the scan.
+    ///
+    /// Has no effect when `--offline`, `--no-deps-dev` or
+    /// `--no-deps-dev-license` is set — all of those suppress the
+    /// licence path this flag accelerates.
+    #[arg(long)]
+    pub enrich_batch: bool,
+
+    /// Milestone 839 (#766) — accept cached deps.dev enrichment up
+    /// to this many seconds old, overriding the freshness bound the
+    /// upstream response asks for.
+    ///
+    /// By default waybill honours the response's own
+    /// `Cache-Control: max-age`, which deps.dev sets to 3600. That
+    /// is deliberate: a pinned package version is immutable but
+    /// deps.dev's *record about* it is not — licences get corrected,
+    /// source links get added, and Go licences come from a scanner
+    /// whose output moves when the scanner does. deps.dev offers no
+    /// `ETag`, so a stale entry cannot be detected, only re-fetched.
+    ///
+    /// Raising this trades currency for speed. The value is recorded
+    /// in each entry written under it, so entries fetched with a
+    /// longer bound keep it and others are unaffected.
+    #[arg(long, value_name = "SECONDS")]
+    pub enrich_cache_max_age: Option<u64>,
+
+    /// Milestone 839 (#766) — bypass the on-disk deps.dev enrichment
+    /// cache for this scan, neither reading from it nor writing to
+    /// it. Use for a cold measurement. To clear the cache instead,
+    /// remove `~/.cache/waybill/deps-dev/`.
+    #[arg(long)]
+    pub enrich_no_cache: bool,
+
     /// Milestone 102 (FR-016/FR-017): include vendored C/C++
     /// dependencies declared via CMake `add_subdirectory(third_party/...)`
     /// or `add_subdirectory(vendor/...)`. Default OFF — these are
@@ -5883,6 +5924,12 @@ mod tests {
             no_oci_cache: false,
             oci_cache_size: None,
             registry_credentials_dir: None,
+            // Milestone 839 — defaults preserve pre-m839 behaviour:
+            // per-component licence fetches, upstream-declared cache
+            // freshness, cache enabled.
+            enrich_batch: false,
+            enrich_cache_max_age: None,
+            enrich_no_cache: false,
             // Milestone 182 — test helper defaults preserve pre-m182
             // behavior (no insecure registries, no additional CAs,
             // full TLS verification). Byte-identity SC-004.
