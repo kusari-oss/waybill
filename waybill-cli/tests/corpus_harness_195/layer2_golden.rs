@@ -172,7 +172,7 @@ fn walk_mask(v: &mut serde_json::Value) {
         // that happen to carry one. The previous version keyed on
         // `spdxId` alone and left every relationship endpoint, annotation
         // subject and rootElement holding the real hash.
-        serde_json::Value::String(s) if s.contains("/doc-") => {
+        serde_json::Value::String(s) if s.contains("/spdx3/doc-") => {
             *v = serde_json::Value::String(mask_doc_prefix(s));
         }
         _ => {}
@@ -207,8 +207,16 @@ fn mask_content_hashes_in_string(s: &str) -> String {
     b.into_owned()
 }
 
-/// Replace every `/doc-<opaque>` segment with `/doc-<masked>` so a
-/// stored golden survives per-scan document-ID rotation.
+/// Replace every `/spdx3/doc-<opaque>` segment with
+/// `/spdx3/doc-<masked>` so a stored golden survives per-scan
+/// document-ID rotation.
+///
+/// Anchored on the full `/spdx3/doc-` namespace rather than a bare
+/// `/doc-`: image scans contain real filesystem paths such as
+/// `/usr/share/doc-base/findutils.findutils`, and a looser match
+/// rewrites those into the golden as corrupted data. Caught by the
+/// regeneration diff on `image-postgres16` — CDX and SPDX 2.3 moved
+/// when only SPDX 3 should have.
 ///
 /// Issue #865: this used to mask only the FIRST occurrence, and was only
 /// ever called on values under the `spdxId` key. Relationship endpoints
@@ -221,10 +229,10 @@ fn mask_content_hashes_in_string(s: &str) -> String {
 fn mask_doc_prefix(s: &str) -> String {
     let mut out = String::with_capacity(s.len());
     let mut rest = s;
-    while let Some(idx) = rest.find("/doc-") {
+    while let Some(idx) = rest.find("/spdx3/doc-") {
         out.push_str(&rest[..idx]);
-        out.push_str("/doc-<masked>");
-        let after = &rest[idx + 5..];
+        out.push_str("/spdx3/doc-<masked>");
+        let after = &rest[idx + 11..];
         // The opaque segment runs to the next `/`, or to a character
         // that cannot appear in it (quote, whitespace) when the IRI is
         // embedded in a larger string such as a JSON-in-string value.
@@ -321,6 +329,23 @@ mod m865_masking_tests {
             mask_doc_prefix("https://w.dev/spdx3/doc-ZZZ"),
             "https://w.dev/spdx3/doc-<masked>",
         );
+    }
+
+    /// A real filesystem path containing `doc-` must survive intact.
+    /// The first version of this fix matched a bare `/doc-` and rewrote
+    /// `/usr/share/doc-base/...` inside the image-postgres16 golden,
+    /// corrupting real data. The regeneration diff caught it: CDX and
+    /// SPDX 2.3 moved when a masking-only change should have touched
+    /// SPDX 3 alone.
+    #[test]
+    fn real_paths_containing_doc_are_not_masked() {
+        for p in [
+            "/usr/share/doc-base/findutils.findutils",
+            "/usr/share/doc-base/base-passwd.users-and-groups",
+            "/etc/doc-something",
+        ] {
+            assert_eq!(mask_doc_prefix(p), p, "must not rewrite the real path {p}");
+        }
     }
 
     /// Strings with no document IRI must pass through untouched — the
