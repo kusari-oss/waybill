@@ -29,9 +29,46 @@ const FIXTURE_REPO_URL: &str = "https://github.com/kusari-sandbox/waybill-test-f
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
 
+    reserve_windows_stack();
     fetch_fixtures();
     emit_fingerprints_corpus_sha();
     emit_waybill_version_override();
+}
+
+/// Milestone 850 (#852) — raise the Windows main-thread stack reserve
+/// from the PE default of 1 MiB to 8 MiB, matching the Linux default.
+///
+/// `ScanArgs` carries 85 clap-derived fields. clap's derive expands
+/// those into a single `augment_args` function, and a debug build does
+/// not reuse stack slots across the per-`Arg` builder temporaries, so
+/// the frame grows with every flag the CLI gains. Measured by lowering
+/// `ulimit -s` against the binary at the m850 commit:
+///
+///   debug:    needs > 1000 KiB, fits at 1024 KiB
+///   release:  needs > 128 KiB,  fits at 256 KiB
+///
+/// Both fit under the Linux and macOS 8 MiB defaults. Only the debug
+/// figure collides with Windows' 1 MiB PE default, which is why this
+/// surfaced in the `scan_windows_smoke` lane (a dev-profile build) and
+/// never in a release artifact: `waybill.exe` died with
+/// STATUS_STACK_OVERFLOW (0xC00000FD) inside argument parsing, ~15 ms
+/// in, before any scan work began.
+///
+/// Reserve is address space, not committed memory — pages are committed
+/// on touch, so the runtime cost of the larger number is zero. Setting
+/// it here rather than in `.cargo/config.toml` means it travels with
+/// the package: a `cargo install` from outside this checkout reads its
+/// own config, but always runs this build script.
+fn reserve_windows_stack() {
+    if std::env::var("CARGO_CFG_TARGET_OS").as_deref() != Ok("windows") {
+        return;
+    }
+    // 8 MiB, matching the Linux `ulimit -s` default.
+    match std::env::var("CARGO_CFG_TARGET_ENV").as_deref() {
+        Ok("msvc") => println!("cargo:rustc-link-arg=/STACK:8388608"),
+        // The mingw toolchain takes the reserve through the GNU linker.
+        _ => println!("cargo:rustc-link-arg=-Wl,--stack,8388608"),
+    }
 }
 
 /// Feature 229 (release-flow implementation) US3 — `WAYBILL_VERSION`
