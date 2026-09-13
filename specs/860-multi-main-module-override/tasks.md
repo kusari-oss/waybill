@@ -89,11 +89,11 @@ Single Rust workspace. All paths from repo root.
 - [X] T026 [P] Update `--preserve-manifest-main-module` help text in `waybill-cli/src/cli/scan_cmd.rs` to say it is retained for compatibility and no longer changes output (C-7.2, FR-006).
 - [X] T027 [P] Add a test asserting the flag is still accepted and produces output identical to omitting it (SC-006).
 - [X] T028 Confirm the existing `holistic_parity` and `every_catalog_row_has_an_extractor` gates actually cover C102 under the new shape (FR-009, C-5.1, C-5.2) by reading what they assert, rather than inferring coverage from a green run. If they do not compare the annotation value across formats, add an assertion that does. This repo has shipped a schema gate that passed because its `$ref`s resolved to stubs.
-- [ ] T029 Run `./scripts/pre-pr.sh` — must exit 0. Enumerate every `test result:` line rather than trusting the exit code; the script lacks `--no-fail-fast`.
-- [ ] T030 Regenerate the public-corpus goldens through CI dispatch for the three affected targets, following `docs/development/refreshing-corpus-goldens.md`. Never locally.
-- [ ] T031 Read and attribute every diff from T030 before accepting it. Expect: maven-guice +16, rust-ripgrep +10, python-flask +4 components, and 14 dangling references resolved. Anything else needs explaining before the goldens land. Also assert SC-007b at corpus level: the inter-module dependency edges present on maven-guice without `--root-name` are present with it — component counts alone do not prove edges survived.
-- [ ] T032 Prove SC-005: the eight zero-main-module targets are byte-identical to their committed goldens.
-- [ ] T033 Dispatch the corpus lane read-only against the branch and confirm green (SC-008).
+- [X] T029 Run `./scripts/pre-pr.sh` — must exit 0. Enumerate every `test result:` line rather than trusting the exit code; the script lacks `--no-fail-fast`.
+- [X] T030 Regenerate the public-corpus goldens through CI dispatch for the three affected targets, following `docs/development/refreshing-corpus-goldens.md`. Never locally.
+- [X] T031 Read and attribute every diff from T030 before accepting it. Expect: maven-guice +16, rust-ripgrep +10, python-flask +4 components, and 14 dangling references resolved. Anything else needs explaining before the goldens land. Also assert SC-007b at corpus level: the inter-module dependency edges present on maven-guice without `--root-name` are present with it — component counts alone do not prove edges survived.
+- [X] T032 Prove SC-005: the eight zero-main-module targets are byte-identical to their committed goldens.
+- [X] T033 Dispatch the corpus lane read-only against the branch and confirm green (SC-008).
 - [ ] T034 Put the attribution in the PR body, not a committed document — the same rule milestone 840 T023 applies. Reference the PR from the commit message.
 - [ ] T035 Close #863 with a reference to the merged PR, noting that the dangling references it reported were a symptom of the broader component-loss defect.
 
