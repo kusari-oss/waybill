@@ -485,10 +485,15 @@ checksum = "3fb1c753"
     dir
 }
 
+/// Was a milestone-077 pin: the Cargo main module was dropped from the
+/// emitted CDX when an override was set.
+///
+/// **Superseded by milestone 860 (#863).** It is retained and demoted,
+/// and the root is anchored to it. This is the end-to-end shape of the
+/// defect #863 reported: naming the subject deleted the scanned
+/// project's own module from its SBOM.
 #[test]
-fn override_drops_manifest_main_module_cargo() {
-    // SC-006 / FR-008 — Cargo main-module dropped from emitted CDX
-    // when the override is set on a manifest-driven scan.
+fn override_retains_manifest_main_module_cargo_m860() {
     let fake_home = tempfile::tempdir().unwrap();
     let fixture = build_cargo_fixture_named("foo-internal", "0.5.1");
     let cdx = run_scan_returning_json(
@@ -507,17 +512,32 @@ fn override_drops_manifest_main_module_cargo() {
     assert_eq!(cdx["metadata"]["component"]["name"], "widget-svc");
     assert_eq!(cdx["metadata"]["component"]["version"], "1.2.3");
 
-    // The manifest-derived main-module PURL must NOT appear anywhere
-    // in components[].
+    // m860/FR-002: the manifest-derived main module is RETAINED.
     let cdx_components = cdx["components"].as_array().expect("components[]");
     let purls: Vec<&str> = cdx_components
         .iter()
         .filter_map(|c| c["purl"].as_str())
         .collect();
     assert!(
-        !purls.contains(&"pkg:cargo/foo-internal@0.5.1"),
-        "manifest main-module PURL must be dropped under override; got: {purls:?}"
+        purls.contains(&"pkg:cargo/foo-internal@0.5.1"),
+        "m860/FR-002: naming the subject must not delete the scanned project's own module; got: {purls:?}"
     );
+    // m860/FR-003: retained as a library, so the document still has one root.
+    let retained = cdx_components
+        .iter()
+        .find(|c| c["purl"].as_str() == Some("pkg:cargo/foo-internal@0.5.1"))
+        .expect("retained module");
+    assert_eq!(retained["type"].as_str(), Some("library"));
+    // m860/FR-008: the root is anchored to it.
+    let root_ref = cdx["metadata"]["component"]["bom-ref"].as_str().expect("root ref");
+    let anchored = cdx["dependencies"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter(|d| d["ref"].as_str() == Some(root_ref))
+        .flat_map(|d| d["dependsOn"].as_array().into_iter().flatten())
+        .any(|t| t.as_str() == Some("pkg:cargo/foo-internal@0.5.1"));
+    assert!(anchored, "m860/FR-008: the root must depend on the retained module");
     // serde dependency should still be present.
     assert!(
         purls.iter().any(|p| p.starts_with("pkg:cargo/serde")),

@@ -268,7 +268,7 @@ pub fn build_document(
     // Two-pass Package build: (a) precompute the PURL → IRI
     // lookup, (b) build agents against the lookup, (c) build
     // Packages with agent attachments inlined.
-    let mut package_iri_by_purl =
+    let package_iri_by_purl =
         super::v3_packages::build_iri_lookup(scan.components, &doc_iri);
 
     let agent_build = super::v3_agents::build_agents(

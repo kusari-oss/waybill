@@ -95,14 +95,45 @@ multi-main-module case. Under convergence that no-op no longer exists.
 (Transparency) wants operator-visible reasoning; a scan that retains 16
 modules under an override should say so once, at INFO, with the count.
 
-## R6 — No corpus target exercises N=1 or the identity collision
+## R6 — CORRECTED: four corpus targets DO exercise N=1
 
-Measured across all eleven targets: main-module counts are 16
-(maven-guice), 10 (rust-ripgrep), 4 (python-flask), and 0 for the other
-eight. **No target has exactly one**, and none exhibits the FR-011
-identity collision.
+**The original finding was wrong.** It claimed no corpus target has
+exactly one main module, and that both N=1 and the FR-011 collision
+therefore needed synthetic tests.
 
-**Decision**: both cases need synthetic unit tests; the corpus cannot
-cover them. This is the same trap as milestone 856, where a hand-built
-fixture passed while production failed — so the N=1 test must run the
-real emitter path, not a hand-assembled component vector.
+The measurement counted components in `components[]` carrying
+`waybill:component-role = main-module`. At N=1 the module is promoted
+*out* of `components[]` into `metadata.component`, so the count came back
+zero for every single-module target. The method could only ever see N>1.
+
+Corrected, from the milestone-860 regeneration (run 34770618930):
+
+| N | targets |
+|---|---------|
+| 16 | maven-guice |
+| 10 | rust-ripgrep |
+| 4 | python-flask |
+| **1** | **go-cobra, npm-express, pants-example-golang, pants-example-javascript** |
+| 0 | image-postgres16, pants-example-django, pants-example-jvm, pants-example-python |
+
+So **seven** targets are affected, not three, and the N=1 convergence
+path has four real regression targets rather than none.
+
+The four N=1 targets each gain exactly the project's own module —
+`pkg:golang/github.com/spf13/cobra@v1.9.1` for go-cobra,
+`pkg:npm/express@5.1.0` for npm-express. Naming the subject previously
+deleted the scanned project from its own SBOM.
+
+The synthetic N=1 test (T020) is still worth keeping: it runs the real
+emitter and pins the behaviour independently of whether a corpus target
+happens to exercise it.
+
+**FR-011 remains uncovered by the corpus** — no target names a root
+matching a module's PURL — so that one is genuinely synthetic-only.
+
+### Why this matters beyond the number
+
+This is the third measurement error in this feature's vicinity where the
+method could not observe what it claimed to measure. Counting a
+promoted-out component in the array it was promoted out of returns zero
+and looks like an answer.

@@ -1,6 +1,6 @@
 # waybill Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-09-12
+Auto-generated from all feature plans. Last updated: 2026-09-13
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -507,9 +507,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 860-multi-main-module-override: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
 - 843-fixture-network-isolation: Added Rust stable — but no Rust changes are expected. + None new. The Go toolchain is already an
 - 839-batch-enrichment: Added Rust stable, workspace toolchain. No nightly. + Existing only — `reqwest` (already the deps.dev
-- 840-refresh-corpus-goldens: Added Rust stable (workspace toolchain; no nightly). No production source changes — this feature touches test fixtures, a review-time tool under `xtask`, and documentation. + Existing only — `serde_json` (already used by the harness for masked golden serialisation), the m195 harness at `waybill-cli/tests/corpus_harness_195/`, and the `public-corpus.yml` dispatch. **Zero new Cargo dependencies.**
 
 
 <!-- MANUAL ADDITIONS START -->

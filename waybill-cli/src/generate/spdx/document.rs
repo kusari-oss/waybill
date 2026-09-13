@@ -651,16 +651,46 @@ pub fn build_document(
     // edges originally sourced at those PURLs are rewritten to
     // source from the new root. In the non-override path the alias
     // list is empty and behavior is unchanged.
-    let purl_aliases: Vec<(String, SpdxId)> =
-        match (override_active, root_ids.first()) {
-            (true, Some(root_id)) => dropped_main_module_purls
-                .iter()
-                .map(|p| (p.clone(), root_id.clone()))
-                .collect(),
-            _ => Vec::new(),
-        };
+    // Milestone 860 (#863): NO aliases. This list used to map every
+    // retained main-module PURL onto the synthesized root's SPDXID so
+    // `build_relationships` would rewrite their edges to source from the
+    // root. FR-007 keeps those edges on the modules, and the root is
+    // anchored to the modules instead (appended below).
+    //
+    // Leaving the aliases in place is what made SPDX 2.3 disagree with
+    // CDX: the CDX root pointed at the retained module while the SPDX
+    // 2.3 root pointed at the module's dependencies. Caught by
+    // `root_override_preserves_root_outgoing_edges_in_all_formats`,
+    // which is an FR-009 parity guard and not a superseded pin.
+    let purl_aliases: Vec<(String, SpdxId)> = Vec::new();
+    let _ = &override_active;
     let mut relationships =
         super::relationships::build_relationships(artifacts, &root_ids, &purl_aliases);
+
+    // Milestone 860 (#863) FR-008 — anchor the emitted root to every
+    // retained main module, mirroring the CDX side so both formats
+    // describe the same graph.
+    if override_active && !dropped_main_module_purls.is_empty() {
+        if let Some(root_id) = root_ids.first() {
+            for purl in &dropped_main_module_purls {
+                // `for_purl` hashes the canonical PURL string, so a
+                // re-parse round-trips to the same SPDXID the package
+                // emitter used for this component.
+                let Ok(parsed) = waybill_common::types::purl::Purl::new(purl) else {
+                    continue;
+                };
+                let target = super::ids::SpdxId::for_purl(&parsed);
+                if target != *root_id {
+                    relationships.push(super::relationships::SpdxRelationship {
+                        source: root_id.clone(),
+                        target,
+                        kind: super::relationships::SpdxRelationshipType::DependsOn,
+                        comment: None,
+                    });
+                }
+            }
+        }
+    }
 
     // Milestone 158 US1 — append workspace-peer synthetic edges so
     // SPDX 2.3 emits DEPENDS_ON relationships from the primary root

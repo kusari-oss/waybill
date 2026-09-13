@@ -192,9 +192,12 @@ override is distinguishable from one that never did.
 - **SC-003**: On `rust-ripgrep`, the same. Currently 58 versus 68.
 - **SC-004**: On `python-flask`, the same: 105 becomes 109, and
   `pkg:pypi/flask@3.1.2` is present.
-- **SC-005**: The eight targets with zero main modules are byte-identical
-  before and after. The policy must not disturb scans that have nothing
-  to drop.
+- **SC-005**: The four targets with zero main modules
+  (`image-postgres16`, `pants-example-django`, `pants-example-jvm`,
+  `pants-example-python`) are byte-identical before and after. The
+  policy must not disturb scans that have nothing to retain.
+  *(Corrected from "eight": four further targets turned out to have
+  exactly one main module — see research.md R6.)*
 - **SC-006**: `--preserve-manifest-main-module` is accepted and produces
   output identical to omitting it.
 - **SC-007**: Exactly one subject is declared per emitted document, for
