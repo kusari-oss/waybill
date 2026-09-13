@@ -60,6 +60,27 @@ per-entry, for one hash appearing at many paths).
 Per T013 this target must **not** be regenerated: doing so encodes the
 fault as expected output.
 
+**Confirmed after the first draft of this document:**
+
+- The 408 files are *not* reattributed to their owning packages.
+  Counting paths referenced by any component of any type: old 408 under
+  `bin/`+`sbin/`, new **1**. They are absent from the SBOM.
+- The behaviour is **deterministic**. Two independent CI regens (runs
+  34666830925 and 34735981512) produced byte-identical output for all 11
+  targets × 3 formats. A refreshed golden would be stable — it would
+  simply freeze the fault.
+- The usrmerge symlink / visited-set hypothesis was **tested and
+  failed**: a synthetic tree with `bin -> usr/bin`, `lib -> usr/lib`,
+  `sbin -> usr/sbin` resolves consistently to `usr/` paths over three
+  runs.
+
+Tracked as **#854**.
+
+Because the two regens are byte-identical and run 34735981512 ran on a
+branch containing m841, m842, m843 and m850 while 34666830925 did not,
+this also *empirically* confirms the staleness reasoning at the top of
+this document: those four merges do not affect corpus output.
+
 ### B. SPDX 2.3 emits self-referential relationships
 
 `spdxElementId == relatedSpdxElement`:
@@ -152,6 +173,7 @@ No new blocking finding emerged from the seven.
 ## Disposition
 
 - Categories 1–6 and finding D: explained; those targets may proceed.
-- Finding A: image-postgres16 blocked pending T013 decision.
+- Finding A: image-postgres16 blocked; tracked as #854. Deterministic,
+  so the golden would be stable — but it would freeze a live defect.
 - Findings B, C: pre-existing defects; track separately, do not block.
 - Finding E: FIXED; all 11 SPDX-3 diffs now review element-wise.
