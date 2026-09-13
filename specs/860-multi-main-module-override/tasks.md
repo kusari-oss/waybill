@@ -94,8 +94,8 @@ Single Rust workspace. All paths from repo root.
 - [X] T031 Read and attribute every diff from T030 before accepting it. Expect: maven-guice +16, rust-ripgrep +10, python-flask +4 components, and 14 dangling references resolved. Anything else needs explaining before the goldens land. Also assert SC-007b at corpus level: the inter-module dependency edges present on maven-guice without `--root-name` are present with it — component counts alone do not prove edges survived.
 - [X] T032 Prove SC-005: the eight zero-main-module targets are byte-identical to their committed goldens.
 - [X] T033 Dispatch the corpus lane read-only against the branch and confirm green (SC-008).
-- [ ] T034 Put the attribution in the PR body, not a committed document — the same rule milestone 840 T023 applies. Reference the PR from the commit message.
-- [ ] T035 Close #863 with a reference to the merged PR, noting that the dangling references it reported were a symptom of the broader component-loss defect.
+- [X] T034 Put the attribution in the PR body, not a committed document — the same rule milestone 840 T023 applies. Reference the PR from the commit message.
+- [X] T035 Close #863 with a reference to the merged PR, noting that the dangling references it reported were a symptom of the broader component-loss defect.
 
 ---
 
@@ -136,3 +136,41 @@ US1 and US2 both depend on Phase 2 and on nothing else. They can be developed an
 Phase 4 adds the inventory guarantee, which is the larger user-visible win (30 components across three targets) but is not a correctness failure in the way a dangling reference is.
 
 Deliver Phase 6's golden regeneration last and once. Any emission-affecting change after T030 invalidates the artifact and the attribution built from it — the freeze-the-fix-set rule from milestone 840 step 5b.
+
+---
+
+## Completion record
+
+All 35 tasks complete. Delivered in PR #866 (merged), closing #863.
+
+**Outcome**: 34 components restored across seven targets; 14 dangling
+references resolved; corpus lane green (run 34773489214, 22/0).
+
+**Scope grew during implementation, twice, both times because a
+measurement was wrong rather than because the work expanded:**
+
+- Research R6 claimed no corpus target exercises N=1. Four do. The
+  method counted `main-module` role annotations in `components[]`, and
+  at N=1 the module is promoted out of that array into
+  `metadata.component` — so it could only ever observe N>1. Three
+  affected targets became seven.
+- Re-anchoring lived at three sites, not one. Missing the third
+  (`purl_aliases` in `spdx/document.rs`) had CDX and SPDX 2.3 emitting
+  different graphs. My parity check compared component counts, which
+  agreed, instead of topology, which did not.
+
+**Two claims retracted in flight**: the "26 → 0 SPDX 3 dangling
+endpoints" improvement (a masking artifact — see #865), and R6 above.
+
+**Five superseded test pins inverted rather than deleted.** One of the
+five failures was NOT superseded: it was a live parity guard catching a
+real defect. That ratio is the durable lesson — in a change that
+legitimately invalidates many tests, the real failure hides among the
+outdated ones, and the instinct to invert them all is exactly wrong.
+
+**Filed, not fixed**: #865 (SPDX 3 golden masking asymmetry).
+
+**Process note**: goldens were regenerated twice, because the SPDX 2.3
+fix landed after the first regeneration. That is the freeze-the-fix-set
+rule from milestone 840 step 5b — written by me, broken by me, one
+regeneration cycle later.
