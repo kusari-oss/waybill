@@ -1043,13 +1043,34 @@ pub(crate) fn resolve_maven_property(
                 .self_coord
                 .as_ref()
                 .map(|(_, _, v)| v.clone())
+                .filter(|v| !v.contains("${"))
                 .or_else(|| {
                     doc.self_version
                         .as_ref()
                         .filter(|v| !v.contains("${"))
                         .cloned()
+                })
+                // Issue #856. A reactor module that omits its own
+                // `<version>` inherits the parent's, and Maven resolves
+                // `${project.version}` to that inherited value. Modules
+                // that write `<version>${project.version}</version>`
+                // explicitly — guice's extensions do — are the same case
+                // wearing a circular-looking hat: the two clauses above
+                // correctly refuse it, and without this fallback the
+                // module's own siblings resolve to `@unknown`.
+                .or_else(|| {
+                    doc.parent_coord
+                        .as_ref()
+                        .map(|(_, _, v)| v.clone())
+                        .filter(|v| !v.contains("${"))
                 }),
-            "project.groupId" => doc.self_coord.as_ref().map(|(g, _, _)| g.clone()),
+            "project.groupId" => doc
+                .self_coord
+                .as_ref()
+                .map(|(g, _, _)| g.clone())
+                // Same inheritance rule: an omitted `<groupId>` comes
+                // from the parent.
+                .or_else(|| doc.parent_coord.as_ref().map(|(g, _, _)| g.clone())),
             "project.artifactId" => doc.self_coord.as_ref().map(|(_, a, _)| a.clone()),
             other => doc.properties.get(other).cloned(),
         };
@@ -2524,27 +2545,46 @@ fn pom_dep_to_entry(
     source_path: &str,
     include_dev: bool,
     cache: Option<&MavenRepoCache>,
+    // Issue #856 — the POM merged with its `<parent>` chain and BOM
+    // imports. `None` preserves pre-#856 behaviour exactly.
+    effective: Option<&EffectivePom>,
 ) -> Option<PackageDbEntry> {
     // Filter out test-scope when include_dev is false.
     if !include_dev && matches!(dep.scope.as_deref(), Some("test")) {
         return None;
     }
     let raw_version = dep.version.clone().unwrap_or_default();
-    let (resolved_version, tier, requirement_ranges): (String, String, Vec<String>) = match resolve_maven_property(&raw_version, doc) {
+    let interpolated = resolve_maven_property(&raw_version, doc);
+    let (resolved_version, tier, requirement_ranges): (String, String, Vec<String>) = match interpolated {
         MavenVersion::Resolved(v) if !v.is_empty() => (v, "source".to_string(), Vec::new()),
-        MavenVersion::Resolved(_) => {
-            // Empty version — demote to design tier.
-            (
-                String::from("unknown"),
-                "design".to_string(),
-                vec![raw_version.clone()],
-            )
+        other => {
+            // Issue #856. An inline `<version>` is the minority case in
+            // real POMs: the standard Maven idiom declares the version
+            // once in `<dependencyManagement>` — on this POM, on a
+            // parent, or in an imported BOM — and every `<dependency>`
+            // then omits it. Interpolating `${...}` against the raw
+            // document cannot see any of that, so those dependencies
+            // were emitted as `@unknown` even when the version sat in
+            // the same file a few lines above.
+            //
+            // `resolve_dep_version` reads the effective POM, which
+            // already flattens the parent chain and BOM imports. Only
+            // when it also comes up empty is the entry genuinely
+            // unresolved and demoted to design tier.
+            let managed = effective
+                .and_then(|eff| resolve_dep_version(dep, eff))
+                .filter(|v| !v.is_empty());
+            match managed {
+                Some(v) => (v, "source".to_string(), Vec::new()),
+                None => {
+                    let raw = match other {
+                        MavenVersion::Placeholder(raw) => raw,
+                        _ => raw_version.clone(),
+                    };
+                    (String::from("unknown"), "design".to_string(), vec![raw])
+                }
+            }
         }
-        MavenVersion::Placeholder(raw) => (
-            String::from("unknown"),
-            "design".to_string(),
-            vec![raw],
-        ),
     };
     let purl = build_maven_purl(&dep.group_id, &dep.artifact_id, &resolved_version)?;
     // Probe the M2 cache for a sidecar SHA hash for this coord. Empty
@@ -3344,6 +3384,40 @@ pub(crate) fn finalize(
         on_disk_coords.insert((group.clone(), artifact.clone()));
     }
 
+    // Issue #856 — register the workspace's own POMs in `pom_store`
+    // before any effective POM is built.
+    //
+    // `build_effective_pom` walks a POM's `<parent>` chain to inherit
+    // `<properties>` and `<dependencyManagement>`, and resolves each
+    // parent through `pom_store` first, then the M2 cache on disk. Until
+    // now the store was fed only by JAR-embedded POMs and cache lookups,
+    // so in a multi-module source checkout a child module could not find
+    // its own reactor root — the parent is a sibling file in the tree
+    // being scanned, present on disk and invisible to the lookup.
+    //
+    // The effect was that any dependency whose version comes from the
+    // root's `<dependencyManagement>` resolved to `unknown`, while
+    // siblings with an inline version resolved fine. On the `maven-guice`
+    // corpus target that is `aopalliance` from `core/pom.xml` emitting
+    // `@unknown` while `bnd` from the same file resolves.
+    //
+    // Only POMs that declare their own full coordinates are inserted; a
+    // child that inherits `<groupId>`/`<version>` has no key to register
+    // under, and does not need one — it is parents that get looked up.
+    for pom_path in &pom_files {
+        let Ok(bytes) = std::fs::read(pom_path) else {
+            continue;
+        };
+        let doc = parse_pom_xml(&bytes);
+        if let Some((g, a, v)) = doc.self_coord.as_ref() {
+            if !g.is_empty() && !a.is_empty() && !v.is_empty() {
+                pom_store
+                    .entry(coord_key(g, a, v))
+                    .or_insert_with(|| bytes.clone());
+            }
+        }
+    }
+
     for pom_path in &pom_files {
         let Ok(bytes) = std::fs::read(pom_path) else {
             continue;
@@ -3386,7 +3460,7 @@ pub(crate) fn finalize(
         let mut bfs_seeds: Vec<(String, String, String)> = Vec::new();
         for dep in &doc.dependencies {
             let Some(entry) =
-                pom_dep_to_entry(dep, &doc, &source_path, include_dev, Some(&repo_cache))
+                pom_dep_to_entry(dep, &doc, &source_path, include_dev, Some(&repo_cache), Some(&project_eff))
             else {
                 continue;
             };
@@ -7668,7 +7742,7 @@ mod tests {
     fn pom_dep_to_entry_optional_true_default_scope_classifies_as_optional() {
         let dep = m184_test_dep(None, /*optional=*/ true);
         let doc = PomXmlDocument::default();
-        let entry = pom_dep_to_entry(&dep, &doc, "/pom.xml", true, None)
+        let entry = pom_dep_to_entry(&dep, &doc, "/pom.xml", true, None, None)
             .expect("entry constructed");
         assert_eq!(
             entry.lifecycle_scope,
@@ -7691,7 +7765,7 @@ mod tests {
         // the derivation annotation MUST NOT be emitted.
         let dep = m184_test_dep(Some("test"), /*optional=*/ true);
         let doc = PomXmlDocument::default();
-        let entry = pom_dep_to_entry(&dep, &doc, "/pom.xml", /*include_dev=*/ true, None)
+        let entry = pom_dep_to_entry(&dep, &doc, "/pom.xml", /*include_dev=*/ true, None, None)
             .expect("entry constructed");
         assert_eq!(
             entry.lifecycle_scope,
@@ -7707,7 +7781,7 @@ mod tests {
         // Decision 2 provided-wins-over-optional pin.
         let dep = m184_test_dep(Some("provided"), /*optional=*/ true);
         let doc = PomXmlDocument::default();
-        let entry = pom_dep_to_entry(&dep, &doc, "/pom.xml", true, None)
+        let entry = pom_dep_to_entry(&dep, &doc, "/pom.xml", true, None, None)
             .expect("entry constructed");
         assert_eq!(
             entry.lifecycle_scope,
@@ -7722,7 +7796,7 @@ mod tests {
     fn pom_dep_to_entry_optional_false_stays_runtime() {
         let dep = m184_test_dep(None, /*optional=*/ false);
         let doc = PomXmlDocument::default();
-        let entry = pom_dep_to_entry(&dep, &doc, "/pom.xml", true, None)
+        let entry = pom_dep_to_entry(&dep, &doc, "/pom.xml", true, None, None)
             .expect("entry constructed");
         assert_eq!(
             entry.lifecycle_scope,
@@ -7740,7 +7814,7 @@ mod tests {
         // annotation).
         let dep = m184_test_dep(Some("compile"), /*optional=*/ false);
         let doc = PomXmlDocument::default();
-        let entry = pom_dep_to_entry(&dep, &doc, "/pom.xml", true, None)
+        let entry = pom_dep_to_entry(&dep, &doc, "/pom.xml", true, None, None)
             .expect("entry constructed");
         assert_eq!(
             entry.lifecycle_scope,
@@ -7767,6 +7841,181 @@ mod tests {
         assert_eq!(
             p.as_str(),
             "pkg:maven/org.apache.commons/commons-lang3@3.14.0"
+        );
+    }
+}
+
+/// Issue #856 — versions that Maven determines from
+/// `<dependencyManagement>` or from a module's inherited coordinates
+/// were emitted as `@unknown`.
+///
+/// These tests deliberately run the PRODUCTION chain — parse, build the
+/// effective POM, then emit — rather than hand-constructing an
+/// `EffectivePom`. A unit test that builds one by hand
+/// (`resolve_dep_version_uses_depmgmt_when_version_absent`) passed
+/// throughout the entire period this bug was live, because the defect
+/// was never in `resolve_dep_version`: it was in which inputs production
+/// handed it. A regression test at the wrong level would pass just as
+/// uselessly.
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod m856_managed_version_tests {
+    use super::*;
+    use std::collections::{HashMap, HashSet};
+
+    const ROOT_POM: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.example.waybillfixture</groupId>
+  <artifactId>reactor</artifactId>
+  <version>1.0.0</version>
+  <packaging>pom</packaging>
+  <modules><module>core</module></modules>
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.example.waybillfixture</groupId>
+        <artifactId>managed-lib</artifactId>
+        <version>4.13.2</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+</project>
+"#;
+
+    /// A child that omits `<groupId>`/`<version>` and writes its
+    /// sibling reference as `${project.version}` — guice's extensions
+    /// do exactly this.
+    const CHILD_POM: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.example.waybillfixture</groupId>
+    <artifactId>reactor</artifactId>
+    <version>1.0.0</version>
+  </parent>
+  <artifactId>reactor-core</artifactId>
+  <version>${project.version}</version>
+  <dependencies>
+    <dependency>
+      <groupId>com.example.waybillfixture</groupId>
+      <artifactId>managed-lib</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.example.waybillfixture</groupId>
+      <artifactId>sibling-lib</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
+</project>
+"#;
+
+    fn effective_of(pom: &str) -> EffectivePom {
+        let doc = parse_pom_xml(pom.as_bytes());
+        let cache = MavenRepoCache::for_tests(Vec::new());
+        let store: PomStore = HashMap::new();
+        let mut seen: HashSet<String> = HashSet::new();
+        let mut memo: EffectivePomMemo = HashMap::new();
+        build_effective_pom(doc, &cache, &store, &mut seen, &mut memo)
+    }
+
+    /// Contract test for the function, NOT a regression guard for the
+    /// bug. It passes `Some(&eff)` itself, so it stays green even when
+    /// production wires `None` — verified by reverting the call site and
+    /// watching this test pass anyway. That is the same weakness as the
+    /// pre-existing hand-built-`EffectivePom` test, stated here so the
+    /// next reader does not mistake it for coverage it lacks.
+    /// `reactor_child_inherits_managed_version_from_the_root_on_disk`
+    /// is the test with teeth.
+    #[test]
+    fn managed_version_reaches_the_emitted_entry() {
+        let doc = parse_pom_xml(ROOT_POM.as_bytes());
+        let eff = effective_of(ROOT_POM);
+        let dep = PomDependency {
+            group_id: "com.example.waybillfixture".to_string(),
+            artifact_id: "managed-lib".to_string(),
+            version: None,
+            scope: None,
+            dep_type: None,
+            optional: false,
+        };
+        let entry = pom_dep_to_entry(&dep, &doc, "/pom.xml", true, None, Some(&eff)).unwrap();
+        assert!(
+            entry.purl.as_str().ends_with("@4.13.2"),
+            "a version declared in <dependencyManagement> must reach the emitted PURL; got {}",
+            entry.purl.as_str(),
+        );
+    }
+
+    #[test]
+    fn without_an_effective_pom_the_old_behaviour_is_preserved() {
+        // The `None` arm must stay byte-identical to pre-#856, or every
+        // caller that cannot supply an effective POM changes silently.
+        let doc = parse_pom_xml(ROOT_POM.as_bytes());
+        let dep = PomDependency {
+            group_id: "com.example.waybillfixture".to_string(),
+            artifact_id: "managed-lib".to_string(),
+            version: None,
+            scope: None,
+            dep_type: None,
+            optional: false,
+        };
+        let entry = pom_dep_to_entry(&dep, &doc, "/pom.xml", true, None, None).unwrap();
+        assert!(
+            entry.purl.as_str().contains("managed-lib"),
+            "got {}",
+            entry.purl.as_str(),
+        );
+        assert_eq!(entry.version, "unknown");
+    }
+
+    #[test]
+    fn project_version_falls_back_to_the_inherited_parent_version() {
+        // `<version>${project.version}</version>` at project level is
+        // circular on its face; the module's real version is the
+        // parent's. Without the fallback every sibling reference in a
+        // guice-shaped reactor resolves to `unknown`.
+        let doc = parse_pom_xml(CHILD_POM.as_bytes());
+        assert_eq!(
+            resolve_maven_property("${project.version}", &doc),
+            MavenVersion::Resolved("1.0.0".to_string()),
+        );
+    }
+
+    #[test]
+    fn reactor_child_inherits_managed_version_from_the_root_on_disk() {
+        // The end-to-end case, and the one no unit test covered: the
+        // child's parent is a sibling FILE in the tree being scanned.
+        // Before #856 the parent was resolvable only from a JAR or the
+        // M2 cache, so a source checkout could not inherit from its own
+        // reactor root.
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(dir.path().join("pom.xml"), ROOT_POM).unwrap();
+        std::fs::create_dir_all(dir.path().join("core")).unwrap();
+        std::fs::write(dir.path().join("core/pom.xml"), CHILD_POM).unwrap();
+
+        let excludes = super::super::exclude_path::ExclusionSet::new_empty();
+        let entries = read(dir.path(), /*include_dev=*/ true, &excludes);
+
+        let managed: Vec<_> = entries
+            .iter()
+            .filter(|e| e.purl.as_str().contains("managed-lib"))
+            .collect();
+        assert!(!managed.is_empty(), "managed-lib was not emitted at all");
+        assert!(
+            managed.iter().all(|e| e.version != "unknown"),
+            "child module failed to inherit <dependencyManagement> from its reactor root: {:?}",
+            managed.iter().map(|e| e.purl.as_str()).collect::<Vec<_>>(),
+        );
+
+        let sibling: Vec<_> = entries
+            .iter()
+            .filter(|e| e.purl.as_str().contains("sibling-lib"))
+            .collect();
+        assert!(
+            sibling.iter().all(|e| e.version != "unknown"),
+            "${{project.version}} sibling reference stayed unresolved: {:?}",
+            sibling.iter().map(|e| e.purl.as_str()).collect::<Vec<_>>(),
         );
     }
 }
