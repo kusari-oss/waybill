@@ -85,3 +85,57 @@ jobs:
           max_attempts: 3
           timeout_minutes: 5
           command: cargo +stable test --workspace -- --ignored --test-threads=1 dual_format_is_at_least_30_percent_faster_than_two_sequential_scans
+
+  # Issue #859 sweep. Green for all 21 scheduled runs on record, so this
+  # escalation is latent rather than overdue — which is the point of doing
+  # it now rather than after the lane has been red for a month.
+  report-failure:
+    name: Report perf failure
+    needs: perf
+    # Scheduled runs only. A `perf`-labelled PR run and a manual dispatch
+    # both have a human already watching; a 06:00 UTC cron does not.
+    if: failure() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      # No `detail:` here on purpose. `perf` is a matrix and its two arms
+      # would write the same job output, so only one would survive; the
+      # action's fallback names the failed arm and step from the API
+      # instead, which is the part that matters — ubuntu and macos fail for
+      # different reasons.
+      - uses: ./.github/actions/report-scheduled-failure
+        with:
+          title: '[canary] nightly perf benchmarks are failing'
+          labels: 'canary,perf'
+          triage: |
+            The nightly wall-clock perf lane is failing on at least one
+            runner. These tests are `#[ignore]`d in the default lane and are
+            NOT required for merge — a failure here blocks nothing, which is
+            precisely why it needs to announce itself.
+
+            **Spec:** `specs/094-deflake-perf-tests/`
+            **Methodology:** [`docs/development/perf-methodology.md`](https://github.com/kusari-oss/waybill/blob/main/docs/development/perf-methodology.md)
+
+            ## Triage
+
+            Each test already retries 3× via `nick-fields/retry`, so a
+            failure here is three consecutive misses, not one unlucky
+            sample. Treat it as signal, not noise.
+
+            Check which runner failed before anything else — `macos-latest`
+            alone is usually shared-runner contention, while both arms
+            failing together points at the ratio the test asserts having
+            genuinely moved.
+
+            These are *ratio* assertions (triple-format ≥25% faster than
+            three sequential scans; dual-format ≥30% faster than two). A
+            ratio can regress because the fast path got slower **or**
+            because the baseline path got faster. Confirm which before
+            hunting for a slowdown that may not exist.

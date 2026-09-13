@@ -186,89 +186,31 @@ jobs:
       issues: write
 
     steps:
-      - name: Ensure labels exist
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          # Idempotent — `|| true` swallows "already exists".
-          gh label create canary --color EDEDED --description "Auto-opened by a nightly canary" --repo "$GITHUB_REPOSITORY" 2>/dev/null || true
-          gh label create corpus --color 0E8A16 --description "Public-corpus regression lane" --repo "$GITHUB_REPOSITORY" 2>/dev/null || true
-
-      - name: Open or update the corpus issue
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-        env:
-          # Route job outputs through env: so github-script reads them
-          # via process.env rather than having them interpolated into the
-          # JS source (defense in depth against script injection).
-          FAILING: ${{ needs.corpus.outputs.failing }}
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
-          script: |
-            const title = '[canary] public-corpus goldens are drifting';
-            const failing = (process.env.FAILING || '').trim();
-            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-            const timestamp = new Date().toISOString();
+          persist-credentials: false
 
-            const commentBody = [
-              `## Nightly run ${context.runId} — ${timestamp}`,
-              ``,
-              failing ? `Drifted:\n\n${failing}` : `No per-target detail parsed — see the run log.`,
-              ``,
-              `Run: ${runUrl}`,
-            ].join('\n');
+      - uses: ./.github/actions/report-scheduled-failure
+        with:
+          # Unchanged from the inline implementation this replaced. The
+          # title is the dedupe key and is matched exactly, so editing it
+          # would orphan any open corpus issue and restart the count.
+          title: '[canary] public-corpus goldens are drifting'
+          labels: 'canary,corpus'
+          detail: ${{ needs.corpus.outputs.failing }}
+          triage: |
+            The nightly public-corpus lane is failing. Either the goldens
+            have accumulated drift and need refreshing, or something
+            regressed.
 
-            const issueBody = [
-              `The nightly public-corpus lane is failing. Either the goldens have`,
-              `accumulated drift and need refreshing, or something regressed.`,
-              ``,
-              `**Refresh procedure:** [\`docs/development/refreshing-corpus-goldens.md\`](https://github.com/${context.repo.owner}/${context.repo.repo}/blob/main/docs/development/refreshing-corpus-goldens.md)`,
-              ``,
-              `Read the diffs before regenerating. If a target is failing for a`,
-              `reason other than accumulated drift, regenerating its golden encodes`,
-              `the fault as expected output.`,
-              ``,
-              `## Reading the per-format count`,
-              ``,
-              `- \`3 of 3 formats drifted\` — broad accumulated drift, usually benign`,
-              `- a single format drifting — narrower, and more suspicious`,
-              ``,
-              `## Staleness`,
-              ``,
-              `This issue is deduped by title, so each nightly failure appends a`,
-              `comment rather than opening a new issue. **The comment count is the`,
-              `staleness metric** — it is how many consecutive nights this has been`,
-              `red. That number is what went unnoticed for 51 nights before #859.`,
-              ``,
-              `---`,
-              `_Auto-opened by the public-corpus lane. Subsequent runs append`,
-              `comments; dedupe is by exact title, so do not edit the title._`,
-              ``,
-              commentBody,
-            ].join('\n');
+            **Refresh procedure:** [`docs/development/refreshing-corpus-goldens.md`](https://github.com/kusari-oss/waybill/blob/main/docs/development/refreshing-corpus-goldens.md)
 
-            const existing = await github.rest.issues.listForRepo({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              state: 'open',
-              labels: 'canary,corpus',
-              per_page: 100,
-            });
-            const match = existing.data.find(i => i.title === title);
-            if (match) {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: match.number,
-                body: commentBody,
-              });
-              core.info(`Appended comment to existing issue #${match.number}`);
-            } else {
-              const created = await github.rest.issues.create({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                title,
-                body: issueBody,
-                labels: ['canary', 'corpus'],
-              });
-              core.info(`Opened issue #${created.data.number}`);
-            }
+            Read the diffs before regenerating. If a target is failing for a
+            reason other than accumulated drift, regenerating its golden
+            encodes the fault as expected output.
+
+            ## Reading the per-format count
+
+            - `3 of 3 formats drifted` — broad accumulated drift, usually benign
+            - a single format drifting — narrower, and more suspicious

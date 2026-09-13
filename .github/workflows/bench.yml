@@ -38,6 +38,8 @@ jobs:
     # C-4: runner class pinned to ubuntu-latest (Linux x86_64) — the
     # reference architecture for docs perf numbers per spec Assumption 1.
     runs-on: ubuntu-latest
+    outputs:
+      detail: ${{ steps.extract.outputs.detail }}
     # SC-008: 90-minute budget for the full matrix.
     timeout-minutes: 90
     steps:
@@ -98,9 +100,36 @@ jobs:
             echo "no run-*.json produced by the capture-only step" >&2
             exit 1
           fi
+          set -o pipefail
           cargo run -p xtask --release -- bench \
             --baseline docs/perf/baseline.json \
-            --output "$RUN_JSON"
+            --output "$RUN_JSON" 2>&1 | tee target/bench/bench-compare.log
+
+      # Pull the regression table into a job output so the escalation issue
+      # names which fixture/dimension crossed the threshold. Bounded to 30
+      # rows: a wholesale baseline mismatch regresses every fixture at once
+      # and would otherwise produce an unreadable issue comment.
+      - name: Extract regressions
+        id: extract
+        if: always()
+        run: |
+          set -euo pipefail
+          log=target/bench/bench-compare.log
+          [ -f "$log" ] || { echo "detail=" >> "$GITHUB_OUTPUT"; exit 0; }
+          # awk, not sed: a sed range's closing address is inclusive, so
+          # the naive form leaks the "### Improvements" header into the
+          # issue under a "Regressions" heading — the opposite of what
+          # happened. The sed form that excludes it is a GNU extension that
+          # BSD sed rejects outright, and since the `|| true` below would
+          # swallow that error into an empty detail, the breakage would be
+          # silent. awk behaves identically on both.
+          awk '/^### Regressions/{f=1} /^### Improvements/{f=0} f' "$log" \
+            | head -30 > target/bench/regressions.txt || true
+          {
+            echo 'detail<<BENCH_EOF'
+            cat target/bench/regressions.txt
+            echo 'BENCH_EOF'
+          } >> "$GITHUB_OUTPUT"
 
       # Always upload artifacts (even on regression-fail) so operators
       # can inspect the diff. C-6 step 3.
@@ -112,6 +141,7 @@ jobs:
           path: |
             target/bench/run-*.json
             target/bench/regression-diff-*.json
+            target/bench/bench-compare.log
           if-no-files-found: warn
           retention-days: 90
 
@@ -219,3 +249,59 @@ jobs:
               });
               core.info(`created new bench-regression comment ${created.data.id} on PR #${prNumber}`);
             }
+
+  # Issue #859 sweep. bench.yml looked escalated during the audit because
+  # it posts a regression table — but that step is gated on
+  # `startsWith(github.ref, 'refs/tags/v')`, which the weekly cron never
+  # satisfies. Its scheduled failures were as silent as the corpus lane's,
+  # and one on 2026-09-06 went unreported.
+  report-failure:
+    name: Report bench failure
+    needs: bench
+    # Scheduled runs only. Release-tag runs already report in-place on the
+    # associated PR, and a dispatch has someone watching.
+    if: failure() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/report-scheduled-failure
+        with:
+          title: '[canary] weekly bench is failing its regression budget'
+          labels: 'canary,perf'
+          detail: ${{ needs.bench.outputs.detail }}
+          triage: |
+            The weekly bench lane crossed its regression threshold against
+            the committed baseline.
+
+            **Baseline:** [`docs/perf/baseline.json`](https://github.com/kusari-oss/waybill/blob/main/docs/perf/baseline.json)
+            **Spec:** `specs/669-bench-harness/`
+
+            ## Triage
+
+            Count the regressed rows first. A handful of fixtures moving in
+            one dimension is a real regression worth bisecting. *Every*
+            fixture regressing at once is almost never a real regression —
+            it means the baseline no longer describes the same thing the
+            subject run measured, and the baseline is what needs attention.
+
+            Check `MaxRssKb` baselines specifically before believing a
+            memory regression. A sub-megabyte peak RSS for a full scan is
+            not a plausible measurement, and comparing against one
+            manufactures enormous percentage deltas out of nothing.
+
+            Suspiciously round subject values (exactly 50 / 100 / 150 ms)
+            indicate timer quantisation rather than a measured duration.
+            Deltas computed from those are not measurements either.
+
+            ## Do not re-baseline to clear this
+
+            Refreshing `baseline.json` makes the lane green by definition
+            and destroys the comparison. Only re-baseline once you know why
+            the numbers moved, and say so in the PR.

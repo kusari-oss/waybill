@@ -40,6 +40,8 @@ jobs:
   quality:
     name: Measure SBOM quality corpus
     runs-on: ubuntu-latest
+    outputs:
+      detail: ${{ steps.extract.outputs.detail }}
     # Measured cold cost is ~95 s fetching + ~140 s scanning; the rest is
     # building waybill. 60 minutes is generous headroom, and the job must be
     # able to fail — deliberately no continue-on-error anywhere below.
@@ -98,11 +100,42 @@ jobs:
         env:
           FILTER_INPUT: ${{ github.event.inputs.filter }}
         run: |
+          set -o pipefail
+          mkdir -p target/quality
           if [ -n "$FILTER_INPUT" ]; then
-            cargo run -p xtask --release -- quality --filter "$FILTER_INPUT"
+            cargo run -p xtask --release -- quality --filter "$FILTER_INPUT" \
+              2>&1 | tee target/quality/quality-run.log
           else
-            cargo run -p xtask --release -- quality
+            cargo run -p xtask --release -- quality \
+              2>&1 | tee target/quality/quality-run.log
           fi
+
+      # Pull the violated metrics out of the run summary so the escalation
+      # issue names what left its range instead of only linking a run.
+      # Parsed from the printed summary rather than the report JSON: the
+      # JSON encodes ExpectedBound/ObservedValue as serde-tagged enums,
+      # while xtask already renders them in a form a human can triage.
+      - name: Extract violations
+        id: extract
+        if: always()
+        run: |
+          set -euo pipefail
+          log=target/quality/quality-run.log
+          [ -f "$log" ] || { echo "detail=" >> "$GITHUB_OUTPUT"; exit 0; }
+          # The `|| true`s are load-bearing, though not for the reason a
+          # non-matching grep would need them: sed exits 0 on no match.
+          # They cover SIGPIPE — `set -o pipefail` is in effect and `head`
+          # closes the pipe early on a long summary, which would otherwise
+          # fail the step and lose the detail it had already captured.
+          {
+            sed -n '/^CONFIG ERRORS/,/^$/p' "$log" || true
+            sed -n '/^VIOLATIONS/,$p' "$log" | head -40 || true
+          } > target/quality/violations.txt || true
+          {
+            echo 'detail<<QUALITY_EOF'
+            cat target/quality/violations.txt
+            echo 'QUALITY_EOF'
+          } >> "$GITHUB_OUTPUT"
 
       # Always upload, including on a failing gate — the report is how an
       # operator finds out what regressed (FR-029).
@@ -111,6 +144,82 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: quality-corpus-${{ github.sha }}
-          path: target/quality/run-*.json
+          path: |
+            target/quality/run-*.json
+            target/quality/quality-run.log
           if-no-files-found: warn
           retention-days: 90
+
+  # Issue #859 sweep. This lane failed on 2026-09-09, -10 and -11 and
+  # notified nobody. It went green on the 12th because #830 happened to
+  # correct the same warm-module-cache mis-authoring from the perf-test
+  # side — the fix arrived from a different direction entirely, and those
+  # three red nights informed no one. That is the shape #859 describes.
+  report-failure:
+    name: Report quality-corpus failure
+    needs: quality
+    # Scheduled runs only. A manual dispatch with a `--filter` is a
+    # deliberate narrow probe and is allowed to fail without escalating.
+    if: failure() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/report-scheduled-failure
+        with:
+          title: '[canary] SBOM quality corpus is failing its authored ranges'
+          labels: 'canary,quality-corpus'
+          detail: ${{ needs.quality.outputs.detail }}
+          triage: |
+            The nightly SBOM quality corpus (m770) is outside its authored
+            ranges, or a target could not be measured at all.
+
+            **Config:** [`xtask/corpus/quality-corpus.toml`](https://github.com/kusari-oss/waybill/blob/main/xtask/corpus/quality-corpus.toml)
+            **Spec:** `specs/770-sbom-quality-corpus/spec.md`
+
+            ## Triage
+
+            A violation is one of two things, and they want opposite responses:
+
+            - **waybill regressed** — a metric moved because scan behaviour
+              changed. Fix the scan; do not touch the range.
+            - **the range was wrong** — the authored bound never matched
+              reality, or upstream moved under it. Re-author the range, and
+              record in the PR what was measured.
+
+            Widening a range to make a red lane green is how this corpus
+            stops being worth running. Read the numbers first.
+
+            ## `status` matters
+
+            A target reported as unmeasurable is NOT a passing target — it
+            means the fetch or the scan failed outright. Check `config_errors`
+            and the `status` column before reading any metric.
+
+            ## The `go-*` targets are pinned to a known-degraded shape
+
+            `go-cobra` and `go-kubernetes` are bounded at `flat = true` and
+            `max_depth = 1` on purpose. That is not the shape waybill should
+            produce — it is [#857](https://github.com/kusari-oss/waybill/issues/857)
+            (Go offline scans orphan most components), and the bounds pin the
+            cold-cache floor so a *further* collapse still fails.
+
+            Two consequences:
+
+            - A Go-target violation in the **worse** direction is a real
+              regression on top of #857.
+            - A Go-target violation in the **better** direction means #857
+              got fixed. Re-author the bounds as part of that fix; do not
+              file it as a regression.
+
+            Do not re-author these against a developer machine. The original
+            bounds were authored with ~16 GB of Go modules on disk and
+            described edges no clean runner can resolve — that is what #830
+            corrected. Isolate `$GOMODCACHE`, `$GOPATH` and `$HOME` before
+            measuring.

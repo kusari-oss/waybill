@@ -171,3 +171,56 @@ jobs:
                 || echo "::warning::Failed to delete $OLD_TAG (may already be gone)"
             done
           echo "Cleanup pass complete"
+
+  # Issue #859 sweep. Green for all 30 scheduled runs on record. Latent,
+  # but the consequence of a silent failure here is larger than elsewhere:
+  # a broken nightly lane produces no release and no error, so the channel
+  # simply stops without ever reporting that it stopped.
+  report-failure:
+    name: Report nightly-release failure
+    needs: nightly-tag-and-dispatch
+    if: failure() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      # Narrower than the workflow-level default (contents: write,
+      # actions: write) — this job only reads the repo and files an issue.
+      contents: read
+      issues: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/report-scheduled-failure
+        with:
+          title: '[canary] nightly release is failing'
+          labels: 'canary,release'
+          triage: |
+            The nightly release lane failed — no nightly was produced for
+            that day.
+
+            **Spec:** `specs/229-release-flow-impl/spec.md`
+            **Contract:** `specs/229-release-flow-impl/contracts/nightly-workflow.md`
+
+            ## Triage
+
+            This job tags and then dispatches `release.yml`; it does not
+            build. Check which half broke:
+
+            - **tag/dispatch failed** — the failure is in this run's log.
+            - **dispatch succeeded, build failed** — this job is green and
+              you are not reading this. Check `release.yml` runs directly;
+              a failure there escalates separately.
+
+            A skipped day is not necessarily a failure. The lane no-ops by
+            design when `main` has no new commits since the last nightly
+            tag, and that path exits 0.
+
+            ## Careful with the retention step
+
+            Cleanup deletes nightlies older than 30 days using an anchored
+            regex that matches *only* nightly-shaped tags. Stables and
+            bridge pre-releases do not match and are safe. If you touch that
+            regex, re-verify the anchoring before merging — this step
+            deletes releases.
