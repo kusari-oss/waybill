@@ -103,8 +103,12 @@ fn reserve_windows_stack() {
 fn emit_waybill_version_override() {
     println!("cargo:rerun-if-env-changed=WAYBILL_VERSION");
     let Ok(raw) = std::env::var("WAYBILL_VERSION") else {
-        // Unset — write OUT_DIR file with CARGO_PKG_VERSION fallback.
-        write_version_file(None);
+        // TEMPORARY MUTATION — milestone 840 T023/T024 only.
+        // Proves the public-corpus lane still detects an emission
+        // change and names the affected target AND format. Reverted in
+        // the commit immediately following. If you are reading this on
+        // any branch, it is a mistake.
+        write_version_file(Some("0.7.0-T023-MUTANT".to_string()));
         return;
     };
     let trimmed = raw.trim();
