@@ -29,6 +29,10 @@ jobs:
     name: Run public corpus (${{ github.event.inputs.branch || github.ref_name }})
     runs-on: ubuntu-latest
     timeout-minutes: 45   # SC-005: cold-cache < 30 min; 15-min buffer
+    outputs:
+      # Consumed by the `report-failure` job so the auto-opened issue
+      # names what broke instead of only linking a run.
+      failing: ${{ steps.extract.outputs.failing }}
     permissions:
       # This job only reads sources and uploads artifacts — no writes to
       # the repo, no package publishing, no PR-comment mutation. Locked
@@ -68,7 +72,37 @@ jobs:
           # Nightly cron never sets this — remains empty string = verify mode.
           WAYBILL_UPDATE_PUBLIC_CORPUS_GOLDENS: ${{ inputs.regen_goldens == true && '1' || '' }}
         run: |
-          cargo test --test public_corpus --release -- --nocapture --test-threads=3
+          set -o pipefail
+          mkdir -p corpus-artifacts
+          cargo test --test public_corpus --release -- --nocapture --test-threads=3 \
+            2>&1 | tee corpus-artifacts/corpus-run.log
+
+      # Extract which targets drifted and in how many formats. The
+      # per-format count matters for triage: "3 of 3" reads as broad
+      # accumulated drift, while a single format drifting is narrower and
+      # more suspicious. That line exists because milestone 840 made the
+      # lane report every format rather than stopping at the first.
+      - name: Extract failing targets
+        id: extract
+        if: always()
+        run: |
+          set -euo pipefail
+          log=corpus-artifacts/corpus-run.log
+          [ -f "$log" ] || { echo "failing=" >> "$GITHUB_OUTPUT"; exit 0; }
+          {
+            # `|| true` per pipeline, not just on the group: under
+            # `set -e` a non-matching grep aborts the whole group, so a
+            # miss on the first pattern would silently skip the second.
+            grep -oE 'test corpus_[a-z0-9_]+ \.\.\. FAILED' "$log" \
+              | sed -E 's/test (corpus_[a-z0-9_]+) \.\.\. FAILED/- \1/' | sort -u || true
+            grep -oE '[0-9]+ of 3 formats drifted for [a-z0-9_-]+' "$log" \
+              | sed -E 's/^/  - /' | sort -u || true
+          } > corpus-artifacts/failing.txt || true
+          {
+            echo 'failing<<CORPUS_EOF'
+            cat corpus-artifacts/failing.txt
+            echo 'CORPUS_EOF'
+          } >> "$GITHUB_OUTPUT"
 
       - name: Capture summary
         if: always()
@@ -87,6 +121,12 @@ jobs:
             echo "Date:   $(date -u +%Y-%m-%dT%H:%M:%SZ)"
             echo ""
             echo "See workflow log for per-target diagnostic blocks."
+            if [ -s corpus-artifacts/failing.txt ]; then
+              echo ""
+              echo "## Drifted"
+              echo ""
+              cat corpus-artifacts/failing.txt
+            fi
           } > corpus-artifacts/corpus-run-summary.md
 
       - name: Upload summary
@@ -123,3 +163,112 @@ jobs:
           path: waybill-cli/tests/fixtures/public_corpus/
           if-no-files-found: warn
           retention-days: 14
+
+  # Issue #859 — escalation. Detection was never the problem: this lane
+  # ran nightly and failed 51 consecutive times (2026-07-24 to
+  # 2026-09-12) while the goldens rotted, and every one of those failures
+  # landed as a red square in the Actions tab that nobody opened.
+  #
+  # Modelled on `.github/workflows/ebpf-canary.yml`, which has always
+  # done this and is why #685 was visible while the corpus rot was not.
+  # Same repo, same nightly hour, opposite outcome — the difference was
+  # one step in a YAML file.
+  report-failure:
+    name: Report corpus failure
+    needs: corpus
+    # Scheduled runs ONLY. Manual dispatches with regen_goldens=true are
+    # expected to fail mid-refresh — several did during #858 — and
+    # opening an issue for each would drown the signal inside a week.
+    if: failure() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+
+    steps:
+      - name: Ensure labels exist
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # Idempotent — `|| true` swallows "already exists".
+          gh label create canary --color EDEDED --description "Auto-opened by a nightly canary" --repo "$GITHUB_REPOSITORY" 2>/dev/null || true
+          gh label create corpus --color 0E8A16 --description "Public-corpus regression lane" --repo "$GITHUB_REPOSITORY" 2>/dev/null || true
+
+      - name: Open or update the corpus issue
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          # Route job outputs through env: so github-script reads them
+          # via process.env rather than having them interpolated into the
+          # JS source (defense in depth against script injection).
+          FAILING: ${{ needs.corpus.outputs.failing }}
+        with:
+          script: |
+            const title = '[canary] public-corpus goldens are drifting';
+            const failing = (process.env.FAILING || '').trim();
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const timestamp = new Date().toISOString();
+
+            const commentBody = [
+              `## Nightly run ${context.runId} — ${timestamp}`,
+              ``,
+              failing ? `Drifted:\n\n${failing}` : `No per-target detail parsed — see the run log.`,
+              ``,
+              `Run: ${runUrl}`,
+            ].join('\n');
+
+            const issueBody = [
+              `The nightly public-corpus lane is failing. Either the goldens have`,
+              `accumulated drift and need refreshing, or something regressed.`,
+              ``,
+              `**Refresh procedure:** [\`docs/development/refreshing-corpus-goldens.md\`](https://github.com/${context.repo.owner}/${context.repo.repo}/blob/main/docs/development/refreshing-corpus-goldens.md)`,
+              ``,
+              `Read the diffs before regenerating. If a target is failing for a`,
+              `reason other than accumulated drift, regenerating its golden encodes`,
+              `the fault as expected output.`,
+              ``,
+              `## Reading the per-format count`,
+              ``,
+              `- \`3 of 3 formats drifted\` — broad accumulated drift, usually benign`,
+              `- a single format drifting — narrower, and more suspicious`,
+              ``,
+              `## Staleness`,
+              ``,
+              `This issue is deduped by title, so each nightly failure appends a`,
+              `comment rather than opening a new issue. **The comment count is the`,
+              `staleness metric** — it is how many consecutive nights this has been`,
+              `red. That number is what went unnoticed for 51 nights before #859.`,
+              ``,
+              `---`,
+              `_Auto-opened by the public-corpus lane. Subsequent runs append`,
+              `comments; dedupe is by exact title, so do not edit the title._`,
+              ``,
+              commentBody,
+            ].join('\n');
+
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'canary,corpus',
+              per_page: 100,
+            });
+            const match = existing.data.find(i => i.title === title);
+            if (match) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: match.number,
+                body: commentBody,
+              });
+              core.info(`Appended comment to existing issue #${match.number}`);
+            } else {
+              const created = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body: issueBody,
+                labels: ['canary', 'corpus'],
+              });
+              core.info(`Opened issue #${created.data.number}`);
+            }
