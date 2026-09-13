@@ -114,8 +114,8 @@
       "version": "unknown"
     },
     {
-      "bom-ref": "pkg:maven/aopalliance/aopalliance@unknown",
-      "cpe": "cpe:2.3:a:aopalliance:aopalliance:unknown:*:*:*:*:*:*:*",
+      "bom-ref": "pkg:maven/aopalliance/aopalliance@1.0",
+      "cpe": "cpe:2.3:a:aopalliance:aopalliance:1.0:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -143,32 +143,24 @@
           "value": "[\"core/pom.xml\"]"
         },
         {
-          "name": "waybill:requirement-ranges",
-          "value": "[\"\"]"
-        },
-        {
           "name": "waybill:source-type",
           "value": "workspace"
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "no <version> in pom.xml; no dependency-reduced-pom.xml or effective-pom fallback"
+          "value": "source"
         },
         {
           "name": "waybill:workspace-member",
           "value": "[\"core\"]"
         }
       ],
-      "purl": "pkg:maven/aopalliance/aopalliance@unknown",
+      "purl": "pkg:maven/aopalliance/aopalliance@1.0",
       "supplier": {
         "name": "aopalliance"
       },
       "type": "library",
-      "version": "unknown"
+      "version": "1.0"
     },
     {
       "bom-ref": "pkg:maven/biz.aQute/bnd@0.0.384",
@@ -345,8 +337,8 @@
       "version": "1.6.3"
     },
     {
-      "bom-ref": "pkg:maven/com.google.code.findbugs/jsr305@unknown",
-      "cpe": "cpe:2.3:a:com.google.code.findbugs:jsr305:unknown:*:*:*:*:*:*:*",
+      "bom-ref": "pkg:maven/com.google.code.findbugs/jsr305@3.0.1",
+      "cpe": "cpe:2.3:a:com.google.code.findbugs:jsr305:3.0.1:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -371,15 +363,11 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:com.google.code.findbugs:jsr305:unknown:*:*:*:*:*:*:* | cpe:2.3:a:findbugs:jsr305:unknown:*:*:*:*:*:*:* | cpe:2.3:a:jsr305:jsr305:unknown:*:*:*:*:*:*:*"
+          "value": "cpe:2.3:a:com.google.code.findbugs:jsr305:3.0.1:*:*:*:*:*:*:* | cpe:2.3:a:findbugs:jsr305:3.0.1:*:*:*:*:*:*:* | cpe:2.3:a:jsr305:jsr305:3.0.1:*:*:*:*:*:*:*"
         },
         {
           "name": "waybill:source-files",
           "value": "[\"extensions/testlib/pom.xml\"]"
-        },
-        {
-          "name": "waybill:requirement-ranges",
-          "value": "[\"\"]"
         },
         {
           "name": "waybill:source-type",
@@ -387,23 +375,19 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "no <version> in pom.xml; no dependency-reduced-pom.xml or effective-pom fallback"
+          "value": "source"
         },
         {
           "name": "waybill:workspace-member",
           "value": "[\"extensions/testlib\"]"
         }
       ],
-      "purl": "pkg:maven/com.google.code.findbugs/jsr305@unknown",
+      "purl": "pkg:maven/com.google.code.findbugs/jsr305@3.0.1",
       "supplier": {
         "name": "com.google.code.findbugs"
       },
       "type": "library",
-      "version": "unknown"
+      "version": "3.0.1"
     },
     {
       "bom-ref": "pkg:maven/com.google.dagger/dagger-producers@2.22.1",
@@ -526,8 +510,8 @@
       "version": "2.22.1"
     },
     {
-      "bom-ref": "pkg:maven/com.google.errorprone/error_prone_annotations@unknown",
-      "cpe": "cpe:2.3:a:com.google.errorprone:error_prone_annotations:unknown:*:*:*:*:*:*:*",
+      "bom-ref": "pkg:maven/com.google.errorprone/error_prone_annotations@2.18.0",
+      "cpe": "cpe:2.3:a:com.google.errorprone:error_prone_annotations:2.18.0:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -552,7 +536,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:com.google.errorprone:error_prone_annotations:unknown:*:*:*:*:*:*:* | cpe:2.3:a:errorprone:error_prone_annotations:unknown:*:*:*:*:*:*:* | cpe:2.3:a:error_prone_annotations:error_prone_annotations:unknown:*:*:*:*:*:*:*"
+          "value": "cpe:2.3:a:com.google.errorprone:error_prone_annotations:2.18.0:*:*:*:*:*:*:* | cpe:2.3:a:errorprone:error_prone_annotations:2.18.0:*:*:*:*:*:*:* | cpe:2.3:a:error_prone_annotations:error_prone_annotations:2.18.0:*:*:*:*:*:*:*"
         },
         {
           "name": "waybill:source-files",
@@ -563,41 +547,33 @@
           "value": "optional"
         },
         {
-          "name": "waybill:requirement-ranges",
-          "value": "[\"\"]"
-        },
-        {
           "name": "waybill:source-type",
           "value": "workspace"
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:optional-derivation",
           "value": "maven-optional-element"
         },
         {
-          "name": "waybill:unresolved-reason",
-          "value": "no <version> in pom.xml; no dependency-reduced-pom.xml or effective-pom fallback"
-        },
-        {
           "name": "waybill:workspace-member",
           "value": "[\"core\"]"
         }
       ],
-      "purl": "pkg:maven/com.google.errorprone/error_prone_annotations@unknown",
+      "purl": "pkg:maven/com.google.errorprone/error_prone_annotations@2.18.0",
       "scope": "excluded",
       "supplier": {
         "name": "com.google.errorprone"
       },
       "type": "library",
-      "version": "unknown"
+      "version": "2.18.0"
     },
     {
-      "bom-ref": "pkg:maven/com.google.guava/guava-testlib@unknown",
-      "cpe": "cpe:2.3:a:com.google.guava:guava-testlib:unknown:*:*:*:*:*:*:*",
+      "bom-ref": "pkg:maven/com.google.guava/guava-testlib@31.0.1-jre",
+      "cpe": "cpe:2.3:a:com.google.guava:guava-testlib:31.0.1-jre:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -622,7 +598,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:com.google.guava:guava-testlib:unknown:*:*:*:*:*:*:* | cpe:2.3:a:guava:guava-testlib:unknown:*:*:*:*:*:*:* | cpe:2.3:a:guava-testlib:guava-testlib:unknown:*:*:*:*:*:*:*"
+          "value": "cpe:2.3:a:com.google.guava:guava-testlib:31.0.1-jre:*:*:*:*:*:*:* | cpe:2.3:a:guava:guava-testlib:31.0.1-jre:*:*:*:*:*:*:* | cpe:2.3:a:guava-testlib:guava-testlib:31.0.1-jre:*:*:*:*:*:*:*"
         },
         {
           "name": "waybill:source-files",
@@ -633,37 +609,29 @@
           "value": "test"
         },
         {
-          "name": "waybill:requirement-ranges",
-          "value": "[\"\"]"
-        },
-        {
           "name": "waybill:source-type",
           "value": "workspace"
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "no <version> in pom.xml; no dependency-reduced-pom.xml or effective-pom fallback"
+          "value": "source"
         },
         {
           "name": "waybill:workspace-member",
           "value": "[\"core\"]"
         }
       ],
-      "purl": "pkg:maven/com.google.guava/guava-testlib@unknown",
+      "purl": "pkg:maven/com.google.guava/guava-testlib@31.0.1-jre",
       "scope": "excluded",
       "supplier": {
         "name": "com.google.guava"
       },
       "type": "library",
-      "version": "unknown"
+      "version": "31.0.1-jre"
     },
     {
-      "bom-ref": "pkg:maven/com.google.guava/guava@unknown",
-      "cpe": "cpe:2.3:a:com.google.guava:guava:unknown:*:*:*:*:*:*:*",
+      "bom-ref": "pkg:maven/com.google.guava/guava@31.0.1-jre",
+      "cpe": "cpe:2.3:a:com.google.guava:guava:31.0.1-jre:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -688,104 +656,35 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:com.google.guava:guava:unknown:*:*:*:*:*:*:* | cpe:2.3:a:guava:guava:unknown:*:*:*:*:*:*:*"
+          "value": "cpe:2.3:a:com.google.guava:guava:31.0.1-jre:*:*:*:*:*:*:* | cpe:2.3:a:guava:guava:31.0.1-jre:*:*:*:*:*:*:*"
         },
         {
           "name": "waybill:source-files",
           "value": "[\"core/pom.xml\"]"
         },
         {
-          "name": "waybill:requirement-ranges",
-          "value": "[\"\"]"
-        },
-        {
           "name": "waybill:source-type",
           "value": "workspace"
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "no <version> in pom.xml; no dependency-reduced-pom.xml or effective-pom fallback"
+          "value": "source"
         },
         {
           "name": "waybill:workspace-member",
           "value": "[\"core\"]"
         }
       ],
-      "purl": "pkg:maven/com.google.guava/guava@unknown",
+      "purl": "pkg:maven/com.google.guava/guava@31.0.1-jre",
       "supplier": {
         "name": "com.google.guava"
       },
       "type": "library",
-      "version": "unknown"
+      "version": "31.0.1-jre"
     },
     {
-      "bom-ref": "pkg:maven/com.google.inject.extensions/guice-assistedinject@unknown",
-      "cpe": "cpe:2.3:a:com.google.inject.extensions:guice-assistedinject:unknown:*:*:*:*:*:*:*",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "extensions/grapher/pom.xml"
-          }
-        ]
-      },
-      "name": "guice-assistedinject",
-      "properties": [
-        {
-          "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:com.google.inject.extensions:guice-assistedinject:unknown:*:*:*:*:*:*:* | cpe:2.3:a:extensions:guice-assistedinject:unknown:*:*:*:*:*:*:* | cpe:2.3:a:guice-assistedinject:guice-assistedinject:unknown:*:*:*:*:*:*:*"
-        },
-        {
-          "name": "waybill:source-files",
-          "value": "[\"extensions/grapher/pom.xml\"]"
-        },
-        {
-          "name": "waybill:requirement-ranges",
-          "value": "[\"${project.version}\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "workspace"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "no <version> in pom.xml; no dependency-reduced-pom.xml or effective-pom fallback"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"extensions/grapher\"]"
-        }
-      ],
-      "purl": "pkg:maven/com.google.inject.extensions/guice-assistedinject@unknown",
-      "supplier": {
-        "name": "com.google.inject.extensions"
-      },
-      "type": "library",
-      "version": "unknown"
-    },
-    {
-      "bom-ref": "pkg:maven/com.google.inject.extensions/guice-servlet@unknown",
-      "cpe": "cpe:2.3:a:com.google.inject.extensions:guice-servlet:unknown:*:*:*:*:*:*:*",
+      "bom-ref": "pkg:maven/com.google.inject.extensions/guice-servlet@7.0.1-SNAPSHOT",
+      "cpe": "cpe:2.3:a:com.google.inject.extensions:guice-servlet:7.0.1-SNAPSHOT:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -810,15 +709,11 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:com.google.inject.extensions:guice-servlet:unknown:*:*:*:*:*:*:* | cpe:2.3:a:extensions:guice-servlet:unknown:*:*:*:*:*:*:* | cpe:2.3:a:guice-servlet:guice-servlet:unknown:*:*:*:*:*:*:*"
+          "value": "cpe:2.3:a:com.google.inject.extensions:guice-servlet:7.0.1-SNAPSHOT:*:*:*:*:*:*:* | cpe:2.3:a:extensions:guice-servlet:7.0.1-SNAPSHOT:*:*:*:*:*:*:* | cpe:2.3:a:guice-servlet:guice-servlet:7.0.1-SNAPSHOT:*:*:*:*:*:*:*"
         },
         {
           "name": "waybill:source-files",
           "value": "[\"extensions/struts2/pom.xml\"]"
-        },
-        {
-          "name": "waybill:requirement-ranges",
-          "value": "[\"${project.version}\"]"
         },
         {
           "name": "waybill:source-type",
@@ -826,23 +721,19 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "no <version> in pom.xml; no dependency-reduced-pom.xml or effective-pom fallback"
+          "value": "source"
         },
         {
           "name": "waybill:workspace-member",
           "value": "[\"extensions/struts2\"]"
         }
       ],
-      "purl": "pkg:maven/com.google.inject.extensions/guice-servlet@unknown",
+      "purl": "pkg:maven/com.google.inject.extensions/guice-servlet@7.0.1-SNAPSHOT",
       "supplier": {
         "name": "com.google.inject.extensions"
       },
       "type": "library",
-      "version": "unknown"
+      "version": "7.0.1-SNAPSHOT"
     },
     {
       "bom-ref": "pkg:maven/com.google.inject.extensions/guice-testlib@5.1.0",
@@ -903,67 +794,6 @@
       "version": "5.1.0"
     },
     {
-      "bom-ref": "pkg:maven/com.google.inject.extensions/guice-throwingproviders@unknown",
-      "cpe": "cpe:2.3:a:com.google.inject.extensions:guice-throwingproviders:unknown:*:*:*:*:*:*:*",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "extensions/testlib/pom.xml"
-          }
-        ]
-      },
-      "name": "guice-throwingproviders",
-      "properties": [
-        {
-          "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:com.google.inject.extensions:guice-throwingproviders:unknown:*:*:*:*:*:*:* | cpe:2.3:a:extensions:guice-throwingproviders:unknown:*:*:*:*:*:*:* | cpe:2.3:a:guice-throwingproviders:guice-throwingproviders:unknown:*:*:*:*:*:*:*"
-        },
-        {
-          "name": "waybill:source-files",
-          "value": "[\"extensions/testlib/pom.xml\"]"
-        },
-        {
-          "name": "waybill:requirement-ranges",
-          "value": "[\"${project.version}\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "workspace"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "no <version> in pom.xml; no dependency-reduced-pom.xml or effective-pom fallback"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"extensions/testlib\"]"
-        }
-      ],
-      "purl": "pkg:maven/com.google.inject.extensions/guice-throwingproviders@unknown",
-      "supplier": {
-        "name": "com.google.inject.extensions"
-      },
-      "type": "library",
-      "version": "unknown"
-    },
-    {
       "bom-ref": "pkg:maven/com.google.inject/guice@5.1.0",
       "cpe": "cpe:2.3:a:com.google.inject:guice:5.1.0:*:*:*:*:*:*:*",
       "evidence": {
@@ -1017,8 +847,8 @@
       "version": "5.1.0"
     },
     {
-      "bom-ref": "pkg:maven/com.google.truth.extensions/truth-java8-extension@unknown",
-      "cpe": "cpe:2.3:a:com.google.truth.extensions:truth-java8-extension:unknown:*:*:*:*:*:*:*",
+      "bom-ref": "pkg:maven/com.google.truth.extensions/truth-java8-extension@1.1.3",
+      "cpe": "cpe:2.3:a:com.google.truth.extensions:truth-java8-extension:1.1.3:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -1043,7 +873,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:com.google.truth.extensions:truth-java8-extension:unknown:*:*:*:*:*:*:* | cpe:2.3:a:extensions:truth-java8-extension:unknown:*:*:*:*:*:*:* | cpe:2.3:a:truth-java8-extension:truth-java8-extension:unknown:*:*:*:*:*:*:*"
+          "value": "cpe:2.3:a:com.google.truth.extensions:truth-java8-extension:1.1.3:*:*:*:*:*:*:* | cpe:2.3:a:extensions:truth-java8-extension:1.1.3:*:*:*:*:*:*:* | cpe:2.3:a:truth-java8-extension:truth-java8-extension:1.1.3:*:*:*:*:*:*:*"
         },
         {
           "name": "waybill:source-files",
@@ -1054,37 +884,29 @@
           "value": "test"
         },
         {
-          "name": "waybill:requirement-ranges",
-          "value": "[\"\"]"
-        },
-        {
           "name": "waybill:source-type",
           "value": "workspace"
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "no <version> in pom.xml; no dependency-reduced-pom.xml or effective-pom fallback"
+          "value": "source"
         },
         {
           "name": "waybill:workspace-member",
           "value": "[\"core\"]"
         }
       ],
-      "purl": "pkg:maven/com.google.truth.extensions/truth-java8-extension@unknown",
+      "purl": "pkg:maven/com.google.truth.extensions/truth-java8-extension@1.1.3",
       "scope": "excluded",
       "supplier": {
         "name": "com.google.truth.extensions"
       },
       "type": "library",
-      "version": "unknown"
+      "version": "1.1.3"
     },
     {
-      "bom-ref": "pkg:maven/com.google.truth/truth@unknown",
-      "cpe": "cpe:2.3:a:com.google.truth:truth:unknown:*:*:*:*:*:*:*",
+      "bom-ref": "pkg:maven/com.google.truth/truth@1.1.3",
+      "cpe": "cpe:2.3:a:com.google.truth:truth:1.1.3:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -1109,7 +931,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:com.google.truth:truth:unknown:*:*:*:*:*:*:* | cpe:2.3:a:truth:truth:unknown:*:*:*:*:*:*:*"
+          "value": "cpe:2.3:a:com.google.truth:truth:1.1.3:*:*:*:*:*:*:* | cpe:2.3:a:truth:truth:1.1.3:*:*:*:*:*:*:*"
         },
         {
           "name": "waybill:source-files",
@@ -1120,37 +942,29 @@
           "value": "test"
         },
         {
-          "name": "waybill:requirement-ranges",
-          "value": "[\"\"]"
-        },
-        {
           "name": "waybill:source-type",
           "value": "workspace"
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "no <version> in pom.xml; no dependency-reduced-pom.xml or effective-pom fallback"
+          "value": "source"
         },
         {
           "name": "waybill:workspace-member",
           "value": "[\"core\"]"
         }
       ],
-      "purl": "pkg:maven/com.google.truth/truth@unknown",
+      "purl": "pkg:maven/com.google.truth/truth@1.1.3",
       "scope": "excluded",
       "supplier": {
         "name": "com.google.truth"
       },
       "type": "library",
-      "version": "unknown"
+      "version": "1.1.3"
     },
     {
-      "bom-ref": "pkg:maven/jakarta.inject/jakarta.inject-api@unknown",
-      "cpe": "cpe:2.3:a:jakarta.inject:jakarta.inject-api:unknown:*:*:*:*:*:*:*",
+      "bom-ref": "pkg:maven/jakarta.inject/jakarta.inject-api@2.0.1",
+      "cpe": "cpe:2.3:a:jakarta.inject:jakarta.inject-api:2.0.1:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -1175,15 +989,11 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:jakarta.inject:jakarta.inject-api:unknown:*:*:*:*:*:*:* | cpe:2.3:a:inject:jakarta.inject-api:unknown:*:*:*:*:*:*:* | cpe:2.3:a:jakarta.inject-api:jakarta.inject-api:unknown:*:*:*:*:*:*:*"
+          "value": "cpe:2.3:a:jakarta.inject:jakarta.inject-api:2.0.1:*:*:*:*:*:*:* | cpe:2.3:a:inject:jakarta.inject-api:2.0.1:*:*:*:*:*:*:* | cpe:2.3:a:jakarta.inject-api:jakarta.inject-api:2.0.1:*:*:*:*:*:*:*"
         },
         {
           "name": "waybill:source-files",
           "value": "[\"core/pom.xml\"]"
-        },
-        {
-          "name": "waybill:requirement-ranges",
-          "value": "[\"\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1191,27 +1001,23 @@
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "no <version> in pom.xml; no dependency-reduced-pom.xml or effective-pom fallback"
+          "value": "source"
         },
         {
           "name": "waybill:workspace-member",
           "value": "[\"core\"]"
         }
       ],
-      "purl": "pkg:maven/jakarta.inject/jakarta.inject-api@unknown",
+      "purl": "pkg:maven/jakarta.inject/jakarta.inject-api@2.0.1",
       "supplier": {
         "name": "jakarta.inject"
       },
       "type": "library",
-      "version": "unknown"
+      "version": "2.0.1"
     },
     {
-      "bom-ref": "pkg:maven/jakarta.inject/jakarta.inject-tck@unknown",
-      "cpe": "cpe:2.3:a:jakarta.inject:jakarta.inject-tck:unknown:*:*:*:*:*:*:*",
+      "bom-ref": "pkg:maven/jakarta.inject/jakarta.inject-tck@2.0.1",
+      "cpe": "cpe:2.3:a:jakarta.inject:jakarta.inject-tck:2.0.1:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -1236,7 +1042,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:jakarta.inject:jakarta.inject-tck:unknown:*:*:*:*:*:*:* | cpe:2.3:a:inject:jakarta.inject-tck:unknown:*:*:*:*:*:*:* | cpe:2.3:a:jakarta.inject-tck:jakarta.inject-tck:unknown:*:*:*:*:*:*:*"
+          "value": "cpe:2.3:a:jakarta.inject:jakarta.inject-tck:2.0.1:*:*:*:*:*:*:* | cpe:2.3:a:inject:jakarta.inject-tck:2.0.1:*:*:*:*:*:*:* | cpe:2.3:a:jakarta.inject-tck:jakarta.inject-tck:2.0.1:*:*:*:*:*:*:*"
         },
         {
           "name": "waybill:source-files",
@@ -1247,33 +1053,25 @@
           "value": "test"
         },
         {
-          "name": "waybill:requirement-ranges",
-          "value": "[\"\"]"
-        },
-        {
           "name": "waybill:source-type",
           "value": "workspace"
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "no <version> in pom.xml; no dependency-reduced-pom.xml or effective-pom fallback"
+          "value": "source"
         },
         {
           "name": "waybill:workspace-member",
           "value": "[\"core\"]"
         }
       ],
-      "purl": "pkg:maven/jakarta.inject/jakarta.inject-tck@unknown",
+      "purl": "pkg:maven/jakarta.inject/jakarta.inject-tck@2.0.1",
       "scope": "excluded",
       "supplier": {
         "name": "jakarta.inject"
       },
       "type": "library",
-      "version": "unknown"
+      "version": "2.0.1"
     },
     {
       "bom-ref": "pkg:maven/jakarta.persistence/jakarta.persistence-api@3.0.0",
@@ -1444,63 +1242,6 @@
       },
       "type": "library",
       "version": "4.13.2"
-    },
-    {
-      "bom-ref": "pkg:maven/junit/junit@unknown",
-      "cpe": "cpe:2.3:a:junit:junit:unknown:*:*:*:*:*:*:*",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "pom.xml"
-          }
-        ]
-      },
-      "name": "junit",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"pom.xml\"]"
-        },
-        {
-          "name": "waybill:requirement-ranges",
-          "value": "[\"\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "workspace"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "no <version> in pom.xml; no dependency-reduced-pom.xml or effective-pom fallback"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\".\"]"
-        }
-      ],
-      "purl": "pkg:maven/junit/junit@unknown",
-      "supplier": {
-        "name": "junit"
-      },
-      "type": "library",
-      "version": "unknown"
     },
     {
       "bom-ref": "pkg:maven/org.apache.felix/org.apache.felix.framework@3.0.5",
@@ -1909,8 +1650,8 @@
       "version": "4.2.0"
     },
     {
-      "bom-ref": "pkg:maven/org.ow2.asm/asm@unknown",
-      "cpe": "cpe:2.3:a:org.ow2.asm:asm:unknown:*:*:*:*:*:*:*",
+      "bom-ref": "pkg:maven/org.ow2.asm/asm@9.5",
+      "cpe": "cpe:2.3:a:org.ow2.asm:asm:9.5:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -1935,7 +1676,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:org.ow2.asm:asm:unknown:*:*:*:*:*:*:* | cpe:2.3:a:asm:asm:unknown:*:*:*:*:*:*:*"
+          "value": "cpe:2.3:a:org.ow2.asm:asm:9.5:*:*:*:*:*:*:* | cpe:2.3:a:asm:asm:9.5:*:*:*:*:*:*:*"
         },
         {
           "name": "waybill:source-files",
@@ -1946,37 +1687,29 @@
           "value": "optional"
         },
         {
-          "name": "waybill:requirement-ranges",
-          "value": "[\"\"]"
-        },
-        {
           "name": "waybill:source-type",
           "value": "workspace"
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "design"
+          "value": "source"
         },
         {
           "name": "waybill:optional-derivation",
           "value": "maven-optional-element"
         },
         {
-          "name": "waybill:unresolved-reason",
-          "value": "no <version> in pom.xml; no dependency-reduced-pom.xml or effective-pom fallback"
-        },
-        {
           "name": "waybill:workspace-member",
           "value": "[\"core\"]"
         }
       ],
-      "purl": "pkg:maven/org.ow2.asm/asm@unknown",
+      "purl": "pkg:maven/org.ow2.asm/asm@9.5",
       "scope": "excluded",
       "supplier": {
         "name": "org.ow2.asm"
       },
       "type": "library",
-      "version": "unknown"
+      "version": "9.5"
     },
     {
       "bom-ref": "pkg:maven/org.slf4j/slf4j-simple@1.6.1",
@@ -2295,6 +2028,46 @@
       "version": ""
     },
     {
+      "bom-ref": "pkg:generic/file-tier?content-sha256=49aebfee3e6ceb861a882b9df3fcf3bc9f5aa4625257378b0c6cdab84a3f4f64",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 1.0,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 1.0,
+                "technique": "hash-comparison"
+              }
+            ]
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "49aebfee3e6ceb861a882b9df3fcf3bc9f5aa4625257378b0c6cdab84a3f4f64"
+        }
+      ],
+      "name": "pom.xml",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"pom.xml\"]"
+        },
+        {
+          "name": "waybill:component-tier",
+          "value": "file"
+        },
+        {
+          "name": "waybill:file-paths",
+          "value": "[\"pom.xml\"]"
+        }
+      ],
+      "type": "file",
+      "version": ""
+    },
+    {
       "bom-ref": "pkg:generic/file-tier?content-sha256=898a272d08f7c7fc16c23256a35056951f2c66257b0a2ecdf5611f6a0b9dd3ab",
       "evidence": {
         "identity": [
@@ -2579,29 +2352,26 @@
     {
       "aggregate": "complete",
       "assemblies": [
-        "pkg:maven/aopalliance/aopalliance@unknown",
+        "pkg:maven/aopalliance/aopalliance@1.0",
         "pkg:maven/biz.aQute/bnd@0.0.384",
         "pkg:maven/com.google.auto.value/auto-value-annotations@1.6.3",
         "pkg:maven/com.google.auto.value/auto-value@1.6.3",
-        "pkg:maven/com.google.code.findbugs/jsr305@unknown",
+        "pkg:maven/com.google.code.findbugs/jsr305@3.0.1",
         "pkg:maven/com.google.dagger/dagger-producers@2.22.1",
         "pkg:maven/com.google.dagger/dagger@2.22.1",
-        "pkg:maven/com.google.errorprone/error_prone_annotations@unknown",
-        "pkg:maven/com.google.guava/guava-testlib@unknown",
-        "pkg:maven/com.google.guava/guava@unknown",
-        "pkg:maven/com.google.inject.extensions/guice-assistedinject@unknown",
-        "pkg:maven/com.google.inject.extensions/guice-servlet@unknown",
+        "pkg:maven/com.google.errorprone/error_prone_annotations@2.18.0",
+        "pkg:maven/com.google.guava/guava-testlib@31.0.1-jre",
+        "pkg:maven/com.google.guava/guava@31.0.1-jre",
+        "pkg:maven/com.google.inject.extensions/guice-servlet@7.0.1-SNAPSHOT",
         "pkg:maven/com.google.inject.extensions/guice-testlib@5.1.0",
-        "pkg:maven/com.google.inject.extensions/guice-throwingproviders@unknown",
         "pkg:maven/com.google.inject/guice@5.1.0",
-        "pkg:maven/com.google.truth.extensions/truth-java8-extension@unknown",
-        "pkg:maven/com.google.truth/truth@unknown",
-        "pkg:maven/jakarta.inject/jakarta.inject-api@unknown",
-        "pkg:maven/jakarta.inject/jakarta.inject-tck@unknown",
+        "pkg:maven/com.google.truth.extensions/truth-java8-extension@1.1.3",
+        "pkg:maven/com.google.truth/truth@1.1.3",
+        "pkg:maven/jakarta.inject/jakarta.inject-api@2.0.1",
+        "pkg:maven/jakarta.inject/jakarta.inject-tck@2.0.1",
         "pkg:maven/jakarta.persistence/jakarta.persistence-api@3.0.0",
         "pkg:maven/jakarta.servlet/jakarta.servlet-api@5.0.0",
         "pkg:maven/junit/junit@4.13.2",
-        "pkg:maven/junit/junit@unknown",
         "pkg:maven/org.apache.felix/org.apache.felix.framework@3.0.5",
         "pkg:maven/org.apache.struts/struts2-core@2.5.30",
         "pkg:maven/org.hamcrest/hamcrest-core@1.3",
@@ -2609,34 +2379,31 @@
         "pkg:maven/org.hibernate/hibernate-core-jakarta@5.6.15.Final",
         "pkg:maven/org.hsqldb/hsqldb-j5@2.0.0",
         "pkg:maven/org.mockito/mockito-core@4.2.0",
-        "pkg:maven/org.ow2.asm/asm@unknown",
+        "pkg:maven/org.ow2.asm/asm@9.5",
         "pkg:maven/org.slf4j/slf4j-simple@1.6.1",
         "pkg:maven/org.springframework/spring-beans@5.3.18"
       ],
       "dependencies": [
-        "pkg:maven/aopalliance/aopalliance@unknown",
+        "pkg:maven/aopalliance/aopalliance@1.0",
         "pkg:maven/biz.aQute/bnd@0.0.384",
         "pkg:maven/com.google.auto.value/auto-value-annotations@1.6.3",
         "pkg:maven/com.google.auto.value/auto-value@1.6.3",
-        "pkg:maven/com.google.code.findbugs/jsr305@unknown",
+        "pkg:maven/com.google.code.findbugs/jsr305@3.0.1",
         "pkg:maven/com.google.dagger/dagger-producers@2.22.1",
         "pkg:maven/com.google.dagger/dagger@2.22.1",
-        "pkg:maven/com.google.errorprone/error_prone_annotations@unknown",
-        "pkg:maven/com.google.guava/guava-testlib@unknown",
-        "pkg:maven/com.google.guava/guava@unknown",
-        "pkg:maven/com.google.inject.extensions/guice-assistedinject@unknown",
-        "pkg:maven/com.google.inject.extensions/guice-servlet@unknown",
+        "pkg:maven/com.google.errorprone/error_prone_annotations@2.18.0",
+        "pkg:maven/com.google.guava/guava-testlib@31.0.1-jre",
+        "pkg:maven/com.google.guava/guava@31.0.1-jre",
+        "pkg:maven/com.google.inject.extensions/guice-servlet@7.0.1-SNAPSHOT",
         "pkg:maven/com.google.inject.extensions/guice-testlib@5.1.0",
-        "pkg:maven/com.google.inject.extensions/guice-throwingproviders@unknown",
         "pkg:maven/com.google.inject/guice@5.1.0",
-        "pkg:maven/com.google.truth.extensions/truth-java8-extension@unknown",
-        "pkg:maven/com.google.truth/truth@unknown",
-        "pkg:maven/jakarta.inject/jakarta.inject-api@unknown",
-        "pkg:maven/jakarta.inject/jakarta.inject-tck@unknown",
+        "pkg:maven/com.google.truth.extensions/truth-java8-extension@1.1.3",
+        "pkg:maven/com.google.truth/truth@1.1.3",
+        "pkg:maven/jakarta.inject/jakarta.inject-api@2.0.1",
+        "pkg:maven/jakarta.inject/jakarta.inject-tck@2.0.1",
         "pkg:maven/jakarta.persistence/jakarta.persistence-api@3.0.0",
         "pkg:maven/jakarta.servlet/jakarta.servlet-api@5.0.0",
         "pkg:maven/junit/junit@4.13.2",
-        "pkg:maven/junit/junit@unknown",
         "pkg:maven/org.apache.felix/org.apache.felix.framework@3.0.5",
         "pkg:maven/org.apache.struts/struts2-core@2.5.30",
         "pkg:maven/org.hamcrest/hamcrest-core@1.3",
@@ -2644,7 +2411,7 @@
         "pkg:maven/org.hibernate/hibernate-core-jakarta@5.6.15.Final",
         "pkg:maven/org.hsqldb/hsqldb-j5@2.0.0",
         "pkg:maven/org.mockito/mockito-core@4.2.0",
-        "pkg:maven/org.ow2.asm/asm@unknown",
+        "pkg:maven/org.ow2.asm/asm@9.5",
         "pkg:maven/org.slf4j/slf4j-simple@1.6.1",
         "pkg:maven/org.springframework/spring-beans@5.3.18"
       ]
@@ -2665,28 +2432,28 @@
   "dependencies": [
     {
       "dependsOn": [
-        "pkg:maven/aopalliance/aopalliance@unknown",
+        "pkg:maven/aopalliance/aopalliance@1.0",
         "pkg:maven/biz.aQute/bnd@0.0.384",
         "pkg:maven/com.google.auto.value/auto-value-annotations@1.6.3",
         "pkg:maven/com.google.auto.value/auto-value@1.6.3",
-        "pkg:maven/com.google.code.findbugs/jsr305@unknown",
+        "pkg:maven/com.google.code.findbugs/jsr305@3.0.1",
         "pkg:maven/com.google.dagger/dagger-producers@2.22.1",
         "pkg:maven/com.google.dagger/dagger@2.22.1",
-        "pkg:maven/com.google.errorprone/error_prone_annotations@unknown",
-        "pkg:maven/com.google.guava/guava-testlib@unknown",
-        "pkg:maven/com.google.guava/guava@unknown",
+        "pkg:maven/com.google.errorprone/error_prone_annotations@2.18.0",
+        "pkg:maven/com.google.guava/guava-testlib@31.0.1-jre",
+        "pkg:maven/com.google.guava/guava@31.0.1-jre",
         "pkg:maven/com.google.inject.extensions/guice-assistedinject@7.0.0",
         "pkg:maven/com.google.inject.extensions/guice-servlet@7.0.0",
         "pkg:maven/com.google.inject.extensions/guice-testlib@7.0.0",
         "pkg:maven/com.google.inject.extensions/guice-throwingproviders@7.0.0",
         "pkg:maven/com.google.inject/guice@7.0.0",
-        "pkg:maven/com.google.truth.extensions/truth-java8-extension@unknown",
-        "pkg:maven/com.google.truth/truth@unknown",
-        "pkg:maven/jakarta.inject/jakarta.inject-api@unknown",
-        "pkg:maven/jakarta.inject/jakarta.inject-tck@unknown",
+        "pkg:maven/com.google.truth.extensions/truth-java8-extension@1.1.3",
+        "pkg:maven/com.google.truth/truth@1.1.3",
+        "pkg:maven/jakarta.inject/jakarta.inject-api@2.0.1",
+        "pkg:maven/jakarta.inject/jakarta.inject-tck@2.0.1",
         "pkg:maven/jakarta.persistence/jakarta.persistence-api@3.0.0",
         "pkg:maven/jakarta.servlet/jakarta.servlet-api@5.0.0",
-        "pkg:maven/junit/junit@unknown",
+        "pkg:maven/junit/junit@4.13.2",
         "pkg:maven/org.apache.felix/org.apache.felix.framework@3.0.5",
         "pkg:maven/org.apache.struts/struts2-core@2.5.30",
         "pkg:maven/org.hamcrest/hamcrest-core@1.3",
@@ -2694,7 +2461,7 @@
         "pkg:maven/org.hibernate/hibernate-core-jakarta@5.6.15.Final",
         "pkg:maven/org.hsqldb/hsqldb-j5@2.0.0",
         "pkg:maven/org.mockito/mockito-core@4.2.0",
-        "pkg:maven/org.ow2.asm/asm@unknown",
+        "pkg:maven/org.ow2.asm/asm@9.5",
         "pkg:maven/org.slf4j/slf4j-simple@1.6.1",
         "pkg:maven/org.springframework/spring-beans@5.3.18"
       ],
@@ -2730,6 +2497,10 @@
     },
     {
       "dependsOn": [],
+      "ref": "pkg:generic/file-tier?content-sha256=49aebfee3e6ceb861a882b9df3fcf3bc9f5aa4625257378b0c6cdab84a3f4f64"
+    },
+    {
+      "dependsOn": [],
       "ref": "pkg:generic/file-tier?content-sha256=898a272d08f7c7fc16c23256a35056951f2c66257b0a2ecdf5611f6a0b9dd3ab"
     },
     {
@@ -2758,7 +2529,7 @@
     },
     {
       "dependsOn": [],
-      "ref": "pkg:maven/aopalliance/aopalliance@unknown"
+      "ref": "pkg:maven/aopalliance/aopalliance@1.0"
     },
     {
       "dependsOn": [],
@@ -2774,7 +2545,7 @@
     },
     {
       "dependsOn": [],
-      "ref": "pkg:maven/com.google.code.findbugs/jsr305@unknown"
+      "ref": "pkg:maven/com.google.code.findbugs/jsr305@3.0.1"
     },
     {
       "dependsOn": [],
@@ -2786,23 +2557,19 @@
     },
     {
       "dependsOn": [],
-      "ref": "pkg:maven/com.google.errorprone/error_prone_annotations@unknown"
+      "ref": "pkg:maven/com.google.errorprone/error_prone_annotations@2.18.0"
     },
     {
       "dependsOn": [],
-      "ref": "pkg:maven/com.google.guava/guava-testlib@unknown"
+      "ref": "pkg:maven/com.google.guava/guava-testlib@31.0.1-jre"
     },
     {
       "dependsOn": [],
-      "ref": "pkg:maven/com.google.guava/guava@unknown"
+      "ref": "pkg:maven/com.google.guava/guava@31.0.1-jre"
     },
     {
       "dependsOn": [],
-      "ref": "pkg:maven/com.google.inject.extensions/guice-assistedinject@unknown"
-    },
-    {
-      "dependsOn": [],
-      "ref": "pkg:maven/com.google.inject.extensions/guice-servlet@unknown"
+      "ref": "pkg:maven/com.google.inject.extensions/guice-servlet@7.0.1-SNAPSHOT"
     },
     {
       "dependsOn": [],
@@ -2810,27 +2577,23 @@
     },
     {
       "dependsOn": [],
-      "ref": "pkg:maven/com.google.inject.extensions/guice-throwingproviders@unknown"
-    },
-    {
-      "dependsOn": [],
       "ref": "pkg:maven/com.google.inject/guice@5.1.0"
     },
     {
       "dependsOn": [],
-      "ref": "pkg:maven/com.google.truth.extensions/truth-java8-extension@unknown"
+      "ref": "pkg:maven/com.google.truth.extensions/truth-java8-extension@1.1.3"
     },
     {
       "dependsOn": [],
-      "ref": "pkg:maven/com.google.truth/truth@unknown"
+      "ref": "pkg:maven/com.google.truth/truth@1.1.3"
     },
     {
       "dependsOn": [],
-      "ref": "pkg:maven/jakarta.inject/jakarta.inject-api@unknown"
+      "ref": "pkg:maven/jakarta.inject/jakarta.inject-api@2.0.1"
     },
     {
       "dependsOn": [],
-      "ref": "pkg:maven/jakarta.inject/jakarta.inject-tck@unknown"
+      "ref": "pkg:maven/jakarta.inject/jakarta.inject-tck@2.0.1"
     },
     {
       "dependsOn": [],
@@ -2843,10 +2606,6 @@
     {
       "dependsOn": [],
       "ref": "pkg:maven/junit/junit@4.13.2"
-    },
-    {
-      "dependsOn": [],
-      "ref": "pkg:maven/junit/junit@unknown"
     },
     {
       "dependsOn": [],
@@ -2878,7 +2637,7 @@
     },
     {
       "dependsOn": [],
-      "ref": "pkg:maven/org.ow2.asm/asm@unknown"
+      "ref": "pkg:maven/org.ow2.asm/asm@9.5"
     },
     {
       "dependsOn": [],
@@ -2919,9 +2678,6 @@
     ],
     "lifecycles": [
       {
-        "phase": "design"
-      },
-      {
         "phase": "pre-build"
       }
     ],
@@ -2960,11 +2716,11 @@
       },
       {
         "name": "waybill:graph-completeness-reason",
-        "value": "orphaned-components-detected: 11 component(s) not reachable from root; transitive-edges-unresolvable: maven"
+        "value": "orphaned-components-detected: 8 component(s) not reachable from root"
       },
       {
         "name": "waybill:workspaces-detected",
-        "value": "[\".\",\"core\",\"examples/guice-demo\",\"extensions/dagger-adapter\",\"extensions/grapher\",\"extensions/persist\",\"extensions/spring\",\"extensions/struts2\",\"extensions/testlib\"]"
+        "value": "[\".\",\"core\",\"examples/guice-demo\",\"extensions/dagger-adapter\",\"extensions/persist\",\"extensions/spring\",\"extensions/struts2\",\"extensions/testlib\"]"
       }
     ],
     "supplier": {
