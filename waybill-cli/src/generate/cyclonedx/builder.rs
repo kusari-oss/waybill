@@ -590,15 +590,14 @@ impl CycloneDxBuilder {
         // (recorded 2026-06-29).
         let drop_result = crate::generate::root_selector::apply_main_module_drop_or_demote(
             components,
-            &self.root_override,
-            self.preserve_manifest_main_module,
+            &self.root_override
         );
         let filtered_components_owned: Option<Vec<ResolvedComponent>> = if override_active {
             Some(drop_result.effective_components)
         } else {
             None
         };
-        let dropped_main_module_purls: Vec<String> = drop_result.redirected_main_module_purls;
+        let dropped_main_module_purls: Vec<String> = drop_result.retained_main_module_purls;
         let effective_components: &[ResolvedComponent] =
             filtered_components_owned.as_deref().unwrap_or(components);
 

@@ -16,8 +16,8 @@ Single Rust workspace. All paths from repo root.
 
 ## Phase 1: Setup
 
-- [ ] T001 Record the pre-change baseline for the three affected targets into `specs/860-multi-main-module-override/baseline.md`: component counts with and without `--root-name`, main-module counts, and dangling-reference counts per format. Without this the deltas in SC-001..SC-004 cannot be shown to have been met.
-- [ ] T002 [P] Confirm the eight zero-main-module targets' current component counts in the same `baseline.md`, so SC-005 byte-identity has a recorded starting point.
+- [X] T001 Record the pre-change baseline for the three affected targets into `specs/860-multi-main-module-override/baseline.md`: component counts with and without `--root-name`, main-module counts, and dangling-reference counts per format. Without this the deltas in SC-001..SC-004 cannot be shown to have been met.
+- [X] T002 [P] Confirm the eight zero-main-module targets' current component counts in the same `baseline.md`, so SC-005 byte-identity has a recorded starting point.
 
 ---
 
@@ -25,14 +25,14 @@ Single Rust workspace. All paths from repo root.
 
 **These change the policy itself. Nothing else can be verified until they land.**
 
-- [ ] T003 In `waybill-cli/src/generate/root_selector.rs`, change `apply_main_module_drop_or_demote` so an active override retains and demotes every main-module component at every N — removing the N>1 fall-through at line 525 and the preserve-flag branch. Per contract C-1.1/C-2.1.
-- [ ] T004 In `waybill-cli/src/generate/root_selector.rs`, rename `DropOrDemoteResult.redirected_main_module_purls` to `retained_main_module_purls` and update its doc comment: the set no longer drives edge removal, it identifies components the root must depend on (data-model.md).
-- [ ] T005 In `waybill-cli/src/generate/root_selector.rs`, stop stripping outbound edges from retained entries, per C-3.1. This reverses the milestone-149 US1 Option A decision recorded 2026-06-29 — leave a comment saying so and why, or the next reader will restore it.
-- [ ] T006 In `waybill-cli/src/generate/root_selector.rs`, replace the milestone-149 FR-013 no-op INFO diagnostic (around lines 548/573/609) with a retention diagnostic naming the count of modules retained, per Constitution Principle X and research R5.
-- [ ] T007 Unit-test the helper in `waybill-cli/src/generate/root_selector.rs`: N=0, N=1 and N>1 all retain and demote identically (C-1.1). Assert the demoted shape — role annotation removed, `waybill:demoted-from-main-module` added, outbound edges retained. Additionally assert C-2.2: the demoted component's PURL, name, version, licenses and hashes are byte-equal to their pre-demote values — the demote transformation edits annotations and type on the same struct, so identity drift would be silent.
-- [ ] T008 Add a test in `waybill-cli/src/generate/root_selector.rs` asserting invariant I1 / FR-003 / C-8.2: for a multi-module fixture under an active override, exactly one component is the document subject and no retained module is emitted as a second root. Assert on emitted shape, not on the helper's return value — the helper cannot see what the emitter does with it.
-- [ ] T009 Teeth-check T008 by making the demote path leave the main-module role annotation in place; the test must fail. This is the specific regression the milestone-077 clean-replacement design existed to prevent, and the one this feature is most likely to reintroduce.
-- [ ] T010 Teeth-check T007: revert T003 locally and confirm the N>1 case fails. A test that passes without the change is the milestone-856 trap; record the result in the PR.
+- [X] T003 In `waybill-cli/src/generate/root_selector.rs`, change `apply_main_module_drop_or_demote` so an active override retains and demotes every main-module component at every N — removing the N>1 fall-through at line 525 and the preserve-flag branch. Per contract C-1.1/C-2.1.
+- [X] T004 In `waybill-cli/src/generate/root_selector.rs`, rename `DropOrDemoteResult.redirected_main_module_purls` to `retained_main_module_purls` and update its doc comment: the set no longer drives edge removal, it identifies components the root must depend on (data-model.md).
+- [X] T005 In `waybill-cli/src/generate/root_selector.rs`, stop stripping outbound edges from retained entries, per C-3.1. This reverses the milestone-149 US1 Option A decision recorded 2026-06-29 — leave a comment saying so and why, or the next reader will restore it.
+- [X] T006 In `waybill-cli/src/generate/root_selector.rs`, replace the milestone-149 FR-013 no-op INFO diagnostic (around lines 548/573/609) with a retention diagnostic naming the count of modules retained, per Constitution Principle X and research R5.
+- [X] T007 Unit-test the helper in `waybill-cli/src/generate/root_selector.rs`: N=0, N=1 and N>1 all retain and demote identically (C-1.1). Assert the demoted shape — role annotation removed, `waybill:demoted-from-main-module` added, outbound edges retained. Additionally assert C-2.2: the demoted component's PURL, name, version, licenses and hashes are byte-equal to their pre-demote values — the demote transformation edits annotations and type on the same struct, so identity drift would be silent.
+- [X] T008 Add a test in `waybill-cli/src/generate/root_selector.rs` asserting invariant I1 / FR-003 / C-8.2: for a multi-module fixture under an active override, exactly one component is the document subject and no retained module is emitted as a second root. Assert on emitted shape, not on the helper's return value — the helper cannot see what the emitter does with it.
+- [X] T009 Teeth-check T008 by making the demote path leave the main-module role annotation in place; the test must fail. This is the specific regression the milestone-077 clean-replacement design existed to prevent, and the one this feature is most likely to reintroduce.
+- [X] T010 Teeth-check T007: revert T003 locally and confirm the N>1 case fails. A test that passes without the change is the milestone-856 trap; record the result in the PR.
 
 **Checkpoint**: components are retained, and exactly one subject is declared. Dangling references should already be gone; reachability is not yet guaranteed.
 

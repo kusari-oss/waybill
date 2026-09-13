@@ -425,9 +425,8 @@ pub fn build_document(
     let drop_result = crate::generate::root_selector::apply_main_module_drop_or_demote(
         artifacts.components,
         &artifacts.root_override,
-        artifacts.preserve_manifest_main_module,
     );
-    let dropped_main_module_purls: Vec<String> = drop_result.redirected_main_module_purls;
+    let dropped_main_module_purls: Vec<String> = drop_result.retained_main_module_purls;
     let filtered_components_owned: Option<Vec<waybill_common::resolution::ResolvedComponent>> =
         if override_active {
             tracing::info!(

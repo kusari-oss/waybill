@@ -65,9 +65,8 @@ pub fn build_document(
     let drop_result = crate::generate::root_selector::apply_main_module_drop_or_demote(
         scan.components,
         &scan.root_override,
-        scan.preserve_manifest_main_module,
     );
-    let dropped_main_module_purls: Vec<String> = drop_result.redirected_main_module_purls;
+    let dropped_main_module_purls: Vec<String> = drop_result.retained_main_module_purls;
     let filtered_components_owned: Option<Vec<ResolvedComponent>> =
         if override_active {
             tracing::info!(
