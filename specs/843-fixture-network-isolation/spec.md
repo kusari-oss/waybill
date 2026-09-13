@@ -23,13 +23,13 @@ Repeated three times each, the actual decomposition is:
 
 | configuration | median |
 |---|---|
-| fully `--offline` | 0.49s |
-| no enrichment, network on | **5.16s** |
-| + Go module proxy refused | **1.15s** |
+| fully `--offline` | 0.50s |
+| no enrichment, network on | **5.26s** |
+| + Go module proxy refused | **1.17s** |
 | + `go mod why` disabled | 4.62s |
 | + binary scan disabled | 4.99s |
 
-**Go module proxy access is ~4.0s of the 5.16s floor — about 78%.** Cargo contributes nothing measurable. Issue #843's second suggested remedy is therefore correct, and this spec's first draft was wrong to dismiss it.
+**Go module proxy access is ~4.09s of the 5.26s floor — about 78%.** Cargo contributes nothing measurable. Issue #843's second suggested remedy is therefore correct, and this spec's first draft was wrong to dismiss it.
 
 The lesson is the feature's own thesis turned on its author: a floor that swings 5s to 23s cannot be A/B tested with one sample per arm, and it was, twice, by someone who had just written that warning into this document. Every measurement in this spec is now a median of three.
 
@@ -93,8 +93,9 @@ A contributor scans this repository during ordinary development — checking an 
 ### Functional Requirements
 
 - **FR-001**: Scanning this repository MUST NOT issue network requests on behalf of its own tree — neither for fixture-declared modules nor for the workspace's own package manifests.
-- **FR-001a**: Go module proxy access on behalf of fixture modules MUST be eliminated. It is roughly 78% of the floor — 5.16s falling to 1.15s when the proxy is refused.
-- **FR-001b**: The remaining ~0.66s above the 0.49s offline base is unattributed and MUST be decomposed before it is either fixed or declared acceptable. It is small, and this feature has already produced two wrong attributions from not decomposing.
+- **FR-001a-pre**: The second clause of FR-001 — the workspace's own package manifests — is **already satisfied and requires no work**. `cargo metadata` is invoked with `--offline` and bounded by a timeout (`waybill-cli/src/scan_fs/package_db/cargo.rs:146-153`), and disabling cargo registry access changes the floor by nothing measurable. Stated so a reader looks for the verification rather than for absent work; T001 records the arm that confirms it.
+- **FR-001a**: Go module proxy access on behalf of fixture modules MUST be eliminated. It is roughly 78% of the floor — 5.26s falling to 1.17s when the proxy is refused (4.09s attributable).
+- **FR-001b**: The remaining ~0.67s above the 0.50s offline base is unattributed and MUST be decomposed before it is either fixed or declared acceptable. It is small, and this feature has already produced two wrong attributions from not decomposing.
 - **FR-002**: The wall time of a scan of this repository with enrichment disabled MUST NOT depend on network conditions.
 - **FR-003**: Every fixture whose unresolvability is the subject of a test MUST remain unresolvable, and the tests covering it MUST continue to detect regressions in the behaviour they assert.
 - **FR-004**: Fixtures whose unresolvability is incidental MUST be made self-contained — resolvable without leaving the repository.
@@ -118,7 +119,7 @@ A contributor scans this repository during ordinary development — checking an 
 
 - **SC-001**: Two consecutive scans of this repository with enrichment disabled differ in wall time by less than 20%, measured on a machine with a working network.
 - **SC-002**: The same scan on a machine with **no** network completes within 20% of the networked time, and emits the same component count.
-- **SC-003**: A scan of this repository issues **zero** network requests attributable to fixture-module resolution, down from 20 per scan.
+- **SC-003**: A scan of this repository issues **zero** network-reaching Go module resolutions, down from **20 failed `go mod graph` invocations** per scan. The unit is *failed resolutions that left the machine*, not total `go` invocations — a scan makes about 80 of those (research R2), most of them local and unaffected by this feature.
 - **SC-004**: Every test that currently asserts on unresolved, fallback or degraded-resolution behaviour still fails when that behaviour is deliberately broken.
 - **SC-005**: A newly added fixture that resolves over the network is detected before it reaches the default branch.
 
@@ -128,16 +129,18 @@ A contributor scans this repository during ordinary development — checking an 
 
   | configuration | floor |
   |---|---|
-  | fully offline | 0.49s |
-  | network on | 5.16s |
-  | Go module proxy refused | **1.15s** |
+  *(Figures are the second measurement round — medians of three, research R1. An earlier round in this document's history reported 0.49 / 5.16 / 1.15; the difference is noise, and carrying two sets in a feature about unstable measurement would be its own joke. R1 is canonical.)*
+
+  | fully offline | 0.50s |
+  | network on | 5.26s |
+  | Go module proxy refused | **1.17s** |
 
   Go module proxy access is roughly **78%** of the floor. Cargo registry access contributes nothing measurable — `cargo metadata` is already invoked with `--offline` and already bounded by a timeout.
 
 - **Measured, not assumed** (2026-09-12, this repository):
   - 21 of 27 Go fixtures declare module paths that cannot resolve, all under `example.com` or `github.com/waybill-fixture`.
   - A scan makes **20** failed resolution invocations, each reaching the network.
-  - The scan floor with enrichment disabled moved between **5.13s and 23.53s** across runs; the same scan fully offline is **0.48s**.
+  - The scan floor with enrichment disabled has been observed anywhere between **5.04s and 23.53s** across runs — the variance is the harm, not the mean. Fully offline it is **0.50s** (canonical figure, research R1).
 - **Renaming the domain is not the fix, and the original issue said it was.** #843 proposed a reserved-for-testing domain as "probably cheapest". Measured, that changes a single resolution from 1.40s to 1.31s — about 6% — because the toolchain consults the module proxy before it ever contacts the module's own host. The proxy round-trip is the cost and it is independent of the module path. Recorded here because the recommendation is wrong and a reader of the issue would otherwise act on it.
 - Two approaches do work, measured on the same probe: refusing the proxy entirely (**0.01s**), and declaring a local replacement so the module resolves inside the tree (**0.01s**, and the dependency graph resolves rather than failing). No fixture uses a local replacement today.
 - These are different in kind, not just in mechanism: refusing the proxy keeps fixtures unresolvable and merely makes failure fast, preserving exactly what tests see today; a local replacement makes them resolve, which changes which waybill code path the fixture exercises. Which applies depends on whether a given fixture's unresolvability is the point — hence FR-003 and FR-004.

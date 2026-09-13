@@ -90,6 +90,14 @@ docs/development/                          # NEW — the FR-005 record and the
                                           #   how-to-add-a-fixture note
 ```
 
+A note on naming: the feature is titled for the *outcome* (a scan that
+does not depend on the network) while the branch, the guard and US2 are
+named for the *locus* (fixtures). That is deliberate — clarification
+broadened the scope to anything the scan does over the network, and
+research then found the only remaining contributor is fixture modules.
+The cargo half of the broadened scope is already satisfied and has a
+verifier (T001's fourth arm), not silent omission.
+
 **No production source changes are planned.** FR-009a permits one if a
 measurement demands it; the measurements do not. If implementation
 finds otherwise, that is a finding to report, not a licence to widen.

@@ -91,9 +91,9 @@ Only three test files reference these fixture paths at all:
 
 | file | what it asserts |
 |---|---|
-| `tests/mod_why_scaling.rs` | fixture readability; concurrent-workspace scan succeeds |
-| `tests/goroot_skip.rs` | GOROOT stdlib is not emitted as a main module |
-| `tests/pants_go_reader.rs` | Pants target annotations |
+| `waybill-cli/tests/mod_why_scaling.rs` | fixture readability; concurrent-workspace scan succeeds |
+| `waybill-cli/tests/goroot_skip.rs` | GOROOT stdlib is not emitted as a main module |
+| `waybill-cli/tests/pants_go_reader.rs` | Pants target annotations |
 
 None asserts on unresolved, fallback or degraded-coverage behaviour.
 
@@ -151,6 +151,6 @@ be observed; a narrower form (asserting the fixture tree contains no
 `require` without a matching `replace`) is cheaper and needs no
 subprocess interception.
 
-The walker-audit gate at `walk.audit-allowlist.txt` is the in-repo
+The walker-audit gate at `waybill-cli/src/scan_fs/walk.audit-allowlist.txt` is the in-repo
 precedent for "a grep that fails CI when a pattern reappears", and is
 the shape to copy.

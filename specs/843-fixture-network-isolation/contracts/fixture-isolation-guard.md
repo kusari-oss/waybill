@@ -49,8 +49,9 @@ than by exemption.
 
 **G-3.2** If an exemption list is nonetheless needed, each entry MUST
 carry a reason. An unexplained allowlist entry is indistinguishable
-from an oversight after six months — the walker-audit allowlist is the
-in-repo precedent worth copying, and worth copying carefully.
+from an oversight after six months — the walker-audit allowlist
+(`waybill-cli/src/scan_fs/walk.audit-allowlist.txt`) is the in-repo
+precedent worth copying, and worth copying carefully.
 
 ---
 
