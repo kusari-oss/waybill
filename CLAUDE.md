@@ -371,6 +371,7 @@ Auto-generated from all feature plans. Last updated: 2026-09-12
 - Committed goldens at `waybill-cli/tests/fixtures/public_corpus/<target>/{cdx,spdx-2.3,spdx-3}.json`. Unchanged layout. (840-refresh-corpus-goldens)
 - Rust stable, workspace toolchain. No nightly. + Existing only — `reqwest` (already the deps.dev (839-batch-enrichment)
 - `$HOME/.cache/waybill/deps-dev/`, sibling to the existing (839-batch-enrichment)
+- Rust stable — but no Rust changes are expected. + None new. The Go toolchain is already an (843-fixture-network-isolation)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -506,9 +507,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 843-fixture-network-isolation: Added Rust stable — but no Rust changes are expected. + None new. The Go toolchain is already an
 - 839-batch-enrichment: Added Rust stable, workspace toolchain. No nightly. + Existing only — `reqwest` (already the deps.dev
 - 840-refresh-corpus-goldens: Added Rust stable (workspace toolchain; no nightly). No production source changes — this feature touches test fixtures, a review-time tool under `xtask`, and documentation. + Existing only — `serde_json` (already used by the harness for masked golden serialisation), the m195 harness at `waybill-cli/tests/corpus_harness_195/`, and the `public-corpus.yml` dispatch. **Zero new Cargo dependencies.**
-- 780-comparative-bench-harness: `xtask compare` — private, deterministic comparison of waybill against operator-nominated SBOM tools. Committed source names no competing tool; results never leave `target/`. Package identity is full PURL including version; truth sets are declared per target and labelled when they are supersets; timing is a within-session interleaved ratio, never a gated absolute. Zero new deps.
 
 
 <!-- MANUAL ADDITIONS START -->
