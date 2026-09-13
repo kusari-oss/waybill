@@ -38,6 +38,10 @@
           "value": "design"
         },
         {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -89,6 +93,10 @@
           "value": "design"
         },
         {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -135,6 +143,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
         },
         {
           "name": "waybill:workspace-member",
@@ -188,6 +200,10 @@
           "value": "design"
         },
         {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -234,6 +250,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
         },
         {
           "name": "waybill:workspace-member",
@@ -283,6 +303,10 @@
           "value": "design"
         },
         {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -328,6 +352,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
         },
         {
           "name": "waybill:workspace-member",
@@ -379,6 +407,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
         },
         {
           "name": "waybill:workspace-member",
@@ -433,6 +465,10 @@
           "value": "design"
         },
         {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -481,6 +517,10 @@
           "value": "design"
         },
         {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -526,6 +566,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
         },
         {
           "name": "waybill:workspace-member",
@@ -579,6 +623,10 @@
           "value": "design"
         },
         {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -627,6 +675,10 @@
           "value": "design"
         },
         {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -672,6 +724,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
         },
         {
           "name": "waybill:workspace-member",
@@ -725,6 +781,10 @@
           "value": "design"
         },
         {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -771,6 +831,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
         },
         {
           "name": "waybill:workspace-member",
@@ -824,6 +888,10 @@
           "value": "design"
         },
         {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -872,6 +940,10 @@
           "value": "design"
         },
         {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -917,6 +989,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
         },
         {
           "name": "waybill:workspace-member",
@@ -970,6 +1046,10 @@
           "value": "design"
         },
         {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -1016,6 +1096,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
         },
         {
           "name": "waybill:workspace-member",
@@ -1069,6 +1153,10 @@
           "value": "design"
         },
         {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -1115,6 +1203,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
         },
         {
           "name": "waybill:workspace-member",
@@ -1168,6 +1260,10 @@
           "value": "design"
         },
         {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -1214,6 +1310,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
         },
         {
           "name": "waybill:workspace-member",
@@ -1265,6 +1365,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
         },
         {
           "name": "waybill:workspace-member",
@@ -1319,6 +1423,10 @@
           "value": "design"
         },
         {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -1371,6 +1479,10 @@
           "value": "design"
         },
         {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -1417,6 +1529,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
         },
         {
           "name": "waybill:workspace-member",
@@ -1466,6 +1582,10 @@
           "value": "design"
         },
         {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -1511,6 +1631,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
         },
         {
           "name": "waybill:workspace-member",
@@ -1564,6 +1688,10 @@
           "value": "design"
         },
         {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -1610,6 +1738,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
         },
         {
           "name": "waybill:workspace-member",
@@ -1659,6 +1791,10 @@
           "value": "design"
         },
         {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -1704,6 +1840,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
         },
         {
           "name": "waybill:workspace-member",
@@ -1753,6 +1893,10 @@
           "value": "design"
         },
         {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -1798,6 +1942,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
         },
         {
           "name": "waybill:workspace-member",
@@ -1847,6 +1995,10 @@
           "value": "design"
         },
         {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -1892,6 +2044,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
         },
         {
           "name": "waybill:workspace-member",
@@ -1945,6 +2101,10 @@
           "value": "design"
         },
         {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -1993,6 +2153,10 @@
           "value": "design"
         },
         {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -2038,6 +2202,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
         },
         {
           "name": "waybill:workspace-member",
@@ -2089,6 +2257,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "workspace member; no lockfile-resolved version"
         },
         {
           "name": "waybill:workspace-member",
@@ -2515,6 +2687,10 @@
         "value": "filesystem-scan"
       },
       {
+        "name": "waybill:cisa-2026-lifecycle",
+        "value": "after-build"
+      },
+      {
         "name": "waybill:os-release-missing-fields",
         "value": "ID,VERSION_ID"
       },
@@ -2557,7 +2733,7 @@
           "name": "waybill",
           "publisher": "waybill contributors",
           "type": "application",
-          "version": "0.1.0-alpha.62"
+          "version": "0.7.0"
         }
       ]
     }

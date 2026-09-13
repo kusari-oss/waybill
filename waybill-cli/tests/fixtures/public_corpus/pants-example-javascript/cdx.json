@@ -24,6 +24,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@ampproject/remapping/-/remapping-2.3.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -84,6 +90,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@babel/code-frame/-/code-frame-7.23.5.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -144,6 +156,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@babel/compat-data/-/compat-data-7.23.5.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -204,6 +222,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@babel/core/-/core-7.24.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -264,6 +288,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@babel/generator/-/generator-7.23.6.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -324,6 +354,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@babel/helper-compilation-targets/-/helper-compilation-targets-7.23.6.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -384,6 +420,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@babel/helper-environment-visitor/-/helper-environment-visitor-7.22.20.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -444,6 +486,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@babel/helper-function-name/-/helper-function-name-7.23.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -504,6 +552,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@babel/helper-hoist-variables/-/helper-hoist-variables-7.22.5.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -564,6 +618,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@babel/helper-module-imports/-/helper-module-imports-7.22.15.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -624,6 +684,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@babel/helper-module-transforms/-/helper-module-transforms-7.23.3.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -688,6 +754,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@babel/helper-plugin-utils/-/helper-plugin-utils-7.24.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -748,6 +820,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@babel/helper-simple-access/-/helper-simple-access-7.22.5.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -808,6 +886,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@babel/helper-split-export-declaration/-/helper-split-export-declaration-7.22.6.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -868,6 +952,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@babel/helper-string-parser/-/helper-string-parser-7.23.4.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -928,6 +1018,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@babel/helper-validator-identifier/-/helper-validator-identifier-7.22.20.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -988,6 +1084,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@babel/helper-validator-option/-/helper-validator-option-7.23.5.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -1048,6 +1150,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@babel/helpers/-/helpers-7.24.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -1108,6 +1216,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@babel/highlight/-/highlight-7.23.4.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -1168,6 +1282,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@babel/parser/-/parser-7.24.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -1228,6 +1348,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@babel/plugin-syntax-async-generators/-/plugin-syntax-async-generators-7.8.4.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -1292,6 +1418,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@babel/plugin-syntax-bigint/-/plugin-syntax-bigint-7.8.3.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -1356,6 +1488,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@babel/plugin-syntax-class-properties/-/plugin-syntax-class-properties-7.12.13.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -1420,6 +1558,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@babel/plugin-syntax-import-meta/-/plugin-syntax-import-meta-7.10.4.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -1484,6 +1628,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@babel/plugin-syntax-json-strings/-/plugin-syntax-json-strings-7.8.3.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -1548,6 +1698,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@babel/plugin-syntax-jsx/-/plugin-syntax-jsx-7.23.3.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -1612,6 +1768,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@babel/plugin-syntax-logical-assignment-operators/-/plugin-syntax-logical-assignment-operators-7.10.4.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -1676,6 +1838,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@babel/plugin-syntax-nullish-coalescing-operator/-/plugin-syntax-nullish-coalescing-operator-7.8.3.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -1740,6 +1908,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@babel/plugin-syntax-numeric-separator/-/plugin-syntax-numeric-separator-7.10.4.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -1804,6 +1978,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@babel/plugin-syntax-object-rest-spread/-/plugin-syntax-object-rest-spread-7.8.3.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -1868,6 +2048,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@babel/plugin-syntax-optional-catch-binding/-/plugin-syntax-optional-catch-binding-7.8.3.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -1932,6 +2118,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@babel/plugin-syntax-optional-chaining/-/plugin-syntax-optional-chaining-7.8.3.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -1996,6 +2188,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@babel/plugin-syntax-top-level-await/-/plugin-syntax-top-level-await-7.14.5.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -2060,6 +2258,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@babel/plugin-syntax-typescript/-/plugin-syntax-typescript-7.23.3.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -2124,6 +2328,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@babel/template/-/template-7.24.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -2184,6 +2394,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@babel/traverse/-/traverse-7.24.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -2244,6 +2460,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@babel/types/-/types-7.24.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -2304,6 +2526,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -2364,6 +2592,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/aix-ppc64/-/aix-ppc64-0.20.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -2424,6 +2658,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/android-arm64/-/android-arm64-0.20.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -2484,6 +2724,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/android-arm/-/android-arm-0.20.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -2544,6 +2790,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/android-x64/-/android-x64-0.20.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -2604,6 +2856,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/darwin-arm64/-/darwin-arm64-0.20.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -2664,6 +2922,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/darwin-x64/-/darwin-x64-0.20.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -2724,6 +2988,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/freebsd-arm64/-/freebsd-arm64-0.20.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -2784,6 +3054,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/freebsd-x64/-/freebsd-x64-0.20.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -2844,6 +3120,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/linux-arm64/-/linux-arm64-0.20.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -2904,6 +3186,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/linux-arm/-/linux-arm-0.20.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -2964,6 +3252,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/linux-ia32/-/linux-ia32-0.20.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -3024,6 +3318,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/linux-loong64/-/linux-loong64-0.20.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -3084,6 +3384,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/linux-mips64el/-/linux-mips64el-0.20.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -3144,6 +3450,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/linux-ppc64/-/linux-ppc64-0.20.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -3204,6 +3516,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/linux-riscv64/-/linux-riscv64-0.20.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -3264,6 +3582,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/linux-s390x/-/linux-s390x-0.20.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -3324,6 +3648,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/linux-x64/-/linux-x64-0.20.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -3384,6 +3714,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/netbsd-x64/-/netbsd-x64-0.20.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -3444,6 +3780,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/openbsd-x64/-/openbsd-x64-0.20.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -3504,6 +3846,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/sunos-x64/-/sunos-x64-0.20.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -3564,6 +3912,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/win32-arm64/-/win32-arm64-0.20.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -3624,6 +3978,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/win32-ia32/-/win32-ia32-0.20.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -3684,6 +4044,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@esbuild/win32-x64/-/win32-x64-0.20.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -3744,6 +4110,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@istanbuljs/load-nyc-config/-/load-nyc-config-1.1.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -3804,6 +4176,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@istanbuljs/schema/-/schema-0.1.3.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -3864,6 +4242,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@jest/console/-/console-29.7.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -3924,6 +4308,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@jest/core/-/core-29.7.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -3984,6 +4374,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@jest/environment/-/environment-29.7.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -4044,6 +4440,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@jest/expect-utils/-/expect-utils-29.7.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -4104,6 +4506,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@jest/expect/-/expect-29.7.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -4164,6 +4572,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@jest/fake-timers/-/fake-timers-29.7.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -4224,6 +4638,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@jest/globals/-/globals-29.7.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -4284,6 +4704,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@jest/reporters/-/reporters-29.7.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -4344,6 +4770,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@jest/schemas/-/schemas-29.6.3.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -4404,6 +4836,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@jest/source-map/-/source-map-29.6.3.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -4464,6 +4902,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@jest/test-result/-/test-result-29.7.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -4524,6 +4968,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@jest/test-sequencer/-/test-sequencer-29.7.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -4584,6 +5034,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@jest/transform/-/transform-29.7.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -4644,6 +5100,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@jest/types/-/types-29.6.3.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -4704,6 +5166,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@jridgewell/gen-mapping/-/gen-mapping-0.3.5.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -4764,6 +5232,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@jridgewell/resolve-uri/-/resolve-uri-3.1.2.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -4824,6 +5298,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@jridgewell/set-array/-/set-array-1.2.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -4884,6 +5364,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@jridgewell/sourcemap-codec/-/sourcemap-codec-1.4.15.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -4944,6 +5430,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@jridgewell/trace-mapping/-/trace-mapping-0.3.25.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -5004,6 +5496,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@sinclair/typebox/-/typebox-0.27.8.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -5064,6 +5562,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@sinonjs/commons/-/commons-3.0.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -5124,6 +5628,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@sinonjs/fake-timers/-/fake-timers-10.3.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -5184,6 +5694,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@types/babel__core/-/babel__core-7.20.5.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -5244,6 +5760,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@types/babel__generator/-/babel__generator-7.6.8.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -5304,6 +5826,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@types/babel__template/-/babel__template-7.4.4.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -5364,6 +5892,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@types/babel__traverse/-/babel__traverse-7.20.5.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -5424,6 +5958,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@types/graceful-fs/-/graceful-fs-4.1.9.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -5484,6 +6024,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@types/istanbul-lib-coverage/-/istanbul-lib-coverage-2.0.6.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -5544,6 +6090,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@types/istanbul-lib-report/-/istanbul-lib-report-3.0.3.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -5604,6 +6156,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@types/istanbul-reports/-/istanbul-reports-3.0.4.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -5664,6 +6222,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@types/node/-/node-20.11.25.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -5724,6 +6288,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@types/stack-utils/-/stack-utils-2.0.3.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -5784,6 +6354,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@types/yargs-parser/-/yargs-parser-21.0.3.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -5844,6 +6420,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@types/yargs/-/yargs-17.0.32.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -5904,6 +6486,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/ansi-escapes/-/ansi-escapes-4.3.2.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -5960,6 +6548,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/ansi-regex/-/ansi-regex-5.0.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -6016,6 +6610,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/ansi-styles/-/ansi-styles-3.2.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -6072,6 +6672,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/ansi-styles/-/ansi-styles-4.3.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -6128,6 +6734,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/ansi-styles/-/ansi-styles-5.2.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -6184,6 +6796,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/anymatch/-/anymatch-3.1.3.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -6240,6 +6858,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/argparse/-/argparse-1.0.10.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -6296,6 +6920,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/babel-jest/-/babel-jest-29.7.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -6356,6 +6986,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/babel-plugin-istanbul/-/babel-plugin-istanbul-6.1.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -6412,6 +7048,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/babel-plugin-jest-hoist/-/babel-plugin-jest-hoist-29.6.3.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -6468,6 +7110,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/babel-preset-current-node-syntax/-/babel-preset-current-node-syntax-1.0.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -6528,6 +7176,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/babel-preset-jest/-/babel-preset-jest-29.6.3.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -6588,6 +7242,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/balanced-match/-/balanced-match-1.0.2.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -6644,6 +7304,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/brace-expansion/-/brace-expansion-1.1.11.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -6700,6 +7366,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/braces/-/braces-3.0.2.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -6756,6 +7428,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/browserslist/-/browserslist-4.23.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -6812,6 +7490,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/bser/-/bser-2.1.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -6868,6 +7552,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/buffer-from/-/buffer-from-1.1.2.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -6924,6 +7614,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/callsites/-/callsites-3.1.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -6980,6 +7676,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/camelcase/-/camelcase-5.3.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -7036,6 +7738,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/camelcase/-/camelcase-6.3.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -7092,6 +7800,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001596.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -7148,6 +7862,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/chalk/-/chalk-2.4.2.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -7204,6 +7924,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/chalk/-/chalk-4.1.2.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -7260,6 +7986,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/char-regex/-/char-regex-1.0.2.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -7316,6 +8048,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/ci-info/-/ci-info-3.9.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -7372,6 +8110,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/cjs-module-lexer/-/cjs-module-lexer-1.2.3.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -7428,6 +8172,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/cliui/-/cliui-8.0.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -7484,6 +8234,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/co/-/co-4.6.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -7540,6 +8296,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/collect-v8-coverage/-/collect-v8-coverage-1.0.2.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -7596,6 +8358,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/color-convert/-/color-convert-1.9.3.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -7652,6 +8420,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/color-convert/-/color-convert-2.0.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -7708,6 +8482,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/color-name/-/color-name-1.1.3.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -7764,6 +8544,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/color-name/-/color-name-1.1.4.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -7820,6 +8606,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/concat-map/-/concat-map-0.0.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -7876,6 +8668,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/convert-source-map/-/convert-source-map-2.0.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -7932,6 +8730,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/create-jest/-/create-jest-29.7.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -7988,6 +8792,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/cross-spawn/-/cross-spawn-7.0.3.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -8044,6 +8854,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/debug/-/debug-4.3.4.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -8100,6 +8916,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/dedent/-/dedent-1.5.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -8156,6 +8978,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/deepmerge/-/deepmerge-4.3.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -8212,6 +9040,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/detect-newline/-/detect-newline-3.1.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -8268,6 +9102,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/diff-sequences/-/diff-sequences-29.6.3.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -8324,6 +9164,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.699.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -8380,6 +9226,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/emittery/-/emittery-0.13.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -8436,6 +9288,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/emoji-regex/-/emoji-regex-8.0.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -8492,6 +9350,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/error-ex/-/error-ex-1.3.2.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -8548,6 +9412,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/esbuild/-/esbuild-0.20.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -8604,6 +9474,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/escalade/-/escalade-3.1.2.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -8660,6 +9536,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/escape-string-regexp/-/escape-string-regexp-1.0.5.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -8716,6 +9598,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/escape-string-regexp/-/escape-string-regexp-2.0.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -8772,6 +9660,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/esprima/-/esprima-4.0.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -8828,6 +9722,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/execa/-/execa-5.1.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -8884,6 +9784,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/exit/-/exit-0.1.2.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -8940,6 +9846,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/expect/-/expect-29.7.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -8996,6 +9908,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/fast-json-stable-stringify/-/fast-json-stable-stringify-2.1.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -9052,6 +9970,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/fb-watchman/-/fb-watchman-2.0.2.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -9108,6 +10032,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/fill-range/-/fill-range-7.0.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -9164,6 +10094,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/find-up/-/find-up-4.1.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -9220,6 +10156,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/fs.realpath/-/fs.realpath-1.0.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -9276,6 +10218,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/fsevents/-/fsevents-2.3.3.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -9332,6 +10280,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/function-bind/-/function-bind-1.1.2.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -9388,6 +10342,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/gensync/-/gensync-1.0.0-beta.2.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -9444,6 +10404,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/get-caller-file/-/get-caller-file-2.0.5.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -9500,6 +10466,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/get-package-type/-/get-package-type-0.1.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -9556,6 +10528,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/get-stream/-/get-stream-6.0.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -9612,6 +10590,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/glob/-/glob-7.2.3.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -9668,6 +10652,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/globals/-/globals-11.12.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -9724,6 +10714,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.2.11.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -9780,6 +10776,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/has-flag/-/has-flag-3.0.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -9836,6 +10838,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/has-flag/-/has-flag-4.0.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -9892,6 +10900,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/hasown/-/hasown-2.0.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -9948,6 +10962,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/html-escaper/-/html-escaper-2.0.2.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -10004,6 +11024,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/human-signals/-/human-signals-2.1.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -10060,6 +11086,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/import-local/-/import-local-3.1.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -10116,6 +11148,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/imurmurhash/-/imurmurhash-0.1.4.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -10172,6 +11210,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/inflight/-/inflight-1.0.6.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -10228,6 +11272,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/inherits/-/inherits-2.0.4.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -10284,6 +11334,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/is-arrayish/-/is-arrayish-0.2.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -10340,6 +11396,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/is-core-module/-/is-core-module-2.13.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -10396,6 +11458,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/is-fullwidth-code-point/-/is-fullwidth-code-point-3.0.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -10452,6 +11520,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/is-generator-fn/-/is-generator-fn-2.1.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -10508,6 +11582,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/is-number/-/is-number-7.0.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -10564,6 +11644,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/is-stream/-/is-stream-2.0.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -10620,6 +11706,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/isexe/-/isexe-2.0.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -10676,6 +11768,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/istanbul-lib-coverage/-/istanbul-lib-coverage-3.2.2.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -10732,6 +11830,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/istanbul-lib-instrument/-/istanbul-lib-instrument-5.2.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -10788,6 +11892,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/istanbul-lib-instrument/-/istanbul-lib-instrument-6.0.2.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -10844,6 +11954,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/istanbul-lib-report/-/istanbul-lib-report-3.0.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -10900,6 +12016,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/istanbul-lib-source-maps/-/istanbul-lib-source-maps-4.0.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -10956,6 +12078,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/istanbul-reports/-/istanbul-reports-3.1.7.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -11012,6 +12140,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/jest-changed-files/-/jest-changed-files-29.7.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -11068,6 +12202,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/jest-circus/-/jest-circus-29.7.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -11124,6 +12264,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/jest-cli/-/jest-cli-29.7.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -11180,6 +12326,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/jest-config/-/jest-config-29.7.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -11240,6 +12392,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/jest-diff/-/jest-diff-29.7.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -11296,6 +12454,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/jest-docblock/-/jest-docblock-29.7.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -11352,6 +12516,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/jest-each/-/jest-each-29.7.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -11408,6 +12578,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/jest-environment-node/-/jest-environment-node-29.7.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -11464,6 +12640,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/jest-get-type/-/jest-get-type-29.6.3.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -11520,6 +12702,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/jest-haste-map/-/jest-haste-map-29.7.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -11576,6 +12764,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/jest-leak-detector/-/jest-leak-detector-29.7.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -11632,6 +12826,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/jest-matcher-utils/-/jest-matcher-utils-29.7.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -11688,6 +12888,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/jest-message-util/-/jest-message-util-29.7.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -11744,6 +12950,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/jest-mock/-/jest-mock-29.7.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -11800,6 +13012,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/jest-pnp-resolver/-/jest-pnp-resolver-1.2.3.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -11860,6 +13078,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/jest-regex-util/-/jest-regex-util-29.6.3.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -11916,6 +13140,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/jest-resolve-dependencies/-/jest-resolve-dependencies-29.7.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -11972,6 +13202,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/jest-resolve/-/jest-resolve-29.7.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -12028,6 +13264,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/jest-runner/-/jest-runner-29.7.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -12084,6 +13326,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/jest-runtime/-/jest-runtime-29.7.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -12140,6 +13388,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/jest-snapshot/-/jest-snapshot-29.7.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -12196,6 +13450,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/jest-util/-/jest-util-29.7.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -12252,6 +13512,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/jest-validate/-/jest-validate-29.7.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -12308,6 +13574,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/jest-watcher/-/jest-watcher-29.7.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -12364,6 +13636,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/jest-worker/-/jest-worker-29.7.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -12420,6 +13698,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/jest/-/jest-29.7.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -12476,6 +13760,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/js-tokens/-/js-tokens-4.0.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -12532,6 +13822,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/js-yaml/-/js-yaml-3.14.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -12588,6 +13884,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/jsesc/-/jsesc-2.5.2.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -12644,6 +13946,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/json-parse-even-better-errors/-/json-parse-even-better-errors-2.3.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -12700,6 +14008,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/json5/-/json5-2.2.3.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -12756,6 +14070,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/kleur/-/kleur-3.0.3.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -12812,6 +14132,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/leven/-/leven-3.1.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -12868,6 +14194,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/lines-and-columns/-/lines-and-columns-1.2.4.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -12924,6 +14256,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/locate-path/-/locate-path-5.0.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -12980,6 +14318,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/lru-cache/-/lru-cache-5.1.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -13036,6 +14380,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/lru-cache/-/lru-cache-6.0.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -13092,6 +14442,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/make-dir/-/make-dir-4.0.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -13148,6 +14504,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/makeerror/-/makeerror-1.0.12.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -13204,6 +14566,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/merge-stream/-/merge-stream-2.0.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -13260,6 +14628,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/micromatch/-/micromatch-4.0.5.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -13316,6 +14690,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/mimic-fn/-/mimic-fn-2.1.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -13372,6 +14752,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/minimatch/-/minimatch-3.1.2.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -13428,6 +14814,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/ms/-/ms-2.1.2.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -13484,6 +14876,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/natural-compare/-/natural-compare-1.4.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -13540,6 +14938,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/node-int64/-/node-int64-0.4.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -13596,6 +15000,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/node-releases/-/node-releases-2.0.14.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -13652,6 +15062,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/normalize-path/-/normalize-path-3.0.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -13708,6 +15124,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/npm-run-path/-/npm-run-path-4.0.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -13764,6 +15186,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/once/-/once-1.4.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -13820,6 +15248,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/onetime/-/onetime-5.1.2.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -13876,6 +15310,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/p-limit/-/p-limit-2.3.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -13932,6 +15372,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/p-limit/-/p-limit-3.1.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -13988,6 +15434,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/p-locate/-/p-locate-4.1.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -14044,6 +15496,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/p-try/-/p-try-2.2.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -14100,6 +15558,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/parse-json/-/parse-json-5.2.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -14156,6 +15620,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/path-exists/-/path-exists-4.0.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -14212,6 +15682,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/path-is-absolute/-/path-is-absolute-1.0.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -14268,6 +15744,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/path-key/-/path-key-3.1.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -14324,6 +15806,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/path-parse/-/path-parse-1.0.7.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -14380,6 +15868,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/picocolors/-/picocolors-1.0.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -14436,6 +15930,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/picomatch/-/picomatch-2.3.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -14492,6 +15992,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/pirates/-/pirates-4.0.6.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -14548,6 +16054,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/pkg-dir/-/pkg-dir-4.2.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -14604,6 +16116,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/pretty-format/-/pretty-format-29.7.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -14660,6 +16178,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/prompts/-/prompts-2.4.2.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -14716,6 +16240,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/pure-rand/-/pure-rand-6.0.4.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -14772,6 +16302,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/react-is/-/react-is-18.2.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -14828,6 +16364,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/require-directory/-/require-directory-2.1.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -14884,6 +16426,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/resolve-cwd/-/resolve-cwd-3.0.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -14940,6 +16488,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/resolve-from/-/resolve-from-5.0.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -14996,6 +16550,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/resolve.exports/-/resolve.exports-2.0.2.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -15052,6 +16612,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/resolve/-/resolve-1.22.8.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -15108,6 +16674,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/semver/-/semver-6.3.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -15164,6 +16736,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/semver/-/semver-7.6.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -15220,6 +16798,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/shebang-command/-/shebang-command-2.0.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -15276,6 +16860,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/shebang-regex/-/shebang-regex-3.0.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -15332,6 +16922,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/signal-exit/-/signal-exit-3.0.7.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -15388,6 +16984,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/sisteransi/-/sisteransi-1.0.5.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -15444,6 +17046,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/slash/-/slash-3.0.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -15500,6 +17108,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/source-map-support/-/source-map-support-0.5.13.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -15556,6 +17170,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/source-map/-/source-map-0.6.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -15612,6 +17232,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/sprintf-js/-/sprintf-js-1.0.3.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -15668,6 +17294,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/stack-utils/-/stack-utils-2.0.6.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -15724,6 +17356,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/string-length/-/string-length-4.0.2.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -15780,6 +17418,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/string-width/-/string-width-4.2.3.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -15836,6 +17480,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/strip-ansi/-/strip-ansi-6.0.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -15892,6 +17542,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/strip-bom/-/strip-bom-4.0.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -15948,6 +17604,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/strip-final-newline/-/strip-final-newline-2.0.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -16004,6 +17666,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/strip-json-comments/-/strip-json-comments-3.1.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -16060,6 +17728,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/supports-color/-/supports-color-5.5.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -16116,6 +17790,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/supports-color/-/supports-color-7.2.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -16172,6 +17852,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/supports-color/-/supports-color-8.1.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -16228,6 +17914,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/supports-preserve-symlinks-flag/-/supports-preserve-symlinks-flag-1.0.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -16284,6 +17976,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/test-exclude/-/test-exclude-6.0.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -16340,6 +18038,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/tmpl/-/tmpl-1.0.5.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -16396,6 +18100,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/to-fast-properties/-/to-fast-properties-2.0.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -16452,6 +18162,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/to-regex-range/-/to-regex-range-5.0.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -16508,6 +18224,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/type-detect/-/type-detect-4.0.8.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -16564,6 +18286,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/type-fest/-/type-fest-0.21.3.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -16620,6 +18348,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/undici-types/-/undici-types-5.26.5.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -16676,6 +18410,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/update-browserslist-db/-/update-browserslist-db-1.0.13.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -16736,6 +18476,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/v8-to-istanbul/-/v8-to-istanbul-9.2.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -16792,6 +18538,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/walker/-/walker-1.0.8.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -16848,6 +18600,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/which/-/which-2.0.2.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -16904,6 +18662,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/wrap-ansi/-/wrap-ansi-7.0.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -16960,6 +18724,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/wrappy/-/wrappy-1.0.2.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -17016,6 +18786,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/write-file-atomic/-/write-file-atomic-4.0.2.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -17072,6 +18848,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/y18n/-/y18n-5.0.8.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -17128,6 +18910,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/yallist/-/yallist-3.1.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -17184,6 +18972,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/yallist/-/yallist-4.0.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -17240,6 +19034,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/yargs-parser/-/yargs-parser-21.1.1.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -17296,6 +19096,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/yargs/-/yargs-17.7.2.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -17352,6 +19158,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/yocto-queue/-/yocto-queue-0.1.0.tgz"
+        }
+      ],
       "hashes": [
         {
           "alg": "SHA-512",
@@ -20100,7 +21912,7 @@
           "name": "waybill",
           "publisher": "waybill contributors",
           "type": "application",
-          "version": "0.5.1-alpha.1"
+          "version": "0.7.0"
         }
       ]
     }

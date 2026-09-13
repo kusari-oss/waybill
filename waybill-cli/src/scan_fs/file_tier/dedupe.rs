@@ -50,6 +50,45 @@ pub(crate) struct DedupeIndex {
     claimed_hashes: HashSet<String>,
 }
 
+/// Directories that the usrmerge transition unified. On every modern
+/// Linux distribution `/bin`, `/sbin`, `/lib` and `/lib64` are symlinks
+/// into `/usr`, so `/bin/sh` and `/usr/bin/sh` name the same file.
+const USRMERGE_DIRS: [&str; 4] = ["bin", "sbin", "lib", "lib64"];
+
+/// Collapse a usrmerge alias onto one canonical spelling — the form
+/// without the `usr/` prefix.
+///
+/// Applied to BOTH the claimed path at index-build time and the observed
+/// path at lookup, so the two spellings of one file collide on a single
+/// key. Without this the comparison is literal, and a file dpkg declares
+/// as `/usr/lib/libc.so` but the walker reaches as `lib/libc.so` reads
+/// as unclaimed — emitting a duplicate file-tier component for a file a
+/// package already owns. On the `postgres:16` corpus target that
+/// produced 564 phantom components; before the walker's traversal
+/// changed, the same defect produced 407 under `bin/` and `sbin/`
+/// instead. See #854.
+///
+/// **Trade-off.** On a pre-usrmerge rootfs, `/lib/foo` and
+/// `/usr/lib/foo` could be genuinely distinct files, and folding them
+/// means a truly-orphan file is suppressed when its same-named twin is
+/// package-owned. That costs one file-tier entry; it never removes a
+/// package component, and the owning package stays in the SBOM either
+/// way. The alternative — today's behaviour — inflates every scan of
+/// every modern image with hundreds of phantom components, so the fold
+/// is the better failure.
+fn fold_usrmerge(path: &Path) -> PathBuf {
+    let Some(s) = path.to_str() else {
+        return path.to_path_buf();
+    };
+    let Some(rest) = s.strip_prefix("usr/") else {
+        return path.to_path_buf();
+    };
+    match rest.split('/').next() {
+        Some(head) if USRMERGE_DIRS.contains(&head) => PathBuf::from(rest),
+        _ => path.to_path_buf(),
+    }
+}
+
 impl DedupeIndex {
     /// Build the index from the already-resolved component vector.
     /// MUST be called AFTER every reader (package-DB, binary-tier,
@@ -70,7 +109,10 @@ impl DedupeIndex {
                 // dpkg-declared path WITH leading `/`. Normalize
                 // here so both shapes index identically.
                 let normalized = occ.location.trim_start_matches('/');
-                claimed_paths.insert(PathBuf::from(normalized));
+                // Fold usrmerge aliases so a path claimed as
+                // `/usr/bin/apt` indexes identically to one observed as
+                // `bin/apt` (see `fold_usrmerge`).
+                claimed_paths.insert(fold_usrmerge(Path::new(normalized)));
             }
             for hash in &c.hashes {
                 if hash.algorithm == HashAlgorithm::Sha256 {
@@ -96,7 +138,7 @@ impl DedupeIndex {
     /// comparison uses lowercase-hex.
     pub(crate) fn is_covered(&self, rel_path: &Path, sha256_hex: &str) -> bool {
         let normalized = rel_path.strip_prefix("/").unwrap_or(rel_path);
-        if self.claimed_paths.contains(normalized) {
+        if self.claimed_paths.contains(&fold_usrmerge(normalized)) {
             return true;
         }
         if self.claimed_hashes.contains(&sha256_hex.to_ascii_lowercase()) {
@@ -274,4 +316,77 @@ mod tests {
         assert!(idx.is_covered(&PathBuf::from("anywhere"), &"abcdef12".repeat(8)));
         assert!(idx.is_covered(&PathBuf::from("anywhere"), &"ABCDEF12".repeat(8)));
     }
+
+    // -----------------------------------------------------------
+    // #854 — usrmerge alias folding.
+    //
+    // dpkg declares one spelling and the walker may observe the other,
+    // because /bin, /sbin, /lib and /lib64 are symlinks into /usr. A
+    // literal comparison reads the file as unclaimed and emits a
+    // duplicate file-tier component for a file a package already owns.
+    // -----------------------------------------------------------
+
+    #[test]
+    fn claim_under_usr_covers_the_bare_alias() {
+        let c = make_component(vec![occ("/usr/bin/apt", "aa")], vec![]);
+        let idx = DedupeIndex::build(std::slice::from_ref(&c));
+        assert!(
+            idx.is_covered(&PathBuf::from("bin/apt"), "zz"),
+            "a file dpkg declares at /usr/bin/apt must not re-emit when \
+             the walker reaches it as bin/apt",
+        );
+    }
+
+    #[test]
+    fn claim_under_bare_alias_covers_the_usr_path() {
+        // The mirror image: some packages declare the pre-usrmerge
+        // spelling. Folding must be symmetric or the fix only works in
+        // whichever direction happened to be tested.
+        let c = make_component(vec![occ("/lib/x86_64-linux-gnu/libc.so.6", "aa")], vec![]);
+        let idx = DedupeIndex::build(std::slice::from_ref(&c));
+        assert!(
+            idx.is_covered(&PathBuf::from("usr/lib/x86_64-linux-gnu/libc.so.6"), "zz"),
+            "folding must work in both directions",
+        );
+    }
+
+    #[test]
+    fn only_the_usrmerge_directories_fold() {
+        // `share` is not a usrmerge directory. Folding it would make
+        // `usr/share/doc/x` and `share/doc/x` collide, suppressing a
+        // genuinely orphan file.
+        let c = make_component(vec![occ("/usr/share/doc/x", "aa")], vec![]);
+        let idx = DedupeIndex::build(std::slice::from_ref(&c));
+        assert!(
+            !idx.is_covered(&PathBuf::from("share/doc/x"), "zz"),
+            "non-usrmerge directories must not fold",
+        );
+    }
+
+    #[test]
+    fn a_genuinely_orphan_file_is_still_emitted() {
+        // The regression guard for over-suppression: the fix must not
+        // make everything look covered.
+        let c = make_component(vec![occ("/usr/bin/apt", "aa")], vec![]);
+        let idx = DedupeIndex::build(std::slice::from_ref(&c));
+        assert!(
+            !idx.is_covered(&PathBuf::from("usr/lib/unowned.so"), "zz"),
+            "an unclaimed file must still emit",
+        );
+    }
+
+    #[test]
+    fn fold_usrmerge_is_idempotent_and_leaves_other_paths_alone() {
+        assert_eq!(fold_usrmerge(Path::new("usr/bin/apt")), PathBuf::from("bin/apt"));
+        assert_eq!(fold_usrmerge(Path::new("bin/apt")), PathBuf::from("bin/apt"));
+        assert_eq!(
+            fold_usrmerge(&fold_usrmerge(Path::new("usr/bin/apt"))),
+            PathBuf::from("bin/apt"),
+        );
+        assert_eq!(fold_usrmerge(Path::new("etc/passwd")), PathBuf::from("etc/passwd"));
+        assert_eq!(fold_usrmerge(Path::new("usr/share/doc")), PathBuf::from("usr/share/doc"));
+        // `usrlib` must not be mistaken for the `usr/` prefix.
+        assert_eq!(fold_usrmerge(Path::new("usrlib/x")), PathBuf::from("usrlib/x"));
+    }
+
 }

@@ -212,6 +212,13 @@ fn walk(old: &Value, new: &Value, path: String, out: &mut Vec<String>) {
                 walk(x, y, format!("{path}[{i}]"), out);
             }
         }
+        // Lengths differ. Positional pairing is meaningless here, and
+        // the catch-all below would collapse the whole array into one
+        // `changed $.path` line — which is what made SPDX 3 `@graph`
+        // unreviewable for every target that gained or lost an element
+        // (7 of 11 in the milestone-840 refresh; image-postgres16
+        // reported a 5036 -> 6315 change as a single line).
+        (Value::Array(a), Value::Array(b)) => align_by_identity(a, b, &path, out),
         (a, b) if a != b => out.push(format!("changed {path}")),
         _ => {}
     }
@@ -244,6 +251,137 @@ fn group(lines: Vec<String>) -> (Vec<(String, usize)>, Vec<String>) {
     }
     grouped.sort_by(|a, b| b.1.cmp(&a.1).then(a.0.cmp(&b.0)));
     (grouped, singles)
+}
+
+/// A stable identity for an array element, used to pair elements across
+/// two documents when the arrays differ in length.
+///
+/// The key MUST NOT be derived from a content-addressed field.
+/// `spdxId`, `SPDXID` and file-tier `bom-ref`s are hashes of the very
+/// content whose change we are trying to describe: keying on them pairs
+/// nothing, and every element reports as both added and removed. That
+/// is the failure this function exists to avoid, so the exclusions are
+/// deliberate rather than incidental.
+///
+/// Scalars are their own identity. Equal scalars then pair silently and
+/// only genuinely added or removed values produce a line.
+fn identity_key(v: &Value) -> Option<String> {
+    let obj = match v.as_object() {
+        Some(o) => o,
+        // Scalar (or array) element: its canonical form is its identity.
+        None => return Some(sanitise_key(&canonical_key(v))),
+    };
+    let get = |k: &str| obj.get(k).and_then(|x| x.as_str());
+
+    // A PURL is a semantic identity that already includes the version,
+    // so a version change correctly reads as one element replacing
+    // another rather than as a field edit.
+    if let Some(p) = get("purl").or_else(|| get("packageUrl")) {
+        return Some(sanitise_key(&format!("purl={p}")));
+    }
+    if let Some(n) = get("name") {
+        let ver = get("versionInfo")
+            .or_else(|| get("software_packageVersion"))
+            .or_else(|| get("version"))
+            .unwrap_or("");
+        return Some(sanitise_key(&format!("name={n}@{ver}")));
+    }
+    // `bom-ref` identifies a CDX component; `ref` identifies a CDX
+    // `dependencies[]` entry. Without the latter the dependency graph —
+    // the thing most worth reviewing — stays an opaque single line.
+    for field in ["bom-ref", "ref"] {
+        if let Some(r) = get(field) {
+            if !is_content_addressed(r) {
+                return Some(sanitise_key(&format!("ref={r}")));
+            }
+        }
+    }
+    // Weakest useful key: elements of the same type bucket together, so
+    // relationships (which carry no stable name) still pair pairwise
+    // within their bucket instead of collapsing the whole array.
+    if let Some(t) = get("type").or_else(|| get("@type")) {
+        return Some(sanitise_key(&format!("type={t}")));
+    }
+    // SPDX 2.3 relationships and annotations carry neither a name nor a
+    // `type`, so without these they bucket as unkeyable and the array
+    // reports as one line. Their own discriminators are the weakest
+    // useful key: elements still pair pairwise within a bucket.
+    if let Some(t) = get("relationshipType") {
+        return Some(sanitise_key(&format!("relationshipType={t}")));
+    }
+    if let Some(t) = get("annotationType") {
+        return Some(sanitise_key(&format!("annotationType={t}")));
+    }
+    None
+}
+
+fn is_content_addressed(s: &str) -> bool {
+    s.contains("content-sha256") || s.starts_with("SPDXRef-")
+}
+
+/// `strip_indices` treats everything between `[` and `]` as an index to
+/// erase, which is what lets repeated shapes group. An identity key
+/// containing a bracket would truncate the shape and split one group in
+/// two, so brackets are folded out of the key.
+fn sanitise_key(s: &str) -> String {
+    s.replace(['[', ']'], "_")
+}
+
+/// Pair two differently-sized arrays by element identity, recursing into
+/// matched pairs and reporting the remainder as added or removed.
+///
+/// Surplus elements sharing a key are reported one line each rather than
+/// as a count, so `group` can collapse them into a counted shape and a
+/// lone survivor still shows up individually (C-3.3).
+fn align_by_identity(a: &[Value], b: &[Value], path: &str, out: &mut Vec<String>) {
+    use std::collections::BTreeMap;
+
+    let mut old_by: BTreeMap<String, Vec<&Value>> = BTreeMap::new();
+    let mut new_by: BTreeMap<String, Vec<&Value>> = BTreeMap::new();
+    let mut old_unkeyed = 0usize;
+    let mut new_unkeyed = 0usize;
+
+    for v in a {
+        match identity_key(v) {
+            Some(k) => old_by.entry(k).or_default().push(v),
+            None => old_unkeyed += 1,
+        }
+    }
+    for v in b {
+        match identity_key(v) {
+            Some(k) => new_by.entry(k).or_default().push(v),
+            None => new_unkeyed += 1,
+        }
+    }
+
+    let mut keys: Vec<String> = old_by.keys().chain(new_by.keys()).cloned().collect();
+    keys.sort();
+    keys.dedup();
+
+    let empty: Vec<&Value> = Vec::new();
+    for k in keys {
+        let o = old_by.get(&k).unwrap_or(&empty);
+        let n = new_by.get(&k).unwrap_or(&empty);
+        let common = o.len().min(n.len());
+        for i in 0..common {
+            walk(o[i], n[i], format!("{path}[{k}]"), out);
+        }
+        for _ in common..o.len() {
+            out.push(format!("removed {path}[{k}]"));
+        }
+        for _ in common..n.len() {
+            out.push(format!("added {path}[{k}]"));
+        }
+    }
+
+    // Elements no rule could key. Reported rather than dropped: a
+    // silently ignored element is the failure mode this whole tool
+    // exists to prevent.
+    if old_unkeyed != new_unkeyed {
+        out.push(format!(
+            "changed {path} (unkeyable elements {old_unkeyed} -> {new_unkeyed})"
+        ));
+    }
 }
 
 fn strip_indices(s: &str) -> String {

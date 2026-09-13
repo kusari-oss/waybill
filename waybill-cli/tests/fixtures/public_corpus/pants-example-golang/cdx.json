@@ -47,12 +47,16 @@
           "value": "[\"go.sum\"]"
         },
         {
+          "name": "waybill:build-inclusion",
+          "value": "unknown"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
           "name": "waybill:go-transitive-source",
-          "value": "module-cache"
+          "value": "go-sum-fallback"
         },
         {
           "name": "waybill:orphan-reason",
@@ -61,6 +65,10 @@
         {
           "name": "waybill:pants-target",
           "value": "mod"
+        },
+        {
+          "name": "waybill:resolver-step",
+          "value": "go-sum-fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -120,12 +128,16 @@
           "value": "[\"go.sum\"]"
         },
         {
+          "name": "waybill:build-inclusion",
+          "value": "unknown"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
           "name": "waybill:go-transitive-source",
-          "value": "module-cache"
+          "value": "go-sum-fallback"
         },
         {
           "name": "waybill:orphan-reason",
@@ -134,6 +146,10 @@
         {
           "name": "waybill:pants-target",
           "value": "mod"
+        },
+        {
+          "name": "waybill:resolver-step",
+          "value": "go-sum-fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -415,7 +431,7 @@
       },
       {
         "name": "waybill:go-transitive-fallback-count",
-        "value": "0"
+        "value": "2"
       }
     ],
     "supplier": {
@@ -428,7 +444,7 @@
           "name": "waybill",
           "publisher": "waybill contributors",
           "type": "application",
-          "version": "0.5.1-alpha.1"
+          "version": "0.7.0"
         }
       ]
     }

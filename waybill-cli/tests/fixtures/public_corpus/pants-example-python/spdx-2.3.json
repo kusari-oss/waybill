@@ -4,74 +4,74 @@
     {
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.5.1-alpha.1",
+      "annotator": "Tool: waybill-0.7.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:generation-context\",\"value\":\"filesystem-scan\"}"
     },
     {
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.5.1-alpha.1",
+      "annotator": "Tool: waybill-0.7.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cisa-2026-lifecycle\",\"value\":\"after-build\"}"
     },
     {
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.5.1-alpha.1",
+      "annotator": "Tool: waybill-0.7.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:os-release-missing-fields\",\"value\":[\"ID\",\"VERSION_ID\"]}"
     },
     {
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.5.1-alpha.1",
+      "annotator": "Tool: waybill-0.7.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness\",\"value\":\"complete\"}"
     },
     {
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.5.1-alpha.1",
+      "annotator": "Tool: waybill-0.7.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspaces-detected\",\"value\":\"[\\\".\\\"]\"}"
     },
     {
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.5.1-alpha.1",
+      "annotator": "Tool: waybill-0.7.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-ring-buffer-overflows\",\"value\":\"0\"}"
     },
     {
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.5.1-alpha.1",
+      "annotator": "Tool: waybill-0.7.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-events-dropped\",\"value\":\"0\"}"
     },
     {
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.5.1-alpha.1",
+      "annotator": "Tool: waybill-0.7.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-uprobe-attach-failures\",\"value\":[]}"
     },
     {
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.5.1-alpha.1",
+      "annotator": "Tool: waybill-0.7.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-kprobe-attach-failures\",\"value\":[]}"
     },
     {
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.5.1-alpha.1",
+      "annotator": "Tool: waybill-0.7.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"compositions\",\"value\":{\"complete_ecosystems\":[\"pypi\"]}}"
     }
   ],
   "creationInfo": "<masked>",
   "dataLicense": "CC0-1.0",
   "documentDescribes": [
-    "SPDXRef-DocumentRoot-XN5JAK52FQK56GWE"
+    "SPDXRef-DocumentRoot-KJP6PADJXZ75UQE7"
   ],
   "documentNamespace": "<masked>",
-  "name": "repo",
+  "name": "pants-example-python e8cfd79",
   "packages": [
     {
-      "SPDXID": "SPDXRef-DocumentRoot-XN5JAK52FQK56GWE",
+      "SPDXID": "SPDXRef-DocumentRoot-KJP6PADJXZ75UQE7",
       "downloadLocation": "NOASSERTION",
       "externalRefs": [
         {
@@ -98,49 +98,49 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"python-default.lock\",\"requirements.txt\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:ansicolors:ansicolors:1.1.8:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-ansicolors:ansicolors:1.1.8:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requirement-ranges\",\"value\":[\"ansicolors==1.1.8\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"requirements.txt\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -180,49 +180,49 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"python-default.lock\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:attrs:attrs:25.3.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-attrs:attrs:25.3.0:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.8\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -262,49 +262,49 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"python-default.lock\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:iniconfig:iniconfig:2.1.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-iniconfig:iniconfig:2.1.0:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.8\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -344,49 +344,49 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"python-default.lock\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:packaging:packaging:25.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-packaging:packaging:25.0:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.8\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -426,49 +426,49 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"python-default.lock\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:pluggy:pluggy:1.6.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-pluggy:pluggy:1.6.0:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.9\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -508,49 +508,49 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"python-default.lock\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:py:py:1.11.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-py:py:1.11.0:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\"!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -590,55 +590,55 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"python-default.lock\",\"requirements.txt\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:pytest:pytest:7.1.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-pytest:pytest:7.1.3:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requirement-ranges\",\"value\":[\"pytest==7.1.3\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"requirements.txt\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.7\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -678,49 +678,49 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"python-default.lock\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:setuptools:setuptools:56.2.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-setuptools:setuptools:56.2.0:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.6\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -760,49 +760,49 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"python-default.lock\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:tomli:tomli:2.2.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-tomli:tomli:2.2.1:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.8\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -874,43 +874,43 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"python-default.lock\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:types-setuptools:types-setuptools:57.4.18:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-types-setuptools:types-setuptools:57.4.18:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -950,25 +950,25 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"get-pants.sh\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"get-pants.sh\"]}"
         }
       ],
@@ -988,7 +988,7 @@
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-XN5JAK52FQK56GWE",
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-KJP6PADJXZ75UQE7",
       "relationshipType": "DESCRIBES",
       "spdxElementId": "SPDXRef-DOCUMENT"
     },
@@ -1040,22 +1040,22 @@
     {
       "relatedSpdxElement": "SPDXRef-Package-C6BIGX26BQTR6BDH",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-XN5JAK52FQK56GWE"
+      "spdxElementId": "SPDXRef-DocumentRoot-KJP6PADJXZ75UQE7"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-THZZ7BY5LVTRT5PE",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-XN5JAK52FQK56GWE"
+      "spdxElementId": "SPDXRef-DocumentRoot-KJP6PADJXZ75UQE7"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-Q72FCOSCIJC2P37I",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-XN5JAK52FQK56GWE"
+      "spdxElementId": "SPDXRef-DocumentRoot-KJP6PADJXZ75UQE7"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-V6WS5B3MCUO5V2R7",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-XN5JAK52FQK56GWE"
+      "spdxElementId": "SPDXRef-DocumentRoot-KJP6PADJXZ75UQE7"
     }
   ],
   "spdxVersion": "SPDX-2.3"

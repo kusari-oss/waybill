@@ -288,6 +288,28 @@ existing `"scan starting"` info-line, plus triple-vs-sequential output
 byte-equivalence — no wall-clock semantics, no thresholds, no
 flakiness.
 
+### Expected-value artifacts (goldens + baselines)
+
+Two artifacts in this repo record an expected value that a gate then
+compares against. Both are generated, not written, and both have burned
+days of debugging when generated in the wrong place:
+
+- **Public-corpus goldens** —
+  [`docs/development/refreshing-corpus-goldens.md`](docs/development/refreshing-corpus-goldens.md)
+- **Performance baseline** —
+  [`docs/perf/refreshing-the-baseline.md`](docs/perf/refreshing-the-baseline.md)
+
+Read the relevant one **before** regenerating. The short version for
+both: generate through CI, never locally, because the content depends on
+the host. The long version is why that rule keeps getting broken anyway
+— see #818 (nine days of failures from a macOS-recorded baseline) and
+#832 (three nights, two wrong diagnoses, an LFS-dependent fixture).
+
+Refreshing a golden without reading every diff is how a regression
+becomes the expected output. If a target is failing for a reason other
+than accumulated drift, regenerating its golden encodes the fault
+permanently.
+
 ## Project principles + where to find them
 
 The canonical source-of-truth for project principles is
