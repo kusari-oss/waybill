@@ -1799,7 +1799,16 @@ pub fn read(
     use crate::scan_fs::package_db::golang::graph_resolver::{
         GraphResolver, GraphResolverConfig, WorkspaceContext,
     };
-    let resolver = GraphResolver::new(GraphResolverConfig::default());
+    // Milestone 850 (#850): `--no-go-proxy-fetch`, threaded the same
+    // way milestone 173 threads `--warm-go-cache` — scan_cmd sets the
+    // env var after flag reconciliation, this sync chain reads it.
+    let skip_proxy_fetch = std::env::var("WAYBILL_NO_GO_PROXY_FETCH")
+        .map(|v| !v.is_empty() && v != "0")
+        .unwrap_or(false);
+    let resolver = GraphResolver::new(GraphResolverConfig {
+        skip_proxy_fetch,
+        ..GraphResolverConfig::default()
+    });
 
     // Milestone 173: opt-in Go cache warming. Read the effective mode
     // from the `WAYBILL_WARM_GO_CACHE_MODE` env var (set by scan_cmd.rs

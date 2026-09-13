@@ -543,6 +543,24 @@ pub struct GraphResolverConfig {
     pub fetch_connect_timeout: Duration,
     pub fetch_total_timeout: Duration,
     pub fetch_concurrency: usize,
+    /// Milestone 850 (#850) — skip step 3 entirely.
+    ///
+    /// Step 3 fetches each module's `.mod` from the proxy to recover
+    /// parent-child topology that step 5's go.sum fallback cannot
+    /// encode. That is worth a round-trip when the module resolves and
+    /// is pure cost when it does not, and the resolver cannot tell
+    /// which in advance — finding out is what the fetch is for.
+    ///
+    /// Operators who do not need transitive topology previously had
+    /// only `--offline`, which disables every enrichment source. This
+    /// narrows the choice to the one step that reaches the network
+    /// here.
+    ///
+    /// Skipping it degrades output only where step 3 would have
+    /// succeeded. On a tree whose modules cannot resolve — the case
+    /// this exists for — it costs nothing and saves a round-trip per
+    /// module.
+    pub skip_proxy_fetch: bool,
 }
 
 impl Default for GraphResolverConfig {
@@ -552,6 +570,7 @@ impl Default for GraphResolverConfig {
             fetch_connect_timeout: Duration::from_secs(10), // FR-008
             fetch_total_timeout: Duration::from_secs(30),  // FR-008
             fetch_concurrency: 16,                          // FR-008a
+            skip_proxy_fetch: false,                        // m850: opt-in
         }
     }
 }
@@ -811,6 +830,13 @@ impl GraphResolver {
     }
 
     fn step3_proxy_fetch(&self, map: &mut ModuleGraphMap, ctx: &WorkspaceContext) {
+        // Milestone 850: the operator opted out. Modules that would
+        // have resolved here fall through to step 5's go.sum closure,
+        // which yields flat root→transitive edges without parent-child
+        // topology — a documented reduction in fidelity, not an error.
+        if self.config.skip_proxy_fetch {
+            return;
+        }
         if ctx.goproxy.is_off() || ctx.goproxy.is_empty() {
             return;
         }
@@ -2238,5 +2264,41 @@ require (
                 "T017 FR-006a: parse_go_mod dropped `{expected}` (indirect or otherwise); got: {names:?}"
             );
         }
+    }
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod m850_skip_proxy_tests {
+    use super::*;
+
+    /// Milestone 850. The flag must suppress step 3 on its own — not
+    /// only in combination with `$GOPROXY=off`, which was the pre-850
+    /// way to get this and which also changes what the `go` toolchain
+    /// does in unrelated steps.
+    #[test]
+    fn skip_proxy_fetch_is_off_by_default() {
+        assert!(
+            !GraphResolverConfig::default().skip_proxy_fetch,
+            "the default must preserve pre-m850 behaviour byte-for-byte",
+        );
+    }
+
+    #[test]
+    fn skip_proxy_fetch_is_independent_of_goproxy() {
+        // The two knobs suppress the same step for different reasons.
+        // Asserting them separately stops a future refactor from
+        // collapsing the flag into the env var, which would tie an
+        // operator preference to the toolchain's resolution behaviour.
+        let cfg = GraphResolverConfig {
+            skip_proxy_fetch: true,
+            ..GraphResolverConfig::default()
+        };
+        assert!(cfg.skip_proxy_fetch);
+        assert_eq!(
+            cfg.fetch_concurrency,
+            GraphResolverConfig::default().fetch_concurrency,
+            "setting the flag must not disturb unrelated resolver config",
+        );
     }
 }

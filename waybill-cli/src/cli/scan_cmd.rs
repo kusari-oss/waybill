@@ -1792,6 +1792,39 @@ The env-var `WAYBILL_NO_BINARY_SCAN=<mode>` provides the same value; the CLI fla
 ",
     )]
     pub no_binary_scan: Option<BinaryScanMode>,
+
+    /// Milestone 850 (#850) — skip the Go module-proxy fetch step.
+    ///
+    /// During Go transitive resolution, modules that `go mod graph`
+    /// and the local module cache could not resolve are fetched from
+    /// the module proxy so their `.mod` files can supply parent-child
+    /// dependency topology. That is one network round-trip per module,
+    /// and for a module that cannot resolve at all it is pure cost —
+    /// the resolver cannot tell which is which in advance, because
+    /// finding out is what the fetch is for.
+    ///
+    /// With this flag those modules fall through to the `go.sum`
+    /// closure instead, which still yields root-to-transitive edges
+    /// but **without parent-child topology** — `go.sum` does not
+    /// encode it.
+    ///
+    /// That reduction follows from the code path rather than from an
+    /// observation: it applies only when the proxy fetch would have
+    /// SUCCEEDED, i.e. `go mod graph` failed and the module cache
+    /// missed but the module exists upstream. Three attempts to
+    /// construct that case during milestone 850 — a tree of
+    /// unresolvable modules, a tree with a warm cache, and a forced
+    /// cold cache — all produced byte-identical output with and
+    /// without the flag, because in each one step 3 either never ran
+    /// or returned nothing. Measured cost on a tree of unresolvable
+    /// modules: 5.38s to 4.65s.
+    ///
+    /// Useful when scanning a tree containing unresolvable modules,
+    /// when measuring scan performance, or on a slow link. `--offline`
+    /// also suppresses this step but disables every other enrichment
+    /// source with it; this is the narrow version.
+    #[arg(long)]
+    pub no_go_proxy_fetch: bool,
 }
 
 /// Milestone 173: CLI-side cache-warming mode. Two variants;
@@ -2944,6 +2977,13 @@ pub async fn execute(
             "WAYBILL_WARM_GO_CACHE_CONCURRENCY",
             args.warm_go_cache_concurrency.to_string(),
         );
+        // Milestone 850: `--offline` already suppresses this step via
+        // `$GOPROXY=off`; setting the variable here too keeps the
+        // resolver's own view consistent rather than leaving it to
+        // depend on which knob happened to fire.
+        if args.no_go_proxy_fetch || offline {
+            std::env::set_var("WAYBILL_NO_GO_PROXY_FETCH", "1");
+        }
     }
 
     // Milestone 052/part-3: the default is to include all lifecycle
@@ -6108,6 +6148,7 @@ mod tests {
             // behavior (no binary-scan suppression; byte-identity
             // per FR-003).
             no_binary_scan: None,
+            no_go_proxy_fetch: false,
         }
     }
 
