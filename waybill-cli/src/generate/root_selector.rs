@@ -482,17 +482,15 @@ pub(crate) const DEMOTED_FROM_MAIN_MODULE_KEY: &str = "waybill:demoted-from-main
 /// iterates to build wire-side `components[]` / `packages[]` /
 /// `software_Package` elements.
 ///
-/// `redirected_main_module_purls` collects the PURLs of every main-module
-/// entry whose outbound dependency edges need re-anchoring onto the
-/// operator-override root (milestone-084 logic at
-/// `cyclonedx/builder.rs:442-447` and parallel SPDX sites). Per
-/// milestone-149 US1 clarification (recorded 2026-06-29), the demoted
-/// entry has NO outbound `dependsOn` edges in the wire output even when
-/// it's KEPT in `components[]` — so this Vec is populated regardless of
-/// whether the entry was dropped (Path 2) or demoted (Path 3).
+/// `retained_main_module_purls` collects the PURLs of every main-module
+/// entry retained under an active override. Milestone 860 (#863)
+/// inverted this set's meaning: it used to name entries whose outbound
+/// edges were removed and re-anchored onto the override root; it now
+/// names the components the root must declare a dependency ON. The
+/// entries keep their own outbound edges.
 pub(crate) struct DropOrDemoteResult {
     pub effective_components: Vec<ResolvedComponent>,
-    pub redirected_main_module_purls: Vec<String>,
+    pub retained_main_module_purls: Vec<String>,
 }
 
 /// Milestone 149: consolidate the duplicated main-module-drop logic
@@ -537,89 +535,92 @@ pub(crate) struct DropOrDemoteResult {
 pub(crate) fn apply_main_module_drop_or_demote(
     components: &[ResolvedComponent],
     root_override: &RootComponentOverride,
-    preserve_main_module: bool,
 ) -> DropOrDemoteResult {
     let override_active = root_override.is_active();
-
-    // Edge Case 1: preserve flag set without an active override is a
-    // silent no-op with an INFO diagnostic so the operator notices the
-    // flag had no effect.
-    if !override_active && preserve_main_module {
-        tracing::info!(
-            "--preserve-manifest-main-module has no effect without --root-name override",
-        );
-    }
 
     // Path 1: override INACTIVE → passthrough.
     if !override_active {
         return DropOrDemoteResult {
             effective_components: components.to_vec(),
-            redirected_main_module_purls: Vec::new(),
+            retained_main_module_purls: Vec::new(),
         };
     }
 
-    // Multi-main-module guard (Edge Case 4 + FR-013): when N>1 main-modules
-    // are tagged, NONE were promoted to metadata.component pre-149
-    // (milestone 127's placeholder-path behavior); the preserve flag is
-    // a no-op because there's no single main-module to demote. Emit INFO
-    // log and fall through to the drop-all path so the override clean-
-    // replacement semantic stays unchanged.
-    let main_module_count = components
-        .iter()
-        .filter(|c| is_main_module(c))
-        .count();
-    let effective_preserve = preserve_main_module && main_module_count == 1;
-    if preserve_main_module && main_module_count > 1 {
-        tracing::info!(
-            count = main_module_count,
-            "--preserve-manifest-main-module skipped: multi-main-module scan ({main_module_count} modules detected)",
-        );
-    }
+    // Milestone 860 (#863): retain and demote at EVERY N.
+    //
+    // Milestones 077 and 149 both assumed a single main module. m077
+    // dropped it so the document would not carry two roots; m149 added
+    // an opt-in demote and explicitly declined N>1, falling through to
+    // the drop path "because there's no SINGLE manifest-derived
+    // main-module to demote". On a workspace that reasoning deletes the
+    // whole inventory: 16 of 61 components on maven-guice, 10 of 68 on
+    // rust-ripgrep, 4 of 109 on python-flask — including
+    // `pkg:pypi/flask@3.1.2`, i.e. Flask itself. The dependency edges
+    // pointing at those components were not removed with them, leaving
+    // fourteen references across two targets resolving to nothing.
+    //
+    // "There is no single module to promote" is a statement about root
+    // SELECTION. It does not follow that the modules should be deleted:
+    // the operator named the subject, which is a different question from
+    // what the inventory contains.
+    // FR-011: the operator may name a root whose identity collides with
+    // a module's. Reachable because waybill mints `pkg:generic/` main
+    // modules for some ecosystems (pip apps, npm CLI tools) — the same
+    // namespace `--root-name` uses. The subject wins: the module is not
+    // emitted separately, so no two components assert one coordinate.
+    let subject_purl: Option<String> = match (&root_override.name, &root_override.version) {
+        (Some(n), Some(v)) => root_override.build_subject_purl(n, v),
+        _ => None,
+    };
 
-    // Single-pass walk: collect redirected PURLs + build effective Vec.
     let mut effective = Vec::with_capacity(components.len());
-    let mut redirected = Vec::new();
+    let mut retained = Vec::new();
     for c in components {
         if is_main_module(c) {
-            // Per US1 clarification Option A (recorded 2026-06-29):
-            // the demoted entry has NO outbound dependsOn edges in the
-            // wire output even when kept. Push the PURL to `redirected`
-            // regardless of whether we drop (Path 2) or demote (Path 3)
-            // so milestone-084 re-anchoring fires identically in both
-            // cases.
-            redirected.push(c.purl.as_str().to_string());
-            if effective_preserve {
-                // Path 3: demote in place — keep entry with transformed
-                // annotations. Removing the role tag flips downstream
-                // type-derivation to `library` automatically (per
-                // research §B + the existing `binary_role_to_cdx_type`
-                // default path).
-                let mut demoted = c.clone();
-                demoted.extra_annotations.remove(COMPONENT_ROLE_KEY);
-                demoted.extra_annotations.insert(
-                    DEMOTED_FROM_MAIN_MODULE_KEY.to_string(),
-                    serde_json::Value::String("true".to_string()),
-                );
-                effective.push(demoted);
-            } else {
-                // Path 2: drop. The existing tracing::info from the
-                // pre-149 emitter-side filter migrated here so the
-                // operator-facing diagnostic stays uniform across all
-                // three formats.
+            if subject_purl.as_deref() == Some(c.purl.as_str()) {
                 tracing::info!(
                     purl = %c.purl,
-                    "override is set; dropping manifest-derived main-module component '{}' from emitted SBOM (per milestone 077 clean-replacement; see GitHub issue #151 + milestone 149 for the preserve-as-library opt-in)",
-                    c.purl,
+                    "override names this module's own coordinate; it IS the subject, not a separate component (FR-011)",
                 );
+                continue;
             }
+            // Demote in place. Removing the role tag flips downstream
+            // type-derivation to `library` automatically.
+            //
+            // The entry KEEPS its outbound edges. This reverses the
+            // milestone-149 US1 Option A decision (recorded 2026-06-29),
+            // which re-anchored them onto the override root. Absorbing
+            // every module's edges onto one root flattens the workspace
+            // layer that the modules exist to express — tolerable for a
+            // single module, wrong for sixteen. Do not restore it
+            // without re-reading specs/860-multi-main-module-override.
+            retained.push(c.purl.as_str().to_string());
+            let mut demoted = c.clone();
+            demoted.extra_annotations.remove(COMPONENT_ROLE_KEY);
+            demoted.extra_annotations.insert(
+                DEMOTED_FROM_MAIN_MODULE_KEY.to_string(),
+                serde_json::Value::String("true".to_string()),
+            );
+            effective.push(demoted);
         } else {
             effective.push(c.clone());
         }
     }
 
+    // Principle X: one operator-visible line stating what happened,
+    // replacing the milestone-149 FR-013 no-op notice that this change
+    // makes obsolete.
+    if !retained.is_empty() {
+        tracing::info!(
+            count = retained.len(),
+            "override is set; retaining {} manifest-derived main-module component(s) as libraries, anchored to the override root (milestone 860 / issue #863)",
+            retained.len(),
+        );
+    }
+
     DropOrDemoteResult {
         effective_components: effective,
-        redirected_main_module_purls: redirected,
+        retained_main_module_purls: retained,
     }
 }
 
@@ -1037,11 +1038,10 @@ mod tests {
         let result = apply_main_module_drop_or_demote(
             &components,
             &no_override(),
-            /* preserve_main_module = */ true, // ← deliberately set; should be a no-op without override
         );
         assert_eq!(result.effective_components.len(), 2,
             "passthrough MUST preserve every input component");
-        assert!(result.redirected_main_module_purls.is_empty(),
+        assert!(result.retained_main_module_purls.is_empty(),
             "passthrough MUST NOT populate redirected PURLs");
         let preserved_main = result.effective_components.iter()
             .find(|c| c.purl.as_str() == "pkg:cargo/foo-internal@0.5.1")
@@ -1057,29 +1057,152 @@ mod tests {
         );
     }
 
-    /// T010 — FR-007 + SC-002 regression guard: Path 2 (drop).
-    /// Override ACTIVE + preserve OFF → main-modules dropped from
-    /// effective_components AND their PURLs land in redirected_main_module_purls
-    /// for milestone-084 re-anchoring.
+    /// T007 — C-1.1 + C-2.2. One policy at every N, and retention must
+    /// not touch the component's identity.
     #[test]
-    fn apply_drop_or_demote_override_no_preserve_drops_main_module_md149() {
+    fn m860_policy_is_identical_at_every_n_and_preserves_identity() {
+        for n in 0..=3 {
+            let mut components: Vec<ResolvedComponent> = (0..n)
+                .map(|i| make_main_module(
+                    &format!("pkg:cargo/mod-{i}@1.0.{i}"),
+                    &format!("/p/{i}/Cargo.toml"),
+                    false,
+                ))
+                .collect();
+            components.push(make_library("pkg:cargo/dep@9.9.9"));
+            let before = components.clone();
+            let result = apply_main_module_drop_or_demote(&components, &active_override());
+
+            assert_eq!(
+                result.effective_components.len(), before.len(),
+                "C-1.1: N={n} must retain every component, same as every other N",
+            );
+            assert_eq!(
+                result.retained_main_module_purls.len(), n,
+                "C-1.1: N={n} must report exactly {n} retained modules",
+            );
+            // C-2.2 — identity untouched by the demote transformation.
+            for orig in before.iter().filter(|c| is_main_module(c)) {
+                let got = result.effective_components.iter()
+                    .find(|c| c.purl.as_str() == orig.purl.as_str())
+                    .unwrap_or_else(|| panic!("{} retained at N={n}", orig.purl));
+                assert_eq!(got.name, orig.name, "C-2.2: name must not change");
+                assert_eq!(got.version, orig.version, "C-2.2: version must not change");
+                assert_eq!(got.licenses, orig.licenses, "C-2.2: licenses must not change");
+                assert_eq!(got.hashes, orig.hashes, "C-2.2: hashes must not change");
+            }
+        }
+    }
+
+    /// T008 — invariant I1 / FR-003 / C-8.2: retention must not produce a
+    /// second root.
+    ///
+    /// This is the specific regression the milestone-077 clean-replacement
+    /// design existed to prevent. That design dropped main modules *in
+    /// order to* avoid two roots; this feature stops dropping them, so
+    /// the guard has to move here rather than disappear.
+    ///
+    /// Asserted on the role annotation because that is what downstream
+    /// type-derivation and root selection read. A component still
+    /// carrying `main-module` after an override is a second root in
+    /// everything but name.
+    #[test]
+    fn m860_retention_declares_no_second_root() {
+        let components = vec![
+            make_main_module("pkg:cargo/crate-a@0.1.0", "/p/a/Cargo.toml", false),
+            make_main_module("pkg:cargo/crate-b@0.2.0", "/p/b/Cargo.toml", false),
+            make_library("pkg:cargo/dep@1.0.0"),
+        ];
+        let result = apply_main_module_drop_or_demote(&components, &active_override());
+        let still_root: Vec<&str> = result.effective_components.iter()
+            .filter(|c| is_main_module(c))
+            .map(|c| c.purl.as_str())
+            .collect();
+        assert!(
+            still_root.is_empty(),
+            "I1/FR-003: no retained component may keep the main-module role; found {still_root:?}",
+        );
+    }
+
+    /// T019 — FR-011 / C-4.1. A module whose identity equals the
+    /// override root's is the subject, not a second component.
+    ///
+    /// Synthetic because no corpus target exhibits this (research R6):
+    /// all eleven mint `pkg:generic/<target>@<pin>` roots while their
+    /// modules are ecosystem-typed. It is reachable in production
+    /// because waybill mints `pkg:generic/` main modules for pip apps
+    /// and npm CLI tools.
+    #[test]
+    fn m860_module_matching_the_override_identity_is_absorbed() {
+        let over = RootComponentOverride {
+            name: Some("widget-svc".to_string()),
+            version: Some("1.2.3".to_string()),
+            ..Default::default()
+        };
+        let subject = over
+            .build_subject_purl("widget-svc", "1.2.3")
+            .expect("subject purl");
+        assert_eq!(subject, "pkg:generic/widget-svc@1.2.3", "precondition");
+
+        let components = vec![
+            make_main_module(&subject, "/p/pyproject.toml", false),
+            make_main_module("pkg:generic/other-tool@9.9.9", "/p/other/pyproject.toml", false),
+            make_library("pkg:pypi/dep@1.0.0"),
+        ];
+        let result = apply_main_module_drop_or_demote(&components, &over);
+
+        assert!(
+            !result.effective_components.iter().any(|c| c.purl.as_str() == subject),
+            "FR-011: the colliding module must not be emitted separately — it IS the subject",
+        );
+        assert!(
+            !result.retained_main_module_purls.iter().any(|p| p == &subject),
+            "FR-011: no root->self anchor for the absorbed module",
+        );
+        assert!(
+            result.effective_components.iter().any(|c| c.purl.as_str() == "pkg:generic/other-tool@9.9.9"),
+            "a non-colliding module is still retained",
+        );
+        assert_eq!(
+            result.retained_main_module_purls,
+            vec!["pkg:generic/other-tool@9.9.9".to_string()],
+        );
+    }
+
+    /// Was a milestone-149 pin asserting the drop path: override active
+    /// + preserve off dropped the main module entirely.
+    ///
+    /// **Superseded by milestone 860 (#863).** There is no drop path any
+    /// more — retention is unconditional. The assertions are inverted
+    /// rather than the test deleted, so the supersession stays visible
+    /// instead of looking like coverage that quietly vanished.
+    #[test]
+    fn apply_drop_or_demote_override_retains_main_module_m860() {
         let components = vec![
             make_main_module("pkg:cargo/foo-internal@0.5.1", "/p/Cargo.toml", false),
             make_library("pkg:cargo/dep-a@1.0.0"),
         ];
-        let result = apply_main_module_drop_or_demote(
-            &components,
-            &active_override(),
-            /* preserve_main_module = */ false,
-        );
-        // Main-module dropped; dep library survives.
-        assert_eq!(result.effective_components.len(), 1);
-        assert_eq!(result.effective_components[0].purl.as_str(), "pkg:cargo/dep-a@1.0.0");
-        // Main-module's PURL in redirected for re-anchoring.
+        let result = apply_main_module_drop_or_demote(&components, &active_override());
         assert_eq!(
-            result.redirected_main_module_purls,
+            result.effective_components.len(), 2,
+            "m860/FR-002: an override MUST NOT remove components",
+        );
+        let main = result.effective_components.iter()
+            .find(|c| c.purl.as_str() == "pkg:cargo/foo-internal@0.5.1")
+            .expect("main module retained, not dropped");
+        assert!(
+            !main.extra_annotations.contains_key(COMPONENT_ROLE_KEY),
+            "m860/FR-003: the role tag MUST be removed so no second root is declared",
+        );
+        assert_eq!(
+            main.extra_annotations.get(DEMOTED_FROM_MAIN_MODULE_KEY).and_then(|v| v.as_str()),
+            Some("true"),
+            "m860/FR-004: a retained module MUST stay distinguishable from a natural library",
+        );
+        assert_eq!(
+            result.retained_main_module_purls,
             vec!["pkg:cargo/foo-internal@0.5.1".to_string()],
-            "FR-007 + milestone-084: dropped main-module's PURL MUST be redirected for re-anchoring",
+            "m860/FR-008: the root must depend on this PURL",
         );
     }
 
@@ -1097,7 +1220,6 @@ mod tests {
         let result = apply_main_module_drop_or_demote(
             &components,
             &active_override(),
-            /* preserve_main_module = */ true,
         );
         // Main-module KEPT + dep library: 2 entries.
         assert_eq!(result.effective_components.len(), 2);
@@ -1117,7 +1239,7 @@ mod tests {
         );
         // US1 clarification Option A: redirected PURL populated even when entry kept.
         assert_eq!(
-            result.redirected_main_module_purls,
+            result.retained_main_module_purls,
             vec!["pkg:cargo/foo-internal@0.5.1".to_string()],
             "US1 Option A: demoted entry's PURL MUST be redirected so relationship re-anchoring fires (demoted entry has no outbound edges in wire output)",
         );
@@ -1153,7 +1275,6 @@ mod tests {
         let result = apply_main_module_drop_or_demote(
             &components,
             &active_override(),
-            /* preserve_main_module = */ true,
         );
         let demoted = result.effective_components.iter()
             .find(|c| c.purl.as_str() == snapshot_purl_str)
@@ -1170,32 +1291,40 @@ mod tests {
         assert_eq!(demoted.evidence.source_connection_ids, snapshot_conn_ids);
     }
 
-    /// T013 — Edge Case 4 + FR-013: multi-main-module + preserve = no-op.
-    /// Falls through to the drop path so override clean-replacement stays
-    /// unchanged for workspace/polyglot scans. Both main-modules dropped,
-    /// both PURLs in redirected.
+    /// Was a milestone-149 pin asserting Edge Case 4 / FR-013: with more
+    /// than one main module the preserve flag was a no-op and everything
+    /// was dropped, "because there's no SINGLE manifest-derived
+    /// main-module to demote".
+    ///
+    /// **Superseded by milestone 860 (#863).** That reasoning is about
+    /// root SELECTION; it does not follow that the modules should be
+    /// deleted. On real workspaces it removed 16 of 61 components from
+    /// maven-guice and 4 of 109 from python-flask — including
+    /// `pkg:pypi/flask@3.1.2`, Flask itself.
     #[test]
-    fn apply_drop_or_demote_multi_main_module_with_preserve_is_noop_md149() {
+    fn apply_drop_or_demote_multi_main_module_retains_all_m860() {
         let components = vec![
             make_main_module("pkg:cargo/crate-a@0.1.0", "/p/a/Cargo.toml", false),
             make_main_module("pkg:cargo/crate-b@0.2.0", "/p/b/Cargo.toml", false),
             make_library("pkg:cargo/dep@1.0.0"),
         ];
-        let result = apply_main_module_drop_or_demote(
-            &components,
-            &active_override(),
-            /* preserve_main_module = */ true,
+        let result = apply_main_module_drop_or_demote(&components, &active_override());
+        assert_eq!(
+            result.effective_components.len(), 3,
+            "m860/FR-005: N>1 follows the same policy as N=1 — nothing is dropped",
         );
-        // Only the library survives; both main-modules dropped.
-        assert_eq!(result.effective_components.len(), 1);
-        assert_eq!(result.effective_components[0].purl.as_str(), "pkg:cargo/dep@1.0.0");
-        // Both main-module PURLs in redirected.
-        assert_eq!(result.redirected_main_module_purls.len(), 2);
-        // No demote annotation anywhere (the multi-MM case falls through).
-        for c in &result.effective_components {
-            assert!(
-                !c.extra_annotations.contains_key(DEMOTED_FROM_MAIN_MODULE_KEY),
-                "FR-013: multi-main-module + preserve MUST NOT emit demote annotation",
+        assert_eq!(
+            result.retained_main_module_purls.len(), 2,
+            "m860/FR-008: the root must depend on BOTH retained modules",
+        );
+        for purl in ["pkg:cargo/crate-a@0.1.0", "pkg:cargo/crate-b@0.2.0"] {
+            let c = result.effective_components.iter()
+                .find(|c| c.purl.as_str() == purl)
+                .unwrap_or_else(|| panic!("{purl} retained"));
+            assert_eq!(
+                c.extra_annotations.get(DEMOTED_FROM_MAIN_MODULE_KEY).and_then(|v| v.as_str()),
+                Some("true"),
+                "m860: every retained module carries the demote annotation, not just one",
             );
         }
     }
@@ -1214,11 +1343,10 @@ mod tests {
         let result = apply_main_module_drop_or_demote(
             &components,
             &active_override(),
-            /* preserve_main_module = */ true,
         );
         assert_eq!(result.effective_components.len(), 1, "demoted entry kept");
         assert!(
-            result.redirected_main_module_purls
+            result.retained_main_module_purls
                 .contains(&"pkg:npm/foo-internal@0.5.1".to_string()),
             "US1 Option A: demoted PURL MUST be in redirected (drives milestone-084 \
              re-anchoring; demoted entry has empty dependsOn in wire output)",
@@ -1255,7 +1383,6 @@ mod tests {
         let result = apply_main_module_drop_or_demote(
             &components,
             &active_override(),
-            /* preserve_main_module = */ true,
         );
         // The merged entry demotes cleanly: role tag removed, annotation added,
         // source_file_paths PRESERVED verbatim (FR-005).

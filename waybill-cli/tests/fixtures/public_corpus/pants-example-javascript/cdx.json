@@ -9018,6 +9018,49 @@
       "version": "4.3.1"
     },
     {
+      "bom-ref": "pkg:npm/demo@0.0.1",
+      "cpe": "cpe:2.3:a:demo:demo:0.0.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "demo",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"path+file:///home/runner/.cache/waybill/corpus/4e02caff677ff9c0/da76d5dbb407d82c136cfe8f18dc06f3c8a440e5/repo\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/demo@0.0.1",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library",
+      "version": "0.0.1"
+    },
+    {
       "bom-ref": "pkg:npm/detect-newline@3.1.0",
       "cpe": "cpe:2.3:a:detect-newline:detect-newline:3.1.0:*:*:*:*:*:*:*",
       "evidence": {
@@ -19340,6 +19383,7 @@
         "pkg:npm/debug@4.3.4",
         "pkg:npm/dedent@1.5.1",
         "pkg:npm/deepmerge@4.3.1",
+        "pkg:npm/demo@0.0.1",
         "pkg:npm/detect-newline@3.1.0",
         "pkg:npm/diff-sequences@29.6.3",
         "pkg:npm/electron-to-chromium@1.4.699",
@@ -19644,6 +19688,7 @@
         "pkg:npm/debug@4.3.4",
         "pkg:npm/dedent@1.5.1",
         "pkg:npm/deepmerge@4.3.1",
+        "pkg:npm/demo@0.0.1",
         "pkg:npm/detect-newline@3.1.0",
         "pkg:npm/diff-sequences@29.6.3",
         "pkg:npm/electron-to-chromium@1.4.699",
@@ -20747,6 +20792,13 @@
     {
       "dependsOn": [],
       "ref": "pkg:npm/deepmerge@4.3.1"
+    },
+    {
+      "dependsOn": [
+        "pkg:npm/esbuild@0.20.1",
+        "pkg:npm/jest@29.7.0"
+      ],
+      "ref": "pkg:npm/demo@0.0.1"
     },
     {
       "dependsOn": [],

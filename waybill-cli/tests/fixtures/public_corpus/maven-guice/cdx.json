@@ -221,6 +221,53 @@
       "version": "0.0.384"
     },
     {
+      "bom-ref": "pkg:maven/com.example/guice-demo@1.0-SNAPSHOT",
+      "cpe": "cpe:2.3:a:com.example:guice-demo:1.0-SNAPSHOT:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "guice-demo",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:com.example:guice-demo:1.0-SNAPSHOT:*:*:*:*:*:*:* | cpe:2.3:a:example:guice-demo:1.0-SNAPSHOT:*:*:*:*:*:*:* | cpe:2.3:a:guice-demo:guice-demo:1.0-SNAPSHOT:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/examples/guice-demo\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"examples/guice-demo\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.example/guice-demo@1.0-SNAPSHOT",
+      "supplier": {
+        "name": "com.example"
+      },
+      "type": "library",
+      "version": "1.0-SNAPSHOT"
+    },
+    {
       "bom-ref": "pkg:maven/com.google.auto.value/auto-value-annotations@1.6.3",
       "cpe": "cpe:2.3:a:com.google.auto.value:auto-value-annotations:1.6.3:*:*:*:*:*:*:*",
       "evidence": {
@@ -683,6 +730,392 @@
       "version": "31.0.1-jre"
     },
     {
+      "bom-ref": "pkg:maven/com.google.inject.extensions/extensions-parent@7.0.0",
+      "cpe": "cpe:2.3:a:com.google.inject.extensions:extensions-parent:7.0.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "extensions-parent",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:com.google.inject.extensions:extensions-parent:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:extensions:extensions-parent:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:extensions-parent:extensions-parent:7.0.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/extensions\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"extensions\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.inject.extensions/extensions-parent@7.0.0",
+      "supplier": {
+        "name": "com.google.inject.extensions"
+      },
+      "type": "library",
+      "version": "7.0.0"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.inject.extensions/guice-assistedinject@7.0.0",
+      "cpe": "cpe:2.3:a:com.google.inject.extensions:guice-assistedinject:7.0.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "extensions/grapher/pom.xml"
+          }
+        ]
+      },
+      "name": "guice-assistedinject",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:com.google.inject.extensions:guice-assistedinject:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:extensions:guice-assistedinject:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:guice-assistedinject:guice-assistedinject:7.0.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"extensions/grapher/pom.xml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"extensions/grapher\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.inject.extensions/guice-assistedinject@7.0.0",
+      "supplier": {
+        "name": "com.google.inject.extensions"
+      },
+      "type": "library",
+      "version": "7.0.0"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.inject.extensions/guice-dagger-adapter@7.0.0",
+      "cpe": "cpe:2.3:a:com.google.inject.extensions:guice-dagger-adapter:7.0.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "guice-dagger-adapter",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:com.google.inject.extensions:guice-dagger-adapter:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:extensions:guice-dagger-adapter:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:guice-dagger-adapter:guice-dagger-adapter:7.0.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/extensions/dagger-adapter\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"extensions/dagger-adapter\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.inject.extensions/guice-dagger-adapter@7.0.0",
+      "supplier": {
+        "name": "com.google.inject.extensions"
+      },
+      "type": "library",
+      "version": "7.0.0"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.inject.extensions/guice-grapher@7.0.0",
+      "cpe": "cpe:2.3:a:com.google.inject.extensions:guice-grapher:7.0.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "guice-grapher",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:com.google.inject.extensions:guice-grapher:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:extensions:guice-grapher:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:guice-grapher:guice-grapher:7.0.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/extensions/grapher\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"extensions/grapher\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.inject.extensions/guice-grapher@7.0.0",
+      "supplier": {
+        "name": "com.google.inject.extensions"
+      },
+      "type": "library",
+      "version": "7.0.0"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.inject.extensions/guice-jmx@7.0.0",
+      "cpe": "cpe:2.3:a:com.google.inject.extensions:guice-jmx:7.0.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "guice-jmx",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:com.google.inject.extensions:guice-jmx:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:extensions:guice-jmx:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:guice-jmx:guice-jmx:7.0.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/extensions/jmx\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"extensions/jmx\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.inject.extensions/guice-jmx@7.0.0",
+      "supplier": {
+        "name": "com.google.inject.extensions"
+      },
+      "type": "library",
+      "version": "7.0.0"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.inject.extensions/guice-jndi@7.0.0",
+      "cpe": "cpe:2.3:a:com.google.inject.extensions:guice-jndi:7.0.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "guice-jndi",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:com.google.inject.extensions:guice-jndi:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:extensions:guice-jndi:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:guice-jndi:guice-jndi:7.0.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/extensions/jndi\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"extensions/jndi\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.inject.extensions/guice-jndi@7.0.0",
+      "supplier": {
+        "name": "com.google.inject.extensions"
+      },
+      "type": "library",
+      "version": "7.0.0"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.inject.extensions/guice-persist@7.0.0",
+      "cpe": "cpe:2.3:a:com.google.inject.extensions:guice-persist:7.0.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "guice-persist",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:com.google.inject.extensions:guice-persist:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:extensions:guice-persist:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:guice-persist:guice-persist:7.0.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/extensions/persist\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"extensions/persist\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.inject.extensions/guice-persist@7.0.0",
+      "supplier": {
+        "name": "com.google.inject.extensions"
+      },
+      "type": "library",
+      "version": "7.0.0"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.inject.extensions/guice-servlet@7.0.0",
+      "cpe": "cpe:2.3:a:com.google.inject.extensions:guice-servlet:7.0.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "guice-servlet",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:com.google.inject.extensions:guice-servlet:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:extensions:guice-servlet:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:guice-servlet:guice-servlet:7.0.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/extensions/servlet\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"extensions/servlet\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.inject.extensions/guice-servlet@7.0.0",
+      "supplier": {
+        "name": "com.google.inject.extensions"
+      },
+      "type": "library",
+      "version": "7.0.0"
+    },
+    {
       "bom-ref": "pkg:maven/com.google.inject.extensions/guice-servlet@7.0.1-SNAPSHOT",
       "cpe": "cpe:2.3:a:com.google.inject.extensions:guice-servlet:7.0.1-SNAPSHOT:*:*:*:*:*:*:*",
       "evidence": {
@@ -729,6 +1162,100 @@
         }
       ],
       "purl": "pkg:maven/com.google.inject.extensions/guice-servlet@7.0.1-SNAPSHOT",
+      "supplier": {
+        "name": "com.google.inject.extensions"
+      },
+      "type": "library",
+      "version": "7.0.1-SNAPSHOT"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.inject.extensions/guice-spring@7.0.0",
+      "cpe": "cpe:2.3:a:com.google.inject.extensions:guice-spring:7.0.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "guice-spring",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:com.google.inject.extensions:guice-spring:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:extensions:guice-spring:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:guice-spring:guice-spring:7.0.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/extensions/spring\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"extensions/spring\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.inject.extensions/guice-spring@7.0.0",
+      "supplier": {
+        "name": "com.google.inject.extensions"
+      },
+      "type": "library",
+      "version": "7.0.0"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.inject.extensions/guice-struts2@7.0.1-SNAPSHOT",
+      "cpe": "cpe:2.3:a:com.google.inject.extensions:guice-struts2:7.0.1-SNAPSHOT:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "guice-struts2",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:com.google.inject.extensions:guice-struts2:7.0.1-SNAPSHOT:*:*:*:*:*:*:* | cpe:2.3:a:extensions:guice-struts2:7.0.1-SNAPSHOT:*:*:*:*:*:*:* | cpe:2.3:a:guice-struts2:guice-struts2:7.0.1-SNAPSHOT:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/extensions/struts2\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"extensions/struts2\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.inject.extensions/guice-struts2@7.0.1-SNAPSHOT",
       "supplier": {
         "name": "com.google.inject.extensions"
       },
@@ -794,6 +1321,204 @@
       "version": "5.1.0"
     },
     {
+      "bom-ref": "pkg:maven/com.google.inject.extensions/guice-testlib@7.0.0",
+      "cpe": "cpe:2.3:a:com.google.inject.extensions:guice-testlib:7.0.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "guice-testlib",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:com.google.inject.extensions:guice-testlib:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:extensions:guice-testlib:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:guice-testlib:guice-testlib:7.0.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/extensions/testlib\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"extensions/testlib\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.inject.extensions/guice-testlib@7.0.0",
+      "supplier": {
+        "name": "com.google.inject.extensions"
+      },
+      "type": "library",
+      "version": "7.0.0"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.inject.extensions/guice-throwingproviders@7.0.0",
+      "cpe": "cpe:2.3:a:com.google.inject.extensions:guice-throwingproviders:7.0.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "extensions/testlib/pom.xml"
+          }
+        ]
+      },
+      "name": "guice-throwingproviders",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:com.google.inject.extensions:guice-throwingproviders:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:extensions:guice-throwingproviders:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:guice-throwingproviders:guice-throwingproviders:7.0.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"extensions/testlib/pom.xml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"extensions/testlib\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.inject.extensions/guice-throwingproviders@7.0.0",
+      "supplier": {
+        "name": "com.google.inject.extensions"
+      },
+      "type": "library",
+      "version": "7.0.0"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.inject/guice-bom@7.0.0",
+      "cpe": "cpe:2.3:a:com.google.inject:guice-bom:7.0.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "guice-bom",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:com.google.inject:guice-bom:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:inject:guice-bom:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:guice-bom:guice-bom:7.0.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/bom\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"bom\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.inject/guice-bom@7.0.0",
+      "supplier": {
+        "name": "com.google.inject"
+      },
+      "type": "library",
+      "version": "7.0.0"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.inject/guice-parent@7.0.0",
+      "cpe": "cpe:2.3:a:com.google.inject:guice-parent:7.0.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "guice-parent",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:com.google.inject:guice-parent:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:inject:guice-parent:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:guice-parent:guice-parent:7.0.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.inject/guice-parent@7.0.0",
+      "supplier": {
+        "name": "com.google.inject"
+      },
+      "type": "library",
+      "version": "7.0.0"
+    },
+    {
       "bom-ref": "pkg:maven/com.google.inject/guice@5.1.0",
       "cpe": "cpe:2.3:a:com.google.inject:guice:5.1.0:*:*:*:*:*:*:*",
       "evidence": {
@@ -845,6 +1570,63 @@
       },
       "type": "library",
       "version": "5.1.0"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.inject/guice@7.0.0",
+      "cpe": "cpe:2.3:a:com.google.inject:guice:7.0.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "extensions/pom.xml"
+          }
+        ]
+      },
+      "name": "guice",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:com.google.inject:guice:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:inject:guice:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:guice:guice:7.0.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"extensions/pom.xml\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"extensions\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.inject/guice@7.0.0",
+      "supplier": {
+        "name": "com.google.inject"
+      },
+      "type": "library",
+      "version": "7.0.0"
     },
     {
       "bom-ref": "pkg:maven/com.google.truth.extensions/truth-java8-extension@1.1.3",
@@ -2354,6 +3136,7 @@
       "assemblies": [
         "pkg:maven/aopalliance/aopalliance@1.0",
         "pkg:maven/biz.aQute/bnd@0.0.384",
+        "pkg:maven/com.example/guice-demo@1.0-SNAPSHOT",
         "pkg:maven/com.google.auto.value/auto-value-annotations@1.6.3",
         "pkg:maven/com.google.auto.value/auto-value@1.6.3",
         "pkg:maven/com.google.code.findbugs/jsr305@3.0.1",
@@ -2362,9 +3145,24 @@
         "pkg:maven/com.google.errorprone/error_prone_annotations@2.18.0",
         "pkg:maven/com.google.guava/guava-testlib@31.0.1-jre",
         "pkg:maven/com.google.guava/guava@31.0.1-jre",
+        "pkg:maven/com.google.inject.extensions/extensions-parent@7.0.0",
+        "pkg:maven/com.google.inject.extensions/guice-assistedinject@7.0.0",
+        "pkg:maven/com.google.inject.extensions/guice-dagger-adapter@7.0.0",
+        "pkg:maven/com.google.inject.extensions/guice-grapher@7.0.0",
+        "pkg:maven/com.google.inject.extensions/guice-jmx@7.0.0",
+        "pkg:maven/com.google.inject.extensions/guice-jndi@7.0.0",
+        "pkg:maven/com.google.inject.extensions/guice-persist@7.0.0",
+        "pkg:maven/com.google.inject.extensions/guice-servlet@7.0.0",
         "pkg:maven/com.google.inject.extensions/guice-servlet@7.0.1-SNAPSHOT",
+        "pkg:maven/com.google.inject.extensions/guice-spring@7.0.0",
+        "pkg:maven/com.google.inject.extensions/guice-struts2@7.0.1-SNAPSHOT",
         "pkg:maven/com.google.inject.extensions/guice-testlib@5.1.0",
+        "pkg:maven/com.google.inject.extensions/guice-testlib@7.0.0",
+        "pkg:maven/com.google.inject.extensions/guice-throwingproviders@7.0.0",
+        "pkg:maven/com.google.inject/guice-bom@7.0.0",
+        "pkg:maven/com.google.inject/guice-parent@7.0.0",
         "pkg:maven/com.google.inject/guice@5.1.0",
+        "pkg:maven/com.google.inject/guice@7.0.0",
         "pkg:maven/com.google.truth.extensions/truth-java8-extension@1.1.3",
         "pkg:maven/com.google.truth/truth@1.1.3",
         "pkg:maven/jakarta.inject/jakarta.inject-api@2.0.1",
@@ -2386,6 +3184,7 @@
       "dependencies": [
         "pkg:maven/aopalliance/aopalliance@1.0",
         "pkg:maven/biz.aQute/bnd@0.0.384",
+        "pkg:maven/com.example/guice-demo@1.0-SNAPSHOT",
         "pkg:maven/com.google.auto.value/auto-value-annotations@1.6.3",
         "pkg:maven/com.google.auto.value/auto-value@1.6.3",
         "pkg:maven/com.google.code.findbugs/jsr305@3.0.1",
@@ -2394,9 +3193,24 @@
         "pkg:maven/com.google.errorprone/error_prone_annotations@2.18.0",
         "pkg:maven/com.google.guava/guava-testlib@31.0.1-jre",
         "pkg:maven/com.google.guava/guava@31.0.1-jre",
+        "pkg:maven/com.google.inject.extensions/extensions-parent@7.0.0",
+        "pkg:maven/com.google.inject.extensions/guice-assistedinject@7.0.0",
+        "pkg:maven/com.google.inject.extensions/guice-dagger-adapter@7.0.0",
+        "pkg:maven/com.google.inject.extensions/guice-grapher@7.0.0",
+        "pkg:maven/com.google.inject.extensions/guice-jmx@7.0.0",
+        "pkg:maven/com.google.inject.extensions/guice-jndi@7.0.0",
+        "pkg:maven/com.google.inject.extensions/guice-persist@7.0.0",
+        "pkg:maven/com.google.inject.extensions/guice-servlet@7.0.0",
         "pkg:maven/com.google.inject.extensions/guice-servlet@7.0.1-SNAPSHOT",
+        "pkg:maven/com.google.inject.extensions/guice-spring@7.0.0",
+        "pkg:maven/com.google.inject.extensions/guice-struts2@7.0.1-SNAPSHOT",
         "pkg:maven/com.google.inject.extensions/guice-testlib@5.1.0",
+        "pkg:maven/com.google.inject.extensions/guice-testlib@7.0.0",
+        "pkg:maven/com.google.inject.extensions/guice-throwingproviders@7.0.0",
+        "pkg:maven/com.google.inject/guice-bom@7.0.0",
+        "pkg:maven/com.google.inject/guice-parent@7.0.0",
         "pkg:maven/com.google.inject/guice@5.1.0",
+        "pkg:maven/com.google.inject/guice@7.0.0",
         "pkg:maven/com.google.truth.extensions/truth-java8-extension@1.1.3",
         "pkg:maven/com.google.truth/truth@1.1.3",
         "pkg:maven/jakarta.inject/jakarta.inject-api@2.0.1",
@@ -2432,38 +3246,22 @@
   "dependencies": [
     {
       "dependsOn": [
-        "pkg:maven/aopalliance/aopalliance@1.0",
-        "pkg:maven/biz.aQute/bnd@0.0.384",
-        "pkg:maven/com.google.auto.value/auto-value-annotations@1.6.3",
-        "pkg:maven/com.google.auto.value/auto-value@1.6.3",
-        "pkg:maven/com.google.code.findbugs/jsr305@3.0.1",
-        "pkg:maven/com.google.dagger/dagger-producers@2.22.1",
-        "pkg:maven/com.google.dagger/dagger@2.22.1",
-        "pkg:maven/com.google.errorprone/error_prone_annotations@2.18.0",
-        "pkg:maven/com.google.guava/guava-testlib@31.0.1-jre",
-        "pkg:maven/com.google.guava/guava@31.0.1-jre",
+        "pkg:maven/com.example/guice-demo@1.0-SNAPSHOT",
+        "pkg:maven/com.google.inject.extensions/extensions-parent@7.0.0",
         "pkg:maven/com.google.inject.extensions/guice-assistedinject@7.0.0",
+        "pkg:maven/com.google.inject.extensions/guice-dagger-adapter@7.0.0",
+        "pkg:maven/com.google.inject.extensions/guice-grapher@7.0.0",
+        "pkg:maven/com.google.inject.extensions/guice-jmx@7.0.0",
+        "pkg:maven/com.google.inject.extensions/guice-jndi@7.0.0",
+        "pkg:maven/com.google.inject.extensions/guice-persist@7.0.0",
         "pkg:maven/com.google.inject.extensions/guice-servlet@7.0.0",
+        "pkg:maven/com.google.inject.extensions/guice-spring@7.0.0",
+        "pkg:maven/com.google.inject.extensions/guice-struts2@7.0.1-SNAPSHOT",
         "pkg:maven/com.google.inject.extensions/guice-testlib@7.0.0",
         "pkg:maven/com.google.inject.extensions/guice-throwingproviders@7.0.0",
-        "pkg:maven/com.google.inject/guice@7.0.0",
-        "pkg:maven/com.google.truth.extensions/truth-java8-extension@1.1.3",
-        "pkg:maven/com.google.truth/truth@1.1.3",
-        "pkg:maven/jakarta.inject/jakarta.inject-api@2.0.1",
-        "pkg:maven/jakarta.inject/jakarta.inject-tck@2.0.1",
-        "pkg:maven/jakarta.persistence/jakarta.persistence-api@3.0.0",
-        "pkg:maven/jakarta.servlet/jakarta.servlet-api@5.0.0",
-        "pkg:maven/junit/junit@4.13.2",
-        "pkg:maven/org.apache.felix/org.apache.felix.framework@3.0.5",
-        "pkg:maven/org.apache.struts/struts2-core@2.5.30",
-        "pkg:maven/org.hamcrest/hamcrest-core@1.3",
-        "pkg:maven/org.hamcrest/hamcrest-library@1.3",
-        "pkg:maven/org.hibernate/hibernate-core-jakarta@5.6.15.Final",
-        "pkg:maven/org.hsqldb/hsqldb-j5@2.0.0",
-        "pkg:maven/org.mockito/mockito-core@4.2.0",
-        "pkg:maven/org.ow2.asm/asm@9.5",
-        "pkg:maven/org.slf4j/slf4j-simple@1.6.1",
-        "pkg:maven/org.springframework/spring-beans@5.3.18"
+        "pkg:maven/com.google.inject/guice-bom@7.0.0",
+        "pkg:maven/com.google.inject/guice-parent@7.0.0",
+        "pkg:maven/com.google.inject/guice@7.0.0"
       ],
       "ref": "maven-guice@b0e1d0f"
     },
@@ -2536,6 +3334,14 @@
       "ref": "pkg:maven/biz.aQute/bnd@0.0.384"
     },
     {
+      "dependsOn": [
+        "pkg:maven/com.google.inject.extensions/guice-testlib@7.0.0",
+        "pkg:maven/com.google.inject/guice@7.0.0",
+        "pkg:maven/junit/junit@4.13.2"
+      ],
+      "ref": "pkg:maven/com.example/guice-demo@1.0-SNAPSHOT"
+    },
+    {
       "dependsOn": [],
       "ref": "pkg:maven/com.google.auto.value/auto-value-annotations@1.6.3"
     },
@@ -2568,16 +3374,131 @@
       "ref": "pkg:maven/com.google.guava/guava@31.0.1-jre"
     },
     {
+      "dependsOn": [
+        "pkg:maven/com.google.guava/guava-testlib@31.0.1-jre",
+        "pkg:maven/com.google.inject/guice@7.0.0",
+        "pkg:maven/org.ow2.asm/asm@9.5"
+      ],
+      "ref": "pkg:maven/com.google.inject.extensions/extensions-parent@7.0.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:maven/com.google.errorprone/error_prone_annotations@2.18.0",
+        "pkg:maven/com.google.truth/truth@1.1.3"
+      ],
+      "ref": "pkg:maven/com.google.inject.extensions/guice-assistedinject@7.0.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:maven/com.google.auto.value/auto-value-annotations@1.6.3",
+        "pkg:maven/com.google.auto.value/auto-value@1.6.3",
+        "pkg:maven/com.google.dagger/dagger-producers@2.22.1",
+        "pkg:maven/com.google.dagger/dagger@2.22.1",
+        "pkg:maven/com.google.truth/truth@1.1.3"
+      ],
+      "ref": "pkg:maven/com.google.inject.extensions/guice-dagger-adapter@7.0.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:maven/com.google.inject.extensions/guice-assistedinject@7.0.0"
+      ],
+      "ref": "pkg:maven/com.google.inject.extensions/guice-grapher@7.0.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/com.google.inject.extensions/guice-jmx@7.0.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/com.google.inject.extensions/guice-jndi@7.0.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:maven/jakarta.persistence/jakarta.persistence-api@3.0.0",
+        "pkg:maven/jakarta.servlet/jakarta.servlet-api@5.0.0",
+        "pkg:maven/org.hamcrest/hamcrest-core@1.3",
+        "pkg:maven/org.hamcrest/hamcrest-library@1.3",
+        "pkg:maven/org.hibernate/hibernate-core-jakarta@5.6.15.Final",
+        "pkg:maven/org.hsqldb/hsqldb-j5@2.0.0",
+        "pkg:maven/org.mockito/mockito-core@4.2.0",
+        "pkg:maven/org.slf4j/slf4j-simple@1.6.1"
+      ],
+      "ref": "pkg:maven/com.google.inject.extensions/guice-persist@7.0.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:maven/jakarta.servlet/jakarta.servlet-api@5.0.0",
+        "pkg:maven/org.mockito/mockito-core@4.2.0"
+      ],
+      "ref": "pkg:maven/com.google.inject.extensions/guice-servlet@7.0.0"
+    },
+    {
       "dependsOn": [],
       "ref": "pkg:maven/com.google.inject.extensions/guice-servlet@7.0.1-SNAPSHOT"
+    },
+    {
+      "dependsOn": [
+        "pkg:maven/org.springframework/spring-beans@5.3.18"
+      ],
+      "ref": "pkg:maven/com.google.inject.extensions/guice-spring@7.0.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:maven/com.google.inject.extensions/guice-servlet@7.0.0",
+        "pkg:maven/jakarta.servlet/jakarta.servlet-api@5.0.0",
+        "pkg:maven/org.apache.struts/struts2-core@2.5.30"
+      ],
+      "ref": "pkg:maven/com.google.inject.extensions/guice-struts2@7.0.1-SNAPSHOT"
     },
     {
       "dependsOn": [],
       "ref": "pkg:maven/com.google.inject.extensions/guice-testlib@5.1.0"
     },
     {
+      "dependsOn": [
+        "pkg:maven/com.google.code.findbugs/jsr305@3.0.1",
+        "pkg:maven/com.google.inject.extensions/guice-throwingproviders@7.0.0",
+        "pkg:maven/com.google.truth/truth@1.1.3"
+      ],
+      "ref": "pkg:maven/com.google.inject.extensions/guice-testlib@7.0.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:maven/com.google.code.findbugs/jsr305@3.0.1",
+        "pkg:maven/com.google.errorprone/error_prone_annotations@2.18.0",
+        "pkg:maven/com.google.truth/truth@1.1.3"
+      ],
+      "ref": "pkg:maven/com.google.inject.extensions/guice-throwingproviders@7.0.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/com.google.inject/guice-bom@7.0.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:maven/junit/junit@4.13.2"
+      ],
+      "ref": "pkg:maven/com.google.inject/guice-parent@7.0.0"
+    },
+    {
       "dependsOn": [],
       "ref": "pkg:maven/com.google.inject/guice@5.1.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:maven/aopalliance/aopalliance@1.0",
+        "pkg:maven/biz.aQute/bnd@0.0.384",
+        "pkg:maven/com.google.errorprone/error_prone_annotations@2.18.0",
+        "pkg:maven/com.google.guava/guava-testlib@31.0.1-jre",
+        "pkg:maven/com.google.guava/guava@31.0.1-jre",
+        "pkg:maven/com.google.truth.extensions/truth-java8-extension@1.1.3",
+        "pkg:maven/com.google.truth/truth@1.1.3",
+        "pkg:maven/jakarta.inject/jakarta.inject-api@2.0.1",
+        "pkg:maven/jakarta.inject/jakarta.inject-tck@2.0.1",
+        "pkg:maven/org.apache.felix/org.apache.felix.framework@3.0.5",
+        "pkg:maven/org.ow2.asm/asm@9.5"
+      ],
+      "ref": "pkg:maven/com.google.inject/guice@7.0.0"
     },
     {
       "dependsOn": [],
@@ -2720,7 +3641,7 @@
       },
       {
         "name": "waybill:workspaces-detected",
-        "value": "[\".\",\"core\",\"examples/guice-demo\",\"extensions/dagger-adapter\",\"extensions/persist\",\"extensions/spring\",\"extensions/struts2\",\"extensions/testlib\"]"
+        "value": "[\".\",\"bom\",\"core\",\"examples/guice-demo\",\"extensions\",\"extensions/dagger-adapter\",\"extensions/grapher\",\"extensions/jmx\",\"extensions/jndi\",\"extensions/persist\",\"extensions/servlet\",\"extensions/spring\",\"extensions/struts2\",\"extensions/testlib\"]"
       }
     ],
     "supplier": {

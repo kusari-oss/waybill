@@ -583,22 +583,21 @@ impl CycloneDxBuilder {
         // (CDX here, SPDX 2.3 + SPDX 3 parallel sites). When the new
         // `preserve_manifest_main_module` flag is set, the helper
         // takes the demote-as-library branch instead of dropping; the
-        // demoted entry's PURL still lands in `dropped_main_module_purls`
+        // demoted entry's PURL still lands in `retained_main_module_purls`
         // (renamed `redirected_main_module_purls` in the helper return
         // type) so the downstream relationship re-anchoring at lines
         // 442-447 continues to fire per US1 clarification Option A
         // (recorded 2026-06-29).
         let drop_result = crate::generate::root_selector::apply_main_module_drop_or_demote(
             components,
-            &self.root_override,
-            self.preserve_manifest_main_module,
+            &self.root_override
         );
         let filtered_components_owned: Option<Vec<ResolvedComponent>> = if override_active {
             Some(drop_result.effective_components)
         } else {
             None
         };
-        let dropped_main_module_purls: Vec<String> = drop_result.redirected_main_module_purls;
+        let retained_main_module_purls: Vec<String> = drop_result.retained_main_module_purls;
         let effective_components: &[ResolvedComponent] =
             filtered_components_owned.as_deref().unwrap_or(components);
 
@@ -678,15 +677,15 @@ impl CycloneDxBuilder {
         //
         // Fix: apply the m086 rewrite eagerly so the classifier operates
         // on the same edge topology that build_dependencies (line 626)
-        // will emit. Reuse `dropped_main_module_purls` computed above.
-        // Extracted to `graph_completeness::rewrite_dropped_mainmod_edges`
+        // will emit. Reuse `retained_main_module_purls` computed above.
+        // Extracted to `graph_completeness::anchor_retained_mainmod_edges`
         // in m194 US4 so SPDX 2.3 + SPDX 3 emitters share the same
         // pre-rewrite and reach classifier `complete` on operator-
         // override scans (SC-005).
         let m192_prerewritten_relationships: Vec<Relationship> =
-            crate::generate::graph_completeness::rewrite_dropped_mainmod_edges(
+            crate::generate::graph_completeness::anchor_retained_mainmod_edges(
                 relationships,
-                &dropped_main_module_purls,
+                &retained_main_module_purls,
                 &target_ref,
             );
         let metadata_relationships_augmented: Vec<Relationship> = m192_prerewritten_relationships
@@ -800,28 +799,19 @@ impl CycloneDxBuilder {
         // re-anchors each dropped-main-module-keyed edge onto target_ref,
         // preserving every edge with the override identity and still
         // satisfying the closure invariant.
+        // Milestone 860 (#863): retained main modules keep their own
+        // edges, and the root is anchored TO them. This block used to
+        // rewrite every edge sourced at a dropped module onto
+        // `target_ref`; with the modules retained that would flatten the
+        // workspace layer. Same helper the graph-completeness pre-pass
+        // uses, so classification and emission see one topology.
         let filtered_relationships_owned: Option<Vec<Relationship>> =
-            if !dropped_main_module_purls.is_empty() {
-                let dropped: std::collections::HashSet<&str> = dropped_main_module_purls
-                    .iter()
-                    .map(|s| s.as_str())
-                    .collect();
-                let rewritten: Vec<Relationship> = relationships
-                    .iter()
-                    .map(|r| {
-                        if dropped.contains(r.from.as_str()) {
-                            Relationship {
-                                from: target_ref.clone(),
-                                to: r.to.clone(),
-                                relationship_type: r.relationship_type.clone(),
-                                provenance: r.provenance.clone(),
-                            }
-                        } else {
-                            r.clone()
-                        }
-                    })
-                    .collect();
-                Some(rewritten)
+            if !retained_main_module_purls.is_empty() {
+                Some(crate::generate::graph_completeness::anchor_retained_mainmod_edges(
+                    relationships,
+                    &retained_main_module_purls,
+                    &target_ref,
+                ))
             } else {
                 None
             };
@@ -2707,10 +2697,93 @@ mod tests {
         );
     }
 
+    /// T017 — C-2.3. The component set emitted WITH an override is a
+    /// superset of the set emitted without one.
+    ///
+    /// Runs the real builder both ways rather than asserting a count,
+    /// so a component silently swapped for another cannot pass.
     #[test]
-    fn override_drops_manifest_main_module_from_components_array() {
-        // SC-006 / FR-008 — manifest-derived main-module is filtered
-        // OUT of components[] when override is active.
+    fn m860_override_emits_a_superset_of_the_unoverridden_set() {
+        let components = vec![
+            make_main_module_component("cargo", "crate-a", "0.1.0"),
+            make_main_module_component("cargo", "crate-b", "0.2.0"),
+            make_component("serde", "1.0.0"),
+        ];
+        let integrity = clean_integrity();
+
+        let plain = CycloneDxBuilder::new(CycloneDxConfig::default())
+            .build(&components, &[], &integrity, "myapp", &[], None)
+            .expect("build without override");
+        let overridden = CycloneDxBuilder::new(CycloneDxConfig::default())
+            .with_root_override(crate::generate::RootComponentOverride {
+                name: Some("widget-svc".to_string()),
+                version: Some("1.2.3".to_string()),
+                ..Default::default()
+            })
+            .build(&components, &[], &integrity, "myapp", &[], None)
+            .expect("build with override");
+
+        let purls = |b: &serde_json::Value| -> std::collections::HashSet<String> {
+            b["components"].as_array().map(|a| a.iter()
+                .filter_map(|c| c["purl"].as_str().map(str::to_string))
+                .collect()).unwrap_or_default()
+        };
+        let (a, b) = (purls(&plain), purls(&overridden));
+        let missing: Vec<&String> = a.difference(&b).collect();
+        assert!(
+            missing.is_empty(),
+            "C-2.3: naming the subject removed {missing:?} from the inventory",
+        );
+    }
+
+    /// T020 — FR-005 convergence at N=1, through the real emitter.
+    ///
+    /// No corpus target has exactly one main module (research R6), so
+    /// this is the only coverage the N=1 path gets. It deliberately runs
+    /// `build()` rather than the helper: milestone 856 shipped a bug for
+    /// months underneath a unit test that hand-assembled its input and
+    /// therefore exercised a function that was never broken.
+    #[test]
+    fn m860_single_main_module_converges_on_the_same_policy() {
+        let components = vec![
+            make_main_module_component("cargo", "only-one", "0.5.1"),
+            make_component("serde", "1.0.0"),
+        ];
+        let integrity = clean_integrity();
+        let bom = CycloneDxBuilder::new(CycloneDxConfig::default())
+            .with_root_override(crate::generate::RootComponentOverride {
+                name: Some("widget-svc".to_string()),
+                version: Some("1.2.3".to_string()),
+                ..Default::default()
+            })
+            .build(&components, &[], &integrity, "myapp", &[], None)
+            .expect("build bom");
+
+        let comps = bom["components"].as_array().expect("components[]");
+        let one = comps.iter()
+            .find(|c| c["purl"].as_str() == Some("pkg:cargo/only-one@0.5.1"))
+            .expect("FR-005: N=1 retains, exactly as N>1 does");
+        assert_eq!(
+            one["type"].as_str(), Some("library"),
+            "FR-005: N=1 demotes, exactly as N>1 does",
+        );
+        // FR-003: the subject is the override, and nothing else claims it.
+        assert_eq!(bom["metadata"]["component"]["name"].as_str(), Some("widget-svc"));
+        let roots: Vec<&str> = comps.iter()
+            .filter(|c| c["type"].as_str() == Some("application"))
+            .filter_map(|c| c["purl"].as_str())
+            .collect();
+        assert!(roots.is_empty(), "FR-003: no second root in components[]; got {roots:?}");
+    }
+
+    /// Was a milestone-077 pin: the manifest-derived main module was
+    /// filtered OUT of `components[]` when an override was active.
+    ///
+    /// **Superseded by milestone 860 (#863).** The module is retained and
+    /// demoted, and the root is anchored to it. Inverted rather than
+    /// deleted so the supersession stays visible.
+    #[test]
+    fn override_retains_manifest_main_module_in_components_array_m860() {
         let builder = CycloneDxBuilder::new(CycloneDxConfig::default())
             .with_root_override(crate::generate::RootComponentOverride {
                 name: Some("widget-svc".to_string()),
@@ -2726,14 +2799,22 @@ mod tests {
             .build(&components, &[], &integrity, "myapp", &[], None)
             .expect("build bom");
         let cdx_components = bom["components"].as_array().expect("components[]");
-        // Main-module is dropped; only `serde` remains.
+        // m860: the main module is retained, demoted, and anchored.
         let purls: Vec<&str> = cdx_components
             .iter()
             .filter_map(|c| c["purl"].as_str())
             .collect();
         assert!(
-            !purls.contains(&"pkg:cargo/foo-internal@0.5.1"),
-            "main-module PURL must be dropped; got: {purls:?}"
+            purls.contains(&"pkg:cargo/foo-internal@0.5.1"),
+            "m860/FR-002: main-module PURL must be RETAINED; got: {purls:?}"
+        );
+        let demoted = cdx_components
+            .iter()
+            .find(|c| c["purl"].as_str() == Some("pkg:cargo/foo-internal@0.5.1"))
+            .expect("retained main module");
+        assert_eq!(
+            demoted["type"].as_str(), Some("library"),
+            "m860/FR-003: the retained module must be a library, not a second root",
         );
         assert!(
             purls.contains(&"pkg:cargo/serde@1.0.0"),

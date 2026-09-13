@@ -1377,10 +1377,13 @@ pub struct ScanArgs {
     /// `waybill:demoted-from-main-module = "true"` annotation per
     /// Constitution Principle V parity-bridging (none of CDX 1.6
     /// `component.type`, SPDX 2.3 `primaryPackagePurpose`, or SPDX 3
-    /// `software_softwarePurpose` expresses demote-provenance). No-op
-    /// without an active root-override flag (silent + INFO log per
-    /// spec FR-006 / Edge Case 1) and no-op on multi-main-module scans
-    /// (silent + INFO log per FR-013 / Edge Case 4).
+    /// `software_softwarePurpose` expresses demote-provenance).
+    ///
+    /// **Retained for compatibility; no longer changes output.**
+    /// Milestone 860 (#863) made retention unconditional — a root
+    /// override now keeps every manifest-derived main module as a
+    /// demoted library at any count, so this flag has nothing left to
+    /// opt into. It is still accepted so existing callers do not break.
     #[arg(long, default_value = "false")]
     pub preserve_manifest_main_module: bool,
 
@@ -5457,6 +5460,27 @@ mod tests {
             suggest_non_stdout_path("cyclonedx-json=-"),
             "cyclonedx-json=signed.cyclonedx-json.json"
         );
+    }
+
+    /// T027 / SC-006 / C-7.1 — `--preserve-manifest-main-module` is
+    /// still accepted after milestone 860 made its behaviour
+    /// unconditional. It is a no-op, not an error: removing it would
+    /// break existing callers for no benefit.
+    ///
+    /// Output equivalence (flag on vs off producing identical bytes) is
+    /// verified at the emitter level; what can break independently here
+    /// is the CLI surface, so that is what this pins.
+    #[test]
+    fn preserve_manifest_main_module_is_still_accepted_m860() {
+        let parsed = <ScanArgsForTest as clap::Parser>::try_parse_from([
+            "scan", "--path", ".", "--preserve-manifest-main-module",
+        ])
+        .expect("C-7.1: the flag MUST still parse, even though it no longer changes output");
+        assert!(parsed.inner.preserve_manifest_main_module);
+
+        let default = <ScanArgsForTest as clap::Parser>::try_parse_from(["scan", "--path", "."])
+            .expect("baseline parse");
+        assert!(!default.inner.preserve_manifest_main_module, "still defaults off");
     }
 
     // ----- Milestone 222 US2b (feature 222-sigstore-keyless-signing) — CLI parsing -----

@@ -65,9 +65,8 @@ pub fn build_document(
     let drop_result = crate::generate::root_selector::apply_main_module_drop_or_demote(
         scan.components,
         &scan.root_override,
-        scan.preserve_manifest_main_module,
     );
-    let dropped_main_module_purls: Vec<String> = drop_result.redirected_main_module_purls;
+    let dropped_main_module_purls: Vec<String> = drop_result.retained_main_module_purls;
     let filtered_components_owned: Option<Vec<ResolvedComponent>> =
         if override_active {
             tracing::info!(
@@ -269,7 +268,7 @@ pub fn build_document(
     // Two-pass Package build: (a) precompute the PURL → IRI
     // lookup, (b) build agents against the lookup, (c) build
     // Packages with agent attachments inlined.
-    let mut package_iri_by_purl =
+    let package_iri_by_purl =
         super::v3_packages::build_iri_lookup(scan.components, &doc_iri);
 
     let agent_build = super::v3_agents::build_agents(
@@ -329,13 +328,21 @@ pub fn build_document(
     // edges originally sourced at those PURLs get rewritten to source
     // from the new root in build_dependency_relationships. Mirrors the
     // SPDX 2.3 alias path in `relationships.rs`.
-    if synthetic_root_added {
-        if let Some(synth_iri) = root_iris.first().cloned() {
-            for purl in &dropped_main_module_purls {
-                package_iri_by_purl.insert(purl.clone(), synth_iri.clone());
-            }
-        }
-    }
+    // Milestone 860 (#863): the alias is GONE.
+    //
+    // It existed (issue #229) so that dependency edges sourced at a
+    // dropped main module would be rewritten to source from the
+    // synthesized root. FR-007 stops moving those edges — retained
+    // modules keep them — so aliasing their PURLs onto the root IRI now
+    // does nothing but misroute their annotations.
+    //
+    // Removing it also closes the subject-routing divergence milestone
+    // 149 recorded in catalog row C102 and deferred to "a future
+    // milestone": the demote annotation was riding the alias and being
+    // emitted with `subject = synth_root_iri`, so all N modules'
+    // annotations collapsed onto one subject. On maven-guice that showed
+    // as 16 annotations in CDX and SPDX 2.3 but 1 in SPDX 3.
+    let _ = synthetic_root_added;
 
     // 3. SpdxDocument (placed in the graph before the per-element
     // sections so a JSON-walker reading top-down hits the document
@@ -627,7 +634,7 @@ pub fn build_document(
             scan.components,
         );
     // Milestone 194 US4 — compute target_ref eagerly so we can pre-
-    // rewrite dropped-mainmod edges (via `rewrite_dropped_mainmod_edges`)
+    // rewrite dropped-mainmod edges (via `anchor_retained_mainmod_edges`)
     // BEFORE the classifier runs, mirroring the CDX path (#570) and
     // the SPDX 2.3 path. Fixes the format-parity gap where SPDX 3
     // over-fires `partial: orphaned-components-detected: N` on
@@ -660,7 +667,7 @@ pub fn build_document(
         .chain(m158_workspace_peer_edges.iter().cloned())
         .collect();
     let m194_classifier_relationships: Vec<waybill_common::resolution::Relationship> = {
-        let prerewritten = crate::generate::graph_completeness::rewrite_dropped_mainmod_edges(
+        let prerewritten = crate::generate::graph_completeness::anchor_retained_mainmod_edges(
             scan.relationships,
             &dropped_main_module_purls,
             &m158_target_ref,

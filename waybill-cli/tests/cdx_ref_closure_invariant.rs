@@ -405,22 +405,68 @@ fn override_preserves_direct_edge_count() {
                 "ecosystem {label}: override identity not propagated to metadata.component.bom-ref"
             );
 
-            // Edge count from project root: invariant under override.
+            // Milestone 086's invariant is that the override path must not
+            // LOSE edges. It measured that as the root's direct edge count,
+            // which was the right proxy while a dropped main module's edges
+            // were re-anchored onto the root — the root inherited them, so
+            // the counts matched.
+            //
+            // Milestone 860 (#863) stops re-anchoring: the module is retained
+            // and keeps its own edges, and the root depends on the module. The
+            // root's direct edge count therefore drops to the number of
+            // modules, while the edges themselves are all still present, one
+            // level down. The proxy broke; the invariant did not.
+            //
+            // Measure the invariant directly instead — total edges must not
+            // shrink — and additionally require that everything reachable from
+            // the root before is still reachable from the root after, which is
+            // the property the proxy was standing in for.
             let no_override_root = no_override["metadata"]["component"]["bom-ref"]
                 .as_str()
                 .expect("metadata.component.bom-ref")
                 .to_string();
-            let no_override_edges = count_dep_edges_from(&no_override, &no_override_root);
-            let with_override_edges = count_dep_edges_from(&with_override, &override_root);
+            let total_edges = |bom: &serde_json::Value| -> usize {
+                bom["dependencies"].as_array().map(|deps| {
+                    deps.iter()
+                        .filter_map(|d| d["dependsOn"].as_array().map(|a| a.len()))
+                        .sum()
+                }).unwrap_or(0)
+            };
+            let (before, after) = (total_edges(&no_override), total_edges(&with_override));
+            assert!(
+                after >= before,
+                "ecosystem {label}: override path lost {} edges overall \
+                 (no-override: {before}, with-override: {after}). \
+                 milestone-086 invariant — edges must be preserved, not filtered.",
+                before.saturating_sub(after),
+            );
 
-            assert_eq!(
-                with_override_edges, no_override_edges,
-                "ecosystem {label}: override path lost {} edges \
-                 (no-override: {}, with-override: {}). \
-                 milestone-086 regression — relationships must be REWRITTEN, not filtered.",
-                no_override_edges - with_override_edges,
-                no_override_edges,
-                with_override_edges,
+            let reach = |bom: &serde_json::Value, root: &str| -> std::collections::BTreeSet<String> {
+                let mut seen = std::collections::BTreeSet::new();
+                let mut stack = vec![root.to_string()];
+                while let Some(cur) = stack.pop() {
+                    if let Some(deps) = bom["dependencies"].as_array() {
+                        for d in deps.iter().filter(|d| d["ref"].as_str() == Some(cur.as_str())) {
+                            for t in d["dependsOn"].as_array().into_iter().flatten() {
+                                if let Some(t) = t.as_str() {
+                                    if seen.insert(t.to_string()) {
+                                        stack.push(t.to_string());
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                seen
+            };
+            let lost: Vec<String> = reach(&no_override, &no_override_root)
+                .difference(&reach(&with_override, &override_root))
+                .cloned()
+                .collect();
+            assert!(
+                lost.is_empty(),
+                "ecosystem {label}: these became unreachable from the root under \
+                 override: {lost:?} — milestone-086 invariant, restated for m860.",
             );
         });
         match result {
@@ -448,16 +494,6 @@ fn override_preserves_direct_edge_count() {
     );
 }
 
-fn count_dep_edges_from(cdx: &serde_json::Value, source_ref: &str) -> usize {
-    cdx["dependencies"]
-        .as_array()
-        .unwrap_or(&vec![])
-        .iter()
-        .find(|d| d["ref"].as_str() == Some(source_ref))
-        .and_then(|d| d["dependsOn"].as_array())
-        .map(|a| a.len())
-        .unwrap_or(0)
-}
 
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::unwrap_used))]

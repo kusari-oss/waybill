@@ -2389,6 +2389,53 @@
       "version": "3.19.1"
     },
     {
+      "bom-ref": "pkg:pypi/flask-example-celery@1.0.0",
+      "cpe": "cpe:2.3:a:flask-example-celery:flask-example-celery:1.0.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "flask-example-celery",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:flask-example-celery:flask-example-celery:1.0.0:*:*:*:*:*:*:* | cpe:2.3:a:python-flask-example-celery:flask-example-celery:1.0.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"path+file:///home/runner/.cache/waybill/corpus/bb69cc12b4b06266/80be49be88b534d2a72ef6bf5ea4aabf89f3305b/repo/examples/celery\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"examples/celery\"]"
+        }
+      ],
+      "purl": "pkg:pypi/flask-example-celery@1.0.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.0.0"
+    },
+    {
       "bom-ref": "pkg:pypi/flask@2.3.2",
       "cpe": "cpe:2.3:a:flask:flask:2.3.2:*:*:*:*:*:*:*",
       "evidence": {
@@ -2440,6 +2487,114 @@
       },
       "type": "library",
       "version": "2.3.2"
+    },
+    {
+      "bom-ref": "pkg:pypi/flask@3.1.2",
+      "cpe": "cpe:2.3:a:flask:flask:3.1.2:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "flask",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:flask:flask:3.1.2:*:*:*:*:*:*:* | cpe:2.3:a:python-flask:flask:3.1.2:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:produces-binaries",
+          "value": "[\"flask\"]"
+        },
+        {
+          "name": "waybill:python-lockfile-format",
+          "value": "uv"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/flask@3.1.2",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "3.1.2"
+    },
+    {
+      "bom-ref": "pkg:pypi/flaskr@1.0.0",
+      "cpe": "cpe:2.3:a:flaskr:flaskr:1.0.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "flaskr",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:flaskr:flaskr:1.0.0:*:*:*:*:*:*:* | cpe:2.3:a:python-flaskr:flaskr:1.0.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"path+file:///home/runner/.cache/waybill/corpus/bb69cc12b4b06266/80be49be88b534d2a72ef6bf5ea4aabf89f3305b/repo/examples/tutorial\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"examples/tutorial\"]"
+        }
+      ],
+      "purl": "pkg:pypi/flaskr@1.0.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.0.0"
     },
     {
       "bom-ref": "pkg:pypi/gha-update@0.2.0",
@@ -3528,6 +3683,53 @@
       },
       "type": "library",
       "version": "3.1.6"
+    },
+    {
+      "bom-ref": "pkg:pypi/js-example@1.1.0",
+      "cpe": "cpe:2.3:a:js_example:js_example:1.1.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "js_example",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:js_example:js_example:1.1.0:*:*:*:*:*:*:* | cpe:2.3:a:python-js_example:js_example:1.1.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"path+file:///home/runner/.cache/waybill/corpus/bb69cc12b4b06266/80be49be88b534d2a72ef6bf5ea4aabf89f3305b/repo/examples/javascript\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"examples/javascript\"]"
+        }
+      ],
+      "purl": "pkg:pypi/js-example@1.1.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.1.0"
     },
     {
       "bom-ref": "pkg:pypi/kombu@5.2.4",
@@ -8951,7 +9153,10 @@
         "pkg:pypi/docutils@0.21.2",
         "pkg:pypi/exceptiongroup@1.3.0",
         "pkg:pypi/filelock@3.19.1",
+        "pkg:pypi/flask-example-celery@1.0.0",
         "pkg:pypi/flask@2.3.2",
+        "pkg:pypi/flask@3.1.2",
+        "pkg:pypi/flaskr@1.0.0",
         "pkg:pypi/gha-update@0.2.0",
         "pkg:pypi/greenlet@3.2.4",
         "pkg:pypi/h11@0.16.0",
@@ -8966,6 +9171,7 @@
         "pkg:pypi/itsdangerous@2.2.0",
         "pkg:pypi/jinja2@3.1.2",
         "pkg:pypi/jinja2@3.1.6",
+        "pkg:pypi/js-example@1.1.0",
         "pkg:pypi/kombu@5.2.4",
         "pkg:pypi/markupsafe@2.1.2",
         "pkg:pypi/markupsafe@3.0.2",
@@ -9057,7 +9263,10 @@
         "pkg:pypi/docutils@0.21.2",
         "pkg:pypi/exceptiongroup@1.3.0",
         "pkg:pypi/filelock@3.19.1",
+        "pkg:pypi/flask-example-celery@1.0.0",
         "pkg:pypi/flask@2.3.2",
+        "pkg:pypi/flask@3.1.2",
+        "pkg:pypi/flaskr@1.0.0",
         "pkg:pypi/gha-update@0.2.0",
         "pkg:pypi/greenlet@3.2.4",
         "pkg:pypi/h11@0.16.0",
@@ -9072,6 +9281,7 @@
         "pkg:pypi/itsdangerous@2.2.0",
         "pkg:pypi/jinja2@3.1.2",
         "pkg:pypi/jinja2@3.1.6",
+        "pkg:pypi/js-example@1.1.0",
         "pkg:pypi/kombu@5.2.4",
         "pkg:pypi/markupsafe@2.1.2",
         "pkg:pypi/markupsafe@3.0.2",
@@ -9286,8 +9496,54 @@
       "ref": "pkg:pypi/filelock@3.19.1"
     },
     {
+      "dependsOn": [
+        "pkg:pypi/celery@5.2.7",
+        "pkg:pypi/flask@2.3.2"
+      ],
+      "ref": "pkg:pypi/flask-example-celery@1.0.0"
+    },
+    {
       "dependsOn": [],
       "ref": "pkg:pypi/flask@2.3.2"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/asgiref@3.9.1",
+        "pkg:pypi/blinker@1.6.2",
+        "pkg:pypi/click@8.1.3",
+        "pkg:pypi/cryptography@45.0.6",
+        "pkg:pypi/gha-update@0.2.0",
+        "pkg:pypi/greenlet@3.2.4",
+        "pkg:pypi/importlib-metadata@8.7.0",
+        "pkg:pypi/itsdangerous@2.1.2",
+        "pkg:pypi/jinja2@3.1.2",
+        "pkg:pypi/markupsafe@2.1.2",
+        "pkg:pypi/mypy@1.17.1",
+        "pkg:pypi/pallets-sphinx-themes@2.3.0",
+        "pkg:pypi/pre-commit-uv@4.1.4",
+        "pkg:pypi/pre-commit@4.3.0",
+        "pkg:pypi/pyright@1.1.403",
+        "pkg:pypi/pytest@8.4.1",
+        "pkg:pypi/python-dotenv@1.1.1",
+        "pkg:pypi/ruff@0.12.9",
+        "pkg:pypi/sphinx-autobuild@2024.10.3",
+        "pkg:pypi/sphinx-tabs@3.4.7",
+        "pkg:pypi/sphinx@8.2.3",
+        "pkg:pypi/sphinxcontrib-log-cabinet@1.0.1",
+        "pkg:pypi/tox-uv@1.28.0",
+        "pkg:pypi/tox@4.28.4",
+        "pkg:pypi/types-contextvars@2.4.7.3",
+        "pkg:pypi/types-dataclasses@0.6.6",
+        "pkg:pypi/werkzeug@2.3.3"
+      ],
+      "ref": "pkg:pypi/flask@3.1.2"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/flask@2.3.2",
+        "pkg:pypi/pytest@8.4.1"
+      ],
+      "ref": "pkg:pypi/flaskr@1.0.0"
     },
     {
       "dependsOn": [
@@ -9359,6 +9615,13 @@
         "pkg:pypi/markupsafe@2.1.2"
       ],
       "ref": "pkg:pypi/jinja2@3.1.6"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/flask@2.3.2",
+        "pkg:pypi/pytest@8.4.1"
+      ],
+      "ref": "pkg:pypi/js-example@1.1.0"
     },
     {
       "dependsOn": [],
@@ -9743,35 +10006,10 @@
     },
     {
       "dependsOn": [
-        "pkg:pypi/asgiref@3.9.1",
-        "pkg:pypi/blinker@1.6.2",
-        "pkg:pypi/celery@5.2.7",
-        "pkg:pypi/click@8.1.3",
-        "pkg:pypi/cryptography@45.0.6",
-        "pkg:pypi/flask@2.3.2",
-        "pkg:pypi/gha-update@0.2.0",
-        "pkg:pypi/greenlet@3.2.4",
-        "pkg:pypi/importlib-metadata@8.7.0",
-        "pkg:pypi/itsdangerous@2.1.2",
-        "pkg:pypi/jinja2@3.1.2",
-        "pkg:pypi/markupsafe@2.1.2",
-        "pkg:pypi/mypy@1.17.1",
-        "pkg:pypi/pallets-sphinx-themes@2.3.0",
-        "pkg:pypi/pre-commit-uv@4.1.4",
-        "pkg:pypi/pre-commit@4.3.0",
-        "pkg:pypi/pyright@1.1.403",
-        "pkg:pypi/pytest@8.4.1",
-        "pkg:pypi/python-dotenv@1.1.1",
-        "pkg:pypi/ruff@0.12.9",
-        "pkg:pypi/sphinx-autobuild@2024.10.3",
-        "pkg:pypi/sphinx-tabs@3.4.7",
-        "pkg:pypi/sphinx@8.2.3",
-        "pkg:pypi/sphinxcontrib-log-cabinet@1.0.1",
-        "pkg:pypi/tox-uv@1.28.0",
-        "pkg:pypi/tox@4.28.4",
-        "pkg:pypi/types-contextvars@2.4.7.3",
-        "pkg:pypi/types-dataclasses@0.6.6",
-        "pkg:pypi/werkzeug@2.3.3"
+        "pkg:pypi/flask-example-celery@1.0.0",
+        "pkg:pypi/flask@3.1.2",
+        "pkg:pypi/flaskr@1.0.0",
+        "pkg:pypi/js-example@1.1.0"
       ],
       "ref": "python-flask@80be49b"
     }
@@ -9848,7 +10086,7 @@
       },
       {
         "name": "waybill:workspaces-detected",
-        "value": "[\".\",\"examples/celery\"]"
+        "value": "[\".\",\"examples/celery\",\"examples/javascript\",\"examples/tutorial\"]"
       }
     ],
     "supplier": {
