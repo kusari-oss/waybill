@@ -939,6 +939,645 @@
       "versionInfo": "0.3.1"
     },
     {
+      "SPDXID": "SPDXRef-Package-TCWKS5CJXP25XWSZ",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"Cargo.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"Cargo.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:demoted-from-main-module\",\"value\":\"true\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/globset@0.4.15",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:globset:globset:0.4.15:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://crates.io/crates/globset/0.4.15",
+          "referenceType": "website"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "globset",
+      "supplier": "Organization: crates.io",
+      "versionInfo": "0.4.15"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-5FJFICU7KAHCNZLV",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"Cargo.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"Cargo.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:demoted-from-main-module\",\"value\":\"true\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/grep-cli@0.1.11",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:grep-cli:grep-cli:0.1.11:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://crates.io/crates/grep-cli/0.1.11",
+          "referenceType": "website"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "grep-cli",
+      "supplier": "Organization: crates.io",
+      "versionInfo": "0.1.11"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-QQNTQ2GI3JI6NLWR",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"Cargo.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"Cargo.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:demoted-from-main-module\",\"value\":\"true\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/grep-matcher@0.1.7",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:grep-matcher:grep-matcher:0.1.7:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://crates.io/crates/grep-matcher/0.1.7",
+          "referenceType": "website"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "grep-matcher",
+      "supplier": "Organization: crates.io",
+      "versionInfo": "0.1.7"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-76UIUDZFOBBNPE6O",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"Cargo.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"Cargo.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:demoted-from-main-module\",\"value\":\"true\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/grep-pcre2@0.1.8",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:grep-pcre2:grep-pcre2:0.1.8:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://crates.io/crates/grep-pcre2/0.1.8",
+          "referenceType": "website"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "grep-pcre2",
+      "supplier": "Organization: crates.io",
+      "versionInfo": "0.1.8"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-IBXIATPXMEI2HRHE",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"Cargo.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"Cargo.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:demoted-from-main-module\",\"value\":\"true\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/grep-printer@0.2.2",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:grep-printer:grep-printer:0.2.2:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://crates.io/crates/grep-printer/0.2.2",
+          "referenceType": "website"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "grep-printer",
+      "supplier": "Organization: crates.io",
+      "versionInfo": "0.2.2"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-2NNC4U6DHTK24JS6",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"Cargo.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"Cargo.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:demoted-from-main-module\",\"value\":\"true\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/grep-regex@0.1.13",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:grep-regex:grep-regex:0.1.13:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://crates.io/crates/grep-regex/0.1.13",
+          "referenceType": "website"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "grep-regex",
+      "supplier": "Organization: crates.io",
+      "versionInfo": "0.1.13"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-DWOOZ2AJSVEARYTL",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"Cargo.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"Cargo.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:demoted-from-main-module\",\"value\":\"true\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/grep-searcher@0.1.14",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:grep-searcher:grep-searcher:0.1.14:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://crates.io/crates/grep-searcher/0.1.14",
+          "referenceType": "website"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "grep-searcher",
+      "supplier": "Organization: crates.io",
+      "versionInfo": "0.1.14"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-F4NS6T7DXDCGCVE6",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"Cargo.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"Cargo.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:demoted-from-main-module\",\"value\":\"true\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/grep@0.3.2",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:grep:grep:0.3.2:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://crates.io/crates/grep/0.3.2",
+          "referenceType": "website"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "grep",
+      "supplier": "Organization: crates.io",
+      "versionInfo": "0.3.2"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-TDPMFO4SKDRHLDBJ",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"Cargo.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"Cargo.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:demoted-from-main-module\",\"value\":\"true\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/ignore@0.4.23",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:ignore:ignore:0.4.23:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://crates.io/crates/ignore/0.4.23",
+          "referenceType": "website"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "ignore",
+      "supplier": "Organization: crates.io",
+      "versionInfo": "0.4.23"
+    },
+    {
       "SPDXID": "SPDXRef-Package-QKIYU5NRPBJR342B",
       "annotations": [
         {
@@ -2139,6 +2778,83 @@
       "name": "regex",
       "supplier": "Organization: crates.io",
       "versionInfo": "1.10.6"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-IPRKQ3QNBZL2OZAZ",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"Cargo.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"Cargo.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:demoted-from-main-module\",\"value\":\"true\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:produces-binaries\",\"value\":[\"rg\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/ripgrep@14.1.1",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:ripgrep:ripgrep:14.1.1:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://crates.io/crates/ripgrep/14.1.1",
+          "referenceType": "website"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "ripgrep",
+      "supplier": "Organization: crates.io",
+      "versionInfo": "14.1.1"
     },
     {
       "SPDXID": "SPDXRef-Package-RQIZUXXS2DEX6BLF",
@@ -4066,297 +4782,297 @@
     {
       "relatedSpdxElement": "SPDXRef-Package-E3ME43VAQTYMJH2U",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-TCWKS5CJXP25XWSZ"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-EOITD2XTAURQBEKX",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-TCWKS5CJXP25XWSZ"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-LHBAIJVPRJDAEJUM",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-TCWKS5CJXP25XWSZ"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX",
+      "relatedSpdxElement": "SPDXRef-Package-TCWKS5CJXP25XWSZ",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-6TYCISEIIDD2YBCC"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-OML5SNXIE4TZECKA",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-TCWKS5CJXP25XWSZ"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-L6R32UC4CXQK5Z6T",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-TCWKS5CJXP25XWSZ"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX",
+      "relatedSpdxElement": "SPDXRef-Package-TCWKS5CJXP25XWSZ",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-L4OWNLE63ENHN4QH"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX",
+      "relatedSpdxElement": "SPDXRef-Package-TCWKS5CJXP25XWSZ",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-XSAHB22QVFZL6CFF"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX",
+      "relatedSpdxElement": "SPDXRef-Package-5FJFICU7KAHCNZLV",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-F4NS6T7DXDCGCVE6"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX",
+      "relatedSpdxElement": "SPDXRef-Package-QQNTQ2GI3JI6NLWR",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-F4NS6T7DXDCGCVE6"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX",
+      "relatedSpdxElement": "SPDXRef-Package-76UIUDZFOBBNPE6O",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-F4NS6T7DXDCGCVE6"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX",
+      "relatedSpdxElement": "SPDXRef-Package-IBXIATPXMEI2HRHE",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-F4NS6T7DXDCGCVE6"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX",
+      "relatedSpdxElement": "SPDXRef-Package-2NNC4U6DHTK24JS6",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-F4NS6T7DXDCGCVE6"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX",
+      "relatedSpdxElement": "SPDXRef-Package-DWOOZ2AJSVEARYTL",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-F4NS6T7DXDCGCVE6"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-AJCLD2HWAHLP4FFV",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-F4NS6T7DXDCGCVE6"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-2LBZW73IHK7QGOIL",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-F4NS6T7DXDCGCVE6"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-EOITD2XTAURQBEKX",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-5FJFICU7KAHCNZLV"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX",
+      "relatedSpdxElement": "SPDXRef-Package-TCWKS5CJXP25XWSZ",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-5FJFICU7KAHCNZLV"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-IMBJVXLITO4QAWBC",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-5FJFICU7KAHCNZLV"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX",
+      "relatedSpdxElement": "SPDXRef-Package-5FJFICU7KAHCNZLV",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-6TYCISEIIDD2YBCC"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-AJCLD2HWAHLP4FFV",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-5FJFICU7KAHCNZLV"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-KHJPYQIKZZ2RYO22",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-5FJFICU7KAHCNZLV"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-67342I3YTUXNQVKM",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-QQNTQ2GI3JI6NLWR"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-2UHY2BR6P4KOJCNW",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-QQNTQ2GI3JI6NLWR"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX",
+      "relatedSpdxElement": "SPDXRef-Package-QQNTQ2GI3JI6NLWR",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-76UIUDZFOBBNPE6O"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX",
+      "relatedSpdxElement": "SPDXRef-Package-76UIUDZFOBBNPE6O",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-6TYCISEIIDD2YBCC"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-FPHEXXQCIUZH5SO6",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-76UIUDZFOBBNPE6O"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-EOITD2XTAURQBEKX",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-IBXIATPXMEI2HRHE"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX",
+      "relatedSpdxElement": "SPDXRef-Package-QQNTQ2GI3JI6NLWR",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-IBXIATPXMEI2HRHE"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX",
+      "relatedSpdxElement": "SPDXRef-Package-2NNC4U6DHTK24JS6",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-IBXIATPXMEI2HRHE"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX",
+      "relatedSpdxElement": "SPDXRef-Package-DWOOZ2AJSVEARYTL",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-IBXIATPXMEI2HRHE"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX",
+      "relatedSpdxElement": "SPDXRef-Package-IBXIATPXMEI2HRHE",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-6TYCISEIIDD2YBCC"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX",
+      "relatedSpdxElement": "SPDXRef-Package-IBXIATPXMEI2HRHE",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-L4OWNLE63ENHN4QH"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX",
+      "relatedSpdxElement": "SPDXRef-Package-IBXIATPXMEI2HRHE",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-XSAHB22QVFZL6CFF"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-AJCLD2HWAHLP4FFV",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-IBXIATPXMEI2HRHE"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-EOITD2XTAURQBEKX",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-2NNC4U6DHTK24JS6"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX",
+      "relatedSpdxElement": "SPDXRef-Package-QQNTQ2GI3JI6NLWR",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-2NNC4U6DHTK24JS6"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX",
+      "relatedSpdxElement": "SPDXRef-Package-2NNC4U6DHTK24JS6",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-6TYCISEIIDD2YBCC"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-OML5SNXIE4TZECKA",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-2NNC4U6DHTK24JS6"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-L6R32UC4CXQK5Z6T",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-2NNC4U6DHTK24JS6"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-EOITD2XTAURQBEKX",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-DWOOZ2AJSVEARYTL"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-DWWVEIMCVKFPW3LD",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-DWOOZ2AJSVEARYTL"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-S2JO5IPVRHR52SIQ",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-DWOOZ2AJSVEARYTL"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX",
+      "relatedSpdxElement": "SPDXRef-Package-QQNTQ2GI3JI6NLWR",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-DWOOZ2AJSVEARYTL"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX",
+      "relatedSpdxElement": "SPDXRef-Package-2NNC4U6DHTK24JS6",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-DWOOZ2AJSVEARYTL"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX",
+      "relatedSpdxElement": "SPDXRef-Package-DWOOZ2AJSVEARYTL",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-6TYCISEIIDD2YBCC"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-67342I3YTUXNQVKM",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-DWOOZ2AJSVEARYTL"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-GI2OBSJEQ6S35QL6",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-DWOOZ2AJSVEARYTL"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-2UHY2BR6P4KOJCNW",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-DWOOZ2AJSVEARYTL"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-EOITD2XTAURQBEKX",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-TDPMFO4SKDRHLDBJ"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-765RIM76IF6UTSPD",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-TDPMFO4SKDRHLDBJ"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-THCITVINIDDXO25E",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-TDPMFO4SKDRHLDBJ"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX",
+      "relatedSpdxElement": "SPDXRef-Package-TCWKS5CJXP25XWSZ",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-TDPMFO4SKDRHLDBJ"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX",
+      "relatedSpdxElement": "SPDXRef-Package-TDPMFO4SKDRHLDBJ",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-6TYCISEIIDD2YBCC"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-67342I3YTUXNQVKM",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-TDPMFO4SKDRHLDBJ"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-OML5SNXIE4TZECKA",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-TDPMFO4SKDRHLDBJ"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-LHEY5LUEAKBRTM2C",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-TDPMFO4SKDRHLDBJ"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-2LBZW73IHK7QGOIL",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-TDPMFO4SKDRHLDBJ"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-KHJPYQIKZZ2RYO22",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-TDPMFO4SKDRHLDBJ"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-GA6XMFKCXK2UNDNF",
@@ -4466,67 +5182,67 @@
     {
       "relatedSpdxElement": "SPDXRef-Package-TX3CZCGWAQLNJ7QN",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-IPRKQ3QNBZL2OZAZ"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-EOITD2XTAURQBEKX",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-IPRKQ3QNBZL2OZAZ"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX",
+      "relatedSpdxElement": "SPDXRef-Package-F4NS6T7DXDCGCVE6",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-IPRKQ3QNBZL2OZAZ"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX",
+      "relatedSpdxElement": "SPDXRef-Package-TDPMFO4SKDRHLDBJ",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-IPRKQ3QNBZL2OZAZ"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-5SIGU76NLBWKQCQJ",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-IPRKQ3QNBZL2OZAZ"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-CMXS7K4FMO6NX7KQ",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-IPRKQ3QNBZL2OZAZ"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX",
+      "relatedSpdxElement": "SPDXRef-Package-IPRKQ3QNBZL2OZAZ",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-6TYCISEIIDD2YBCC"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX",
+      "relatedSpdxElement": "SPDXRef-Package-IPRKQ3QNBZL2OZAZ",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-L4OWNLE63ENHN4QH"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-UPVSAGVIXT4YGWYQ",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-IPRKQ3QNBZL2OZAZ"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX",
+      "relatedSpdxElement": "SPDXRef-Package-IPRKQ3QNBZL2OZAZ",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-XSAHB22QVFZL6CFF"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-AJCLD2HWAHLP4FFV",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-IPRKQ3QNBZL2OZAZ"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-LUFE6G2P4YXH2WDJ",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-IPRKQ3QNBZL2OZAZ"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-2LBZW73IHK7QGOIL",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+      "spdxElementId": "SPDXRef-Package-IPRKQ3QNBZL2OZAZ"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-KHJPYQIKZZ2RYO22",
@@ -4652,6 +5368,56 @@
       "relatedSpdxElement": "SPDXRef-Package-B34PSASMMME7F43R",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-XXMZZ6ZEQXVQEWLB"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-TCWKS5CJXP25XWSZ",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-5FJFICU7KAHCNZLV",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-QQNTQ2GI3JI6NLWR",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-76UIUDZFOBBNPE6O",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-IBXIATPXMEI2HRHE",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-2NNC4U6DHTK24JS6",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-DWOOZ2AJSVEARYTL",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-F4NS6T7DXDCGCVE6",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-TDPMFO4SKDRHLDBJ",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-IPRKQ3QNBZL2OZAZ",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-DDQTGNVLTRCDF2XX"
     }
   ],
   "spdxVersion": "SPDX-2.3"

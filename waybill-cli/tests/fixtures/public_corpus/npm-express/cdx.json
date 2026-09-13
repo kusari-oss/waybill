@@ -904,6 +904,49 @@
       "type": "library"
     },
     {
+      "bom-ref": "pkg:npm/express@5.1.0",
+      "cpe": "cpe:2.3:a:express:express:5.1.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "express",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"path+file:///home/runner/.cache/waybill/corpus/f12f3d8cb55abc01/e99649895f714c9dc9b3538e2cb0f58954f0ecfa/repo\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/express@5.1.0",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library",
+      "version": "5.1.0"
+    },
+    {
       "bom-ref": "pkg:npm/finalhandler",
       "evidence": {
         "identity": [
@@ -2336,6 +2379,7 @@
         "pkg:npm/eslint",
         "pkg:npm/etag",
         "pkg:npm/express-session",
+        "pkg:npm/express@5.1.0",
         "pkg:npm/finalhandler",
         "pkg:npm/fresh",
         "pkg:npm/hbs",
@@ -2381,6 +2425,7 @@
         "pkg:npm/eslint",
         "pkg:npm/etag",
         "pkg:npm/express-session",
+        "pkg:npm/express@5.1.0",
         "pkg:npm/finalhandler",
         "pkg:npm/fresh",
         "pkg:npm/hbs",
@@ -2425,49 +2470,7 @@
   "dependencies": [
     {
       "dependsOn": [
-        "pkg:npm/accepts",
-        "pkg:npm/after",
-        "pkg:npm/body-parser",
-        "pkg:npm/connect-redis",
-        "pkg:npm/content-disposition",
-        "pkg:npm/content-type",
-        "pkg:npm/cookie",
-        "pkg:npm/cookie-parser",
-        "pkg:npm/cookie-session",
-        "pkg:npm/cookie-signature",
-        "pkg:npm/debug",
-        "pkg:npm/ejs",
-        "pkg:npm/encodeurl",
-        "pkg:npm/escape-html",
-        "pkg:npm/eslint",
-        "pkg:npm/etag",
-        "pkg:npm/express-session",
-        "pkg:npm/finalhandler",
-        "pkg:npm/fresh",
-        "pkg:npm/hbs",
-        "pkg:npm/http-errors",
-        "pkg:npm/marked",
-        "pkg:npm/merge-descriptors",
-        "pkg:npm/method-override",
-        "pkg:npm/mime-types",
-        "pkg:npm/mocha",
-        "pkg:npm/morgan",
-        "pkg:npm/nyc",
-        "pkg:npm/on-finished",
-        "pkg:npm/once",
-        "pkg:npm/parseurl",
-        "pkg:npm/pbkdf2-password",
-        "pkg:npm/proxy-addr",
-        "pkg:npm/qs",
-        "pkg:npm/range-parser",
-        "pkg:npm/router",
-        "pkg:npm/send",
-        "pkg:npm/serve-static",
-        "pkg:npm/statuses",
-        "pkg:npm/supertest",
-        "pkg:npm/type-is",
-        "pkg:npm/vary",
-        "pkg:npm/vhost"
+        "pkg:npm/express@5.1.0"
       ],
       "ref": "npm-express@e996498"
     },
@@ -2542,6 +2545,54 @@
     {
       "dependsOn": [],
       "ref": "pkg:npm/express-session"
+    },
+    {
+      "dependsOn": [
+        "pkg:npm/accepts",
+        "pkg:npm/after",
+        "pkg:npm/body-parser",
+        "pkg:npm/connect-redis",
+        "pkg:npm/content-disposition",
+        "pkg:npm/content-type",
+        "pkg:npm/cookie",
+        "pkg:npm/cookie-parser",
+        "pkg:npm/cookie-session",
+        "pkg:npm/cookie-signature",
+        "pkg:npm/debug",
+        "pkg:npm/ejs",
+        "pkg:npm/encodeurl",
+        "pkg:npm/escape-html",
+        "pkg:npm/eslint",
+        "pkg:npm/etag",
+        "pkg:npm/express-session",
+        "pkg:npm/finalhandler",
+        "pkg:npm/fresh",
+        "pkg:npm/hbs",
+        "pkg:npm/http-errors",
+        "pkg:npm/marked",
+        "pkg:npm/merge-descriptors",
+        "pkg:npm/method-override",
+        "pkg:npm/mime-types",
+        "pkg:npm/mocha",
+        "pkg:npm/morgan",
+        "pkg:npm/nyc",
+        "pkg:npm/on-finished",
+        "pkg:npm/once",
+        "pkg:npm/parseurl",
+        "pkg:npm/pbkdf2-password",
+        "pkg:npm/proxy-addr",
+        "pkg:npm/qs",
+        "pkg:npm/range-parser",
+        "pkg:npm/router",
+        "pkg:npm/send",
+        "pkg:npm/serve-static",
+        "pkg:npm/statuses",
+        "pkg:npm/supertest",
+        "pkg:npm/type-is",
+        "pkg:npm/vary",
+        "pkg:npm/vhost"
+      ],
+      "ref": "pkg:npm/express@5.1.0"
     },
     {
       "dependsOn": [],
@@ -2679,6 +2730,9 @@
     "lifecycles": [
       {
         "phase": "design"
+      },
+      {
+        "phase": "pre-build"
       }
     ],
     "properties": [

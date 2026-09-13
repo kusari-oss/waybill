@@ -402,6 +402,83 @@
       "versionInfo": "v2.1.0"
     },
     {
+      "SPDXID": "SPDXRef-Package-W22BABVIRD4LH6CG",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:detected-go\",\"value\":\"true\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"go.mod\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:github.com\\\\/spf13\\\\/cobra:github.com\\\\/spf13\\\\/cobra:v1.9.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:github.com\\\\/spf13:github.com\\\\/spf13\\\\/cobra:v1.9.1:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"go.mod\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:demoted-from-main-module\",\"value\":\"true\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:golang/github.com/spf13/cobra@v1.9.1",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:github.com\\/spf13\\/cobra:github.com\\/spf13\\/cobra:v1.9.1:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://github.com/spf13/cobra",
+          "referenceType": "vcs"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "github.com/spf13/cobra",
+      "supplier": "Organization: github.com/spf13",
+      "versionInfo": "v1.9.1"
+    },
+    {
       "SPDXID": "SPDXRef-Package-7SX5NKBWT75DIDL7",
       "annotations": [
         {
@@ -739,35 +816,40 @@
     {
       "relatedSpdxElement": "SPDXRef-Package-TJPG6XJRAUO3XRD5",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-NMR4NKT77ESVEQSD"
+      "spdxElementId": "SPDXRef-Package-W22BABVIRD4LH6CG"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-DJ3ZIKWTNBYO26BT",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-NMR4NKT77ESVEQSD"
+      "spdxElementId": "SPDXRef-Package-W22BABVIRD4LH6CG"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-7SX5NKBWT75DIDL7",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-NMR4NKT77ESVEQSD"
+      "spdxElementId": "SPDXRef-Package-W22BABVIRD4LH6CG"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-A3EJRWNXRJBCN4AR",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-NMR4NKT77ESVEQSD"
+      "spdxElementId": "SPDXRef-Package-W22BABVIRD4LH6CG"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-HM5FXARQYFCATZ3B",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-NMR4NKT77ESVEQSD"
+      "spdxElementId": "SPDXRef-Package-W22BABVIRD4LH6CG"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-OPPLTPJ24FIGRUY2",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-NMR4NKT77ESVEQSD"
+      "spdxElementId": "SPDXRef-Package-W22BABVIRD4LH6CG"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-FEEV6I7DXEM55JJ3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-W22BABVIRD4LH6CG"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-W22BABVIRD4LH6CG",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-NMR4NKT77ESVEQSD"
     }

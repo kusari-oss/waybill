@@ -10581,6 +10581,60 @@
       "versionInfo": "4.3.1"
     },
     {
+      "SPDXID": "SPDXRef-Package-M3EV7NRFRCTSIXH7",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"path+file:///home/runner/.cache/waybill/corpus/4e02caff677ff9c0/da76d5dbb407d82c136cfe8f18dc06f3c8a440e5/repo\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:demoted-from-main-module\",\"value\":\"true\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:npm/demo@0.0.1",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:demo:demo:0.0.1:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "demo",
+      "supplier": "Organization: npmjs.com",
+      "versionInfo": "0.0.1"
+    },
+    {
       "SPDXID": "SPDXRef-Package-WEADV2DKPHDSGBLA",
       "annotations": [
         {
@@ -25440,14 +25494,19 @@
       "spdxElementId": "SPDXRef-Package-J5XMVKF6YABLSXFK"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-MJAA6EWEW62HHPNO",
+      "relatedSpdxElement": "SPDXRef-Package-M3EV7NRFRCTSIXH7",
       "relationshipType": "DEV_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-CQGXGU3AUYIHG7CT"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-MJAA6EWEW62HHPNO",
+      "relatedSpdxElement": "SPDXRef-Package-M3EV7NRFRCTSIXH7",
       "relationshipType": "DEV_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-YGZTYDKW3L62F73Q"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-M3EV7NRFRCTSIXH7",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-MJAA6EWEW62HHPNO"
     }
   ],
   "spdxVersion": "SPDX-2.3"

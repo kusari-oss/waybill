@@ -35,7 +35,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-0.7.0",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspaces-detected\",\"value\":\"[\\\".\\\",\\\"examples/celery\\\"]\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspaces-detected\",\"value\":\"[\\\".\\\",\\\"examples/celery\\\",\\\"examples/javascript\\\",\\\"examples/tutorial\\\"]\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -2869,6 +2869,66 @@
       "versionInfo": "3.19.1"
     },
     {
+      "SPDXID": "SPDXRef-Package-4NAE2LK4YBLHHTRB",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"path+file:///home/runner/.cache/waybill/corpus/bb69cc12b4b06266/80be49be88b534d2a72ef6bf5ea4aabf89f3305b/repo/examples/celery\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:flask-example-celery:flask-example-celery:1.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-flask-example-celery:flask-example-celery:1.0.0:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:demoted-from-main-module\",\"value\":\"true\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"examples/celery\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/flask-example-celery@1.0.0",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:flask-example-celery:flask-example-celery:1.0.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "flask-example-celery",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "1.0.0"
+    },
+    {
       "SPDXID": "SPDXRef-Package-E4V5BJ6OLPTANZIS",
       "annotations": [
         {
@@ -2933,6 +2993,144 @@
       "name": "flask",
       "supplier": "Organization: PyPI",
       "versionInfo": "2.3.2"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:flask:flask:3.1.2:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-flask:flask:3.1.2:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:demoted-from-main-module\",\"value\":\"true\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:produces-binaries\",\"value\":[\"flask\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:python-lockfile-format\",\"value\":\"uv\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/flask@3.1.2",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:flask:flask:3.1.2:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "flask",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "3.1.2"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-TUBIOX2YDGDATG5V",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"path+file:///home/runner/.cache/waybill/corpus/bb69cc12b4b06266/80be49be88b534d2a72ef6bf5ea4aabf89f3305b/repo/examples/tutorial\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:flaskr:flaskr:1.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-flaskr:flaskr:1.0.0:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:demoted-from-main-module\",\"value\":\"true\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"examples/tutorial\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/flaskr@1.0.0",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:flaskr:flaskr:1.0.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "flaskr",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "1.0.0"
     },
     {
       "SPDXID": "SPDXRef-Package-3HJ6UX7E3PWLKFXK",
@@ -4209,6 +4407,66 @@
       "name": "jinja2",
       "supplier": "Organization: PyPI",
       "versionInfo": "3.1.6"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-B5EHXR7Q6P6G4JFC",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"path+file:///home/runner/.cache/waybill/corpus/bb69cc12b4b06266/80be49be88b534d2a72ef6bf5ea4aabf89f3305b/repo/examples/javascript\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:js_example:js_example:1.1.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-js_example:js_example:1.1.0:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:demoted-from-main-module\",\"value\":\"true\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"examples/javascript\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/js-example@1.1.0",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:js_example:js_example:1.1.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "js_example",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "1.1.0"
     },
     {
       "SPDXID": "SPDXRef-Package-2FIM5TUAK376LSU6",
@@ -10493,140 +10751,140 @@
     {
       "relatedSpdxElement": "SPDXRef-Package-KPEQT3M2DBPJZ6GH",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-AA662EJCXX5RLRZ6"
+      "spdxElementId": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-VJ4B64HRTZD3ENXV",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-AA662EJCXX5RLRZ6"
+      "spdxElementId": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-VJ4B64HRTZD3ENXV",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-AA662EJCXX5RLRZ6"
+      "spdxElementId": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-YG5WXBXA5YHDLCHN",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-AA662EJCXX5RLRZ6"
+      "spdxElementId": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-CEGN46QWVZTT3J5T",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-AA662EJCXX5RLRZ6"
+      "spdxElementId": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-E7GW44NAPCTLSLSL",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-AA662EJCXX5RLRZ6"
+      "spdxElementId": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-XA3VRQJORFO3XKSR",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-AA662EJCXX5RLRZ6"
+      "spdxElementId": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-MYWIAUZWQB5X3VI5",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-AA662EJCXX5RLRZ6"
+      "spdxElementId": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-AA662EJCXX5RLRZ6",
+      "relatedSpdxElement": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-NTQOZ7VZTQI4DH24"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-AA662EJCXX5RLRZ6",
+      "relatedSpdxElement": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-2Q7O4CPCBVQMV2BJ"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-AA662EJCXX5RLRZ6",
+      "relatedSpdxElement": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-SGRNALK5IJQHGE5P"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-AA662EJCXX5RLRZ6",
+      "relatedSpdxElement": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-FK3CORYC2337QRFT"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-AA662EJCXX5RLRZ6",
+      "relatedSpdxElement": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-4PHT7OHK2K5SWN4O"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-AA662EJCXX5RLRZ6",
+      "relatedSpdxElement": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-QU6IFIUX53U5ZKGT"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-AA662EJCXX5RLRZ6",
+      "relatedSpdxElement": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-ILWSOUQDRS33SBY7"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-AA662EJCXX5RLRZ6",
+      "relatedSpdxElement": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-VUL4WSA5R3L2BFZZ"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-AA662EJCXX5RLRZ6",
+      "relatedSpdxElement": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-3HJ6UX7E3PWLKFXK"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-AA662EJCXX5RLRZ6",
+      "relatedSpdxElement": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-EZSK4BIHUZTA7OFO"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-AA662EJCXX5RLRZ6",
+      "relatedSpdxElement": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-HJYRSEOK3MOQ7QQK"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-AA662EJCXX5RLRZ6",
+      "relatedSpdxElement": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-JGFRNCEBLF3BNVVK"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-AA662EJCXX5RLRZ6",
+      "relatedSpdxElement": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-2V3CDDMEZQEDV5QK"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-AA662EJCXX5RLRZ6",
+      "relatedSpdxElement": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-RQQY5T4254RIL2OG"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-AA662EJCXX5RLRZ6",
+      "relatedSpdxElement": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-3PQJMONW2YWT5NPP"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-AA662EJCXX5RLRZ6",
+      "relatedSpdxElement": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-IQS7F7HXUQG5YV5O"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-AA662EJCXX5RLRZ6",
+      "relatedSpdxElement": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-WYD5WDXU3SFSR64A"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-AA662EJCXX5RLRZ6",
+      "relatedSpdxElement": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-UTSNVV6YJ7S3DDK2"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-AA662EJCXX5RLRZ6",
+      "relatedSpdxElement": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-LEKQYBX2WWSIKQR6"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-AA662EJCXX5RLRZ6",
+      "relatedSpdxElement": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-EGW2TY2DR73RY2HC"
     },
@@ -11333,32 +11591,52 @@
     {
       "relatedSpdxElement": "SPDXRef-Package-E4V5BJ6OLPTANZIS",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-AA662EJCXX5RLRZ6"
+      "spdxElementId": "SPDXRef-Package-4NAE2LK4YBLHHTRB"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-NVRGFWHNTTHKJZDV",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-AA662EJCXX5RLRZ6"
+      "spdxElementId": "SPDXRef-Package-4NAE2LK4YBLHHTRB"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-E4V5BJ6OLPTANZIS",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-AA662EJCXX5RLRZ6"
+      "spdxElementId": "SPDXRef-Package-B5EHXR7Q6P6G4JFC"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-AA662EJCXX5RLRZ6",
+      "relatedSpdxElement": "SPDXRef-Package-B5EHXR7Q6P6G4JFC",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-RQQY5T4254RIL2OG"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-E4V5BJ6OLPTANZIS",
       "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-TUBIOX2YDGDATG5V"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-TUBIOX2YDGDATG5V",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-RQQY5T4254RIL2OG"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-4NAE2LK4YBLHHTRB",
+      "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-AA662EJCXX5RLRZ6"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-AA662EJCXX5RLRZ6",
-      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
-      "spdxElementId": "SPDXRef-Package-RQQY5T4254RIL2OG"
+      "relatedSpdxElement": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-AA662EJCXX5RLRZ6"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-TUBIOX2YDGDATG5V",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-AA662EJCXX5RLRZ6"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-B5EHXR7Q6P6G4JFC",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-AA662EJCXX5RLRZ6"
     }
   ],
   "spdxVersion": "SPDX-2.3"

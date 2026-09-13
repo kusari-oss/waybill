@@ -734,6 +734,537 @@
       "version": "0.3.1"
     },
     {
+      "bom-ref": "pkg:cargo/globset@0.4.15",
+      "cpe": "cpe:2.3:a:globset:globset:0.4.15:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/globset/0.4.15"
+        }
+      ],
+      "name": "globset",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/globset@0.4.15",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "0.4.15"
+    },
+    {
+      "bom-ref": "pkg:cargo/grep-cli@0.1.11",
+      "cpe": "cpe:2.3:a:grep-cli:grep-cli:0.1.11:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/grep-cli/0.1.11"
+        }
+      ],
+      "name": "grep-cli",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/grep-cli@0.1.11",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "0.1.11"
+    },
+    {
+      "bom-ref": "pkg:cargo/grep-matcher@0.1.7",
+      "cpe": "cpe:2.3:a:grep-matcher:grep-matcher:0.1.7:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/grep-matcher/0.1.7"
+        }
+      ],
+      "name": "grep-matcher",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/grep-matcher@0.1.7",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "0.1.7"
+    },
+    {
+      "bom-ref": "pkg:cargo/grep-pcre2@0.1.8",
+      "cpe": "cpe:2.3:a:grep-pcre2:grep-pcre2:0.1.8:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/grep-pcre2/0.1.8"
+        }
+      ],
+      "name": "grep-pcre2",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/grep-pcre2@0.1.8",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "0.1.8"
+    },
+    {
+      "bom-ref": "pkg:cargo/grep-printer@0.2.2",
+      "cpe": "cpe:2.3:a:grep-printer:grep-printer:0.2.2:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/grep-printer/0.2.2"
+        }
+      ],
+      "name": "grep-printer",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/grep-printer@0.2.2",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "0.2.2"
+    },
+    {
+      "bom-ref": "pkg:cargo/grep-regex@0.1.13",
+      "cpe": "cpe:2.3:a:grep-regex:grep-regex:0.1.13:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/grep-regex/0.1.13"
+        }
+      ],
+      "name": "grep-regex",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/grep-regex@0.1.13",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "0.1.13"
+    },
+    {
+      "bom-ref": "pkg:cargo/grep-searcher@0.1.14",
+      "cpe": "cpe:2.3:a:grep-searcher:grep-searcher:0.1.14:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/grep-searcher/0.1.14"
+        }
+      ],
+      "name": "grep-searcher",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/grep-searcher@0.1.14",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "0.1.14"
+    },
+    {
+      "bom-ref": "pkg:cargo/grep@0.3.2",
+      "cpe": "cpe:2.3:a:grep:grep:0.3.2:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/grep/0.3.2"
+        }
+      ],
+      "name": "grep",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/grep@0.3.2",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "0.3.2"
+    },
+    {
+      "bom-ref": "pkg:cargo/ignore@0.4.23",
+      "cpe": "cpe:2.3:a:ignore:ignore:0.4.23:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/ignore/0.4.23"
+        }
+      ],
+      "name": "ignore",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/ignore@0.4.23",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "0.4.23"
+    },
+    {
       "bom-ref": "pkg:cargo/itoa@1.0.11",
       "cpe": "cpe:2.3:a:itoa:itoa:1.0.11:*:*:*:*:*:*:*",
       "evidence": {
@@ -1778,6 +2309,69 @@
       },
       "type": "library",
       "version": "1.10.6"
+    },
+    {
+      "bom-ref": "pkg:cargo/ripgrep@14.1.1",
+      "cpe": "cpe:2.3:a:ripgrep:ripgrep:14.1.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/ripgrep/14.1.1"
+        }
+      ],
+      "name": "ripgrep",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:produces-binaries",
+          "value": "[\"rg\"]"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/ripgrep@14.1.1",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "14.1.1"
     },
     {
       "bom-ref": "pkg:cargo/ryu@1.0.18",
@@ -3436,6 +4030,15 @@
         "pkg:cargo/encoding_rs@0.8.34",
         "pkg:cargo/encoding_rs_io@0.1.7",
         "pkg:cargo/glob@0.3.1",
+        "pkg:cargo/globset@0.4.15",
+        "pkg:cargo/grep-cli@0.1.11",
+        "pkg:cargo/grep-matcher@0.1.7",
+        "pkg:cargo/grep-pcre2@0.1.8",
+        "pkg:cargo/grep-printer@0.2.2",
+        "pkg:cargo/grep-regex@0.1.13",
+        "pkg:cargo/grep-searcher@0.1.14",
+        "pkg:cargo/grep@0.3.2",
+        "pkg:cargo/ignore@0.4.23",
         "pkg:cargo/itoa@1.0.11",
         "pkg:cargo/jemalloc-sys@0.5.4%2B5.3.0-patched",
         "pkg:cargo/jemallocator@0.5.4",
@@ -3453,6 +4056,7 @@
         "pkg:cargo/regex-automata@0.4.7",
         "pkg:cargo/regex-syntax@0.8.4",
         "pkg:cargo/regex@1.10.6",
+        "pkg:cargo/ripgrep@14.1.1",
         "pkg:cargo/ryu@1.0.18",
         "pkg:cargo/same-file@1.0.6",
         "pkg:cargo/serde@1.0.210",
@@ -3489,6 +4093,15 @@
         "pkg:cargo/encoding_rs@0.8.34",
         "pkg:cargo/encoding_rs_io@0.1.7",
         "pkg:cargo/glob@0.3.1",
+        "pkg:cargo/globset@0.4.15",
+        "pkg:cargo/grep-cli@0.1.11",
+        "pkg:cargo/grep-matcher@0.1.7",
+        "pkg:cargo/grep-pcre2@0.1.8",
+        "pkg:cargo/grep-printer@0.2.2",
+        "pkg:cargo/grep-regex@0.1.13",
+        "pkg:cargo/grep-searcher@0.1.14",
+        "pkg:cargo/grep@0.3.2",
+        "pkg:cargo/ignore@0.4.23",
         "pkg:cargo/itoa@1.0.11",
         "pkg:cargo/jemalloc-sys@0.5.4%2B5.3.0-patched",
         "pkg:cargo/jemallocator@0.5.4",
@@ -3506,6 +4119,7 @@
         "pkg:cargo/regex-automata@0.4.7",
         "pkg:cargo/regex-syntax@0.8.4",
         "pkg:cargo/regex@1.10.6",
+        "pkg:cargo/ripgrep@14.1.1",
         "pkg:cargo/ryu@1.0.18",
         "pkg:cargo/same-file@1.0.6",
         "pkg:cargo/serde@1.0.210",
@@ -3614,6 +4228,110 @@
       "ref": "pkg:cargo/glob@0.3.1"
     },
     {
+      "dependsOn": [
+        "pkg:cargo/aho-corasick@1.1.3",
+        "pkg:cargo/bstr@1.10.0",
+        "pkg:cargo/glob@0.3.1",
+        "pkg:cargo/log@0.4.22",
+        "pkg:cargo/regex-automata@0.4.7",
+        "pkg:cargo/regex-syntax@0.8.4",
+        "pkg:cargo/serde@1.0.210",
+        "pkg:cargo/serde_json@1.0.128"
+      ],
+      "ref": "pkg:cargo/globset@0.4.15"
+    },
+    {
+      "dependsOn": [
+        "pkg:cargo/bstr@1.10.0",
+        "pkg:cargo/globset@0.4.15",
+        "pkg:cargo/libc@0.2.158",
+        "pkg:cargo/log@0.4.22",
+        "pkg:cargo/termcolor@1.4.1",
+        "pkg:cargo/winapi-util@0.1.9"
+      ],
+      "ref": "pkg:cargo/grep-cli@0.1.11"
+    },
+    {
+      "dependsOn": [
+        "pkg:cargo/memchr@2.7.4",
+        "pkg:cargo/regex@1.10.6"
+      ],
+      "ref": "pkg:cargo/grep-matcher@0.1.7"
+    },
+    {
+      "dependsOn": [
+        "pkg:cargo/grep-matcher@0.1.7",
+        "pkg:cargo/log@0.4.22",
+        "pkg:cargo/pcre2@0.2.9"
+      ],
+      "ref": "pkg:cargo/grep-pcre2@0.1.8"
+    },
+    {
+      "dependsOn": [
+        "pkg:cargo/bstr@1.10.0",
+        "pkg:cargo/grep-matcher@0.1.7",
+        "pkg:cargo/grep-regex@0.1.13",
+        "pkg:cargo/grep-searcher@0.1.14",
+        "pkg:cargo/log@0.4.22",
+        "pkg:cargo/serde@1.0.210",
+        "pkg:cargo/serde_json@1.0.128",
+        "pkg:cargo/termcolor@1.4.1"
+      ],
+      "ref": "pkg:cargo/grep-printer@0.2.2"
+    },
+    {
+      "dependsOn": [
+        "pkg:cargo/bstr@1.10.0",
+        "pkg:cargo/grep-matcher@0.1.7",
+        "pkg:cargo/log@0.4.22",
+        "pkg:cargo/regex-automata@0.4.7",
+        "pkg:cargo/regex-syntax@0.8.4"
+      ],
+      "ref": "pkg:cargo/grep-regex@0.1.13"
+    },
+    {
+      "dependsOn": [
+        "pkg:cargo/bstr@1.10.0",
+        "pkg:cargo/encoding_rs@0.8.34",
+        "pkg:cargo/encoding_rs_io@0.1.7",
+        "pkg:cargo/grep-matcher@0.1.7",
+        "pkg:cargo/grep-regex@0.1.13",
+        "pkg:cargo/log@0.4.22",
+        "pkg:cargo/memchr@2.7.4",
+        "pkg:cargo/memmap2@0.9.4",
+        "pkg:cargo/regex@1.10.6"
+      ],
+      "ref": "pkg:cargo/grep-searcher@0.1.14"
+    },
+    {
+      "dependsOn": [
+        "pkg:cargo/grep-cli@0.1.11",
+        "pkg:cargo/grep-matcher@0.1.7",
+        "pkg:cargo/grep-pcre2@0.1.8",
+        "pkg:cargo/grep-printer@0.2.2",
+        "pkg:cargo/grep-regex@0.1.13",
+        "pkg:cargo/grep-searcher@0.1.14",
+        "pkg:cargo/termcolor@1.4.1",
+        "pkg:cargo/walkdir@2.5.0"
+      ],
+      "ref": "pkg:cargo/grep@0.3.2"
+    },
+    {
+      "dependsOn": [
+        "pkg:cargo/bstr@1.10.0",
+        "pkg:cargo/crossbeam-channel@0.5.13",
+        "pkg:cargo/crossbeam-deque@0.8.5",
+        "pkg:cargo/globset@0.4.15",
+        "pkg:cargo/log@0.4.22",
+        "pkg:cargo/memchr@2.7.4",
+        "pkg:cargo/regex-automata@0.4.7",
+        "pkg:cargo/same-file@1.0.6",
+        "pkg:cargo/walkdir@2.5.0",
+        "pkg:cargo/winapi-util@0.1.9"
+      ],
+      "ref": "pkg:cargo/ignore@0.4.23"
+    },
+    {
       "dependsOn": [],
       "ref": "pkg:cargo/itoa@1.0.11"
     },
@@ -3711,6 +4429,24 @@
         "pkg:cargo/regex-syntax@0.8.4"
       ],
       "ref": "pkg:cargo/regex@1.10.6"
+    },
+    {
+      "dependsOn": [
+        "pkg:cargo/anyhow@1.0.87",
+        "pkg:cargo/bstr@1.10.0",
+        "pkg:cargo/grep@0.3.2",
+        "pkg:cargo/ignore@0.4.23",
+        "pkg:cargo/jemallocator@0.5.4",
+        "pkg:cargo/lexopt@0.3.0",
+        "pkg:cargo/log@0.4.22",
+        "pkg:cargo/serde@1.0.210",
+        "pkg:cargo/serde_derive@1.0.210",
+        "pkg:cargo/serde_json@1.0.128",
+        "pkg:cargo/termcolor@1.4.1",
+        "pkg:cargo/textwrap@0.16.1",
+        "pkg:cargo/walkdir@2.5.0"
+      ],
+      "ref": "pkg:cargo/ripgrep@14.1.1"
     },
     {
       "dependsOn": [],
@@ -3865,14 +4601,6 @@
     },
     {
       "dependsOn": [
-        "pkg:cargo/aho-corasick@1.1.3",
-        "pkg:cargo/anyhow@1.0.87",
-        "pkg:cargo/bstr@1.10.0",
-        "pkg:cargo/crossbeam-channel@0.5.13",
-        "pkg:cargo/crossbeam-deque@0.8.5",
-        "pkg:cargo/encoding_rs@0.8.34",
-        "pkg:cargo/encoding_rs_io@0.1.7",
-        "pkg:cargo/glob@0.3.1",
         "pkg:cargo/globset@0.4.15",
         "pkg:cargo/grep-cli@0.1.11",
         "pkg:cargo/grep-matcher@0.1.7",
@@ -3882,24 +4610,7 @@
         "pkg:cargo/grep-searcher@0.1.14",
         "pkg:cargo/grep@0.3.2",
         "pkg:cargo/ignore@0.4.23",
-        "pkg:cargo/jemallocator@0.5.4",
-        "pkg:cargo/lexopt@0.3.0",
-        "pkg:cargo/libc@0.2.158",
-        "pkg:cargo/log@0.4.22",
-        "pkg:cargo/memchr@2.7.4",
-        "pkg:cargo/memmap2@0.9.4",
-        "pkg:cargo/pcre2@0.2.9",
-        "pkg:cargo/regex-automata@0.4.7",
-        "pkg:cargo/regex-syntax@0.8.4",
-        "pkg:cargo/regex@1.10.6",
-        "pkg:cargo/same-file@1.0.6",
-        "pkg:cargo/serde@1.0.210",
-        "pkg:cargo/serde_derive@1.0.210",
-        "pkg:cargo/serde_json@1.0.128",
-        "pkg:cargo/termcolor@1.4.1",
-        "pkg:cargo/textwrap@0.16.1",
-        "pkg:cargo/walkdir@2.5.0",
-        "pkg:cargo/winapi-util@0.1.9"
+        "pkg:cargo/ripgrep@14.1.1"
       ],
       "ref": "rust-ripgrep@0e8390a"
     }

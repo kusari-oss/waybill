@@ -35,7 +35,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-0.7.0",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspaces-detected\",\"value\":\"[\\\".\\\",\\\"core\\\",\\\"examples/guice-demo\\\",\\\"extensions/dagger-adapter\\\",\\\"extensions/persist\\\",\\\"extensions/spring\\\",\\\"extensions/struts2\\\",\\\"extensions/testlib\\\"]\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspaces-detected\",\"value\":\"[\\\".\\\",\\\"bom\\\",\\\"core\\\",\\\"examples/guice-demo\\\",\\\"extensions\\\",\\\"extensions/dagger-adapter\\\",\\\"extensions/grapher\\\",\\\"extensions/jmx\\\",\\\"extensions/jndi\\\",\\\"extensions/persist\\\",\\\"extensions/servlet\\\",\\\"extensions/spring\\\",\\\"extensions/struts2\\\",\\\"extensions/testlib\\\"]\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -367,6 +367,66 @@
       "name": "bnd",
       "supplier": "Organization: biz.aQute",
       "versionInfo": "0.0.384"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-2EH2PWPQP6EL4JAK",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/examples/guice-demo\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.example:guice-demo:1.0-SNAPSHOT:*:*:*:*:*:*:*\",\"cpe:2.3:a:example:guice-demo:1.0-SNAPSHOT:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-demo:guice-demo:1.0-SNAPSHOT:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:demoted-from-main-module\",\"value\":\"true\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"examples/guice-demo\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/com.example/guice-demo@1.0-SNAPSHOT",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:com.example:guice-demo:1.0-SNAPSHOT:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "guice-demo",
+      "supplier": "Organization: com.example",
+      "versionInfo": "1.0-SNAPSHOT"
     },
     {
       "SPDXID": "SPDXRef-Package-B2YRU3N2UVRFADZ5",
@@ -945,6 +1005,498 @@
       "versionInfo": "31.0.1-jre"
     },
     {
+      "SPDXID": "SPDXRef-Package-WW6PY5U2QVWHQ26J",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/extensions\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.inject.extensions:extensions-parent:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:extensions-parent:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions-parent:extensions-parent:7.0.0:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:demoted-from-main-module\",\"value\":\"true\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"extensions\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/com.google.inject.extensions/extensions-parent@7.0.0",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:com.google.inject.extensions:extensions-parent:7.0.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "extensions-parent",
+      "supplier": "Organization: com.google.inject.extensions",
+      "versionInfo": "7.0.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-V2ONHKBEAL7BVAG7",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"extensions/grapher/pom.xml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.inject.extensions:guice-assistedinject:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:guice-assistedinject:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-assistedinject:guice-assistedinject:7.0.0:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/grapher/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:demoted-from-main-module\",\"value\":\"true\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"extensions/grapher\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/com.google.inject.extensions/guice-assistedinject@7.0.0",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:com.google.inject.extensions:guice-assistedinject:7.0.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "guice-assistedinject",
+      "supplier": "Organization: com.google.inject.extensions",
+      "versionInfo": "7.0.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-BH3LNK7D2QYEPO4R",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/extensions/dagger-adapter\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.inject.extensions:guice-dagger-adapter:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:guice-dagger-adapter:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-dagger-adapter:guice-dagger-adapter:7.0.0:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:demoted-from-main-module\",\"value\":\"true\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"extensions/dagger-adapter\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/com.google.inject.extensions/guice-dagger-adapter@7.0.0",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:com.google.inject.extensions:guice-dagger-adapter:7.0.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "guice-dagger-adapter",
+      "supplier": "Organization: com.google.inject.extensions",
+      "versionInfo": "7.0.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-EPV6UE2KY3AIR6E7",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/extensions/grapher\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.inject.extensions:guice-grapher:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:guice-grapher:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-grapher:guice-grapher:7.0.0:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:demoted-from-main-module\",\"value\":\"true\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"extensions/grapher\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/com.google.inject.extensions/guice-grapher@7.0.0",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:com.google.inject.extensions:guice-grapher:7.0.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "guice-grapher",
+      "supplier": "Organization: com.google.inject.extensions",
+      "versionInfo": "7.0.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-NG44TDJUPNOEFXZL",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/extensions/jmx\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.inject.extensions:guice-jmx:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:guice-jmx:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-jmx:guice-jmx:7.0.0:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:demoted-from-main-module\",\"value\":\"true\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"extensions/jmx\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/com.google.inject.extensions/guice-jmx@7.0.0",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:com.google.inject.extensions:guice-jmx:7.0.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "guice-jmx",
+      "supplier": "Organization: com.google.inject.extensions",
+      "versionInfo": "7.0.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-L4XJKUN3J5UCFLLZ",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/extensions/jndi\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.inject.extensions:guice-jndi:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:guice-jndi:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-jndi:guice-jndi:7.0.0:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:demoted-from-main-module\",\"value\":\"true\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"extensions/jndi\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/com.google.inject.extensions/guice-jndi@7.0.0",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:com.google.inject.extensions:guice-jndi:7.0.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "guice-jndi",
+      "supplier": "Organization: com.google.inject.extensions",
+      "versionInfo": "7.0.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-UZ54D32TGK6FSFUG",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/extensions/persist\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.inject.extensions:guice-persist:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:guice-persist:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-persist:guice-persist:7.0.0:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:demoted-from-main-module\",\"value\":\"true\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"extensions/persist\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/com.google.inject.extensions/guice-persist@7.0.0",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:com.google.inject.extensions:guice-persist:7.0.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "guice-persist",
+      "supplier": "Organization: com.google.inject.extensions",
+      "versionInfo": "7.0.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-LT3DCR6VMUNXMHYR",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/extensions/servlet\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.inject.extensions:guice-servlet:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:guice-servlet:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-servlet:guice-servlet:7.0.0:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:demoted-from-main-module\",\"value\":\"true\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"extensions/servlet\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/com.google.inject.extensions/guice-servlet@7.0.0",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:com.google.inject.extensions:guice-servlet:7.0.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "guice-servlet",
+      "supplier": "Organization: com.google.inject.extensions",
+      "versionInfo": "7.0.0"
+    },
+    {
       "SPDXID": "SPDXRef-Package-ZIWYSNO36G2P7EEZ",
       "annotations": [
         {
@@ -1007,6 +1559,126 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "guice-servlet",
+      "supplier": "Organization: com.google.inject.extensions",
+      "versionInfo": "7.0.1-SNAPSHOT"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-2J4QXPGW446WCZDJ",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/extensions/spring\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.inject.extensions:guice-spring:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:guice-spring:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-spring:guice-spring:7.0.0:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:demoted-from-main-module\",\"value\":\"true\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"extensions/spring\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/com.google.inject.extensions/guice-spring@7.0.0",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:com.google.inject.extensions:guice-spring:7.0.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "guice-spring",
+      "supplier": "Organization: com.google.inject.extensions",
+      "versionInfo": "7.0.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-KI6J5WBYA4LNTBDE",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/extensions/struts2\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.inject.extensions:guice-struts2:7.0.1-SNAPSHOT:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:guice-struts2:7.0.1-SNAPSHOT:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-struts2:guice-struts2:7.0.1-SNAPSHOT:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:demoted-from-main-module\",\"value\":\"true\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"extensions/struts2\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/com.google.inject.extensions/guice-struts2@7.0.1-SNAPSHOT",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:com.google.inject.extensions:guice-struts2:7.0.1-SNAPSHOT:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "guice-struts2",
       "supplier": "Organization: com.google.inject.extensions",
       "versionInfo": "7.0.1-SNAPSHOT"
     },
@@ -1083,6 +1755,258 @@
       "versionInfo": "5.1.0"
     },
     {
+      "SPDXID": "SPDXRef-Package-KHRKBEH66UBIZKWS",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/extensions/testlib\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.inject.extensions:guice-testlib:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:guice-testlib:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-testlib:guice-testlib:7.0.0:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:demoted-from-main-module\",\"value\":\"true\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"extensions/testlib\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/com.google.inject.extensions/guice-testlib@7.0.0",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:com.google.inject.extensions:guice-testlib:7.0.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "guice-testlib",
+      "supplier": "Organization: com.google.inject.extensions",
+      "versionInfo": "7.0.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-6H5UMSIWRQDJYQVW",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"extensions/testlib/pom.xml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.inject.extensions:guice-throwingproviders:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:guice-throwingproviders:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-throwingproviders:guice-throwingproviders:7.0.0:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/testlib/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:demoted-from-main-module\",\"value\":\"true\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"extensions/testlib\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/com.google.inject.extensions/guice-throwingproviders@7.0.0",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:com.google.inject.extensions:guice-throwingproviders:7.0.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "guice-throwingproviders",
+      "supplier": "Organization: com.google.inject.extensions",
+      "versionInfo": "7.0.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-D2GSYF2BT6R626KU",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/bom\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.inject:guice-bom:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:inject:guice-bom:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-bom:guice-bom:7.0.0:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:demoted-from-main-module\",\"value\":\"true\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"bom\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/com.google.inject/guice-bom@7.0.0",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:com.google.inject:guice-bom:7.0.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "guice-bom",
+      "supplier": "Organization: com.google.inject",
+      "versionInfo": "7.0.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-UICUX3U3NGXO4D7T",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.inject:guice-parent:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:inject:guice-parent:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-parent:guice-parent:7.0.0:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:demoted-from-main-module\",\"value\":\"true\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/com.google.inject/guice-parent@7.0.0",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:com.google.inject:guice-parent:7.0.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "guice-parent",
+      "supplier": "Organization: com.google.inject",
+      "versionInfo": "7.0.0"
+    },
+    {
       "SPDXID": "SPDXRef-Package-ANDTMBBYEGMOMFZR",
       "annotations": [
         {
@@ -1147,6 +2071,78 @@
       "name": "guice",
       "supplier": "Organization: com.google.inject",
       "versionInfo": "5.1.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-YQFYBDY6EYSTD2G4",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"extensions/pom.xml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.inject:guice:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:inject:guice:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice:guice:7.0.0:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:demoted-from-main-module\",\"value\":\"true\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"extensions\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/com.google.inject/guice@7.0.0",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:com.google.inject:guice:7.0.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "guice",
+      "supplier": "Organization: com.google.inject",
+      "versionInfo": "7.0.0"
     },
     {
       "SPDXID": "SPDXRef-Package-26JLNFOT6U7SJTGF",
@@ -2907,239 +3903,319 @@
       "spdxElementId": "SPDXRef-DOCUMENT"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
+      "relatedSpdxElement": "SPDXRef-Package-V2ONHKBEAL7BVAG7",
       "relationshipType": "TEST_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-5TW2VDAA3S5LCWK5"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
+      "relatedSpdxElement": "SPDXRef-Package-V2ONHKBEAL7BVAG7",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-WRBANFHZM5OSNV7F"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-CZWDGGRKJBALGMSV",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2"
+      "spdxElementId": "SPDXRef-Package-YQFYBDY6EYSTD2G4"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-O6CVO6KZYDAAPJB6",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2"
+      "spdxElementId": "SPDXRef-Package-YQFYBDY6EYSTD2G4"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-HK45AOV4QQFGKRG6",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2"
+      "spdxElementId": "SPDXRef-Package-YQFYBDY6EYSTD2G4"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
+      "relatedSpdxElement": "SPDXRef-Package-YQFYBDY6EYSTD2G4",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-WRBANFHZM5OSNV7F"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
+      "relatedSpdxElement": "SPDXRef-Package-YQFYBDY6EYSTD2G4",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-I2DJC2RDB6TNWZEH"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
+      "relatedSpdxElement": "SPDXRef-Package-YQFYBDY6EYSTD2G4",
       "relationshipType": "TEST_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-OO3DTZ2BAIDCFOJC"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
+      "relatedSpdxElement": "SPDXRef-Package-YQFYBDY6EYSTD2G4",
       "relationshipType": "TEST_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-5HRWP6CUB6NYPSVU"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
+      "relatedSpdxElement": "SPDXRef-Package-YQFYBDY6EYSTD2G4",
       "relationshipType": "TEST_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-DRTGNSORYL5QHXX7"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
+      "relatedSpdxElement": "SPDXRef-Package-YQFYBDY6EYSTD2G4",
       "relationshipType": "TEST_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-4AFKQTIBKR73X7S7"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
+      "relatedSpdxElement": "SPDXRef-Package-YQFYBDY6EYSTD2G4",
       "relationshipType": "TEST_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-5TW2VDAA3S5LCWK5"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
+      "relatedSpdxElement": "SPDXRef-Package-YQFYBDY6EYSTD2G4",
       "relationshipType": "TEST_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-26JLNFOT6U7SJTGF"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
+      "relatedSpdxElement": "SPDXRef-Package-6H5UMSIWRQDJYQVW",
       "relationshipType": "TEST_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-5TW2VDAA3S5LCWK5"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-S3BEHTA77EXZN5F7",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2"
+      "spdxElementId": "SPDXRef-Package-6H5UMSIWRQDJYQVW"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
+      "relatedSpdxElement": "SPDXRef-Package-6H5UMSIWRQDJYQVW",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-WRBANFHZM5OSNV7F"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
+      "relatedSpdxElement": "SPDXRef-Package-YQFYBDY6EYSTD2G4",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2"
+      "spdxElementId": "SPDXRef-Package-2EH2PWPQP6EL4JAK"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
+      "relatedSpdxElement": "SPDXRef-Package-KHRKBEH66UBIZKWS",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2"
+      "spdxElementId": "SPDXRef-Package-2EH2PWPQP6EL4JAK"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
+      "relatedSpdxElement": "SPDXRef-Package-2EH2PWPQP6EL4JAK",
       "relationshipType": "TEST_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-B7B65U5T2YH5ZD5T"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
+      "relatedSpdxElement": "SPDXRef-Package-BH3LNK7D2QYEPO4R",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-GNCFPA6C6XFLX7SQ"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
+      "relatedSpdxElement": "SPDXRef-Package-BH3LNK7D2QYEPO4R",
       "relationshipType": "TEST_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-CUXIZLAUDEVXBQ2C"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
+      "relatedSpdxElement": "SPDXRef-Package-BH3LNK7D2QYEPO4R",
       "relationshipType": "TEST_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-5TW2VDAA3S5LCWK5"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
+      "relatedSpdxElement": "SPDXRef-Package-BH3LNK7D2QYEPO4R",
       "relationshipType": "TEST_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-B2YRU3N2UVRFADZ5"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
+      "relatedSpdxElement": "SPDXRef-Package-BH3LNK7D2QYEPO4R",
       "relationshipType": "TEST_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-U3OQOPHC5Q36X56F"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
+      "relatedSpdxElement": "SPDXRef-Package-V2ONHKBEAL7BVAG7",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2"
+      "spdxElementId": "SPDXRef-Package-EPV6UE2KY3AIR6E7"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
+      "relatedSpdxElement": "SPDXRef-Package-UZ54D32TGK6FSFUG",
       "relationshipType": "BUILD_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-73OZYVUVXIK7N6WA"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
+      "relatedSpdxElement": "SPDXRef-Package-UZ54D32TGK6FSFUG",
       "relationshipType": "BUILD_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-WRKBBVO34AI3VB7U"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
+      "relatedSpdxElement": "SPDXRef-Package-UZ54D32TGK6FSFUG",
       "relationshipType": "TEST_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-ZXZMW2QFZZGW7LIA"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
+      "relatedSpdxElement": "SPDXRef-Package-UZ54D32TGK6FSFUG",
       "relationshipType": "TEST_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-M7DMSQ2QCN76EFXI"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
+      "relatedSpdxElement": "SPDXRef-Package-UZ54D32TGK6FSFUG",
       "relationshipType": "TEST_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-7YYQ7XFXIEFO7F7E"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
+      "relatedSpdxElement": "SPDXRef-Package-UZ54D32TGK6FSFUG",
       "relationshipType": "TEST_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-S3KPENR5HVDEVLOY"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
+      "relatedSpdxElement": "SPDXRef-Package-UZ54D32TGK6FSFUG",
       "relationshipType": "TEST_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-GV4EIMXRNHDIREJX"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
+      "relatedSpdxElement": "SPDXRef-Package-UZ54D32TGK6FSFUG",
       "relationshipType": "TEST_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-VMWWDPKQSQZ55WVW"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
+      "relatedSpdxElement": "SPDXRef-Package-YQFYBDY6EYSTD2G4",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2"
+      "spdxElementId": "SPDXRef-Package-WW6PY5U2QVWHQ26J"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
+      "relatedSpdxElement": "SPDXRef-Package-YQFYBDY6EYSTD2G4",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2"
+      "spdxElementId": "SPDXRef-Package-WW6PY5U2QVWHQ26J"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
+      "relatedSpdxElement": "SPDXRef-Package-WW6PY5U2QVWHQ26J",
       "relationshipType": "TEST_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-5HRWP6CUB6NYPSVU"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
+      "relatedSpdxElement": "SPDXRef-Package-WW6PY5U2QVWHQ26J",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-I2DJC2RDB6TNWZEH"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
+      "relatedSpdxElement": "SPDXRef-Package-LT3DCR6VMUNXMHYR",
       "relationshipType": "BUILD_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-WRKBBVO34AI3VB7U"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
+      "relatedSpdxElement": "SPDXRef-Package-LT3DCR6VMUNXMHYR",
       "relationshipType": "TEST_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-S3KPENR5HVDEVLOY"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
+      "relatedSpdxElement": "SPDXRef-Package-2J4QXPGW446WCZDJ",
       "relationshipType": "BUILD_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-BQCRREYHSHSKHJR4"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
+      "relatedSpdxElement": "SPDXRef-Package-LT3DCR6VMUNXMHYR",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2"
+      "spdxElementId": "SPDXRef-Package-KI6J5WBYA4LNTBDE"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
+      "relatedSpdxElement": "SPDXRef-Package-KI6J5WBYA4LNTBDE",
       "relationshipType": "BUILD_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-WRKBBVO34AI3VB7U"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
+      "relatedSpdxElement": "SPDXRef-Package-KI6J5WBYA4LNTBDE",
       "relationshipType": "BUILD_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-KDQR4Q237Q6FDL6T"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
+      "relatedSpdxElement": "SPDXRef-Package-6H5UMSIWRQDJYQVW",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2"
+      "spdxElementId": "SPDXRef-Package-KHRKBEH66UBIZKWS"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
+      "relatedSpdxElement": "SPDXRef-Package-KHRKBEH66UBIZKWS",
       "relationshipType": "TEST_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-5TW2VDAA3S5LCWK5"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-S3BEHTA77EXZN5F7",
       "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-KHRKBEH66UBIZKWS"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-UICUX3U3NGXO4D7T",
+      "relationshipType": "TEST_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-B7B65U5T2YH5ZD5T"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-2EH2PWPQP6EL4JAK",
+      "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2",
-      "relationshipType": "TEST_DEPENDENCY_OF",
-      "spdxElementId": "SPDXRef-Package-B7B65U5T2YH5ZD5T"
+      "relatedSpdxElement": "SPDXRef-Package-WW6PY5U2QVWHQ26J",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-V2ONHKBEAL7BVAG7",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-BH3LNK7D2QYEPO4R",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-EPV6UE2KY3AIR6E7",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-NG44TDJUPNOEFXZL",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-L4XJKUN3J5UCFLLZ",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-UZ54D32TGK6FSFUG",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-LT3DCR6VMUNXMHYR",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-2J4QXPGW446WCZDJ",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-KI6J5WBYA4LNTBDE",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-KHRKBEH66UBIZKWS",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-6H5UMSIWRQDJYQVW",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-D2GSYF2BT6R626KU",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-UICUX3U3NGXO4D7T",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-YQFYBDY6EYSTD2G4",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-LI3IHHIUL7DSU5E2"
     }
   ],
   "spdxVersion": "SPDX-2.3"
