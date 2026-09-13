@@ -137,18 +137,6 @@ fn walk_mask(v: &mut serde_json::Value) {
                     map.insert((*k).to_string(), serde_json::Value::String("<masked>".to_string()));
                 }
             }
-            // SPDX 3 wraps everything under "@graph" with per-element
-            // spdxIds that embed content hashes; mask them structurally.
-            if let Some(spdxid) = map.get_mut("spdxId") {
-                if let Some(s) = spdxid.as_str() {
-                    if s.contains("/doc-") {
-                        // Mask the doc- prefix (a per-scan random-ish
-                        // identifier) while preserving the shape.
-                        let masked = mask_doc_prefix(s);
-                        *spdxid = serde_json::Value::String(masked);
-                    }
-                }
-            }
             // m196: mask SHA256 / MD5 content hashes embedded inside
             // annotation `statement:` / `comment:` / `value:` JSON-in-
             // string values (chiefly the `evidence.occurrences[]` shape
@@ -178,6 +166,14 @@ fn walk_mask(v: &mut serde_json::Value) {
             for child in arr.iter_mut() {
                 walk_mask(child);
             }
+        }
+        // Issue #865: mask the document IRI wherever it appears, at the
+        // string leaf, so this does not depend on enumerating the keys
+        // that happen to carry one. The previous version keyed on
+        // `spdxId` alone and left every relationship endpoint, annotation
+        // subject and rootElement holding the real hash.
+        serde_json::Value::String(s) if s.contains("/spdx3/doc-") => {
+            *v = serde_json::Value::String(mask_doc_prefix(s));
         }
         _ => {}
     }
@@ -211,18 +207,153 @@ fn mask_content_hashes_in_string(s: &str) -> String {
     b.into_owned()
 }
 
+/// Replace every `/spdx3/doc-<opaque>` segment with
+/// `/spdx3/doc-<masked>` so a stored golden survives per-scan
+/// document-ID rotation.
+///
+/// Anchored on the full `/spdx3/doc-` namespace rather than a bare
+/// `/doc-`: image scans contain real filesystem paths such as
+/// `/usr/share/doc-base/findutils.findutils`, and a looser match
+/// rewrites those into the golden as corrupted data. Caught by the
+/// regeneration diff on `image-postgres16` — CDX and SPDX 2.3 moved
+/// when only SPDX 3 should have.
+///
+/// Issue #865: this used to mask only the FIRST occurrence, and was only
+/// ever called on values under the `spdxId` key. Relationship endpoints
+/// (`from`, `to`), annotation `subject`s, `rootElement` and `suppliedBy`
+/// all carry the same IRI and were left holding the real hash — so a
+/// stored SPDX 3 golden referenced identifiers that appeared nowhere in
+/// its own document, and any structural check on one was meaningless.
+/// It also inflated every SPDX 3 diff, because an unmasked
+/// content-addressed hash cascades on any content change.
 fn mask_doc_prefix(s: &str) -> String {
-    // Replace `/doc-<opaque>/` with `/doc-<masked>/` to survive per-scan
-    // doc-ID rotation.
-    if let Some(idx) = s.find("/doc-") {
-        let rest = &s[idx + 5..];
-        if let Some(slash) = rest.find('/') {
-            let (_opaque, tail) = rest.split_at(slash);
-            format!("{}/doc-<masked>{}", &s[..idx], tail)
-        } else {
-            format!("{}/doc-<masked>", &s[..idx])
+    let mut out = String::with_capacity(s.len());
+    let mut rest = s;
+    while let Some(idx) = rest.find("/spdx3/doc-") {
+        out.push_str(&rest[..idx]);
+        out.push_str("/spdx3/doc-<masked>");
+        let after = &rest[idx + 11..];
+        // The opaque segment runs to the next `/`, or to a character
+        // that cannot appear in it (quote, whitespace) when the IRI is
+        // embedded in a larger string such as a JSON-in-string value.
+        match after.find(|c: char| c == '/' || c == '"' || c.is_whitespace()) {
+            Some(end) => rest = &after[end..],
+            None => return out,
         }
-    } else {
-        s.to_string()
+    }
+    out.push_str(rest);
+    out
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod m865_masking_tests {
+    use super::*;
+    use serde_json::json;
+
+    /// The defect: masking keyed on `spdxId`, so every other IRI-bearing
+    /// field kept the real document hash and the stored golden referenced
+    /// identifiers absent from its own document.
+    #[test]
+    fn every_iri_bearing_field_is_masked_not_just_spdx_id() {
+        let doc = json!({
+            "@graph": [
+                { "type": "software_Package", "spdxId": "https://w.dev/spdx3/doc-ABC/pkg-1" },
+                { "type": "Relationship",
+                  "spdxId": "https://w.dev/spdx3/doc-ABC/rel-1",
+                  "from": "https://w.dev/spdx3/doc-ABC/pkg-1",
+                  "to": ["https://w.dev/spdx3/doc-ABC/pkg-2"] },
+                { "type": "Annotation",
+                  "spdxId": "https://w.dev/spdx3/doc-ABC/anno-1",
+                  "subject": "https://w.dev/spdx3/doc-ABC/pkg-1" },
+                { "type": "SpdxDocument",
+                  "spdxId": "https://w.dev/spdx3/doc-ABC",
+                  "rootElement": ["https://w.dev/spdx3/doc-ABC/pkg-1"] }
+            ]
+        });
+        let masked = mask_nondeterministic(&doc);
+        let text = serde_json::to_string(&masked).unwrap();
+        assert!(
+            !text.contains("doc-ABC"),
+            "no field may retain the real document id; got {text}",
+        );
+        assert!(text.contains("doc-<masked>"), "the shape must be preserved");
+    }
+
+    /// The property the goldens were violating: after masking, every
+    /// relationship endpoint must still resolve to an element of the
+    /// same document. Without this, no structural check on a stored
+    /// golden means anything.
+    #[test]
+    fn masked_document_stays_internally_coherent() {
+        let doc = json!({
+            "@graph": [
+                { "type": "software_Package", "spdxId": "https://w.dev/spdx3/doc-XYZ/pkg-1" },
+                { "type": "software_Package", "spdxId": "https://w.dev/spdx3/doc-XYZ/pkg-2" },
+                { "type": "Relationship",
+                  "spdxId": "https://w.dev/spdx3/doc-XYZ/rel-1",
+                  "from": "https://w.dev/spdx3/doc-XYZ/pkg-1",
+                  "to": ["https://w.dev/spdx3/doc-XYZ/pkg-2"] }
+            ]
+        });
+        let masked = mask_nondeterministic(&doc);
+        let graph = masked["@graph"].as_array().unwrap();
+        let ids: std::collections::BTreeSet<&str> = graph
+            .iter()
+            .filter_map(|e| e["spdxId"].as_str())
+            .collect();
+        for e in graph.iter().filter(|e| e["type"] == "Relationship") {
+            let from = e["from"].as_str().unwrap();
+            assert!(ids.contains(from), "dangling `from` after masking: {from}");
+            for t in e["to"].as_array().unwrap() {
+                let t = t.as_str().unwrap();
+                assert!(ids.contains(t), "dangling `to` after masking: {t}");
+            }
+        }
+    }
+
+    /// The helper masked only the first occurrence, which silently left
+    /// later ones intact inside JSON-in-string values.
+    #[test]
+    fn every_occurrence_in_one_string_is_masked() {
+        let s = "a https://w.dev/spdx3/doc-AAA/pkg-1 b https://w.dev/spdx3/doc-AAA/pkg-2 c";
+        let out = mask_doc_prefix(s);
+        assert!(!out.contains("doc-AAA"), "got {out}");
+        assert_eq!(out.matches("doc-<masked>").count(), 2);
+    }
+
+    /// A bare document IRI with no trailing segment must still mask.
+    #[test]
+    fn trailing_document_iri_is_masked() {
+        assert_eq!(
+            mask_doc_prefix("https://w.dev/spdx3/doc-ZZZ"),
+            "https://w.dev/spdx3/doc-<masked>",
+        );
+    }
+
+    /// A real filesystem path containing `doc-` must survive intact.
+    /// The first version of this fix matched a bare `/doc-` and rewrote
+    /// `/usr/share/doc-base/...` inside the image-postgres16 golden,
+    /// corrupting real data. The regeneration diff caught it: CDX and
+    /// SPDX 2.3 moved when a masking-only change should have touched
+    /// SPDX 3 alone.
+    #[test]
+    fn real_paths_containing_doc_are_not_masked() {
+        for p in [
+            "/usr/share/doc-base/findutils.findutils",
+            "/usr/share/doc-base/base-passwd.users-and-groups",
+            "/etc/doc-something",
+        ] {
+            assert_eq!(mask_doc_prefix(p), p, "must not rewrite the real path {p}");
+        }
+    }
+
+    /// Strings with no document IRI must pass through untouched — the
+    /// leaf rule runs on every string in the document.
+    #[test]
+    fn unrelated_strings_are_untouched() {
+        for s in ["pkg:cargo/serde@1.0.0", "MIT", "", "no slashes here"] {
+            assert_eq!(mask_doc_prefix(s), s, "must not alter {s:?}");
+        }
     }
 }
