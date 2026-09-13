@@ -38,10 +38,20 @@ scanned with `--root-name`, so all are exposed to the policy):
 |--------|-----------------------:|----------------------------:|--------------:|--------:|--------------------------:|
 | maven-guice | 16 | 61 | 45 | 16 | 5 |
 | rust-ripgrep | 10 | 68 | 58 | 10 | 9 |
-| other nine targets | 0–1 | — | — | 0 | 0 |
+| python-flask | 4 | 109 | 105 | 4 | 0 |
+| other eight targets | 0 | — | — | 0 | 0 |
 
-Two of eleven targets are affected; the other nine have at most one main
-module and are unaffected by whichever policy is chosen.
+Three of eleven targets are affected. The other eight have **zero** main
+modules, so no policy choice touches them. Notably **no corpus target
+has exactly one** main module, which is why the N=1 path is invisible
+here and why converging on a single policy costs nothing in golden
+churn.
+
+`python-flask` shows the failure in its plainest form: it has no
+dangling references, because nothing depends on the four modules that
+disappear. They are simply gone — including `pkg:pypi/flask@3.1.2`.
+Scanning the Flask repository and naming the subject currently removes
+Flask itself from the inventory.
 
 The removed components are real: they are the workspace's own modules,
 and sibling modules declare dependencies on them. Those dependency edges
@@ -124,14 +134,16 @@ override is distinguishable from one that never did.
   workspace modules as components MUST NOT produce a second root.
 - **FR-004**: A component that held the main-module role before an
   override MUST remain distinguishable from one that never held it.
-- **FR-005**: Behaviour when exactly one main module is present MUST be
-  unchanged from milestones 077 and 149, unless this spec explicitly
-  supersedes it. [NEEDS CLARIFICATION: does the N=1 path converge on the
-  new N>1 policy, or stay as-is and leave two behaviours?]
-- **FR-006**: `--preserve-manifest-main-module` MUST have a defined,
-  documented meaning under the new policy, including the possibility
-  that it becomes redundant. [NEEDS CLARIFICATION: retain as a no-op for
-  compatibility, or remove it?]
+- **FR-005**: One policy MUST apply at every value of N. The N=1 path
+  converges on the policy defined here, superseding the milestone-077
+  clean-replacement default and making the milestone-149 demote
+  behaviour unconditional. Behaviour MUST NOT depend on a count the
+  operator cannot see and did not specify.
+- **FR-006**: `--preserve-manifest-main-module` MUST continue to be
+  accepted, and becomes a no-op because its behaviour is now
+  unconditional. It MUST NOT error, and its help text MUST say it is
+  retained for compatibility and no longer changes output. Removing it
+  would break existing callers for no gain.
 - **FR-007**: The chosen policy MUST apply identically across CycloneDX,
   SPDX 2.3 and SPDX 3, via the existing shared helper rather than three
   parallel implementations.
@@ -159,14 +171,32 @@ override is distinguishable from one that never did.
 - **SC-002**: On `maven-guice`, component count under `--root-name`
   matches the count without it. Currently 45 versus 61.
 - **SC-003**: On `rust-ripgrep`, the same. Currently 58 versus 68.
-- **SC-004**: The nine unaffected targets are byte-identical before and
-  after this change — the policy must not disturb scans with at most one
-  main module.
-- **SC-005**: Exactly one subject is declared per emitted document, for
+- **SC-004**: On `python-flask`, the same: 105 becomes 109, and
+  `pkg:pypi/flask@3.1.2` is present.
+- **SC-005**: The eight targets with zero main modules are byte-identical
+  before and after. The policy must not disturb scans that have nothing
+  to drop.
+- **SC-006**: `--preserve-manifest-main-module` is accepted and produces
+  output identical to omitting it.
+- **SC-007**: Exactly one subject is declared per emitted document, for
   every target, verified in all three formats.
-- **SC-006**: The public-corpus lane is green on the refreshed goldens,
+- **SC-008**: The public-corpus lane is green on the refreshed goldens,
   and the accompanying diff is attributed per
   `docs/development/refreshing-corpus-goldens.md`.
+
+## Clarifications
+
+### Session 2026-09-13
+
+- Q: Does the N=1 path converge on the new policy, or stay as it is? →
+  **A: Converge.** One rule for all N. Measurement showed no corpus
+  target has exactly one main module, so convergence adds no golden
+  churn beyond the three N>1 targets — it is the cheaper option here as
+  well as the simpler one to explain.
+- Q: What happens to `--preserve-manifest-main-module`? → **A: Keep it
+  as an accepted, documented no-op.** Its behaviour becomes
+  unconditional, so the flag has nothing left to do; removing it would
+  break existing callers for no benefit.
 
 ## Assumptions
 

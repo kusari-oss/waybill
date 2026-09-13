@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [X] No [NEEDS CLARIFICATION] markers remain
 - [X] Requirements are testable and unambiguous
 - [X] Success criteria are measurable
 - [X] Success criteria are technology-agnostic (no implementation details)
@@ -31,26 +31,18 @@
 
 ## Notes
 
-Two [NEEDS CLARIFICATION] markers remain, both deliberate — they are the
-decisions this feature exists to make, and guessing them would defeat
-the purpose of specifying it:
+All checklist items pass. Both [NEEDS CLARIFICATION] markers were
+resolved in the 2026-09-13 clarification session and are recorded in the
+spec's Clarifications section.
 
-- **FR-005** — does the N=1 path converge on the new policy, or stay as
-  it is? Converging means changing milestone-077 behaviour that has
-  shipped for a long time; not converging means two behaviours depending
-  on a count the operator cannot see.
-- **FR-006** — what happens to `--preserve-manifest-main-module`? Under
-  the chosen direction it may become the permanent behaviour, leaving
-  the flag a no-op.
+Correction made while resolving them: the first draft's Observed Impact
+table listed two affected targets. Re-measuring for the convergence
+question found a **third** — `python-flask`, with 4 main modules and 0
+dangling references, which is why the dangling-reference count alone had
+missed it. Its four dropped components include `pkg:pypi/flask@3.1.2`.
+The draft's SC-004 ("nine unaffected targets") was wrong on both the
+count and the premise and has been replaced.
 
-Both are scope-level and go to `/speckit.clarify`.
-
-Two file references appear in the spec (`root_selector.rs:525` and the
-milestone-149 quotation). They are evidence for the problem statement,
-not implementation direction, and both were read at authoring time
-rather than recalled.
-
-Numbers in the Observed Impact table and Success Criteria were measured
-on 2026-09-13 against the committed goldens and local scans, not
-estimated. The measurement for `rust-ripgrep` used the corpus cache at
-pin `0e8390a`; `maven-guice` at pin `b0e1d0fa`.
+Numbers in Observed Impact and Success Criteria were measured on
+2026-09-13 against the committed goldens and local scans of the pinned
+corpus checkouts, not estimated.
