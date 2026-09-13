@@ -41,26 +41,60 @@ failing set from a previous run; it moves.
 
 ### 2. Regenerate through CI
 
-Dispatch `public-corpus.yml` against your branch with
-`regen_goldens: true`. The workflow sets the update flag, the harness
-overwrites the goldens, and the job uploads the fixture tree as the
-`corpus-goldens-regen` artifact.
+Push your branch first — the workflow checks out the branch you name,
+not your working tree.
 
-Download that artifact. Do not run the regeneration locally, even to
-"check something quickly" — a local run that overwrites goldens is
-indistinguishable afterwards from a CI-generated one.
+```bash
+gh workflow run "Public corpus regression" \
+  -f branch=<your-branch> -f regen_goldens=true
+```
+
+The workflow sets the update flag, the harness overwrites the goldens in
+the CI workspace, and the job uploads the fixture tree as the
+`corpus-goldens-regen` artifact. Nothing is written to your repository.
+
+```bash
+gh run download <run-id> -n corpus-goldens-regen -D /tmp/regen
+```
+
+Do not run the regeneration locally, even to "check something quickly" —
+a local run that overwrites goldens is indistinguishable afterwards from
+a CI-generated one.
 
 ### 3. Read every diff, normalised
 
+The artifact is not in git, so compare it against the committed goldens
+by path. All thirty-three at once:
+
+```bash
+cargo build -p xtask
+G=waybill-cli/tests/fixtures/public_corpus
+for t in $(ls /tmp/regen); do
+  for f in cdx spdx-2.3 spdx-3; do
+    ./target/debug/xtask corpus-diff \
+      --old "$G/$t/$f.json" --new "/tmp/regen/$t/$f.json" --format "$f"
+  done
+done
 ```
-cargo run -p xtask -- corpus-diff --target <name> --old-ref HEAD
-```
+
+The other invocation form — `--target <name> --old-ref <ref>` — compares
+a target's *committed* goldens against a git ref. That is for looking at
+history, not for reviewing a regenerated artifact, which by definition
+is not committed yet. Reaching for it here produces a diff of the wrong
+pair, or an empty one, and an empty diff is easy to misread as "no
+drift".
 
 Goldens are stored already masked, so timestamps, per-scan document
 identifiers and embedded content hashes are already neutralised. What
 the normaliser adds is array-ordering stability — without it, SPDX 3
 `@graph` reordering presents as every element changing and buries
 whatever really changed.
+
+It also pairs elements across arrays that changed length, keyed on
+identity rather than position. Do not switch that key to `spdxId`,
+`SPDXID` or a file-tier `bom-ref`: those are hashes of the content whose
+change you are trying to read, so keying on them pairs nothing and
+reports every element as both added and removed.
 
 ### 4. Attribute every category
 
