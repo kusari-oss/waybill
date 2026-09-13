@@ -286,9 +286,14 @@ fn identity_key(v: &Value) -> Option<String> {
             .unwrap_or("");
         return Some(sanitise_key(&format!("name={n}@{ver}")));
     }
-    if let Some(r) = get("bom-ref") {
-        if !is_content_addressed(r) {
-            return Some(sanitise_key(&format!("ref={r}")));
+    // `bom-ref` identifies a CDX component; `ref` identifies a CDX
+    // `dependencies[]` entry. Without the latter the dependency graph —
+    // the thing most worth reviewing — stays an opaque single line.
+    for field in ["bom-ref", "ref"] {
+        if let Some(r) = get(field) {
+            if !is_content_addressed(r) {
+                return Some(sanitise_key(&format!("ref={r}")));
+            }
         }
     }
     // Weakest useful key: elements of the same type bucket together, so
@@ -296,6 +301,16 @@ fn identity_key(v: &Value) -> Option<String> {
     // within their bucket instead of collapsing the whole array.
     if let Some(t) = get("type").or_else(|| get("@type")) {
         return Some(sanitise_key(&format!("type={t}")));
+    }
+    // SPDX 2.3 relationships and annotations carry neither a name nor a
+    // `type`, so without these they bucket as unkeyable and the array
+    // reports as one line. Their own discriminators are the weakest
+    // useful key: elements still pair pairwise within a bucket.
+    if let Some(t) = get("relationshipType") {
+        return Some(sanitise_key(&format!("relationshipType={t}")));
+    }
+    if let Some(t) = get("annotationType") {
+        return Some(sanitise_key(&format!("annotationType={t}")));
     }
     None
 }

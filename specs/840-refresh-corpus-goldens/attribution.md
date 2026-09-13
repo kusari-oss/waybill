@@ -35,6 +35,72 @@ The regen artifact is therefore still representative.
 | 5 | source-provenance refs (m776, #797) | 302× pants-js, 51× ripgrep | `externalReferences` / `externalRefs`. |
 | 6 | PEP 735 dev-dep groups (#784) | 1× python-flask | root `dependsOn` 12 → 29; 19× added `scope`; every new entry `lifecycle-scope=optional`. |
 
+## T018 / T020 — named cause per category
+
+T020 requires a named merge per category; "expected churn" is not a
+cause. Working the log from `25bfbce4` forward:
+
+| # | category | named cause |
+|---|----------|-------------|
+| 1 | tool version rotation | the release version bump itself |
+| 2 | `$.name` `"repo"` -> `"<target> <sha>"` | **#817** (`64918944`, "derive SPDX source document names from resolved root identity"). The harness has passed `--root-name`/`--root-version` since before the goldens were written (`harness.rs:213`); the document simply did not honour them, and used the scan directory basename — which in the corpus cache is literally `repo`. |
+| 2b | SPDX-3 `rootElement[]` | **#817**, same change |
+| 3 | content-addressed id cascade | consequence of 1, 2, 4, 5, 6 — not independent |
+| 3b | SPDX-3 `suppliedBy` | also cascade, **not** a supplier-data change: the values are IRIs carrying the `doc-<hash>` prefix, and the referenced Agent *name* set is byte-identical old vs new. No emission change touches `suppliedBy` since the goldens were written. |
+| 4 | uv.lock hashes | **#754** (m674) |
+| 5 | source-provenance refs | **#797** (m776) |
+| 6 | PEP 735 dev-dep groups | **#784** |
+| 7 | maven `compositions[0].assemblies` | the `junit@unknown` component entering the assembly list — see finding C |
+
+### Categories found only after the normaliser improved
+
+Extending the identity key to CDX `dependencies[].ref`, SPDX
+`relationshipType` and `annotationType` made four more categories
+visible that had been hidden inside opaque single lines. Recording this
+because it is the second time better tooling changed the attribution —
+the first pass was incomplete, and nothing but the tool revealed it.
+
+| category | targets | named cause |
+|----------|---------|-------------|
+| `waybill:cisa-2026-lifecycle` = `after-build` | **all 11** | **#643** (m221) |
+| `waybill:unresolved-reason` | npm-express + others | **#703** / **#704** (m236) |
+| `waybill:python-lockfile-format` | python-flask | **#754** (m674) |
+| `waybill:orphan-reason` = `unresolved-indirect-require` | go-cobra (5 of 7 components) | **#680** (m233) — see #857 |
+
+`changed $.annotations[].comment` across 6–7 targets is not a category:
+all doc-scope annotations bucket under `annotationType=OTHER`, so
+inserting one element shifts pairwise pairing within the bucket. The
+only real doc-scope change is the added cisa-2026-lifecycle row.
+
+`changed $.components[name=xsubpp@].hashes[].content` is the documented
+name-key limitation, not a content change under a pinned digest:
+`bin/xsubpp` (a #854 phantom, correctly removed) and
+`usr/share/perl/5.40/ExtUtils/xsubpp` (a genuine orphan, newly surfaced)
+are different files sharing a basename.
+
+### #854 fix — verified against the target
+
+| | orphan file-tier paths | `lib/` |
+|---|---|---|
+| committed golden | 534 (408 under `bin`+`sbin`) | 0 |
+| pre-fix regen (34735981512) | 744 | 616 |
+| post-fix regen (34737159179) | **180** | **52** |
+
+`library` unchanged at 144 throughout. All 52 survivors are genuinely
+unclaimed — 0 of 52 carry a package occurrence in either spelling. Only
+image-postgres16 moved; the ten source-repo targets are byte-identical
+to the pre-fix regen.
+
+### Defects raised rather than fixed here
+
+- **#855** — SPDX 2.3 self-referential relationships
+- **#856** — maven `<dependencyManagement>` versions unresolved
+- **#857** — Go offline scans orphan most components
+
+Each is explained above and deterministic. Fixing any of them would
+change emission and invalidate this regen, so the fix set is frozen at
+#854 for this feature.
+
 ## FR-007 findings — NOT benign drift
 
 ### A. image-postgres16 — file-tier coverage swung. **Blocks refresh.**
