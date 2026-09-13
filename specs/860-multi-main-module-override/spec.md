@@ -114,8 +114,11 @@ override is distinguishable from one that never did.
   dangling reference, so the graph stays valid — but the component is
   still absent from the inventory.
 - **The override names a coordinate that matches an existing module.**
-  The document must not end up with two components claiming the same
-  identity.
+  The root absorbs it: the module is not emitted separately and its
+  outbound edges attach to the root (FR-011). Reachable because waybill
+  mints `pkg:generic/` main modules for some ecosystems, the same
+  namespace the override uses. No current corpus target exhibits this,
+  so it needs a synthetic test rather than a corpus assertion.
 - **`--preserve-manifest-main-module` passed on an N>1 scan.** Today it
   is silently a no-op with an INFO diagnostic. Whatever policy is chosen,
   the flag's behaviour on this path must be stated rather than left to
@@ -144,10 +147,24 @@ override is distinguishable from one that never did.
   unconditional. It MUST NOT error, and its help text MUST say it is
   retained for compatibility and no longer changes output. Removing it
   would break existing callers for no gain.
-- **FR-007**: The chosen policy MUST apply identically across CycloneDX,
+- **FR-007**: A retained former main module MUST keep its own outbound
+  dependency edges. Its edges MUST NOT be re-anchored onto the override
+  root, superseding the milestone-149 decision for this path.
+- **FR-008**: The override root MUST declare a dependency on **every**
+  retained former main module — a flat fan-out, independent of the
+  inter-module edges, so the emitted graph is root → modules →
+  libraries and reachability does not depend on inbound-edge data being
+  complete. Emitting root edges only for modules nothing else depends on
+  is explicitly rejected: a missing inbound edge would silently orphan a
+  module.
+- **FR-011**: When a retained module's PURL equals the override root's
+  PURL, the module MUST NOT be emitted as a separate component, and its
+  outbound edges MUST attach to the root. No two components may assert
+  the same coordinate.
+- **FR-009**: The chosen policy MUST apply identically across CycloneDX,
   SPDX 2.3 and SPDX 3, via the existing shared helper rather than three
   parallel implementations.
-- **FR-008**: Any change in emitted output MUST be reflected in the
+- **FR-010**: Any change in emitted output MUST be reflected in the
   public-corpus goldens in the same change, with the diff attributed.
 
 ### Key Entities
@@ -160,6 +177,8 @@ override is distinguishable from one that never did.
 - **Redirected PURL set** — the coordinates whose outbound edges are
   re-anchored onto the override root today. Inbound edges are not
   currently considered; this feature's defect lives in that asymmetry.
+  Under FR-007/FR-008 this set stops driving edge removal and instead
+  identifies which components the root should depend on.
 
 ## Success Criteria *(mandatory)*
 
@@ -180,6 +199,12 @@ override is distinguishable from one that never did.
   output identical to omitting it.
 - **SC-007**: Exactly one subject is declared per emitted document, for
   every target, verified in all three formats.
+- **SC-007a**: Every retained former main module is reachable from the
+  subject in the emitted graph — zero orphaned modules on the three
+  affected targets.
+- **SC-007b**: Retained modules keep their own edges: on `maven-guice`
+  the inter-module dependency edges present without `--root-name` are
+  present with it.
 - **SC-008**: The public-corpus lane is green on the refreshed goldens,
   and the accompanying diff is attributed per
   `docs/development/refreshing-corpus-goldens.md`.
@@ -193,6 +218,30 @@ override is distinguishable from one that never did.
   target has exactly one main module, so convergence adds no golden
   churn beyond the three N>1 targets — it is the cheaper option here as
   well as the simpler one to explain.
+- Q: What happens to a retained module's outbound dependency edges? →
+  **A: Retain them, and anchor the root to the modules.** The override
+  root declares a dependency on each retained former main module, giving
+  root → modules → libraries. This supersedes the milestone-149
+  re-anchoring decision (recorded 2026-06-29) for this path: absorbing
+  every module's edges onto the root flattens the workspace layer, and
+  retaining edges without anchoring the root leaves the subject
+  disconnected from everything it contains.
+- Q: Which retained modules does the root depend on? → **A: Every one
+  of them**, a flat fan-out, with inter-module edges retained alongside.
+  Selecting only the modules nothing else depends on would mirror a
+  reactor more closely, but it relies on inbound-edge data being
+  complete — and this project routinely scans in conditions where it is
+  not (offline, no module cache; see #857). A missing inbound edge would
+  then silently orphan a module, which is the failure this feature
+  exists to remove.
+- Q: What if a retained module's identity equals the override root's? →
+  **A: The root wins and absorbs it.** The module is not emitted as a
+  separate component and its outbound edges attach to the root. The
+  operator named the subject, so the subject prevails; merging also
+  avoids two components asserting the same coordinate. Reachable in
+  principle because waybill mints `pkg:generic/` main modules for some
+  ecosystems (pip apps, npm CLI tools — `scan_cmd.rs:1648`), the same
+  namespace the override uses; no current corpus target exhibits it.
 - Q: What happens to `--preserve-manifest-main-module`? → **A: Keep it
   as an accepted, documented no-op.** Its behaviour becomes
   unconditional, so the flag has nothing left to do; removing it would
