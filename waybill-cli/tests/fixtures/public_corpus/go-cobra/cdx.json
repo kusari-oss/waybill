@@ -59,6 +59,10 @@
           "value": "go-sum-fallback"
         },
         {
+          "name": "waybill:orphan-reason",
+          "value": "unresolved-indirect-require"
+        },
+        {
           "name": "waybill:resolver-step",
           "value": "go-sum-fallback"
         },
@@ -130,6 +134,10 @@
         {
           "name": "waybill:go-transitive-source",
           "value": "go-sum-fallback"
+        },
+        {
+          "name": "waybill:orphan-reason",
+          "value": "unresolved-indirect-require"
         },
         {
           "name": "waybill:resolver-step",
@@ -205,6 +213,10 @@
           "value": "go-sum-fallback"
         },
         {
+          "name": "waybill:orphan-reason",
+          "value": "unresolved-indirect-require"
+        },
+        {
           "name": "waybill:resolver-step",
           "value": "go-sum-fallback"
         },
@@ -278,6 +290,10 @@
           "value": "go-sum-fallback"
         },
         {
+          "name": "waybill:orphan-reason",
+          "value": "unresolved-indirect-require"
+        },
+        {
           "name": "waybill:resolver-step",
           "value": "go-sum-fallback"
         },
@@ -345,6 +361,10 @@
           "value": "go-sum-fallback"
         },
         {
+          "name": "waybill:orphan-reason",
+          "value": "unresolved-indirect-require"
+        },
+        {
           "name": "waybill:resolver-step",
           "value": "go-sum-fallback"
         },
@@ -410,6 +430,10 @@
         {
           "name": "waybill:go-transitive-source",
           "value": "go-sum-fallback"
+        },
+        {
+          "name": "waybill:orphan-reason",
+          "value": "unresolved-indirect-require"
         },
         {
           "name": "waybill:resolver-step",
@@ -586,6 +610,10 @@
         "value": "filesystem-scan"
       },
       {
+        "name": "waybill:cisa-2026-lifecycle",
+        "value": "after-build"
+      },
+      {
         "name": "waybill:os-release-missing-fields",
         "value": "ID,VERSION_ID"
       },
@@ -640,7 +668,7 @@
           "name": "waybill",
           "publisher": "waybill contributors",
           "type": "application",
-          "version": "0.1.0-alpha.62"
+          "version": "0.7.0"
         }
       ]
     }

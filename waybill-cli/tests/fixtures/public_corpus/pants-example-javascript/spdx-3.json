@@ -9,7 +9,7 @@
     },
     {
       "creationInfo": "<masked>",
-      "name": "waybill-0.5.1-alpha.1",
+      "name": "waybill-0.7.0",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/tool/waybill",
       "type": "Tool"
     },
@@ -25,9 +25,9 @@
           "type": "ExternalIdentifier"
         }
       ],
-      "name": "pants-example-javascript",
+      "name": "pants-example-javascript da76d5d",
       "rootElement": [
-        "https://waybill.kusari.dev/spdx3/doc-DNUV3MM4EEJ5US2XEXZOSJ5F/pkg-root-C7K4QR5ZKDQXKUM3"
+        "https://waybill.kusari.dev/spdx3/doc-4E2IXPQ7AEIKLH66NEQBYCXO/pkg-root-C7K4QR5ZKDQXKUM3"
       ],
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>",
       "type": "SpdxDocument"

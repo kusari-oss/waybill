@@ -155,6 +155,10 @@
           "value": "design"
         },
         {
+          "name": "waybill:unresolved-reason",
+          "value": "no <version> in pom.xml; no dependency-reduced-pom.xml or effective-pom fallback"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"core\"]"
         }
@@ -359,7 +363,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "extensions/throwingproviders/pom.xml"
+            "location": "extensions/testlib/pom.xml"
           }
         ]
       },
@@ -371,7 +375,7 @@
         },
         {
           "name": "waybill:source-files",
-          "value": "[\"extensions/throwingproviders/pom.xml\"]"
+          "value": "[\"extensions/testlib/pom.xml\"]"
         },
         {
           "name": "waybill:requirement-ranges",
@@ -386,8 +390,12 @@
           "value": "design"
         },
         {
+          "name": "waybill:unresolved-reason",
+          "value": "no <version> in pom.xml; no dependency-reduced-pom.xml or effective-pom fallback"
+        },
+        {
           "name": "waybill:workspace-member",
-          "value": "[\"extensions/throwingproviders\"]"
+          "value": "[\"extensions/testlib\"]"
         }
       ],
       "purl": "pkg:maven/com.google.code.findbugs/jsr305@unknown",
@@ -571,6 +579,10 @@
           "value": "maven-optional-element"
         },
         {
+          "name": "waybill:unresolved-reason",
+          "value": "no <version> in pom.xml; no dependency-reduced-pom.xml or effective-pom fallback"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"core\"]"
         }
@@ -633,6 +645,10 @@
           "value": "design"
         },
         {
+          "name": "waybill:unresolved-reason",
+          "value": "no <version> in pom.xml; no dependency-reduced-pom.xml or effective-pom fallback"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"core\"]"
         }
@@ -689,6 +705,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "no <version> in pom.xml; no dependency-reduced-pom.xml or effective-pom fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -748,6 +768,10 @@
           "value": "design"
         },
         {
+          "name": "waybill:unresolved-reason",
+          "value": "no <version> in pom.xml; no dependency-reduced-pom.xml or effective-pom fallback"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"extensions/grapher\"]"
         }
@@ -803,6 +827,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "no <version> in pom.xml; no dependency-reduced-pom.xml or effective-pom fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -920,6 +948,10 @@
           "value": "design"
         },
         {
+          "name": "waybill:unresolved-reason",
+          "value": "no <version> in pom.xml; no dependency-reduced-pom.xml or effective-pom fallback"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"extensions/testlib\"]"
         }
@@ -1034,6 +1066,10 @@
           "value": "design"
         },
         {
+          "name": "waybill:unresolved-reason",
+          "value": "no <version> in pom.xml; no dependency-reduced-pom.xml or effective-pom fallback"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"core\"]"
         }
@@ -1096,6 +1132,10 @@
           "value": "design"
         },
         {
+          "name": "waybill:unresolved-reason",
+          "value": "no <version> in pom.xml; no dependency-reduced-pom.xml or effective-pom fallback"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"core\"]"
         }
@@ -1152,6 +1192,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "no <version> in pom.xml; no dependency-reduced-pom.xml or effective-pom fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -1213,6 +1257,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "no <version> in pom.xml; no dependency-reduced-pom.xml or effective-pom fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -1362,6 +1410,60 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "examples/guice-demo/pom.xml"
+          }
+        ]
+      },
+      "name": "junit",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"examples/guice-demo/pom.xml\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "test"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"examples/guice-demo\"]"
+        }
+      ],
+      "purl": "pkg:maven/junit/junit@4.13.2",
+      "scope": "excluded",
+      "supplier": {
+        "name": "junit"
+      },
+      "type": "library",
+      "version": "4.13.2"
+    },
+    {
+      "bom-ref": "pkg:maven/junit/junit@unknown",
+      "cpe": "cpe:2.3:a:junit:junit:unknown:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "pom.xml"
           }
         ]
@@ -1373,24 +1475,32 @@
           "value": "[\"pom.xml\"]"
         },
         {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"\"]"
+        },
+        {
           "name": "waybill:source-type",
-          "value": "transitive"
+          "value": "workspace"
         },
         {
           "name": "waybill:sbom-tier",
-          "value": "source"
+          "value": "design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "no <version> in pom.xml; no dependency-reduced-pom.xml or effective-pom fallback"
         },
         {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
-      "purl": "pkg:maven/junit/junit@4.13.2",
+      "purl": "pkg:maven/junit/junit@unknown",
       "supplier": {
         "name": "junit"
       },
       "type": "library",
-      "version": "4.13.2"
+      "version": "unknown"
     },
     {
       "bom-ref": "pkg:maven/org.apache.felix/org.apache.felix.framework@3.0.5",
@@ -1852,6 +1962,10 @@
           "value": "maven-optional-element"
         },
         {
+          "name": "waybill:unresolved-reason",
+          "value": "no <version> in pom.xml; no dependency-reduced-pom.xml or effective-pom fallback"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"core\"]"
         }
@@ -1979,6 +2093,46 @@
       },
       "type": "library",
       "version": "5.3.18"
+    },
+    {
+      "bom-ref": "pkg:generic/file-tier?content-sha256=1ed804ceed688464c9099d61906bbfb2b53a9c0d5e6cf8afd16de1c08fbd8c67",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 1.0,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 1.0,
+                "technique": "hash-comparison"
+              }
+            ]
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "1ed804ceed688464c9099d61906bbfb2b53a9c0d5e6cf8afd16de1c08fbd8c67"
+        }
+      ],
+      "name": "pom.xml",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"extensions/throwingproviders/pom.xml\"]"
+        },
+        {
+          "name": "waybill:component-tier",
+          "value": "file"
+        },
+        {
+          "name": "waybill:file-paths",
+          "value": "[\"extensions/throwingproviders/pom.xml\"]"
+        }
+      ],
+      "type": "file",
+      "version": ""
     },
     {
       "bom-ref": "pkg:generic/file-tier?content-sha256=27a128e54950d8bc1291e028999d0fb36e2ef115983a2c75d8520f4327b72982",
@@ -2447,6 +2601,7 @@
         "pkg:maven/jakarta.persistence/jakarta.persistence-api@3.0.0",
         "pkg:maven/jakarta.servlet/jakarta.servlet-api@5.0.0",
         "pkg:maven/junit/junit@4.13.2",
+        "pkg:maven/junit/junit@unknown",
         "pkg:maven/org.apache.felix/org.apache.felix.framework@3.0.5",
         "pkg:maven/org.apache.struts/struts2-core@2.5.30",
         "pkg:maven/org.hamcrest/hamcrest-core@1.3",
@@ -2481,6 +2636,7 @@
         "pkg:maven/jakarta.persistence/jakarta.persistence-api@3.0.0",
         "pkg:maven/jakarta.servlet/jakarta.servlet-api@5.0.0",
         "pkg:maven/junit/junit@4.13.2",
+        "pkg:maven/junit/junit@unknown",
         "pkg:maven/org.apache.felix/org.apache.felix.framework@3.0.5",
         "pkg:maven/org.apache.struts/struts2-core@2.5.30",
         "pkg:maven/org.hamcrest/hamcrest-core@1.3",
@@ -2523,14 +2679,14 @@
         "pkg:maven/com.google.inject.extensions/guice-servlet@7.0.0",
         "pkg:maven/com.google.inject.extensions/guice-testlib@7.0.0",
         "pkg:maven/com.google.inject.extensions/guice-throwingproviders@7.0.0",
-        "pkg:maven/com.google.inject/guice@5.1.0",
+        "pkg:maven/com.google.inject/guice@7.0.0",
         "pkg:maven/com.google.truth.extensions/truth-java8-extension@unknown",
         "pkg:maven/com.google.truth/truth@unknown",
         "pkg:maven/jakarta.inject/jakarta.inject-api@unknown",
         "pkg:maven/jakarta.inject/jakarta.inject-tck@unknown",
         "pkg:maven/jakarta.persistence/jakarta.persistence-api@3.0.0",
         "pkg:maven/jakarta.servlet/jakarta.servlet-api@5.0.0",
-        "pkg:maven/junit/junit@4.13.2",
+        "pkg:maven/junit/junit@unknown",
         "pkg:maven/org.apache.felix/org.apache.felix.framework@3.0.5",
         "pkg:maven/org.apache.struts/struts2-core@2.5.30",
         "pkg:maven/org.hamcrest/hamcrest-core@1.3",
@@ -2551,6 +2707,10 @@
     {
       "dependsOn": [],
       "ref": "pkg:bazel/rules_jvm_external@unknown"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/file-tier?content-sha256=1ed804ceed688464c9099d61906bbfb2b53a9c0d5e6cf8afd16de1c08fbd8c67"
     },
     {
       "dependsOn": [],
@@ -2686,6 +2846,10 @@
     },
     {
       "dependsOn": [],
+      "ref": "pkg:maven/junit/junit@unknown"
+    },
+    {
+      "dependsOn": [],
       "ref": "pkg:maven/org.apache.felix/org.apache.felix.framework@3.0.5"
     },
     {
@@ -2767,6 +2931,10 @@
         "value": "filesystem-scan"
       },
       {
+        "name": "waybill:cisa-2026-lifecycle",
+        "value": "after-build"
+      },
+      {
         "name": "waybill:os-release-missing-fields",
         "value": "ID,VERSION_ID"
       },
@@ -2792,11 +2960,11 @@
       },
       {
         "name": "waybill:graph-completeness-reason",
-        "value": "orphaned-components-detected: 9 component(s) not reachable from root; transitive-edges-unresolvable: maven"
+        "value": "orphaned-components-detected: 11 component(s) not reachable from root; transitive-edges-unresolvable: maven"
       },
       {
         "name": "waybill:workspaces-detected",
-        "value": "[\".\",\"core\",\"examples/guice-demo\",\"extensions/dagger-adapter\",\"extensions/grapher\",\"extensions/persist\",\"extensions/spring\",\"extensions/struts2\",\"extensions/testlib\",\"extensions/throwingproviders\"]"
+        "value": "[\".\",\"core\",\"examples/guice-demo\",\"extensions/dagger-adapter\",\"extensions/grapher\",\"extensions/persist\",\"extensions/spring\",\"extensions/struts2\",\"extensions/testlib\"]"
       }
     ],
     "supplier": {
@@ -2809,7 +2977,7 @@
           "name": "waybill",
           "publisher": "waybill contributors",
           "type": "application",
-          "version": "0.1.0-alpha.62"
+          "version": "0.7.0"
         }
       ]
     }
