@@ -108,7 +108,7 @@ fn emit_waybill_version_override() {
         // change and names the affected target AND format. Reverted in
         // the commit immediately following. If you are reading this on
         // any branch, it is a mistake.
-        write_version_file(Some("0.7.0-T023-MUTANT".to_string()));
+        write_version_file(Some("0.7.0-T023-MUTANT"));
         return;
     };
     let trimmed = raw.trim();
