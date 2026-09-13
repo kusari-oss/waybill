@@ -42,14 +42,23 @@ research.
 
 ---
 
-> **Phase 3 attempted and reverted — see `baseline.md` §T006–T009.**
+> **Phases 3–6 CLOSED, NOT DONE.** Phase 3 attempted and reverted — see `baseline.md` §T006–T009.
 > The `replace` technique works for the Go toolchain (5.28s → 1.79s,
 > 2.9×) but **waybill's own parser honours `replace` and drops or
 > rewrites the module** (`legacy.rs:7`), so tests asserting on
 > third-party Go components fail: 3 failures at full scope, 8 at
 > partial. Reverted to green. The remaining 0.61s was never the
 > toolchain — it is waybill's own proxy-fetch tier. This phase needs a
-> technique that does not exist yet; see the report for options.
+> technique that does not exist yet. Phases 4–6 depended on Phase 3 and
+> are closed with it: US2's verification has nothing to verify, US3's
+> local-dev benefit never arrived, and a regression guard for a rule
+> that cannot be followed would be a guard that fails on every fixture
+> in the tree.
+>
+> The real fix is **#850** — waybill's own proxy tier re-attempts the
+> same doomed module up to 32 times per scan, which is what kept the
+> floor above target even after every fixture resolved locally. #843 is
+> closed in favour of it.
 
 ## Phase 3: User Story 1 — A contributor measuring performance gets a number they can trust (P1)
 
