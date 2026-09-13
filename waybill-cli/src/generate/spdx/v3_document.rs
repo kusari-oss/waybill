@@ -626,7 +626,7 @@ pub fn build_document(
             scan.components,
         );
     // Milestone 194 US4 — compute target_ref eagerly so we can pre-
-    // rewrite dropped-mainmod edges (via `rewrite_dropped_mainmod_edges`)
+    // rewrite dropped-mainmod edges (via `anchor_retained_mainmod_edges`)
     // BEFORE the classifier runs, mirroring the CDX path (#570) and
     // the SPDX 2.3 path. Fixes the format-parity gap where SPDX 3
     // over-fires `partial: orphaned-components-detected: N` on
@@ -659,7 +659,7 @@ pub fn build_document(
         .chain(m158_workspace_peer_edges.iter().cloned())
         .collect();
     let m194_classifier_relationships: Vec<waybill_common::resolution::Relationship> = {
-        let prerewritten = crate::generate::graph_completeness::rewrite_dropped_mainmod_edges(
+        let prerewritten = crate::generate::graph_completeness::anchor_retained_mainmod_edges(
             scan.relationships,
             &dropped_main_module_purls,
             &m158_target_ref,

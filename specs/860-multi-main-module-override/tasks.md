@@ -44,12 +44,12 @@ Single Rust workspace. All paths from repo root.
 
 **Independent test**: scan any affected target with `--root-name`, subtract the component set from the set of dependency-reference targets, and get an empty set — in all three formats.
 
-- [ ] T011 [US1] In `waybill-cli/src/generate/cyclonedx/builder.rs` (call site line 591), emit a `dependencies[]` entry anchoring the override root to every retained module from `retained_main_module_purls`, per C-3.2.
-- [ ] T012 [US1] In `waybill-cli/src/generate/spdx/document.rs` (call site line 425), emit the equivalent SPDX 2.3 relationships from the override root to every retained module.
-- [ ] T013 [US1] In `waybill-cli/src/generate/spdx/v3_document.rs` (call site line 65), emit the equivalent SPDX 3 relationships.
-- [ ] T014 [US1] Add a test in `waybill-cli/tests/` asserting invariant I2 — every `dependsOn` target and every relationship endpoint resolves to a component in the same document — run against a synthetic multi-module fixture in all three formats.
-- [ ] T015 [US1] Add a test asserting invariant I3 — every retained module is reachable from the subject (SC-007a).
-- [ ] T016 [US1] Teeth-check T014 and T015 by reverting T011–T013; both must fail.
+- [X] T011 [US1] In `waybill-cli/src/generate/cyclonedx/builder.rs` (call site line 591), emit a `dependencies[]` entry anchoring the override root to every retained module from `retained_main_module_purls`, per C-3.2.
+- [X] T012 [US1] In `waybill-cli/src/generate/spdx/document.rs` (call site line 425), emit the equivalent SPDX 2.3 relationships from the override root to every retained module.
+- [X] T013 [US1] In `waybill-cli/src/generate/spdx/v3_document.rs` (call site line 65), emit the equivalent SPDX 3 relationships.
+- [X] T014 [US1] Add a test in `waybill-cli/tests/` asserting invariant I2 — every `dependsOn` target and every relationship endpoint resolves to a component in the same document — run against a synthetic multi-module fixture in all three formats.
+- [X] T015 [US1] Add a test asserting invariant I3 — every retained module is reachable from the subject (SC-007a).
+- [X] T016 [US1] Teeth-check T014 and T015 by reverting T011–T013; both must fail.
 
 **Checkpoint**: US1 is independently deliverable. The graph is internally consistent even before the inventory claims in US2 are verified.
 

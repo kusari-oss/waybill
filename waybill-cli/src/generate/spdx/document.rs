@@ -722,7 +722,7 @@ pub fn build_document(
     // alias in `spdx/relationships.rs` and produces empty
     // `.dependsOn` on the synthesized root.
     let m194_classifier_relationships: Vec<waybill_common::resolution::Relationship> = {
-        let prerewritten = crate::generate::graph_completeness::rewrite_dropped_mainmod_edges(
+        let prerewritten = crate::generate::graph_completeness::anchor_retained_mainmod_edges(
             artifacts.relationships,
             &dropped_main_module_purls,
             &m158_target_ref,

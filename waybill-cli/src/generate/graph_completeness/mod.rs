@@ -516,39 +516,138 @@ fn workspace_member_dirs(c: &ResolvedComponent) -> std::collections::HashSet<Str
 /// closing the format-parity gap for graph-completeness on operator-
 /// override scans (SC-005: pico corpus SBOMs → `complete` across all
 /// three formats).
-pub fn rewrite_dropped_mainmod_edges(
+pub fn anchor_retained_mainmod_edges(
     relationships: &[Relationship],
-    dropped_main_module_purls: &[String],
+    retained_main_module_purls: &[String],
     target_ref: &str,
 ) -> Vec<Relationship> {
-    if dropped_main_module_purls.is_empty() {
+    if retained_main_module_purls.is_empty() {
         return relationships.to_vec();
     }
-    let dropped: HashSet<&str> = dropped_main_module_purls
+
+    // Milestone 860 (#863). This function used to REWRITE every edge
+    // sourced at a dropped main module so it sourced from the override
+    // root instead. That made sense while the modules were being
+    // deleted — the edges had to go somewhere. Now the modules are
+    // retained, so their edges stay with them, and the root is anchored
+    // TO them instead.
+    //
+    // Rewriting here would flatten the workspace: on maven-guice all
+    // sixteen modules' dependencies would collapse onto one root and the
+    // module layer would carry nothing.
+    let mut out = relationships.to_vec();
+    let existing: HashSet<(&str, &str)> = relationships
         .iter()
-        .map(|s| s.as_str())
+        .map(|r| (r.from.as_str(), r.to.as_str()))
         .collect();
-    relationships
-        .iter()
-        .map(|r| {
-            if dropped.contains(r.from.as_str()) {
-                Relationship {
-                    from: target_ref.to_string(),
-                    to: r.to.clone(),
-                    relationship_type: r.relationship_type.clone(),
-                    provenance: r.provenance.clone(),
-                }
-            } else {
-                r.clone()
-            }
-        })
-        .collect()
+
+    for purl in retained_main_module_purls {
+        // FR-011: a module whose identity equals the root IS the root.
+        // Anchoring it to itself would be a self-edge.
+        if purl.as_str() == target_ref {
+            continue;
+        }
+        if existing.contains(&(target_ref, purl.as_str())) {
+            continue;
+        }
+        out.push(Relationship {
+            from: target_ref.to_string(),
+            to: purl.clone(),
+            relationship_type: RelationshipType::DependsOn,
+            provenance: EnrichmentProvenance {
+                source: "milestone-860-retained-main-module".to_string(),
+                data_type: "dependency-graph".to_string(),
+            },
+        });
+    }
+    out
 }
 
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
     use super::*;
+
+    fn rel(from: &str, to: &str) -> Relationship {
+        Relationship {
+            from: from.to_string(),
+            to: to.to_string(),
+            relationship_type: RelationshipType::DependsOn,
+            provenance: EnrichmentProvenance {
+                source: "test".to_string(),
+                data_type: "dependency-graph".to_string(),
+            },
+        }
+    }
+
+    /// T014 — invariant I2 (FR-001, C-3.3). Every edge endpoint must
+    /// resolve to a component present in the document.
+    #[test]
+    fn m860_no_edge_dangles_after_anchoring() {
+        // crate-a is a retained module; dep-x is its dependency.
+        let rels = vec![rel("pkg:cargo/crate-a@1.0.0", "pkg:cargo/dep-x@2.0.0")];
+        let retained = vec!["pkg:cargo/crate-a@1.0.0".to_string()];
+        let out = anchor_retained_mainmod_edges(&rels, &retained, "root@1");
+
+        // The component set that will be emitted: root + module + dep.
+        let present: HashSet<&str> =
+            ["root@1", "pkg:cargo/crate-a@1.0.0", "pkg:cargo/dep-x@2.0.0"]
+                .into_iter()
+                .collect();
+        for r in &out {
+            assert!(present.contains(r.from.as_str()), "I2: dangling from {}", r.from);
+            assert!(present.contains(r.to.as_str()), "I2: dangling to {}", r.to);
+        }
+        assert!(
+            out.iter().any(|r| r.from == "pkg:cargo/crate-a@1.0.0"),
+            "FR-007: the module MUST keep its own outbound edge",
+        );
+    }
+
+    /// T015 — invariant I3 (FR-008). Every retained module reachable
+    /// from the subject, including one that nothing else depends on.
+    #[test]
+    fn m860_every_retained_module_is_reachable_from_the_root() {
+        let rels = vec![rel("pkg:cargo/crate-a@1.0.0", "pkg:cargo/crate-b@1.0.0")];
+        let retained = vec![
+            "pkg:cargo/crate-a@1.0.0".to_string(),
+            "pkg:cargo/crate-b@1.0.0".to_string(),
+        ];
+        let out = anchor_retained_mainmod_edges(&rels, &retained, "root@1");
+        for m in &retained {
+            assert!(
+                out.iter().any(|r| r.from == "root@1" && &r.to == m),
+                "I3/FR-008: root must depend on {m} — flat fan-out, not only the un-depended-upon",
+            );
+        }
+        // crate-b is depended upon by crate-a AND anchored to the root.
+        // FR-008 rejects selecting only the graph's top, because a
+        // missing inbound edge would then orphan a module silently.
+        assert_eq!(out.len(), 3, "1 original edge + 2 anchors");
+    }
+
+    /// FR-011 — a module whose identity equals the root is the root; no
+    /// self-edge is emitted.
+    #[test]
+    fn m860_module_matching_the_root_gets_no_self_edge() {
+        let retained = vec!["root@1".to_string(), "pkg:cargo/other@1.0.0".to_string()];
+        let out = anchor_retained_mainmod_edges(&[], &retained, "root@1");
+        assert!(
+            !out.iter().any(|r| r.from == r.to),
+            "FR-011: no self-edge; got {out:?}",
+        );
+        assert_eq!(out.len(), 1, "only the non-colliding module is anchored");
+    }
+
+    /// Passthrough guard: with nothing retained the graph is untouched,
+    /// which is what keeps the eight zero-main-module corpus targets
+    /// byte-identical (SC-005).
+    #[test]
+    fn m860_no_retained_modules_leaves_the_graph_untouched() {
+        let rels = vec![rel("a", "b"), rel("b", "c")];
+        let out = anchor_retained_mainmod_edges(&rels, &[], "root@1");
+        assert_eq!(out, rels, "SC-005: no retained modules ⇒ no change at all");
+    }
     use crate::generate::graph_completeness::test_support::{
         mk_component, mk_main_module, mk_rel, selection_with_main_module,
     };
