@@ -67,10 +67,29 @@ fn run_target(name: &str) {
         panic!("{fail}");
     }
     // Layer 2 — full-SBOM byte-identity golden diff.
+    //
+    // Every format is compared before reporting, and all failures are
+    // reported together. Panicking on the first one aborts the test
+    // before the later formats are ever compared, which has two costs:
+    // a reviewer fixing CDX drift only discovers SPDX drift on the next
+    // run, and — the reason this changed — the lane cannot demonstrate
+    // that the SPDX comparisons execute at all, because a CDX failure
+    // always preempts them. Milestone 840 T024 requires exactly that
+    // demonstration: a format whose comparison silently no-ops must not
+    // be able to hide behind the other two.
+    let mut failures = Vec::new();
     for fmt in [FailureFormat::Cdx, FailureFormat::Spdx23, FailureFormat::Spdx3] {
         if let Err(fail) = compare_golden(target.name, fmt, &sboms) {
-            panic!("{fail}");
+            failures.push(format!("{fail}"));
         }
+    }
+    if !failures.is_empty() {
+        panic!(
+            "{} of 3 formats drifted for {}:\n\n{}",
+            failures.len(),
+            target.name,
+            failures.join("\n\n"),
+        );
     }
 }
 
