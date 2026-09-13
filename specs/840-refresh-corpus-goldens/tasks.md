@@ -48,12 +48,12 @@
 - [X] T009 [US1] Confirm the artifact's target set matches T001's failing set. A target present in one and not the other means the failing set moved between dispatches and T001 must be re-run.
 - [X] T010 [US1] For each failing target, produce a normalised diff with `cargo run -p xtask -- corpus-diff --target <name> --old-ref HEAD` and save each to the PR draft. Up to thirty-three diffs across eleven targets × three formats — every corpus target is failing (verified run 34666133472).
 - [X] T011 [US1] Read every diff. Classify each change as a repeated shape (a category) or a singleton. Per `research.md` R4 a singleton is NOT a category and gets its own explanation — folding singletons into a category is how a regression is absorbed into a large benign diff.
-- [ ] T012 [US1] For any target whose diff shows a change inconsistent with accumulated drift, investigate before proceeding. FR-007 blocks the refresh for that target until the change is explained or raised as a defect.
-- [ ] T013 [US1] Apply FR-012 to any target failing for a non-drift reason: repair it in this feature if the fix is small, otherwise remove it from the lane's gating set and open a tracked issue. Regenerating its golden is forbidden — that encodes the fault as expected output.
-- [ ] T014 [US1] If any target was removed under T013, make the removal visible in the lane's own output per FR-012a, so shrinking coverage to reach 100% cannot be mistaken for earning it.
-- [ ] T015 [US1] Copy the regenerated goldens for every verified target into `waybill-cli/tests/fixtures/public_corpus/`, all targets in one change per FR-013.
-- [ ] T016 [US1] Confirm no assertion was widened, relaxed or disabled to achieve a pass (FR-008): `git diff` must show changes under `fixtures/` only, with `waybill-cli/tests/corpus_harness_195/` untouched.
-- [ ] T017 [US1] Dispatch the lane read-only against the branch; confirm every gated target passes (SC-001).
+- [X] T012 [US1] For any target whose diff shows a change inconsistent with accumulated drift, investigate before proceeding. FR-007 blocks the refresh for that target until the change is explained or raised as a defect.
+- [X] T013 [US1] Apply FR-012 to any target failing for a non-drift reason: repair it in this feature if the fix is small, otherwise remove it from the lane's gating set and open a tracked issue. Regenerating its golden is forbidden — that encodes the fault as expected output.
+- [X] T014 [US1] If any target was removed under T013, make the removal visible in the lane's own output per FR-012a, so shrinking coverage to reach 100% cannot be mistaken for earning it.
+- [X] T015 [US1] Copy the regenerated goldens for every verified target into `waybill-cli/tests/fixtures/public_corpus/`, all targets in one change per FR-013.
+- [X] T016 [US1] Confirm no assertion was widened, relaxed or disabled to achieve a pass (FR-008): `git diff` must show changes under `fixtures/` only, with `waybill-cli/tests/corpus_harness_195/` untouched.
+- [X] T017 [US1] Dispatch the lane read-only against the branch; confirm every gated target passes (SC-001).
 
 **Checkpoint**: Lane green. Goldens committed. No harness or workflow file modified.
 
@@ -67,13 +67,13 @@
 
 **Coupling note**: US2 is not deliverable *after* US1 in the usual sense. FR-006/FR-007 make attribution a precondition of committing a golden, so T011–T012 (in US1) are where the understanding is produced; the tasks below are where it is recorded and proven. The stories are separable as *deliverables* — green lane vs reviewable evidence — not as a work sequence.
 
-- [ ] T018 [US2] Build the attribution table: for each delta category found in T011, name the merge that caused it, working the log from `25bfbce` (2026-07-21, the last golden write) to the branch point. Expect m776 (#797) to account for a large share via source-provenance `externalReferences`.
-- [ ] T019 [US2] Record which targets exhibit each category, so categories can be compared ACROSS targets per FR-013a. A target exhibiting a category no other target shows is the most likely place for a regression to hide.
-- [ ] T020 [US2] Confirm every category has a named cause. "Expected churn" is not a cause; any category without one returns to T012.
-- [ ] T021 [US2] Write the attribution into the pull request description per FR-015. Do NOT commit it as a document — it describes one moment and would read as current long after it is not, which is the failure mode #827 is currently cleaning up.
-- [ ] T022 [US2] Reference the pull request from the commit message per FR-015a, then verify SC-007 by running `git log -1` on the merged commit and confirming the attribution is reachable from what it prints — following only the reference, without prior knowledge that evidence exists.
-- [ ] T023 [US2] Prove the lane still detects change (FR-010, SC-003): introduce a deliberate emission change, dispatch the lane, confirm it fails and names the affected target and format, then revert. Record the failing run ID in the PR. A green lane is not evidence of a working lane — this repo has shipped a schema gate that passed because its `$ref`s resolved to stubs.
-- [ ] T024 [US2] Cover at least one target per format in T023, so a format whose comparison silently no-ops cannot hide behind the other two.
+- [X] T018 [US2] Build the attribution table: for each delta category found in T011, name the merge that caused it, working the log from `25bfbce` (2026-07-21, the last golden write) to the branch point. Expect m776 (#797) to account for a large share via source-provenance `externalReferences`.
+- [X] T019 [US2] Record which targets exhibit each category, so categories can be compared ACROSS targets per FR-013a. A target exhibiting a category no other target shows is the most likely place for a regression to hide.
+- [X] T020 [US2] Confirm every category has a named cause. "Expected churn" is not a cause; any category without one returns to T012.
+- [X] T021 [US2] Write the attribution into the pull request description per FR-015. Do NOT commit it as a document — it describes one moment and would read as current long after it is not, which is the failure mode #827 is currently cleaning up.
+- [X] T022 [US2] Reference the pull request from the commit message per FR-015a, then verify SC-007 by running `git log -1` on the merged commit and confirming the attribution is reachable from what it prints — following only the reference, without prior knowledge that evidence exists.
+- [X] T023 [US2] Prove the lane still detects change (FR-010, SC-003): introduce a deliberate emission change, dispatch the lane, confirm it fails and names the affected target and format, then revert. Record the failing run ID in the PR. A green lane is not evidence of a working lane — this repo has shipped a schema gate that passed because its `$ref`s resolved to stubs.
+- [X] T024 [US2] Cover at least one target per format in T023, so a format whose comparison silently no-ops cannot hide behind the other two.
 
 **Checkpoint**: Attribution complete in the PR, every category caused, teeth demonstrated per format.
 
@@ -85,11 +85,11 @@
 
 **Independent test**: Someone who did not do this refresh can restate the procedure from the document alone.
 
-- [ ] T025 [P] [US3] Publish `specs/840-refresh-corpus-goldens/quickstart.md` to `docs/development/refreshing-corpus-goldens.md` per FR-014, as a sibling of `docs/perf/refreshing-the-baseline.md` — same hazard class, same shelf.
-- [ ] T026 [P] [US3] Ensure the document states the local-generation prohibition and *why*, citing #818 (macOS-recorded baseline vs Linux CI, nine days of phantom failures) and #832 (LFS-dependent fixture, three nights, two wrong diagnoses). The reason is what makes the rule survive contact with someone in a hurry.
-- [ ] T027 [P] [US3] Link the procedure from `CONTRIBUTING.md` where the other maintenance procedures are listed, so it is found without knowing its filename.
+- [X] T025 [P] [US3] Publish `specs/840-refresh-corpus-goldens/quickstart.md` to `docs/development/refreshing-corpus-goldens.md` per FR-014, as a sibling of `docs/perf/refreshing-the-baseline.md` — same hazard class, same shelf.
+- [X] T026 [P] [US3] Ensure the document states the local-generation prohibition and *why*, citing #818 (macOS-recorded baseline vs Linux CI, nine days of phantom failures) and #832 (LFS-dependent fixture, three nights, two wrong diagnoses). The reason is what makes the rule survive contact with someone in a hurry.
+- [X] T027 [P] [US3] Link the procedure from `CONTRIBUTING.md` where the other maintenance procedures are listed, so it is found without knowing its filename.
 
-- [ ] T028 [US3] Validate SC-006: have someone who did not perform this refresh — a colleague, or a fresh session with no feature context — read `docs/development/refreshing-corpus-goldens.md` alone and restate the procedure. Record which steps they could not reconstruct and fix those gaps in the document. Self-review does not satisfy this: the author cannot un-know the procedure, which is the one thing the criterion measures.
+- [X] T028 [US3] Validate SC-006: have someone who did not perform this refresh — a colleague, or a fresh session with no feature context — read `docs/development/refreshing-corpus-goldens.md` alone and restate the procedure. Record which steps they could not reconstruct and fix those gaps in the document. Self-review does not satisfy this: the author cannot un-know the procedure, which is the one thing the criterion measures.
 
 **Checkpoint**: Procedure published, discoverable, and confirmed followable by someone other than its author.
 
@@ -97,10 +97,10 @@
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T029 Verify reproducibility (FR-011, SC-004): dispatch regen a second time against the unchanged tree and confirm the output is identical to the committed goldens. A difference means something non-deterministic is unmasked.
-- [ ] T030 If T029 finds non-determinism, fix it in the harness's `mask_nondeterministic` where the gate honours it — NOT in `corpus_diff`, where only human reviewers would see the fix and the lane would keep failing.
-- [ ] T031 Run the full pre-PR gate: `./scripts/pre-pr.sh` must exit 0.
-- [ ] T032 Close #763 with a reference to the merged PR, noting the corrected scope (eleven targets — every one — not the five originally reported).
+- [X] T029 Verify reproducibility (FR-011, SC-004): dispatch regen a second time against the unchanged tree and confirm the output is identical to the committed goldens. A difference means something non-deterministic is unmasked.
+- [X] T030 If T029 finds non-determinism, fix it in the harness's `mask_nondeterministic` where the gate honours it — NOT in `corpus_diff`, where only human reviewers would see the fix and the lane would keep failing.
+- [X] T031 Run the full pre-PR gate: `./scripts/pre-pr.sh` must exit 0.
+- [X] T032 Close #763 with a reference to the merged PR, noting the corrected scope (eleven targets — every one — not the five originally reported).
 
 ---
 
@@ -149,3 +149,50 @@ Phase 1 (Setup)
 3. Phase 5 can land before, with, or after — it blocks nothing.
 
 **Estimated shape**: 32 tasks. The volume is in T010–T011 (up to thirty-three diffs to read and classify), which is human judgment and does not parallelise without losing the cross-target signal that makes it worth doing.
+
+---
+
+## Completion record
+
+All tasks complete. Delivered across three pull requests:
+
+| PR | scope |
+|----|-------|
+| #858 | goldens refreshed + attributed (T010–T024, T029, T031, T032) |
+| #860 | nightly failure escalation — follow-up #859, not an m840 task |
+| #861 | fresh-reader gaps closed (T028) |
+
+Two conditional tasks did not fire:
+
+- **T014** — no target was removed from the gating set. The one
+  non-drift failure (image-postgres16) was repaired under T013 as #854
+  rather than removed, so there was no coverage reduction to make
+  visible.
+- **T030** — T029 found no nondeterminism. Two independent regens (runs
+  34666830925 and 34735981512) produced byte-identical output across all
+  11 targets × 3 formats, so no masking fix was needed.
+
+Evidence run IDs:
+
+| run | purpose |
+|-----|---------|
+| 34666830925 / 34735981512 | reproducibility — byte-identical (T029) |
+| 34737159179 | the regeneration these goldens came from |
+| 34738008101 | read-only lane green with refreshed goldens (T017) |
+| 34738261598 | mutation naming only `cdx.json` — the T024 finding |
+| 34738509509 | mutation naming all three formats (T023/T024 evidence) |
+| 34738741130 | read-only lane green after revert |
+
+SC-007 verified by running `git log -1` on the merged commit `f5bda73f`:
+it prints `(#858)`, and following only that reference reaches the
+attribution in the PR body.
+
+**SC-006 is provisionally met.** T028 was satisfied by a fresh session
+with no feature context, which is what the task permits — but that is a
+weaker signal than a colleague, since it shares priors with the author
+about how this tooling works. A human cold read would still be worth
+having.
+
+Defects found during the refresh: **#854** fixed in #858; **#855**,
+**#856**, **#857** raised and deliberately not fixed, because any
+emission change would have invalidated the regeneration.
