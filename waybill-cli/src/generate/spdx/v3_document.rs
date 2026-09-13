@@ -328,13 +328,21 @@ pub fn build_document(
     // edges originally sourced at those PURLs get rewritten to source
     // from the new root in build_dependency_relationships. Mirrors the
     // SPDX 2.3 alias path in `relationships.rs`.
-    if synthetic_root_added {
-        if let Some(synth_iri) = root_iris.first().cloned() {
-            for purl in &dropped_main_module_purls {
-                package_iri_by_purl.insert(purl.clone(), synth_iri.clone());
-            }
-        }
-    }
+    // Milestone 860 (#863): the alias is GONE.
+    //
+    // It existed (issue #229) so that dependency edges sourced at a
+    // dropped main module would be rewritten to source from the
+    // synthesized root. FR-007 stops moving those edges — retained
+    // modules keep them — so aliasing their PURLs onto the root IRI now
+    // does nothing but misroute their annotations.
+    //
+    // Removing it also closes the subject-routing divergence milestone
+    // 149 recorded in catalog row C102 and deferred to "a future
+    // milestone": the demote annotation was riding the alias and being
+    // emitted with `subject = synth_root_iri`, so all N modules'
+    // annotations collapsed onto one subject. On maven-guice that showed
+    // as 16 annotations in CDX and SPDX 2.3 but 1 in SPDX 3.
+    let _ = synthetic_root_added;
 
     // 3. SpdxDocument (placed in the graph before the per-element
     // sections so a JSON-walker reading top-down hits the document

@@ -2697,6 +2697,85 @@ mod tests {
         );
     }
 
+    /// T017 — C-2.3. The component set emitted WITH an override is a
+    /// superset of the set emitted without one.
+    ///
+    /// Runs the real builder both ways rather than asserting a count,
+    /// so a component silently swapped for another cannot pass.
+    #[test]
+    fn m860_override_emits_a_superset_of_the_unoverridden_set() {
+        let components = vec![
+            make_main_module_component("cargo", "crate-a", "0.1.0"),
+            make_main_module_component("cargo", "crate-b", "0.2.0"),
+            make_component("serde", "1.0.0"),
+        ];
+        let integrity = clean_integrity();
+
+        let plain = CycloneDxBuilder::new(CycloneDxConfig::default())
+            .build(&components, &[], &integrity, "myapp", &[], None)
+            .expect("build without override");
+        let overridden = CycloneDxBuilder::new(CycloneDxConfig::default())
+            .with_root_override(crate::generate::RootComponentOverride {
+                name: Some("widget-svc".to_string()),
+                version: Some("1.2.3".to_string()),
+                ..Default::default()
+            })
+            .build(&components, &[], &integrity, "myapp", &[], None)
+            .expect("build with override");
+
+        let purls = |b: &serde_json::Value| -> std::collections::HashSet<String> {
+            b["components"].as_array().map(|a| a.iter()
+                .filter_map(|c| c["purl"].as_str().map(str::to_string))
+                .collect()).unwrap_or_default()
+        };
+        let (a, b) = (purls(&plain), purls(&overridden));
+        let missing: Vec<&String> = a.difference(&b).collect();
+        assert!(
+            missing.is_empty(),
+            "C-2.3: naming the subject removed {missing:?} from the inventory",
+        );
+    }
+
+    /// T020 — FR-005 convergence at N=1, through the real emitter.
+    ///
+    /// No corpus target has exactly one main module (research R6), so
+    /// this is the only coverage the N=1 path gets. It deliberately runs
+    /// `build()` rather than the helper: milestone 856 shipped a bug for
+    /// months underneath a unit test that hand-assembled its input and
+    /// therefore exercised a function that was never broken.
+    #[test]
+    fn m860_single_main_module_converges_on_the_same_policy() {
+        let components = vec![
+            make_main_module_component("cargo", "only-one", "0.5.1"),
+            make_component("serde", "1.0.0"),
+        ];
+        let integrity = clean_integrity();
+        let bom = CycloneDxBuilder::new(CycloneDxConfig::default())
+            .with_root_override(crate::generate::RootComponentOverride {
+                name: Some("widget-svc".to_string()),
+                version: Some("1.2.3".to_string()),
+                ..Default::default()
+            })
+            .build(&components, &[], &integrity, "myapp", &[], None)
+            .expect("build bom");
+
+        let comps = bom["components"].as_array().expect("components[]");
+        let one = comps.iter()
+            .find(|c| c["purl"].as_str() == Some("pkg:cargo/only-one@0.5.1"))
+            .expect("FR-005: N=1 retains, exactly as N>1 does");
+        assert_eq!(
+            one["type"].as_str(), Some("library"),
+            "FR-005: N=1 demotes, exactly as N>1 does",
+        );
+        // FR-003: the subject is the override, and nothing else claims it.
+        assert_eq!(bom["metadata"]["component"]["name"].as_str(), Some("widget-svc"));
+        let roots: Vec<&str> = comps.iter()
+            .filter(|c| c["type"].as_str() == Some("application"))
+            .filter_map(|c| c["purl"].as_str())
+            .collect();
+        assert!(roots.is_empty(), "FR-003: no second root in components[]; got {roots:?}");
+    }
+
     /// Was a milestone-077 pin: the manifest-derived main module was
     /// filtered OUT of `components[]` when an override was active.
     ///

@@ -563,10 +563,27 @@ pub(crate) fn apply_main_module_drop_or_demote(
     // SELECTION. It does not follow that the modules should be deleted:
     // the operator named the subject, which is a different question from
     // what the inventory contains.
+    // FR-011: the operator may name a root whose identity collides with
+    // a module's. Reachable because waybill mints `pkg:generic/` main
+    // modules for some ecosystems (pip apps, npm CLI tools) — the same
+    // namespace `--root-name` uses. The subject wins: the module is not
+    // emitted separately, so no two components assert one coordinate.
+    let subject_purl: Option<String> = match (&root_override.name, &root_override.version) {
+        (Some(n), Some(v)) => root_override.build_subject_purl(n, v),
+        _ => None,
+    };
+
     let mut effective = Vec::with_capacity(components.len());
     let mut retained = Vec::new();
     for c in components {
         if is_main_module(c) {
+            if subject_purl.as_deref() == Some(c.purl.as_str()) {
+                tracing::info!(
+                    purl = %c.purl,
+                    "override names this module's own coordinate; it IS the subject, not a separate component (FR-011)",
+                );
+                continue;
+            }
             // Demote in place. Removing the role tag flips downstream
             // type-derivation to `library` automatically.
             //
@@ -1104,6 +1121,51 @@ mod tests {
         assert!(
             still_root.is_empty(),
             "I1/FR-003: no retained component may keep the main-module role; found {still_root:?}",
+        );
+    }
+
+    /// T019 — FR-011 / C-4.1. A module whose identity equals the
+    /// override root's is the subject, not a second component.
+    ///
+    /// Synthetic because no corpus target exhibits this (research R6):
+    /// all eleven mint `pkg:generic/<target>@<pin>` roots while their
+    /// modules are ecosystem-typed. It is reachable in production
+    /// because waybill mints `pkg:generic/` main modules for pip apps
+    /// and npm CLI tools.
+    #[test]
+    fn m860_module_matching_the_override_identity_is_absorbed() {
+        let over = RootComponentOverride {
+            name: Some("widget-svc".to_string()),
+            version: Some("1.2.3".to_string()),
+            ..Default::default()
+        };
+        let subject = over
+            .build_subject_purl("widget-svc", "1.2.3")
+            .expect("subject purl");
+        assert_eq!(subject, "pkg:generic/widget-svc@1.2.3", "precondition");
+
+        let components = vec![
+            make_main_module(&subject, "/p/pyproject.toml", false),
+            make_main_module("pkg:generic/other-tool@9.9.9", "/p/other/pyproject.toml", false),
+            make_library("pkg:pypi/dep@1.0.0"),
+        ];
+        let result = apply_main_module_drop_or_demote(&components, &over);
+
+        assert!(
+            !result.effective_components.iter().any(|c| c.purl.as_str() == subject),
+            "FR-011: the colliding module must not be emitted separately — it IS the subject",
+        );
+        assert!(
+            !result.retained_main_module_purls.iter().any(|p| p == &subject),
+            "FR-011: no root->self anchor for the absorbed module",
+        );
+        assert!(
+            result.effective_components.iter().any(|c| c.purl.as_str() == "pkg:generic/other-tool@9.9.9"),
+            "a non-colliding module is still retained",
+        );
+        assert_eq!(
+            result.retained_main_module_purls,
+            vec!["pkg:generic/other-tool@9.9.9".to_string()],
         );
     }
 
