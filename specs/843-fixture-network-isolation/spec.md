@@ -1,9 +1,37 @@
-# Feature Specification: Test fixtures must not depend on network reachability
+# Feature Specification: A scan of this repository must not depend on network reachability
 
 **Feature Branch**: `843-fixture-network-isolation`
 **Created**: 2026-09-12
 **Status**: Draft
 **Input**: Issue #843 — "Go test fixtures trigger real network resolution, making scan timings unstable"
+
+## Clarifications
+
+### Session 2026-09-12
+
+- Q: Does this cover only fixture-declared modules, or anything that makes a scan of this repo reach the network? → A: Anything (Option A). Scoping to fixtures alone risks leaving network in the floor and making SC-001/SC-002 unachievable.
+- Q: May the fix change how waybill invokes cargo, or must production behaviour stay untouched? → A: It may (Option A) — but the measurement that motivated the question was wrong, and on the corrected numbers no production change appears necessary. The permission stands; the need does not.
+
+#### Measurement correction, recorded rather than quietly fixed
+
+Two wrong attributions were made **during this clarification session**, both from single-sample comparisons against a floor this very feature exists because it is unstable:
+
+1. First claim: "the cargo download is ~17 of the 22 seconds, about 77%". Wrong. That rested on one 22.00s outlier. Repeated, the baseline is 5.04–5.35s and disabling cargo registry access changes nothing (5.00–5.12s). `cargo metadata` is already invoked with `--offline` and already bounded by a timeout, which should have been checked before the claim rather than after.
+2. Second claim: "refusing the Go proxy does not move the floor at all". Also wrong, same cause.
+
+Repeated three times each, the actual decomposition is:
+
+| configuration | median |
+|---|---|
+| fully `--offline` | 0.49s |
+| no enrichment, network on | **5.16s** |
+| + Go module proxy refused | **1.15s** |
+| + `go mod why` disabled | 4.62s |
+| + binary scan disabled | 4.99s |
+
+**Go module proxy access is ~4.0s of the 5.16s floor — about 78%.** Cargo contributes nothing measurable. Issue #843's second suggested remedy is therefore correct, and this spec's first draft was wrong to dismiss it.
+
+The lesson is the feature's own thesis turned on its author: a floor that swings 5s to 23s cannot be A/B tested with one sample per arm, and it was, twice, by someone who had just written that warning into this document. Every measurement in this spec is now a median of three.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -64,7 +92,9 @@ A contributor scans this repository during ordinary development — checking an 
 
 ### Functional Requirements
 
-- **FR-001**: Scanning this repository MUST NOT issue network requests on behalf of test fixtures.
+- **FR-001**: Scanning this repository MUST NOT issue network requests on behalf of its own tree — neither for fixture-declared modules nor for the workspace's own package manifests.
+- **FR-001a**: Go module proxy access on behalf of fixture modules MUST be eliminated. It is roughly 78% of the floor — 5.16s falling to 1.15s when the proxy is refused.
+- **FR-001b**: The remaining ~0.66s above the 0.49s offline base is unattributed and MUST be decomposed before it is either fixed or declared acceptable. It is small, and this feature has already produced two wrong attributions from not decomposing.
 - **FR-002**: The wall time of a scan of this repository with enrichment disabled MUST NOT depend on network conditions.
 - **FR-003**: Every fixture whose unresolvability is the subject of a test MUST remain unresolvable, and the tests covering it MUST continue to detect regressions in the behaviour they assert.
 - **FR-004**: Fixtures whose unresolvability is incidental MUST be made self-contained — resolvable without leaving the repository.
@@ -72,8 +102,9 @@ A contributor scans this repository during ordinary development — checking an 
 - **FR-006**: Self-containment MUST survive extraction of the repository to another location, including `git archive` output and container build contexts.
 - **FR-007**: A broken local reference in a self-contained fixture MUST fail visibly at test time, and MUST NOT degrade into a network lookup.
 - **FR-008**: A newly added fixture that reintroduces network-dependent resolution MUST be detected rather than discovered later by someone measuring performance.
-- **FR-009**: This change MUST NOT alter waybill's production behaviour for real, resolvable modules. The resolution ladder, the proxy path and the fallback markers are unchanged; only the fixtures and the harness around them move.
-- **FR-010**: Fixtures that remain deliberately unresolvable MUST have their resolution cost bounded, so that "deliberately unresolvable" does not mean "unboundedly slow".
+- **FR-009**: This change MUST NOT alter waybill's behaviour for real, resolvable modules. The resolution ladder and the fallback markers are unchanged.
+- **FR-009a**: Changing how waybill invokes an external toolchain IS permitted where the measurement shows it necessary, but MUST be justified by a measurement rather than assumed. On the corrected numbers no such change looks necessary — the cost is fixture modules reaching the proxy, which the fixtures themselves can prevent — so a plan proposing one MUST say what it measured.
+- **FR-010**: Fixtures that remain deliberately unresolvable MUST fail **locally**, without a network attempt. Measured, a local replacement pointing at a missing path fails in 0.01s — so "deliberately unresolvable" and "fast" are not in tension and no time budget needs inventing.
 
 ### Key Entities
 
@@ -93,6 +124,16 @@ A contributor scans this repository during ordinary development — checking an 
 
 ## Assumptions
 
+- **Where the cost actually is** (2026-09-12, this repository, enrichment disabled, medians of three):
+
+  | configuration | floor |
+  |---|---|
+  | fully offline | 0.49s |
+  | network on | 5.16s |
+  | Go module proxy refused | **1.15s** |
+
+  Go module proxy access is roughly **78%** of the floor. Cargo registry access contributes nothing measurable — `cargo metadata` is already invoked with `--offline` and already bounded by a timeout.
+
 - **Measured, not assumed** (2026-09-12, this repository):
   - 21 of 27 Go fixtures declare module paths that cannot resolve, all under `example.com` or `github.com/waybill-fixture`.
   - A scan makes **20** failed resolution invocations, each reaching the network.
@@ -100,5 +141,7 @@ A contributor scans this repository during ordinary development — checking an 
 - **Renaming the domain is not the fix, and the original issue said it was.** #843 proposed a reserved-for-testing domain as "probably cheapest". Measured, that changes a single resolution from 1.40s to 1.31s — about 6% — because the toolchain consults the module proxy before it ever contacts the module's own host. The proxy round-trip is the cost and it is independent of the module path. Recorded here because the recommendation is wrong and a reader of the issue would otherwise act on it.
 - Two approaches do work, measured on the same probe: refusing the proxy entirely (**0.01s**), and declaring a local replacement so the module resolves inside the tree (**0.01s**, and the dependency graph resolves rather than failing). No fixture uses a local replacement today.
 - These are different in kind, not just in mechanism: refusing the proxy keeps fixtures unresolvable and merely makes failure fast, preserving exactly what tests see today; a local replacement makes them resolve, which changes which waybill code path the fixture exercises. Which applies depends on whether a given fixture's unresolvability is the point — hence FR-003 and FR-004.
+- **A fixture can be unresolvable without touching the network, which removes most of US2's apparent tension.** A local replacement pointing at a *missing* path fails in 0.01s with `no such file or directory` and no network at all. So both kinds of fixture can be network-free: incidental ones resolve locally, deliberate ones fail locally.
+- The one residual risk was checked rather than assumed: waybill classifies Go fetch failures into `http_404`, `dns`, `connection`, `timeout`, `parse` and `other`, so moving a fixture from a network 404 to a local missing file could change its class. **No test asserts on the class a fixture produces** — the only assertions on `ErrorClass` are string-stability checks on the enum itself. The tradeoff is therefore not live today, and FR-003 remains as the guard if a future test makes it so.
 - The repository's own test suite is the only consumer of these fixtures. No downstream user depends on their module paths.
 - `git archive` is the extraction path used by the benchmark and corpus harnesses, so FR-006 is a live constraint rather than a hypothetical one.
