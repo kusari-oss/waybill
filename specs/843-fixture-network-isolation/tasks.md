@@ -27,20 +27,29 @@ research.
 
 ## Phase 1: Setup
 
-- [ ] T001 Record the pre-change floor into `specs/843-fixture-network-isolation/baseline.md`: median of three for `--offline`, for network-on with enrichment disabled, and for network-on with the Go proxy refused. Research measured 0.50s / 5.26s / 1.17s; re-establish them on the machine doing the work, because SC-001 and SC-002 are ratios against this and a figure from another host is not a baseline. Also record a fourth arm with cargo registry access disabled, which verifies FR-001's second clause: research found `waybill-cli/src/scan_fs/package_db/cargo.rs:146-153` already invokes `cargo metadata` with `--offline` under a timeout, so the arm should be indistinguishable from the second — confirming the clause is satisfied rather than assuming it.
-- [ ] T002 Record the current `go` subprocess inventory into `specs/843-fixture-network-isolation/baseline.md` by shimming the binary as research R2 did — counts per subcommand, not timings (the shim inflates its own timings). Research found 80 invocations: 27 `go version`, 26 `go mod graph`, 17 `go list all`, 10 `go mod why`. This is the denominator for SC-003.
+- [X] T001 Record the pre-change floor into `specs/843-fixture-network-isolation/baseline.md`: median of three for `--offline`, for network-on with enrichment disabled, and for network-on with the Go proxy refused. Research measured 0.50s / 5.26s / 1.17s; re-establish them on the machine doing the work, because SC-001 and SC-002 are ratios against this and a figure from another host is not a baseline. Also record a fourth arm with cargo registry access disabled, which verifies FR-001's second clause: research found `waybill-cli/src/scan_fs/package_db/cargo.rs:146-153` already invokes `cargo metadata` with `--offline` under a timeout, so the arm should be indistinguishable from the second — confirming the clause is satisfied rather than assuming it. **DONE** — 0.51s offline / 5.39s network / 1.16s proxy-refused / 5.56s cargo-refused. Go proxy attributable 4.23s (78%); cargo −0.17s, confirming FR-001 clause 2 already satisfied.
+- [X] T002 Record the current `go` subprocess inventory into `specs/843-fixture-network-isolation/baseline.md` by shimming the binary as research R2 did — counts per subcommand, not timings (the shim inflates its own timings). Research found 80 invocations: 27 `go version`, 26 `go mod graph`, 17 `go list all`, 10 `go mod why`. This is the denominator for SC-003. **DONE** — 87 invocations: 27 `go version`, 26 `go mod graph`, 17 `go mod why`, 17 `go list all`.
 
 ---
 
 ## Phase 2: Foundational (blocking prerequisites)
 
-- [ ] T003 Enumerate every Go fixture manifest under `waybill-cli/tests/fixtures/` and classify each as `incidental` or `deliberate`, recording the result in `docs/development/go-fixture-inventory.md` (FR-005). Research found 21 of 27 declare unresolvable modules and **none** is deliberate; record the classification anyway so the next contributor reads it rather than re-deriving it.
-- [ ] T004 For each manifest classified in T003, record which tests consume it. Research found only three files reference these fixtures by path — `waybill-cli/tests/mod_why_scaling.rs`, `waybill-cli/tests/goroot_skip.rs`, `waybill-cli/tests/pants_go_reader.rs` — and a first attempt that searched by fixture *name* returned 25 files because `workspace_mode` is also a type in this codebase. Search by path.
-- [ ] T005 Record for each manifest whether a committed golden covers it, in `docs/development/go-fixture-inventory.md` (goldens live under `waybill-cli/tests/fixtures/golden/`). This decides the replacement shape in T007: a golden-covered fixture takes a missing target so its `waybill:go-transitive-coverage` annotation does not change.
+- [X] T003 Enumerate every Go fixture manifest under `waybill-cli/tests/fixtures/` and classify each as `incidental` or `deliberate`, recording the result in `docs/development/go-fixture-inventory.md` (FR-005). Research found 21 of 27 declare unresolvable modules and **none** is deliberate; record the classification anyway so the next contributor reads it rather than re-deriving it. **DONE** — 27 manifests, 20 with unreplaced requires, all classified `incidental`; no fixture is `deliberate`.
+- [X] T004 For each manifest classified in T003, record which tests consume it. Research found only three files reference these fixtures by path — `waybill-cli/tests/mod_why_scaling.rs`, `waybill-cli/tests/goroot_skip.rs`, `waybill-cli/tests/pants_go_reader.rs` — and a first attempt that searched by fixture *name* returned 25 files because `workspace_mode` is also a type in this codebase. Search by path. **DONE** — seven consumer files, not three as research R4 estimated. Three grep methods gave three wrong answers before group-directory matching worked; all recorded in the inventory.
+- [X] T005 Record for each manifest whether a committed golden covers it, in `docs/development/go-fixture-inventory.md` (goldens live under `waybill-cli/tests/fixtures/golden/`). This decides the replacement shape in T007: a golden-covered fixture takes a missing target so its `waybill:go-transitive-coverage` annotation does not change. **DONE — no golden covers any of them.** The ecosystem goldens take their inputs from the sibling fixtures repo via `WAYBILL_FIXTURES_DIR`, not this tree. The missing-target preference research R5 introduced has nothing to protect.
 
 *Checkpoint**: the inventory answers "what is this fixture for, who uses it, and does a golden watch it" for every Go manifest in the tree. Nothing below should require re-deriving any of that.
 
 ---
+
+> **Phase 3 attempted and reverted — see `baseline.md` §T006–T009.**
+> The `replace` technique works for the Go toolchain (5.28s → 1.79s,
+> 2.9×) but **waybill's own parser honours `replace` and drops or
+> rewrites the module** (`legacy.rs:7`), so tests asserting on
+> third-party Go components fail: 3 failures at full scope, 8 at
+> partial. Reverted to green. The remaining 0.61s was never the
+> toolchain — it is waybill's own proxy-fetch tier. This phase needs a
+> technique that does not exist yet; see the report for options.
 
 ## Phase 3: User Story 1 — A contributor measuring performance gets a number they can trust (P1)
 
