@@ -100,25 +100,58 @@ oscillate. Freeing that pom let it appear as file-tier, making all six
 extension poms file-tier where previously five were — the new state is
 the consistent one.
 
-### E. Review-tool gap — `xtask corpus-diff` cannot align SPDX-3 `@graph`
+### E. Review-tool gap — FIXED
 
-Element-wise grouping happens only when `@graph` length is unchanged:
+`walk` descended into arrays only when both sides had equal length;
+anything else fell through to the catch-all and printed one
+`changed $.path` line. Alignment succeeded for exactly the four targets
+whose `@graph` length was unchanged (django 481, jvm 359, python 126,
+javascript 14) and failed for the seven that gained or lost elements —
+including image-postgres16, whose 5036 -> 6315 change was a single line.
 
-| aligned | `@graph` old → new |
-|---------|--------------------|
-| yes | django 481→481, jvm 359→359, python 126→126, javascript 14→14 |
-| **no** | go-cobra 98→105, image-postgres16 5036→**6315**, maven-guice 447→479, npm-express 368→412, pants-golang 65→69, python-flask 979→1086, ripgrep 501→502 |
+Fixed by pairing length-mismatched arrays on a stable identity key
+(`align_by_identity`). The key deliberately excludes content-addressed
+fields — `spdxId`, `SPDXID`, and file-tier `bom-ref`s are hashes of the
+very content whose change we are describing, so keying on them pairs
+nothing and reports every element as both added and removed. Preference
+order: `purl`, then `name`(+version), then a non-content-addressed
+`bom-ref`, then `type` as a weak bucket so relationships still pair
+pairwise. Scalars are their own identity.
 
-The 7 length-changed targets each report one opaque `changed $.@graph`
-line. SPDX-3 review is therefore **blind for 7 of 11 targets**, including
-the +1279-element image-postgres16 change. FR-007 cannot be satisfied for
-those targets until the normaliser aligns on a stable semantic key rather
-than requiring equal lengths — sorting by the content-addressed `spdxId`
-cannot work, because that is precisely what changes.
+After the fix all 11 SPDX-3 diffs are element-wise, and the four that
+already aligned are byte-identical to before — the working path is
+untouched. Six tests added (`length_mismatch_reports_the_added_element_
+not_the_whole_array`, `identity_ignores_content_addressed_ids`,
+`scalar_array_length_mismatch_names_the_values`,
+`purl_identity_survives_a_field_edit`,
+`identity_key_never_derives_from_a_content_hash`,
+`unkeyable_elements_are_reported_not_dropped`).
+
+**Known limitation**: elements keyed by `name` can mis-pair when two
+distinct elements share a basename. image-postgres16's
+`[4x] changed $.@graph[].verifiedUsing[].hashValue` is most likely this
+rather than four file contents changing under a pinned image digest — a
+pinned digest cannot change content. Recorded rather than chased,
+because it does not affect the disposition of any target.
+
+### SPDX-3 content, now visible
+
+All seven newly-readable diffs fall inside the existing categories:
+
+- `spdxId` / `subject` / `statement` / `from` / `to[]` — category 3 cascade
+- `createdBy[0]` / `createdUsing[0]` — category 1 version rotation
+- python-flask `[83x] added verifiedUsing` — category 4, matching the 83
+  CDX `hashes` exactly
+- rust-ripgrep `[51x] added software_downloadLocation` — category 5,
+  matching the 51 CDX `externalReferences` exactly
+- image-postgres16 `[1680x] added` / `[401x] removed` `@graph[]` — the
+  same file-tier swing as finding A, seen from the SPDX-3 side
+
+No new blocking finding emerged from the seven.
 
 ## Disposition
 
 - Categories 1–6 and finding D: explained; those targets may proceed.
 - Finding A: image-postgres16 blocked pending T013 decision.
 - Findings B, C: pre-existing defects; track separately, do not block.
-- Finding E: blocks SPDX-3 sign-off for 7 targets; tool fix needed first.
+- Finding E: FIXED; all 11 SPDX-3 diffs now review element-wise.

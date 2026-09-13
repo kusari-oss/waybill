@@ -160,3 +160,117 @@ fn committed_goldens_are_untouched_by_a_diff_run() {
         "a corpus-diff run must leave committed goldens byte-identical",
     );
 }
+
+// ---------------------------------------------------------------
+// C-3.3 — arrays whose LENGTH changed must still be described
+// element-wise. Before milestone 840's attribution pass, `walk`
+// descended into arrays only when both sides had equal length;
+// anything else fell through to the catch-all and printed one
+// `changed $.path` line. That made SPDX 3 `@graph` unreviewable for
+// every target that gained or lost an element — 7 of 11 in the
+// refresh, including a 5036 -> 6315 change reported as a single line.
+// ---------------------------------------------------------------
+
+use super::{align_by_identity, identity_key, walk};
+use serde_json::Value;
+
+/// Run the same pipeline `report` uses, returning the raw lines.
+fn diff_lines(a: &Value, b: &Value) -> Vec<String> {
+    let mut out = Vec::new();
+    walk(&normalise(a), &normalise(b), String::from("$"), &mut out);
+    out
+}
+
+#[test]
+fn length_mismatch_reports_the_added_element_not_the_whole_array() {
+    let a = json!({"@graph": [
+        {"type": "software_Package", "name": "alpha", "spdxId": "SPDXRef-1"}
+    ]});
+    let b = json!({"@graph": [
+        {"type": "software_Package", "name": "alpha", "spdxId": "SPDXRef-1"},
+        {"type": "software_Package", "name": "beta",  "spdxId": "SPDXRef-2"}
+    ]});
+    let lines = diff_lines(&a, &b);
+    assert!(
+        lines.iter().any(|l| l.starts_with("added") && l.contains("beta")),
+        "the new element must be named; got {lines:?}",
+    );
+    assert!(
+        !lines.iter().any(|l| l == "changed $.@graph"),
+        "the whole array must not collapse to one opaque line; got {lines:?}",
+    );
+}
+
+#[test]
+fn identity_ignores_content_addressed_ids() {
+    // The motivating trap: SPDX ids are hashes of the content whose
+    // change we are describing. Keying on them pairs nothing, and every
+    // element reports as both added and removed.
+    let a = json!({"@graph": [
+        {"type": "software_Package", "name": "alpha", "spdxId": "SPDXRef-OLD"},
+        {"type": "software_Package", "name": "beta",  "spdxId": "SPDXRef-X"}
+    ]});
+    let b = json!({"@graph": [
+        {"type": "software_Package", "name": "alpha", "spdxId": "SPDXRef-NEW"}
+    ]});
+    let lines = diff_lines(&a, &b);
+    assert!(
+        lines.iter().any(|l| l.contains("spdxId")),
+        "alpha must pair by name so its id change is visible; got {lines:?}",
+    );
+    assert!(
+        lines.iter().any(|l| l.starts_with("removed") && l.contains("beta")),
+        "beta must report as removed; got {lines:?}",
+    );
+}
+
+#[test]
+fn scalar_array_length_mismatch_names_the_values() {
+    let a = json!({"documentDescribes": ["a", "b"]});
+    let b = json!({"documentDescribes": ["a"]});
+    let lines = diff_lines(&a, &b);
+    assert!(
+        lines.iter().any(|l| l.starts_with("removed") && l.contains('b')),
+        "a dropped scalar must be named, not summarised; got {lines:?}",
+    );
+}
+
+#[test]
+fn purl_identity_survives_a_field_edit() {
+    let a = json!({"components": [
+        {"purl": "pkg:npm/x@1.0.0", "licenses": ["MIT"]},
+        {"purl": "pkg:npm/y@1.0.0", "licenses": ["MIT"]}
+    ]});
+    let b = json!({"components": [
+        {"purl": "pkg:npm/x@1.0.0", "licenses": ["GPL-3.0"]}
+    ]});
+    let lines = diff_lines(&a, &b);
+    assert!(
+        lines.iter().any(|l| l.contains("licenses") && l.contains("pkg:npm/x@1.0.0")),
+        "x must pair by purl so the licence change is attributed; got {lines:?}",
+    );
+}
+
+#[test]
+fn identity_key_never_derives_from_a_content_hash() {
+    let file_tier = json!({"bom-ref": "pkg:generic/file-tier?content-sha256=deadbeef"});
+    let key = identity_key(&file_tier);
+    assert!(
+        key.as_deref().is_none_or(|k| !k.contains("deadbeef")),
+        "a content hash must not become an identity key; got {key:?}",
+    );
+}
+
+#[test]
+fn unkeyable_elements_are_reported_not_dropped() {
+    // An element no rule can key must still surface. Silently ignoring
+    // it is the failure this tool exists to prevent.
+    let mut out = Vec::new();
+    let a: Vec<Value> = vec![];
+    let b: Vec<Value> = vec![json!({"no_identity_field": 1})];
+    align_by_identity(&a, &b, "$.x", &mut out);
+    assert!(
+        !out.is_empty(),
+        "an unkeyable added element must produce a line",
+    );
+}
