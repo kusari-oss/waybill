@@ -107,15 +107,32 @@ pub fn go_cobra_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
     // replaced with the operator-override subject `go-cobra@<sha7>`.
     // Layer 1 assertions target the resulting shape.
 
-    // Assertion 1: graph-completeness == "complete" (per m194 stack).
+    // Assertion 1: graph-completeness == "partial".
+    //
+    // Milestone 866 (#880) changed this from `complete`, and the change
+    // is the point rather than a regression to tolerate.
+    //
+    // The corpus scans offline with no module cache, so Go transitive
+    // resolution cannot run. Pre-866 the go.sum fallback attached every
+    // unresolved module to the main module; that made each one reachable,
+    // so the reachability check found zero orphans and reported
+    // `complete` over a graph waybill had itself filled in. Those edges
+    // claimed `go.mod` as their source and `go.mod` does not contain
+    // them.
+    //
+    // With them removed, `blackfriday` and `check.v1` have no incoming
+    // edge — correctly, since nothing in the tree says where they belong
+    // — and the existing orphan classifier reports `partial`. A cobra
+    // scan in this mode that says `complete` again means the fabrication
+    // is back.
     let gc = cdx_graph_completeness(&sboms.cdx).unwrap_or_else(|| "<missing>".to_string());
-    if gc != "complete" {
+    if gc != "partial" {
         return Err(AssertionFailure {
             invariant_name: "graph-completeness",
             format: FailureFormat::Cdx,
             observed: gc,
-            expected: "complete".to_string(),
-            suggested_action: "investigate m158 / m194 regression — cobra is a simple Go source tree; classifier over-fire suggests orphan-class or classifier bug",
+            expected: "partial".to_string(),
+            suggested_action: "offline cobra cannot resolve transitive edges, so `partial` is correct. `complete` means edges are being asserted that no go.mod declares — see milestone 866 / #880 and specs/866-go-graph-completeness/contracts/edge-backing.md",
         });
     }
     // Assertion 2: stdlib component emitted.
