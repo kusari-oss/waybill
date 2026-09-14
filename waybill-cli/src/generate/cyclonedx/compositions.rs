@@ -32,6 +32,11 @@ pub fn build_compositions(
     target_ref: &str,
     components: &[ResolvedComponent],
     complete_ecosystems: &[String],
+    // Milestone 866 (#871). Which component refs the BFS could actually
+    // reach. `None` means the caller has no completeness result (the
+    // SPDX/OpenVEX paths, which pass no ecosystems either), in which
+    // case the pre-866 behaviour is preserved.
+    reachable_set: Option<&std::collections::HashSet<String>>,
 ) -> serde_json::Value {
     let has_probe_failures = !integrity.uprobe_attach_failures.is_empty()
         || !integrity.kprobe_attach_failures.is_empty();
@@ -69,16 +74,79 @@ pub fn build_compositions(
                 .or_default()
                 .push(c.purl.as_str().to_string());
         }
+        // Milestone 866 (#871) — `assemblies` and `dependencies` are
+        // NOT the same claim and must no longer share a list.
+        //
+        // `assemblies`: these components are completely enumerated for
+        //   the ecosystem. Reading dpkg's database really does yield
+        //   every installed package, so this stays whole-bucket.
+        // `dependencies`: the dependency GRAPH is complete for these
+        //   components. Enumerating packages says nothing about whether
+        //   their edges were resolved, and conflating the two asserted
+        //   graph completeness for components with no edges at all — on
+        //   `go-cobra`, 7 of 8 components, in the same document that
+        //   reported `graph-completeness = partial`.
+        //
+        // A component can only carry the `dependencies` claim if the
+        // BFS actually reached it. Anything else goes in the
+        // `aggregate: unknown` record below, which is CycloneDX's own
+        // vocabulary for "real components whose graph position we could
+        // not determine" — no waybill-specific extension needed.
+        let mut unresolved: Vec<String> = Vec::new();
         for eco in complete_ecosystems {
-            if let Some(refs) = by_eco.get(eco.as_str()) {
-                if !refs.is_empty() {
-                    out.push(json!({
-                        "aggregate": "complete",
-                        "assemblies": refs,
-                        "dependencies": refs,
-                    }));
-                }
+            let Some(refs) = by_eco.get(eco.as_str()) else {
+                continue;
+            };
+            if refs.is_empty() {
+                continue;
             }
+
+            // The `dependencies` claim is all-or-nothing per ecosystem.
+            //
+            // Per-component reachability is too weak a test: a component
+            // can be reachable (something points AT it) while its own
+            // outgoing edges were never resolved. Measured on `go-cobra`
+            // cold, `go-md2man` is reachable and has no emitted edges —
+            // but a warm scan proves it depends on `blackfriday`. Calling
+            // its graph complete because it was reachable would restate
+            // the same overclaim one level down.
+            //
+            // If any component in the ecosystem is unreachable, the
+            // resolution for that ecosystem demonstrably did not
+            // complete, and no component in it may carry the claim.
+            // go.sum enumerates modules but carries no parent-child
+            // topology at all, so cold Go always lands here — which is
+            // the correct answer, not a limitation.
+            let graph_resolved = match reachable_set {
+                Some(set) => refs.iter().all(|r| set.contains(r.as_str())),
+                None => true,
+            };
+
+            let mut record = json!({
+                "aggregate": "complete",
+                "assemblies": refs,
+            });
+            if graph_resolved {
+                // `assemblies` stays whole-bucket regardless: reading
+                // dpkg's database really does enumerate every installed
+                // package, and that claim is unaffected by edge
+                // resolution.
+                record["dependencies"] = json!(refs);
+            } else {
+                unresolved.extend(refs.iter().cloned());
+            }
+            out.push(record);
+        }
+        if !unresolved.is_empty() {
+            unresolved.sort();
+            unresolved.dedup();
+            // CycloneDX's own vocabulary for "these are real components
+            // whose dependency graph we could not determine". No
+            // waybill-specific extension required.
+            out.push(json!({
+                "aggregate": "unknown",
+                "dependencies": unresolved,
+            }));
         }
     }
 
@@ -175,7 +243,7 @@ mod tests {
     #[test]
     fn clean_trace_with_no_complete_ecosystems_emits_single_record() {
         let integrity = clean_integrity();
-        let result = build_compositions(&integrity, "myapp@0.1.0", &[], &[]);
+        let result = build_compositions(&integrity, "myapp@0.1.0", &[], &[], None);
         let arr = result.as_array().expect("array");
         assert_eq!(arr.len(), 1);
         assert_eq!(arr[0]["aggregate"], "incomplete_first_party_only");
@@ -185,12 +253,12 @@ mod tests {
     fn data_loss_maps_to_incomplete() {
         let mut integrity = clean_integrity();
         integrity.ring_buffer_overflows = 5;
-        let result = build_compositions(&integrity, "myapp@0.1.0", &[], &[]);
+        let result = build_compositions(&integrity, "myapp@0.1.0", &[], &[], None);
         assert_eq!(result[0]["aggregate"], "incomplete");
 
         let mut integrity2 = clean_integrity();
         integrity2.events_dropped = 3;
-        let result2 = build_compositions(&integrity2, "myapp@0.1.0", &[], &[]);
+        let result2 = build_compositions(&integrity2, "myapp@0.1.0", &[], &[], None);
         assert_eq!(result2[0]["aggregate"], "incomplete");
     }
 
@@ -198,7 +266,7 @@ mod tests {
     fn probe_failures_map_to_unknown() {
         let mut integrity = clean_integrity();
         integrity.uprobe_attach_failures = vec!["libssl.so:SSL_write".to_string()];
-        let result = build_compositions(&integrity, "myapp@0.1.0", &[], &[]);
+        let result = build_compositions(&integrity, "myapp@0.1.0", &[], &[], None);
         assert_eq!(result[0]["aggregate"], "unknown");
     }
 
@@ -207,14 +275,14 @@ mod tests {
         let mut integrity = clean_integrity();
         integrity.ring_buffer_overflows = 10;
         integrity.kprobe_attach_failures = vec!["sys_connect".to_string()];
-        let result = build_compositions(&integrity, "myapp@0.1.0", &[], &[]);
+        let result = build_compositions(&integrity, "myapp@0.1.0", &[], &[], None);
         assert_eq!(result[0]["aggregate"], "unknown");
     }
 
     #[test]
     fn target_ref_appears_in_assemblies() {
         let integrity = clean_integrity();
-        let result = build_compositions(&integrity, "myapp@0.1.0", &[], &[]);
+        let result = build_compositions(&integrity, "myapp@0.1.0", &[], &[], None);
         assert_eq!(result[0]["assemblies"][0], "myapp@0.1.0");
     }
 
@@ -228,7 +296,7 @@ mod tests {
         let mut integrity = clean_integrity();
         integrity.ring_buffer_overflows = 2;
         integrity.events_dropped = 3;
-        let result = build_compositions(&integrity, "myapp@0.1.0", &[], &[]);
+        let result = build_compositions(&integrity, "myapp@0.1.0", &[], &[], None);
         assert!(
             result[0].get("properties").is_none(),
             "composition records must not carry properties (CDX 1.6 schema): {:?}",
@@ -252,6 +320,7 @@ mod tests {
             "myapp@0.1.0",
             &components,
             &ecosystems,
+            None,
         );
         let arr = result.as_array().expect("array");
         // Two per-ecosystem complete records, the target-integrity
@@ -273,7 +342,7 @@ mod tests {
         let integrity = clean_integrity();
         let ecosystems = vec!["deb".to_string()];
         let result =
-            build_compositions(&integrity, "myapp@0.1.0", &[], &ecosystems);
+            build_compositions(&integrity, "myapp@0.1.0", &[], &ecosystems, None);
         let arr = result.as_array().expect("array");
         assert_eq!(arr.len(), 1);
         assert_eq!(arr[0]["aggregate"], "incomplete_first_party_only");
@@ -292,6 +361,7 @@ mod tests {
             "myapp@0.1.0",
             &components,
             &ecosystems,
+            None,
         );
         let arr = result.as_array().expect("array");
         // 1 deb-complete + 1 target-integrity + 1 primary-dep-complete = 3.

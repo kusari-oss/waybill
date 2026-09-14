@@ -35,7 +35,24 @@ const FIXTURE_SUBPATH: &str = "go";
 ///   edges synthesized from go.sum's flat closure via step 5).
 /// - Post-194 US1 (issue #571): 110 edges (+1: main-module →
 ///   pkg:golang/stdlib@v* edge closing the stdlib-orphan gap).
-const EXPECTED_WAYBILL_EDGE_COUNT: usize = 110;
+// Milestone 866 (#857 / #829) — re-baselined from 110 to 32.
+//
+// The alpha.24 figure of 110 counted the m091 go.sum-fallback
+// augment and the Issue-#251 residual-orphan backfill, both of which
+// attached modules to the main module that nothing in the scanned tree
+// declares as its dependencies. Those are removed; what remains is
+// exactly what the fixture's own go.mod declares.
+//
+// Verified against the fixture rather than simply accepting the new
+// number: `go.mod` declares 31 direct (non-`// indirect`) requires, and
+// waybill emits 32 edges — those 31 plus the synthetic `stdlib` node,
+// with zero edges unbacked by a declared requirement.
+//
+// The drop is deliberate and costs parity with trivy, which flattens
+// the whole module set onto the main module in offline mode. A warm
+// cache resolves the real topology and puts those modules under their
+// actual parents; see specs/866-go-graph-completeness/research.md R6.
+const EXPECTED_WAYBILL_EDGE_COUNT: usize = 32;
 
 const EXPECTED_REPRESENTATIVE_EDGES: &[(&str, &str)] = &[
     // Direct deps from go.mod `require` block — synthesized into edges
@@ -52,13 +69,25 @@ const EXPECTED_REPRESENTATIVE_EDGES: &[(&str, &str)] = &[
         "pkg:golang/sigs.k8s.io/cri-tools",
         "pkg:golang/github.com/onsi/ginkgo/v2",
     ),
-    // Milestone 091 invariant — step-5 go.sum-fallback edge: a
-    // transitive dep that was NOT a direct dep in cri-tools' go.mod
-    // and was previously dropped in offline+cache-empty mode.
-    // beorn7/perks is a transitive of prometheus libraries, not a
-    // direct cri-tools dep — it's only reachable via go.sum.
-    // Pre-091 waybill emitted no edge to this component; post-091
-    // step 5 augments main-module's depends list.
+    // Milestone 866 — the m091 representative edge
+    // `cri-tools -> beorn7/perks` was REMOVED from this list.
+    //
+    // It asserted the invariant this milestone reverses. `beorn7/perks`
+    // is a transitive of the prometheus libraries and appears in
+    // cri-tools' go.mod only as `// indirect`; the edge existed solely
+    // because the go.sum fallback attached it to the main module. An
+    // `// indirect` entry records that the module graph needs a module,
+    // not that this module imports it, so a `dependsOn` edge for it
+    // states a directness the manifest denies.
+];
+
+/// Milestone 866 — the negative half of the invariant above.
+///
+/// A test that only asserts edges are PRESENT cannot catch a
+/// regression that re-adds fabricated ones, which is how the
+/// pre-866 behaviour survived so long. These edges must NOT appear.
+const FORBIDDEN_EDGES: &[(&str, &str)] = &[
+    // `// indirect` in the fixture's go.mod — never a direct dependency.
     (
         "pkg:golang/sigs.k8s.io/cri-tools",
         "pkg:golang/github.com/beorn7/perks",
@@ -88,6 +117,13 @@ fn transitive_edges_match_baseline() {
         .iter()
         .map(|e| (strip_version(&e.from).to_string(), strip_version(&e.to).to_string()))
         .collect();
+    for (from_prefix, to_prefix) in FORBIDDEN_EDGES {
+        assert!(
+            !edge_set.contains(&(from_prefix.to_string(), to_prefix.to_string())),
+            "milestone 866: fabricated edge re-appeared: {from_prefix} → {to_prefix} \
+             — this edge is not declared in the fixture's go.mod"
+        );
+    }
     for (from_prefix, to_prefix) in EXPECTED_REPRESENTATIVE_EDGES {
         assert!(
             edge_set.contains(&(from_prefix.to_string(), to_prefix.to_string())),

@@ -372,6 +372,8 @@ Auto-generated from all feature plans. Last updated: 2026-09-13
 - Rust stable, workspace toolchain. No nightly. + Existing only — `reqwest` (already the deps.dev (839-batch-enrichment)
 - `$HOME/.cache/waybill/deps-dev/`, sibling to the existing (839-batch-enrichment)
 - Rust stable — but no Rust changes are expected. + None new. The Go toolchain is already an (843-fixture-network-isolation)
+- Rust stable, workspace toolchain inherited. No nightly. `waybill-ebpf` untouched. + Existing only — `serde`/`serde_json` (relationship + annotation emission), `tracing`, `anyhow`. **Zero new Cargo dependencies.** (866-go-graph-completeness)
+- N/A — all state in-process per scan, matching every reader milestone since 002. (866-go-graph-completeness)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -507,9 +509,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 866-go-graph-completeness: Added Rust stable, workspace toolchain inherited. No nightly. `waybill-ebpf` untouched. + Existing only — `serde`/`serde_json` (relationship + annotation emission), `tracing`, `anyhow`. **Zero new Cargo dependencies.**
 - 860-multi-main-module-override: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
 - 843-fixture-network-isolation: Added Rust stable — but no Rust changes are expected. + None new. The Go toolchain is already an
-- 839-batch-enrichment: Added Rust stable, workspace toolchain. No nightly. + Existing only — `reqwest` (already the deps.dev
 
 
 <!-- MANUAL ADDITIONS START -->

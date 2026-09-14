@@ -195,10 +195,6 @@
           "value": "go-sum-fallback"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
-        },
-        {
           "name": "waybill:resolver-step",
           "value": "go-sum-fallback"
         },
@@ -337,10 +333,6 @@
           "value": "go-sum-fallback"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
-        },
-        {
           "name": "waybill:resolver-step",
           "value": "go-sum-fallback"
         },
@@ -406,10 +398,6 @@
         {
           "name": "waybill:go-transitive-source",
           "value": "go-sum-fallback"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
         },
         {
           "name": "waybill:resolver-step",
@@ -548,10 +536,6 @@
         {
           "name": "waybill:go-transitive-source",
           "value": "go-sum-fallback"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
         },
         {
           "name": "waybill:resolver-step",
@@ -745,10 +729,6 @@
           "value": "go-sum-fallback"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
-        },
-        {
           "name": "waybill:resolver-step",
           "value": "go-sum-fallback"
         },
@@ -824,7 +804,10 @@
         "pkg:golang/gopkg.in/check.v1@v0.0.0-20161208181325-20d25e280405",
         "pkg:golang/gopkg.in/yaml.v3@v3.0.1",
         "pkg:golang/stdlib@v1.26.1"
-      ],
+      ]
+    },
+    {
+      "aggregate": "unknown",
       "dependencies": [
         "pkg:golang/example.com/simple@v0.0.0-unknown",
         "pkg:golang/github.com/davecgh/go-spew@v1.1.1",
@@ -857,16 +840,10 @@
   "dependencies": [
     {
       "dependsOn": [
-        "pkg:golang/github.com/davecgh/go-spew@v1.1.1",
-        "pkg:golang/github.com/inconshreveable/mousetrap@v1.1.0",
         "pkg:golang/github.com/mattn/go-isatty@v0.0.21",
-        "pkg:golang/github.com/pmezard/go-difflib@v1.0.0",
         "pkg:golang/github.com/sirupsen/logrus@v1.9.4",
         "pkg:golang/github.com/spf13/cobra@v1.10.2",
-        "pkg:golang/github.com/spf13/pflag@v1.0.9",
         "pkg:golang/github.com/stretchr/testify@v1.11.1",
-        "pkg:golang/golang.org/x/sys@v0.28.0",
-        "pkg:golang/gopkg.in/check.v1@v0.0.0-20161208181325-20d25e280405",
         "pkg:golang/gopkg.in/yaml.v3@v3.0.1",
         "pkg:golang/stdlib@v1.26.1"
       ],
@@ -1023,7 +1000,11 @@
       },
       {
         "name": "waybill:graph-completeness",
-        "value": "complete"
+        "value": "partial"
+      },
+      {
+        "name": "waybill:graph-completeness-reason",
+        "value": "orphaned-components-detected: 6 component(s) not reachable from root"
       },
       {
         "name": "waybill:workspaces-detected",

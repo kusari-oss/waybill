@@ -11,6 +11,7 @@
 ## Table of contents
 
 1. [Positioning — how waybill uses spec-native fields](#1-positioning--how-waybill-uses-spec-native-fields)
+   - 1.1 [Component identity — one component per PURL](#11-component-identity--one-component-per-purl)
 2. [How to read this doc](#2-how-to-read-this-doc)
 3. [Signals waybill makes available — by use case](#3-signals-waybill-makes-available--by-use-case)
    - 3.1 [Vulnerability scanning](#31-vulnerability-scanning)
@@ -34,6 +35,55 @@ waybill strictly conforms to **CycloneDX 1.6**, **SPDX 2.3**, and **SPDX 3.0.1**
 A small fraction of the data — currently 102 distinct keys at the time of writing — rides on `waybill:*`-prefixed annotations. These are **parity-bridging annotations** introduced per [Constitution Principle V](../../.specify/memory/constitution.md): every spec proposing a new `waybill:*` field must first audit the target formats for an existing native construct carrying the same semantic. Annotations are permitted only when (a) no native field exists across all three formats, or (b) one format has the native field but the others don't (parity-gap carve-out). Every `waybill:*` annotation has a documented audit trail in the [SBOM format mapping](sbom-format-mapping.md) catalog naming the rejected native-field alternatives.
 
 The job of this doc is to tell consumers what each parity-bridging annotation means and how to use it. The framing is consumer-centric ("here's what waybill emits and how to use it"), not competitive — we don't name specific competing SBOM tools or characterize their omissions. Consumers reading this guide already have an SBOM in hand; the question is "what's in it that I should care about?"
+
+### 1.1 Component identity — one component per PURL
+
+waybill emits **one component per Package URL**. A package at a given
+version is a single component no matter how many manifests in the
+scanned tree mention it. The two facts that a per-location reading would
+spread across duplicates are recorded in their spec-native slots
+instead:
+
+| Fact | Where waybill puts it |
+|---|---|
+| where the component was discovered | `evidence.occurrences[]` |
+| which components require it | dependency edges (`dependencies[].dependsOn` / SPDX `DEPENDS_ON`) |
+
+This follows from what a PURL *is*: an identifier for a package, not for
+a sighting of one. Two entries with the same PURL denote the same
+package, so collapsing them loses nothing provided the locations and the
+requirer relationships are preserved.
+
+**Why this matters when comparing totals across tools.** SBOM tools
+differ in how they count, and some emit a separate component per
+discovery location. On a large multi-module repository the two
+conventions produce very different headline numbers for substantially
+the same set of packages — on one 39-module Go repository, roughly
+2,300-2,500 components under a per-location reading against roughly
+450-500 under one-component-per-PURL.
+
+Neither number is wrong; they answer different questions. But a raw
+total is not a like-for-like comparison. If you are reconciling
+waybill's output against another tool and the counts differ by a
+multiple:
+
+1. **Compare distinct PURLs, not component-array lengths.** That is the
+   comparison that asks "did both tools find the same packages?"
+2. **Check whether the other document repeats PURLs.** Grouping its
+   components by PURL will show immediately whether the difference is
+   discovery or convention.
+3. **Then compare the sets.** A genuine discovery gap shows up as PURLs
+   present in one document and absent from the other — which is worth
+   investigating in either direction.
+
+**One deliberate exclusion to know about.** waybill does not descend
+into directories whose names begin with `_` or `.`, matching the Go
+toolchain's own rule that such directories are excluded from builds.
+Modules that exist only beneath such a directory are therefore absent
+from waybill's output by design. A tool that walks every directory
+regardless will list them. If a reconciliation turns up extra modules on
+the other side, check their paths for a `_`- or `.`-prefixed segment
+before treating them as a waybill omission.
 
 ---
 
@@ -1064,6 +1114,14 @@ For the full per-row wire-shape detail across all 100+ catalog rows, see [`sbom-
 ## 7. For tool authors
 
 If you're building a tool that consumes waybill SBOMs (vulnerability scanner, SBOM-diff tool, compliance dashboard, license auditor, custom remediation engine), this section is a quick integration checklist.
+
+**0. Key on PURL, not on component-array position**. waybill emits one
+component per PURL ([§1.1](#11-component-identity--one-component-per-purl));
+discovery locations live in `evidence.occurrences[]` and requirer
+relationships in dependency edges. A diff or reconciliation tool that
+compares component-array lengths against a document built on a
+per-location convention will report a large spurious difference. Group
+by PURL on both sides first.
 
 **1. Decide your envelope-parse approach**. Per [§4](#4-the-waybill-annotationv1-envelope), SPDX 2.3 + SPDX 3 ride the `waybill-annotation/v1` envelope as a JSON-encoded string inside the format's native `Annotation`. You can either:
 - Match on the envelope `schema` field (`"waybill-annotation/v1"`) to identify waybill-emitted annotations.
