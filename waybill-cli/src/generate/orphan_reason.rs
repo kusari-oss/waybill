@@ -37,6 +37,26 @@ use crate::scan_fs::package_db::maven::ScanTargetCoord;
 
 const ANNOTATION_KEY: &str = "waybill:orphan-reason";
 
+/// Milestone 866 — module identity for the same-name sibling check.
+///
+/// `Purl::name()` returns the LAST path segment, which for a Go module
+/// with a major-version suffix is the suffix itself: both
+/// `github.com/russross/blackfriday/v2` and
+/// `github.com/cpuguy83/go-md2man/v2` report `name == "v2"`. Keying the
+/// sibling index on that made every `/vN` module a "version" of every
+/// other, so one reachable `/vN` module marked all the rest
+/// `stale-go-sum-entry` — measured on `go-cobra`, where reachable
+/// `go-md2man/v2` mislabelled orphaned `blackfriday/v2`.
+///
+/// The sibling check means "same module, different version", so the key
+/// is the PURL with the version stripped.
+fn versionless_identity(purl: &str) -> &str {
+    match purl.split_once('@') {
+        Some((base, _version)) => base,
+        None => purl,
+    }
+}
+
 /// The C45 `waybill:orphan-reason` vocabulary after milestone 167 lands.
 /// Total 5 codes: 2 preserved from m061 + 3 new.
 ///
@@ -141,7 +161,10 @@ pub fn classify_orphans(
         if ecosystem != "npm" && ecosystem != "golang" {
             continue;
         }
-        let key = (ecosystem.to_string(), c.purl.name().to_string());
+        let key = (
+            ecosystem.to_string(),
+            versionless_identity(c.purl.as_str()).to_string(),
+        );
         by_name.entry(key).or_default().push(c.purl.as_str().to_string());
     }
 
@@ -185,7 +208,10 @@ pub fn classify_orphans(
         }
 
         // 2c. Same-name reachable sibling check.
-        let key = (ecosystem.clone(), c.purl.name().to_string());
+        let key = (
+            ecosystem.clone(),
+            versionless_identity(&purl_str).to_string(),
+        );
         let has_reachable_sibling = by_name
             .get(&key)
             .map(|siblings| {

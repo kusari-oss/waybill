@@ -779,6 +779,9 @@ impl CycloneDxBuilder {
             &target_ref,
             effective_components,
             complete_ecosystems,
+            // Milestone 866 (#871) — only components the BFS reached may
+            // carry the `dependencies` (graph-is-complete) claim.
+            Some(&graph_completeness.reachable_set),
         );
         // Milestone 084 — when override has dropped main-module components,
         // closure-invariant fix: relationships whose `from` is one of the

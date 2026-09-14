@@ -431,67 +431,15 @@ fn resolve_tool_to_module<'a>(tool_path: &str, module_paths: &[&'a str]) -> Opti
     best
 }
 
-/// Issue #251: compute the set of Go module names to flat-attach to
-/// main-module's `depends` to recover reachability after the resolver's
-/// hierarchical attribution leaves some components orphan.
-///
-/// Inputs:
-/// - `golang_names`: every Go module's `entry.name` in the current scan's
-///   `out` (the components that have already been emitted as PackageDbEntry
-///   records). These are the candidates: any of them with zero incoming
-///   edges from non-main entries will be backfilled.
-/// - `all_edges`: a flat `(source_name, source_depends)` view of every
-///   entry in `out` — Go-or-otherwise. Used to count incoming edges into
-///   `golang_names`. Passing this as a slice lets unit tests exercise
-///   the logic without constructing PackageDbEntry instances.
-/// - `main_entry_depends`: main-module's current `depends` list before
-///   backfill. Entries already there are dedup'd out of the result.
-///
-/// Returns a sorted Vec of Go module names with zero incoming edges
-/// from any non-main entry AND not already in main-module's depends.
-fn compute_orphan_backfill(
-    golang_names: &[&str],
-    all_edges: &[(&str, &[String])],
-    main_entry_depends: &[String],
-) -> Vec<String> {
-    if golang_names.is_empty() {
-        return Vec::new();
-    }
-    let go_set: std::collections::HashSet<&str> = golang_names.iter().copied().collect();
-    let mut incoming: std::collections::HashMap<&str, usize> =
-        golang_names.iter().map(|&n| (n, 0)).collect();
-    for (_, depends) in all_edges {
-        for child in *depends {
-            // Milestone 233: depends may carry either bare `name` or
-            // `name version` (post-m233 disambiguation form). Compare
-            // against the name-only golang_names set on the leading
-            // token.
-            let child_name = child.split_whitespace().next().unwrap_or(child.as_str());
-            if go_set.contains(child_name) {
-                if let Some(c) = incoming.get_mut(child_name) {
-                    *c += 1;
-                }
-            }
-        }
-    }
-    // Milestone 233: main_entry_depends may carry either bare `name`
-    // (pre-m233 form) or `name version` (post-m233 disambiguation).
-    // Split on whitespace to get the name-only prefix for the
-    // exclusion check so a direct-require doesn't get double-attached
-    // as a backfilled orphan.
-    let existing: std::collections::HashSet<&str> = main_entry_depends
-        .iter()
-        .map(|s| s.split_whitespace().next().unwrap_or(s.as_str()))
-        .collect();
-    let mut backfilled: Vec<String> = Vec::new();
-    for &name in golang_names {
-        if incoming.get(name).copied().unwrap_or(0) == 0 && !existing.contains(name) {
-            backfilled.push(name.to_string());
-        }
-    }
-    backfilled.sort();
-    backfilled
-}
+// Milestone 866 — `compute_orphan_backfill` removed with its only
+// caller. It computed which Go components had zero incoming edges
+// so they could be flat-attached to the main module; that attach
+// asserted a dependency nothing in the scanned tree declared, and
+// the reachability it manufactured is what let graph-completeness
+// report `complete`. Measured on guac: of the 17 orphans the
+// backfill was hiding, 16 are modules the main module genuinely
+// does not need and 1 is reachable only through a test package.
+// See specs/866-go-graph-completeness/ and the #251 comment.
 
 // ---------------------------------------------------------------------------
 // go.sum parser
@@ -1784,7 +1732,6 @@ pub fn read(
     // `waybill:orphan-reason: flat-attached-fallback` so the diagnostic
     // signal (waybill couldn't determine this component's hierarchical
     // parent) survives despite the resolved-incoming-edge from main.
-    let mut backfilled_paths: HashSet<String> = HashSet::new();
     // Milestone 055 (T024 + T025): build the GraphResolver once per
     // scan and reuse it across project roots. The resolver's
     // 4-step ladder produces a `ModuleGraphMap` that supersedes the
@@ -2013,45 +1960,37 @@ pub fn read(
         if let Some(mut main_entry) =
             build_main_module_entry(doc, project_root, &go_mod_source)
         {
-            // Milestone 091: in offline + cache-empty mode, the
-            // resolver's step 5 claims every go.sum module steps 1–3
-            // didn't reach, tagging them with source = GoSumFallback.
-            // Augment main-module's `depends` with those module paths
-            // so the SBOM includes flat root → transitive edges
-            // recovering the ~110 transitive edges trivy captures from
-            // go.sum content alone. Existing `// indirect`-filtered
-            // direct-deps already in `main_entry.depends` are deduped
-            // via the HashSet pass.
-            // Milestone 233 (FR-001) — filter fallback paths to those
-            // present in THIS main-module's own `go.sum`. Pre-233 used
-            // `gosum_fallback_paths()` (scan-global aggregate), which
-            // leaked sibling modules' go.sum entries into every main-
-            // module's `depends`. See spec.md § Background.
+            // Milestone 866 (#857 / #829) — the go.sum fallback augment
+            // that used to live here has been removed.
             //
-            // Milestone 233 (FR-003) — emit fallback paths in "name
-            // version" form using THIS project's go.sum entries.
-            // Multi-module workspaces with same-name different-version
-            // fallback modules resolve to the correct per-project
-            // version via scan_fs/mod.rs:606-612 disambiguation.
-            let fallback_paths = graph_map.gosum_fallback_paths_for(sums);
-            if !fallback_paths.is_empty() {
-                let existing: std::collections::HashSet<String> =
-                    main_entry.depends.iter().cloned().collect();
-                let path_to_version: std::collections::HashMap<&str, &str> = sums
-                    .iter()
-                    .filter(|e| e.kind == GoSumKind::Module)
-                    .map(|e| (e.module.as_str(), e.version.as_str()))
-                    .collect();
-                for path in fallback_paths {
-                    let dep_string = match path_to_version.get(path.as_str()) {
-                        Some(v) => format!("{} {}", path, v),
-                        None => path.clone(),
-                    };
-                    if !existing.contains(&dep_string) && !existing.contains(&path) {
-                        main_entry.depends.push(dep_string);
-                    }
-                }
-            }
+            // It appended every module the resolver's steps 1-3 failed
+            // to reach to this main module's `depends`, so the SBOM
+            // would carry flat root -> transitive edges "recovering the
+            // ~110 transitive edges trivy captures from go.sum content
+            // alone" (m091, scoped per main-module by m233).
+            //
+            // go.sum is a hash list. It names modules without saying who
+            // requires them, so nothing in it could attribute those
+            // modules to a parent — the augment picked the main module
+            // because it was the only candidate, not because anything
+            // declared it. Measured on the pinned corpus targets, that
+            // produced 2 of 7 emitted edges on `go-cobra` and 554 of
+            // 2984 on `kubernetes` stating a direct dependency the
+            // scanned project does not declare.
+            //
+            // Those invented edges also attached every component to the
+            // graph, which is what let `waybill:graph-completeness`
+            // report `complete` over a graph it had itself filled in.
+            // Removing them is what makes that signal correct.
+            //
+            // This deliberately emits FEWER edges than trivy does in
+            // offline mode. See specs/866-go-graph-completeness/
+            // research.md R6 before treating that as a regression: the
+            // recovered edges were never read from any manifest, and an
+            // SBOM's value is that its claims are checkable. The real
+            // remedy is a resolvable module graph (warm cache, or
+            // --warm-go-cache from m173), which recovers the true
+            // topology rather than guessing at it.
 
             // Milestone 233 (FR-002 + Clarifications §2) — replace-
             // directive → sibling main-module edges. For each `replace
@@ -2060,12 +1999,38 @@ pub fn read(
             // main-module's project_root, add an edge from this main-
             // module to the sibling's module_path. Matches Go's own
             // `go mod graph` behavior.
-            for ((_old_path, _old_ver), (new_path, _new_ver)) in &doc.replaces {
+            for ((old_path, _old_ver), (new_path, _new_ver)) in &doc.replaces {
                 // Only filesystem-path replaces (relative or absolute).
                 // Module-path replaces (like `replace foo v1 => foo v2`)
                 // leave `new_path` as a module path, which won't
                 // canonicalize to any project_root.
                 if !new_path.starts_with('.') && !new_path.starts_with('/') {
+                    continue;
+                }
+                // Milestone 866 (#857) — a `replace` redirects a module
+                // path; it does not declare a dependency. Emitting an
+                // edge for a replace with no matching `require` asserts
+                // a relationship nothing in the tree states.
+                //
+                // Measured: `k8s.io/api`'s go.mod carries
+                // `replace k8s.io/streaming => ../streaming` and no
+                // `require k8s.io/streaming`, yet waybill emitted
+                // `k8s.io/api -> k8s.io/streaming`. That edge is one of
+                // the 554 unbacked edges on the kubernetes target.
+                //
+                // Require the redirect to have a backing DIRECT require
+                // before following it to the sibling. `// indirect` does
+                // not qualify: it records that the module graph needs
+                // that module, not that THIS module imports it, and a
+                // CycloneDX `dependsOn` / SPDX DEPENDS_ON edge states a
+                // direct dependency. This matches the milestone-059
+                // policy that `build_main_module_entry` already applies
+                // to the require list itself (`.filter(|req| !req.indirect)`).
+                if !doc
+                    .requires
+                    .iter()
+                    .any(|r| &r.path == old_path && !r.indirect)
+                {
                     continue;
                 }
                 let target_abs = project_root.join(new_path);
@@ -2224,71 +2189,32 @@ pub fn read(
             // nested-module orphan to the root. The longest-prefix
             // check picks the actual "owning" project_root instead.
             // See spec.md § Background / reporter's ticket.
-            let project_root_str = project_root.to_string_lossy();
-            let all_project_root_strs: Vec<String> = parsed_roots
-                .iter()
-                .map(|(pr, _, _)| pr.to_string_lossy().into_owned())
-                .collect();
-            let owns_component = |source_path: &str| -> bool {
-                if !source_path.starts_with(project_root_str.as_ref()) {
-                    return false;
-                }
-                // Every other project_root that is ALSO a prefix must be
-                // shorter than THIS project_root; otherwise the other
-                // one owns the component.
-                all_project_root_strs.iter().all(|other| {
-                    !source_path.starts_with(other.as_str())
-                        || other.len() <= project_root_str.len()
-                })
-            };
-            let golang_names: Vec<&str> = out
-                .iter()
-                .filter(|e| e.purl.as_str().starts_with("pkg:golang/"))
-                .filter(|e| owns_component(&e.source_path))
-                .map(|e| e.name.as_str())
-                .collect();
-            let all_edges: Vec<(&str, &[String])> = out
-                .iter()
-                .map(|e| (e.name.as_str(), e.depends.as_slice()))
-                .collect();
-            let backfilled =
-                compute_orphan_backfill(&golang_names, &all_edges, &main_entry.depends);
-            if !backfilled.is_empty() {
-                tracing::info!(
-                    backfill_count = backfilled.len(),
-                    "Issue #251: flat-attaching residual-orphan Go components to main-module (resolver's hierarchical attribution left them with zero incoming edges)"
-                );
-                // Record paths for the post-loop annotation pass — these
-                // components get `waybill:orphan-reason:
-                // flat-attached-fallback` so consumers can distinguish
-                // them from real direct requires.
-                for p in &backfilled {
-                    backfilled_paths.insert(p.clone());
-                }
-                // Milestone 233 (FR-003): resolve each backfilled name to
-                // the (name, version) tuple of the owning component in
-                // `out` (limited to components whose source_path is under
-                // THIS project_root — same longest-prefix rule as
-                // `owns_component`). Emit "name version" form so the
-                // scan_fs/mod.rs disambiguation resolves to the correct
-                // per-project-owned version. Pre-233 emitted bare names,
-                // which name-only-lookup last-writes-wins to a sibling
-                // module's version when multiple exist.
-                let versioned_backfilled: Vec<String> = backfilled
-                    .into_iter()
-                    .map(|name| {
-                        out.iter()
-                            .find(|e| {
-                                e.name == name
-                                    && e.purl.as_str().starts_with("pkg:golang/")
-                                    && owns_component(&e.source_path)
-                            })
-                            .map(|e| format!("{} {}", e.name, e.version))
-                            .unwrap_or(name)
-                    })
-                    .collect();
-                main_entry.depends.extend(versioned_backfilled);
-            }
+            // Milestone 866 (#857 / #829) — the Issue #251 residual-
+            // orphan backfill that used to live here has been removed.
+            //
+            // It flat-attached every Go component with zero incoming
+            // edges to the main module, to establish the invariant
+            // "every emitted Go component is reachable from
+            // main-module". That invariant is the problem: it was met by
+            // manufacturing the edges that satisfy it. Nothing in the
+            // scanned tree said those components belonged to the main
+            // module — the backfill chose it because it was the only
+            // candidate.
+            //
+            // The manufactured edges then fed the reachability check
+            // behind `waybill:graph-completeness`, so a graph waybill had
+            // filled in reported `orphan_count=0` and `complete`. On the
+            // pinned `go-cobra` target this produced
+            // `cobra -> blackfriday` and `cobra -> check.v1`, neither of
+            // which appears in cobra's go.mod.
+            //
+            // Components left with no incoming edge now stay that way:
+            // they remain in the inventory (FR-007) and the existing
+            // orphan machinery reports them, which is what makes the
+            // completeness signal correct rather than merely quiet.
+            // `backfilled_paths` stays empty, so the companion
+            // `waybill:orphan-reason: flat-attached-fallback` annotation
+            // no longer fires — there is nothing flat-attached to mark.
             let purl_key = main_entry.purl.as_str().to_string();
             if seen_purls.insert(purl_key) {
                 out.push(main_entry);
@@ -2510,7 +2436,24 @@ pub fn read(
         }
         for entry in &out {
             for child_path in &entry.depends {
-                if let Some(c) = incoming_count.get_mut(child_path.as_str()) {
+                // Milestone 866 — `depends` carries either a bare
+                // `name` or the post-m233 `"name version"` form. The
+                // map is keyed by bare name, so the versioned form has
+                // never matched and every Go component counted as
+                // having zero incoming edges.
+                //
+                // That is why `waybill:orphan-reason` appeared on
+                // components that are plainly reachable: on `go-cobra`
+                // it marked all six non-main-module components, four of
+                // which are cobra's own direct requires. The annotation
+                // has been reporting "resolved via fallback", not
+                // "unattached", for as long as m233's format change has
+                // been in place.
+                let key = child_path
+                    .split_once(' ')
+                    .map(|(name, _version)| name)
+                    .unwrap_or(child_path.as_str());
+                if let Some(c) = incoming_count.get_mut(key) {
                     *c += 1;
                 }
             }
@@ -2591,19 +2534,13 @@ pub fn read(
         // `unresolved-indirect-require` continues to mean "no
         // incoming edge AND we couldn't backfill" (rare; only when
         // the backfill pass skipped the entry for some reason).
-        for entry in out.iter_mut() {
-            if !entry.purl.as_str().starts_with("pkg:golang/") {
-                continue;
-            }
-            if backfilled_paths.contains(&entry.name) {
-                let reason = "flat-attached-fallback".to_string();
-                reason_classes.insert(reason.clone());
-                entry.extra_annotations.insert(
-                    "waybill:orphan-reason".to_string(),
-                    serde_json::Value::String(reason),
-                );
-            }
-        }
+        // Milestone 866 — the `flat-attached-fallback` annotation loop
+        // that stood here is gone with the backfill that produced it.
+        // Nothing flat-attaches any more, so nothing can be marked as
+        // such. The C45 vocabulary value is deliberately RETAINED in
+        // `generate::orphan_reason` — documents emitted before this
+        // milestone carry it, and the preservation branch there still
+        // has to recognise it.
 
         // Aggregate doc-level completeness signal. Only set when there
         // were Go components at all (signal not applicable for
@@ -3400,104 +3337,11 @@ tool (
 
     // --- issue #251: orphan backfill ---------------------------------------
 
-    #[test]
-    fn backfill_empty_when_no_golang_components() {
-        let result = compute_orphan_backfill(&[], &[], &[]);
-        assert!(result.is_empty());
-    }
 
-    #[test]
-    fn backfill_empty_when_all_modules_have_incoming_edges() {
-        // Scenario: main → A, A → B. No orphans.
-        let depends_a: Vec<String> = vec!["B".to_string()];
-        let depends_main: Vec<String> = vec!["A".to_string()];
-        let edges: Vec<(&str, &[String])> = vec![
-            ("A", depends_a.as_slice()),
-            ("MAIN", depends_main.as_slice()),
-        ];
-        let result = compute_orphan_backfill(
-            &["A", "B"],
-            &edges,
-            &depends_main,
-        );
-        assert!(
-            result.is_empty(),
-            "A is reachable from main, B is reachable from A — neither should backfill",
-        );
-    }
 
-    #[test]
-    fn backfill_attaches_module_with_zero_incoming() {
-        // Scenario from guac: main directly requires A. A → B WAS the
-        // expected edge but waybill's resolver lost it. B is in `out`
-        // (from go.sum) but no entry depends on B. main_entry.depends =
-        // [A] (only direct, non-indirect from go.mod).
-        // Backfill should add B.
-        let depends_a: Vec<String> = vec![]; // A's depends list is empty (resolver gap)
-        let depends_main: Vec<String> = vec!["A".to_string()];
-        let edges: Vec<(&str, &[String])> = vec![
-            ("A", depends_a.as_slice()),
-            ("MAIN", depends_main.as_slice()),
-        ];
-        let result = compute_orphan_backfill(
-            &["A", "B"],
-            &edges,
-            &depends_main,
-        );
-        assert_eq!(result, vec!["B".to_string()]);
-    }
 
-    #[test]
-    fn backfill_skips_modules_already_in_main_depends() {
-        // Edge case: A is already in main_entry.depends AND has zero
-        // incoming edges from non-main entries. Don't double-add.
-        let depends_main: Vec<String> = vec!["A".to_string()];
-        let edges: Vec<(&str, &[String])> = vec![
-            ("MAIN", depends_main.as_slice()),
-        ];
-        let result = compute_orphan_backfill(
-            &["A"],
-            &edges,
-            &depends_main,
-        );
-        assert!(result.is_empty(), "A already in main_entry.depends — should not backfill");
-    }
 
-    #[test]
-    fn backfill_ignores_incoming_edges_from_non_golang_names() {
-        // A non-Go entry depending on a Go module name still counts as
-        // an incoming edge — keeps the contract simple. Non-Go edges
-        // are rare but real (e.g., a binary entry that references its
-        // ELF-discovered Go module).
-        let depends_binary: Vec<String> = vec!["A".to_string()];
-        let edges: Vec<(&str, &[String])> = vec![
-            ("/usr/bin/some-binary", depends_binary.as_slice()),
-        ];
-        let result = compute_orphan_backfill(
-            &["A"],
-            &edges,
-            &[],
-        );
-        assert!(
-            result.is_empty(),
-            "Even cross-ecosystem incoming edges count — A should not backfill",
-        );
-    }
 
-    #[test]
-    fn backfill_emits_sorted_output() {
-        // Three orphans; verify deterministic ordering.
-        let edges: Vec<(&str, &[String])> = vec![];
-        let result = compute_orphan_backfill(
-            &["zeta", "alpha", "middle"],
-            &edges,
-            &[],
-        );
-        assert_eq!(
-            result,
-            vec!["alpha".to_string(), "middle".to_string(), "zeta".to_string()],
-        );
-    }
 
     #[test]
     fn backfill_annotation_contract_naming_stable() {
@@ -3521,34 +3365,6 @@ tool (
         // downstream consumer-side policy that relies on these strings.
     }
 
-    #[test]
-    fn backfill_real_world_shape_guac_indirect() {
-        // Closest analog to the guac@ebb808e reproducer: main module
-        // directly requires `osv-scalibr`; `osv-scalibr` SHOULD also
-        // require `go-ext4-filesystem` per `go mod why -m` but the
-        // resolver dropped that edge for some reason. Expect:
-        //   - osv-scalibr stays as a direct edge from main (no change).
-        //   - go-ext4-filesystem gets flat-backfilled onto main.
-        let depends_osvscalibr: Vec<String> = vec![];
-        let depends_main: Vec<String> = vec!["github.com/google/osv-scalibr".to_string()];
-        let edges: Vec<(&str, &[String])> = vec![
-            ("github.com/google/osv-scalibr", depends_osvscalibr.as_slice()),
-            ("MAIN", depends_main.as_slice()),
-        ];
-        let result = compute_orphan_backfill(
-            &[
-                "github.com/google/osv-scalibr",
-                "github.com/masahiro331/go-ext4-filesystem",
-            ],
-            &edges,
-            &depends_main,
-        );
-        assert_eq!(
-            result,
-            vec!["github.com/masahiro331/go-ext4-filesystem".to_string()],
-            "osv-scalibr already direct from main; go-ext4-filesystem (no incoming edge) backfills",
-        );
-    }
 
     // --- go.sum parser -----------------------------------------------------
 

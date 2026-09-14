@@ -331,6 +331,24 @@ pub fn compute_graph_completeness(
     }
 }
 
+/// Milestone 866 — package identity for the same-package tier lookup.
+///
+/// `Purl::name()` is the LAST path segment, which collides across
+/// distinct packages in exactly the ecosystems this classifier covers:
+/// Go modules with a major-version suffix
+/// (`blackfriday/v2` and `go-md2man/v2` both report `"v2"`) and scoped
+/// npm packages (`@types/node` and `@babel/node` both report `"node"`).
+/// Keying on it lets one package's tier vouch for an unrelated one.
+///
+/// The versionless PURL is the actual package identity.
+fn versionless_identity(purl: &waybill_common::types::purl::Purl) -> String {
+    let s = purl.as_str();
+    match s.split_once('@') {
+        Some((base, _version)) => base.to_string(),
+        None => s.to_string(),
+    }
+}
+
 /// Milestone 177 classifier — identify ecosystems where the
 /// transitive-edge closure is unwalkable due to design-tier or
 /// analyzed-tier components lacking a same-package source-tier-or-
@@ -361,7 +379,7 @@ fn classify_transitive_edges_unresolvable(
     // Pass 1: same-package safety lookup.
     let mut safe_packages: HashMap<(String, String), bool> = HashMap::new();
     for c in components {
-        let key = (c.purl.ecosystem().to_string(), c.purl.name().to_string());
+        let key = (c.purl.ecosystem().to_string(), versionless_identity(&c.purl));
         let is_safe = matches!(
             c.sbom_tier.as_deref(),
             Some("source") | Some("deployed") | Some("build")
@@ -380,7 +398,7 @@ fn classify_transitive_edges_unresolvable(
         if !is_triggering_tier {
             continue;
         }
-        let key = (c.purl.ecosystem().to_string(), c.purl.name().to_string());
+        let key = (c.purl.ecosystem().to_string(), versionless_identity(&c.purl));
         if !safe_packages.get(&key).copied().unwrap_or(false) {
             affected_ecosystems.insert(c.purl.ecosystem().to_string());
         }
