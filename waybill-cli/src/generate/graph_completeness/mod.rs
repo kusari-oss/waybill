@@ -311,6 +311,30 @@ pub fn compute_graph_completeness(
         reason_codes.push(code);
     }
 
+    // Milestone 866 (FR-003, #829) — independent coverage check.
+    //
+    // Reachability alone is not enough. A scan can attach every
+    // component to something and still have failed to resolve the
+    // transitive graph, in which case `complete` is asserted over a
+    // graph nobody verified. That is what `pants-example-golang`
+    // exhibited: zero orphans, so no reachability signal fired, while
+    // every non-main component carried
+    // `waybill:go-transitive-source = go-sum-fallback` and the document
+    // reported `go-transitive-coverage = unknown`. The graph was
+    // declared complete and the evidence for the opposite sat on the
+    // components.
+    //
+    // This check does not depend on graph shape, so it still holds if a
+    // future fallback attaches components to something real but wrong —
+    // the failure mode reachability cannot see.
+    //
+    // `GoTransitiveCoverageDegraded` has existed in the reason-code
+    // vocabulary since m158 with a formatter and a unit test, and was
+    // never constructed. This is its first production caller.
+    if let Some(code) = classify_go_transitive_coverage_degraded(components) {
+        reason_codes.push(code);
+    }
+
     let value = if reason_codes.is_empty() && orphan_count == 0 {
         GraphCompletenessValue::Complete
     } else if !reason_codes.is_empty() {
@@ -329,6 +353,38 @@ pub fn compute_graph_completeness(
         orphan_count,
         reachable_set,
     }
+}
+
+/// Milestone 866 (FR-003) — did Go transitive resolution actually
+/// complete?
+///
+/// Counts components whose own evidence says their transitive edges
+/// came from a degraded tier. `go-sum-fallback` means the resolver's
+/// high-fidelity steps did not reach the module and go.sum was used
+/// instead; go.sum carries no parent-child topology, so those edges
+/// were never resolved. `unresolved` means no source produced edges at
+/// all.
+///
+/// The synthetic `pkg:golang/stdlib` node is excluded: it is emitted
+/// unconditionally and carries no resolution provenance.
+fn classify_go_transitive_coverage_degraded(
+    components: &[ResolvedComponent],
+) -> Option<ReasonCode> {
+    let degraded = components
+        .iter()
+        .filter(|c| {
+            c.extra_annotations
+                .get("waybill:go-transitive-source")
+                .and_then(|v| v.as_str())
+                .is_some_and(|v| v == "go-sum-fallback" || v == "unresolved")
+        })
+        .count();
+    if degraded == 0 {
+        return None;
+    }
+    Some(ReasonCode::GoTransitiveCoverageDegraded {
+        missing_count: degraded,
+    })
 }
 
 /// Milestone 866 — package identity for the same-package tier lookup.
