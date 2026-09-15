@@ -89,3 +89,44 @@ touched all of them. This is mechanically safe — a missed site is a compile
 error, not a silent bug — but it makes the diff wide, and it is the same
 shape of problem already tracked for a 31-parameter constructor elsewhere in
 this repo.
+
+## T031 — the quality-corpus bound, re-authored from CI
+
+Measured on CI (run `35032804554`), not locally:
+
+```
+gradle-bitwarden-android  pkgs=338 files=9 edges=150 depth=6 flat=false sbomqs=6.60
+```
+
+| bound | before | after | moved? |
+|---|---|---|---|
+| `edges` | 346..424 | **135..165** | yes — see below |
+| `max_depth` | 4..9 | 4..9 | no: 6 is back inside it on its own |
+| `flat` | false | false | no: now genuinely false |
+| `pkgs` / `files` / `sbomqs` | — | — | no: never left range |
+
+Only the violating bound moved. A passing bound moved without cause is the
+drift this file exists to catch.
+
+**Why 150 and not 385.** The old figure counted the CycloneDX
+primary-dependency fallback attaching the root to all 233 maven components,
+because the gem main module had no outgoing edges and therefore neither did
+the root. 150 is the real graph: 140 gem→gem transitive edges + 9
+main-module→gem declared edges recovered here + 1 root→main-module anchor.
+
+The 233 maven components still carry no edges, **correctly** — they come from
+a `gradle.lockfile`, whose format (`group:artifact:version=configuration`)
+carries no parent-child topology at all. Flat by construction, like `go.sum`.
+A separate gap, not one this feature claims to close.
+
+## T033 — walker audit
+
+Zero `fn walk[_(]` lines added or removed under `waybill-cli/src/scan_fs/` on
+this branch, and `walk.audit-allowlist.txt` is untouched. The audit set is
+byte-identical to `main`, so the gate cannot trip on this change.
+
+Worth recording: a hand-rolled local replication of that CI grep reported 35
+live entries against a 12-line allowlist and looked like catastrophic drift.
+It was wrong — the CI check strips leading indentation via `sed` and the
+replication did not. Diffing the branch against `main` for `fn walk` lines is
+the reliable instrument; re-implementing the gate is not.
