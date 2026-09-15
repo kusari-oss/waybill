@@ -253,15 +253,44 @@ ecosystem = "pip"
 # INVERTED RATIO: 11 package-tier vs 375 file-tier (97% files). ansible commits
 # no pip lockfile, so `pkgs` is tiny and `files` is large -- the opposite of
 # most targets, and the reason the two are bounded separately.
-# PERMANENTLY FLAT for the same reason.
+#
+# Re-measured 2026-09-15 on CI after #883, waybill @ 4f440be3:
+#   pkgs=13 files=375 edges=7 depth=2 flat=false sbomqs=5.69
+#   waybill self-report: partial
+#
+# `edges` drops 386 -> 7 and `flat` flips true -> false. Both are
+# corrections, and the OLD number was not measuring dependency structure.
+#
+# ansible declares its dependencies as PEP 621 dynamic metadata
+# (`dynamic = ["dependencies"]` + `[tool.setuptools.dynamic] dependencies =
+# {file = "requirements.txt"}`). Before #883 the pip reader read `depends`
+# only from a literal `[project].dependencies`, which is absent by
+# definition in that form, so the main module emitted no outgoing edges.
+# With the root also edgeless, the CycloneDX primary-dependency fallback
+# fired and attached the root to every component nothing depended on --
+# all 375 file-tier components plus the 11 packages. THAT is the 386, and
+# it is why the old shape was `depth=1 flat=true`: a flat star from the
+# root, ~97% of it `root -> <source file>` edges that no manifest declares.
+#
+# m860 gave the root a real anchor edge to the retained main module, so the
+# fallback correctly stopped firing and the gap became visible as edges=2.
+# #883 then attached the five genuine requirements.txt declarations
+# (jinja2, PyYAML, cryptography, packaging, resolvelib) to `ansible-core`,
+# giving 7 = 5 declared + 2 root anchors, at depth 2.
+#
+# NOT flat any more, and the bound must not be re-fitted to 386 -- that
+# would re-encode the fabricated file edges as expected output.
+# The band is absolute rather than proportional because the count is small
+# and deterministic (committed manifests, no cache and no network), matching
+# how go-cobra is bounded. A collapse back toward 2 still trips `min`.
 [targets.expect]
 pkgs      = { min = 8, max = 14 }
 files     = { min = 337, max = 413 }
-edges     = { min = 347, max = 425 }
+edges     = { min = 5, max = 11 }
 max_depth = { min = 1, max = 5 }
 sbomqs    = { min = 5.37, max = 6.37 }
 wall_ms   = { min = 5, max = 30000 }
-flat      = true
+flat      = false
 
 [[targets]]
 name      = "python-pytorch"

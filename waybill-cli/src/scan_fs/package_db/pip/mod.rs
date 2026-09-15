@@ -714,6 +714,138 @@ fn filter_project_roots_by_name(project_roots: &[PathBuf]) -> (Vec<PathBuf>, usi
     (retained, rejected)
 }
 
+/// Resolve PEP 621 dynamic dependency metadata into main-module
+/// `depends` names (#883).
+///
+/// setuptools declares the indirection as:
+///
+/// ```toml
+/// [project]
+/// dynamic = ["dependencies", "optional-dependencies"]
+///
+/// [tool.setuptools.dynamic]
+/// dependencies = { file = "requirements.txt" }          # or a list of files
+///
+/// [tool.setuptools.dynamic.optional-dependencies]
+/// test = { file = "test-requirements.txt" }
+/// ```
+///
+/// Returns the requirement names found in the referenced files. The
+/// files are parsed with the same `requirements.txt` parser the
+/// standalone reader uses, so `-r` includes, hash flags, comments and
+/// direct-URL forms are handled identically rather than re-implemented.
+///
+/// Emits a `warn!` when `[project].dynamic` claims dependencies but
+/// nothing resolves — a silently empty dependency graph is the worst
+/// available outcome, and it is what this function exists to stop.
+fn resolve_setuptools_dynamic_depends(
+    project_root: &Path,
+    project: &toml::Value,
+    parsed: &toml::Value,
+) -> Vec<String> {
+    let dynamic_claims: Vec<&str> = project
+        .get("dynamic")
+        .and_then(|v| v.as_array())
+        .map(|arr| arr.iter().filter_map(|x| x.as_str()).collect())
+        .unwrap_or_default();
+    let wants_deps = dynamic_claims.contains(&"dependencies");
+    let wants_optional = dynamic_claims.contains(&"optional-dependencies");
+    if !wants_deps && !wants_optional {
+        return Vec::new();
+    }
+
+    let dynamic_table = parsed
+        .get("tool")
+        .and_then(|t| t.get("setuptools"))
+        .and_then(|st| st.get("dynamic"));
+
+    // `file` accepts a bare string or an array of strings.
+    let files_of = |v: &toml::Value| -> Vec<String> {
+        let Some(f) = v.get("file") else {
+            return Vec::new();
+        };
+        if let Some(one) = f.as_str() {
+            return vec![one.to_string()];
+        }
+        f.as_array()
+            .map(|arr| {
+                arr.iter()
+                    .filter_map(|x| x.as_str())
+                    .map(str::to_string)
+                    .collect()
+            })
+            .unwrap_or_default()
+    };
+
+    let mut rel_files: Vec<String> = Vec::new();
+    if let Some(dt) = dynamic_table {
+        if wants_deps {
+            if let Some(v) = dt.get("dependencies") {
+                rel_files.extend(files_of(v));
+            }
+        }
+        if wants_optional {
+            if let Some(opt) = dt.get("optional-dependencies").and_then(|v| v.as_table()) {
+                for (_extra, v) in opt {
+                    rel_files.extend(files_of(v));
+                }
+            }
+        }
+    }
+
+    let mut out: Vec<String> = Vec::new();
+    let mut files_read = 0usize;
+    for rel in &rel_files {
+        // The path comes from a scanned repository, so treat it as
+        // untrusted: keep resolution inside the project root rather
+        // than letting a manifest point the reader at an arbitrary
+        // file. Matches the walker's containment posture.
+        let candidate = Path::new(rel);
+        if candidate.is_absolute() || candidate.components().any(|c| {
+            matches!(c, std::path::Component::ParentDir)
+        }) {
+            tracing::warn!(
+                path = %rel,
+                "pip: ignoring [tool.setuptools.dynamic] file outside the project root",
+            );
+            continue;
+        }
+        let abs = project_root.join(candidate);
+        let Ok(text) = std::fs::read_to_string(&abs) else {
+            tracing::warn!(
+                path = %abs.display(),
+                "pip: [tool.setuptools.dynamic] references a requirements file that could not be read",
+            );
+            continue;
+        };
+        files_read += 1;
+        for entry in requirements_txt::parse_requirements_file_text(&text) {
+            if !entry.name.is_empty() {
+                out.push(entry.name);
+            }
+        }
+    }
+
+    if out.is_empty() {
+        tracing::warn!(
+            project_root = %project_root.display(),
+            dynamic = ?dynamic_claims,
+            referenced_files = rel_files.len(),
+            files_read,
+            "pip: [project].dynamic declares dependencies but none could be resolved; \
+             the main module will emit no dependency edges",
+        );
+    } else {
+        tracing::debug!(
+            project_root = %project_root.display(),
+            resolved = out.len(),
+            files_read,
+            "pip: resolved PEP 621 dynamic dependencies",
+        );
+    }
+    out
+}
+
 pub(crate) fn build_pip_main_module_entry(
     project_root: &Path,
 ) -> (Option<PackageDbEntry>, bool) {
@@ -826,6 +958,23 @@ pub(crate) fn build_pip_main_module_entry(
                 }
             }
         }
+        // Milestone 866 follow-up (#883) — PEP 621 dynamic metadata.
+        // When `[project].dynamic` lists "dependencies", the
+        // `[project].dependencies` array is absent *by definition* and
+        // the real list lives behind `[tool.setuptools.dynamic]`. The
+        // loops above then produce an empty `depends`, so the main
+        // module emits no outgoing edges at all while its dependencies
+        // are still discovered as components by the requirements
+        // reader — an SBOM that lists the dependencies and
+        // simultaneously asserts the project depends on nothing.
+        depends.extend(resolve_setuptools_dynamic_depends(project_root, project, &parsed));
+    }
+    // Order-preserving dedup: a name can be declared both statically
+    // and dynamically. `Vec::dedup` only collapses *adjacent* repeats,
+    // which is not what is needed here.
+    {
+        let mut seen: std::collections::HashSet<String> = Default::default();
+        depends.retain(|d| seen.insert(d.clone()));
     }
     let mut extra_annotations: std::collections::BTreeMap<String, serde_json::Value> =
         Default::default();
@@ -1741,6 +1890,143 @@ version = "0.5.0"
         // packageurl-python reference impl, NOT strict PEP 503).
         assert_eq!(entry.purl.as_str(), "pkg:pypi/some-package-name@0.5.0");
         assert_eq!(entry.name, "Some_Package_Name");
+    }
+
+    #[test]
+    fn build_pip_main_module_resolves_pep621_dynamic_dependencies() {
+        // #883. `dynamic = ["dependencies"]` means `[project].dependencies`
+        // is absent BY DEFINITION and the real list lives behind
+        // `[tool.setuptools.dynamic]`. Before the fix this produced an
+        // empty `depends`, silently, so the main module emitted no
+        // outgoing edges while its dependencies were still discovered
+        // as components by the requirements reader.
+        let tmp = tempfile::tempdir().unwrap();
+        write_pyproject(
+            tmp.path(),
+            r#"
+[project]
+name = "waybill-fixture-app"
+version = "1.0.0"
+dynamic = ["dependencies"]
+
+[tool.setuptools.dynamic]
+dependencies = { file = "requirements.txt" }
+"#,
+        );
+        std::fs::write(
+            tmp.path().join("requirements.txt"),
+            "waybill-fixture-alpha >= 1.0  # comment\nwaybill-fixture-beta\n\n",
+        )
+        .unwrap();
+        let (entry, _) = build_pip_main_module_entry(tmp.path());
+        let entry = entry.unwrap();
+        assert_eq!(
+            entry.depends,
+            vec![
+                "waybill-fixture-alpha".to_string(),
+                "waybill-fixture-beta".to_string()
+            ],
+            "dynamic dependencies must resolve to main-module depends"
+        );
+    }
+
+    #[test]
+    fn build_pip_main_module_dynamic_deps_accepts_file_list_and_optional() {
+        // setuptools allows `file` to be a list, and the same
+        // indirection exists for optional-dependencies (per extra).
+        let tmp = tempfile::tempdir().unwrap();
+        write_pyproject(
+            tmp.path(),
+            r#"
+[project]
+name = "waybill-fixture-app"
+version = "1.0.0"
+dynamic = ["dependencies", "optional-dependencies"]
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["base.txt", "extra.txt"] }
+
+[tool.setuptools.dynamic.optional-dependencies]
+test = { file = "test-reqs.txt" }
+"#,
+        );
+        std::fs::write(tmp.path().join("base.txt"), "waybill-fixture-alpha\n").unwrap();
+        std::fs::write(tmp.path().join("extra.txt"), "waybill-fixture-beta\n").unwrap();
+        std::fs::write(tmp.path().join("test-reqs.txt"), "waybill-fixture-gamma\n").unwrap();
+        let (entry, _) = build_pip_main_module_entry(tmp.path());
+        let entry = entry.unwrap();
+        assert!(entry.depends.contains(&"waybill-fixture-alpha".to_string()));
+        assert!(entry.depends.contains(&"waybill-fixture-beta".to_string()));
+        assert!(
+            entry.depends.contains(&"waybill-fixture-gamma".to_string()),
+            "optional-dependencies dynamic form must resolve too: {:?}",
+            entry.depends
+        );
+    }
+
+    #[test]
+    fn build_pip_main_module_dynamic_deps_refuses_paths_outside_project_root() {
+        // The path is repository content, so it is untrusted. A
+        // manifest must not be able to point the reader at a file
+        // outside the tree being scanned.
+        let tmp = tempfile::tempdir().unwrap();
+        write_pyproject(
+            tmp.path(),
+            r#"
+[project]
+name = "waybill-fixture-app"
+version = "1.0.0"
+dynamic = ["dependencies"]
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["inside.txt", "../outside.txt"] }
+"#,
+        );
+        std::fs::write(tmp.path().join("inside.txt"), "waybill-fixture-inside\n").unwrap();
+        std::fs::write(
+            tmp.path().parent().unwrap().join("outside.txt"),
+            "waybill-fixture-escaped\n",
+        )
+        .unwrap();
+        let (entry, _) = build_pip_main_module_entry(tmp.path());
+        let entry = entry.unwrap();
+        // Both halves matter. Asserting only the absence would pass
+        // vacuously if dynamic resolution were disabled entirely, so
+        // the in-root file must be shown to resolve in the same run.
+        assert!(
+            entry.depends.contains(&"waybill-fixture-inside".to_string()),
+            "the in-root file must still resolve: {:?}",
+            entry.depends
+        );
+        assert!(
+            !entry.depends.contains(&"waybill-fixture-escaped".to_string()),
+            "a parent-dir traversal must not be followed: {:?}",
+            entry.depends
+        );
+    }
+
+    #[test]
+    fn build_pip_main_module_static_dependencies_still_win() {
+        // Control: the non-dynamic path must be untouched by #883.
+        let tmp = tempfile::tempdir().unwrap();
+        write_pyproject(
+            tmp.path(),
+            r#"
+[project]
+name = "waybill-fixture-app"
+version = "1.0.0"
+dependencies = ["waybill-fixture-alpha >= 1.0", "waybill-fixture-beta"]
+"#,
+        );
+        let (entry, _) = build_pip_main_module_entry(tmp.path());
+        let entry = entry.unwrap();
+        assert_eq!(
+            entry.depends,
+            vec![
+                "waybill-fixture-alpha".to_string(),
+                "waybill-fixture-beta".to_string()
+            ]
+        );
     }
 
     #[test]
