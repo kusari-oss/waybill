@@ -123,9 +123,9 @@ component; confirm the outcome is readable from the emitted document alone.
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T031 Re-author `gradle-bitwarden-android`'s expectations in `xtask/corpus/quality-corpus.toml` from a **CI** measurement, not a local one. Its current `edges 346..424` / `max_depth 4..9` / `flat false` were authored against fabricated primary-dependency-fallback edges and are not a target to aim at. Move only the bounds that actually violate; a passing bound moved without cause is the drift that file exists to catch
-- [ ] T032 [P] Update `specs/867-mainmod-depends-ecosystem/measurements/README.md` with the post-fix figures beside the baselines so the before/after pair stays reproducible
-- [ ] T033 [P] Verify the walker-audit gate separately — it is not in `scripts/pre-pr.sh` and trips CI even when local pre-PR is green. Expected to be a no-op here since no file under `waybill-cli/src/scan_fs/walk*` is touched, but confirm rather than assume
+- [X] T031 Re-author `gradle-bitwarden-android`'s expectations in `xtask/corpus/quality-corpus.toml` from a **CI** measurement, not a local one. Its current `edges 346..424` / `max_depth 4..9` / `flat false` were authored against fabricated primary-dependency-fallback edges and are not a target to aim at. Move only the bounds that actually violate; a passing bound moved without cause is the drift that file exists to catch
+- [X] T032 [P] Update `specs/867-mainmod-depends-ecosystem/measurements/README.md` with the post-fix figures beside the baselines so the before/after pair stays reproducible
+- [X] T033 [P] Verify the walker-audit gate separately — it is not in `scripts/pre-pr.sh` and trips CI even when local pre-PR is green. Expected to be a no-op here since no file under `waybill-cli/src/scan_fs/walk*` is touched, but confirm rather than assume
 - [ ] T034 [P] Comment on #886 and #870 with the outcome, and state in the PR body that `gradle-bitwarden-android`'s bound moved because the old number counted fabricated edges — a reviewer comparing against the old figure will otherwise read the drop as a regression
 - [ ] T035 Open the PR with `./scripts/pre-pr.sh` green and every per-target `N passed; 0 failed` line enumerated
 
