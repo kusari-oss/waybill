@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [X] No [NEEDS CLARIFICATION] markers remain
 - [X] Requirements are testable and unambiguous
 - [X] Success criteria are measurable
 - [X] Success criteria are technology-agnostic (no implementation details)
@@ -31,18 +31,31 @@
 
 ## Notes
 
-One open [NEEDS CLARIFICATION] remains, on scope breadth (project/main-module
-components only vs. any component carrying reader-declared dependency names).
-It is deliberately left open rather than defaulted: the two readings differ in
-blast radius and in how much of SC-004 must be demonstrated, and the evidence
-supports the broad reading while the narrow one is the lower-risk change. This
-is a scope decision, which the spec guidance ranks as the highest-priority
-class of clarification.
+All items pass as of the 2026-09-15 clarification session. Three questions
+asked and answered, all in the highest-impact classes (scope, then functional
+behaviour, then observability):
 
-Every figure in the spec is traceable to an observation recorded in issue
-#886 — the 0-vs-9 edge measurement on `bitwarden/android` @ `d817f6b`, the
-103-component island with 140 internal edges and 2 graph roots, and the second
-reader's generic-identity fallback pinned by an existing test. No number in
-this spec is derived arithmetic presented as measurement.
+1. **Scope breadth** → any component, gated on the reader having explicitly
+   recorded its dependency ecosystem. Keeps the general framing while making
+   rollout per-reader, so untouched readers are byte-identical by
+   construction (FR-001a, SC-004a).
+2. **Cross-ecosystem ambiguity** → designed out rather than arbitrated.
+   Lookup is confined to the recorded ecosystem, so a same-named package in
+   another ecosystem is never a candidate. This simplified FR-006 instead of
+   answering it.
+3. **Reporting form** → log plus a document-scope unresolved count, so the
+   signal survives into the SBOM and is machine-readable. Which field carries
+   it is deferred to planning under the standards-native-fields-first rule
+   (FR-005b).
 
-Resolve the clarification via `/speckit.clarify` before `/speckit.plan`.
+One correction made during the session: an edge case initially claimed that
+same-ecosystem multi-match "needs a defined outcome". It does not — the
+resolution index holds one identity per name per ecosystem, collapsing such
+collisions when it is built, which pre-dates this feature and is unchanged by
+it. The edge case now records that explicitly so it is not mistaken for
+something introduced here.
+
+Every figure remains traceable to an observation recorded in issue #886. No
+number in this spec is derived arithmetic presented as measurement.
+
+Ready for `/speckit.plan`.

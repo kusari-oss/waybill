@@ -125,22 +125,33 @@ component and confirm the outcome is discoverable without reading source.
 
 1. **Given** a declared dependency matching no component in the scan, **When**
    an SBOM is generated, **Then** no edge and no fabricated component is
-   emitted for it, **And** the drop is reported to the operator.
+   emitted for it, **And** the emitted document carries a non-zero unresolved
+   count.
 2. **Given** a component whose entire declared dependency list resolves to
-   nothing, **When** an SBOM is generated, **Then** that outcome is
-   distinguishable from a component that declared nothing at all.
+   nothing, **When** an SBOM is generated, **Then** reading the document
+   alone distinguishes that from a component that declared nothing at all.
+3. **Given** a scan in which every declared dependency resolved, **When** an
+   SBOM is generated, **Then** the same count field is present with value
+   zero rather than absent.
 
 ---
 
 ### Edge Cases
 
-- A declared name matches components in **more than one** ecosystem. Picking
-  one arbitrarily would assert a relationship the manifest does not support.
-- A declared name matches a component in the requirer's own ecosystem **and**
-  another. The same-ecosystem match is the one the manifest meant.
+- A declared name matches a component in a **different** ecosystem from the
+  recorded one, and nothing in the recorded one. It stays unresolved: a
+  same-named package in another ecosystem is a different package.
+- A declared name corresponds to **several components within the recorded
+  ecosystem** — for example one package present at two versions in a single
+  scan, which does occur in practice. This is collapsed when the resolution
+  index is built, one identity per name per ecosystem, and is unchanged by
+  this feature. Noted so it is not mistaken for something introduced here;
+  out of scope.
 - A declared name matches the requirer itself — must not produce a self-edge.
-- The same name is declared by two components in different ecosystems, each
-  meaning a different package.
+- The recorded ecosystem is itself wrong or stale, so correct-looking
+  candidates elsewhere are deliberately not reached. Accepted: FR-001a makes
+  the recording the reader's assertion, and a wrong assertion is a reader
+  defect to fix at the source rather than to paper over during resolution.
 - A project declares dependencies but the scan captured none of them (for
   example a lockfile was absent), so every name is unresolvable.
 - Components whose dependency names were *inferred* rather than read from a
@@ -152,19 +163,38 @@ component and confirm the outcome is discoverable without reading source.
 
 - **FR-001**: A dependency that a reader read from a manifest MUST be
   resolvable to an edge whether or not the requirer's PURL type matches the
-  dependency's ecosystem.
-- **FR-002**: Resolution MUST prefer a match within the requirer's own
-  ecosystem when one exists, so existing behaviour is never altered by this
-  feature.
+  dependency's ecosystem. This applies to **any** component, not only
+  project/main-module components.
+- **FR-001a**: The behaviour in FR-001 MUST apply only where the reader has
+  explicitly recorded the ecosystem its dependency names belong to. Where a
+  reader has recorded nothing, resolution MUST behave exactly as it does
+  today. The recorded ecosystem MUST NOT be inferred or guessed on the
+  reader's behalf — an absent recording means "unchanged", never "work it
+  out".
+- **FR-002**: Where a reader has recorded the ecosystem of its dependency
+  names, that ecosystem — and only that ecosystem — MUST be searched.
+  Candidates in other ecosystems MUST NOT be considered. Where nothing was
+  recorded, the requirer's own PURL type MUST be used, exactly as today.
 - **FR-003**: This behaviour MUST be on by default and MUST NOT require an
   optional flag.
 - **FR-004**: A declared dependency matching no component MUST NOT produce an
   edge, and MUST NOT cause a component to be fabricated for it.
 - **FR-005**: The system MUST report declared dependencies that resolved to
-  nothing, in a form an operator can act on without reading source.
-- **FR-006**: An ambiguous match — one name matching components in several
-  ecosystems with no same-ecosystem match — MUST NOT silently pick one. The
-  chosen disposition MUST be consistent and documented.
+  nothing, both as an operator-visible log line and as a **document-scope
+  count** carried in the emitted SBOM, so the signal survives the scan and is
+  machine-readable.
+- **FR-005a**: The count MUST be present and zero when every declared
+  dependency resolved, so that "declared nothing" and "declarations all
+  resolved" and "declarations went nowhere" are three distinguishable states
+  rather than two.
+- **FR-005b**: The count MUST be carried in a standards-native field where
+  one exists for this meaning; a project-specific property is permitted only
+  with a recorded justification naming the native field that was missing.
+- **FR-006**: Cross-ecosystem ambiguity MUST NOT be resolvable by guessing.
+  FR-002 removes the class outright by confining lookup to the recorded
+  ecosystem: a name is either matched there or left unresolved. A candidate
+  in a different ecosystem is not a weaker match for the same package, it is
+  a different package, and emitting it would be a false positive.
 - **FR-007**: Edges produced under this feature MUST be distinguishable, by a
   consumer reading the document, from edges produced by the existing opt-in
   cross-ecosystem *inference* capability, because the two carry different
@@ -179,7 +209,9 @@ component and confirm the outcome is discoverable without reading source.
 
 - **Declared dependency**: a dependency name a reader read from a manifest,
   together with the ecosystem that manifest's names belong to. The second
-  half is what is currently unavailable at resolution time.
+  half is what is currently unavailable at resolution time, and recording it
+  is what opts a reader into FR-001. It is a property of the manifest the
+  reader parsed, not of the requirer's identity.
 - **Resolution index**: the mapping from `(ecosystem, name)` to component
   identity, built once per scan from everything the scan found.
 - **Requirer**: the component carrying the declared dependency list. Its PURL
@@ -200,8 +232,16 @@ component and confirm the outcome is discoverable without reading source.
 - **SC-004**: Every scan whose components and dependencies share an ecosystem
   produces output byte-identical to before the change, demonstrated across
   the committed corpus.
+- **SC-004a**: Every scan involving only readers that have not recorded a
+  dependency ecosystem produces output byte-identical to before the change.
+  This follows from FR-001a by construction and is the property that makes
+  per-reader adoption safe, so it is asserted rather than assumed.
 - **SC-005**: A declared dependency that matches no component produces no
-  edge and no fabricated component, and the drop is reported.
+  edge and no fabricated component, and the emitted document carries a
+  non-zero unresolved count naming how many were dropped.
+- **SC-005a**: A scan in which every declared dependency resolved emits the
+  same count field with value zero, so a consumer can distinguish it from a
+  document that never had declarations to resolve.
 - **SC-006**: Turning on the existing opt-in inference capability changes no
   edge this feature produces by default.
 - **SC-007**: Every claim above is demonstrated to **fail** against the
@@ -217,7 +257,9 @@ component and confirm the outcome is discoverable without reading source.
   Out of scope; if it is ever wanted it belongs in its own change.
 - **The reader knows the ecosystem of the names it read.** A reader parsing a
   Ruby lockfile knows those are gem names. This is treated as available
-  information rather than something to be inferred.
+  information rather than something to be inferred, and recording it is the
+  mechanism by which a reader adopts this feature (FR-001a). Adoption is
+  therefore incremental and each reader's change is separately demonstrable.
 - **"Declared" means read from a manifest.** Dependency lists a reader
   inferred by other means are out of scope, so this feature cannot turn an
   inference into a default edge.
@@ -253,9 +295,18 @@ component and confirm the outcome is discoverable without reading source.
 
 - Q: Does this apply only to project/main-module components, or to any
   component carrying reader-declared dependency names?
-  → A: [NEEDS CLARIFICATION: narrow scope limits the change to the components
-  where the defect is confirmed (project/main-module entries in two readers),
-  and is lower risk. Broad scope treats it as a property of declared-dependency
-  resolution generally, which is what the evidence suggests it is, but touches
-  every reader's edges at once. The two differ in blast radius and in how much
-  of SC-004 has to be demonstrated.]
+  → A: Any component, but only where the reader has **explicitly recorded**
+  the ecosystem of its dependency names. Readers adopt this one at a time; a
+  reader that has not recorded it produces byte-identical output by
+  construction.
+- Q: What happens when a declared name matches components in more than one
+  ecosystem?
+  → A: It cannot. Lookup happens **only** within the recorded ecosystem, so
+  cross-ecosystem candidates are never considered. A name matching nothing
+  there is unresolved and reported, not resolved to another ecosystem's
+  component.
+- Q: In what form must an unresolved declared dependency be reported?
+  → A: A log line **and** a document-scope count of declared dependencies
+  that resolved to nothing, so the signal survives into the SBOM itself and
+  is machine-readable. Which native or bridged field carries the count is a
+  planning decision, subject to the standards-native-fields-first rule.
