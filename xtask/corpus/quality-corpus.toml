@@ -61,16 +61,29 @@ ecosystem = "go"
 # see. These bounds describe the COLD-CACHE FLOOR, which is what a deterministic
 # regression detector must bound -- NOT the ceiling of waybill's Go capability. A
 # real build with a warm cache legitimately resolves more (m055 / m091 / m160).
-# NOTE: waybill self-reports graph-completeness `complete` on this flat graph --
-# the divergence the independent flatness metric exists to catch (research R3).
+# Re-measured 2026-09-14 after m866 (#880), isolated env, waybill @ e595bad1:
+#   pkgs=8 files=0 edges=6 depth=2 flat=false
+#   waybill self-report: partial
+#
+# `flat` flips true -> false and the self-report `complete` -> `partial`.
+# Both are improvements. Pre-m866 the go.sum fallback attached every
+# unresolved module to the main module, which made the graph a single
+# level AND made every component reachable -- so completeness reported
+# `complete` over a graph it had itself filled in. Those edges are gone;
+# what remains is what go.mod declares, and the two components whose
+# parent could not be determined offline are now honestly unattached.
+#
+# The flatness metric did its job here: it was the independent signal
+# that caught the self-report being wrong (research R3), and it is the
+# signal that now records the fix.
 [targets.expect]
 pkgs      = { min = 4, max = 10 }
 files     = { min = 0, max = 3 }
 edges     = { min = 4, max = 10 }
-max_depth = { min = 1, max = 5 }
+max_depth = { min = 1, max = 6 }
 sbomqs    = { min = 7.09, max = 8.09 }
 wall_ms   = { min = 5, max = 3000 }
-flat      = true
+flat      = false
 
 [[targets]]
 name      = "go-kubernetes"
@@ -94,13 +107,29 @@ timeout_secs = 900  # ~100s observed; headroom for a cold runner
 # NOTE: waybill self-reports graph-completeness `complete` on this flat graph --
 # the divergence the independent flatness metric exists to catch (research R3).
 [targets.expect]
+# Re-measured 2026-09-14 after m866 (#880), isolated env, waybill @ e595bad1:
+#   pkgs=494 files=330 edges=640 depth=2 flat=false
+#   waybill self-report: partial
+#
+# `edges` RISES from the old 441..539 band. That band was authored before
+# m860 (main-module retention) against a measurement of 490, so two
+# milestones have moved it since: m860 pushed edge counts up, m866 pulled
+# the fabricated ones back out, and the net against the stale band is an
+# increase. Do not read the rise as m866 adding edges -- m866 removed
+# 554 edges that claimed go.mod as their source while absent from it,
+# plus 1841 that asserted a directness `// indirect` denies. Every one of
+# the 551 genuinely-declared direct edges survived.
+#
+# The 640 emitted here are all backed by a declared requirement; verified
+# with specs/866-go-graph-completeness/measurements/probe_edge_truth.py,
+# which reports 0 unbacked.
 pkgs      = { min = 410, max = 502 }
 files     = { min = 297, max = 363 }
-edges     = { min = 441, max = 539 }
-max_depth = { min = 1, max = 5 }
+edges     = { min = 576, max = 704 }
+max_depth = { min = 1, max = 6 }
 sbomqs    = { min = 6.54, max = 7.54 }
 wall_ms   = { min = 5, max = 2000000 }
-flat      = true
+flat      = false
 
 [[targets]]
 name      = "rust-ripgrep"

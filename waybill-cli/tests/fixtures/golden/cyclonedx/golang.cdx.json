@@ -1004,7 +1004,7 @@
       },
       {
         "name": "waybill:graph-completeness-reason",
-        "value": "orphaned-components-detected: 6 component(s) not reachable from root"
+        "value": "orphaned-components-detected: 6 component(s) not reachable from root; go-transitive-coverage-degraded: 11 transitive edge(s) not populated"
       },
       {
         "name": "waybill:workspaces-detected",

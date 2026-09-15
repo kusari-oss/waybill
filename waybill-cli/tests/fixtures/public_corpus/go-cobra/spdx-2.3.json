@@ -23,7 +23,13 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-0.7.0",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness\",\"value\":\"complete\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness\",\"value\":\"partial\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-0.7.0",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness-reason\",\"value\":\"orphaned-components-detected: 2 component(s) not reachable from root; go-transitive-coverage-degraded: 6 transitive edge(s) not populated\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -165,12 +171,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-0.7.0",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:orphan-reason\",\"value\":\"unresolved-indirect-require\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:resolver-step\",\"value\":\"go-sum-fallback\"}"
         },
         {
@@ -255,12 +255,6 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:go-transitive-source\",\"value\":\"go-sum-fallback\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.7.0",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:orphan-reason\",\"value\":\"unresolved-indirect-require\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -527,12 +521,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-0.7.0",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:orphan-reason\",\"value\":\"unresolved-indirect-require\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:resolver-step\",\"value\":\"go-sum-fallback\"}"
         },
         {
@@ -712,12 +700,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-0.7.0",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:orphan-reason\",\"value\":\"unresolved-indirect-require\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:resolver-step\",\"value\":\"go-sum-fallback\"}"
         },
         {
@@ -830,16 +812,6 @@
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-A3EJRWNXRJBCN4AR",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-W22BABVIRD4LH6CG"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-HM5FXARQYFCATZ3B",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-W22BABVIRD4LH6CG"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-OPPLTPJ24FIGRUY2",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-W22BABVIRD4LH6CG"
     },

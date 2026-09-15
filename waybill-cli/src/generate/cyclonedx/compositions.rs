@@ -37,6 +37,14 @@ pub fn build_compositions(
     // SPDX/OpenVEX paths, which pass no ecosystems either), in which
     // case the pre-866 behaviour is preserved.
     reachable_set: Option<&std::collections::HashSet<String>>,
+    // Ecosystems the completeness classifier named as degraded. An
+    // ecosystem can be fully reachable and still have had its
+    // resolution fail — `pants-example-golang` has zero orphans while
+    // every component came from the go.sum fallback. Reachability alone
+    // therefore lets those keep a `complete` dependency claim while the
+    // document reports `partial`, which is the contradiction #871 is
+    // about, one reason-code removed.
+    degraded_ecosystems: &std::collections::HashSet<String>,
 ) -> serde_json::Value {
     let has_probe_failures = !integrity.uprobe_attach_failures.is_empty()
         || !integrity.kprobe_attach_failures.is_empty();
@@ -117,10 +125,15 @@ pub fn build_compositions(
             // go.sum enumerates modules but carries no parent-child
             // topology at all, so cold Go always lands here — which is
             // the correct answer, not a limitation.
-            let graph_resolved = match reachable_set {
+            let all_reachable = match reachable_set {
                 Some(set) => refs.iter().all(|r| set.contains(r.as_str())),
                 None => true,
             };
+            // Both conditions must hold. Reachability says every
+            // component is attached to something; the degraded list says
+            // whether the resolution that produced those attachments
+            // actually completed.
+            let graph_resolved = all_reachable && !degraded_ecosystems.contains(eco.as_str());
 
             let mut record = json!({
                 "aggregate": "complete",
@@ -243,7 +256,7 @@ mod tests {
     #[test]
     fn clean_trace_with_no_complete_ecosystems_emits_single_record() {
         let integrity = clean_integrity();
-        let result = build_compositions(&integrity, "myapp@0.1.0", &[], &[], None);
+        let result = build_compositions(&integrity, "myapp@0.1.0", &[], &[], None, &Default::default());
         let arr = result.as_array().expect("array");
         assert_eq!(arr.len(), 1);
         assert_eq!(arr[0]["aggregate"], "incomplete_first_party_only");
@@ -253,12 +266,12 @@ mod tests {
     fn data_loss_maps_to_incomplete() {
         let mut integrity = clean_integrity();
         integrity.ring_buffer_overflows = 5;
-        let result = build_compositions(&integrity, "myapp@0.1.0", &[], &[], None);
+        let result = build_compositions(&integrity, "myapp@0.1.0", &[], &[], None, &Default::default());
         assert_eq!(result[0]["aggregate"], "incomplete");
 
         let mut integrity2 = clean_integrity();
         integrity2.events_dropped = 3;
-        let result2 = build_compositions(&integrity2, "myapp@0.1.0", &[], &[], None);
+        let result2 = build_compositions(&integrity2, "myapp@0.1.0", &[], &[], None, &Default::default());
         assert_eq!(result2[0]["aggregate"], "incomplete");
     }
 
@@ -266,7 +279,7 @@ mod tests {
     fn probe_failures_map_to_unknown() {
         let mut integrity = clean_integrity();
         integrity.uprobe_attach_failures = vec!["libssl.so:SSL_write".to_string()];
-        let result = build_compositions(&integrity, "myapp@0.1.0", &[], &[], None);
+        let result = build_compositions(&integrity, "myapp@0.1.0", &[], &[], None, &Default::default());
         assert_eq!(result[0]["aggregate"], "unknown");
     }
 
@@ -275,14 +288,14 @@ mod tests {
         let mut integrity = clean_integrity();
         integrity.ring_buffer_overflows = 10;
         integrity.kprobe_attach_failures = vec!["sys_connect".to_string()];
-        let result = build_compositions(&integrity, "myapp@0.1.0", &[], &[], None);
+        let result = build_compositions(&integrity, "myapp@0.1.0", &[], &[], None, &Default::default());
         assert_eq!(result[0]["aggregate"], "unknown");
     }
 
     #[test]
     fn target_ref_appears_in_assemblies() {
         let integrity = clean_integrity();
-        let result = build_compositions(&integrity, "myapp@0.1.0", &[], &[], None);
+        let result = build_compositions(&integrity, "myapp@0.1.0", &[], &[], None, &Default::default());
         assert_eq!(result[0]["assemblies"][0], "myapp@0.1.0");
     }
 
@@ -296,7 +309,7 @@ mod tests {
         let mut integrity = clean_integrity();
         integrity.ring_buffer_overflows = 2;
         integrity.events_dropped = 3;
-        let result = build_compositions(&integrity, "myapp@0.1.0", &[], &[], None);
+        let result = build_compositions(&integrity, "myapp@0.1.0", &[], &[], None, &Default::default());
         assert!(
             result[0].get("properties").is_none(),
             "composition records must not carry properties (CDX 1.6 schema): {:?}",
@@ -321,6 +334,7 @@ mod tests {
             &components,
             &ecosystems,
             None,
+            &Default::default(),
         );
         let arr = result.as_array().expect("array");
         // Two per-ecosystem complete records, the target-integrity
@@ -342,7 +356,7 @@ mod tests {
         let integrity = clean_integrity();
         let ecosystems = vec!["deb".to_string()];
         let result =
-            build_compositions(&integrity, "myapp@0.1.0", &[], &ecosystems, None);
+            build_compositions(&integrity, "myapp@0.1.0", &[], &ecosystems, None, &Default::default());
         let arr = result.as_array().expect("array");
         assert_eq!(arr.len(), 1);
         assert_eq!(arr[0]["aggregate"], "incomplete_first_party_only");
@@ -362,6 +376,7 @@ mod tests {
             &components,
             &ecosystems,
             None,
+            &Default::default(),
         );
         let arr = result.as_array().expect("array");
         // 1 deb-complete + 1 target-integrity + 1 primary-dep-complete = 3.

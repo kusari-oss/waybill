@@ -817,7 +817,7 @@
       "annotationType": "other",
       "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-ADC7KQ5CGA7N657ACLLQU3KG/anno-F4PC4VQPWKTX7UMI",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness-reason\",\"value\":\"orphaned-components-detected: 6 component(s) not reachable from root\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness-reason\",\"value\":\"orphaned-components-detected: 6 component(s) not reachable from root; go-transitive-coverage-degraded: 11 transitive edge(s) not populated\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-ADC7KQ5CGA7N657ACLLQU3KG",
       "type": "Annotation"
     },

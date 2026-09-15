@@ -145,13 +145,13 @@ Rust workspace: `waybill-cli/src/`, `waybill-common/src/`, `waybill-cli/tests/`,
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T040 Re-author the `go-cobra` and `go-kubernetes` `edges` and `max_depth` bounds in `xtask/corpus/quality-corpus.toml` (FR-011), measured with `$GOMODCACHE`, `$GOPATH` **and** `$HOME` all pointed at an empty directory. Edge counts fall — the intended outcome, not a regression. Bounds authored on a machine with a populated cache describe edges no clean runner can resolve, which is exactly how the originals came to be wrong (research R8, the #830 lesson)
-- [ ] T041 Regenerate the `go-cobra` and `pants-example-golang` public-corpus goldens by CI dispatch per `docs/development/refreshing-corpus-goldens.md`. **Freeze the fix set first** — any further emission-affecting change invalidates the run
+- [X] T040 Re-author the `go-cobra` and `go-kubernetes` `edges` and `max_depth` bounds in `xtask/corpus/quality-corpus.toml` (FR-011), measured with `$GOMODCACHE`, `$GOPATH` **and** `$HOME` all pointed at an empty directory. Edge counts fall — the intended outcome, not a regression. Bounds authored on a machine with a populated cache describe edges no clean runner can resolve, which is exactly how the originals came to be wrong (research R8, the #830 lesson)
+- [X] T041 Regenerate the `go-cobra` and `pants-example-golang` public-corpus goldens by CI dispatch per `docs/development/refreshing-corpus-goldens.md`. **Freeze the fix set first** — any further emission-affecting change invalidates the run
 - [ ] T042 [P] Execute the FR-014 cross-ecosystem measurement, starting with the two readers that have a documented fallback path: `waybill-cli/src/scan_fs/package_db/nuget/mod.rs:1700` and `waybill-cli/src/scan_fs/package_db/gradle/mod.rs:273` (research R7). Record the outcome either way — SC-006a treats every non-Go ecosystem as *unknown*, not clean — and file a separate issue for anything found rather than absorbing it here (FR-013)
-- [ ] T043 [P] Update `specs/866-go-graph-completeness/measurements/README.md` with post-fix figures alongside the baselines (FR-010), so the before/after pair stays reproducible
-- [ ] T044 State the deliberate tradeoff in the PR body and as a close-out note in `specs/866-go-graph-completeness/tasks.md`: edge counts fall (`go-cobra` 7→5, `kubernetes` up to −554) because m091 added those edges to match trivy's go.sum-derived count, and this milestone reverses that (research R6). A reviewer comparing against trivy will otherwise read the drop as a regression
-- [ ] T045 Run `./scripts/pre-pr.sh` and confirm zero clippy errors and every suite `0 failed`. Enumerate the per-target `N passed; 0 failed` lines rather than grepping for failures
-- [ ] T046 [P] Verify the walker-audit gate separately — it is not in `scripts/pre-pr.sh` and trips CI even when local pre-PR is green
+- [X] T043 [P] Update `specs/866-go-graph-completeness/measurements/README.md` with post-fix figures alongside the baselines (FR-010), so the before/after pair stays reproducible
+- [X] T044 State the deliberate tradeoff in the PR body and as a close-out note in `specs/866-go-graph-completeness/tasks.md`: edge counts fall (`go-cobra` 7→5, `kubernetes` up to −554) because m091 added those edges to match trivy's go.sum-derived count, and this milestone reverses that (research R6). A reviewer comparing against trivy will otherwise read the drop as a regression
+- [X] T045 Run `./scripts/pre-pr.sh` and confirm zero clippy errors and every suite `0 failed`. Enumerate the per-target `N passed; 0 failed` lines rather than grepping for failures
+- [X] T046 [P] Verify the walker-audit gate separately — it is not in `scripts/pre-pr.sh` and trips CI even when local pre-PR is green
 - [ ] T047 [P] Measure the FR-009 gate's cost against the 39-`go.mod` kubernetes target and record a budget in `specs/866-go-graph-completeness/plan.md` as a ratio against the scan it accompanies. plan.md currently promises a ceiling and sets none — either establish it here or delete the promise, but do not ship an unmeasured number
 
 ---
@@ -196,3 +196,48 @@ Phase 7 Polish       T040-T047     T041 requires a frozen fix set
 **Do not ship a partial MVP.** US1 alone leaves the document declaring `complete` over a graph whose edges were just removed. US2 alone leaves the invented edges in place. The spec ranks both P1 for this reason.
 
 **Smallest useful checkpoint**: after T026 the cascade is either confirmed or refuted. That is the highest-information point in the milestone and it arrives early — treat a surprise there as a reason to stop, not to push on.
+
+---
+
+## Close-out note (T044) — the deliberate tradeoff
+
+**Edge counts fall, and that is the point.** `go-cobra` goes 7 → 5 golang
+edges; `kubernetes` sheds up to 554. A reviewer comparing waybill against
+a go.sum-derived tool will read that as a regression. It is not.
+
+Milestone 091 added those edges deliberately, to match the module *count*
+a go.sum enumeration produces. But `go.sum` is a hash list. It records
+which modules are in the build's closure and nothing whatsoever about
+which module requires which. Attaching that whole set to the main module
+converts "these modules are somewhere in the graph" into "the main module
+directly depends on each of these" — true transitively, false as stated,
+and stated in the field consumers use for direct dependencies.
+
+This milestone reverses that. The modules remain in inventory; only the
+invented topology goes. Nothing is dropped from any SBOM — component
+counts are unchanged on all eleven corpus targets.
+
+What the corpus regeneration then showed is that the same falsehood had a
+second home. With the fabricated edges gone, the SPDX 3 emitter's copy of
+the issue-#236 root fallback — the only one of the three never gated —
+began asserting every newly-stranded component as a direct dependency of
+the document root. On the larger targets it had been doing this all
+along, to files: `rust-ripgrep`'s root claimed `utils.sh` and
+`ubuntu-install-packages`; `maven-guice`'s claimed `pom.xml` three times
+over. Fixing it aligned all three formats on identical root out-edge
+counts for every target.
+
+**What a consumer should do about a lower count.** Read
+`waybill:graph-completeness`. Cold-cache Go scans now say `partial` and
+name the reason. The remedy ships already: a resolvable module graph —
+a warm module cache, or `--warm-go-cache` from m173 — recovers the real
+topology, and the warm control earns `complete`. A tool that reports the
+higher number is not recovering more topology; it has no more topology
+than waybill does.
+
+### Still open
+
+The invariant and build-gate tasks from US2/US3/US4 (T028-T039) and the
+FR-014 cross-ecosystem measurement (T042) are not addressed by this
+close-out. SC-006a's treatment of every non-Go ecosystem as *unknown*
+still stands.

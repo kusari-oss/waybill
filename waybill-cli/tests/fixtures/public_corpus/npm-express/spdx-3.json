@@ -865,16 +865,6 @@
     },
     {
       "creationInfo": "<masked>",
-      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-root-Y4N3PES5J4AVOXJL",
-      "relationshipType": "dependsOn",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-6YDFL7YPPTFQD4KK",
-      "to": [
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-BKI7GHGLDSIUYHC7"
-      ],
-      "type": "Relationship"
-    },
-    {
-      "creationInfo": "<masked>",
       "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-NUED7H2R5TR7VKG5",
       "relationshipType": "dependsOn",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-7HEKP5CF4DTQT4FV",

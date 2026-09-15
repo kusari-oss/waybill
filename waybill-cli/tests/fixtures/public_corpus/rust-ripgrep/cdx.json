@@ -4079,7 +4079,10 @@
         "pkg:cargo/windows_x86_64_gnu@0.52.6",
         "pkg:cargo/windows_x86_64_gnullvm@0.52.6",
         "pkg:cargo/windows_x86_64_msvc@0.52.6"
-      ],
+      ]
+    },
+    {
+      "aggregate": "unknown",
       "dependencies": [
         "pkg:cargo/aho-corasick@1.1.3",
         "pkg:cargo/anyhow@1.0.87",

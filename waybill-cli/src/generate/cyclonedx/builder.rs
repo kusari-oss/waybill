@@ -774,14 +774,36 @@ impl CycloneDxBuilder {
                 );
             }
         }
+        // Milestone 866 (#871) — ecosystems whose resolution did not
+        // actually complete. Derived from the reason codes so the native
+        // CycloneDX field and `waybill:graph-completeness` cannot
+        // disagree: whatever made the document `partial` also withholds
+        // the per-ecosystem `dependencies` claim below.
+        let degraded_ecosystems: std::collections::HashSet<String> = {
+            use crate::generate::graph_completeness::ReasonCode;
+            let mut degraded = std::collections::HashSet::new();
+            for code in &graph_completeness.reason_codes {
+                match code {
+                    ReasonCode::TransitiveEdgesUnresolvable { ecosystems } => {
+                        degraded.extend(ecosystems.iter().cloned());
+                    }
+                    ReasonCode::GoTransitiveCoverageDegraded { .. } => {
+                        degraded.insert("golang".to_string());
+                    }
+                    _ => {}
+                }
+            }
+            degraded
+        };
         let compositions = build_compositions(
             integrity,
             &target_ref,
             effective_components,
             complete_ecosystems,
-            // Milestone 866 (#871) — only components the BFS reached may
-            // carry the `dependencies` (graph-is-complete) claim.
+            // Only components the BFS reached may carry the
+            // `dependencies` (graph-is-complete) claim.
             Some(&graph_completeness.reachable_set),
+            &degraded_ecosystems,
         );
         // Milestone 084 — when override has dropped main-module components,
         // closure-invariant fix: relationships whose `from` is one of the

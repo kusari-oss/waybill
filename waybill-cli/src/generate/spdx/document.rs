@@ -1678,6 +1678,105 @@ mod tests {
     }
 
     #[test]
+    fn spdx3_synth_root_does_not_attach_stranded_components() {
+        // Milestone 866. The SPDX 3 mirror of the two tests below,
+        // which did not exist — and that is why SPDX 3 carried an
+        // ungated copy of the issue-#236 fallback long after SPDX 2.3
+        // and CDX had been gated.
+        //
+        // The divergence was invisible until the Go edge fix landed.
+        // While the fabricated `main-module -> <every go.sum module>`
+        // edges existed, a stranded module sat in `depended_on` and was
+        // filtered out. Removing them promoted it to a graph root, and
+        // the ungated fallback asserted it as a DIRECT dependency of the
+        // root — in SPDX 3 only, while the very same document reported
+        // it as an unreachable orphan.
+        //
+        // Shape mirrors the test below: 1 main module, 1 dep it points
+        // at, 1 stranded component nothing references.
+        let integ = empty_integrity();
+        let main_module = mk_main_module(
+            "pkg:golang/github.com/example/waybill-fixture-app@v1.2.3",
+            "waybill-fixture-app",
+            "v1.2.3",
+        );
+        let direct_dep = mk_component(
+            "pkg:golang/github.com/example/waybill-fixture-dep@v1.0.0",
+            "waybill-fixture-dep",
+            "v1.0.0",
+        );
+        let stranded = mk_component(
+            "pkg:golang/github.com/example/waybill-fixture-stranded@v0.4.0",
+            "waybill-fixture-stranded",
+            "v0.4.0",
+        );
+        let comps = vec![main_module.clone(), direct_dep.clone(), stranded.clone()];
+        let rels = vec![waybill_common::resolution::Relationship {
+            from: main_module.purl.as_str().to_string(),
+            to: direct_dep.purl.as_str().to_string(),
+            relationship_type: waybill_common::resolution::RelationshipType::DependsOn,
+            provenance: waybill_common::resolution::EnrichmentProvenance {
+                source: "test".to_string(),
+                data_type: "runtime".to_string(),
+            },
+        }];
+        let arts = mk_artifacts_with_override(
+            "fixture-root",
+            &comps,
+            &rels,
+            &integ,
+            "fixture-root",
+            "9.9.9",
+        );
+        let cfg = crate::generate::OutputConfig {
+            mikebom_version: "0.0.0-test",
+            created: chrono::DateTime::parse_from_rfc3339("2026-05-24T00:00:00Z")
+                .unwrap()
+                .with_timezone(&chrono::Utc),
+            overrides: Default::default(),
+        };
+        let doc = super::super::v3_document::build_document(&arts, &cfg, None)
+            .expect("SPDX 3 document builds");
+        let graph = doc["@graph"].as_array().expect("@graph");
+
+        let iri_of = |name: &str| -> String {
+            graph
+                .iter()
+                .find(|e| {
+                    e["type"].as_str() == Some("software_Package")
+                        && e["name"].as_str() == Some(name)
+                })
+                .and_then(|e| e["spdxId"].as_str())
+                .unwrap_or_else(|| panic!("no Package named {name}"))
+                .to_string()
+        };
+        let root_iri = iri_of("fixture-root");
+        let stranded_iri = iri_of("waybill-fixture-stranded");
+
+        let root_targets: Vec<&str> = graph
+            .iter()
+            .filter(|e| {
+                e["type"].as_str() == Some("Relationship")
+                    && e["from"].as_str() == Some(root_iri.as_str())
+                    && e["relationshipType"].as_str() == Some("dependsOn")
+            })
+            .filter_map(|e| e["to"][0].as_str())
+            .collect();
+
+        assert!(
+            !root_targets.contains(&stranded_iri.as_str()),
+            "the stranded component must not be asserted as a direct \
+             dependency of the synthesized root. Got: {root_targets:?}"
+        );
+        assert_eq!(
+            root_targets.len(),
+            1,
+            "synth root should have exactly one outgoing dependsOn (the \
+             retained main module). Got: {root_targets:?}"
+        );
+    }
+
+    #[test]
     fn synth_root_fallback_skipped_when_alias_rewrite_already_populated_edges() {
         // Regression for the alpha.35 cross-format divergence
         // surfaced after #229 + #236 both shipped. When `--root-name`

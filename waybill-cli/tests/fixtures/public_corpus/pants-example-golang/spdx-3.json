@@ -245,16 +245,6 @@
       "creationInfo": "<masked>",
       "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-root-QQJDP5GTSS5SKNDE",
       "relationshipType": "dependsOn",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-3GIAJFFTA6GE2NGT",
-      "to": [
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-X5QIBLEI7QDVIJZ4"
-      ],
-      "type": "Relationship"
-    },
-    {
-      "creationInfo": "<masked>",
-      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-root-QQJDP5GTSS5SKNDE",
-      "relationshipType": "dependsOn",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-KF7TAOSY7AU264MZ",
       "to": [
         "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-NKO3SR2JA2FXUXXS"
@@ -288,16 +278,6 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-URTF66WCSST7QVFE",
       "to": [
         "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-C3XBGHEYQSJBP4E2"
-      ],
-      "type": "Relationship"
-    },
-    {
-      "creationInfo": "<masked>",
-      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-root-QQJDP5GTSS5SKNDE",
-      "relationshipType": "dependsOn",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-XUUQNCIJFRPPBA76",
-      "to": [
-        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-G4VMKWSHXDQKKU23"
       ],
       "type": "Relationship"
     },
@@ -393,7 +373,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-5ZNNGQYWD3SA3SSR",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness\",\"value\":\"complete\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness\",\"value\":\"partial\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>",
       "type": "Annotation"
     },
@@ -427,14 +407,6 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-7GM5DHQJROJMLWKH",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:resolver-step\",\"value\":\"go-sum-fallback\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-C3XBGHEYQSJBP4E2",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "<masked>",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-7QHH2UJXQWWE2SWN",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:orphan-reason\",\"value\":\"unresolved-indirect-require\"}",
-      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-DKAFQULQWHAUSS6J",
       "type": "Annotation"
     },
     {
@@ -608,14 +580,6 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-NBKBBWE2QNKJXTMB",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:orphan-reason\",\"value\":\"unresolved-indirect-require\"}",
-      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-C3XBGHEYQSJBP4E2",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-NPW7X5PR5JT5C4OQ",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cisa-2026-lifecycle\",\"value\":\"after-build\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>",
@@ -683,6 +647,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-TCMSE4FB7KJLIZ7S",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:go-transitive-source\",\"value\":\"go-sum-fallback\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-DKAFQULQWHAUSS6J",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-TROHDRSATHQRXGHX",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness-reason\",\"value\":\"go-transitive-coverage-degraded: 2 transitive edge(s) not populated\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>",
       "type": "Annotation"
     },
     {
