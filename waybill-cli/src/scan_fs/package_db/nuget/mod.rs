@@ -762,7 +762,14 @@ fn build_nuget_main_module_entry(
     };
 
     Some(PackageDbEntry {
-        depends_ecosystem: None,
+        // Milestone 867 (#886) — `depends` holds NuGet package names, taken
+        // from `packages.lock.json` Direct/CentralTransitive entries or from
+        // `<PackageReference Include=...>`. Recorded unconditionally rather
+        // than only on the generic-fallback branch: on the normal branch the
+        // PURL is already `pkg:nuget/...` so the recording is a no-op, and
+        // making it conditional would mean the correctness of these edges
+        // depended on whether a version happened to resolve.
+        depends_ecosystem: Some("nuget".to_string()),
         build_inclusion: None,
         purl,
         name,
@@ -1632,6 +1639,40 @@ mod tests {
             main_modules[0].purl.as_str(),
             "pkg:nuget/Contoso.Framework@2.0.0",
             "AssemblyName drives PURL name segment"
+        );
+    }
+
+    #[test]
+    fn m867_main_module_records_nuget_ecosystem_on_generic_fallback() {
+        // #886 / US2. When the version ladder cannot resolve a version the
+        // main module is emitted as `pkg:generic/<stem>@0.0.0`, while its
+        // `depends` remain NuGet names. Without the recording the resolver
+        // would search the `generic` ecosystem for them and find none —
+        // the same defect the gem reader had, reached by a different route.
+        let tmp = tempfile::tempdir().unwrap();
+        write(
+            tmp.path(),
+            "App.csproj",
+            r#"<Project>
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Waybill.Fixture.Alpha" Version="1.0.0" />
+  </ItemGroup>
+</Project>"#,
+        );
+        let main_modules = read_main_modules(tmp.path());
+        assert_eq!(main_modules.len(), 1);
+        assert!(
+            main_modules[0].purl.as_str().starts_with("pkg:generic/"),
+            "precondition: the version ladder falls through to generic. Got {}",
+            main_modules[0].purl.as_str()
+        );
+        assert_eq!(
+            main_modules[0].depends_ecosystem.as_deref(),
+            Some("nuget"),
+            "the reader must assert the ecosystem of the names it read"
         );
     }
 

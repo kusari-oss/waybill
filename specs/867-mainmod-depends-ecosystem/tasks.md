@@ -81,14 +81,14 @@ and confirm the declared dependencies resolve with no optional flag.
 
 ### Tests for User Story 2
 
-- [ ] T017 [P] [US2] Add a unit test in `waybill-cli/src/scan_fs/package_db/nuget/mod.rs` alongside `main_module_version_ladder_falls_through_to_generic`, asserting that a main module on the generic-fallback path records the nuget ecosystem for its `depends`
-- [ ] T018 [US2] Teeth-check T017 against the pre-change build and record the observed failure
+- [X] T017 [P] [US2] Add a unit test in `waybill-cli/src/scan_fs/package_db/nuget/mod.rs` alongside `main_module_version_ladder_falls_through_to_generic`, asserting that a main module on the generic-fallback path records the nuget ecosystem for its `depends`
+- [X] T018 [US2] Teeth-check T017 against the pre-change build and record the observed failure
 
 ### Implementation for User Story 2
 
-- [ ] T019 [US2] Record the nuget ecosystem on the main-module entry in `waybill-cli/src/scan_fs/package_db/nuget/mod.rs` where `main_module_depends` is populated from the lockfile
-- [ ] T020 [US2] Confirm the non-fallback NuGet path — where the main module already carries a matching PURL type — produces byte-identical output, since recording an ecosystem that equals the requirer's type must be a no-op (SC-004)
-- [ ] T021 [US2] Run `./scripts/pre-pr.sh`
+- [X] T019 [US2] Record the nuget ecosystem on the main-module entry in `waybill-cli/src/scan_fs/package_db/nuget/mod.rs` where `main_module_depends` is populated from the lockfile
+- [X] T020 [US2] Confirm the non-fallback NuGet path — where the main module already carries a matching PURL type — produces byte-identical output, since recording an ecosystem that equals the requirer's type must be a no-op (SC-004)
+- [X] T021 [US2] Run `./scripts/pre-pr.sh`
 
 **Checkpoint**: two readers adopted by the same mechanism; every other reader provably untouched.
 
