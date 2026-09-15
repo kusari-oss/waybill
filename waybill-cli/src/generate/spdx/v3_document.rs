@@ -268,7 +268,7 @@ pub fn build_document(
     // Two-pass Package build: (a) precompute the PURL → IRI
     // lookup, (b) build agents against the lookup, (c) build
     // Packages with agent attachments inlined.
-    let package_iri_by_purl =
+    let mut package_iri_by_purl =
         super::v3_packages::build_iri_lookup(scan.components, &doc_iri);
 
     let agent_build = super::v3_agents::build_agents(
@@ -342,7 +342,6 @@ pub fn build_document(
     // emitted with `subject = synth_root_iri`, so all N modules'
     // annotations collapsed onto one subject. On maven-guice that showed
     // as 16 annotations in CDX and SPDX 2.3 but 1 in SPDX 3.
-    let _ = synthetic_root_added;
 
     // 3. SpdxDocument (placed in the graph before the per-element
     // sections so a JSON-walker reading top-down hits the document
@@ -656,27 +655,51 @@ pub fn build_document(
             scan.target_name.to_string()
         }
     };
-    // Existing augmentation feeds the DOWNSTREAM emit path unchanged
-    // (SPDX 3's `build_dependency_relationships` + issue-#229 alias
-    // at line ~322 handle dropped-mainmod re-anchoring at IRI-resolve
-    // time). Only the classifier gets the pre-rewritten set.
-    let m158_augmented_relationships: Vec<waybill_common::resolution::Relationship> = scan
-        .relationships
-        .iter()
-        .cloned()
-        .chain(m158_workspace_peer_edges.iter().cloned())
-        .collect();
-    let m194_classifier_relationships: Vec<waybill_common::resolution::Relationship> = {
-        let prerewritten = crate::generate::graph_completeness::anchor_retained_mainmod_edges(
+    // Milestone 866 — map the root's own identity onto the synthesized
+    // root IRI. `build_dependency_relationships` resolves endpoints
+    // through `package_iri_by_purl`, and the root's ref (`go-cobra`,
+    // an operator-supplied name, not a PURL) has no entry — so the
+    // `root -> <retained main module>` edges m860 anchors were being
+    // silently dropped, leaving the root with no outgoing edge.
+    //
+    // This is deliberately narrower than the issue-#229 alias m860
+    // removed: that one mapped every dropped main-module PURL onto the
+    // root IRI, which collapsed all N modules' annotations onto one
+    // subject. This maps only the root's own ref, so module identities
+    // and their annotations are untouched.
+    if synthetic_root_added && !m158_target_ref.is_empty() {
+        if let Some(root_iri) = root_iris.first() {
+            package_iri_by_purl
+                .entry(m158_target_ref.clone())
+                .or_insert_with(|| root_iri.clone());
+        }
+    }
+
+    // Milestone 866 — the emit path gets the anchored set too, which is
+    // what CDX has always done (`builder.rs`, via
+    // `effective_relationships`). It used to be classifier-only here,
+    // because before m860 this helper REWROTE edges off the dropped main
+    // module and running it twice emptied the synthesized root's
+    // `dependsOn`. Post-m860 it only ADDS `root -> <retained main
+    // module>` edges and dedupes against what is already there, so that
+    // hazard is gone and withholding it only cost SPDX 3 the root edge.
+    //
+    // Without it the synthesized root has no outgoing edge at all, which
+    // then opened the issue-#236 fallback below and let it attach every
+    // component nothing depends on — including components the same
+    // document reports as unreachable orphans.
+    let m158_augmented_relationships: Vec<waybill_common::resolution::Relationship> =
+        crate::generate::graph_completeness::anchor_retained_mainmod_edges(
             scan.relationships,
             &dropped_main_module_purls,
             &m158_target_ref,
-        );
-        prerewritten
-            .into_iter()
-            .chain(m158_workspace_peer_edges.iter().cloned())
-            .collect()
-    };
+        )
+        .into_iter()
+        .chain(m158_workspace_peer_edges.iter().cloned())
+        .collect();
+    // The classifier sees exactly the graph that gets emitted.
+    let m194_classifier_relationships: Vec<waybill_common::resolution::Relationship> =
+        m158_augmented_relationships.clone();
 
     // 7. Relationship elements — dependency edges, containment edges,
     //    license/agent edges, document-describes edge. Combined into
@@ -708,27 +731,50 @@ pub fn build_document(
     // disconnected graph-tops where CDX has a single root.
     if synthetic_root_added {
         if let Some(synth_iri) = root_iris.first() {
-            let depended_on: std::collections::BTreeSet<&str> = scan
-                .relationships
+            // Milestone 866 — mirror the gate SPDX 2.3 carries at
+            // `document.rs` ("only fire when synth_id has no outgoing
+            // edges") and CDX carries as `target_has_no_edges`. Without
+            // it this fallback over-attaches under `--root-name`, where
+            // the alias rewrite has already given the root its real
+            // outgoing edges: every component nothing else depends on
+            // gets asserted as a direct dependency of the root.
+            //
+            // The defect was latent until the Go edge fix. While the
+            // fabricated `main-module -> <every go.sum module>` edges
+            // existed, the stranded modules sat in `depended_on` and
+            // were filtered out here. Removing those edges promoted
+            // them to graph roots, and this fallback re-attached them
+            // to the root — reintroducing the same unbacked-edge
+            // falsehood one level up, in one format only, while the
+            // same document reported them as unreachable orphans.
+            let synth_has_outgoing = all_relationships
                 .iter()
-                .map(|r| r.to.as_str())
-                .collect();
-            let mut graph_root_iris: Vec<&str> = scan
-                .components
-                .iter()
-                .filter(|c| c.parent_purl.is_none() && !depended_on.contains(c.purl.as_str()))
-                .filter_map(|c| package_iri_by_purl.get(c.purl.as_str()).map(String::as_str))
-                .collect();
-            // Deterministic emission order: lex by IRI.
-            graph_root_iris.sort();
-            for to_iri in graph_root_iris {
-                all_relationships.push(super::v3_relationships::build_relationship(
-                    synth_iri.as_str(),
-                    "dependsOn",
-                    to_iri,
-                    &doc_iri,
-                    CREATION_INFO_ID,
-                ));
+                .any(|r| r["from"].as_str() == Some(synth_iri.as_str()));
+            if !synth_has_outgoing {
+                let depended_on: std::collections::BTreeSet<&str> = scan
+                    .relationships
+                    .iter()
+                    .map(|r| r.to.as_str())
+                    .collect();
+                let mut graph_root_iris: Vec<&str> = scan
+                    .components
+                    .iter()
+                    .filter(|c| {
+                        c.parent_purl.is_none() && !depended_on.contains(c.purl.as_str())
+                    })
+                    .filter_map(|c| package_iri_by_purl.get(c.purl.as_str()).map(String::as_str))
+                    .collect();
+                // Deterministic emission order: lex by IRI.
+                graph_root_iris.sort();
+                for to_iri in graph_root_iris {
+                    all_relationships.push(super::v3_relationships::build_relationship(
+                        synth_iri.as_str(),
+                        "dependsOn",
+                        to_iri,
+                        &doc_iri,
+                        CREATION_INFO_ID,
+                    ));
+                }
             }
         }
     }

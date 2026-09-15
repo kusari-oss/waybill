@@ -101,6 +101,16 @@ the CI workspace, and the job uploads the fixture tree as the
 `corpus-goldens-regen` artifact. Nothing is written to your repository
 by the workflow — you install the goldens yourself, in step 8.
 
+> **Dispatch one at a time.** The lane's concurrency group is keyed on
+> `github.ref`, and every `workflow_dispatch` resolves to the same ref
+> whatever `branch` you pass — so all your dispatches share one group.
+> `cancel-in-progress: false` protects the *running* job, but GitHub
+> keeps only one *pending* run per group: dispatching a second
+> regeneration while the first is still queued cancels the first, and it
+> shows up as a `cancelled` run you did not cancel. Wait for each run to
+> finish before dispatching the next. This bites hardest at step 7,
+> where the whole point is to get two artifacts from two runs.
+
 > **Pick the run id deliberately.** This lane also runs nightly on cron,
 > so `gh run list` interleaves cron runs with your dispatches, and
 > "the most recent one" is frequently not yours. By the end of this

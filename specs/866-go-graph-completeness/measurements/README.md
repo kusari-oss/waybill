@@ -216,3 +216,128 @@ would each have supported a false conclusion:
 
 Any check added here must be run against a known-bad input and
 **observed to fail** before its passing result is believed.
+
+---
+
+## T041 — what the corpus regeneration turned up
+
+Regenerating the public-corpus goldens is where the fix met eleven real
+projects instead of two, and it surfaced one defect the local suites
+could not see.
+
+### The SPDX 3 root-attachment divergence
+
+With the unbacked Go edges gone, `go-cobra`'s SPDX 3 document asserted
+two dependency edges that CycloneDX and SPDX 2.3 did not:
+
+```
+REL go-cobra -[dependsOn]-> github.com/russross/blackfriday/v2
+REL go-cobra -[dependsOn]-> gopkg.in/check.v1
+```
+
+Those are the same two modules the *same document* reports as
+`orphaned-components-detected: 2 component(s) not reachable from root`.
+The document contradicted itself, and it did so by fabricating a direct
+dependency — the exact falsehood this milestone exists to remove,
+displaced one level up and into one format.
+
+**Why it was latent.** Both stranded modules used to appear in some
+relationship's `to` position, courtesy of the fabricated
+`main-module -> <every go.sum module>` edges. The issue-#236 fallback
+skips anything already depended on, so it never touched them. Removing
+those edges promoted both to graph roots and handed them straight to the
+fallback.
+
+**Why only SPDX 3.** All three emitters carry a copy of that fallback.
+CycloneDX gates it on `target_has_no_edges`; SPDX 2.3 gates it on
+"synth_id has no outgoing edges" — a gate its comment records as having
+been added after an earlier over-attachment bug. The SPDX 3 copy never
+got one. It could not have been gated as written, either: SPDX 3 was
+also dropping the `root -> <retained main module>` edge that m860
+anchors, because `build_dependency_relationships` resolves endpoints
+through `package_iri_by_purl` and the root's ref is an operator-supplied
+name, not a PURL. With no entry, the edge was silently discarded and the
+root genuinely had no outgoing edges — so the fallback fired, and fired
+unfiltered.
+
+Two changes, both narrowing SPDX 3 onto what the other two formats
+already did:
+
+1. alias the root's own ref onto the synthesized root IRI, so m860's
+   anchor edge survives. Deliberately narrower than the issue-#229 alias
+   that m860 removed — that one mapped *every* dropped main-module PURL
+   onto the root and collapsed N modules' annotations onto one subject.
+2. gate the fallback on the root already having an outgoing edge,
+   mirroring SPDX 2.3.
+
+After both, all three formats agree:
+
+```
+root      -> github.com/spf13/cobra        (and nothing else)
+cobra     -> go-md2man, mousetrap, pflag, yaml.v3, stdlib
+blackfriday, check.v1: present, no incoming edge
+```
+
+**Teeth-checked.** `spdx3_synth_root_does_not_attach_stranded_components`
+(in `spdx/document.rs`, beside its two SPDX 2.3 siblings) was observed to
+fail against the pre-fix emitter — reporting both root targets including
+the stranded one — before it was trusted to pass. SPDX 3 had no test
+module at all, which is the whole reason the gap survived; the two
+SPDX 2.3 tests guarding this exact behaviour had no mirror.
+
+### Attribution of the golden drift
+
+Seven of eleven targets drifted. Every category traced to a named commit:
+
+| targets | change | cause |
+|---|---|---|
+| `go-cobra`, `pants-example-golang` | edges removed; 4 and 2 false `waybill:orphan-reason` markers dropped | `e595bad1` (#880) |
+| `go-cobra`, `pants-example-golang` | `graph-completeness` `complete` → `partial` + reason | `ceec02a2` (FR-003) |
+| `rust-ripgrep`, `python-flask`, `maven-guice`, `go-cobra` | `compositions` dependency claim split off by reachability | `e595bad1` (#871) |
+| `image-postgres16`, `npm-express`, `pants-example-golang` | same split, by degraded ecosystem | `6f926977` |
+| `go-cobra`, `pants-example-golang` | SPDX 3 `spdxId`/`statement`/`subject` churn | content-addressed IDs re-hashing over the above |
+
+Two notes on reading that table:
+
+- The removed `waybill:orphan-reason` markers are a correctness gain, not
+  churn. On `go-cobra` they sat on `go-md2man`, `mousetrap`, `pflag` and
+  `yaml.v3` — which are precisely the four modules cobra's `go.mod`
+  declares. The marker now sits on the two genuinely stranded modules
+  and nothing else.
+- `image-postgres16` is the evidence that the degraded-ecosystem change
+  withholds rather than blanket-demotes: its `deb` ecosystem (142
+  components) keeps `aggregate: complete`, while only `generic` and
+  `golang` (2 components) drop to `unknown`.
+
+Component counts are unchanged on all eleven targets. Only `go-cobra`
+loses edges: 8 → 6, i.e. 7 → 5 golang edges, matching the quickstart.
+
+### The normalised diff and the gate agree, and that is load-bearing
+
+The review tool reported exactly 11 changed (target, format) pairs; the
+lane failed exactly 11. Had the gate failed more than the tool reported,
+the surplus would have been array-ordering instability, which belongs in
+`mask_nondeterministic` rather than in a golden.
+
+The tool's raw counts are not the finding, though. It reported `[90x]
+changed $.@graph[].spdxId` and `[82x] changed $.@graph[].statement` on
+`go-cobra`; comparing the documents semantically instead — by
+`(type, subject-name, statement)` rather than by position — the real
+change is four annotation removals, one completeness value, and two
+edges. SPDX 3 `spdxId`s are content hashes, so the tool cannot key on
+them and reports neighbours of an insertion as changed. Read those
+figures as "something moved here", never as a magnitude.
+
+### Reproducibility
+
+Two independent regeneration runs at `6f926977`
+(`34918022260`, `34918425387`) produced byte-identical artifacts.
+
+### Operational note — regeneration dispatches must be serialized
+
+`public-corpus.yml` sets `concurrency: { group: public-corpus-${{
+github.ref }}, cancel-in-progress: false }`, and every `workflow_dispatch`
+resolves to the same `github.ref` regardless of the `branch` input. GitHub
+keeps only **one** pending run per group: dispatching a second regeneration
+while the first is still queued cancels the first. Dispatch, wait for
+completion, then dispatch the next.
