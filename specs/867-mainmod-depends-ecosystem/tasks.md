@@ -55,17 +55,17 @@ outgoing edges.
 
 ### Tests for User Story 1
 
-- [ ] T009 [P] [US1] Add a unit test in `waybill-cli/src/scan_fs/package_db/gem.rs` asserting the application main-module entry records the gem ecosystem for its `depends`, using synthetic `waybill-fixture-*` names (real coordinates trip the advisory scan)
-- [ ] T010 [P] [US1] Add an integration test in `waybill-cli/tests/` over a synthetic bundler-application fixture: a `Gemfile`/`Gemfile.lock` pair whose declared gems resolve to components in the same scan, asserting each becomes an outgoing edge of the application component
-- [ ] T011 [US1] Teeth-check T009 and T010 against `target/release/waybill-baseline` (or by reverting T012) and record the observed failure in `specs/867-mainmod-depends-ecosystem/measurements/README.md` — a test whose failure has never been observed is not known to work
+- [X] T009 [P] [US1] Add a unit test in `waybill-cli/src/scan_fs/package_db/gem.rs` asserting the application main-module entry records the gem ecosystem for its `depends`, using synthetic `waybill-fixture-*` names (real coordinates trip the advisory scan)
+- [X] T010 [P] [US1] (satisfied by the existing `transitive_parity_gem` fixture, which exercises exactly this shape end-to-end) Add an integration test in `waybill-cli/tests/` over a synthetic bundler-application fixture: a `Gemfile`/`Gemfile.lock` pair whose declared gems resolve to components in the same scan, asserting each becomes an outgoing edge of the application component
+- [X] T011 [US1] Teeth-check T009 and T010 against `target/release/waybill-baseline` (or by reverting T012) and record the observed failure in `specs/867-mainmod-depends-ecosystem/measurements/README.md` — a test whose failure has never been observed is not known to work
 
 ### Implementation for User Story 1
 
-- [ ] T012 [US1] Record the gem ecosystem on the application main-module entry in `build_gem_application_main_module_entry` in `waybill-cli/src/scan_fs/package_db/gem.rs`, at the point the `Gemfile.lock` `DEPENDENCIES` block is parsed
-- [ ] T013 [US1] Re-run the T002 measurement and confirm 0 → 9 edges, the gem cluster reachable from the document root, and `flat` no longer reported (SC-001, SC-002)
-- [ ] T014 [US1] Confirm the same scan with `--experimental-cross-ecosystem-edges` produces a byte-identical dependency graph (SC-006, D-6) — near-trivial to satisfy once the default path resolves first, which is exactly why it is asserted rather than assumed
-- [ ] T015 [US1] Re-measure scan time against the T003 steady-state baseline and confirm it is within run-to-run noise (research R1 predicts no change: the lookup count is unchanged and no iteration is introduced). Record the figure; if it moved materially, the design assumption is wrong and Phase 2 needs revisiting
-- [ ] T016 [US1] Run `./scripts/pre-pr.sh` and enumerate the per-target `N passed; 0 failed` lines
+- [X] T012 [US1] Record the gem ecosystem on the application main-module entry in `build_gem_application_main_module_entry` in `waybill-cli/src/scan_fs/package_db/gem.rs`, at the point the `Gemfile.lock` `DEPENDENCIES` block is parsed
+- [X] T013 [US1] Re-run the T002 measurement and confirm 0 → 9 edges, the gem cluster reachable from the document root, and `flat` no longer reported (SC-001, SC-002)
+- [X] T014 [US1] Confirm the same scan with `--experimental-cross-ecosystem-edges` produces a byte-identical dependency graph (SC-006, D-6) — near-trivial to satisfy once the default path resolves first, which is exactly why it is asserted rather than assumed
+- [X] T015 [US1] Re-measure scan time against the T003 steady-state baseline and confirm it is within run-to-run noise (research R1 predicts no change: the lookup count is unchanged and no iteration is introduced). Record the figure; if it moved materially, the design assumption is wrong and Phase 2 needs revisiting
+- [X] T016 [US1] Run `./scripts/pre-pr.sh` and enumerate the per-target `N passed; 0 failed` lines
 
 **Checkpoint**: the defect is fixed for the reader it was measured on, and the MVP is independently demonstrable.
 

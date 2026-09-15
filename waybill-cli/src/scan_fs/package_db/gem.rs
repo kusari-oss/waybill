@@ -1768,7 +1768,13 @@ fn build_gem_application_main_module_entry(
         .unwrap_or_default();
 
     Some(PackageDbEntry {
-        depends_ecosystem: None,
+        // Milestone 867 (#886) — these names came out of the `Gemfile.lock`
+        // `DEPENDENCIES` block just above, so they are gem names. This
+        // component's own PURL is `pkg:generic/<dir>` because a
+        // bundler-managed application is not a published gem; without the
+        // recording the resolver looks for gem names in the `generic`
+        // ecosystem and silently drops every one of them.
+        depends_ecosystem: Some("gem".to_string()),
         build_inclusion: None,
         purl,
         name: slug,
@@ -2157,6 +2163,46 @@ fn extract_string_literal(rhs: &str) -> Option<String> {
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
     use super::*;
+
+    #[test]
+    fn m867_application_main_module_records_the_gem_ecosystem() {
+        // #886. The application main module is `pkg:generic/<dir>` because a
+        // bundler-managed app is not a published gem, but the names it
+        // declares are gem names. Without the recording the resolver looks
+        // for them in `generic` and drops every one, silently.
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::write(
+            tmp.path().join("Gemfile"),
+            "source 'https://rubygems.org'\ngem 'waybill-fixture-alpha'\n",
+        )
+        .unwrap();
+        std::fs::write(
+            tmp.path().join("Gemfile.lock"),
+            "GEM\n  specs:\n    waybill-fixture-alpha (1.0.0)\n\nDEPENDENCIES\n  waybill-fixture-alpha\n",
+        )
+        .unwrap();
+        let entry = build_gem_application_main_module_entry(
+            &tmp.path().join("Gemfile"),
+            tmp.path(),
+        )
+        .expect("application main module is built");
+        assert_eq!(
+            entry.depends_ecosystem.as_deref(),
+            Some("gem"),
+            "the reader must assert the ecosystem of the names it read"
+        );
+        assert!(
+            entry.depends.contains(&"waybill-fixture-alpha".to_string()),
+            "depends should carry the DEPENDENCIES block: {:?}",
+            entry.depends
+        );
+        assert!(
+            entry.purl.as_str().starts_with("pkg:generic/"),
+            "precondition: identity is generic, which is why the recording \
+             is needed. Got {}",
+            entry.purl.as_str()
+        );
+    }
 
     #[test]
     fn parses_minimal_gem_section() {

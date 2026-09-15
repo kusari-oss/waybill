@@ -37,12 +37,25 @@ const FIXTURE_SUBPATH: &str = "gem";
 // condition change eliminates it). Loss: the 21 synth-root → graph-root
 // edges are no longer emitted. The m216 main-module DOES declare
 // direct-deps in its `depends[]` field (from Gemfile.lock's
-// DEPENDENCIES block), but scan_fs::mod.rs's dep-name resolver is
-// same-ecosystem-scoped (keys on `(ecosystem, name)`), so a
-// pkg:generic/ main-module cannot cross-link to pkg:gem/ deps.
-// Follow-up work: waybill#633 (m218) bridges cross-ecosystem lookup
-// for pkg:generic/ main-modules. Net delta: 218 − 21 = 197.
-const EXPECTED_WAYBILL_EDGE_COUNT: usize = 197;
+// DEPENDENCIES block), but scan_fs::mod.rs's dep-name resolver was
+// same-ecosystem-scoped (keyed on `(ecosystem, name)` derived from the
+// REQUIRER's PURL type), so a pkg:generic/ main-module could not
+// cross-link to pkg:gem/ deps. Net delta was: 218 − 21 = 197.
+//
+// Milestone 867 (#886) RAISES this flag-off baseline 197 → 224 (+27).
+// The comment above described the defect accurately and deferred it to
+// an opt-in flag; m867 treats it as a defect instead. The gem reader now
+// records that the names in `depends[]` are gem names, and the resolver
+// honours that recording rather than inferring the ecosystem from the
+// requirer's own PURL type. The +27 are exactly the 27 entries in
+// fastlane's Gemfile.lock DEPENDENCIES block — a 1:1 match, verified
+// edge-by-edge, not a count that happened to land.
+//
+// This baseline is now EQUAL to `EXPECTED_WAYBILL_EDGE_COUNT_FLAG_ON`,
+// and that equality is the point of m867: a dependency a manifest
+// declares is not an inference, so recovering it must not require
+// opting in. See FR-008 / contract D-6.
+const EXPECTED_WAYBILL_EDGE_COUNT: usize = 224;
 
 // Milestone 218 (waybill#633) INCREASES the flag-on baseline from
 // 197 → 224 (+27): with the FR-000
@@ -98,15 +111,22 @@ fn transitive_edges_match_baseline() {
     }
 }
 
-/// Milestone 218 (waybill#633) US1 SC-001 + SC-002: with the
-/// FR-000 experimental flag enabled, the pkg:generic/ main-module
-/// gains outgoing DEPENDS_ON edges to every DEPENDENCIES-declared
-/// gem (27 for fastlane's Gemfile.lock). Total edge count moves
-/// from 197 (flag-off baseline) → 224 (flag-on baseline).
+/// Milestone 218 (waybill#633) US1 SC-001 + SC-002: with the FR-000
+/// experimental flag enabled, the pkg:generic/ main-module carries
+/// outgoing DEPENDS_ON edges to every DEPENDENCIES-declared gem (27 for
+/// fastlane's Gemfile.lock).
 ///
-/// SC-009 (byte-identity flag-off) is enforced by the
-/// `transitive_edges_match_baseline` test above (unchanged from
-/// pre-m218).
+/// Milestone 867 (#886): this assertion still holds, but it no longer
+/// measures a DELTA. The flag-off baseline now also resolves those 27
+/// edges, because the gem reader records the ecosystem of the names it
+/// read and the resolver honours it. So flag-on and flag-off agree at
+/// 224, and the flag is a no-op on this fixture.
+///
+/// That is FR-008 / contract D-6 in its strongest form, asserted on a
+/// real fixture: enabling inference changes no edge the default already
+/// produces. The test is kept rather than deleted precisely because a
+/// future regression that re-narrowed the default path would show up
+/// here as the two counts diverging again.
 #[test]
 fn m218_flag_on_recovers_edges_from_pkg_generic_main_module() {
     use std::process::Command;
