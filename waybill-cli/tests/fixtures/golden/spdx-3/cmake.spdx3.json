@@ -205,6 +205,14 @@
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-BZMBMAKQ75L23LW5CRTGDZPM/anno-AFSCP3LS7FARF7T2",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep-count\",\"value\":\"0\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-BZMBMAKQ75L23LW5CRTGDZPM",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-BZMBMAKQ75L23LW5CRTGDZPM/anno-AHEPUWH6U7OVPETE",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:download-url\",\"value\":\"https://zlib.net/zlib-1.3.1.tar.gz\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-BZMBMAKQ75L23LW5CRTGDZPM/pkg-3ECZZDDDHD3O6FKS",

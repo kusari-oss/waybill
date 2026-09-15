@@ -81,6 +81,11 @@ pub const PACKAGE_DB_CONFIDENCE: f64 = 0.85;
 /// walks that only find artefact files.
 pub struct ScanResult {
     pub components: Vec<ResolvedComponent>,
+    /// Milestone 867 (#886) — how many declared dependency names resolved to
+    /// no component in this scan. Always present, including zero: an absent
+    /// count cannot be told apart from a scan that had nothing to resolve,
+    /// which is the distinction an auditor needs (FR-005a).
+    pub unresolved_declared_dep_count: usize,
     pub relationships: Vec<Relationship>,
     /// PURL ecosystem identifiers (e.g. `"deb"`, `"apk"`) whose installed
     /// database was read in full during this scan. Each listed ecosystem
@@ -233,6 +238,11 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
     // source.
     let artifacts = walker::walk_and_hash(root, None, size_cap);
     let mut components: Vec<ResolvedComponent> = Vec::with_capacity(artifacts.len());
+    // Milestone 867 (#886) — declared names that resolved to nothing, across
+    // every component in this scan. Surfaced document-scope so "this project
+    // declares nothing" and "this project's declarations went nowhere" stop
+    // looking identical to a consumer.
+    let mut unresolved_declared_dep_count: usize = 0;
 
     // Artifact-file walk — confidence 0.70, carries a real SHA-256.
     for artifact in artifacts {
@@ -933,6 +943,10 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
                 // (set by the binary reader's `make_file_level_component`).
                 binary_role: entry.binary_role,
             });
+            // Milestone 867 (#886) — index of the component just pushed, so
+            // declared names that resolve to nothing can be localised on it
+            // below (C115) without re-scanning the vec.
+            let this_component_idx = components.len() - 1;
 
             // Emit a Relationship edge for each dependency that
             // resolved to another entry in this scan. Dangling targets
@@ -970,12 +984,21 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
                 entry.depends_ecosystem.as_deref(),
                 ecosystem.as_str(),
             );
+            // Milestone 867 (#886) — names this component declared that
+            // resolved to nothing. Silence here is what let the ecosystem
+            // mismatch survive across releases and two readers, so a drop
+            // is now counted and localised rather than simply not happening.
+            let mut unresolved_here: Vec<String> = Vec::new();
             for dep_name in &entry.depends {
                 let key = (
                     dep_ecosystem.to_string(),
                     normalize_dep_name(dep_ecosystem, dep_name),
                 );
+                // A name that matches counts as resolved even when the edge
+                // is suppressed as a self-loop: the scan knew what it named.
+                let mut dep_resolved = false;
                 if let Some(to) = name_to_purl.get(&key) {
+                    dep_resolved = true;
                     if to != &purl_str {
                         // Skip self-loops (can happen via provides).
                         relationships.push(Relationship {
@@ -1067,8 +1090,32 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
                                 }
                             }
                         }
+                        dep_resolved = true;
                     }
                 }
+                if !dep_resolved {
+                    unresolved_here.push(dep_name.clone());
+                }
+            }
+            if !unresolved_here.is_empty() {
+                unresolved_declared_dep_count += unresolved_here.len();
+                // C115 — localise on the requirer. Value shape matches the
+                // existing npm-workspace-peer emission: a bare string for a
+                // single name, a JSON-encoded sorted array for several.
+                unresolved_here.sort();
+                unresolved_here.dedup();
+                let value = if unresolved_here.len() == 1 {
+                    serde_json::Value::String(unresolved_here[0].clone())
+                } else {
+                    serde_json::Value::String(
+                        serde_json::to_string(&unresolved_here)
+                            .unwrap_or_else(|_| "[]".to_string()),
+                    )
+                };
+                components[this_component_idx]
+                    .extra_annotations
+                    .entry("waybill:unresolved-declared-dep".to_string())
+                    .or_insert(value);
             }
         }
     }
@@ -1197,7 +1244,17 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         cross_ecosystem_edges_report = Some(xeco_report);
     }
 
+    if unresolved_declared_dep_count > 0 {
+        tracing::warn!(
+            unresolved_declared_dep_count,
+            "waybill: {} declared dependency name(s) resolved to no component \
+             in this scan and were dropped; see \
+             `waybill:unresolved-declared-dep` on the declaring components",
+            unresolved_declared_dep_count,
+        );
+    }
     Ok(ScanResult {
+        unresolved_declared_dep_count,
         components,
         relationships,
         complete_ecosystems,

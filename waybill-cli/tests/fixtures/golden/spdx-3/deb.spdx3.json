@@ -155,6 +155,14 @@
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-3TMJ33HW5I4ZF62PAFGJ3KKC/anno-2JHRF3ZVFGP5RCOF",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep-count\",\"value\":\"0\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-3TMJ33HW5I4ZF62PAFGJ3KKC",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-3TMJ33HW5I4ZF62PAFGJ3KKC/anno-33M7SJB63SRZYD7B",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-ring-buffer-overflows\",\"value\":\"0\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-3TMJ33HW5I4ZF62PAFGJ3KKC",

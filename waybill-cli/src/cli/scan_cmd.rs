@@ -3415,6 +3415,7 @@ pub async fn execute(
     let scan_fs::ScanResult {
         mut components,
         mut relationships,
+        unresolved_declared_dep_count,
         complete_ecosystems,
         os_release_missing_fields,
         go_transitive_coverage,
@@ -4305,6 +4306,7 @@ pub async fn execute(
     // serializer the user requested — the single-pass guarantee of
     // FR-004 / SC-009.
     let artifacts = ScanArtifacts {
+        unresolved_declared_dep_count,
         target_name: &target_name,
         components: &components,
         relationships: &relationships,

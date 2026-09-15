@@ -104,18 +104,18 @@ component; confirm the outcome is readable from the emitted document alone.
 
 ### Tests for User Story 3
 
-- [ ] T022 [P] [US3] Add an integration test in `waybill-cli/tests/` asserting a declared dependency matching no component produces no edge and no fabricated component, and the document carries a non-zero unresolved count (FR-004, SC-005, D-4)
-- [ ] T023 [P] [US3] Add a test asserting the count is emitted with value **zero** when every declared dependency resolved, so "declared nothing", "all resolved" and "declarations went nowhere" are three distinguishable states (FR-005a, SC-005a)
-- [ ] T024 [US3] Teeth-check T022 and T023 — including feeding a document with the count absent to confirm the check fails, not just a document where the count is wrong — and record both observed failures
+- [X] T022 [P] [US3] Add an integration test in `waybill-cli/tests/` asserting a declared dependency matching no component produces no edge and no fabricated component, and the document carries a non-zero unresolved count (FR-004, SC-005, D-4)
+- [X] T023 [P] [US3] Add a test asserting the count is emitted with value **zero** when every declared dependency resolved, so "declared nothing", "all resolved" and "declarations went nowhere" are three distinguishable states (FR-005a, SC-005a)
+- [X] T024 [US3] Teeth-check T022 and T023 — including feeding a document with the count absent to confirm the check fails, not just a document where the count is wrong — and record both observed failures
 
 ### Implementation for User Story 3
 
-- [ ] T025 [US3] Count declared dependencies that resolved to nothing during the resolution pass in `waybill-cli/src/scan_fs/mod.rs`, and emit the operator-visible log line (FR-005)
-- [ ] T026 [US3] Emit the count as a document-scope annotation across all three formats under `waybill-cli/src/generate/`, always present including at zero (FR-005a)
-- [ ] T027 [US3] Broaden the existing `waybill:unresolved-declared-dep` (C115) from npm workspace peers to any requirer with unresolved declared names, reusing its envelope and its completed KEEP-NO-NATIVE audit (research R3)
-- [ ] T028 [US3] Add the document-scope row to `docs/reference/sbom-format-mapping.md` **and** its matching entry in `waybill-cli/src/parity/extractors/mod.rs::EXTRACTORS` in the same commit — a row without an extractor fails `every_catalog_row_has_an_extractor` and `holistic_parity`. Record the Principle V justification naming the native field that was missing (FR-005b), inheriting C104's rejection of `compositions[].aggregate`
-- [ ] T029 [US3] Verify the count is measured against the emitted documents rather than read back from the resolver's own reporting (D-7) — the count is produced by the code under change, so a test that only checks it is asking the change to grade itself
-- [ ] T030 [US3] Run `./scripts/pre-pr.sh`
+- [X] T025 [US3] Count declared dependencies that resolved to nothing during the resolution pass in `waybill-cli/src/scan_fs/mod.rs`, and emit the operator-visible log line (FR-005)
+- [X] T026 [US3] Emit the count as a document-scope annotation across all three formats under `waybill-cli/src/generate/`, always present including at zero (FR-005a)
+- [X] T027 [US3] Broaden the existing `waybill:unresolved-declared-dep` (C115) from npm workspace peers to any requirer with unresolved declared names, reusing its envelope and its completed KEEP-NO-NATIVE audit (research R3)
+- [X] T028 [US3] Add the document-scope row to `docs/reference/sbom-format-mapping.md` **and** its matching entry in `waybill-cli/src/parity/extractors/mod.rs::EXTRACTORS` in the same commit — a row without an extractor fails `every_catalog_row_has_an_extractor` and `holistic_parity`. Record the Principle V justification naming the native field that was missing (FR-005b), inheriting C104's rejection of `compositions[].aggregate`
+- [X] T029 [US3] Verify the count is measured against the emitted documents rather than read back from the resolver's own reporting (D-7) — the count is produced by the code under change, so a test that only checks it is asking the change to grade itself
+- [X] T030 [US3] Run `./scripts/pre-pr.sh`
 
 **Checkpoint**: the failure mode that let this defect survive across releases and two readers is now visible in the document.
 

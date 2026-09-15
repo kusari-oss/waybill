@@ -211,6 +211,14 @@
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-2QDNZUKFMDC63OUBASCXFKJV/anno-N2S4JJIEJM2RQZN4",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep-count\",\"value\":\"0\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-2QDNZUKFMDC63OUBASCXFKJV",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-2QDNZUKFMDC63OUBASCXFKJV/anno-NFBYZC4APPKDPTYA",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"lib/apk/db/installed\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-2QDNZUKFMDC63OUBASCXFKJV/pkg-NJ6CH7QTZDKJ74FQ",

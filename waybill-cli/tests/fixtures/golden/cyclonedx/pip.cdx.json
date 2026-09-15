@@ -541,6 +541,10 @@
       {
         "name": "waybill:workspaces-detected",
         "value": "[\".venv/lib/python3.12/site-packages/certifi-2023.7.22.dist-info\",\".venv/lib/python3.12/site-packages/charset_normalizer-3.3.2.dist-info\",\".venv/lib/python3.12/site-packages/flask-3.0.0.dist-info\",\".venv/lib/python3.12/site-packages/idna-3.6.dist-info\",\".venv/lib/python3.12/site-packages/jinja2-3.1.2.dist-info\",\".venv/lib/python3.12/site-packages/requests-2.31.0.dist-info\",\".venv/lib/python3.12/site-packages/urllib3-2.0.7.dist-info\"]"
+      },
+      {
+        "name": "waybill:unresolved-declared-dep-count",
+        "value": "0"
       }
     ],
     "supplier": {
