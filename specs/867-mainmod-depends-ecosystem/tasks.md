@@ -21,9 +21,9 @@ first-class here and each carries an explicit teeth-check.
 
 ## Phase 1: Setup
 
-- [ ] T001 Build a release binary from the merge-base and keep it as the pre-change reference at `target/release/waybill-baseline`, so every teeth-check in this feature compares against a real prior build rather than a remembered one (a stale binary is how three claims in the 866 spec came to describe a product state that no longer existed)
-- [ ] T002 [P] Clone `bitwarden/android` @ `d817f6b4bf7c17172a74fabca1e09e738c7ec6c9` into a scratch dir and record the pre-change measurement — main-module outgoing edges, total edges, reachability of the gem cluster, `flat` — per `quickstart.md` §1
-- [ ] T003 [P] Record the steady-state scan-time baseline for the same target (median of 3 consecutive runs after a warm-up run; research R1 measured 920/603/600 ms, and the 600 ms pair is the comparison point, not the first run)
+- [X] T001 Build a release binary from the merge-base and keep it as the pre-change reference at `target/release/waybill-baseline`, so every teeth-check in this feature compares against a real prior build rather than a remembered one (a stale binary is how three claims in the 866 spec came to describe a product state that no longer existed)
+- [X] T002 [P] Clone `bitwarden/android` @ `d817f6b4bf7c17172a74fabca1e09e738c7ec6c9` into a scratch dir and record the pre-change measurement — main-module outgoing edges, total edges, reachability of the gem cluster, `flat` — per `quickstart.md` §1
+- [X] T003 [P] Record the steady-state scan-time baseline for the same target (median of 3 consecutive runs after a warm-up run; research R1 measured 920/603/600 ms, and the 600 ms pair is the comparison point, not the first run)
 
 ---
 
@@ -33,11 +33,11 @@ first-class here and each carries an explicit teeth-check.
 output, the per-reader adoption gate is not working and the rest of the plan
 is unsafe. T007 is what proves it.
 
-- [ ] T004 Add the optional declared-dependency-ecosystem field to `PackageDbEntry` in `waybill-cli/src/scan_fs/package_db/mod.rs`, documenting that `None` means "this reader has not adopted" and is never a prompt to infer (FR-001a, data-model.md)
-- [ ] T005 Use the recorded ecosystem as the lookup key in the edge-resolution loop at `waybill-cli/src/scan_fs/mod.rs:952`, falling back to the requirer's PURL type when unset (D-1, D-2)
-- [ ] T006 Use the same ecosystem for name normalisation in the same loop, so `normalize_dep_name` is never called with an ecosystem different from the one being searched (D-3) — this must not be split from T005; searching the gem ecosystem with a generically-normalised name produces a miss that looks like a genuine absence and would be counted as one under FR-005
-- [ ] T007 Add a test in `waybill-cli/tests/` asserting that an entry with no recorded ecosystem resolves byte-identically to the pre-change build, across at least one fixture per resolution shape already covered by the suite (SC-004a, D-2)
-- [ ] T008 Run `./scripts/pre-pr.sh` and confirm zero golden churn across the whole workspace. Any diff here is a defect in T004-T006, not an expected update — do not regenerate a golden to make this pass
+- [X] T004 Add the optional declared-dependency-ecosystem field to `PackageDbEntry` in `waybill-cli/src/scan_fs/package_db/mod.rs`, documenting that `None` means "this reader has not adopted" and is never a prompt to infer (FR-001a, data-model.md)
+- [X] T005 Use the recorded ecosystem as the lookup key in the edge-resolution loop at `waybill-cli/src/scan_fs/mod.rs:952`, falling back to the requirer's PURL type when unset (D-1, D-2)
+- [X] T006 Use the same ecosystem for name normalisation in the same loop, so `normalize_dep_name` is never called with an ecosystem different from the one being searched (D-3) — this must not be split from T005; searching the gem ecosystem with a generically-normalised name produces a miss that looks like a genuine absence and would be counted as one under FR-005
+- [X] T007 Add a test in `waybill-cli/tests/` asserting that an entry with no recorded ecosystem resolves byte-identically to the pre-change build, across at least one fixture per resolution shape already covered by the suite (SC-004a, D-2)
+- [X] T008 Run `./scripts/pre-pr.sh` and confirm zero golden churn across the whole workspace. Any diff here is a defect in T004-T006, not an expected update — do not regenerate a golden to make this pass
 
 **Checkpoint**: the carrier and the resolver are in place, nothing has adopted, and output is provably unchanged.
 

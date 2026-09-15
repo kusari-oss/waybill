@@ -679,6 +679,7 @@ fn append_synthetic_built_in_gems(
         }
 
         let entry = PackageDbEntry {
+            depends_ecosystem: None,
             build_inclusion: None,
             purl,
             name: name.clone(),
@@ -739,6 +740,7 @@ fn spec_to_entry(
     // Extract `.name` for edge construction.
     let depends: Vec<String> = spec.depends.iter().map(|d| d.name.clone()).collect();
     Some(PackageDbEntry {
+        depends_ecosystem: None,
         build_inclusion: None,
         purl,
         name: spec.name.clone(),
@@ -783,6 +785,7 @@ fn gemspec_to_entry(
 ) -> Option<PackageDbEntry> {
     let purl = build_gem_purl(name, version)?;
     Some(PackageDbEntry {
+        depends_ecosystem: None,
         build_inclusion: None,
         purl,
         name: name.to_string(),
@@ -1490,6 +1493,7 @@ fn build_gem_main_module_entry(gemspec_path: &Path) -> Option<PackageDbEntry> {
     let groups = parse_gemspec_groups(gemspec_path);
     let depends: Vec<String> = groups.into_keys().collect();
     Some(PackageDbEntry {
+        depends_ecosystem: None,
         build_inclusion: None,
         purl,
         name,
@@ -1764,6 +1768,7 @@ fn build_gem_application_main_module_entry(
         .unwrap_or_default();
 
     Some(PackageDbEntry {
+        depends_ecosystem: None,
         build_inclusion: None,
         purl,
         name: slug,
@@ -2824,6 +2829,7 @@ end
             serde_json::Value::String("main-module".to_string()),
         );
         PackageDbEntry {
+            depends_ecosystem: None,
             build_inclusion: None,
             purl,
             name: name.to_string(),

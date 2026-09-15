@@ -216,6 +216,7 @@ fn project_to_package_db_entry(
     };
 
     Some(PackageDbEntry {
+        depends_ecosystem: None,
         purl,
         name: entry.identity,
         version: version_segment,

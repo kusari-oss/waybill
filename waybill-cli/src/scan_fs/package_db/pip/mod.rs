@@ -1010,6 +1010,7 @@ pub(crate) fn build_pip_main_module_entry(
 
     let source_path = format!("path+file://{}", project_root.display());
     let entry = PackageDbEntry {
+        depends_ecosystem: None,
         build_inclusion: None,
         purl,
         name: name.to_string(),
@@ -1236,6 +1237,7 @@ pub(crate) fn pyproject_declared_deps(project_root: &Path) -> Vec<PackageDbEntry
                 );
             }
             Some(PackageDbEntry {
+                depends_ecosystem: None,
                 build_inclusion: None,
                 purl,
                 name,
@@ -2175,6 +2177,7 @@ dependencies = [
             serde_json::Value::String("main-module".to_string()),
         );
         PackageDbEntry {
+            depends_ecosystem: None,
             build_inclusion: None,
             purl,
             name: name.to_string(),

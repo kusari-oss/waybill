@@ -396,6 +396,7 @@ pub(crate) fn locked_req_to_entry(
     }
 
     Some(PackageDbEntry {
+        depends_ecosystem: None,
         purl,
         name: req.project_name.clone(),
         version: req.version.clone(),

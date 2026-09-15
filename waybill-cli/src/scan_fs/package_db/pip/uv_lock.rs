@@ -534,6 +534,7 @@ pub(crate) fn parse_uv_lock_with_flags(
         let hashes = extract_sha256_hashes(tbl);
 
         out.push(PackageDbEntry {
+            depends_ecosystem: None,
             build_inclusion: None,
             purl,
             name: name.to_string(),

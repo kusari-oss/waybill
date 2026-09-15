@@ -675,6 +675,7 @@ fn emit_main_module(
     };
 
     Some(PackageDbEntry {
+        depends_ecosystem: None,
         purl,
         name: app_name,
         version: "0.0.0-unknown".to_string(),
@@ -769,6 +770,7 @@ fn emit_lockfile_components(
         };
 
         out.push(PackageDbEntry {
+            depends_ecosystem: None,
             purl,
             name: entry.name.clone(),
             version: entry.version.clone(),
@@ -843,6 +845,7 @@ fn emit_design_tier_components(
         );
 
         out.push(PackageDbEntry {
+            depends_ecosystem: None,
             purl,
             name: decl.name.clone(),
             version: sanitized.clone(),

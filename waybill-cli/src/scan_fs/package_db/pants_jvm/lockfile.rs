@@ -411,6 +411,7 @@ pub(crate) fn entry_to_package_db_entry(
     }
 
     Some(PackageDbEntry {
+        depends_ecosystem: None,
         purl,
         name: artifact.to_string(),
         version: version.to_string(),

@@ -87,6 +87,20 @@ pub struct PackageDbEntry {
     /// up against the set of entries found in the same scan and drops
     /// any that don't resolve.
     pub depends: Vec<String>,
+    /// Milestone 867 (#886) — the ecosystem the names in `depends` belong
+    /// to, as asserted by the reader that read them.
+    ///
+    /// `None` means **this reader has not adopted**, and resolution falls
+    /// back to deriving the ecosystem from this entry's own PURL type
+    /// exactly as it did before. It is never an invitation to infer: an
+    /// absent value means "unchanged", not "work it out" (FR-001a).
+    ///
+    /// This exists because a reader can legitimately emit a component whose
+    /// PURL type differs from the ecosystem its dependency names live in —
+    /// a bundler application emitted as `pkg:generic/<dir>` whose `depends`
+    /// are gem names, for instance. Keying the lookup on the requirer's own
+    /// type then misses every one of them, silently.
+    pub depends_ecosystem: Option<String>,
     /// Free-form package supplier — for dpkg, the `Maintainer:` field
     /// (e.g. `"Matthias Klose <doko@debian.org>"`). Maps directly to
     /// CycloneDX `component.supplier.name`. `None` when the source db
@@ -3197,6 +3211,7 @@ Architecture: arm64
         sbom_tier: Option<&str>,
     ) -> PackageDbEntry {
         PackageDbEntry {
+            depends_ecosystem: None,
             build_inclusion: None,
             purl: Purl::new(purl_str).expect("valid purl"),
             name: name.to_string(),
@@ -4076,6 +4091,7 @@ Architecture: arm64
     fn make_pkg(purl_str: &str, evidence_kind: Option<&str>) -> PackageDbEntry {
         let purl = waybill_common::types::purl::Purl::new(purl_str).unwrap();
         PackageDbEntry {
+            depends_ecosystem: None,
             build_inclusion: None,
             purl,
             name: "test-pkg".to_string(),

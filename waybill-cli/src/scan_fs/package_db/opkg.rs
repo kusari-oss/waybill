@@ -323,6 +323,7 @@ fn build_entry(
         .collect();
 
     Some(PackageDbEntry {
+        depends_ecosystem: None,
         build_inclusion: None,
         purl,
         name,

@@ -1265,6 +1265,7 @@ impl AssemblyAccumulator {
                 .map(|p| p.to_string_lossy().to_string())
                 .unwrap_or_default();
             out.push(PackageDbEntry {
+                depends_ecosystem: None,
                 build_inclusion: None,
                 purl,
                 name: name.clone(),

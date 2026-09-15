@@ -814,6 +814,7 @@ fn emit_entries_from_info(
             let key = purl.as_str().to_string();
             if seen_purls.insert(key) {
                 out.push(PackageDbEntry {
+                    depends_ecosystem: None,
                     build_inclusion: None,
                     purl,
                     name: path.clone(),
@@ -858,6 +859,7 @@ fn emit_entries_from_info(
             let key = purl.as_str().to_string();
             if seen_purls.insert(key) {
                 out.push(PackageDbEntry {
+                    depends_ecosystem: None,
                     build_inclusion: None,
                     purl,
                     name: path.clone(),
@@ -913,6 +915,7 @@ fn emit_file_level_diagnostic(
         return;
     };
     out.push(PackageDbEntry {
+        depends_ecosystem: None,
         build_inclusion: None,
         purl,
         name: file_name,

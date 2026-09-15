@@ -514,6 +514,7 @@ fn build_entry(
         (None, Default::default())
     };
     Some(PackageDbEntry {
+        depends_ecosystem: None,
         build_inclusion: None,
         purl,
         name: name.to_string(),

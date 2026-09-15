@@ -703,6 +703,7 @@ where
             );
         }
         out.push(PackageDbEntry {
+            depends_ecosystem: None,
             build_inclusion: None,
             purl,
             name: resolved_path,
@@ -755,6 +756,7 @@ fn build_stdlib_entry(
         Err(_) => return None,
     };
     Some(PackageDbEntry {
+        depends_ecosystem: None,
         build_inclusion: None,
         purl,
         name: "stdlib".to_string(),
@@ -1050,6 +1052,7 @@ pub(crate) fn build_main_module_entry(
     let licenses = detect_main_module_license(project_root);
 
     Some(PackageDbEntry {
+        depends_ecosystem: None,
         build_inclusion: None,
         purl,
         name: module_path,
@@ -4408,6 +4411,7 @@ func TestX(t *testing.T) { _ = lib.X() }"#,
 
     fn make_go_entry_for_stamp(name: &str, version: &str) -> PackageDbEntry {
         PackageDbEntry {
+            depends_ecosystem: None,
             build_inclusion: None,
             purl: waybill_common::types::purl::Purl::new(&format!(
                 "pkg:golang/{name}@{version}"
@@ -4538,6 +4542,7 @@ func TestX(t *testing.T) { _ = lib.X() }"#,
         // SC-003 dual-side byte-identity guard: no annotation emission
         // on non-Go entries.
         let mut entry = PackageDbEntry {
+            depends_ecosystem: None,
             build_inclusion: None,
             purl: waybill_common::types::purl::Purl::new(
                 "pkg:npm/left-pad@1.3.0",

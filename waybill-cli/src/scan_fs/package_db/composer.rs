@@ -549,6 +549,7 @@ fn emit_main_module(
     depends.extend(manifest.require_dev.keys().cloned());
 
     Some(PackageDbEntry {
+        depends_ecosystem: None,
         purl,
         name: name.to_string(),
         version,
@@ -714,6 +715,7 @@ fn build_entry_from_lockfile_package(
     };
 
     Some(PackageDbEntry {
+        depends_ecosystem: None,
         purl,
         name: pkg.name.clone(),
         version: pkg.version.clone(),
@@ -799,6 +801,7 @@ fn emit_design_tier_components(
         );
 
         out.push(PackageDbEntry {
+            depends_ecosystem: None,
             purl,
             name: name.clone(),
             version: sanitized.clone(),

@@ -1030,6 +1030,7 @@ fn build_entry_from_control(
         .filter(|s| !s.is_empty());
 
     Some(PackageDbEntry {
+        depends_ecosystem: None,
         build_inclusion: None,
         purl,
         name,
@@ -1105,6 +1106,7 @@ fn filename_fallback_entry(
     );
 
     Some(PackageDbEntry {
+        depends_ecosystem: None,
         build_inclusion: None,
         purl,
         name: parsed.name,

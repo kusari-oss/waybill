@@ -949,8 +949,32 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
             // matching non-generic components. See
             // `generate/cross_ecosystem_edges/tie_break.rs` +
             // `contracts/tie-break-rule.md`.
+            // Milestone 867 (#886) — the ecosystem to search is the one the
+            // READER recorded for these names, not the one implied by this
+            // entry's own PURL type. A reader can legitimately emit a
+            // component whose type differs from its dependencies' ecosystem
+            // — a bundler application emitted as `pkg:generic/<dir>` whose
+            // `depends` are gem names — and keying on the requirer's type
+            // then misses every one of them, silently.
+            //
+            // `None` means the reader has not adopted, and resolution falls
+            // back to the pre-867 behaviour exactly. That is what makes
+            // per-reader rollout safe by construction rather than by test.
+            //
+            // The same value drives normalisation. `normalize_dep_name` is
+            // ecosystem-keyed, so searching one ecosystem with a name
+            // normalised under another produces a miss indistinguishable
+            // from a genuine absence — which would then be counted as one.
+            // Lookup and normalisation must not be split.
+            let dep_ecosystem: &str = dep_lookup_ecosystem(
+                entry.depends_ecosystem.as_deref(),
+                ecosystem.as_str(),
+            );
             for dep_name in &entry.depends {
-                let key = (ecosystem.clone(), normalize_dep_name(&ecosystem, dep_name));
+                let key = (
+                    dep_ecosystem.to_string(),
+                    normalize_dep_name(dep_ecosystem, dep_name),
+                );
                 if let Some(to) = name_to_purl.get(&key) {
                     if to != &purl_str {
                         // Skip self-loops (can happen via provides).
@@ -1743,6 +1767,26 @@ fn apply_lifecycle_scope_to_edges(
             "milestone 179: rewrote DependsOn → TestDependsOn for m112 NotNeeded transitives (SPDX 2.3 TEST_DEPENDENCY_OF)",
         );
     }
+}
+
+/// Milestone 867 (#886) — which ecosystem a component's declared dependency
+/// names should be looked up in.
+///
+/// `recorded` is the reader's assertion about the names it read. When it is
+/// absent the reader has not adopted, and the requirer's own PURL ecosystem
+/// is used, which is exactly the pre-867 behaviour — this is the property
+/// that makes per-reader rollout safe by construction (FR-001a, contract
+/// D-2).
+///
+/// An absent recording is never an invitation to infer. Inference across
+/// ecosystems is a separate, opt-in capability that annotates what it
+/// guessed; this function only ever returns something a reader asserted or
+/// the status quo.
+pub(crate) fn dep_lookup_ecosystem<'a>(
+    recorded: Option<&'a str>,
+    requirer_ecosystem: &'a str,
+) -> &'a str {
+    recorded.unwrap_or(requirer_ecosystem)
 }
 
 pub(crate) fn normalize_dep_name(ecosystem: &str, name: &str) -> String {
@@ -2713,6 +2757,51 @@ Architecture: amd64
         // Idempotent: applying again is a no-op.
         assert_eq!(normalize_dep_name("cargo", &key), key);
     }
+
+    #[test]
+    fn m867_absent_recording_falls_back_to_requirer_ecosystem() {
+        // Contract D-2. This is the clause the whole per-reader rollout
+        // rests on: a reader that has not adopted must resolve exactly as
+        // it did before, so SC-004a is structural rather than something
+        // every reader has to be tested for.
+        assert_eq!(dep_lookup_ecosystem(None, "golang"), "golang");
+        assert_eq!(dep_lookup_ecosystem(None, "generic"), "generic");
+    }
+
+    #[test]
+    fn m867_recorded_ecosystem_overrides_requirer_purl_type() {
+        // Contract D-1. The bundler-application case: the component is
+        // `pkg:generic/<dir>` but the names it declared are gem names.
+        assert_eq!(dep_lookup_ecosystem(Some("gem"), "generic"), "gem");
+        assert_eq!(dep_lookup_ecosystem(Some("nuget"), "generic"), "nuget");
+    }
+
+    #[test]
+    fn m867_recording_matching_the_requirer_is_a_no_op() {
+        // A reader may record an ecosystem equal to its own PURL type.
+        // That must behave identically to not recording at all, which is
+        // what lets an adopting reader's non-fallback paths stay
+        // byte-identical (SC-004, task T020).
+        assert_eq!(
+            dep_lookup_ecosystem(Some("pypi"), "pypi"),
+            dep_lookup_ecosystem(None, "pypi"),
+        );
+    }
+
+    #[test]
+    fn m867_normalisation_follows_the_lookup_ecosystem() {
+        // Contract D-3. `normalize_dep_name` is ecosystem-keyed — pypi maps
+        // `_` to `-`, everything else only lowercases. Normalising under a
+        // different ecosystem than the one being searched produces a miss
+        // indistinguishable from a genuine absence, which would then be
+        // counted as one. This pins the two together.
+        let eco = dep_lookup_ecosystem(Some("pypi"), "generic");
+        assert_eq!(normalize_dep_name(eco, "Some_Package"), "some-package");
+        // The pre-867 path would have normalised under "generic", which
+        // lowercases but does not map the underscore:
+        assert_eq!(normalize_dep_name("generic", "Some_Package"), "some_package");
+    }
+
 
     // ============================================================
     // Milestone 133 US2.2 — tag_components_with_layer_digest tests.

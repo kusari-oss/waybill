@@ -230,6 +230,7 @@ fn read_one_deps_json(rootfs: &Path, path: &Path) -> Vec<PackageDbEntry> {
         }
 
         out.push(PackageDbEntry {
+            depends_ecosystem: None,
             build_inclusion: None,
             purl,
             name: name.to_string(),

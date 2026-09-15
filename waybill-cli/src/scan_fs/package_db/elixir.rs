@@ -1063,6 +1063,7 @@ fn emit_main_module(
     }
 
     Some(PackageDbEntry {
+        depends_ecosystem: None,
         purl,
         name: app_name,
         version,
@@ -1162,6 +1163,7 @@ fn emit_lockfile_components(
         };
 
         out.push(PackageDbEntry {
+            depends_ecosystem: None,
             purl,
             name,
             version,
@@ -1303,6 +1305,7 @@ fn emit_design_tier_components(
         };
 
         out.push(PackageDbEntry {
+            depends_ecosystem: None,
             purl,
             name: decl.name.clone(),
             version: version_field,

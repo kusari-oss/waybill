@@ -64,6 +64,7 @@ pub(crate) fn parse_pipfile_lock(
             };
 
             out.push(PackageDbEntry {
+                depends_ecosystem: None,
                 build_inclusion: None,
                 purl,
                 name: name.clone(),

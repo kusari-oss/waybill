@@ -414,6 +414,7 @@ fn emit_main_module(
     };
 
     Some(PackageDbEntry {
+        depends_ecosystem: None,
         purl,
         name: pubspec_yaml.name.clone(),
         version,
@@ -504,6 +505,7 @@ fn emit_lockfile_entries(
         let extra_annotations = build_extra_annotations(entry, source_type_value);
 
         out.push(PackageDbEntry {
+            depends_ecosystem: None,
             purl,
             name: name.clone(),
             version: entry.version.clone(),
@@ -600,6 +602,7 @@ fn emit_design_tier_components(
         );
 
         out.push(PackageDbEntry {
+            depends_ecosystem: None,
             purl,
             name: name.clone(),
             version: constraint.clone(),

@@ -1040,6 +1040,7 @@ fn build_helm_entry(
         ),
     );
     PackageDbEntry {
+        depends_ecosystem: None,
         build_inclusion: None,
         purl,
         name,
