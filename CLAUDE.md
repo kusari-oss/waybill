@@ -1,6 +1,6 @@
 # waybill Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-09-13
+Auto-generated from all feature plans. Last updated: 2026-09-15
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -374,6 +374,7 @@ Auto-generated from all feature plans. Last updated: 2026-09-13
 - Rust stable — but no Rust changes are expected. + None new. The Go toolchain is already an (843-fixture-network-isolation)
 - Rust stable, workspace toolchain inherited. No nightly. `waybill-ebpf` untouched. + Existing only — `serde`/`serde_json` (relationship + annotation emission), `tracing`, `anyhow`. **Zero new Cargo dependencies.** (866-go-graph-completeness)
 - N/A — all state in-process per scan, matching every reader milestone since 002. (866-go-graph-completeness)
+- Rust stable, workspace toolchain inherited. No nightly. + Existing only — `std::collections::HashMap`, (867-mainmod-depends-ecosystem)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -509,9 +510,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 867-mainmod-depends-ecosystem: Added Rust stable, workspace toolchain inherited. No nightly. + Existing only — `std::collections::HashMap`,
 - 866-go-graph-completeness: Added Rust stable, workspace toolchain inherited. No nightly. `waybill-ebpf` untouched. + Existing only — `serde`/`serde_json` (relationship + annotation emission), `tracing`, `anyhow`. **Zero new Cargo dependencies.**
 - 860-multi-main-module-override: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
-- 843-fixture-network-isolation: Added Rust stable — but no Rust changes are expected. + None new. The Go toolchain is already an
 
 
 <!-- MANUAL ADDITIONS START -->
