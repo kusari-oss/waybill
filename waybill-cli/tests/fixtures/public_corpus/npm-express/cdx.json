@@ -2406,7 +2406,10 @@
         "pkg:npm/type-is",
         "pkg:npm/vary",
         "pkg:npm/vhost"
-      ],
+      ]
+    },
+    {
+      "aggregate": "unknown",
       "dependencies": [
         "pkg:npm/accepts",
         "pkg:npm/after",

@@ -59,10 +59,6 @@
           "value": "go-sum-fallback"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
-        },
-        {
           "name": "waybill:resolver-step",
           "value": "go-sum-fallback"
         },
@@ -134,10 +130,6 @@
         {
           "name": "waybill:go-transitive-source",
           "value": "go-sum-fallback"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
         },
         {
           "name": "waybill:resolver-step",
@@ -353,10 +345,6 @@
           "value": "go-sum-fallback"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
-        },
-        {
           "name": "waybill:resolver-step",
           "value": "go-sum-fallback"
         },
@@ -495,10 +483,6 @@
           "value": "go-sum-fallback"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
-        },
-        {
           "name": "waybill:resolver-step",
           "value": "go-sum-fallback"
         },
@@ -569,7 +553,10 @@
         "pkg:golang/gopkg.in/check.v1@v0.0.0-20161208181325-20d25e280405",
         "pkg:golang/gopkg.in/yaml.v3@v3.0.1",
         "pkg:golang/stdlib@v1.15"
-      ],
+      ]
+    },
+    {
+      "aggregate": "unknown",
       "dependencies": [
         "pkg:golang/github.com/cpuguy83/go-md2man/v2@v2.0.6",
         "pkg:golang/github.com/inconshreveable/mousetrap@v1.1.0",
@@ -617,9 +604,7 @@
       "dependsOn": [
         "pkg:golang/github.com/cpuguy83/go-md2man/v2@v2.0.6",
         "pkg:golang/github.com/inconshreveable/mousetrap@v1.1.0",
-        "pkg:golang/github.com/russross/blackfriday/v2@v2.1.0",
         "pkg:golang/github.com/spf13/pflag@v1.0.6",
-        "pkg:golang/gopkg.in/check.v1@v0.0.0-20161208181325-20d25e280405",
         "pkg:golang/gopkg.in/yaml.v3@v3.0.1",
         "pkg:golang/stdlib@v1.15"
       ],
@@ -706,7 +691,11 @@
       },
       {
         "name": "waybill:graph-completeness",
-        "value": "complete"
+        "value": "partial"
+      },
+      {
+        "name": "waybill:graph-completeness-reason",
+        "value": "orphaned-components-detected: 2 component(s) not reachable from root; go-transitive-coverage-degraded: 6 transitive edge(s) not populated"
       },
       {
         "name": "waybill:workspaces-detected",

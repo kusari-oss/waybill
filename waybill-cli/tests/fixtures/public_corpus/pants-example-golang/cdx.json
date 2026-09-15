@@ -59,10 +59,6 @@
           "value": "go-sum-fallback"
         },
         {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
-        },
-        {
           "name": "waybill:pants-target",
           "value": "mod"
         },
@@ -209,10 +205,6 @@
         {
           "name": "waybill:go-transitive-source",
           "value": "go-sum-fallback"
-        },
-        {
-          "name": "waybill:orphan-reason",
-          "value": "unresolved-indirect-require"
         },
         {
           "name": "waybill:pants-target",
@@ -369,7 +361,10 @@
         "pkg:golang/github.com/pantsbuild/example-golang@048c22e",
         "pkg:golang/github.com/spf13/pflag@v1.0.10",
         "pkg:golang/stdlib@v1.24"
-      ],
+      ]
+    },
+    {
+      "aggregate": "unknown",
       "dependencies": [
         "pkg:golang/github.com/google/uuid@v1.6.0",
         "pkg:golang/github.com/pantsbuild/example-golang@048c22e",
@@ -490,7 +485,11 @@
       },
       {
         "name": "waybill:graph-completeness",
-        "value": "complete"
+        "value": "partial"
+      },
+      {
+        "name": "waybill:graph-completeness-reason",
+        "value": "go-transitive-coverage-degraded: 2 transitive edge(s) not populated"
       },
       {
         "name": "waybill:workspaces-detected",

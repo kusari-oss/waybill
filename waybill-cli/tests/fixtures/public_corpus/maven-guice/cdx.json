@@ -3180,7 +3180,10 @@
         "pkg:maven/org.ow2.asm/asm@9.5",
         "pkg:maven/org.slf4j/slf4j-simple@1.6.1",
         "pkg:maven/org.springframework/spring-beans@5.3.18"
-      ],
+      ]
+    },
+    {
+      "aggregate": "unknown",
       "dependencies": [
         "pkg:maven/aopalliance/aopalliance@1.0",
         "pkg:maven/biz.aQute/bnd@0.0.384",

@@ -295,7 +295,8 @@ Seven of eleven targets drifted. Every category traced to a named commit:
 | `go-cobra`, `pants-example-golang` | `graph-completeness` `complete` → `partial` + reason | `ceec02a2` (FR-003) |
 | `rust-ripgrep`, `python-flask`, `maven-guice`, `go-cobra` | `compositions` dependency claim split off by reachability | `e595bad1` (#871) |
 | `image-postgres16`, `npm-express`, `pants-example-golang` | same split, by degraded ecosystem | `6f926977` |
-| `go-cobra`, `pants-example-golang` | SPDX 3 `spdxId`/`statement`/`subject` churn | content-addressed IDs re-hashing over the above |
+| `rust-ripgrep`, `maven-guice`, `python-flask`, `npm-express`, `pants-example-golang`, `go-cobra` | SPDX 3 root edges replaced | `61f8ba98` |
+| all drifted targets | SPDX 3 `spdxId`/`statement`/`subject` churn | content-addressed IDs re-hashing over the above |
 
 Two notes on reading that table:
 
@@ -311,6 +312,40 @@ Two notes on reading that table:
 
 Component counts are unchanged on all eleven targets. Only `go-cobra`
 loses edges: 8 → 6, i.e. 7 → 5 golang edges, matching the quickstart.
+
+### What the SPDX 3 fix actually changed, per target
+
+`go-cobra` is the smallest case and the one the spec is written around,
+but it is not the most striking. The ungated fallback had been attaching
+whatever happened to be a graph root, and on most targets that was
+**files, not dependencies**:
+
+| target | root edges before | root edges after |
+|---|---|---|
+| `rust-ripgrep` | `utils.sh`, `ubuntu-install-packages`, `copy-examples`, `benchsuite`, `sha256-releases`, `test-complete`, `build-and-publish-m2` | the nine real workspace crates (`grep`, `grep-cli`, `globset`, `ignore`, …) |
+| `maven-guice` | `deploy-guice.sh`, `diff-jars.sh`, `google_bazel_common`, and `pom.xml` three times over | the sixteen real Maven modules |
+| `pants-example-golang` | `get-pants.sh`, `pants_from_sources` | the main module |
+| `npm-express` | `run` | the main module |
+| `python-flask` | 24 packages nothing declared a dependency on | the four real ones |
+
+After the fix every target's root out-edge count is identical across
+CycloneDX, SPDX 2.3 and SPDX 3:
+
+```
+go-cobra 1/1/1   image-postgres16 201/201/201   maven-guice 16/16/16
+npm-express 1/1/1   pants-example-django 21/21/21   pants-example-golang 1/1/1
+pants-example-jvm 4/4/4   pants-example-python 4/4/4   python-flask 4/4/4
+rust-ripgrep 10/10/10
+```
+
+### One pre-existing divergence, left alone
+
+`pants-example-javascript` reports `cdx=0, spdx-2.3=1, spdx-3=0` root
+out-edges — SPDX 2.3 emits `root -> demo`, CycloneDX emits nothing. This
+is the opposite direction from the defect fixed here (CycloneDX is the
+outlier) and it is **pre-existing**: all three of that target's goldens
+are byte-identical before and after, so it did not drift and nothing was
+regenerated for it. Filed separately rather than encoded.
 
 ### The normalised diff and the gate agree, and that is load-bearing
 

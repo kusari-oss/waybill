@@ -44529,7 +44529,10 @@
       "assemblies": [
         "pkg:golang/github.com/moby/sys/user@v0.1.0",
         "pkg:golang/golang.org/x/sys@v0.1.0"
-      ],
+      ]
+    },
+    {
+      "aggregate": "unknown",
       "dependencies": [
         "pkg:golang/github.com/moby/sys/user@v0.1.0",
         "pkg:golang/golang.org/x/sys@v0.1.0"
