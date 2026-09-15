@@ -376,3 +376,31 @@ resolves to the same `github.ref` regardless of the `branch` input. GitHub
 keeps only **one** pending run per group: dispatching a second regeneration
 while the first is still queued cancels the first. Dispatch, wait for
 completion, then dispatch the next.
+
+### Step 10 — the lane was observed failing, without a synthetic mutation
+
+The refresh procedure ends by requiring proof that the lane can still
+fail, "named target and all three formats", because a refresh that
+silently disabled the gate would look identical to one that fixed it.
+
+This cycle produced that proof from a real emission change rather than a
+deliberate one. The read-only run before the goldens were installed
+(`34917982329`) failed with:
+
+```
+3 of 3 formats drifted for go-cobra
+3 of 3 formats drifted for pants-example-golang
+1 of 3 formats drifted for image-postgres16
+1 of 3 formats drifted for maven-guice
+1 of 3 formats drifted for npm-express
+1 of 3 formats drifted for python-flask
+1 of 3 formats drifted for rust-ripgrep
+```
+
+The `3 of 3` lines are the load-bearing part: they show the SPDX 2.3 and
+SPDX 3 comparisons actually ran and reported independently. The failure
+mode milestone 840 caught — the layer-2 loop panicking on the first
+failing format, so a red lane named only `cdx.json` and proved nothing
+about the other two — would have printed `1 of 3` everywhere.
+
+The confirming read-only run after installation (`34920854544`) is green.
