@@ -133,10 +133,10 @@ lifecycle was decided.
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T036 Re-author `pants-backend-ai`'s expectations in `xtask/corpus/quality-corpus.toml` from a **CI** measurement, not a local one. Its current `edges 826..1010` / `max_depth 4..9` / `flat false` were authored against fabricated primary-dependency-fallback edges — scanning without `--root-name` still reproduces 918 today. Move only the bounds that actually violate
-- [ ] T037 [P] Update `specs/868-resolve-ownership/measurements/README.md` with post-fix figures beside the baselines so the before/after pair stays reproducible
-- [ ] T038 [P] Confirm the interleaved A/B scan-time comparison against the T003 baseline is within run-to-run noise, and record it
-- [ ] T039 [P] Verify the walker-audit gate separately — it is not in `scripts/pre-pr.sh`. Expected to be a no-op since no file under `waybill-cli/src/scan_fs/walk*` is touched, but confirm rather than assume
+- [X] T036 Re-author `pants-backend-ai`'s expectations in `xtask/corpus/quality-corpus.toml` from a **CI** measurement, not a local one. Its current `edges 826..1010` / `max_depth 4..9` / `flat false` were authored against fabricated primary-dependency-fallback edges — scanning without `--root-name` still reproduces 918 today. Move only the bounds that actually violate
+- [X] T037 [P] Update `specs/868-resolve-ownership/measurements/README.md` with post-fix figures beside the baselines so the before/after pair stays reproducible
+- [X] T038 [P] Confirm the interleaved A/B scan-time comparison against the T003 baseline is within run-to-run noise, and record it
+- [X] T039 [P] Verify the walker-audit gate separately — it is not in `scripts/pre-pr.sh`. Expected to be a no-op since no file under `waybill-cli/src/scan_fs/walk*` is touched, but confirm rather than assume
 - [ ] T040 [P] Comment on #887 and #870 with the outcome, and state in the PR body that `pants-backend-ai`'s bound moved because the old number counted fabricated edges — a reviewer comparing against it will otherwise read the drop as a regression
 - [ ] T041 Open the PR with `./scripts/pre-pr.sh` green and every per-target `N passed; 0 failed` line enumerated
 

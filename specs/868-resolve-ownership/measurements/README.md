@@ -223,6 +223,89 @@ both binaries: **248 of 272** pypi components carry it. FR-005 / SC-005 hold
 and are unregressed; no work was needed, which is what research R2
 predicted.
 
+## T036 — the corpus bounds need no change
+
+`pants-backend-ai`'s committed expectations in `xtask/corpus/quality-corpus.toml`
+turn out to be satisfied by the fixed document without moving anything.
+Measured with the harness's exact invocation (`--offline`, `--root-name`,
+`--root-version`, and an isolated `HOME`/`GOPATH`/`GOMODCACHE`), metrics
+computed the way `xtask/src/quality/analyze.rs` computes them:
+
+| metric | committed bound | baseline | after |
+|---|---|---:|---:|
+| pkgs | 243..299 | 272 ✓ | 281 ✓ |
+| files | 53..65 | 59 ✓ | 59 ✓ |
+| edges | 826..1010 | **761 ✗** | 919 ✓ |
+| max_depth | 4..9 | **1 ✗** | 5 ✓ |
+| flat | false | **true ✗** | false ✓ |
+
+Three metrics violated before this feature and none violates after. **No
+bound moves.** T036 anticipated re-authoring them; the measurement says
+there is nothing to re-author, so nothing was touched.
+
+### Why the bounds were right by accident
+
+tasks.md notes the bounds "were authored against fabricated
+primary-dependency-fallback edges". That is true about their provenance, and
+it is worth being exact about why they nonetheless land correctly.
+
+Without `--root-name`, CycloneDX's primary-dependency fallback fires and
+attaches every orphan to the root. Both binaries produce the same numbers
+that way:
+
+| invocation | binary | pkgs | edges | depth | flat |
+|---|---|---:|---:|---:|---|
+| **no** `--root-name` | baseline | 330 | 918 | 5 | false |
+| **no** `--root-name` | after | 339 | 918 | 5 | false |
+| with `--root-name` (harness) | baseline | 272 | 761 | 1 | **true** |
+| with `--root-name` (harness) | after | 281 | 919 | 5 | false |
+
+The fallback's 918/5 and the genuinely-anchored 919/5 agree to within one
+edge. So the original author measured a document whose reachability was
+manufactured, wrote down bounds describing it, and those bounds happen to
+describe a correctly-anchored document too — because the fallback was
+approximating, crudely, the very edges that were missing.
+
+That is a coincidence, not a validation of the method. A fallback that
+attaches every orphan to the root will always produce a plausible-looking
+depth and edge count; here it produced a plausible-looking *and* nearly
+correct one. The lesson is the one contract A-8 states: a number that looks
+right is not evidence the graph is right.
+
+## T038 — scan time is unchanged
+
+Interleaved on identical machine state, alternating binaries within each
+round. Separately-taken baselines attributed machine drift to the change in
+milestone 867; interleaving is what prevents that.
+
+| round | baseline | after |
+|---|---:|---:|
+| 1 | 746 ms | 749 ms |
+| 2 | 754 ms | 753 ms |
+| 3 | 753 ms | 756 ms |
+| **median** | **753 ms** | **753 ms** |
+
+Zero median difference, and the spread within each arm (8-10 ms) exceeds the
+difference between them. Indistinguishable.
+
+Note the T003 figure recorded in research R6 was 781/778/794 ms on a
+different machine state. That is exactly why the comparison here is
+interleaved rather than taken against the recorded number.
+
+## T039 — walker-audit gate
+
+Not run by `scripts/pre-pr.sh`, so verified separately rather than assumed.
+
+No file under `waybill-cli/src/scan_fs/walk*` is touched by this branch, and
+`walk.audit-allowlist.txt` is unmodified. Comparing the `fn walk[_(]` surface
+between `main` and the branch gives **78 identical lines on both sides**, so
+the gate is a no-op.
+
+Method note: the comparison diffs `git grep` output taken from the two refs
+rather than re-implementing the CI gate's grep-and-diff locally. A previous
+attempt at local re-implementation reported false drift (35 vs 12 entries)
+because `sed` was absent from the shell's PATH.
+
 ## Deviation from tasks.md T013
 
 tasks.md specifies computing "top-level requirements — packages nothing else
