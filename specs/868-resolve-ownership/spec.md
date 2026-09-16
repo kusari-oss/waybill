@@ -202,9 +202,13 @@ confirm each package's originating resolve is determinable from the document.
 - **FR-002b**: A package belonging to more than one resolve MUST be reachable
   through each of them, satisfying FR-006 structurally rather than by an
   attribution rule.
-- **FR-003**: Where ownership cannot be determined, the resolve MUST remain
-  unanchored rather than being attached to an arbitrary component, and the
-  situation MUST be reported.
+- **FR-003**: A lockfile discovered on disk that the project's configuration
+  does not name MUST remain unanchored rather than being attached to an
+  arbitrary component, and the count of such lockfiles MUST be reported. The
+  readers glob `3rdparty/python/*.lock`, `<root>/*.lock` and
+  `<root>/lockfiles/*.lock`, deriving a resolve name from the filename stem;
+  a stem-derived name is **not** a declaration of ownership and MUST NOT be
+  treated as one.
 - **FR-003a**: A resolve MUST be classified build-time when the project's own
   configuration declares a tool installing from it. Such a declaration MUST
   take precedence over any name-based heuristic.
@@ -224,7 +228,12 @@ confirm each package's originating resolve is determinable from the document.
   field is missing" stay distinguishable.
 - **FR-004**: An anchoring relationship introduced by waybill MUST be
   distinguishable, by a consumer reading the document, from a dependency a
-  manifest declared.
+  manifest declared. This is satisfied by the **target** rather than the edge:
+  the only introduced relationship is root → resolve component, and that
+  target is explicitly marked as a resolve (FR-002a). The resolve →
+  top-level-requirement edges are read from the lockfile and are not
+  introduced. A per-edge marker is therefore NOT required, and anchor edges
+  stay ordinary dependency edges so consumers traverse them unmodified.
 - **FR-005**: Each package MUST remain attributable to the resolve it came
   from, including when several resolves are present.
 - **FR-006**: A package appearing in more than one resolve MUST NOT be
@@ -357,6 +366,27 @@ confirm each package's originating resolve is determinable from the document.
   - **That signal is partial.** It covers five resolves. `towncrier` and
     `pants-plugins` are tooling by any reading and live under `tools/`, but
     nothing declares them as such — only the path convention suggests it.
+
+### Session 2026-09-16 (amendments, post-analysis)
+
+- Q: FR-004 requires the anchoring *relationship* be distinguishable, but the
+  plan emits anchor edges as ordinary dependency edges. Conflict?
+  → A: **No — satisfied by the target, not the edge.** Only root → resolve is
+  waybill-introduced, and it points at a component explicitly marked as a
+  resolve. The resolve → requirement edges are read from the lockfile. A
+  per-edge marker is feasible (CycloneDX `dependencies[i].properties[]`
+  already carries the m218 cross-ecosystem annotations, and SPDX 2.3/3 have
+  `relationships[].comment`) but would build per-edge provenance plumbing that
+  exists for nothing else — those SPDX comment fields are `None` at every
+  construction site today — for a single edge type.
+
+- Q: Is FR-003 vacuous now that ownership means "one component per declared
+  resolve"?
+  → A: **No.** Analysis assumed it was and checking disproved it. Lockfiles
+  are discovered by glob independently of `[python.resolves]`, with the
+  resolve name taken from the filename stem. Such a lockfile has a name but
+  no declaration, so under FR-002 it has no determinable owner. FR-003 is
+  narrowed to that concrete case rather than retired.
 
 ### Session 2026-09-16 (amendment, post-plan)
 
