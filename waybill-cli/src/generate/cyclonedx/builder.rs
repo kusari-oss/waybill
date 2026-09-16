@@ -719,6 +719,7 @@ impl CycloneDxBuilder {
             .chain(m158_workspace_peer_edges.iter().cloned())
             .collect();
 
+
         // FR-008 multi-root BFS on the AUGMENTED + REWRITTEN graph.
         let graph_completeness =
             crate::generate::graph_completeness::compute_graph_completeness(
