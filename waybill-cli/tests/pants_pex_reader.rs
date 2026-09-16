@@ -891,8 +891,41 @@ fn multi_resolve_map_central_directory_emits_all_resolves() {
         stderr.contains("lockfiles_discovered=5"),
         "expected lockfiles_discovered=5 (one per declared resolve), stderr:\n{stderr}"
     );
+    // Milestone 868 (#887): 12 = 7 locked distributions + one component per
+    // DECLARED resolve. The fixture's `[python.resolves]` names five, and
+    // each now gets a component that owns its graph. The package count is
+    // unchanged — connecting a graph must not invent packages (FR-008 /
+    // contract A-6), which is why this asserts the composition rather than
+    // the total: a bare total would pass just as happily if five phantom
+    // distributions had appeared instead.
     assert!(
-        stderr.contains("components_emitted=7"),
-        "expected components_emitted=7, stderr:\n{stderr}"
+        stderr.contains("components_emitted=12"),
+        "expected components_emitted=12 (7 distributions + 5 declared resolves), stderr:\n{stderr}"
     );
+    // Reuses `cdx` read above; the 7-package assertion earlier in this test
+    // already pins that no distribution was invented.
+    let resolves: Vec<&str> = cdx["components"]
+        .as_array()
+        .expect("components[]")
+        .iter()
+        .filter(|c| {
+            c["properties"].as_array().is_some_and(|ps| {
+                ps.iter().any(|p| {
+                    p["name"] == "waybill:component-kind" && p["value"] == "lockfile-resolve"
+                })
+            })
+        })
+        .filter_map(|c| c["name"].as_str())
+        .collect();
+    assert_eq!(
+        resolves.len(),
+        5,
+        "one component per declared resolve, got {resolves:?}"
+    );
+    for expected in ["service-a", "service-b", "tools-mypy", "tools-pytest", "shared-utils"] {
+        assert!(
+            resolves.contains(&expected),
+            "declared resolve `{expected}` has no owning component: {resolves:?}"
+        );
+    }
 }

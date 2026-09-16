@@ -375,6 +375,7 @@ Auto-generated from all feature plans. Last updated: 2026-09-15
 - Rust stable, workspace toolchain inherited. No nightly. `waybill-ebpf` untouched. + Existing only — `serde`/`serde_json` (relationship + annotation emission), `tracing`, `anyhow`. **Zero new Cargo dependencies.** (866-go-graph-completeness)
 - N/A — all state in-process per scan, matching every reader milestone since 002. (866-go-graph-completeness)
 - Rust stable, workspace toolchain inherited. No nightly. + Existing only — `std::collections::HashMap`, (867-mainmod-depends-ecosystem)
+- Rust stable, workspace toolchain inherited. No nightly. + Existing only — `toml` (already parses `pants.toml`), (868-resolve-ownership)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -510,9 +511,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 868-resolve-ownership: Added Rust stable, workspace toolchain inherited. No nightly. + Existing only — `toml` (already parses `pants.toml`),
 - 867-mainmod-depends-ecosystem: Added Rust stable, workspace toolchain inherited. No nightly. + Existing only — `std::collections::HashMap`,
 - 866-go-graph-completeness: Added Rust stable, workspace toolchain inherited. No nightly. `waybill-ebpf` untouched. + Existing only — `serde`/`serde_json` (relationship + annotation emission), `tracing`, `anyhow`. **Zero new Cargo dependencies.**
-- 860-multi-main-module-override: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
 
 
 <!-- MANUAL ADDITIONS START -->

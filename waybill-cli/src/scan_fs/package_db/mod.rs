@@ -483,6 +483,13 @@ pub struct ScanDiagnostics {
     /// `aggregate_mixed == true` when subprojects resolved via
     /// different tiers — the emitter surfaces `"mixed"` in that case.
     pub gradle_scan_summary: Option<gradle::ladder::GradleScanSummary>,
+
+    /// Milestone 868 (#887) — what this scan learned about Pants resolve
+    /// OWNERSHIP: how many resolves were classified from something weaker
+    /// than a declaration, and how many discovered lockfiles nothing
+    /// declares. `None` iff no Pex lockfile was found, which keeps
+    /// non-Pants scans byte-identical (contract A-7).
+    pub pants_resolve_summary: Option<pants::PantsResolveSummary>,
 }
 
 /// Milestone 188 (#455) — result-side classification of Helm
@@ -1769,7 +1776,11 @@ pub fn read_all(
     // PURL-level dedup (lockfile-tier with hashes wins over
     // requirements.txt-tier without). Reader is a no-op (empty return,
     // no log) on repos without any Pex lockfiles per FR-007 / SC-003.
-    out.extend(pants::read(rootfs));
+    let (pants_components, pants_resolve_summary) = pants::read_with_summary(rootfs);
+    // Milestone 868 (#887): doc-scope resolve-ownership counts. Left `None`
+    // when no Pex lockfile was found, so non-Pants scans are unchanged.
+    diagnostics.pants_resolve_summary = pants_resolve_summary;
+    out.extend(pants_components);
 
     // Milestone 224: Pants coursier JVM lockfile reader — Maven
     // components from `3rdparty/jvm/*.lock` (default glob) +

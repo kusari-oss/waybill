@@ -3425,6 +3425,7 @@ pub async fn execute(
         go_toolchains_detected,
         cross_ecosystem_edges_report,
         helm_extraction_mode,
+        pants_resolve_summary,
         gradle_scan_summary,
         scan_target_coord,
         divergence_records,
@@ -4353,6 +4354,7 @@ pub async fn execute(
         // Milestone 204 (#554): doc-scope helm image-extraction-mode
         // signal for the C123 annotation.
         helm_extraction_mode: helm_extraction_mode.as_ref(),
+        pants_resolve_summary,
         gradle_scan_summary: gradle_scan_summary.as_ref(),
         // Milestone 665: propagate the operator's `--no-binary-scan=<MODE>`
         // choice so every emitter can attach the doc-scope

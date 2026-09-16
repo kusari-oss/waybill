@@ -471,6 +471,7 @@ pub fn build_document(
             go_toolchains_detected: artifacts.go_toolchains_detected,
             cross_ecosystem_edges_report: artifacts.cross_ecosystem_edges_report,
             helm_extraction_mode: artifacts.helm_extraction_mode,
+            pants_resolve_summary: artifacts.pants_resolve_summary,
             gradle_scan_summary: artifacts.gradle_scan_summary,
             no_binary_scan_mode: artifacts.no_binary_scan_mode,
             image_source: artifacts.image_source,
@@ -523,6 +524,7 @@ pub fn build_document(
             go_toolchains_detected: artifacts.go_toolchains_detected,
             cross_ecosystem_edges_report: artifacts.cross_ecosystem_edges_report,
             helm_extraction_mode: artifacts.helm_extraction_mode,
+            pants_resolve_summary: artifacts.pants_resolve_summary,
             gradle_scan_summary: artifacts.gradle_scan_summary,
             no_binary_scan_mode: artifacts.no_binary_scan_mode,
             image_source: artifacts.image_source,
@@ -754,9 +756,13 @@ pub fn build_document(
     // alias in `spdx/relationships.rs` and produces empty
     // `.dependsOn` on the synthesized root.
     let m194_classifier_relationships: Vec<waybill_common::resolution::Relationship> = {
-        let prerewritten = crate::generate::graph_completeness::anchor_retained_mainmod_edges(
-            artifacts.relationships,
-            &dropped_main_module_purls,
+        let prerewritten = crate::generate::graph_completeness::anchor_resolve_components(
+            &crate::generate::graph_completeness::anchor_retained_mainmod_edges(
+                artifacts.relationships,
+                &dropped_main_module_purls,
+                &m158_target_ref,
+            ),
+            artifacts.components,
             &m158_target_ref,
         );
         prerewritten
@@ -1256,6 +1262,7 @@ mod tests {
             go_toolchains_detected: None,
             cross_ecosystem_edges_report: None,
             helm_extraction_mode: None,
+            pants_resolve_summary: None,
             gradle_scan_summary: None,
             no_binary_scan_mode: None,
             image_source: None,

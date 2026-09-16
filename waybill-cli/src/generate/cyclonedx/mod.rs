@@ -70,6 +70,7 @@ impl SbomSerializer for CycloneDxJsonSerializer {
             // `waybill:go-transitive-fallback-count` metadata property.
             .with_go_transitive_fallback_count(scan.go_transitive_fallback_count)
             .with_unresolved_declared_dep_count(scan.unresolved_declared_dep_count)
+            .with_pants_resolve_summary(scan.pants_resolve_summary)
             // Milestone 173 — propagate the doc-scope Go cache-warming
             // outcome from ScanArtifacts into the builder for the
             // C118 (mode) + C119 (failed) metadata properties.

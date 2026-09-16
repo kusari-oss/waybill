@@ -186,6 +186,36 @@ fn component_resolve_names(doc: &Value) -> Vec<(String, String)> {
     out
 }
 
+/// The `waybill:pants-resolve` tags carried by *package* components
+/// only. Since m868 a lockfile also emits one synthetic
+/// `pkg:generic/<resolve-name>` resolve component carrying the same
+/// tag; tests that count per-package tagging must not see it.
+fn package_resolve_names(doc: &Value) -> Vec<(String, String)> {
+    let resolve_component_purls: std::collections::HashSet<String> = doc
+        .get("components")
+        .and_then(|c| c.as_array())
+        .map(|arr| {
+            arr.iter()
+                .filter_map(|c| {
+                    let purl = c.get("purl")?.as_str()?.to_string();
+                    let props = c.get("properties")?.as_array()?;
+                    props.iter().any(|p| {
+                        p.get("name").and_then(|n| n.as_str())
+                            == Some("waybill:component-kind")
+                            && p.get("value").and_then(|v| v.as_str())
+                                == Some("lockfile-resolve")
+                    })
+                    .then_some(purl)
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+    component_resolve_names(doc)
+        .into_iter()
+        .filter(|(purl, _)| !resolve_component_purls.contains(purl))
+        .collect()
+}
+
 // -------------------------------------------------------------------
 // Tests populated by T009–T011 (US1), T014–T018 (US2), T020–T021 (US3).
 // -------------------------------------------------------------------
@@ -469,12 +499,30 @@ custom-name = "3rdparty/python/generic-file.lock"
 
     // (c) The emitted resolve-name is the map key. Check via the
     //     component's `waybill:pants-resolve` property.
-    let resolve_names = component_resolve_names(&doc);
-    assert_eq!(resolve_names.len(), 1);
+    let resolve_names = package_resolve_names(&doc);
+    assert_eq!(
+        resolve_names.len(),
+        1,
+        "expected exactly 1 tagged package component; got {resolve_names:#?}",
+    );
     assert_eq!(
         resolve_names[0].1, "custom-name",
         "map key `custom-name` must win over file-stem `generic-file`; got={:?}",
         resolve_names[0].1,
+    );
+
+    // (d) m868: the synthetic resolve component is named by the same
+    //     map key, not by the file stem. Asserting it here keeps the
+    //     two identity paths (package tag, resolve component) from
+    //     diverging silently.
+    let resolve_components: Vec<String> = component_purls(&doc)
+        .into_iter()
+        .filter(|p| p.starts_with("pkg:generic/"))
+        .collect();
+    assert_eq!(
+        resolve_components,
+        vec!["pkg:generic/custom-name".to_string()],
+        "expected one resolve component named by the map key",
     );
 }
 

@@ -165,6 +165,12 @@ pub struct ScanResult {
     /// `scan_result.diagnostics.helm_extraction_mode` below.
     pub helm_extraction_mode:
         Option<crate::scan_fs::package_db::HelmExtractionMode>,
+
+    /// Milestone 868 (#887) — Pants resolve-ownership counts for the
+    /// doc-scope `waybill:resolve-ownership` annotation. `None` iff no Pex
+    /// lockfile was discovered (contract A-7 byte-identity).
+    pub pants_resolve_summary:
+        Option<crate::scan_fs::package_db::pants::PantsResolveSummary>,
     /// Milestone 235 Phase 6 US4: aggregate Gradle-resolution tier
     /// signal for the doc-scope `waybill:gradle-resolution-tier`
     /// annotation. `None` iff no Gradle project was touched; otherwise
@@ -390,6 +396,9 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
     // `None` on non-Helm scans (byte-identity per FR-004).
     let mut helm_extraction_mode:
         Option<package_db::HelmExtractionMode> = None;
+    let mut pants_resolve_summary: Option<
+        crate::scan_fs::package_db::pants::PantsResolveSummary,
+    > = None;
     // Milestone 235 US4: aggregate Gradle-resolution tier signal.
     let mut gradle_scan_summary:
         Option<package_db::gradle::ladder::GradleScanSummary> = None;
@@ -444,6 +453,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         // ScanDiagnostics into the local for the ScanResult return.
         // `HelmExtractionMode` is `Copy` — no clone needed.
         helm_extraction_mode = scan_result.diagnostics.helm_extraction_mode;
+        pants_resolve_summary = scan_result.diagnostics.pants_resolve_summary;
         // m235 US4: same clone-copy pattern — `GradleScanSummary` is
         // `Clone` but not `Copy`, so we `.clone()`.
         gradle_scan_summary = scan_result.diagnostics.gradle_scan_summary.clone();
@@ -1266,6 +1276,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         go_toolchains_detected,
         cross_ecosystem_edges_report,
         helm_extraction_mode,
+        pants_resolve_summary,
         gradle_scan_summary,
         scan_target_coord,
         divergence_records,

@@ -106,6 +106,7 @@ pub fn build_document(
             go_toolchains_detected: scan.go_toolchains_detected,
             cross_ecosystem_edges_report: scan.cross_ecosystem_edges_report,
             helm_extraction_mode: scan.helm_extraction_mode,
+            pants_resolve_summary: scan.pants_resolve_summary,
             gradle_scan_summary: scan.gradle_scan_summary,
             no_binary_scan_mode: scan.no_binary_scan_mode,
             image_source: scan.image_source,
@@ -690,9 +691,13 @@ pub fn build_document(
     // component nothing depends on — including components the same
     // document reports as unreachable orphans.
     let m158_augmented_relationships: Vec<waybill_common::resolution::Relationship> =
-        crate::generate::graph_completeness::anchor_retained_mainmod_edges(
-            scan.relationships,
-            &dropped_main_module_purls,
+        crate::generate::graph_completeness::anchor_resolve_components(
+            &crate::generate::graph_completeness::anchor_retained_mainmod_edges(
+                scan.relationships,
+                &dropped_main_module_purls,
+                &m158_target_ref,
+            ),
+            scan.components,
             &m158_target_ref,
         )
         .into_iter()

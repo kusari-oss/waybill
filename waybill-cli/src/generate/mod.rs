@@ -167,6 +167,11 @@ pub struct ScanArtifacts<'a> {
     pub helm_extraction_mode: Option<
         &'a crate::scan_fs::package_db::HelmExtractionMode,
     >,
+    /// Milestone 868 (#887) — Pants resolve-ownership counts driving the
+    /// doc-scope C161 `waybill:resolve-ownership` annotation. `None` iff no
+    /// Pex lockfile was discovered (annotation absent; contract A-7).
+    pub pants_resolve_summary:
+        Option<crate::scan_fs::package_db::pants::PantsResolveSummary>,
     /// Milestone 235 US4: aggregate Gradle-resolution tier summary
     /// driving the C146 `waybill:gradle-resolution-tier` doc-scope
     /// annotation. `None` iff no Gradle project was touched
@@ -407,6 +412,7 @@ impl<'a> ScanArtifacts<'a> {
             go_toolchains_detected: self.go_toolchains_detected,
             cross_ecosystem_edges_report: self.cross_ecosystem_edges_report,
             helm_extraction_mode: self.helm_extraction_mode,
+            pants_resolve_summary: self.pants_resolve_summary,
             gradle_scan_summary: self.gradle_scan_summary,
             no_binary_scan_mode: self.no_binary_scan_mode,
             image_source: self.image_source,

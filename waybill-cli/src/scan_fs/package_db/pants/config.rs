@@ -27,6 +27,40 @@ use serde::Deserialize;
 pub(crate) struct PantsConfig {
     #[serde(default)]
     pub(crate) python: PythonSection,
+    /// Milestone 868 (#887): every other top-level table, captured so
+    /// tool sections can be inspected for `install_from_resolve`.
+    ///
+    /// Pants declares a tool's resolve from the tool's own section —
+    /// `[black] install_from_resolve = "black"` — not from
+    /// `[python.resolves]`, which is the full registry and lists
+    /// application and tool lockfiles alike. That back-reference is the
+    /// only DECLARATIVE statement that a resolve exists to serve
+    /// tooling; the alternative, matching resolve names against a list
+    /// of known tool names, is a guess that is already wrong in
+    /// practice (see `resolve_classifier`).
+    #[serde(flatten)]
+    #[allow(dead_code)] // Read via `tool_declared_resolves` (T028 classifier).
+    pub(crate) other_sections: BTreeMap<String, toml::Value>,
+}
+
+impl PantsConfig {
+    /// Resolve names a tool section declares it installs from.
+    ///
+    /// Knowingly PARTIAL, and that is the point: on the measured target
+    /// five of nine resolves carry the back-reference while `towncrier`
+    /// and `pants-plugins` are tooling that nothing declares as such.
+    /// Callers must treat absence as "undeclared" and fall back
+    /// visibly (FR-003a-i / FR-003c) rather than inferring from the
+    /// resolve's name or its lockfile path.
+    #[allow(dead_code)] // Consumed by the T028 classifier precedence change.
+    pub(crate) fn tool_declared_resolves(&self) -> std::collections::BTreeSet<String> {
+        self.other_sections
+            .values()
+            .filter_map(|v| v.get("install_from_resolve"))
+            .filter_map(|v| v.as_str())
+            .map(str::to_string)
+            .collect()
+    }
 }
 
 /// The one Pants config section we care about.
@@ -68,6 +102,58 @@ pub(crate) fn parse(bytes: &[u8]) -> Option<PantsConfig> {
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
     use super::*;
+
+    #[test]
+    fn m868_tool_sections_declare_their_resolves() {
+        // #887 / T005. The declarative signal is a tool's own section
+        // back-referencing a resolve, NOT membership of [python.resolves] —
+        // that map is the full registry and lists application and tool
+        // lockfiles alike, so it cannot discriminate.
+        let cfg = parse(
+            br#"
+[python]
+interpreter_constraints = ["CPython==3.13.7"]
+
+[python.resolves]
+app-default = "python.lock"
+waybill-fixture-linter = "tools/waybill-fixture-linter.lock"
+waybill-fixture-undeclared = "tools/waybill-fixture-undeclared.lock"
+
+[waybill-fixture-linter]
+install_from_resolve = "waybill-fixture-linter"
+"#,
+        )
+        .expect("pants.toml parses");
+
+        // The registry lists all three...
+        assert_eq!(cfg.python.resolves.len(), 3);
+
+        // ...but only one is DECLARED as serving a tool.
+        let declared = cfg.tool_declared_resolves();
+        assert!(declared.contains("waybill-fixture-linter"));
+        assert!(
+            !declared.contains("app-default"),
+            "an application resolve must not be picked up as tool-declared"
+        );
+        assert!(
+            !declared.contains("waybill-fixture-undeclared"),
+            "a resolve under tools/ that nothing declares must stay undeclared — \
+             the path is a convention, not a declaration (FR-003a-i)"
+        );
+        assert_eq!(declared.len(), 1);
+    }
+
+    #[test]
+    fn m868_no_tool_sections_yields_no_declarations() {
+        let cfg = parse(
+            br#"
+[python.resolves]
+app-default = "python.lock"
+"#,
+        )
+        .expect("parses");
+        assert!(cfg.tool_declared_resolves().is_empty());
+    }
 
     #[test]
     fn parse_valid_python_lockfile_path() {

@@ -71,6 +71,8 @@ pub struct CycloneDxBuilder {
     /// scan happened.
     go_transitive_fallback_count: Option<usize>,
     unresolved_declared_dep_count: usize,
+    /// Milestone 868 (#887) — doc-scope Pants resolve-ownership counts.
+    pants_resolve_summary: Option<crate::scan_fs::package_db::pants::PantsResolveSummary>,
     /// Milestone 173: doc-scope Go cache-warming outcome for the C118
     /// (`waybill:go-cache-warming-mode`) + C119
     /// (`waybill:go-cache-warming-failed`) annotations. Sibling of
@@ -211,6 +213,7 @@ impl CycloneDxBuilder {
             go_transitive_coverage: None,
             go_transitive_fallback_count: None,
             unresolved_declared_dep_count: 0,
+            pants_resolve_summary: None,
             go_cache_warming: None,
             go_workspace_mode: None,
             go_toolchains_detected: None,
@@ -425,6 +428,16 @@ impl CycloneDxBuilder {
     /// names that resolved to no component. Always emitted, including zero.
     pub fn with_unresolved_declared_dep_count(mut self, count: usize) -> Self {
         self.unresolved_declared_dep_count = count;
+        self
+    }
+
+    /// Milestone 868 (#887) — document-scope Pants resolve-ownership counts.
+    /// `None` iff no Pex lockfile was discovered (annotation absent).
+    pub fn with_pants_resolve_summary(
+        mut self,
+        summary: Option<crate::scan_fs::package_db::pants::PantsResolveSummary>,
+    ) -> Self {
+        self.pants_resolve_summary = summary;
         self
     }
 
@@ -691,12 +704,15 @@ impl CycloneDxBuilder {
         // in m194 US4 so SPDX 2.3 + SPDX 3 emitters share the same
         // pre-rewrite and reach classifier `complete` on operator-
         // override scans (SC-005).
-        let m192_prerewritten_relationships: Vec<Relationship> =
-            crate::generate::graph_completeness::anchor_retained_mainmod_edges(
+        let m192_prerewritten_relationships: Vec<Relationship> = crate::generate::graph_completeness::anchor_resolve_components(
+            &crate::generate::graph_completeness::anchor_retained_mainmod_edges(
                 relationships,
                 &retained_main_module_purls,
                 &target_ref,
-            );
+            ),
+            effective_components,
+            &target_ref,
+        );
         let metadata_relationships_augmented: Vec<Relationship> = m192_prerewritten_relationships
             .iter()
             .cloned()
@@ -745,6 +761,7 @@ impl CycloneDxBuilder {
             self.go_workspace_mode.as_ref(),
             self.go_transitive_fallback_count,
             self.unresolved_declared_dep_count,
+            self.pants_resolve_summary.as_ref(),
             self.go_cache_warming.as_ref(),
             self.go_toolchains_detected.as_deref(),
             self.cross_ecosystem_edges_report.as_ref(),
@@ -840,16 +857,23 @@ impl CycloneDxBuilder {
         // `target_ref`; with the modules retained that would flatten the
         // workspace layer. Same helper the graph-completeness pre-pass
         // uses, so classification and emission see one topology.
+        // Milestone 868 (#887): computed unconditionally now. The m860
+        // guard keyed on `retained_main_module_purls` being non-empty, but a
+        // project can declare resolves without having a retained main module
+        // — on the measured target the resolve components would then never
+        // be anchored, which is the defect this feature exists to fix. Both
+        // helpers are no-ops when their respective inputs are absent, so the
+        // unconditional form is equivalent for every pre-868 scan.
         let filtered_relationships_owned: Option<Vec<Relationship>> =
-            if !retained_main_module_purls.is_empty() {
-                Some(crate::generate::graph_completeness::anchor_retained_mainmod_edges(
+            Some(crate::generate::graph_completeness::anchor_resolve_components(
+                &crate::generate::graph_completeness::anchor_retained_mainmod_edges(
                     relationships,
                     &retained_main_module_purls,
                     &target_ref,
-                ))
-            } else {
-                None
-            };
+                ),
+                effective_components,
+                &target_ref,
+            ));
         let effective_relationships_base: &[Relationship] = filtered_relationships_owned
             .as_deref()
             .unwrap_or(relationships);

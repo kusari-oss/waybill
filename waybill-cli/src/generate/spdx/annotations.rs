@@ -761,6 +761,18 @@ pub fn annotate_document(
         json!(artifacts.unresolved_declared_dep_count.to_string()),
     );
 
+    // Milestone 868 (#887) — C161 doc-scope Pants resolve-ownership counts.
+    // Absent on every scan that discovered no Pex lockfile (contract A-7);
+    // present with BOTH counts otherwise, zero included, so "nothing needed
+    // guessing" stays distinguishable from "the field is missing" (FR-003c).
+    if let Some(summary) = artifacts.pants_resolve_summary {
+        push(
+            &mut out,
+            "waybill:resolve-ownership",
+            json!(summary.as_wire_str()),
+        );
+    }
+
     // Milestone 161 (T044): doc-scope Go-workspace-mode annotation
     // (C112). Emitted iff `go.work` file was present at the scanned
     // root (`Detected` or `Malformed` variant); `Absent` is treated

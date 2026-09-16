@@ -358,7 +358,67 @@ fn dedup_by_canonical_path(candidates: Vec<DiscoveredLockfile>) -> Vec<Discovere
 /// outcome + the two supported override keys so operators can self-
 /// diagnose. When NO Pants signal is present, remain silent — this
 /// preserves byte-identity for non-Pants repos per m223 SC-003.
-pub fn read(scan_root: &Path) -> Vec<PackageDbEntry> {
+/// Milestone 868 (#887) — what the scan learned about resolve OWNERSHIP,
+/// as opposed to resolve contents.
+///
+/// Emitted document-scope so an auditor can see how much of the
+/// classification rests on evidence and how much on convention, without
+/// re-deriving it from the component set. Both counts are always present
+/// when this struct is present, including zero: "nothing needed guessing"
+/// and "the field is missing" are different claims, and the distinction is
+/// exactly what an auditor needs (FR-003c).
+///
+/// `None` rather than a zeroed struct when no Pex lockfile was found at all,
+/// which is what keeps non-Pants scans byte-identical (contract A-7).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct PantsResolveSummary {
+    /// Resolves whose lifecycle was decided by the name allowlist or the
+    /// runtime default rather than by a `install_from_resolve` declaration.
+    pub weak_classification_count: usize,
+    /// Lockfiles discovered by glob that `[python.resolves]` does not name.
+    /// Their packages have no declarable owner, so they get no resolve
+    /// component and no anchor edge — a filename stem is a convention, not
+    /// a declaration (FR-003).
+    pub unanchored_lockfile_count: usize,
+}
+
+impl PantsResolveSummary {
+    /// Wire form for the `waybill:resolve-ownership` annotation. Fixed field
+    /// order so the value is byte-stable across runs.
+    pub fn as_wire_str(&self) -> String {
+        format!(
+            "weak-classification={};unanchored-lockfiles={}",
+            self.weak_classification_count, self.unanchored_lockfile_count,
+        )
+    }
+}
+
+pub fn read_with_summary(scan_root: &Path) -> (Vec<PackageDbEntry>, Option<PantsResolveSummary>) {
+    // Milestone 868 (#887) — read the configuration's own statements about
+    // resolves once, up front.
+    //
+    // `declared_resolve_names` is every resolve `[python.resolves]` names: the
+    // full registry, application and tool lockfiles alike. Only these get an
+    // owning component, because only these have an ownership the project
+    // actually declared.
+    //
+    // `tool_declared` is the narrower set a tool section back-references via
+    // `install_from_resolve`. Knowingly partial — on the measured target it
+    // covers five of nine, while `towncrier` and `pants-plugins` are tooling
+    // nothing declares — so absence means "fall back visibly", never "infer
+    // from the name".
+    let (declared_resolve_names, tool_declared_resolves) = {
+        let toml_path = scan_root.join("pants.toml");
+        match std::fs::read(&toml_path).ok().and_then(|b| config::parse(&b)) {
+            Some(cfg) => (
+                cfg.python.resolves.keys().cloned().collect::<std::collections::BTreeSet<_>>(),
+                cfg.tool_declared_resolves(),
+            ),
+            None => Default::default(),
+        }
+    };
+    let mut unanchored_lockfiles: usize = 0;
+    let mut weak_classification: usize = 0;
     let default_dir_exists = scan_root.join("3rdparty").join("python").exists();
     let pants_toml_exists = scan_root.join("pants.toml").exists();
     // Milestone 673 T009 (US2, FR-006): the `<scan_root>/lockfiles/`
@@ -380,7 +440,10 @@ pub fn read(scan_root: &Path) -> Vec<PackageDbEntry> {
                 "pants-pex reader complete"
             );
         }
-        return Vec::new();
+        // Zero lockfiles found: no ownership was learned, so the doc-scope
+        // summary stays absent rather than reporting two honest zeroes that
+        // would change every non-Pants document (contract A-7).
+        return (Vec::new(), None);
     }
 
     let lockfiles_discovered = candidates.len();
@@ -449,30 +512,74 @@ pub fn read(scan_root: &Path) -> Vec<PackageDbEntry> {
         if was_legacy_shape {
             legacy_counter.record_stripped(1);
         }
+        // Milestone 868 (#887) — read the declaration ONCE per lockfile, so
+        // this resolve's packages and its owning component cannot end up
+        // classified from different evidence.
+        let declared_by_tool = tool_declared_resolves.contains(&candidate.resolve_name);
         for resolve in &lock.locked_resolves {
             for req in &resolve.locked_requirements {
                 if let Some(entry) = lockfile::locked_req_to_entry(
                     req,
                     &candidate.path,
                     &candidate.resolve_name,
+                    declared_by_tool,
                 ) {
                     components.push(entry);
                 }
             }
         }
+        // Milestone 868 (#887) — the component that owns this resolve.
+        // Emitted only for a resolve the project's configuration NAMES: a
+        // lockfile found by glob carries a name derived from its filename
+        // stem, which is a convention rather than a declaration of
+        // ownership, so it stays unanchored and is counted (FR-003).
+        if declared_resolve_names.contains(&candidate.resolve_name) {
+            if let Some(entry) = lockfile::resolve_component_entry(
+                &lock,
+                &candidate.path,
+                &candidate.resolve_name,
+                declared_by_tool,
+            ) {
+                if !declared_by_tool {
+                    weak_classification += 1;
+                }
+                components.push(entry);
+            }
+        } else {
+            unanchored_lockfiles += 1;
+        }
     }
 
     let components_emitted = components.len();
+    if unanchored_lockfiles > 0 {
+        tracing::warn!(
+            unanchored_lockfiles,
+            "pants-pex reader: {} lockfile(s) are not named by `[python.resolves]`; \
+             their packages have no declarable owner and are left unanchored \
+             (a filename stem is a convention, not a declaration)",
+            unanchored_lockfiles,
+        );
+    }
     tracing::info!(
         lockfiles_discovered,
         lockfiles_parsed_ok,
         lockfiles_skipped_corrupt,
         legacy_shape_lockfiles = legacy_counter.as_log_value(),
         components_emitted,
+        weak_classification,
+        unanchored_lockfiles,
         "pants-pex reader complete"
     );
 
-    components
+    // `None` when no Pex lockfile was found at all — that is what keeps a
+    // non-Pants scan byte-identical (contract A-7). Once one was found, both
+    // counts are reported even at zero (FR-003c).
+    let summary = (lockfiles_discovered > 0).then_some(PantsResolveSummary {
+        weak_classification_count: weak_classification,
+        unanchored_lockfile_count: unanchored_lockfiles,
+    });
+
+    (components, summary)
 }
 
 // -------------------------------------------------------------------
@@ -519,6 +626,207 @@ mod tests {
             counter.as_log_value(),
             3,
             "counter must count files (3 non-zero calls), not bytes"
+        );
+    }
+}
+
+// -------------------------------------------------------------------
+// Milestone 868 T007-T008 (US1): resolve-component emission.
+// Contracts A-2 (declared, never guessed), A-6 (invents nothing),
+// A-7 (no resolve => unchanged). See contracts/resolve-anchoring.md.
+// -------------------------------------------------------------------
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod m868_resolve_component_tests {
+    use super::*;
+
+    /// A PEX lockfile body carrying both locked packages and the
+    /// top-level `requirements` the resolve was asked to provide.
+    fn synth_lockfile(packages: &[(&str, &str)], requirements: &[&str]) -> Vec<u8> {
+        let locked: Vec<String> = packages
+            .iter()
+            .map(|(name, version)| {
+                format!(
+                    r#"{{"project_name":"{name}","version":"{version}","artifacts":[{{"algorithm":"sha256","hash":"{h}","url":"https://files.pythonhosted.org/packages/xx/{m}-{version}-py3-none-any.whl"}}]}}"#,
+                    h = "a".repeat(64),
+                    m = name.replace('-', "_"),
+                )
+            })
+            .collect();
+        let reqs: Vec<String> = requirements.iter().map(|r| format!("\"{r}\"")).collect();
+        format!(
+            r#"{{"pex_version":"2.10.0","requirements":[{reqs}],"locked_resolves":[{{"locked_requirements":[{locked}]}}]}}"#,
+            reqs = reqs.join(","),
+            locked = locked.join(","),
+        )
+        .into_bytes()
+    }
+
+    fn write(root: &Path, rel: &str, bytes: &[u8]) {
+        let p = root.join(rel);
+        std::fs::create_dir_all(p.parent().unwrap()).unwrap();
+        std::fs::write(p, bytes).unwrap();
+    }
+
+    /// Every component the reader marks as owning a resolve, by the
+    /// resolve name it carries. Read from the emitted entries, never
+    /// from a count the reader reports about itself (contract A-8).
+    fn resolve_components(entries: &[PackageDbEntry]) -> Vec<(String, String)> {
+        let mut out: Vec<(String, String)> = entries
+            .iter()
+            .filter(|e| {
+                e.extra_annotations
+                    .get("waybill:component-kind")
+                    .and_then(|v| v.as_str())
+                    == Some("lockfile-resolve")
+            })
+            .map(|e| {
+                (
+                    e.purl.as_str().to_string(),
+                    e.extra_annotations
+                        .get("waybill:pants-resolve")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or_default()
+                        .to_string(),
+                )
+            })
+            .collect();
+        out.sort();
+        out
+    }
+
+    #[test]
+    fn t007_one_resolve_component_per_declared_resolve_named_by_declaration() {
+        // FR-002 / contract A-2: two `[python.resolves]` entries yield
+        // exactly two resolve components, each identified by the name the
+        // configuration declares — NOT by the lockfile's filename stem,
+        // which here deliberately differs from both map keys.
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path();
+        write(
+            root,
+            "pants.toml",
+            br#"
+[python.resolves]
+app-runtime = "locks/stem-one.lock"
+lint-tools = "locks/stem-two.lock"
+"#,
+        );
+        write(
+            root,
+            "locks/stem-one.lock",
+            &synth_lockfile(
+                &[("waybill-fixture-alpha", "1.0.0"), ("waybill-fixture-beta", "2.0.0")],
+                &["waybill-fixture-alpha~=1.0"],
+            ),
+        );
+        write(
+            root,
+            "locks/stem-two.lock",
+            &synth_lockfile(&[("waybill-fixture-gamma", "3.0.0")], &["waybill-fixture-gamma"]),
+        );
+
+        let entries = read_with_summary(root).0;
+        let resolves = resolve_components(&entries);
+
+        assert_eq!(
+            resolves,
+            vec![
+                (
+                    "pkg:generic/app-runtime".to_string(),
+                    "app-runtime".to_string()
+                ),
+                (
+                    "pkg:generic/lint-tools".to_string(),
+                    "lint-tools".to_string()
+                ),
+            ],
+            "expected one resolve component per declared resolve, named by the \
+             declaration rather than the file stem; got {resolves:#?}",
+        );
+
+        // Contract A-6: anchoring invents no PACKAGE. The three synthetic
+        // packages are exactly the three the lockfiles lock.
+        let pypi: Vec<String> = entries
+            .iter()
+            .map(|e| e.purl.as_str().to_string())
+            .filter(|p| p.starts_with("pkg:pypi/"))
+            .collect();
+        assert_eq!(
+            pypi.len(),
+            3,
+            "resolve components must not add package components; got {pypi:#?}",
+        );
+    }
+
+    #[test]
+    fn t007b_resolve_component_depends_on_declared_requirements_only() {
+        // FR-001: the resolve owns what the lockfile SAYS it was asked
+        // for. `beta` is locked but not requested — it is reachable as a
+        // transitive of alpha, not as a direct child of the resolve.
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path();
+        write(
+            root,
+            "pants.toml",
+            br#"
+[python.resolves]
+app-runtime = "locks/app.lock"
+"#,
+        );
+        write(
+            root,
+            "locks/app.lock",
+            &synth_lockfile(
+                &[("waybill-fixture-alpha", "1.0.0"), ("waybill-fixture-beta", "2.0.0")],
+                &["waybill-fixture-alpha~=1.0"],
+            ),
+        );
+
+        let entries = read_with_summary(root).0;
+        let resolve = entries
+            .iter()
+            .find(|e| e.purl.as_str() == "pkg:generic/app-runtime")
+            .expect("resolve component must be emitted");
+        assert_eq!(
+            resolve.depends,
+            vec!["waybill-fixture-alpha".to_string()],
+            "resolve must depend on its DECLARED requirements, not on \
+             everything the lockfile locks",
+        );
+    }
+
+    #[test]
+    fn t008_no_resolve_component_without_a_declaration() {
+        // FR-007 / contract A-7: the same lockfile, discovered by the
+        // default glob with NO `[python.resolves]` naming it, yields the
+        // same packages and NO resolve component. A filename stem is a
+        // convention, not a declaration of ownership.
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path();
+        write(root, "pants.toml", b"[python]\n");
+        write(
+            root,
+            "3rdparty/python/default.lock",
+            &synth_lockfile(&[("waybill-fixture-alpha", "1.0.0")], &["waybill-fixture-alpha"]),
+        );
+
+        let entries = read_with_summary(root).0;
+        assert!(
+            !entries.is_empty(),
+            "the glob-discovered lockfile must still be read",
+        );
+        assert_eq!(
+            resolve_components(&entries),
+            Vec::<(String, String)>::new(),
+            "a resolve nobody declares must own nothing",
+        );
+        assert!(
+            entries
+                .iter()
+                .any(|e| e.purl.as_str().starts_with("pkg:pypi/waybill-fixture-alpha")),
+            "the packages themselves are unaffected",
         );
     }
 }
