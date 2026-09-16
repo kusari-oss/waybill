@@ -25,9 +25,9 @@ requirement known to be unimplementable was the thing to avoid.
 
 ## Phase 1: Setup
 
-- [ ] T001 Build a release binary from the merge-base and keep it at `target/release/waybill-baseline` as the pre-change reference for every teeth-check and every A/B measurement in this feature
-- [ ] T002 [P] Clone `lablup/backend.ai` @ `809fcd394dd8e39456986dd742e7d51c6aedd647` into a scratch dir and record the pre-change measurement per `quickstart.md` §1 — reachable-from-root, max depth, total edges, orphan count, and the per-resolve lifecycle classification table
-- [ ] T003 [P] Record the steady-state scan-time baseline for that target (median of 3 after a warm-up). Research R6 measured 781/778/794 ms; the confirmation in T028 must be **interleaved** A/B on identical machine state, because a separately-taken comparison produced a false ~3% regression in milestone 867
+- [X] T001 Build a release binary from the merge-base and keep it at `target/release/waybill-baseline` as the pre-change reference for every teeth-check and every A/B measurement in this feature
+- [X] T002 [P] Clone `lablup/backend.ai` @ `809fcd394dd8e39456986dd742e7d51c6aedd647` into a scratch dir and record the pre-change measurement per `quickstart.md` §1 — reachable-from-root, max depth, total edges, orphan count, and the per-resolve lifecycle classification table
+- [X] T003 [P] Record the steady-state scan-time baseline for that target (median of 3 after a warm-up). Research R6 measured 781/778/794 ms; the confirmation in T028 must be **interleaved** A/B on identical machine state, because a separately-taken comparison produced a false ~3% regression in milestone 867
 
 ---
 
@@ -37,9 +37,9 @@ requirement known to be unimplementable was the thing to avoid.
 If anything in this phase or the next moves one of them, the feature is not
 scoped where it claims to be and Phase 4 (anchoring) is unsafe to land.
 
-- [ ] T004 Parse tool sections' `install_from_resolve` back-references in `waybill-cli/src/scan_fs/package_db/pants/config.rs`, producing a resolve-name → declared-by-tool map. Currently unparsed — it appears only as an unhandled key in `pants_shell/config.rs`
-- [ ] T005 Add a test in `waybill-cli/src/scan_fs/package_db/pants/config.rs` asserting the map is built from a `pants.toml` carrying both `[python.resolves]` entries and tool sections, using synthetic names (real coordinates trip the advisory scan)
-- [ ] T006 Run `./scripts/pre-pr.sh` and confirm zero golden churn — parsing a key nobody reads yet must change no output (SC-004)
+- [X] T004 Parse tool sections' `install_from_resolve` back-references in `waybill-cli/src/scan_fs/package_db/pants/config.rs`, producing a resolve-name → declared-by-tool map. Currently unparsed — it appears only as an unhandled key in `pants_shell/config.rs`
+- [X] T005 Add a test in `waybill-cli/src/scan_fs/package_db/pants/config.rs` asserting the map is built from a `pants.toml` carrying both `[python.resolves]` entries and tool sections, using synthetic names (real coordinates trip the advisory scan)
+- [X] T006 Run `./scripts/pre-pr.sh` and confirm zero golden churn — parsing a key nobody reads yet must change no output (SC-004)
 
 **Checkpoint**: the declaration is readable and nothing has changed.
 
