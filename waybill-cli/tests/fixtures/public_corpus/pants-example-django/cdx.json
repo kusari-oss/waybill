@@ -2,6 +2,58 @@
   "bomFormat": "CycloneDX",
   "components": [
     {
+      "bom-ref": "pkg:generic/python-default",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "lockfiles/python-default.lock"
+          }
+        ]
+      },
+      "name": "python-default",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"lockfiles/python-default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:component-kind",
+          "value": "lockfile-resolve"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:resolve-classification-source",
+          "value": "heuristic-or-default"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"lockfiles\"]"
+        }
+      ],
+      "purl": "pkg:generic/python-default",
+      "type": "library"
+    },
+    {
       "bom-ref": "pkg:pypi/ansicolors",
       "evidence": {
         "identity": [
@@ -169,6 +221,10 @@
         {
           "name": "waybill:requires-python",
           "value": ">=3.9"
+        },
+        {
+          "name": "waybill:unresolved-declared-dep",
+          "value": "pytest-asyncio"
         },
         {
           "name": "waybill:workspace-member",
@@ -406,6 +462,10 @@
         {
           "name": "waybill:requires-python",
           "value": ">=3.10"
+        },
+        {
+          "name": "waybill:unresolved-declared-dep",
+          "value": "colorama"
         },
         {
           "name": "waybill:workspace-member",
@@ -762,6 +822,10 @@
           "value": ">=3.8"
         },
         {
+          "name": "waybill:unresolved-declared-dep",
+          "value": "tomli"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"lockfiles\"]"
         }
@@ -827,6 +891,10 @@
         {
           "name": "waybill:requires-python",
           "value": ">=3.6"
+        },
+        {
+          "name": "waybill:unresolved-declared-dep",
+          "value": "[\"argon2-cffi\",\"bcrypt\"]"
         },
         {
           "name": "waybill:workspace-member",
@@ -947,6 +1015,10 @@
           "value": ">=3.7"
         },
         {
+          "name": "waybill:unresolved-declared-dep",
+          "value": "[\"coverage\",\"eventlet\",\"gevent\",\"importlib-metadata\",\"pytest-cov\",\"setproctitle\",\"tornado\"]"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"lockfiles\"]"
         }
@@ -1012,6 +1084,10 @@
         {
           "name": "waybill:requires-python",
           "value": ">=3.6"
+        },
+        {
+          "name": "waybill:unresolved-declared-dep",
+          "value": "[\"flake8\",\"ruff\"]"
         },
         {
           "name": "waybill:workspace-member",
@@ -1267,6 +1343,10 @@
           "value": ">=3.8"
         },
         {
+          "name": "waybill:unresolved-declared-dep",
+          "value": "[\"beautifulsoup4\",\"cssselect\",\"html5lib\",\"lxml-html-clean\"]"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"lockfiles\"]"
         }
@@ -1423,6 +1503,10 @@
         {
           "name": "waybill:requires-python",
           "value": ">=3.9"
+        },
+        {
+          "name": "waybill:unresolved-declared-dep",
+          "value": "[\"orjson\",\"pip\",\"psutil\",\"tomli\"]"
         },
         {
           "name": "waybill:workspace-member",
@@ -1626,6 +1710,10 @@
           "value": ">=3.9"
         },
         {
+          "name": "waybill:unresolved-declared-dep",
+          "value": "[\"coverage\",\"pre-commit\",\"pytest-benchmark\",\"tox\"]"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"lockfiles\"]"
         }
@@ -1823,6 +1911,10 @@
           "value": ">=3.8"
         },
         {
+          "name": "waybill:unresolved-declared-dep",
+          "value": "colorama"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"lockfiles\"]"
         }
@@ -1992,6 +2084,10 @@
           "value": ">=3.8"
         },
         {
+          "name": "waybill:unresolved-declared-dep",
+          "value": "[\"django-configurations\",\"sphinx\",\"sphinx-rtd-theme\"]"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"lockfiles\"]"
         }
@@ -2057,6 +2153,10 @@
         {
           "name": "waybill:requires-python",
           "value": ">=3.9"
+        },
+        {
+          "name": "waybill:unresolved-declared-dep",
+          "value": "[\"argcomplete\",\"attrs\",\"colorama\",\"exceptiongroup\",\"hypothesis\",\"mock\",\"tomli\",\"xmlschema\"]"
         },
         {
           "name": "waybill:workspace-member",
@@ -2240,6 +2340,10 @@
           "value": ">=3.9"
         },
         {
+          "name": "waybill:unresolved-declared-dep",
+          "value": "[\"chardet\",\"pysocks\"]"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"lockfiles\"]"
         }
@@ -2358,6 +2462,10 @@
           "value": ">=3.9"
         },
         {
+          "name": "waybill:unresolved-declared-dep",
+          "value": "[\"build\",\"filelock\",\"furo\",\"importlib-metadata\",\"ini2toml\",\"jaraco.develop\",\"jaraco.envs\",\"jaraco.functools\",\"jaraco.packaging\",\"jaraco.path\",\"jaraco.test\",\"jaraco.text\",\"jaraco.tidelift\",\"more-itertools\",\"pip\",\"platformdirs\",\"pygments-github-lexers\",\"pyproject-hooks\",\"pytest-checkdocs\",\"pytest-cov\",\"pytest-enabler\",\"pytest-home\",\"pytest-mypy\",\"pytest-perf\",\"pytest-ruff\",\"pytest-subprocess\",\"pytest-timeout\",\"pytest-xdist\",\"rst.linker\",\"ruff\",\"sphinx\",\"sphinx-favicon\",\"sphinx-inline-tabs\",\"sphinx-lint\",\"sphinx-notfound-page\",\"sphinx-reredirects\",\"sphinxcontrib-towncrier\",\"tomli\",\"tomli-w\",\"towncrier\",\"virtualenv\",\"wheel\"]"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"lockfiles\"]"
         }
@@ -2423,6 +2531,10 @@
         {
           "name": "waybill:requires-python",
           "value": ">=3.8"
+        },
+        {
+          "name": "waybill:unresolved-declared-dep",
+          "value": "[\"build\",\"hatch\",\"sphinx\"]"
         },
         {
           "name": "waybill:workspace-member",
@@ -2925,6 +3037,10 @@
           "value": ">=3.9"
         },
         {
+          "name": "waybill:unresolved-declared-dep",
+          "value": "[\"brotli\",\"brotlicffi\",\"h2\",\"pysocks\",\"zstandard\"]"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"lockfiles\"]"
         }
@@ -3092,32 +3208,43 @@
     {
       "dependsOn": [
         "pkg:generic/file-tier?content-sha256=2ecc548aa7a68dc6e83f75003316648417520fb3a59f85dae7e24337414db378",
+        "pkg:generic/python-default",
         "pkg:pypi/ansicolors",
-        "pkg:pypi/ansicolors@1.1.8",
         "pkg:pypi/django",
         "pkg:pypi/django-debug-toolbar",
-        "pkg:pypi/django-debug-toolbar@3.8.1",
         "pkg:pypi/django-stubs",
-        "pkg:pypi/django-stubs@4.2.7",
         "pkg:pypi/gunicorn",
-        "pkg:pypi/gunicorn@23.0.0",
         "pkg:pypi/protobuf",
-        "pkg:pypi/protobuf@6.32.1",
         "pkg:pypi/pytest",
         "pkg:pypi/pytest-django",
-        "pkg:pypi/pytest-django@4.11.1",
         "pkg:pypi/requests",
         "pkg:pypi/setuptools",
         "pkg:pypi/translate",
-        "pkg:pypi/translate@3.6.1",
-        "pkg:pypi/types-requests",
-        "pkg:pypi/types-requests@2.32.4.20250913"
+        "pkg:pypi/types-requests"
       ],
       "ref": "pants-example-django@7da716f"
     },
     {
       "dependsOn": [],
       "ref": "pkg:generic/file-tier?content-sha256=2ecc548aa7a68dc6e83f75003316648417520fb3a59f85dae7e24337414db378"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/ansicolors@1.1.8",
+        "pkg:pypi/django-debug-toolbar@3.8.1",
+        "pkg:pypi/django-stubs@4.2.7",
+        "pkg:pypi/django@3.2.25",
+        "pkg:pypi/gunicorn@23.0.0",
+        "pkg:pypi/mypy@1.18.1",
+        "pkg:pypi/protobuf@6.32.1",
+        "pkg:pypi/pytest-django@4.11.1",
+        "pkg:pypi/pytest@8.4.2",
+        "pkg:pypi/requests@2.32.5",
+        "pkg:pypi/setuptools@80.9.0",
+        "pkg:pypi/translate@3.6.1",
+        "pkg:pypi/types-requests@2.32.4.20250913"
+      ],
+      "ref": "pkg:generic/python-default"
     },
     {
       "dependsOn": [],
@@ -3433,6 +3560,14 @@
       {
         "name": "waybill:workspaces-detected",
         "value": "[\".\",\"lockfiles\"]"
+      },
+      {
+        "name": "waybill:unresolved-declared-dep-count",
+        "value": "97"
+      },
+      {
+        "name": "waybill:resolve-ownership",
+        "value": "weak-classification=1;unanchored-lockfiles=0"
       }
     ],
     "supplier": {

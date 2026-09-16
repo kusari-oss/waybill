@@ -16340,6 +16340,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-4GZUD7OLMSCKQAWL",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep\",\"value\":\"debconf-2.0\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-7KN3PVCBQQA6JARK",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-4HEDYTIHOMTPCEDR",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"analyzed\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZKP7NX5RZZAHPQVH",
@@ -20340,6 +20348,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-FRR5RIH3I2CFCQUH",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep\",\"value\":\"debconf-2.0\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-V3L2PN2RAPZQMJ5X",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-FSGRNOHJXQGZSVH4",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"var/lib/dpkg/status\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EV2ZLSXGVRZSJBYR",
@@ -20423,6 +20439,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-FWQIENNUL43OO2BX",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"var/lib/dpkg/status\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-QX5EYLKZHIOQ6QCT",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-FXU4Y4ZYLGH72AYQ",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep-count\",\"value\":\"13\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>",
       "type": "Annotation"
     },
     {
@@ -20959,6 +20983,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-H3XLMKFOBZVLN4HF",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:debian:libsasl2-2:2.1.28\\\\+dfsg1-9:*:*:*:*:*:*:*\",\"cpe:2.3:a:libsasl2-2:libsasl2-2:2.1.28\\\\+dfsg1-9:*:*:*:*:*:*:*\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-Q4IZRBNCU4G3OMBA",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-H4EJFMY3PMSHDPKS",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep\",\"value\":\"perlapi-5.40.0\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-SEREV5V34GRGYFAV",
       "type": "Annotation"
     },
     {
@@ -21655,6 +21687,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-ISQDB4HX7FRCTCGK",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"var/lib/dpkg/status\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3L5MUDDPPOOWBZGJ",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-ITILGDVI5FBCD6OU",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep\",\"value\":\"[\\\"debconf-2.0\\\",\\\"lsb-base\\\"]\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-W6O3GXC5LNTLYRE4",
       "type": "Annotation"
     },
     {
@@ -23100,6 +23140,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-M7DNOAIJGH7OJ5EL",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep\",\"value\":\"debconf-2.0\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-JANFVAOK2EPEYT6Q",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-M7MSNS6W7XSYWO5C",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"/usr/bin/egrep\",\"md5\":\"<masked-md5>\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"/usr/bin/fgrep\",\"md5\":\"<masked-md5>\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"/usr/bin/grep\",\"md5\":\"<masked-md5>\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"/usr/bin/rgrep\",\"md5\":\"<masked-md5>\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"/usr/share/doc/grep/copyright\",\"md5\":\"<masked-md5>\",\"sha256\":\"<masked-sha256>\"}]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-LZ7JX7NS7EWL7J2T",
@@ -24516,6 +24564,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-POTHDLVOJC2TSZNY",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep\",\"value\":\"debconf-2.0\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-G4RJHKO2L3PL5Q7H",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-POXVLG3UCH3EGPGX",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"/usr/lib/x86_64-linux-gnu/libz.so.1.3.1\",\"md5\":\"<masked-md5>\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"/usr/share/doc/zlib1g/copyright\",\"md5\":\"<masked-md5>\",\"sha256\":\"<masked-sha256>\"}]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-OSKTXPSG2YNWSAVK",
@@ -25127,6 +25183,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-QZ3WUN5JZZJDH2J5",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"var/lib/dpkg/info/postgresql-client-common.postinst\",\"var/lib/dpkg/info/postgresql-client-common.preinst\",\"var/lib/dpkg/info/postgresql-client-common.prerm\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GFHSQ5TSSMHD3GN4",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-QZ767YYUXIEQ5JI4",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep\",\"value\":\"[\\\"debconf-2.0\\\",\\\"locales-all\\\"]\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-SV6F63CPNQHLI3PZ",
       "type": "Annotation"
     },
     {
@@ -27068,6 +27132,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-VAPO4TOHK4MSRECC",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep\",\"value\":\"debconf-2.0\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-4UZMEMJHR3RE4BVI",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-VB4P6R4LD7PW6ZZ6",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-S5H64E6SMGRS5AIG",
@@ -27087,6 +27159,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-VBSY6LKWXDVCOKKV",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"var/lib/dpkg/status\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-42AALSRWI64SRS3Y",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-VCHKN6V7HSJU2HNU",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep\",\"value\":\"[\\\"cdebconf\\\",\\\"debconf-2.0\\\"]\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EBHFAGYNWA6SHUSV",
       "type": "Annotation"
     },
     {
@@ -27303,6 +27383,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-VT22WXESNUG44XLV",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"var/lib/dpkg/info/procps.postrm\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-4V7YLQVNJLKK5GRT",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-VT7I5OIHBAUS3MPO",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep\",\"value\":\"pinentry\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-HNDJNFYGC4ND27OD",
       "type": "Annotation"
     },
     {

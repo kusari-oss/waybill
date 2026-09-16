@@ -2027,6 +2027,10 @@
       {
         "name": "waybill:workspaces-detected",
         "value": "[\"3rdparty/jvm\"]"
+      },
+      {
+        "name": "waybill:unresolved-declared-dep-count",
+        "value": "0"
       }
     ],
     "supplier": {

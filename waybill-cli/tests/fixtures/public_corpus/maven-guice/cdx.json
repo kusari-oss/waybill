@@ -3645,6 +3645,10 @@
       {
         "name": "waybill:workspaces-detected",
         "value": "[\".\",\"bom\",\"core\",\"examples/guice-demo\",\"extensions\",\"extensions/dagger-adapter\",\"extensions/grapher\",\"extensions/jmx\",\"extensions/jndi\",\"extensions/persist\",\"extensions/servlet\",\"extensions/spring\",\"extensions/struts2\",\"extensions/testlib\"]"
+      },
+      {
+        "name": "waybill:unresolved-declared-dep-count",
+        "value": "0"
       }
     ],
     "supplier": {
