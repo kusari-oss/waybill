@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [X] No [NEEDS CLARIFICATION] markers remain
 - [X] Requirements are testable and unambiguous
 - [X] Success criteria are measurable
 - [X] Success criteria are technology-agnostic (no implementation details)
@@ -31,32 +31,34 @@
 
 ## Notes
 
-Two open `[NEEDS CLARIFICATION]` markers remain, both deliberately left open
-rather than defaulted, and both in the highest-priority class (scope /
-modelling):
+All items pass as of the 2026-09-16 clarification session. Two questions
+asked and answered, both scope/modelling, and **both answers were changed by
+evidence gathered during the session rather than reasoned from the spec**:
 
-1. **What component owns a resolve.** The three candidates differ in whether a
-   new component appears in the SBOM at all, which is consumer-visible and not
-   reversible by a later change without moving identities. There is no
-   defensible default: (a) invents a component no manifest describes, (b)
-   asserts a direct dependency the root manifest does not state, (c) is the
-   most faithful but may not be recoverable from a lockfile alone.
-2. **Whether tool lockfiles are anchored like application resolves.** Both
-   answers are defective in opposite directions — anchoring asserts a runtime
-   relationship that does not exist, excluding leaves the contents unreachable.
-   A third option (anchor, but mark build-time) exists. This is a scope
-   boundary, which the spec guidance ranks highest.
+1. **Ownership → one component per named resolve.** The spec's first draft
+   called consuming-package ownership "most faithful but maybe not
+   recoverable". The reverse is true: `waybill:pants-resolve` is already
+   emitted on 248 of 272 pypi components and already names 8 distinct
+   resolves, so per-resolve ownership is what the available data supports,
+   while consuming-package ownership would need a mapping nothing recovers.
+   The spec now records that correction rather than quietly adopting the
+   answer.
 
-This feature is unusual in that the *defect* is completely characterised and
-measured while the *fix* is genuinely undecided. The evidence is not the
-uncertain part; the modelling is.
+2. **Tool resolves → anchored and marked build-time.** Writing this surfaced
+   a factual error made earlier in the same session: `[python.resolves]` is
+   not an application-only list, it is the full registry with tool lockfiles
+   in it. The real signal is a tool section back-referencing a resolve via
+   `install_from_resolve`, and that signal is **partial** — it covers five of
+   the nine resolves, while `towncrier` and `pants-plugins` are tooling that
+   nothing declares as such.
 
-Every figure is traceable to an observation taken against `main` at
-`3ad457ae` — re-measured for this spec rather than carried over from issue
-#887, because #885 and #888 landed in between and stale evidence is how a
-spec comes to describe a product state that no longer exists. The re-measure
-also produced a figure the issue did not have (778 declared names resolving
-to nothing), which was investigated and found to be unselected extras —
-explicitly placed Out of Scope rather than left as an unexplained number.
+   Rather than hide the partiality behind name-matching, FR-003a forbids
+   inferring from names or paths, FR-003b defaults undeclared resolves to
+   runtime (over-report loudly rather than hide quietly), and FR-003c requires
+   the runtime-by-default count be reported so the over-reporting is visible.
 
-Resolve both clarifications via `/speckit.clarify` before `/speckit.plan`.
+This feature entered clarification with the defect fully measured and the fix
+undecided. Both decisions are now grounded in observations recorded in the
+spec, and each names the assumption it overturned.
+
+Ready for `/speckit.plan`.

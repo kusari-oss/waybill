@@ -178,7 +178,13 @@ confirm each package's originating resolve is determinable from the document.
   model look right.
 - A resolve belonging to tooling rather than to the shipped application, where
   anchoring it to the application would assert a runtime relationship that
-  does not exist.
+  does not exist. Handled by FR-003a: classified build-time when a tool
+  declares it.
+- **A tooling resolve that nothing declares as one.** `towncrier` and
+  `pants-plugins` on the measured target: registered like any other resolve,
+  living under `tools/`, with no `install_from_resolve` back-reference. These
+  fall to the FR-003b runtime default and are over-reported rather than
+  hidden, and FR-003c makes that visible.
 
 ## Requirements *(mandatory)*
 
@@ -186,12 +192,31 @@ confirm each package's originating resolve is determinable from the document.
 
 - **FR-001**: The contents of a lockfile resolve MUST be reachable from the
   document root by following dependency edges.
-- **FR-002**: The component that owns a resolve MUST be derived from the
-  project's own configuration where that configuration names its resolves;
-  ownership MUST NOT be guessed when the configuration is silent.
+- **FR-002**: Each named resolve MUST be represented by its own component,
+  derived from the name the project's configuration gives it. Ownership MUST
+  NOT be guessed when the configuration names no resolve.
+- **FR-002a**: A resolve component MUST be identifiable as representing a
+  resolve rather than a package. It stands for a pinned set the project
+  declared, not for something installable, and a consumer must not mistake it
+  for a dependency that can be fetched or scanned for vulnerabilities.
+- **FR-002b**: A package belonging to more than one resolve MUST be reachable
+  through each of them, satisfying FR-006 structurally rather than by an
+  attribution rule.
 - **FR-003**: Where ownership cannot be determined, the resolve MUST remain
   unanchored rather than being attached to an arbitrary component, and the
   situation MUST be reported.
+- **FR-003a**: A resolve MUST be classified build-time when the project's own
+  configuration declares a tool installing from it. Classification MUST NOT be
+  inferred from the resolve's name or from the path of its lockfile.
+- **FR-003b**: A resolve with no such declaration MUST be treated as
+  runtime. This direction is deliberate: mis-marking a runtime resolve as
+  build-time would hide real packages from a consumer filtering for runtime
+  risk, whereas mis-marking a build resolve as runtime over-reports. Only the
+  first failure is silent, so the default takes the loud one.
+- **FR-003c**: Because FR-003a is knowingly partial — two resolves on the
+  measured target are tooling that nothing declares as such — the count of
+  resolves classified runtime **by default rather than by declaration** MUST
+  be reported, so the over-reporting is visible instead of invisible.
 - **FR-004**: An anchoring relationship introduced by waybill MUST be
   distinguishable, by a consumer reading the document, from a dependency a
   manifest declared.
@@ -214,8 +239,10 @@ confirm each package's originating resolve is determinable from the document.
   graph between them, declared in the project's build configuration and
   materialised as a lockfile. Already read correctly; what is missing is its
   relationship to the project.
-- **Resolve owner**: the component a resolve's contents belong to. The thing
-  this feature has to identify and which does not exist in the model today.
+- **Resolve component**: a component standing for one named resolve, sitting
+  between the document root and that resolve's top-level requirements. New to
+  the model. It represents a pinned set the project named, not an installable
+  package — which is why FR-002a requires it be distinguishable from one.
 - **Top-level requirement**: a package in a resolve that nothing else in that
   resolve depends on — what the resolve was asked to provide. 99 of these on
   the measured target, all currently unreachable.
@@ -235,8 +262,18 @@ confirm each package's originating resolve is determinable from the document.
   committed corpus.
 - **SC-005**: On a repository with more than one resolve, each package's
   originating resolve is determinable from the document alone.
-- **SC-006**: No component count increases as a result of this feature on any
-  corpus target — connecting a graph must not create packages.
+- **SC-005a**: On the measured target, the five resolves a tool declares
+  (`black`, `pytest`, `coverage-py`, `mypy`, `setuptools`) are classified
+  build-time, and the count classified runtime-by-default is reported and
+  non-zero — it is 4 there, covering the two genuine applications plus the two
+  undeclared tooling resolves.
+- **SC-006**: No **package** component is created by this feature on any
+  corpus target. Resolve components are added by design — 8 on the measured
+  target — and each MUST correspond to a resolve the project's own
+  configuration names. Connecting a graph must not invent packages.
+- **SC-006a**: Each package's originating resolve remains determinable after
+  the change, and a package belonging to several resolves is reachable via
+  each.
 - **SC-007**: Every claim above is demonstrated to **fail** against the
   pre-change build before it is accepted as passing.
 
@@ -279,22 +316,39 @@ confirm each package's originating resolve is determinable from the document.
 ### Session 2026-09-16
 
 - Q: What component owns a resolve?
-  → A: [NEEDS CLARIFICATION: the candidates differ in what they assert. (a) a
-  synthetic component per named resolve, which introduces a component that no
-  manifest describes but states ownership exactly and handles several resolves
-  naturally; (b) the project/root component, which invents nothing but asserts
-  that the root directly requires every top-level requirement, which its
-  manifest does not say; (c) the packages that consume the resolve, which is
-  the most faithful but needs a per-package→resolve mapping that may not be
-  recoverable from the lockfile alone. These differ in whether a new component
-  appears in the SBOM, which is consumer-visible.]
+  → A: **One component per named resolve.** The document root points at each
+  resolve, and the resolve points at its own top-level requirements.
+  Attribution across several resolves falls out of the structure rather than
+  needing separate machinery.
+
+  Decided on evidence gathered during clarification: `waybill:pants-resolve`
+  is already emitted on 248 of 272 pypi components and already names **8
+  distinct resolves** on the measured target. That grouping is exactly what a
+  per-resolve component expresses.
+
+  It also corrects this spec's own first draft, which called the
+  consuming-packages model "most faithful but maybe not recoverable". The
+  reverse holds: the existing tag names the **resolve** a package belongs to,
+  not the package that consumes it, so per-resolve ownership is the option the
+  available data supports and consuming-package ownership is the one that
+  would need a mapping nothing currently recovers.
 
 - Q: Do tool lockfiles get anchored the same way as application resolves?
-  → A: [NEEDS CLARIFICATION: the measured target has seven `tools/*.lock`
-  files (pytest, mypy, black, coverage-py, setuptools, pants-plugins) beside
-  two application resolves. Anchoring them identically would make a linter's
-  pinned dependencies reachable from the application root, asserting a
-  runtime relationship that does not exist; excluding them leaves their
-  contents unreachable, which is the defect this feature exists to fix,
-  merely scoped smaller. A third option is to anchor them but mark the
-  relationship as build-time rather than runtime.]
+  → A: **Yes — every resolve is anchored, and tool resolves are marked
+  build-time.** Leaving them unreachable would be the same defect at smaller
+  scale, and the runtime/build distinction is carried explicitly so a consumer
+  filtering for runtime risk excludes them correctly.
+
+  The classification rule must come from what the project declares, not from
+  matching names. Evidence gathered during clarification, which corrected an
+  assumption made earlier in this same session:
+
+  - `[python.resolves]` is **not** an application-only list. It is the full
+    resolve registry, tool lockfiles included — all nine on the measured
+    target are declared there.
+  - The declarative signal is instead a tool's own configuration section
+    back-referencing a resolve (`[black] install_from_resolve = "black"`, and
+    likewise `pytest`, `coverage-py`, `mypy`, `setuptools`).
+  - **That signal is partial.** It covers five resolves. `towncrier` and
+    `pants-plugins` are tooling by any reading and live under `tools/`, but
+    nothing declares them as such — only the path convention suggests it.
