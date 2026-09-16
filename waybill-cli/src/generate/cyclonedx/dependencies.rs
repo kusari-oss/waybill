@@ -74,9 +74,36 @@ pub fn build_dependencies(
     // component-side graph). For a flat scan with no relationships,
     // this means target_ref → every component. For a transitive scan,
     // it's just the top-level packages.
+    //
+    // Milestone 894 (#894): "has edges" means has DECLARED dependency edges.
+    // A milestone-868 resolve anchor (root -> `pkg:generic/<resolve-name>`)
+    // is synthetic ownership, not a dependency the project declared, so it
+    // must not count here.
+    //
+    // It did count, and the consequence was that one honest root edge
+    // switched off a fallback that had been supplying twenty-one. On
+    // `pants-example-django` reachability fell from 46 of 46 to 34 of 47:
+    // the resolve anchors its declared lockfile requirements, and the
+    // design-tier components sourced from requirements files — which the
+    // fallback had been covering — were stranded. Invisible on milestone
+    // 868's own measured target, whose root already had a real edge, so the
+    // fallback was never doing any work there.
+    let resolve_component_refs: BTreeSet<&str> = components
+        .iter()
+        .filter(|c| {
+            c.extra_annotations
+                .get("waybill:component-kind")
+                .and_then(|v| v.as_str())
+                == Some("lockfile-resolve")
+        })
+        .map(|c| c.purl.as_str())
+        .collect();
     let target_has_no_edges = dep_map
         .get(target_ref)
-        .map(|set| set.is_empty())
+        .map(|set| {
+            set.iter()
+                .all(|t| resolve_component_refs.contains(t.as_str()))
+        })
         .unwrap_or(true);
     if target_has_no_edges && !components.is_empty() {
         let mut depended_on: BTreeSet<String> = BTreeSet::new();
@@ -97,7 +124,13 @@ pub fn build_dependencies(
             .filter(|r| !depended_on.contains(r) && r != target_ref)
             .collect();
         if !roots.is_empty() {
-            dep_map.insert(target_ref.to_string(), roots);
+            // Union rather than replace: the resolve anchors deliberately did
+            // not count toward the gate above, so they must survive it.
+            let existing = dep_map.remove(target_ref).unwrap_or_default();
+            dep_map.insert(
+                target_ref.to_string(),
+                roots.into_iter().chain(existing).collect(),
+            );
         }
     }
 

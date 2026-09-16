@@ -763,3 +763,142 @@ fn t030_undeclared_resolves_are_counted_as_weakly_classified() {
         (expected.clone(), expected.clone(), expected),
     );
 }
+
+// -------------------------------------------------------------------
+// Issue #894 — regressions found by the #890 golden refresh.
+// -------------------------------------------------------------------
+
+#[test]
+fn m894_anchoring_does_not_strand_components_the_fallback_was_covering() {
+    // Defect 2. CycloneDX's primary-dependency fallback fires only when the
+    // root has no outgoing edges. Milestone 868 gave the root one genuine
+    // edge (root -> the resolve component), which switched the fallback off
+    // — and on a project whose other components are NOT lockfile entries,
+    // everything the fallback had been covering was stranded.
+    //
+    // Observed on `pants-example-django`: reachability fell from 46 of 46 to
+    // 34 of 47. A resolve anchor is synthetic ownership, not a dependency
+    // the project declared, so it must not count toward "the root has edges".
+    let dir = tempfile::tempdir().unwrap();
+    write_repo(
+        dir.path(),
+        &[
+            (
+                "pants.toml",
+                br#"
+[python.resolves]
+app-runtime = "locks/app.lock"
+"#,
+            ),
+            (
+                "locks/app.lock",
+                &synth_lockfile(
+                    &[("waybill-fixture-locked", "1.0.0", &[])],
+                    &["waybill-fixture-locked"],
+                ),
+            ),
+            // Declared in a requirements file, absent from the lockfile —
+            // the design-tier shape the fallback used to carry. No
+            // `pyproject.toml`, so the root has no dependency edge of its
+            // own: exactly the condition that made the fallback load-bearing.
+            (
+                "requirements.txt",
+                b"waybill-fixture-requirements-only\n",
+            ),
+        ],
+    );
+    let doc = run_scan(dir.path());
+    let refs = ref_by_purl(&doc);
+    let reached = reachable_from_root(&doc);
+
+    let stranded: Vec<&String> = refs
+        .iter()
+        .filter(|(_, r)| !reached.contains(*r))
+        .map(|(p, _)| p)
+        .collect();
+    assert!(
+        stranded.is_empty(),
+        "anchoring must not strand components the fallback was covering; \
+         unreachable: {stranded:#?}",
+    );
+
+    // And the anchor itself is still there — the fix restores the fallback,
+    // it does not remove the feature.
+    assert_eq!(
+        cdx_marked_resolves(&doc),
+        vec!["pkg:generic/app-runtime".to_string()],
+    );
+}
+
+#[test]
+fn m894_a_tool_installing_from_the_default_resolve_stays_runtime() {
+    // Defect 1. `install_from_resolve` says a tool is installed FROM a
+    // resolve, which is evidence the resolve CONTAINS the tool — not that it
+    // EXISTS FOR it. When the named resolve is the application's own
+    // default, treating the back-reference as a build-time declaration marks
+    // every runtime dependency `scope: "excluded"` and hides them from a
+    // consumer filtering for runtime risk. Contract A-5 forbids exactly this
+    // direction of error.
+    //
+    // Observed on `pants-example-django`: 34 of 47 components excluded.
+    let dir = tempfile::tempdir().unwrap();
+    write_repo(
+        dir.path(),
+        &[
+            (
+                "pants.toml",
+                br#"
+[python]
+resolves = { python-default = "locks/python-default.lock" }
+
+[pytest]
+install_from_resolve = "python-default"
+[mypy]
+install_from_resolve = "python-default"
+"#,
+            ),
+            (
+                "locks/python-default.lock",
+                &synth_lockfile(
+                    &[("waybill-fixture-app-dep", "1.0.0", &[])],
+                    &["waybill-fixture-app-dep"],
+                ),
+            ),
+        ],
+    );
+    let doc = run_scan(dir.path());
+
+    let excluded: Vec<String> = doc["components"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter(|c| c["scope"].as_str() == Some("excluded"))
+        .filter_map(|c| c["purl"].as_str().map(String::from))
+        .collect();
+    assert!(
+        excluded.is_empty(),
+        "a tool installing FROM the default resolve must not push the \
+         application's dependencies out of runtime scope; excluded: {excluded:#?}",
+    );
+
+    // The resolve is classified, and classified by the weaker evidence —
+    // which is the honest answer here, and is counted as such.
+    let resolve = doc["components"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .find(|c| c["purl"].as_str() == Some("pkg:generic/python-default"))
+        .expect("resolve component");
+    let source = resolve["properties"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .find(|p| p["name"].as_str() == Some("waybill:resolve-classification-source"))
+        .and_then(|p| p["value"].as_str());
+    assert_eq!(
+        source,
+        Some("heuristic-or-default"),
+        "the back-reference is not a declaration about this resolve, so the \
+         classification rests on the weaker evidence and must say so",
+    );
+}

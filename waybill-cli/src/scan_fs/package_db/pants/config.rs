@@ -53,7 +53,25 @@ impl PantsConfig {
     /// visibly (FR-003a-i / FR-003c) rather than inferring from the
     /// resolve's name or its lockfile path.
     #[allow(dead_code)] // Consumed by the T028 classifier precedence change.
+    /// Resolves a tool section back-references via `install_from_resolve`,
+    /// EXCLUDING the project's default resolve.
+    ///
+    /// The exclusion is the whole point (#894). `install_from_resolve` says a
+    /// tool is installed *from* a resolve — evidence the resolve CONTAINS the
+    /// tool, not that it EXISTS FOR it. When the named resolve is the
+    /// application's own default, the tool is piggybacking on it, which is a
+    /// normal Pants pattern and says nothing about the resolve's lifecycle.
+    /// Treating it as build-time hides every runtime dependency of the
+    /// application behind CycloneDX `scope: "excluded"`.
     pub(crate) fn tool_declared_resolves(&self) -> std::collections::BTreeSet<String> {
+        let default_resolve = self.python.effective_default_resolve().to_string();
+        self.tool_declared_resolves_unfiltered()
+            .into_iter()
+            .filter(|r| *r != default_resolve)
+            .collect()
+    }
+
+    fn tool_declared_resolves_unfiltered(&self) -> std::collections::BTreeSet<String> {
         self.other_sections
             .values()
             .filter_map(|v| v.get("install_from_resolve"))
@@ -88,6 +106,35 @@ pub(crate) struct PythonSection {
     #[serde(default)]
     #[allow(dead_code)] // Read by T012 map-walk in `discover_lockfiles`.
     pub(crate) resolves: BTreeMap<String, toml::Value>,
+
+    /// Milestone 894 (#894): Pants' `[python].default_resolve` — the resolve
+    /// the project's own first-party code is built against.
+    ///
+    /// Load-bearing for lifecycle classification, not for discovery. A tool
+    /// section may say `install_from_resolve = "<the default resolve>"`,
+    /// which means the tool is installed FROM the application's resolve
+    /// rather than that the resolve exists to provide the tool. Without this
+    /// field, milestone 868 read that back-reference as evidence the resolve
+    /// is build-time and marked an entire application's dependency set
+    /// `scope: "excluded"` — the failure contract A-5 forbids.
+    #[serde(default)]
+    pub(crate) default_resolve: Option<String>,
+}
+
+/// Pants' own default when `[python].default_resolve` is absent.
+/// Source: pantsbuild `python_setup.py`, `default_resolve` option.
+pub(crate) const PANTS_DEFAULT_RESOLVE: &str = "python-default";
+
+impl PythonSection {
+    /// The resolve first-party code is built against. A back-reference to
+    /// THIS resolve is never evidence that it is build-time.
+    pub(crate) fn effective_default_resolve(&self) -> &str {
+        self.default_resolve
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+            .unwrap_or(PANTS_DEFAULT_RESOLVE)
+    }
 }
 
 /// Parse `pants.toml` bytes. Returns `None` on any parse error (per
@@ -249,5 +296,99 @@ path = "3rdparty/python/table.lock"
             .expect("table entry present");
         assert!(table_entry.as_str().is_none());
         assert!(table_entry.is_table());
+    }
+}
+
+// -------------------------------------------------------------------
+// Issue #894 — a tool installing FROM the default resolve is not
+// evidence that the default resolve is build-time.
+// -------------------------------------------------------------------
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod m894_default_resolve_tests {
+    use super::*;
+
+    #[test]
+    fn default_resolve_falls_back_to_pants_own_default() {
+        let cfg = parse(b"[python]\n").unwrap();
+        assert_eq!(cfg.python.effective_default_resolve(), "python-default");
+        let cfg = parse(b"[python]\ndefault_resolve = \"app\"\n").unwrap();
+        assert_eq!(cfg.python.effective_default_resolve(), "app");
+        // Blank is not a declaration.
+        let cfg = parse(b"[python]\ndefault_resolve = \"  \"\n").unwrap();
+        assert_eq!(cfg.python.effective_default_resolve(), "python-default");
+    }
+
+    #[test]
+    fn tool_installing_from_the_default_resolve_does_not_declare_it() {
+        // The shape that broke `pants-example-django`: pytest and mypy are
+        // installed FROM the application's own resolve. That says the
+        // resolve CONTAINS them, not that it EXISTS FOR them.
+        let cfg = parse(
+            br#"
+[python]
+resolves = { python-default = "lockfiles/python-default.lock" }
+
+[pytest]
+install_from_resolve = "python-default"
+[mypy]
+install_from_resolve = "python-default"
+"#,
+        )
+        .unwrap();
+        assert!(
+            cfg.tool_declared_resolves().is_empty(),
+            "the default resolve must never be reported as tool-declared; \
+             treating it so marks an entire application build-time",
+        );
+        // The raw back-references are still readable — the filter is a
+        // policy about lifecycle, not a claim the sections do not exist.
+        assert_eq!(cfg.tool_declared_resolves_unfiltered().len(), 1);
+    }
+
+    #[test]
+    fn tool_specific_resolves_are_still_declared() {
+        // The case milestone 868 was built for must keep working: resolves
+        // that exist to provide a tool, and are NOT the default.
+        let cfg = parse(
+            br#"
+[python]
+default_resolve = "python-default"
+resolves = { python-default = "a.lock", mypy = "b.lock", setuptools = "c.lock" }
+
+[mypy]
+install_from_resolve = "mypy"
+[setuptools]
+install_from_resolve = "setuptools"
+[pytest]
+install_from_resolve = "python-default"
+"#,
+        )
+        .unwrap();
+        let declared = cfg.tool_declared_resolves();
+        assert_eq!(
+            declared.iter().map(String::as_str).collect::<Vec<_>>(),
+            vec!["mypy", "setuptools"],
+            "tool-specific resolves stay declared; only the default is exempt",
+        );
+    }
+
+    #[test]
+    fn a_renamed_default_resolve_is_still_exempt() {
+        // The exemption follows `default_resolve`, not the literal string
+        // "python-default" — a project that renames it must not regress.
+        let cfg = parse(
+            br#"
+[python]
+default_resolve = "app-runtime"
+resolves = { app-runtime = "a.lock" }
+
+[pytest]
+install_from_resolve = "app-runtime"
+"#,
+        )
+        .unwrap();
+        assert!(cfg.tool_declared_resolves().is_empty());
     }
 }
