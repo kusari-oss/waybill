@@ -86,14 +86,14 @@ the anchoring without reference to waybill's source.
 
 ### Tests for User Story 2
 
-- [ ] T019 [P] [US2] Add an integration test in `waybill-cli/tests/` asserting a resolve component is identifiable as a resolve rather than a package (FR-002a, contract A-3) — a consumer must not try to fetch or vulnerability-scan it. Additionally assert the root → resolve edge is distinguishable from a declared dependency **via its target's marker**, which is how FR-004 is satisfied without a per-edge annotation
-- [ ] T020 [US2] Teeth-check T019 and record the observed failure
+- [X] T019 [P] [US2] Add an integration test in `waybill-cli/tests/` asserting a resolve component is identifiable as a resolve rather than a package (FR-002a, contract A-3) — a consumer must not try to fetch or vulnerability-scan it. Additionally assert the root → resolve edge is distinguishable from a declared dependency **via its target's marker**, which is how FR-004 is satisfied without a per-edge annotation
+- [X] T020 [US2] Teeth-check T019 and record the observed failure
 
 ### Implementation for User Story 2
 
-- [ ] T021 [US2] Emit the resolve-nature marker on resolve components across all three formats under `waybill-cli/src/generate/`
-- [ ] T022 [US2] Add the catalogue row to `docs/reference/sbom-format-mapping.md` **and** its matching entry in `waybill-cli/src/parity/extractors/mod.rs::EXTRACTORS` in the same commit — a row without an extractor fails `every_catalog_row_has_an_extractor` and `holistic_parity`. Record the Principle V justification naming the native field that was missing (research R4)
-- [ ] T023 [US2] Run `./scripts/pre-pr.sh`
+- [X] T021 [US2] Emit the resolve-nature marker on resolve components across all three formats under `waybill-cli/src/generate/`
+- [X] T022 [US2] Add the catalogue row to `docs/reference/sbom-format-mapping.md` **and** its matching entry in `waybill-cli/src/parity/extractors/mod.rs::EXTRACTORS` in the same commit — a row without an extractor fails `every_catalog_row_has_an_extractor` and `holistic_parity`. Record the Principle V justification naming the native field that was missing (research R4)
+- [X] T023 [US2] Run `./scripts/pre-pr.sh`
 
 **Checkpoint**: the anchoring is self-describing in the document.
 

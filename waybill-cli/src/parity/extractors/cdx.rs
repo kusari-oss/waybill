@@ -944,6 +944,7 @@ cdx_anno!(c156_cdx, "waybill:file-inventory-source-shapes-active",    document);
 cdx_anno!(c157_cdx, "waybill:python-lockfile-format",                 component);
 cdx_anno!(c158_cdx, "waybill:enrichment-degraded",                  document);
 cdx_anno!(c159_cdx, "waybill:unresolved-declared-dep-count",         document);
+cdx_anno!(c160_cdx, "waybill:component-kind",                        component);
 
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.

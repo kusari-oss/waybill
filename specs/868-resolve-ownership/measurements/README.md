@@ -124,6 +124,33 @@ it measures the fallback instead of the feature.
 | `t012_anchoring_adds_resolve_components_and_invents_no_packages` | partly | the "two resolve components exist" half fails on baseline; the "packages unchanged" and "undeclared emits none" halves are A-6/A-7 regression guards and pass before the change |
 | `t017_a_package_in_two_resolves_is_reachable_via_each` | yes | neither resolve component exists to start a walk from |
 
+## T020 — US2 teeth-check
+
+Both US2 tests fail against `waybill-baseline` for the same reason and it is
+a blunt one: the pre-change binary emits no `pkg:generic/*` resolve component
+at all, in any format, so there is nothing for the marker assertions to find.
+
+| Test | Fails on baseline? | Why |
+|---|---|---|
+| `t019_a_resolve_is_identifiable_as_a_resolve_in_every_format` | yes | CDX assertion expects two marked components, finds zero; the SPDX 2.3 and SPDX 3 envelope counts are likewise 0 against an expected 2 |
+| `t019b_the_root_to_resolve_edge_is_distinguishable_by_its_target` | yes | expects 2 anchor edges among the root's out-edges, finds 0 |
+
+Worth naming what this teeth-check does *not* prove. It confirms the tests
+notice the feature's absence; it does not confirm they would notice the
+marker being emitted on the wrong components. That second property is
+carried by the in-test assertion that no `pkg:pypi/*` component may hold the
+marker, which fails on a hypothetical over-broad implementation rather than
+on the baseline.
+
+### T021 was verification, not implementation
+
+`waybill:component-kind` rides the standard `PackageDbEntry.extra_annotations`
+channel, which every emitter already fans out. Confirmed on the fixture
+before writing any emitter code — CDX `properties[]`, SPDX 2.3
+`annotations[].comment`, and SPDX 3 `Annotation.statement` all carried
+`lockfile-resolve` unmodified. Same finding as T032 anticipated for C143.
+No emitter change was needed or made.
+
 ## Deviation from tasks.md T013
 
 tasks.md specifies computing "top-level requirements — packages nothing else

@@ -92,6 +92,41 @@ fn run_scan(root: &Path) -> Value {
     serde_json::from_slice(&std::fs::read(&out_path).unwrap()).unwrap()
 }
 
+/// Run a scan emitting all three formats, returning (cdx, spdx23, spdx3).
+/// US2 asserts the resolve marker survives every emitter, so the assertion
+/// has to see every emitter.
+fn run_scan_all_formats(root: &Path) -> (Value, Value, Value) {
+    let out = tempfile::tempdir().unwrap();
+    let cdx = out.path().join("o.cdx.json");
+    let s23 = out.path().join("o.spdx.json");
+    let s3 = out.path().join("o.spdx3.json");
+    let result = Command::new(binary_path())
+        .arg("--offline")
+        .arg("sbom")
+        .arg("scan")
+        .arg("--path")
+        .arg(root)
+        .arg("--format")
+        .arg("cyclonedx-json,spdx-2.3-json,spdx-3-json")
+        .arg("--output")
+        .arg(format!("cyclonedx-json={}", cdx.display()))
+        .arg("--output")
+        .arg(format!("spdx-2.3-json={}", s23.display()))
+        .arg("--output")
+        .arg(format!("spdx-3-json={}", s3.display()))
+        .arg("--no-deep-hash")
+        .output()
+        .unwrap();
+    assert!(
+        result.status.success(),
+        "scan failed: {}",
+        String::from_utf8_lossy(&result.stderr),
+    );
+    let read =
+        |p: &std::path::PathBuf| -> Value { serde_json::from_slice(&std::fs::read(p).unwrap()).unwrap() };
+    (read(&cdx), read(&s23), read(&s3))
+}
+
 /// Every `bom-ref` reachable from the document root by following
 /// `dependencies[].dependsOn`. This is the measurement contract A-8
 /// requires: the graph as emitted, walked here, not a verdict the document
@@ -424,5 +459,151 @@ dependencies = ["waybill-fixture-direct"]
             .iter()
             .any(|p| p.starts_with("pkg:generic/")),
         "a project declaring no resolve must emit no resolve component",
+    );
+}
+
+// -------------------------------------------------------------------
+// User Story 2 — the anchor says what it is.
+// -------------------------------------------------------------------
+
+/// Purls of components carrying the resolve-nature marker, per format.
+fn cdx_marked_resolves(doc: &Value) -> Vec<String> {
+    let mut v: Vec<String> = doc["components"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter(|c| {
+            c["properties"].as_array().into_iter().flatten().any(|p| {
+                p["name"].as_str() == Some("waybill:component-kind")
+                    && p["value"].as_str() == Some("lockfile-resolve")
+            })
+        })
+        .filter_map(|c| c["purl"].as_str().map(String::from))
+        .collect();
+    v.sort();
+    v
+}
+
+fn envelope_hits(text_iter: impl Iterator<Item = String>) -> usize {
+    text_iter
+        .filter(|c| c.contains("waybill:component-kind") && c.contains("lockfile-resolve"))
+        .count()
+}
+
+#[test]
+fn t019_a_resolve_is_identifiable_as_a_resolve_in_every_format() {
+    // FR-002a / contract A-3. A resolve has no upstream, nothing to fetch
+    // and no vulnerability surface. A consumer that cannot tell it from a
+    // package will try to resolve it against an index and fail.
+    //
+    // `pkg:generic/` alone does not carry that — real, fetchable things use
+    // the same type — so the nature is asserted from the explicit marker,
+    // in all three formats. A signal that survives only CycloneDX is not a
+    // signal a consumer can rely on.
+    let dir = tempfile::tempdir().unwrap();
+    two_resolve_repo(dir.path());
+    let (cdx, spdx23, spdx3) = run_scan_all_formats(dir.path());
+
+    assert_eq!(
+        cdx_marked_resolves(&cdx),
+        vec![
+            "pkg:generic/app-runtime".to_string(),
+            "pkg:generic/lint-tools".to_string()
+        ],
+        "CDX: exactly the resolve components carry the marker",
+    );
+
+    // No PACKAGE may carry it — the marker would mean nothing if one did.
+    let marked = cdx_marked_resolves(&cdx);
+    for c in cdx["components"].as_array().into_iter().flatten() {
+        let purl = c["purl"].as_str().unwrap_or_default();
+        if purl.starts_with("pkg:pypi/") {
+            assert!(
+                !marked.iter().any(|m| m == purl),
+                "{purl} is a package and must not be marked a resolve",
+            );
+        }
+    }
+
+    // SPDX 2.3 — per-Package `annotations[].comment` envelope.
+    let s23 = envelope_hits(
+        spdx23["packages"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .flat_map(|p| p["annotations"].as_array().into_iter().flatten())
+            .filter_map(|a| a["comment"].as_str().map(String::from)),
+    );
+    assert_eq!(s23, 2, "SPDX 2.3 must carry the marker on both resolves");
+
+    // SPDX 3 — `Annotation.statement` envelope.
+    let s3 = envelope_hits(
+        spdx3["@graph"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter_map(|e| e["statement"].as_str().map(String::from)),
+    );
+    assert!(
+        s3 >= 2,
+        "SPDX 3 must carry the marker on both resolves; got {s3}",
+    );
+}
+
+#[test]
+fn t019b_the_root_to_resolve_edge_is_distinguishable_by_its_target() {
+    // FR-004. The anchor edge is an ordinary dependency edge on purpose —
+    // consumers traverse it without special handling. What makes it
+    // distinguishable is its TARGET being marked a resolve, which is why
+    // there is no per-edge annotation to look for.
+    //
+    // Asserted as a property of the pair so it fails if either half
+    // regresses: the root's out-edges split into exactly the anchors and a
+    // non-empty remainder, and the split is computable from the marker
+    // alone.
+    let dir = tempfile::tempdir().unwrap();
+    two_resolve_repo(dir.path());
+    let doc = run_scan(dir.path());
+
+    let marked: HashSet<String> = doc["components"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter(|c| {
+            c["properties"].as_array().into_iter().flatten().any(|p| {
+                p["name"].as_str() == Some("waybill:component-kind")
+                    && p["value"].as_str() == Some("lockfile-resolve")
+            })
+        })
+        .filter_map(|c| c["bom-ref"].as_str().map(String::from))
+        .collect();
+
+    let root = doc["metadata"]["component"]["bom-ref"].as_str().unwrap();
+    let root_targets: Vec<String> = doc["dependencies"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter(|d| d["ref"].as_str() == Some(root))
+        .flat_map(|d| {
+            d["dependsOn"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter_map(|t| t.as_str().map(String::from))
+                .collect::<Vec<_>>()
+        })
+        .collect();
+
+    let (anchors, plain): (Vec<&String>, Vec<&String>) =
+        root_targets.iter().partition(|t| marked.contains(*t));
+    assert_eq!(
+        anchors.len(),
+        2,
+        "expected the two anchor edges among the root's out-edges; got {root_targets:#?}",
+    );
+    assert!(
+        !plain.is_empty(),
+        "the fixture must also carry a NON-anchor root edge, or this test \
+         cannot show the two are distinguishable",
     );
 }
