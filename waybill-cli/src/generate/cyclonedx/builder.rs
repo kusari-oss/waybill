@@ -691,12 +691,15 @@ impl CycloneDxBuilder {
         // in m194 US4 so SPDX 2.3 + SPDX 3 emitters share the same
         // pre-rewrite and reach classifier `complete` on operator-
         // override scans (SC-005).
-        let m192_prerewritten_relationships: Vec<Relationship> =
-            crate::generate::graph_completeness::anchor_retained_mainmod_edges(
+        let m192_prerewritten_relationships: Vec<Relationship> = crate::generate::graph_completeness::anchor_resolve_components(
+            &crate::generate::graph_completeness::anchor_retained_mainmod_edges(
                 relationships,
                 &retained_main_module_purls,
                 &target_ref,
-            );
+            ),
+            effective_components,
+            &target_ref,
+        );
         let metadata_relationships_augmented: Vec<Relationship> = m192_prerewritten_relationships
             .iter()
             .cloned()
@@ -840,16 +843,23 @@ impl CycloneDxBuilder {
         // `target_ref`; with the modules retained that would flatten the
         // workspace layer. Same helper the graph-completeness pre-pass
         // uses, so classification and emission see one topology.
+        // Milestone 868 (#887): computed unconditionally now. The m860
+        // guard keyed on `retained_main_module_purls` being non-empty, but a
+        // project can declare resolves without having a retained main module
+        // — on the measured target the resolve components would then never
+        // be anchored, which is the defect this feature exists to fix. Both
+        // helpers are no-ops when their respective inputs are absent, so the
+        // unconditional form is equivalent for every pre-868 scan.
         let filtered_relationships_owned: Option<Vec<Relationship>> =
-            if !retained_main_module_purls.is_empty() {
-                Some(crate::generate::graph_completeness::anchor_retained_mainmod_edges(
+            Some(crate::generate::graph_completeness::anchor_resolve_components(
+                &crate::generate::graph_completeness::anchor_retained_mainmod_edges(
                     relationships,
                     &retained_main_module_purls,
                     &target_ref,
-                ))
-            } else {
-                None
-            };
+                ),
+                effective_components,
+                &target_ref,
+            ));
         let effective_relationships_base: &[Relationship] = filtered_relationships_owned
             .as_deref()
             .unwrap_or(relationships);

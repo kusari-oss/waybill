@@ -41,6 +41,28 @@ pub(crate) struct PexLockfile {
     /// locks can be > 1. Every resolve's `locked_requirements` are
     /// unioned into the emitted component list.
     pub(crate) locked_resolves: Vec<LockedResolve>,
+    /// Milestone 868 (#887): the resolve's DECLARED top-level
+    /// requirements, as PEP 508 strings (`"Jinja2~=3.1.6"`).
+    ///
+    /// This is what the resolve was asked to provide, stated by the
+    /// lockfile rather than derived from graph shape. It is deliberately
+    /// preferred over "packages nothing else in the resolve depends on".
+    ///
+    /// Measured across the nine resolves on the target (see
+    /// `specs/868-resolve-ownership/measurements/`): 149 declared against
+    /// 113 derived, and the derived figure falls to 80 depending only on
+    /// whether `extra == "..."` markers are treated as real edges. A
+    /// requested package can also be a transitive dependency of another
+    /// requested package, which makes it a non-root while still being
+    /// something the resolve was explicitly asked for.
+    ///
+    /// `tools/setuptools.lock` is the sharp case: `setuptools` and `wheel`
+    /// each appear in the other's `requires_dists` behind extras markers,
+    /// so deriving naively yields ZERO roots and the whole resolve stays
+    /// unreachable. Reading the declaration needs no marker-evaluation
+    /// policy at all, which is what contract A-2 asks for.
+    #[serde(default)]
+    pub(crate) requirements: Vec<String>,
 }
 
 /// One resolve block inside `locked_resolves`. Ignored fields:
@@ -283,6 +305,110 @@ fn extract_pep508_project_name(req: &str) -> String {
 /// - PURL construction failure
 ///
 /// Field mapping matches data-model.md §"PackageDbEntry field mapping".
+/// Milestone 868 (#887) — build the component that OWNS a resolve.
+///
+/// A resolve's dependency graph is read correctly today and connected to
+/// nothing: on the measured target 760 well-formed edges sit in a document
+/// where 1 of 331 components is reachable from the root. Nothing in the model
+/// said which component a resolve belongs to. This is that component.
+///
+/// It is **not a package**. It has no upstream, nothing to fetch, and no
+/// vulnerability surface of its own — a consumer treating it as a package
+/// would try to resolve it against an index and fail. The `pkg:generic/`
+/// type alone does not convey that (real fetchable things use it too), so
+/// the nature is carried explicitly per FR-002a.
+///
+/// `depends` is the lockfile's DECLARED `requirements`, not the packages
+/// nothing else depends on. See the field doc on `PexLockfile::requirements`.
+pub(crate) fn resolve_component_entry(
+    lock: &PexLockfile,
+    lockfile_path: &Path,
+    resolve_name: &str,
+    declared_by_tool: bool,
+) -> Option<PackageDbEntry> {
+    if resolve_name.trim().is_empty() {
+        return None;
+    }
+    let purl = Purl::new(&format!(
+        "pkg:generic/{}",
+        encode_purl_segment(resolve_name)
+    ))
+    .ok()?;
+
+    // PEP 508 strings -> distribution names. `Jinja2~=3.1.6` -> `jinja2`,
+    // `SQLAlchemy[postgresql_asyncpg]~=1.4.54` -> `sqlalchemy`.
+    let mut depends: Vec<String> = Vec::new();
+    for raw in &lock.requirements {
+        let name: String = raw
+            .trim()
+            .chars()
+            .take_while(|c| !matches!(c, ' ' | '\t' | '[' | '(' | '<' | '>' | '=' | '!' | '~' | ';' | ','))
+            .collect();
+        if name.is_empty() {
+            continue;
+        }
+        depends.push(normalize_pypi_name_for_purl(&name));
+    }
+    depends.sort();
+    depends.dedup();
+
+    let mut extra_annotations: std::collections::BTreeMap<String, serde_json::Value> =
+        Default::default();
+    extra_annotations.insert(
+        "waybill:component-kind".to_string(),
+        json!("lockfile-resolve"),
+    );
+    extra_annotations.insert("waybill:pants-resolve".to_string(), json!(resolve_name));
+    // FR-003c: whether this classification rests on a declaration or on the
+    // weaker name heuristic. Recorded per component so the aggregate count is
+    // reconstructible from the document rather than only asserted by it.
+    extra_annotations.insert(
+        "waybill:resolve-classification-source".to_string(),
+        json!(if declared_by_tool { "declared" } else { "heuristic-or-default" }),
+    );
+
+    Some(PackageDbEntry {
+        depends_ecosystem: Some("pypi".to_string()),
+        build_inclusion: None,
+        purl,
+        name: resolve_name.to_string(),
+        version: String::new(),
+        arch: None,
+        source_path: lockfile_path.display().to_string(),
+        depends,
+        maintainer: None,
+        licenses: Vec::new(),
+        // A resolve a tool declares is build-time; otherwise runtime, which
+        // over-reports rather than hiding (FR-003b).
+        lifecycle_scope: Some(if declared_by_tool {
+            waybill_common::resolution::LifecycleScope::Development
+        } else {
+            classify_resolve(resolve_name)
+        }),
+        requirement_ranges: Vec::new(),
+        source_type: None,
+        buildinfo_status: None,
+        evidence_kind: None,
+        sbom_tier: Some("source".to_string()),
+        extra_annotations,
+        binary_class: None,
+        binary_stripped: None,
+        linkage_kind: None,
+        detected_go: None,
+        confidence: None,
+        binary_packed: None,
+        raw_version: None,
+        parent_purl: None,
+        npm_role: None,
+        co_owned_by: None,
+        // A resolve is a declared grouping, not a distribution: there is no
+        // artifact to hash.
+        hashes: Vec::new(),
+        shade_relocation: None,
+        binary_role: None,
+    })
+}
+
 pub(crate) fn locked_req_to_entry(
     req: &LockedRequirement,
     lockfile_path: &Path,

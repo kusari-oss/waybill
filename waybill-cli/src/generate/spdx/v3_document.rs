@@ -690,9 +690,13 @@ pub fn build_document(
     // component nothing depends on — including components the same
     // document reports as unreachable orphans.
     let m158_augmented_relationships: Vec<waybill_common::resolution::Relationship> =
-        crate::generate::graph_completeness::anchor_retained_mainmod_edges(
-            scan.relationships,
-            &dropped_main_module_purls,
+        crate::generate::graph_completeness::anchor_resolve_components(
+            &crate::generate::graph_completeness::anchor_retained_mainmod_edges(
+                scan.relationships,
+                &dropped_main_module_purls,
+                &m158_target_ref,
+            ),
+            scan.components,
             &m158_target_ref,
         )
         .into_iter()

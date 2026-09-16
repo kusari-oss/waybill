@@ -590,6 +590,54 @@ fn workspace_member_dirs(c: &ResolvedComponent) -> std::collections::HashSet<Str
 /// closing the format-parity gap for graph-completeness on operator-
 /// override scans (SC-005: pico corpus SBOMs → `complete` across all
 /// three formats).
+/// Milestone 868 (#887) — anchor the document root to each resolve component.
+///
+/// A resolve's graph is read correctly and, without this, connected to
+/// nothing: on the measured target 760 well-formed edges sat in a document
+/// where 1 of 331 components was reachable from the root.
+///
+/// This is the only relationship the feature INTRODUCES — the
+/// resolve→requirement edges are read from the lockfile's declared
+/// `requirements`. It is distinguishable from a declared dependency by its
+/// target, which is explicitly marked as a resolve rather than a package
+/// (FR-004 / contract A-3), which is why the edge itself carries no marker
+/// and stays an ordinary dependency edge that consumers traverse unmodified.
+pub fn anchor_resolve_components(
+    relationships: &[Relationship],
+    components: &[ResolvedComponent],
+    target_ref: &str,
+) -> Vec<Relationship> {
+    let existing: HashSet<(&str, &str)> = relationships
+        .iter()
+        .map(|r| (r.from.as_str(), r.to.as_str()))
+        .collect();
+    let mut out = relationships.to_vec();
+    for c in components {
+        let is_resolve = c
+            .extra_annotations
+            .get("waybill:component-kind")
+            .and_then(|v| v.as_str())
+            == Some("lockfile-resolve");
+        if !is_resolve {
+            continue;
+        }
+        let purl = c.purl.as_str();
+        if purl == target_ref || existing.contains(&(target_ref, purl)) {
+            continue;
+        }
+        out.push(Relationship {
+            from: target_ref.to_string(),
+            to: purl.to_string(),
+            relationship_type: RelationshipType::DependsOn,
+            provenance: EnrichmentProvenance {
+                source: "milestone-868-resolve-ownership".to_string(),
+                data_type: "dependency-graph".to_string(),
+            },
+        });
+    }
+    out
+}
+
 pub fn anchor_retained_mainmod_edges(
     relationships: &[Relationship],
     retained_main_module_purls: &[String],

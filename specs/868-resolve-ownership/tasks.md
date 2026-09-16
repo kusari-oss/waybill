@@ -56,21 +56,21 @@ root; confirm the resolves' top-level requirements are reached.
 
 ### Tests for User Story 1
 
-- [ ] T007 [P] [US1] Add a unit test in `waybill-cli/src/scan_fs/package_db/pants/mod.rs` asserting one resolve component is emitted per `[python.resolves]` entry, identified by the declared resolve name (FR-002, contract A-2)
-- [ ] T008 [P] [US1] Add a unit test asserting a resolve component is emitted for a declared resolve and **not** emitted for a project declaring none (FR-007, contract A-7)
-- [ ] T009 [P] [US1] Add an integration test in `waybill-cli/tests/` over a synthetic Pants fixture with two resolves, asserting each resolve's top-level requirements are reachable from the document root by following dependency edges (FR-001) — asserted against the emitted graph, never against the completeness annotation (contract A-8)
-- [ ] T010 [US1] Teeth-check T007-T009 against `target/release/waybill-baseline` (SC-007) and record the observed failures in `specs/868-resolve-ownership/measurements/README.md`
+- [X] T007 [P] [US1] Add a unit test in `waybill-cli/src/scan_fs/package_db/pants/mod.rs` asserting one resolve component is emitted per `[python.resolves]` entry, identified by the declared resolve name (FR-002, contract A-2)
+- [X] T008 [P] [US1] Add a unit test asserting a resolve component is emitted for a declared resolve and **not** emitted for a project declaring none (FR-007, contract A-7)
+- [X] T009 [P] [US1] Add an integration test in `waybill-cli/tests/` over a synthetic Pants fixture with two resolves, asserting each resolve's top-level requirements are reachable from the document root by following dependency edges (FR-001) — asserted against the emitted graph, never against the completeness annotation (contract A-8)
+- [X] T010 [US1] Teeth-check T007-T009 against `target/release/waybill-baseline` (SC-007) and record the observed failures in `specs/868-resolve-ownership/measurements/README.md`
 
 ### Implementation for User Story 1
 
-- [ ] T011 [US1] Emit one resolve component per declared resolve in `waybill-cli/src/scan_fs/package_db/pants/mod.rs`, using `pkg:generic/` with the declared name (research R3). No edges yet
-- [ ] T012 [US1] Verify at this point that component count rises by exactly the number of declared resolves and **no package component is created** (FR-008, SC-006, contract A-6) — the cheapest moment to catch an over-broad change, before any edge exists
-- [ ] T013 [US1] Compute each resolve's top-level requirements — packages nothing else *within that resolve* depends on — in `waybill-cli/src/scan_fs/mod.rs`. Per-resolve, not global: a package can be top-level in one resolve and transitive in another
-- [ ] T014 [US1] Emit the anchor edges root → resolve component → top-level requirements in `waybill-cli/src/scan_fs/mod.rs`, as ordinary dependency edges so consumers reach them without special handling
-- [ ] T015 [US1] Re-run the T002 measurement and confirm reachable-from-root rises from 1 of 331, max depth rises above 1, and the document no longer reports itself flat (SC-001, SC-002)
-- [ ] T016 [US1] Confirm the orphan count falls from 271 and **agrees with the emitted graph** rather than with the classifier's own report (FR-009, SC-003, contract A-8)
-- [ ] T017 [US1] Confirm a package belonging to more than one resolve is reachable via each (FR-002b, FR-006, SC-006a)
-- [ ] T018 [US1] Run `./scripts/pre-pr.sh` and enumerate the per-target `N passed; 0 failed` lines
+- [X] T011 [US1] Emit one resolve component per declared resolve in `waybill-cli/src/scan_fs/package_db/pants/mod.rs`, using `pkg:generic/` with the declared name (research R3). No edges yet
+- [X] T012 [US1] Verify at this point that component count rises by exactly the number of declared resolves and **no package component is created** (FR-008, SC-006, contract A-6) — the cheapest moment to catch an over-broad change, before any edge exists
+- [X] T013 [US1] Compute each resolve's top-level requirements — packages nothing else *within that resolve* depends on — in `waybill-cli/src/scan_fs/mod.rs`. Per-resolve, not global: a package can be top-level in one resolve and transitive in another
+- [X] T014 [US1] Emit the anchor edges root → resolve component → top-level requirements in `waybill-cli/src/scan_fs/mod.rs`, as ordinary dependency edges so consumers reach them without special handling
+- [X] T015 [US1] Re-run the T002 measurement and confirm reachable-from-root rises from 1 of 331, max depth rises above 1, and the document no longer reports itself flat (SC-001, SC-002)
+- [X] T016 [US1] Confirm the orphan count falls from 271 and **agrees with the emitted graph** rather than with the classifier's own report (FR-009, SC-003, contract A-8)
+- [X] T017 [US1] Confirm a package belonging to more than one resolve is reachable via each (FR-002b, FR-006, SC-006a)
+- [X] T018 [US1] Run `./scripts/pre-pr.sh` and enumerate the per-target `N passed; 0 failed` lines
 
 **Checkpoint**: the defect is fixed on the target that holds the evidence, and the MVP is independently demonstrable.
 
