@@ -206,17 +206,22 @@ confirm each package's originating resolve is determinable from the document.
   unanchored rather than being attached to an arbitrary component, and the
   situation MUST be reported.
 - **FR-003a**: A resolve MUST be classified build-time when the project's own
-  configuration declares a tool installing from it. Classification MUST NOT be
-  inferred from the resolve's name or from the path of its lockfile.
+  configuration declares a tool installing from it. Such a declaration MUST
+  take precedence over any name-based heuristic.
+- **FR-003a-i**: Where nothing declares a resolve, a name-based heuristic MAY
+  classify it, and every such use MUST be reported (FR-003c). The heuristic
+  MUST NOT override a declaration, and MUST NOT be treated as equivalent
+  evidence.
 - **FR-003b**: A resolve with no such declaration MUST be treated as
   runtime. This direction is deliberate: mis-marking a runtime resolve as
   build-time would hide real packages from a consumer filtering for runtime
   risk, whereas mis-marking a build resolve as runtime over-reports. Only the
   first failure is silent, so the default takes the loud one.
-- **FR-003c**: Because FR-003a is knowingly partial — two resolves on the
-  measured target are tooling that nothing declares as such — the count of
-  resolves classified runtime **by default rather than by declaration** MUST
-  be reported, so the over-reporting is visible instead of invisible.
+- **FR-003c**: The count of resolves classified by anything weaker than a
+  declaration — by name heuristic, or by the FR-003b runtime default — MUST be
+  reported, so reliance on weak evidence is visible instead of invisible. The
+  count MUST be emitted even when zero, so "nothing needed guessing" and "the
+  field is missing" stay distinguishable.
 - **FR-004**: An anchoring relationship introduced by waybill MUST be
   distinguishable, by a consumer reading the document, from a dependency a
   manifest declared.
@@ -352,3 +357,24 @@ confirm each package's originating resolve is determinable from the document.
   - **That signal is partial.** It covers five resolves. `towncrier` and
     `pants-plugins` are tooling by any reading and live under `tools/`, but
     nothing declares them as such — only the path convention suggests it.
+
+### Session 2026-09-16 (amendment, post-plan)
+
+- Q: FR-003a forbade any name-based inference. Planning found a name-allowlist
+  classifier already ships and is the only signal for repositories whose tools
+  do not declare `install_from_resolve`. Keep the prohibition?
+  → A: **No — softened to a precedence rule.** A declaration now takes
+  precedence over the heuristic (FR-003a) and the heuristic survives as a
+  reported fallback (FR-003a-i), rather than being banned outright.
+
+  The prohibition was right about the evidence and wrong about the remedy.
+  Banning the heuristic would delete the only classification signal available
+  to repositories that declare nothing, regressing them, and no measurement
+  supports that trade.
+
+  The evidence that motivated the original wording still stands and is
+  stronger than clarification knew: the shipped allowlist contains `coverage`
+  and `coveragepy` while the resolve is named `coverage-py`, and `setuptools`
+  is absent entirely — so **two of eight resolves on the measured target are
+  misclassified today**. Declaration-first fixes both without removing the
+  fallback. See research R1.
