@@ -24,7 +24,7 @@ use serde_json::json;
 use waybill_common::types::hash::ContentHash;
 use waybill_common::types::purl::{encode_purl_segment, Purl};
 
-use super::resolve_classifier::classify_resolve;
+use super::resolve_classifier::classify_resolve_with_source;
 use crate::scan_fs::package_db::pip::normalize_pypi_name_for_purl;
 use crate::scan_fs::package_db::PackageDbEntry;
 
@@ -335,6 +335,10 @@ pub(crate) fn resolve_component_entry(
     ))
     .ok()?;
 
+    // One classification, used for both the scope and the recorded evidence
+    // strength, so the two cannot disagree about the same resolve.
+    let classification = classify_resolve_with_source(resolve_name, declared_by_tool);
+
     // PEP 508 strings -> distribution names. `Jinja2~=3.1.6` -> `jinja2`,
     // `SQLAlchemy[postgresql_asyncpg]~=1.4.54` -> `sqlalchemy`.
     let mut depends: Vec<String> = Vec::new();
@@ -364,7 +368,7 @@ pub(crate) fn resolve_component_entry(
     // reconstructible from the document rather than only asserted by it.
     extra_annotations.insert(
         "waybill:resolve-classification-source".to_string(),
-        json!(if declared_by_tool { "declared" } else { "heuristic-or-default" }),
+        json!(classification.1.as_wire_str()),
     );
 
     Some(PackageDbEntry {
@@ -380,11 +384,7 @@ pub(crate) fn resolve_component_entry(
         licenses: Vec::new(),
         // A resolve a tool declares is build-time; otherwise runtime, which
         // over-reports rather than hiding (FR-003b).
-        lifecycle_scope: Some(if declared_by_tool {
-            waybill_common::resolution::LifecycleScope::Development
-        } else {
-            classify_resolve(resolve_name)
-        }),
+        lifecycle_scope: Some(classification.0),
         requirement_ranges: Vec::new(),
         source_type: None,
         buildinfo_status: None,
@@ -413,6 +413,11 @@ pub(crate) fn locked_req_to_entry(
     req: &LockedRequirement,
     lockfile_path: &Path,
     resolve_name: &str,
+    // Milestone 868 (#887) — whether a `pants.toml` tool section declares
+    // this resolve via `install_from_resolve`. The declaration decides the
+    // lifecycle; the name allowlist is the fallback where nothing declares
+    // (FR-003a, contract A-4).
+    declared_by_tool: bool,
 ) -> Option<PackageDbEntry> {
     if req.project_name.trim().is_empty() {
         tracing::warn!(
@@ -530,7 +535,7 @@ pub(crate) fn locked_req_to_entry(
         source_path: lockfile_path.display().to_string(),
         depends,
         maintainer: None,
-        lifecycle_scope: Some(classify_resolve(resolve_name)),
+        lifecycle_scope: Some(classify_resolve_with_source(resolve_name, declared_by_tool).0),
         requirement_ranges: Vec::new(),
         source_type: None, // Distinct from ArtifactSourceType — this
                            // field is for pip/npm source-URL kinds, not

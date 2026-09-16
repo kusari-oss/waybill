@@ -151,6 +151,78 @@ before writing any emitter code — CDX `properties[]`, SPDX 2.3
 `lockfile-resolve` unmodified. Same finding as T032 anticipated for C143.
 No emitter change was needed or made.
 
+## T027 — US3 teeth-check
+
+| Test | Fails on baseline? | Why |
+|---|---|---|
+| `t024_declaration_beats_allowlist_when_they_disagree` | yes | `classify_resolve_with_source` does not exist; the declaration is never read |
+| `t024b_declaration_is_recorded_even_when_it_agrees_with_the_allowlist` | yes | same |
+| `t025_undeclared_falls_back_and_says_so` | yes | same |
+| `t026_the_counts_are_emitted_even_when_both_are_zero` | yes | annotation absent entirely — see below |
+| `t026b_the_annotation_is_absent_when_no_lockfile_was_found` | **no** | regression guard: asserts an absence that also holds before the change |
+| `t030_undeclared_resolves_are_counted_as_weakly_classified` | yes | annotation absent |
+| `t034_a_glob_discovered_lockfile_nobody_declares_is_counted_unanchored` | yes | annotation absent |
+
+T027 asks specifically whether the checks catch an **absent** field rather
+than only a wrong value, since the FR-003c requirement is precisely that
+zero and missing stay distinguishable. They do, by construction: the helper
+returns `Option<String>` per format and the assertions compare against
+`Some(..)`, so an absent annotation yields `None` and fails the comparison.
+Confirmed against the baseline binary, which emits no `waybill:resolve-ownership`
+in any format. `t026b` is the pair's other half and asserts `None` on a repo
+with no Pex lockfile.
+
+## T029 / T030 / T032 — US3 on the measured target
+
+Reader log, after:
+
+```
+pants-pex reader complete lockfiles_discovered=9 lockfiles_parsed_ok=9
+  components_emitted=301 weak_classification=4 unanchored_lockfiles=0
+```
+
+Four of nine resolves are classified by something weaker than a declaration
+— `python-default`, `python-kernel`, `pants-plugins` and `towncrier`, none of
+which any tool section back-references. The other five (`black`, `pytest`,
+`coverage-py`, `mypy`, `setuptools`) carry `install_from_resolve`. C161 reads
+`weak-classification=4;unanchored-lockfiles=0`, byte-identical across CDX,
+SPDX 2.3 and SPDX 3.
+
+### T029 — two live misclassifications corrected, none introduced
+
+Per-resolve lifecycle scope of the emitted components, before and after
+T028. `?` is the absence of `waybill:lifecycle-scope`, which is how runtime
+is emitted.
+
+| resolve | before | after |
+|---|---|---|
+| black | development: 4 | development: 4 |
+| **coverage-py** | development: 1, runtime: 1 | **development: 2** |
+| mypy | development: 2 | development: 2 |
+| pants-plugins | runtime: 1 | runtime: 1 |
+| pytest | development: 9 | development: 9 |
+| python-default | runtime: 216 | runtime: 216 |
+| python-kernel | runtime: 17 | runtime: 17 |
+| **setuptools** | development: 1, runtime: 1 | **development: 2** |
+| towncrier | runtime: 4 | runtime: 4 |
+
+Exactly the two resolves contract A-4 names as misclassified move, and
+**nothing moves the other way** (SC-005a). The single `development` entry
+each already had before T028 is the resolve component itself, which read the
+declaration from the start; the package is what was left behind.
+
+The allowlist was deliberately not widened to cover `coverage-py` and
+`setuptools`. Research R1 records why: it would paper over the reason a name
+allowlist is the wrong instrument, and would still be wrong for the next
+project that names its coverage resolve something else.
+
+### T032 — per-package attribution verified, not built
+
+C143 `waybill:pants-resolve` was already shipping. Measured identically on
+both binaries: **248 of 272** pypi components carry it. FR-005 / SC-005 hold
+and are unregressed; no work was needed, which is what research R2
+predicted.
+
 ## Deviation from tasks.md T013
 
 tasks.md specifies computing "top-level requirements — packages nothing else

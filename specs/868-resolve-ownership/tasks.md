@@ -110,22 +110,22 @@ lifecycle was decided.
 
 ### Tests for User Story 3
 
-- [ ] T024 [P] [US3] Add a test in `waybill-cli/src/scan_fs/package_db/pants/resolve_classifier.rs` asserting a declaration beats the name allowlist, including the case where the two disagree (FR-003a, contract A-4)
-- [ ] T025 [P] [US3] Add a test asserting a resolve nothing declares falls to runtime **and** is counted as classified by weaker-than-declaration evidence (FR-003b, FR-003c, contract A-5)
-- [ ] T026 [P] [US3] Add a test asserting the weak-evidence count is emitted **even when zero**, so "nothing needed guessing" and "the field is missing" stay distinguishable (FR-003c)
-- [ ] T027 [US3] Teeth-check T024-T026, including feeding a document with the count absent to confirm the check fails rather than only catching a wrong value. Record all observed failures
+- [X] T024 [P] [US3] Add a test in `waybill-cli/src/scan_fs/package_db/pants/resolve_classifier.rs` asserting a declaration beats the name allowlist, including the case where the two disagree (FR-003a, contract A-4)
+- [X] T025 [P] [US3] Add a test asserting a resolve nothing declares falls to runtime **and** is counted as classified by weaker-than-declaration evidence (FR-003b, FR-003c, contract A-5)
+- [X] T026 [P] [US3] Add a test asserting the weak-evidence count is emitted **even when zero**, so "nothing needed guessing" and "the field is missing" stay distinguishable (FR-003c)
+- [X] T027 [US3] Teeth-check T024-T026, including feeding a document with the count absent to confirm the check fails rather than only catching a wrong value. Record all observed failures
 
 ### Implementation for User Story 3
 
-- [ ] T028 [US3] Make the `install_from_resolve` declaration take precedence over `DEV_RESOLVE_NAMES` in `waybill-cli/src/scan_fs/package_db/pants/resolve_classifier.rs`, keeping the allowlist as a fallback for undeclared resolves (FR-003a, FR-003a-i). Do **not** widen the allowlist — research R1 deferred that deliberately, since patching `coverage-py` and `setuptools` into it would paper over why a name allowlist is the wrong instrument
-- [ ] T029 [US3] Confirm on the measured target that `coverage-py` and `setuptools` move from runtime to build-time, and that **no resolve moves the other way** (SC-005a). Two live misclassifications corrected
-- [ ] T030 [US3] Count resolves classified by anything weaker than a declaration and emit it document-scope across all three formats under `waybill-cli/src/generate/`, always present including zero (FR-003c)
-- [ ] T031 [US3] Add the catalogue row and its extractor entry in the same commit, as T022
-- [ ] T032 [US3] Verify per-package resolve attribution still holds — `waybill:pants-resolve` (C143) already ships on 248 of 272 pypi components, so FR-005/SC-005 are **verified, not built** (research R2)
-- [ ] T033 [US3] Run `./scripts/pre-pr.sh`
+- [X] T028 [US3] Make the `install_from_resolve` declaration take precedence over `DEV_RESOLVE_NAMES` in `waybill-cli/src/scan_fs/package_db/pants/resolve_classifier.rs`, keeping the allowlist as a fallback for undeclared resolves (FR-003a, FR-003a-i). Do **not** widen the allowlist — research R1 deferred that deliberately, since patching `coverage-py` and `setuptools` into it would paper over why a name allowlist is the wrong instrument
+- [X] T029 [US3] Confirm on the measured target that `coverage-py` and `setuptools` move from runtime to build-time, and that **no resolve moves the other way** (SC-005a). Two live misclassifications corrected
+- [X] T030 [US3] Count resolves classified by anything weaker than a declaration and emit it document-scope across all three formats under `waybill-cli/src/generate/`, always present including zero (FR-003c)
+- [X] T031 [US3] Add the catalogue row and its extractor entry in the same commit, as T022
+- [X] T032 [US3] Verify per-package resolve attribution still holds — `waybill:pants-resolve` (C143) already ships on 248 of 272 pypi components, so FR-005/SC-005 are **verified, not built** (research R2)
+- [X] T033 [US3] Run `./scripts/pre-pr.sh`
 
-- [ ] T034 [P] [US3] Add a test in `waybill-cli/tests/` asserting a glob-discovered lockfile that `[python.resolves]` does not name produces **no** resolve component and **no** anchor edge, and is counted as unanchored — a stem-derived resolve name is not a declaration of ownership (FR-003)
-- [ ] T035 [US3] Emit the unanchored-lockfile count document-scope in `waybill-cli/src/generate/`, alongside the FR-003c weak-evidence count and always present including zero, reusing the same catalogue row added in T031 rather than adding a second
+- [X] T034 [P] [US3] Add a test in `waybill-cli/tests/` asserting a glob-discovered lockfile that `[python.resolves]` does not name produces **no** resolve component and **no** anchor edge, and is counted as unanchored — a stem-derived resolve name is not a declaration of ownership (FR-003)
+- [X] T035 [US3] Emit the unanchored-lockfile count document-scope in `waybill-cli/src/generate/`, alongside the FR-003c weak-evidence count and always present including zero, reusing the same catalogue row added in T031 rather than adding a second
 
 **Checkpoint**: multi-resolve attribution is intact and classification prefers evidence over guessing.
 

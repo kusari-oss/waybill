@@ -607,3 +607,159 @@ fn t019b_the_root_to_resolve_edge_is_distinguishable_by_its_target() {
          cannot show the two are distinguishable",
     );
 }
+
+// -------------------------------------------------------------------
+// User Story 3 — say how much of the classification was guessed.
+// -------------------------------------------------------------------
+
+/// The doc-scope `waybill:resolve-ownership` value, per format. `None` means
+/// the annotation is absent, which is a different claim from a zeroed value
+/// and is asserted as such.
+fn resolve_ownership(cdx: &Value, spdx23: &Value, spdx3: &Value) -> (Option<String>, Option<String>, Option<String>) {
+    let c = cdx["metadata"]["properties"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .find(|p| p["name"].as_str() == Some("waybill:resolve-ownership"))
+        .and_then(|p| p["value"].as_str().map(String::from));
+    let extract = |s: &str| -> Option<String> {
+        let v: Value = serde_json::from_str(s).ok()?;
+        (v["field"].as_str()? == "waybill:resolve-ownership")
+            .then(|| v["value"].as_str().map(String::from))?
+    };
+    let s2 = spdx23["annotations"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|a| a["comment"].as_str())
+        .find_map(extract);
+    let s3 = spdx3["@graph"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|e| e["statement"].as_str())
+        .find_map(extract);
+    (c, s2, s3)
+}
+
+#[test]
+fn t026_the_counts_are_emitted_even_when_both_are_zero() {
+    // FR-003c. A project whose every resolve is declared needed no guessing
+    // at all — and that is a finding, not an absence. If the annotation were
+    // omitted at zero, a consumer could not tell it apart from a document
+    // that never ran the classifier.
+    let dir = tempfile::tempdir().unwrap();
+    write_repo(
+        dir.path(),
+        &[
+            (
+                "pants.toml",
+                br#"
+[python.resolves]
+app-runtime = "locks/app.lock"
+
+[app-runtime]
+install_from_resolve = "app-runtime"
+"#,
+            ),
+            (
+                "locks/app.lock",
+                &synth_lockfile(
+                    &[("waybill-fixture-alpha", "1.0.0", &[])],
+                    &["waybill-fixture-alpha"],
+                ),
+            ),
+        ],
+    );
+    let (cdx, spdx23, spdx3) = run_scan_all_formats(dir.path());
+    let expected = Some("weak-classification=0;unanchored-lockfiles=0".to_string());
+    assert_eq!(
+        resolve_ownership(&cdx, &spdx23, &spdx3),
+        (expected.clone(), expected.clone(), expected),
+        "both counts must be present at zero, in all three formats",
+    );
+}
+
+#[test]
+fn t026b_the_annotation_is_absent_when_no_lockfile_was_found() {
+    // Contract A-7 / SC-004. The flip side of t026: a repo with no Pex
+    // lockfile learned nothing about ownership, so it reports nothing.
+    // Emitting two honest zeroes here would change every non-Pants document
+    // in the corpus.
+    let dir = tempfile::tempdir().unwrap();
+    write_repo(
+        dir.path(),
+        &[(
+            "pyproject.toml",
+            br#"
+[project]
+name = "waybill-fixture-app"
+version = "0.1.0"
+dependencies = ["waybill-fixture-direct"]
+"#,
+        )],
+    );
+    let (cdx, spdx23, spdx3) = run_scan_all_formats(dir.path());
+    assert_eq!(
+        resolve_ownership(&cdx, &spdx23, &spdx3),
+        (None, None, None),
+        "a project with no Pex lockfile must emit no ownership annotation",
+    );
+}
+
+#[test]
+fn t034_a_glob_discovered_lockfile_nobody_declares_is_counted_unanchored() {
+    // FR-003. The lockfile is read and its packages emitted, but no resolve
+    // component and no anchor edge are created — a filename stem is a
+    // convention, not a declaration of ownership. The count is how that
+    // silence is made visible.
+    let dir = tempfile::tempdir().unwrap();
+    write_repo(
+        dir.path(),
+        &[
+            ("pants.toml", b"[python]\n"),
+            (
+                "3rdparty/python/undeclared.lock",
+                &synth_lockfile(
+                    &[("waybill-fixture-alpha", "1.0.0", &[])],
+                    &["waybill-fixture-alpha"],
+                ),
+            ),
+        ],
+    );
+    let (cdx, spdx23, spdx3) = run_scan_all_formats(dir.path());
+
+    let expected = Some("weak-classification=0;unanchored-lockfiles=1".to_string());
+    assert_eq!(
+        resolve_ownership(&cdx, &spdx23, &spdx3),
+        (expected.clone(), expected.clone(), expected),
+    );
+
+    // No resolve component, and therefore no anchor edge.
+    assert!(
+        cdx_marked_resolves(&cdx).is_empty(),
+        "an undeclared lockfile owns nothing",
+    );
+    // The packages themselves are still read.
+    assert!(
+        purls(&cdx)
+            .iter()
+            .any(|p| p.starts_with("pkg:pypi/waybill-fixture-alpha")),
+        "the lockfile's packages are unaffected by the ownership question",
+    );
+}
+
+#[test]
+fn t030_undeclared_resolves_are_counted_as_weakly_classified() {
+    // FR-003c again, from the other side: the two-resolve fixture declares
+    // neither resolve via a tool section, so both fall to the name allowlist
+    // and both are counted.
+    let dir = tempfile::tempdir().unwrap();
+    two_resolve_repo(dir.path());
+    let (cdx, spdx23, spdx3) = run_scan_all_formats(dir.path());
+    let expected = Some("weak-classification=2;unanchored-lockfiles=0".to_string());
+    assert_eq!(
+        resolve_ownership(&cdx, &spdx23, &spdx3),
+        (expected.clone(), expected.clone(), expected),
+    );
+}

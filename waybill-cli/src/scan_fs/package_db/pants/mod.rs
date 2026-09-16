@@ -358,7 +358,42 @@ fn dedup_by_canonical_path(candidates: Vec<DiscoveredLockfile>) -> Vec<Discovere
 /// outcome + the two supported override keys so operators can self-
 /// diagnose. When NO Pants signal is present, remain silent — this
 /// preserves byte-identity for non-Pants repos per m223 SC-003.
-pub fn read(scan_root: &Path) -> Vec<PackageDbEntry> {
+/// Milestone 868 (#887) — what the scan learned about resolve OWNERSHIP,
+/// as opposed to resolve contents.
+///
+/// Emitted document-scope so an auditor can see how much of the
+/// classification rests on evidence and how much on convention, without
+/// re-deriving it from the component set. Both counts are always present
+/// when this struct is present, including zero: "nothing needed guessing"
+/// and "the field is missing" are different claims, and the distinction is
+/// exactly what an auditor needs (FR-003c).
+///
+/// `None` rather than a zeroed struct when no Pex lockfile was found at all,
+/// which is what keeps non-Pants scans byte-identical (contract A-7).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct PantsResolveSummary {
+    /// Resolves whose lifecycle was decided by the name allowlist or the
+    /// runtime default rather than by a `install_from_resolve` declaration.
+    pub weak_classification_count: usize,
+    /// Lockfiles discovered by glob that `[python.resolves]` does not name.
+    /// Their packages have no declarable owner, so they get no resolve
+    /// component and no anchor edge — a filename stem is a convention, not
+    /// a declaration (FR-003).
+    pub unanchored_lockfile_count: usize,
+}
+
+impl PantsResolveSummary {
+    /// Wire form for the `waybill:resolve-ownership` annotation. Fixed field
+    /// order so the value is byte-stable across runs.
+    pub fn as_wire_str(&self) -> String {
+        format!(
+            "weak-classification={};unanchored-lockfiles={}",
+            self.weak_classification_count, self.unanchored_lockfile_count,
+        )
+    }
+}
+
+pub fn read_with_summary(scan_root: &Path) -> (Vec<PackageDbEntry>, Option<PantsResolveSummary>) {
     // Milestone 868 (#887) — read the configuration's own statements about
     // resolves once, up front.
     //
@@ -383,6 +418,7 @@ pub fn read(scan_root: &Path) -> Vec<PackageDbEntry> {
         }
     };
     let mut unanchored_lockfiles: usize = 0;
+    let mut weak_classification: usize = 0;
     let default_dir_exists = scan_root.join("3rdparty").join("python").exists();
     let pants_toml_exists = scan_root.join("pants.toml").exists();
     // Milestone 673 T009 (US2, FR-006): the `<scan_root>/lockfiles/`
@@ -404,7 +440,10 @@ pub fn read(scan_root: &Path) -> Vec<PackageDbEntry> {
                 "pants-pex reader complete"
             );
         }
-        return Vec::new();
+        // Zero lockfiles found: no ownership was learned, so the doc-scope
+        // summary stays absent rather than reporting two honest zeroes that
+        // would change every non-Pants document (contract A-7).
+        return (Vec::new(), None);
     }
 
     let lockfiles_discovered = candidates.len();
@@ -473,12 +512,17 @@ pub fn read(scan_root: &Path) -> Vec<PackageDbEntry> {
         if was_legacy_shape {
             legacy_counter.record_stripped(1);
         }
+        // Milestone 868 (#887) — read the declaration ONCE per lockfile, so
+        // this resolve's packages and its owning component cannot end up
+        // classified from different evidence.
+        let declared_by_tool = tool_declared_resolves.contains(&candidate.resolve_name);
         for resolve in &lock.locked_resolves {
             for req in &resolve.locked_requirements {
                 if let Some(entry) = lockfile::locked_req_to_entry(
                     req,
                     &candidate.path,
                     &candidate.resolve_name,
+                    declared_by_tool,
                 ) {
                     components.push(entry);
                 }
@@ -494,8 +538,11 @@ pub fn read(scan_root: &Path) -> Vec<PackageDbEntry> {
                 &lock,
                 &candidate.path,
                 &candidate.resolve_name,
-                tool_declared_resolves.contains(&candidate.resolve_name),
+                declared_by_tool,
             ) {
+                if !declared_by_tool {
+                    weak_classification += 1;
+                }
                 components.push(entry);
             }
         } else {
@@ -519,10 +566,20 @@ pub fn read(scan_root: &Path) -> Vec<PackageDbEntry> {
         lockfiles_skipped_corrupt,
         legacy_shape_lockfiles = legacy_counter.as_log_value(),
         components_emitted,
+        weak_classification,
+        unanchored_lockfiles,
         "pants-pex reader complete"
     );
 
-    components
+    // `None` when no Pex lockfile was found at all — that is what keeps a
+    // non-Pants scan byte-identical (contract A-7). Once one was found, both
+    // counts are reported even at zero (FR-003c).
+    let summary = (lockfiles_discovered > 0).then_some(PantsResolveSummary {
+        weak_classification_count: weak_classification,
+        unanchored_lockfile_count: unanchored_lockfiles,
+    });
+
+    (components, summary)
 }
 
 // -------------------------------------------------------------------
@@ -670,7 +727,7 @@ lint-tools = "locks/stem-two.lock"
             &synth_lockfile(&[("waybill-fixture-gamma", "3.0.0")], &["waybill-fixture-gamma"]),
         );
 
-        let entries = read(root);
+        let entries = read_with_summary(root).0;
         let resolves = resolve_components(&entries);
 
         assert_eq!(
@@ -727,7 +784,7 @@ app-runtime = "locks/app.lock"
             ),
         );
 
-        let entries = read(root);
+        let entries = read_with_summary(root).0;
         let resolve = entries
             .iter()
             .find(|e| e.purl.as_str() == "pkg:generic/app-runtime")
@@ -755,7 +812,7 @@ app-runtime = "locks/app.lock"
             &synth_lockfile(&[("waybill-fixture-alpha", "1.0.0")], &["waybill-fixture-alpha"]),
         );
 
-        let entries = read(root);
+        let entries = read_with_summary(root).0;
         assert!(
             !entries.is_empty(),
             "the glob-discovered lockfile must still be read",

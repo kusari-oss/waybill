@@ -71,6 +71,8 @@ pub struct CycloneDxBuilder {
     /// scan happened.
     go_transitive_fallback_count: Option<usize>,
     unresolved_declared_dep_count: usize,
+    /// Milestone 868 (#887) — doc-scope Pants resolve-ownership counts.
+    pants_resolve_summary: Option<crate::scan_fs::package_db::pants::PantsResolveSummary>,
     /// Milestone 173: doc-scope Go cache-warming outcome for the C118
     /// (`waybill:go-cache-warming-mode`) + C119
     /// (`waybill:go-cache-warming-failed`) annotations. Sibling of
@@ -211,6 +213,7 @@ impl CycloneDxBuilder {
             go_transitive_coverage: None,
             go_transitive_fallback_count: None,
             unresolved_declared_dep_count: 0,
+            pants_resolve_summary: None,
             go_cache_warming: None,
             go_workspace_mode: None,
             go_toolchains_detected: None,
@@ -425,6 +428,16 @@ impl CycloneDxBuilder {
     /// names that resolved to no component. Always emitted, including zero.
     pub fn with_unresolved_declared_dep_count(mut self, count: usize) -> Self {
         self.unresolved_declared_dep_count = count;
+        self
+    }
+
+    /// Milestone 868 (#887) — document-scope Pants resolve-ownership counts.
+    /// `None` iff no Pex lockfile was discovered (annotation absent).
+    pub fn with_pants_resolve_summary(
+        mut self,
+        summary: Option<crate::scan_fs::package_db::pants::PantsResolveSummary>,
+    ) -> Self {
+        self.pants_resolve_summary = summary;
         self
     }
 
@@ -748,6 +761,7 @@ impl CycloneDxBuilder {
             self.go_workspace_mode.as_ref(),
             self.go_transitive_fallback_count,
             self.unresolved_declared_dep_count,
+            self.pants_resolve_summary.as_ref(),
             self.go_cache_warming.as_ref(),
             self.go_toolchains_detected.as_deref(),
             self.cross_ecosystem_edges_report.as_ref(),
