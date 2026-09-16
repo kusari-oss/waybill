@@ -1112,6 +1112,7 @@ fn build_freeze_component(entry: &CabalFreezeEntry) -> PackageDbEntry {
             let mut extra_annotations = base_annotations("hackage-freeze");
             apply_ghc_stdlib_annotation(&mut extra_annotations, name);
             PackageDbEntry {
+                depends_ecosystem: None,
                 purl,
                 name: name.clone(),
                 version: version.clone(),
@@ -1157,6 +1158,7 @@ fn build_freeze_component(entry: &CabalFreezeEntry) -> PackageDbEntry {
                 ),
             );
             PackageDbEntry {
+                depends_ecosystem: None,
                 purl,
                 name: name.clone(),
                 version: sanitized,
@@ -1197,6 +1199,7 @@ fn build_stack_lock_component(entry: &StackLockEntry) -> PackageDbEntry {
     let mut extra_annotations = base_annotations("hackage-stack-lock");
     apply_ghc_stdlib_annotation(&mut extra_annotations, &entry.name);
     PackageDbEntry {
+        depends_ecosystem: None,
         purl,
         name: entry.name.clone(),
         version: entry.version.clone(),
@@ -1263,6 +1266,7 @@ fn build_snapshot_placeholder(snapshot: &StackSnapshot) -> PackageDbEntry {
         "design"
     };
     PackageDbEntry {
+        depends_ecosystem: None,
         purl,
         name: snapshot.resolver.clone(),
         version: version_slot,
@@ -1349,6 +1353,7 @@ fn build_main_module(
     let sbom_tier = if has_lockfile { "source" } else { "design" };
 
     Some(PackageDbEntry {
+        depends_ecosystem: None,
         purl,
         name,
         version,
@@ -1417,6 +1422,7 @@ fn build_design_tier_components(
             ),
         );
         out.push(PackageDbEntry {
+            depends_ecosystem: None,
             purl,
             name: dep.name.clone(),
             version: sanitized,

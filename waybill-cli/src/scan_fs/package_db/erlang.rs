@@ -1478,6 +1478,7 @@ fn build_main_module_component(
     }
 
     Some(PackageDbEntry {
+        depends_ecosystem: None,
         purl,
         name: manifest.app_name.clone(),
         version: manifest.version.clone(),
@@ -1605,6 +1606,7 @@ fn build_lock_entry_component(
     }
 
     PackageDbEntry {
+        depends_ecosystem: None,
         purl,
         name,
         version,
@@ -1670,6 +1672,7 @@ fn build_otp_runtime_placeholder(
     }
 
     Some(PackageDbEntry {
+        depends_ecosystem: None,
         purl,
         name: atom.to_string(),
         version: "unspecified".to_string(),
@@ -1792,6 +1795,7 @@ fn build_design_tier_component(decl: &DeclaredDep, config_dir: &Path) -> Option<
     };
 
     Some(PackageDbEntry {
+        depends_ecosystem: None,
         purl,
         name: decl.name.clone(),
         version: version_field,

@@ -131,6 +131,7 @@ impl PythonStdlibCollapser {
                     .collect::<Vec<_>>()
                     .join("; ");
                 Some(PackageDbEntry {
+                    depends_ecosystem: None,
                     build_inclusion: None,
                     purl,
                     name: "cpython".to_string(),

@@ -353,6 +353,7 @@ impl RequirementsTxtEntry {
             }
         };
         Some(PackageDbEntry {
+            depends_ecosystem: None,
             build_inclusion: None,
             purl,
             name: self.name,

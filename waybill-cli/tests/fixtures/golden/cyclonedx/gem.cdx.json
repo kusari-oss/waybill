@@ -583,6 +583,10 @@
           "value": "source"
         },
         {
+          "name": "waybill:unresolved-declared-dep",
+          "value": "diff-lcs"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -626,6 +630,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:unresolved-declared-dep",
+          "value": "diff-lcs"
         },
         {
           "name": "waybill:workspace-member",
@@ -996,6 +1004,10 @@
       {
         "name": "waybill:workspaces-detected",
         "value": "[\".\"]"
+      },
+      {
+        "name": "waybill:unresolved-declared-dep-count",
+        "value": "2"
       }
     ],
     "supplier": {

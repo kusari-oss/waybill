@@ -603,6 +603,7 @@ fn parse_rpm_file(
     let maintainer = vendor_header.or(packager);
 
     Some(PackageDbEntry {
+        depends_ecosystem: None,
         build_inclusion: None,
         purl,
         name,

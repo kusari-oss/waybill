@@ -446,6 +446,7 @@ pub fn build_document(
     // a local view that mirrors the input but with components swapped.
     let view_artifacts: ScanArtifacts<'_> = if let Some(ref filtered) = filtered_components_owned {
         ScanArtifacts {
+            unresolved_declared_dep_count: artifacts.unresolved_declared_dep_count,
             target_name: artifacts.target_name,
             components: filtered.as_slice(),
             relationships: artifacts.relationships,
@@ -497,6 +498,7 @@ pub fn build_document(
         }
     } else {
         ScanArtifacts {
+            unresolved_declared_dep_count: artifacts.unresolved_declared_dep_count,
             target_name: artifacts.target_name,
             components: artifacts.components,
             relationships: artifacts.relationships,
@@ -1248,6 +1250,7 @@ mod tests {
             os_release_missing_fields: &[],
             go_transitive_coverage: None,
             go_transitive_fallback_count: None,
+            unresolved_declared_dep_count: 0,
             go_cache_warming: None,
             go_workspace_mode: None,
             go_toolchains_detected: None,

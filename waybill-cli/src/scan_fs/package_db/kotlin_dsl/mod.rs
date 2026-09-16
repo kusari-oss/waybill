@@ -378,6 +378,7 @@ fn synthesize_workspace_root(s: &SettingsScript) -> PackageDbEntry {
         JsonValue::String(source_path_str.clone()),
     );
     PackageDbEntry {
+        depends_ecosystem: None,
         build_inclusion: None,
         purl,
         name: root_name,

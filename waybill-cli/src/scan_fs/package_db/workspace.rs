@@ -78,6 +78,7 @@ pub(super) fn synthesize_workspace_root(
     );
 
     Some(PackageDbEntry {
+        depends_ecosystem: None,
         build_inclusion: None,
         purl,
         name: name.to_string(),

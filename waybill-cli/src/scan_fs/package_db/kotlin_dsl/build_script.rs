@@ -280,6 +280,7 @@ pub(super) fn resolve_and_emit(
         }
         let lifecycle_scope = config_to_lifecycle_scope(&entry.config);
         out.push(PackageDbEntry {
+            depends_ecosystem: None,
             build_inclusion: None,
             purl,
             name: dep.name,

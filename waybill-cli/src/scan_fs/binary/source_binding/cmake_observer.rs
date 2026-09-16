@@ -189,6 +189,7 @@ mod tests {
             serde_json::json!(mechanism),
         );
         PackageDbEntry {
+            depends_ecosystem: None,
             build_inclusion: None,
             purl: Purl::new(purl).unwrap(),
             name: name.to_string(),

@@ -395,10 +395,35 @@ ecosystem = "gradle"
 #   wall=1398ms sbomqs=6.79 pkgs=337 files=9 edges=385 depth=5 flat=false
 #   waybill self-report: partial
 # 233 maven + 103 gem -- the gems are fastlane, via Gemfile.lock. Not a bug.
+#
+# Re-measured 2026-09-15 on CI after #886/m867, waybill @ 44f0ab97:
+#   pkgs=338 files=9 edges=150 depth=6 flat=false sbomqs=6.60
+#
+# `edges` moves 385 -> 150. ONLY this bound moves: `max_depth` (now 6) and
+# `flat` (now false) come back inside their existing ranges on their own,
+# and pkgs/files/sbomqs never left. A passing bound moved without cause is
+# the drift this file exists to catch.
+#
+# The old 385 was NOT measuring dependency structure. The gem application
+# main module is emitted as pkg:generic/<dir> while its Gemfile.lock
+# DEPENDENCIES are gem names, and the resolver keyed the lookup on the
+# requirer's own PURL type -- so all 9 declared deps were silently dropped
+# and the main module had no outgoing edges. With the root also edgeless the
+# CycloneDX primary-dependency fallback fired and attached the root to every
+# component nothing depended on, including all 233 maven components. That
+# is where 385 came from, and why the shape was depth=1 flat=true: a flat
+# star from the root.
+#
+# 150 is the real graph: 140 gem->gem transitive edges from Gemfile.lock,
+# + 9 main-module->gem declared edges recovered by m867, + 1 root->main-module
+# anchor. The 233 maven components still carry no edges, correctly: they come
+# from a gradle.lockfile, whose format (group:artifact:version=configuration)
+# carries no parent-child topology at all -- flat by construction, like
+# go.sum. That is a separate gap and not one m867 claims to close.
 [targets.expect]
 pkgs      = { min = 303, max = 371 }
 files     = { min = 6, max = 12 }
-edges     = { min = 346, max = 424 }
+edges     = { min = 135, max = 165 }
 max_depth = { min = 4, max = 9 }
 sbomqs    = { min = 6.29, max = 7.29 }
 wall_ms   = { min = 5, max = 20000 }

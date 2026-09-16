@@ -703,6 +703,14 @@
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-YHOEFWUKBPXRPI2ENZFKE47T/anno-KNETNG4JNZCWEMCT",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep-count\",\"value\":\"0\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-YHOEFWUKBPXRPI2ENZFKE47T",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-YHOEFWUKBPXRPI2ENZFKE47T/anno-MBZBL2QVKZPHZB2P",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-uprobe-attach-failures\",\"value\":[]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-YHOEFWUKBPXRPI2ENZFKE47T",

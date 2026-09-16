@@ -176,6 +176,10 @@
       {
         "name": "waybill:workspaces-detected",
         "value": "[\"usr/local/bin\"]"
+      },
+      {
+        "name": "waybill:unresolved-declared-dep-count",
+        "value": "0"
       }
     ],
     "supplier": {

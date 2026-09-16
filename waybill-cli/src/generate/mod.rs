@@ -111,6 +111,11 @@ pub struct ScanArtifacts<'a> {
     /// `waybill:go-transitive-fallback-count` annotation emitters in
     /// CDX 1.6, SPDX 2.3, and SPDX 3.0.1.
     pub go_transitive_fallback_count: Option<usize>,
+    /// Milestone 867 (#886) — how many declared dependency names resolved to
+    /// no component in this scan. Always emitted, including zero (FR-005a):
+    /// an absent count is indistinguishable from a document that had no
+    /// declarations to resolve, which is the distinction this exists to make.
+    pub unresolved_declared_dep_count: usize,
     /// Milestone 173: doc-scope Go cache-warming outcome. `None` iff
     /// no Go scan happened (annotation absent for non-Go scans, per
     /// FR-011). `Some(_)` on Go-containing scans, with `mode`
@@ -396,6 +401,7 @@ impl<'a> ScanArtifacts<'a> {
             scope_mode: self.scope_mode,
             go_transitive_coverage: self.go_transitive_coverage,
             go_transitive_fallback_count: self.go_transitive_fallback_count,
+            unresolved_declared_dep_count: self.unresolved_declared_dep_count,
             go_cache_warming: self.go_cache_warming,
             go_workspace_mode: self.go_workspace_mode,
             go_toolchains_detected: self.go_toolchains_detected,

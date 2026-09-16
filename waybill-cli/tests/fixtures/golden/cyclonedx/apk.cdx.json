@@ -188,6 +188,10 @@
       {
         "name": "waybill:workspaces-detected",
         "value": "[\"lib/apk/db\"]"
+      },
+      {
+        "name": "waybill:unresolved-declared-dep-count",
+        "value": "0"
       }
     ],
     "supplier": {

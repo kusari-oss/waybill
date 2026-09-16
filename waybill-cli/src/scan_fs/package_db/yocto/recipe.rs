@@ -309,6 +309,7 @@ fn build_layer_root_entry(layer: &super::layer_conf::LayerConf) -> PackageDbEntr
     }
 
     PackageDbEntry {
+        depends_ecosystem: None,
         build_inclusion: None,
         purl,
         name: layer.collection.clone(),
@@ -798,6 +799,7 @@ fn process_recipe(
     }
 
     Some(PackageDbEntry {
+        depends_ecosystem: None,
         build_inclusion: None,
         purl,
         name: component_name,

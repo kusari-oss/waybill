@@ -977,6 +977,7 @@ fn build_cmake_entry(
         .unwrap_or_default();
 
     PackageDbEntry {
+        depends_ecosystem: None,
         build_inclusion: None,
         purl,
         name: name.to_string(),

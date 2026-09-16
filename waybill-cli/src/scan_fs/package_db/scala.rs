@@ -1197,6 +1197,7 @@ fn build_lockfile_component(entry: &SbtLockEntry) -> PackageDbEntry {
     };
 
     PackageDbEntry {
+        depends_ecosystem: None,
         purl,
         name: entry.name.clone(),
         version: entry.version.clone(),
@@ -1306,6 +1307,7 @@ fn build_main_module_component(
     }
 
     Some(PackageDbEntry {
+        depends_ecosystem: None,
         purl,
         name,
         version,
@@ -1404,6 +1406,7 @@ fn build_design_tier_component(
     };
 
     Some(PackageDbEntry {
+        depends_ecosystem: None,
         purl,
         name: dep.artifact.clone(),
         version: sanitized_version,

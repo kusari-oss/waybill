@@ -367,6 +367,7 @@ fn build_entry(
     ))
     .ok()?;
     Some(PackageDbEntry {
+        depends_ecosystem: None,
         build_inclusion: None,
         purl,
         name: format!("{}:{}", coord.group, coord.artifact),

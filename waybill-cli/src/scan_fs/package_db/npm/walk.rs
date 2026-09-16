@@ -260,6 +260,7 @@ fn walk_node_modules(
             None
         };
         out.push(PackageDbEntry {
+            depends_ecosystem: None,
             build_inclusion: None,
             purl,
             name: name.to_string(),
@@ -433,6 +434,7 @@ pub(crate) fn parse_root_package_json(
                 ),
             );
             out.push(PackageDbEntry {
+                depends_ecosystem: None,
                 build_inclusion: None,
                 purl,
                 name: emit_name,
@@ -656,6 +658,7 @@ pub(crate) fn build_npm_main_module_entry(
         })
         .collect();
     Some(PackageDbEntry {
+        depends_ecosystem: None,
         build_inclusion: None,
         purl,
         name: name.to_string(),
@@ -853,6 +856,7 @@ mod tests {
 
     fn make_pkg_entry(name: &str, version: &str, purl_str: &str) -> PackageDbEntry {
         PackageDbEntry {
+            depends_ecosystem: None,
             build_inclusion: None,
             purl: make_purl(purl_str),
             name: name.to_string(),

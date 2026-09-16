@@ -120,6 +120,7 @@ pub(crate) fn script_to_package_db_entry(
     let hash = ContentHash::sha256(&sha256_full).ok()?;
 
     Some(PackageDbEntry {
+        depends_ecosystem: None,
         purl,
         name: basename.to_string(),
         version: sha256_prefix,
@@ -204,6 +205,7 @@ pub(crate) fn tool_to_package_db_entry(
     );
 
     Some(PackageDbEntry {
+        depends_ecosystem: None,
         purl,
         name: tool_name.to_string(),
         version: version.to_string(),

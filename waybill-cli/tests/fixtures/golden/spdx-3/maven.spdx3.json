@@ -516,6 +516,14 @@
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cisa-2026-lifecycle\",\"value\":\"after-build\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-COSAP7RNHOF4YNB7DS2UNPG7",
       "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-COSAP7RNHOF4YNB7DS2UNPG7/anno-XYUUPNLQ5EKRRQGC",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep-count\",\"value\":\"0\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-COSAP7RNHOF4YNB7DS2UNPG7",
+      "type": "Annotation"
     }
   ]
 }

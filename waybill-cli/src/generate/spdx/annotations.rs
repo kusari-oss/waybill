@@ -750,6 +750,17 @@ pub fn annotate_document(
         );
     }
 
+    // Milestone 867 (#886) — C159 doc-scope count of declared dependency
+    // names that resolved to no component in this scan. ALWAYS emitted,
+    // including zero (FR-005a): an absent count cannot be told apart from a
+    // document that had no declarations to resolve, and that is exactly the
+    // distinction an auditor needs. Companion to the per-component C115.
+    push(
+        &mut out,
+        "waybill:unresolved-declared-dep-count",
+        json!(artifacts.unresolved_declared_dep_count.to_string()),
+    );
+
     // Milestone 161 (T044): doc-scope Go-workspace-mode annotation
     // (C112). Emitted iff `go.work` file was present at the scanned
     // root (`Detected` or `Malformed` variant); `Absent` is treated

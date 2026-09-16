@@ -337,6 +337,7 @@ fn stanza_to_entry(
         .collect();
 
     Some(PackageDbEntry {
+        depends_ecosystem: None,
         purl,
         name: stanza.name,
         version: stanza.version,

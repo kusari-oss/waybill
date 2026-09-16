@@ -148,6 +148,7 @@ impl LinkageAggregator {
         records
             .into_iter()
             .map(|(soname, rec)| PackageDbEntry {
+                depends_ecosystem: None,
                 build_inclusion: None,
                 purl: rec.purl,
                 name: soname,

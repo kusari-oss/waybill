@@ -704,6 +704,7 @@ fn synthesize_nameless_nested_mainmods(
             serde_json::Value::String("nameless-nested-workspace".to_string()),
         );
         entries.push(PackageDbEntry {
+            depends_ecosystem: None,
             build_inclusion: None,
             purl,
             name: basename.to_string(),

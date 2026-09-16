@@ -306,6 +306,10 @@
       {
         "name": "waybill:workspaces-detected",
         "value": "[\".\"]"
+      },
+      {
+        "name": "waybill:unresolved-declared-dep-count",
+        "value": "0"
       }
     ],
     "supplier": {

@@ -68,6 +68,10 @@
       {
         "name": "waybill:graph-completeness",
         "value": "complete"
+      },
+      {
+        "name": "waybill:unresolved-declared-dep-count",
+        "value": "0"
       }
     ],
     "supplier": {

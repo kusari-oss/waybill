@@ -83,6 +83,7 @@ pub fn build_document(
     let view_scan_storage: ScanArtifacts<'_>;
     let scan: &ScanArtifacts<'_> = if let Some(ref filtered) = filtered_components_owned {
         view_scan_storage = ScanArtifacts {
+            unresolved_declared_dep_count: scan.unresolved_declared_dep_count,
             target_name: scan.target_name,
             components: filtered.as_slice(),
             relationships: scan.relationships,

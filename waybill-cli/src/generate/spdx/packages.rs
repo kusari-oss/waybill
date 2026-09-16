@@ -744,6 +744,7 @@ mod tests {
             os_release_missing_fields: &[],
             go_transitive_coverage: None,
             go_transitive_fallback_count: None,
+            unresolved_declared_dep_count: 0,
             go_cache_warming: None,
             go_workspace_mode: None,
             go_toolchains_detected: None,

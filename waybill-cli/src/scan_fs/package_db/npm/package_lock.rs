@@ -329,6 +329,7 @@ pub(crate) fn parse_package_lock(
         };
 
         out.push(PackageDbEntry {
+            depends_ecosystem: None,
             build_inclusion: None,
             purl,
             name,

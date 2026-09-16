@@ -866,6 +866,14 @@
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-BDKEJMEEPRURQV2YGOTVZLRD/anno-CSTVQL67N4W5FE7L",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep-count\",\"value\":\"2\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-BDKEJMEEPRURQV2YGOTVZLRD",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-BDKEJMEEPRURQV2YGOTVZLRD/anno-CT5RSULTTEO2UVYY",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-BDKEJMEEPRURQV2YGOTVZLRD/pkg-TF7KZG636E2WYOG4",
@@ -1061,6 +1069,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-BDKEJMEEPRURQV2YGOTVZLRD/anno-M3W5CANUI7IRDNNT",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"Gemfile.lock\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-BDKEJMEEPRURQV2YGOTVZLRD/pkg-M2UW7GZUIUH5QD3L",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-BDKEJMEEPRURQV2YGOTVZLRD/anno-M5W43FUX5NOTJ7YS",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep\",\"value\":\"diff-lcs\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-BDKEJMEEPRURQV2YGOTVZLRD/pkg-PMPBKMPDRNPMKQSQ",
       "type": "Annotation"
     },
     {
@@ -1277,6 +1293,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-BDKEJMEEPRURQV2YGOTVZLRD/anno-TVTOJ4NFLG2C7UX4",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"Gemfile.lock\",\"sha256\":\"541146cad7a90425593c9bebc8585f7897fe8d185ef853b592afc4e9af8e3065\"}]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-BDKEJMEEPRURQV2YGOTVZLRD/pkg-GMGKOLOFGMASIEY4",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-BDKEJMEEPRURQV2YGOTVZLRD/anno-V52VIG4SGHJERTCV",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep\",\"value\":\"diff-lcs\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-BDKEJMEEPRURQV2YGOTVZLRD/pkg-Y5OXYUAJ2AR7ARAQ",
       "type": "Annotation"
     },
     {

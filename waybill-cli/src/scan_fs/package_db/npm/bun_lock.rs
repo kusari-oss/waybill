@@ -269,6 +269,7 @@ pub(crate) fn parse_bun_lock(
             );
 
             out.push(PackageDbEntry {
+                depends_ecosystem: None,
                 build_inclusion: None,
                 purl,
                 name: member_name.clone(),
@@ -420,6 +421,7 @@ pub(crate) fn parse_bun_lock(
             };
 
             out.push(PackageDbEntry {
+                depends_ecosystem: None,
                 build_inclusion: None,
                 purl,
                 name: name.to_string(),
