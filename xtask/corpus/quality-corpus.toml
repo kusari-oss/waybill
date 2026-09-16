@@ -140,10 +140,23 @@ ecosystem = "cargo"
 #   wall=484ms sbomqs=7.49 pkgs=51 files=7 edges=94 depth=4 flat=false
 #   waybill self-report: partial
 # Widest wall-time spread observed (2.6x between two runs on identical hardware).
+#
+# Re-measured 2026-09-16 on CI (run 35039567256) — Class A of #870.
+#   pkgs=61 files=7 edges=141 depth=5 flat=false sbomqs=7.06
+#
+# Cause: m860 retained main modules. The root now anchors real
+# workspace/reactor members and those members keep their own outgoing edges,
+# so component and edge counts rise and the graph stops being flat. Verified
+# from the committed public-corpus golden rather than assumed: 141 edges with 38 components carrying outgoing edges and the root
+#          anchoring the 10 real workspace crates.
+#
+# This is the OPPOSITE signature to the #870 Class B targets, where the
+# extra edges were a root-to-everything fallback star over members with zero
+# outgoing edges. Only the bounds that actually violated are moved.
 [targets.expect]
-pkgs      = { min = 45, max = 57 }
+pkgs      = { min = 55, max = 67 }
 files     = { min = 4, max = 10 }
-edges     = { min = 84, max = 104 }
+edges     = { min = 127, max = 155 }
 max_depth = { min = 3, max = 8 }
 sbomqs    = { min = 6.99, max = 7.99 }
 wall_ms   = { min = 5, max = 5000 }
@@ -178,6 +191,19 @@ ecosystem = "npm"
 # PERMANENTLY FLAT: express commits no package-lock.json, so under --offline
 # waybill has nothing to resolve transitively. `flat = true` asserts what is
 # true, not what we wish were true. A change to false would be news.
+#
+# Re-measured 2026-09-16 on CI (run 35039567256) — Class A of #870.
+#   pkgs=44 files=1 edges=44 depth=2 flat=false sbomqs=5.64
+#
+# Cause: m860 retained main modules. The root now anchors real
+# workspace/reactor members and those members keep their own outgoing edges,
+# so component and edge counts rise and the graph stops being flat. Verified
+# from the committed public-corpus golden rather than assumed: 44 edges = 1 root->main-module anchor + 43 real main-module->dep edges,
+#          i.e. depth 2 rather than a flat star. pkgs/edges never left range.
+#
+# This is the OPPOSITE signature to the #870 Class B targets, where the
+# extra edges were a root-to-everything fallback star over members with zero
+# outgoing edges. Only the bounds that actually violated are moved.
 [targets.expect]
 pkgs      = { min = 38, max = 48 }
 files     = { min = 0, max = 4 }
@@ -185,7 +211,7 @@ edges     = { min = 38, max = 48 }
 max_depth = { min = 1, max = 5 }
 sbomqs    = { min = 5.31, max = 6.31 }
 wall_ms   = { min = 5, max = 1000 }
-flat      = true
+flat      = false
 
 [[targets]]
 name      = "pnpm-vue-core"
@@ -304,14 +330,28 @@ ecosystem = "pip"
 # non-recursively (research R6). Counts are lower than a working copy's.
 # Do not "correct" them. Only 4 edges across 293 components, hence a
 # deliberately loose `edges` floor.
+#
+# Re-measured 2026-09-16 on CI (run 35039567256) — Class A of #870.
+#   pkgs=116 files=181 edges=8 depth=2 flat=false sbomqs=5.68
+#
+# Cause: m860 retained main modules. The root now anchors real
+# workspace/reactor members and those members keep their own outgoing edges,
+# so component and edge counts rise and the graph stops being flat. Verified
+# from the committed public-corpus golden rather than assumed: no public-corpus golden for this target, so verified from the measured
+#          shape instead: depth=2 means a real second level exists. A
+#          fabricated fallback star would be depth 1.
+#
+# This is the OPPOSITE signature to the #870 Class B targets, where the
+# extra edges were a root-to-everything fallback star over members with zero
+# outgoing edges. Only the bounds that actually violated are moved.
 [targets.expect]
 pkgs      = { min = 100, max = 124 }
 files     = { min = 162, max = 200 }
-edges     = { min = 1, max = 7 }
+edges     = { min = 5, max = 11 }
 max_depth = { min = 1, max = 5 }
 sbomqs    = { min = 5.41, max = 6.41 }
 wall_ms   = { min = 5, max = 50000 }
-flat      = true
+flat      = false
 
 [[targets]]
 name      = "uv-meilisearch-python"
@@ -359,14 +399,27 @@ ecosystem = "maven"
 #   wall=273ms sbomqs=6.56 pkgs=35 files=12 edges=32 depth=1 flat=true
 #   waybill self-report: partial
 # FLAT despite Maven's pom hierarchy.
+#
+# Re-measured 2026-09-16 on CI (run 35039567256) — Class A of #870.
+#   pkgs=48 files=13 edges=62 depth=2 flat=false sbomqs=6.27
+#
+# Cause: m860 retained main modules. The root now anchors real
+# workspace/reactor members and those members keep their own outgoing edges,
+# so component and edge counts rise and the graph stops being flat. Verified
+# from the committed public-corpus golden rather than assumed: 62 edges = 16 root->module anchors + 46 real module->dependency edges
+#          spread across 13 modules (guice->11, guice-persist->8, ...).
+#
+# This is the OPPOSITE signature to the #870 Class B targets, where the
+# extra edges were a root-to-everything fallback star over members with zero
+# outgoing edges. Only the bounds that actually violated are moved.
 [targets.expect]
-pkgs      = { min = 31, max = 39 }
+pkgs      = { min = 43, max = 53 }
 files     = { min = 9, max = 15 }
-edges     = { min = 28, max = 36 }
+edges     = { min = 56, max = 68 }
 max_depth = { min = 1, max = 5 }
 sbomqs    = { min = 6.06, max = 7.06 }
 wall_ms   = { min = 5, max = 3000 }
-flat      = true
+flat      = false
 
 [[targets]]
 name      = "gradle-apache-solr"
