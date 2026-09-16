@@ -902,3 +902,93 @@ install_from_resolve = "python-default"
          classification rests on the weaker evidence and must say so",
     );
 }
+
+#[test]
+fn m892_reported_completeness_agrees_with_the_emitted_graph() {
+    // Issue #892. The completeness annotation is what consumers read to
+    // decide whether to trust the graph, so it must not contradict the
+    // document carrying it.
+    //
+    // The classifier mirrors the emitter's primary-dependency fallback
+    // internally. Milestone 868's resolve anchor made the classifier's gate
+    // think the root already had edges, so its mirror declined to fire while
+    // the emitter's did — and it reported `partial` with 12 unreachable
+    // components over a `pants-example-django` document that reached every
+    // one of them.
+    //
+    // Asserted as agreement rather than as a fixed verdict: the point is
+    // that the two halves see one graph, not that this fixture is complete.
+    let dir = tempfile::tempdir().unwrap();
+    write_repo(
+        dir.path(),
+        &[
+            (
+                "pants.toml",
+                br#"
+[python.resolves]
+app-runtime = "locks/app.lock"
+"#,
+            ),
+            (
+                "locks/app.lock",
+                &synth_lockfile(
+                    &[("waybill-fixture-locked", "1.0.0", &[])],
+                    &["waybill-fixture-locked"],
+                ),
+            ),
+            // Not in the lockfile, and the root declares no dependency of
+            // its own — the shape that makes the fallback load-bearing.
+            ("requirements.txt", b"waybill-fixture-requirements-only\n"),
+        ],
+    );
+    let doc = run_scan(dir.path());
+
+    let reached = reachable_from_root(&doc);
+    let tiered: Vec<&Value> = doc["components"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter(|c| {
+            c["properties"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .any(|p| p["name"].as_str() == Some("waybill:sbom-tier"))
+        })
+        .collect();
+    let walked_orphans = tiered
+        .iter()
+        .filter(|c| !reached.contains(c["bom-ref"].as_str().unwrap_or_default()))
+        .count();
+
+    let reported = doc["metadata"]["properties"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .find(|p| p["name"].as_str() == Some("waybill:graph-completeness"))
+        .and_then(|p| p["value"].as_str())
+        .expect("completeness annotation");
+    let reason = doc["metadata"]["properties"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .find(|p| p["name"].as_str() == Some("waybill:graph-completeness-reason"))
+        .and_then(|p| p["value"].as_str())
+        .unwrap_or("");
+
+    assert_eq!(
+        walked_orphans, 0,
+        "precondition: this fixture's graph reaches everything",
+    );
+    // `partial` is legitimate here for an unrelated reason — a design-tier
+    // pypi component with no resolved version makes transitive edges
+    // unresolvable — so the verdict is not what this asserts. The ORPHAN
+    // claim is: the annotation must not say components are unreachable when
+    // the document reaches all of them.
+    assert!(
+        !reason.contains("orphaned-components-detected"),
+        "the annotation claims orphans the emitted graph does not have; \
+         walked orphans = {walked_orphans}, verdict = {reported:?}, \
+         reason = {reason:?}",
+    );
+}

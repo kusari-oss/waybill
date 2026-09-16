@@ -205,9 +205,33 @@ pub fn compute_graph_completeness(
     // dep-graph and keeps BFS reachability aligned with what the
     // consumer sees.
     let mut edges = bfs::build_edge_adjacency(relationships);
+    // Issue #892 / #894 — "has outbound edges" means has DECLARED ones. A
+    // milestone-868 resolve anchor (root -> `pkg:generic/<resolve-name>`) is
+    // synthetic ownership, not a dependency the project declared.
+    //
+    // Without this the anchor made `target_has_outbound` true, the mirror
+    // below declined to fire, and the classifier graded a sparser graph than
+    // the emitter shipped: on `pants-example-django` a `partial` verdict
+    // naming 12 unreachable components over a document with none. The
+    // emitter-side gate in `cyclonedx/dependencies.rs` already carries the
+    // same exemption; this is the classifier half of the same rule, and the
+    // two must agree or the annotation contradicts the document carrying it.
+    let resolve_component_refs: HashSet<&str> = components
+        .iter()
+        .filter(|c| {
+            c.extra_annotations
+                .get("waybill:component-kind")
+                .and_then(|v| v.as_str())
+                == Some("lockfile-resolve")
+        })
+        .map(|c| c.purl.as_str())
+        .collect();
     let target_has_outbound = edges
         .get(target_ref)
-        .map(|v| !v.is_empty())
+        .map(|v| {
+            v.iter()
+                .any(|t| !resolve_component_refs.contains(t.as_str()))
+        })
         .unwrap_or(false);
     if !target_ref.is_empty() && !target_has_outbound && !components.is_empty() {
         // Collect graph-tops: components not depended on by anything.
@@ -221,7 +245,13 @@ pub fn compute_graph_completeness(
             .filter(|purl| !depended_on.contains(purl.as_str()) && purl != target_ref)
             .collect();
         if !graph_tops.is_empty() {
-            edges.insert(target_ref.to_string(), graph_tops);
+            // Union, not replace: the resolve anchors deliberately did not
+            // count toward the gate above, so they must survive it.
+            let mut merged = edges.remove(target_ref).unwrap_or_default();
+            merged.extend(graph_tops);
+            merged.sort();
+            merged.dedup();
+            edges.insert(target_ref.to_string(), merged);
         }
     }
 
