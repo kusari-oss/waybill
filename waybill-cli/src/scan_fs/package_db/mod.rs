@@ -490,6 +490,11 @@ pub struct ScanDiagnostics {
     /// declares. `None` iff no Pex lockfile was found, which keeps
     /// non-Pants scans byte-identical (contract A-7).
     pub pants_resolve_summary: Option<pants::PantsResolveSummary>,
+
+    /// Milestone 895 (#891) — count of `.cabal` dependency entries that were
+    /// not valid package names and were skipped. `None` iff no `.cabal` file
+    /// was read, which keeps non-Haskell scans byte-identical.
+    pub haskell_parse_summary: Option<haskell::HaskellParseSummary>,
 }
 
 /// Milestone 188 (#455) — result-side classification of Helm
@@ -2661,6 +2666,11 @@ fn run_shared_walker_pilot(
             haskell::finalize(paths, include_dev, exclude_set)
         })
         .unwrap_or_default();
+    // Milestone 895 (FR-012a/b) — doc-scope count of dependency entries the
+    // Haskell reader could not read. `None` when no `.cabal` file was read.
+    let haskell_parse_summary = haskell_entries.1;
+    let haskell_entries = haskell_entries.0;
+    diagnostics.haskell_parse_summary = haskell_parse_summary;
     let erlang_entries = registry
         .registrations()
         .iter()

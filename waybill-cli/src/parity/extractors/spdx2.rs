@@ -648,6 +648,7 @@ spdx23_anno!(c158_spdx23, "waybill:enrichment-degraded",                  docume
 spdx23_anno!(c159_spdx23, "waybill:unresolved-declared-dep-count",         document);
 spdx23_anno!(c160_spdx23, "waybill:component-kind",                        component);
 spdx23_anno!(c161_spdx23, "waybill:resolve-ownership",                     document);
+spdx23_anno!(c162_spdx23, "waybill:cabal-entries-skipped",                 document);
 
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.

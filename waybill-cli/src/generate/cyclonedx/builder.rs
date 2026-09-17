@@ -73,6 +73,8 @@ pub struct CycloneDxBuilder {
     unresolved_declared_dep_count: usize,
     /// Milestone 868 (#887) — doc-scope Pants resolve-ownership counts.
     pants_resolve_summary: Option<crate::scan_fs::package_db::pants::PantsResolveSummary>,
+    /// Milestone 895 (#891) — doc-scope Haskell skipped-entry count.
+    haskell_parse_summary: Option<crate::scan_fs::package_db::haskell::HaskellParseSummary>,
     /// Milestone 173: doc-scope Go cache-warming outcome for the C118
     /// (`waybill:go-cache-warming-mode`) + C119
     /// (`waybill:go-cache-warming-failed`) annotations. Sibling of
@@ -214,6 +216,7 @@ impl CycloneDxBuilder {
             go_transitive_fallback_count: None,
             unresolved_declared_dep_count: 0,
             pants_resolve_summary: None,
+            haskell_parse_summary: None,
             go_cache_warming: None,
             go_workspace_mode: None,
             go_toolchains_detected: None,
@@ -438,6 +441,15 @@ impl CycloneDxBuilder {
         summary: Option<crate::scan_fs::package_db::pants::PantsResolveSummary>,
     ) -> Self {
         self.pants_resolve_summary = summary;
+        self
+    }
+
+    /// Milestone 895 (#891) — doc-scope Haskell skipped-entry count.
+    pub fn with_haskell_parse_summary(
+        mut self,
+        summary: Option<crate::scan_fs::package_db::haskell::HaskellParseSummary>,
+    ) -> Self {
+        self.haskell_parse_summary = summary;
         self
     }
 
@@ -762,6 +774,7 @@ impl CycloneDxBuilder {
             self.go_transitive_fallback_count,
             self.unresolved_declared_dep_count,
             self.pants_resolve_summary.as_ref(),
+            self.haskell_parse_summary.as_ref(),
             self.go_cache_warming.as_ref(),
             self.go_toolchains_detected.as_deref(),
             self.cross_ecosystem_edges_report.as_ref(),

@@ -171,6 +171,11 @@ pub struct ScanResult {
     /// lockfile was discovered (contract A-7 byte-identity).
     pub pants_resolve_summary:
         Option<crate::scan_fs::package_db::pants::PantsResolveSummary>,
+
+    /// Milestone 895 (#891) — Haskell skipped-entry count for the doc-scope
+    /// annotation. `None` iff no `.cabal` file was read.
+    pub haskell_parse_summary:
+        Option<crate::scan_fs::package_db::haskell::HaskellParseSummary>,
     /// Milestone 235 Phase 6 US4: aggregate Gradle-resolution tier
     /// signal for the doc-scope `waybill:gradle-resolution-tier`
     /// annotation. `None` iff no Gradle project was touched; otherwise
@@ -399,6 +404,9 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
     let mut pants_resolve_summary: Option<
         crate::scan_fs::package_db::pants::PantsResolveSummary,
     > = None;
+    let mut haskell_parse_summary: Option<
+        crate::scan_fs::package_db::haskell::HaskellParseSummary,
+    > = None;
     // Milestone 235 US4: aggregate Gradle-resolution tier signal.
     let mut gradle_scan_summary:
         Option<package_db::gradle::ladder::GradleScanSummary> = None;
@@ -454,6 +462,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         // `HelmExtractionMode` is `Copy` — no clone needed.
         helm_extraction_mode = scan_result.diagnostics.helm_extraction_mode;
         pants_resolve_summary = scan_result.diagnostics.pants_resolve_summary;
+        haskell_parse_summary = scan_result.diagnostics.haskell_parse_summary;
         // m235 US4: same clone-copy pattern — `GradleScanSummary` is
         // `Clone` but not `Copy`, so we `.clone()`.
         gradle_scan_summary = scan_result.diagnostics.gradle_scan_summary.clone();
@@ -1277,6 +1286,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         cross_ecosystem_edges_report,
         helm_extraction_mode,
         pants_resolve_summary,
+        haskell_parse_summary,
         gradle_scan_summary,
         scan_target_coord,
         divergence_records,

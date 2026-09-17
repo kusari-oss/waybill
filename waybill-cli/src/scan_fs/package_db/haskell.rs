@@ -70,7 +70,7 @@
 //! Zero new Cargo dependencies — reuses workspace `regex`, `serde_yaml`,
 //! `serde_json`, `tracing`, `anyhow`.
 
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
@@ -232,7 +232,7 @@ pub(crate) fn build_and_run(
         .expect("haskell registration must be present — we just registered it");
     let paths = extract_paths(haskell_reg);
 
-    finalize(paths, include_dev, exclude_set)
+    finalize(paths, include_dev, exclude_set).0
 }
 
 
@@ -320,6 +320,10 @@ struct CabalManifest {
     version: Option<String>,
     stanzas: Vec<CabalStanza>,
     hpack_generated: bool,
+    /// Milestone 895 (FR-012a) — dependency entries in this file that could
+    /// not be read. Carried on the manifest so the per-file figure survives
+    /// to the scan-wide total without a side channel.
+    skipped_entries: usize,
 }
 
 #[derive(Debug, Clone)]
@@ -344,6 +348,18 @@ enum StanzaKind {
 struct DeclaredDep {
     name: String,          // lowercased per Hackage casing convention
     range: Option<String>, // raw range string when present
+    /// Milestone 895 (#891) — for a `build-tool-depends` entry, the
+    /// executable named after the colon in `package:executable`.
+    ///
+    /// Modelled as a field rather than left inside `name` so the
+    /// package-and-executable pair cannot flow into a package-name slot
+    /// again: `hspec-discover:hspec-discover` was emitted as a Hackage
+    /// package name, and no registry resolves it.
+    executable: Option<String>,
+    /// Every distinct constraint declared for this name across the file,
+    /// sorted. A package declared in two stanzas with different constraints
+    /// keeps both (FR-007); the identifier no longer distinguishes them.
+    all_ranges: Vec<String>,
 }
 
 // -----------------------------------------------------------------------
@@ -477,25 +493,107 @@ fn cabal_version_re() -> &'static Regex {
 fn cabal_stanza_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
-        Regex::new(r"(?mi)^(library|executable|test-suite|benchmark|foreign-library)(?:\s+(\S+))?\s*$")
+        // Milestone 895: `[ \t]*$` rather than `\s*$`. `\s` matches newlines,
+        // so the greedy trailing `\s*` consumed the line break AND the next
+        // line's indentation — which made a stanza whose first line is its
+        // dependency field look like a field at column zero, and that field
+        // was then skipped. Measured: a `library` stanza starting directly
+        // with `build-depends:` emitted nothing at all, while the same stanza
+        // with any preceding line emitted normally.
+        Regex::new(r"(?mi)^(library|executable|test-suite|benchmark|foreign-library)(?:[ \t]+(\S+))?[ \t\r]*$")
             .expect("static stanza regex")
     })
 }
 
-fn cabal_build_depends_re() -> &'static Regex {
-    static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| {
-        Regex::new(r"(?mis)^\s+build-depends:\s*([^\n][\s\S]*?)(?:\n\s*\n|\n\S|\z)")
-            .expect("static build-depends regex")
-    })
+/// Milestone 895 (#891) — extract the body of EVERY `<field>:` block in a
+/// stanza, applying the cabal layout rule.
+///
+/// Replaces two regexes whose terminator alternation was blank line, column
+/// zero, or end of file. A cabal field block actually ends at the first
+/// subsequent non-blank line indented **at most as far as the field line
+/// itself** — measured on two real files with different generators, see
+/// `specs/895-fix-cabal-parser/research.md` R1.
+///
+/// Two things the old rule got wrong, and one it never attempted:
+///
+/// - It ran past the following field, gluing it onto the last entry. That is
+///   #891 defects 2, 3 and 4.
+/// - `Regex::captures` is singular, so only the FIRST block in a stanza was
+///   considered. Cabal permits a field to repeat, and grouping dependencies
+///   under comment headings by repeating `build-depends:` is idiomatic — on
+///   `aeson.cabal` that cost 10 of 48 declared dependencies.
+/// - Blocks nested inside `if` conditionals were never reached. On the same
+///   file, three dependencies are declared only there.
+///
+/// The reference point is the FIELD line, not the first entry: a block's
+/// entries are frequently less indented than its first entry, which is why
+/// keying on the first entry's column would be wrong.
+fn extract_field_blocks(stanza_body: &str, field: &str) -> Vec<String> {
+    fn indent_of(line: &str) -> usize {
+        line.len() - line.trim_start_matches([' ', '\t']).len()
+    }
+
+    // `.lines()` strips `\n` but leaves `\r`, which otherwise trails every
+    // token on a CRLF file and leaks into emitted identifiers.
+    let lines: Vec<&str> = stanza_body
+        .lines()
+        .map(|l| l.strip_suffix('\r').unwrap_or(l))
+        .collect();
+    let mut blocks: Vec<String> = Vec::new();
+
+    for (i, line) in lines.iter().enumerate() {
+        let trimmed = line.trim_start();
+        let Some(rest) = trimmed.strip_prefix(field) else {
+            continue;
+        };
+        let Some(rest) = rest.strip_prefix(':') else {
+            continue;
+        };
+        // A field at column zero is a stanza-level field, not one inside the
+        // section being scanned.
+        let field_indent = indent_of(line);
+        if field_indent == 0 {
+            continue;
+        }
+
+        // Text after the colon is the block's first content — the
+        // `cabal init` layout puts the first entry there.
+        //
+        // Comments are stripped HERE, per source line, before the lines are
+        // joined. Stripping after the join truncates the whole block at the
+        // first `--` and silently drops every entry that followed it.
+        let mut body = String::from(strip_line_comment(rest));
+        for next in lines.iter().skip(i + 1) {
+            if next.trim().is_empty() {
+                // A blank line does not end a block; it is skipped while
+                // looking for the terminator.
+                continue;
+            }
+            if indent_of(next) <= field_indent {
+                break;
+            }
+            body.push(' ');
+            body.push_str(strip_line_comment(next));
+        }
+        blocks.push(body);
+    }
+    blocks
 }
 
-fn cabal_build_tool_depends_re() -> &'static Regex {
-    static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| {
-        Regex::new(r"(?mis)^\s+build-tool-depends:\s*([^\n][\s\S]*?)(?:\n\s*\n|\n\S|\z)")
-            .expect("static build-tool-depends regex")
-    })
+/// Strip a trailing `--` line comment from ONE source line.
+///
+/// Comments at or below the field's indentation already terminate the block
+/// under the layout rule, so this handles the deeper case — a comment sitting
+/// between two entries.
+///
+/// Must be applied per line, before the block's lines are joined: applied to
+/// an already-joined body it truncates at the first `--` and drops every
+/// entry after it.
+fn strip_line_comment(line: &str) -> &str {
+    match line.find("--") {
+        Some(idx) => &line[..idx],
+        None => line,
+    }
 }
 
 fn hpack_header_re() -> &'static Regex {
@@ -544,18 +642,29 @@ pub fn read(
         stack_yaml_paths: discover_stack_yamls(rootfs, exclude_set),
         package_yaml_paths: discover_package_yamls(rootfs, exclude_set),
     };
-    finalize(paths, include_dev, exclude_set)
+    finalize(paths, include_dev, exclude_set).0
 }
 
 /// Post-walker entry — takes the discovered path lists (from either
 /// the legacy `discover_*` or the shared-walker `on_haskell_file`) and
 /// runs the parse-and-emit pipeline. Preserves the original `read()`
 /// behavior byte-for-byte on the emitted `Vec<PackageDbEntry>`.
+/// Milestone 895 (FR-012a/b) — how many dependency entries the scan could
+/// not read, and whether a `.cabal` file was read at all.
+///
+/// `None` when no `.cabal` file was found: a project with no Haskell content
+/// must stay byte-identical, and reporting an honest zero everywhere would
+/// change every other document in the corpus (SEC-2).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct HaskellParseSummary {
+    pub skipped_entries: usize,
+}
+
 pub(crate) fn finalize(
     paths: HaskellDiscoveredPaths,
     _include_dev: bool,
     _exclude_set: &ExclusionSet,
-) -> Vec<PackageDbEntry> {
+) -> (Vec<PackageDbEntry>, Option<HaskellParseSummary>) {
     let mut out: Vec<PackageDbEntry> = Vec::new();
     let mut seen_purls: HashSet<String> = HashSet::new();
 
@@ -590,8 +699,11 @@ pub(crate) fn finalize(
         && stack_lock_paths.is_empty()
         && stack_yaml_paths.is_empty()
     {
-        return out;
+        return (out, None);
     }
+    // A `.cabal` file was read, so the summary is reported even at zero
+    // (FR-012b). Accumulated across every manifest parsed below.
+    let mut skipped_entries: usize = 0;
 
     // Phase B — parse freeze files. Track parse-success per parent dir
     // so design-tier fallback (Phase G) can distinguish "lockfile exists
@@ -666,7 +778,10 @@ pub(crate) fn finalize(
             continue;
         }
         match parse_cabal_manifest(path) {
-            Ok(manifest) => cabal_manifests.push((path.clone(), manifest)),
+            Ok(manifest) => {
+                skipped_entries += manifest.skipped_entries;
+                cabal_manifests.push((path.clone(), manifest));
+            }
             Err(err) => {
                 tracing::warn!(
                     path = %path.display(),
@@ -748,7 +863,15 @@ pub(crate) fn finalize(
         }
     }
 
-    out
+    if skipped_entries > 0 {
+        tracing::warn!(
+            skipped_entries,
+            "haskell: {} dependency entr(ies) were not valid cabal package \
+             names and were skipped; their readable siblings are unaffected",
+            skipped_entries,
+        );
+    }
+    (out, Some(HaskellParseSummary { skipped_entries }))
 }
 
 // -----------------------------------------------------------------------
@@ -979,20 +1102,24 @@ fn parse_cabal_manifest(path: &Path) -> anyhow::Result<CabalManifest> {
         .captures(&text)
         .and_then(|c| c.get(1).map(|m| m.as_str().to_string()));
     let hpack_generated = hpack_header_re().is_match(&text);
-    let stanzas = extract_stanzas(&text);
+    let (stanzas, skipped_entries) = extract_stanzas_counting(&text);
 
     Ok(CabalManifest {
         name,
         version,
         stanzas,
         hpack_generated,
+        skipped_entries,
     })
 }
 
 /// Extract per-stanza `build-depends:` + `build-tool-depends:` blocks
 /// from a *.cabal body. Per research §R4.
-fn extract_stanzas(text: &str) -> Vec<CabalStanza> {
+/// Stanzas, plus the number of dependency entries that could not be read
+/// across all of them (FR-012a).
+fn extract_stanzas_counting(text: &str) -> (Vec<CabalStanza>, usize) {
     let mut out: Vec<CabalStanza> = Vec::new();
+    let mut skipped_entries: usize = 0;
     // Collect all stanza openers + their character offsets.
     let opener_matches: Vec<_> = cabal_stanza_re()
         .captures_iter(text)
@@ -1021,8 +1148,10 @@ fn extract_stanzas(text: &str) -> Vec<CabalStanza> {
             .unwrap_or(text.len());
         let block = &text[block_start..block_end];
 
-        let build_depends = extract_build_depends_block(block, cabal_build_depends_re());
-        let build_tool_depends = extract_build_depends_block(block, cabal_build_tool_depends_re());
+        let (build_depends, skipped_deps) = extract_declared_deps(block, "build-depends");
+        let (build_tool_depends, skipped_tools) =
+            extract_declared_deps(block, "build-tool-depends");
+        skipped_entries += skipped_deps + skipped_tools;
 
         out.push(CabalStanza {
             kind: *kind,
@@ -1031,23 +1160,48 @@ fn extract_stanzas(text: &str) -> Vec<CabalStanza> {
             build_tool_depends,
         });
     }
-    out
+    (out, skipped_entries)
 }
 
-fn extract_build_depends_block(block: &str, re: &Regex) -> Vec<DeclaredDep> {
-    let Some(caps) = re.captures(block) else {
-        return Vec::new();
-    };
-    let Some(body) = caps.get(1) else {
-        return Vec::new();
-    };
-    parse_dep_list(body.as_str())
+/// Every dependency declared by every `<field>:` block in a stanza.
+///
+/// One block per occurrence (milestone 895) — the previous implementation
+/// took `Regex::captures`, singular, and saw only the first.
+fn extract_declared_deps(block: &str, field: &str) -> (Vec<DeclaredDep>, usize) {
+    let mut deps = Vec::new();
+    let mut skipped = 0usize;
+    for body in extract_field_blocks(block, field) {
+        let (d, s) = parse_dep_list_counting(&body);
+        deps.extend(d);
+        skipped += s;
+    }
+    (deps, skipped)
 }
 
 /// Parse a comma-separated dep list (potentially multi-line) into
 /// `Vec<DeclaredDep>`. Each entry is `<name> [<range>]`; we split on
 /// first whitespace to separate name from range.
-fn parse_dep_list(body: &str) -> Vec<DeclaredDep> {
+/// Whether a token is a legal cabal package name.
+///
+/// Cabal's grammar is alphanumerics and hyphens, with at least one component
+/// that is not purely numeric. Without this check anything surviving the
+/// comma split became a component — a `!!!not-a-package` entry was emitted as
+/// `pkg:hackage/!!!not-a-package`, which no registry resolves and which a
+/// consumer cannot distinguish from a real dependency.
+fn is_valid_cabal_package_name(name: &str) -> bool {
+    !name.is_empty()
+        && name.chars().all(|c| c.is_ascii_alphanumeric() || c == '-')
+        && name.chars().any(|c| c.is_ascii_alphabetic())
+}
+
+/// Entries, plus the number that could not be read.
+///
+/// Milestone 895 (FR-012): an unreadable entry yields nothing rather than a
+/// guess, and its readable siblings are unaffected. Closing at list
+/// granularity instead would delete the siblings — trading an accuracy
+/// failure for a larger completeness one, which is the reasoning recorded in
+/// the spec's Fail Closed clarification.
+fn parse_dep_list_counting(body: &str) -> (Vec<DeclaredDep>, usize) {
     // Flatten multi-line continuations: collapse whitespace + newlines.
     let flattened: String = body
         .lines()
@@ -1055,23 +1209,40 @@ fn parse_dep_list(body: &str) -> Vec<DeclaredDep> {
         .collect::<Vec<_>>()
         .join(" ");
     let mut out: Vec<DeclaredDep> = Vec::new();
+    let mut skipped: usize = 0;
     for entry_str in flattened.split(',') {
         let trimmed = entry_str.trim();
         if trimmed.is_empty() {
             continue;
         }
-        match trimmed.split_once(char::is_whitespace) {
-            Some((name, rest)) => out.push(DeclaredDep {
-                name: name.to_lowercase(),
-                range: Some(rest.trim().to_string()),
-            }),
-            None => out.push(DeclaredDep {
-                name: trimmed.to_lowercase(),
-                range: None,
-            }),
+        let (raw_name, range) = match trimmed.split_once(char::is_whitespace) {
+            Some((name, rest)) => (name, Some(rest.trim().to_string())),
+            None => (trimmed, None),
+        };
+        // A `build-tool-depends` entry is `package:executable`. The package
+        // is the declared name; the executable is carried separately.
+        let (name, executable) = match raw_name.split_once(':') {
+            Some((pkg, exe)) if !pkg.is_empty() && !exe.is_empty() => {
+                (pkg, Some(exe.to_lowercase()))
+            }
+            _ => (raw_name, None),
+        };
+        if !is_valid_cabal_package_name(name) {
+            skipped += 1;
+            tracing::debug!(
+                entry = %trimmed,
+                "haskell: dependency entry is not a valid cabal package name; skipping"
+            );
+            continue;
         }
+        out.push(DeclaredDep {
+            name: name.to_lowercase(),
+            range,
+            executable,
+            all_ranges: Vec::new(),
+        });
     }
-    out
+    (out, skipped)
 }
 
 // -----------------------------------------------------------------------
@@ -1079,24 +1250,58 @@ fn parse_dep_list(body: &str) -> Vec<DeclaredDep> {
 // -----------------------------------------------------------------------
 
 fn collect_design_tier_deps(manifest: &CabalManifest) -> Vec<(DeclaredDep, LifecycleScope)> {
-    let mut by_name: HashMap<String, (DeclaredDep, LifecycleScope)> = HashMap::new();
+    // Milestone 895: the accumulator carries EVERY constraint declared for a
+    // name, and every executable, not only the first.
+    //
+    // The previous shape kept the first `DeclaredDep` and merged only scope,
+    // so a package declared in two stanzas with different constraints lost
+    // one of them silently. That mattered little while the constraint also
+    // appeared in the identifier; now that the identifier is versionless the
+    // constraint record is its only carrier (FR-007).
+    let mut by_name: HashMap<String, (DeclaredDep, LifecycleScope, BTreeSet<String>, BTreeSet<String>)> =
+        HashMap::new();
+
+    let record = |dep: &DeclaredDep, scope: LifecycleScope, map: &mut HashMap<_, _>| {
+        let entry = map
+            .entry(dep.name.clone())
+            .or_insert_with(|| (dep.clone(), scope, BTreeSet::new(), BTreeSet::new()));
+        let (_, s, ranges, execs): &mut (DeclaredDep, LifecycleScope, BTreeSet<String>, BTreeSet<String>) = entry;
+        *s = merge_scope(*s, scope);
+        if let Some(r) = dep.range.as_ref().filter(|r| !r.trim().is_empty()) {
+            ranges.insert(r.clone());
+        }
+        if let Some(e) = dep.executable.as_ref() {
+            execs.insert(e.clone());
+        }
+    };
+
     for stanza in &manifest.stanzas {
         let scope = stanza_lifecycle_scope(stanza.kind);
         for dep in &stanza.build_depends {
-            by_name
-                .entry(dep.name.clone())
-                .and_modify(|(_, s)| *s = merge_scope(*s, scope))
-                .or_insert_with(|| (dep.clone(), scope));
+            record(dep, scope, &mut by_name);
         }
         for dep in &stanza.build_tool_depends {
-            // Build-tool-depends ALWAYS Development per FR-010, regardless of containing stanza.
-            by_name
-                .entry(dep.name.clone())
-                .and_modify(|(_, s)| *s = merge_scope(*s, LifecycleScope::Development))
-                .or_insert_with(|| (dep.clone(), LifecycleScope::Development));
+            // A build tool is build-time regardless of the stanza containing
+            // it (FR-010).
+            record(dep, LifecycleScope::Development, &mut by_name);
         }
     }
-    by_name.into_values().collect()
+
+    by_name
+        .into_values()
+        .map(|(mut dep, scope, ranges, execs)| {
+            // Fold every distinct constraint into the entry, sorted so the
+            // emitted record is byte-stable across runs.
+            dep.range = if ranges.is_empty() {
+                None
+            } else {
+                Some(ranges.iter().cloned().collect::<Vec<_>>().join(", "))
+            };
+            dep.all_ranges = ranges.into_iter().collect();
+            dep.executable = execs.into_iter().next();
+            (dep, scope)
+        })
+        .collect()
 }
 
 // -----------------------------------------------------------------------
@@ -1398,9 +1603,24 @@ fn build_design_tier_components(
         if dep.name == main_name {
             continue;
         }
-        let range = dep.range.clone().unwrap_or_else(|| "unspecified".to_string());
-        let sanitized = sanitize_purl_version(&range);
-        let purl_str = format!("pkg:hackage/{}@{}", dep.name, sanitized);
+        // Milestone 895 (#891) — a declared dependency has no RESOLVED version,
+        // so the identifier carries no version segment.
+        //
+        // Previously the declared CONSTRAINT was sanitised into the version
+        // slot, producing `pkg:hackage/base@>=4.11_&&_<4.22` — syntactically
+        // a PURL, semantically meaningless, resolvable against nothing. A
+        // constraint describes an acceptable set; a version names one member
+        // of it, and the formats model only the latter. The `unspecified`
+        // sentinel the fallback used was the same error in milder form.
+        //
+        // The constraint is not lost: it is carried in
+        // `waybill:requirement-ranges` below, catalogued as C20, which is now
+        // its sole carrier.
+        //
+        // Matches the convention the cargo, gem, pip, nuget, cmake and vcpkg
+        // readers already use for the same situation. The `ghc` / stackage
+        // resolver placeholders are a different code path and keep theirs.
+        let purl_str = format!("pkg:hackage/{}", dep.name);
         let purl = match Purl::new(&purl_str) {
             Ok(p) => p,
             Err(_) => continue,
@@ -1411,8 +1631,22 @@ fn build_design_tier_components(
         // later accumulate onto a survivor if a source-tier match exists.
         extra_annotations.insert(
             "waybill:requirement-ranges".to_string(),
-            serde_json::json!([dep.range.clone().unwrap_or_default()]),
+            serde_json::json!(if dep.all_ranges.is_empty() {
+                dep.range.clone().into_iter().collect::<Vec<_>>()
+            } else {
+                dep.all_ranges.clone()
+            }),
         );
+        // Milestone 895 (#891) — the executable a `build-tool-depends` entry
+        // names. The identifier carries the package alone so it resolves
+        // against the registry; this keeps the pair the project declared
+        // recoverable (FR-010b).
+        if let Some(exe) = dep.executable.as_ref() {
+            extra_annotations.insert(
+                "waybill:cabal-build-tool-executable".to_string(),
+                serde_json::Value::String(exe.clone()),
+            );
+        }
         apply_ghc_stdlib_annotation(&mut extra_annotations, &dep.name);
         // Milestone 236 (C151): haskell cabal design-tier reason.
         extra_annotations.insert(
@@ -1425,14 +1659,21 @@ fn build_design_tier_components(
             depends_ecosystem: None,
             purl,
             name: dep.name.clone(),
-            version: sanitized,
+            // No resolved version, and the constraint is not one — it lives
+            // in `requirement_ranges` below (milestone 895).
+            version: String::new(),
             arch: None,
             source_path: cabal_path.to_string_lossy().into_owned(),
             depends: Vec::new(),
             maintainer: None,
             licenses: Vec::new(),
             lifecycle_scope: Some(scope),
-            requirement_ranges: dep.range.clone().into_iter().collect(),
+            // Every distinct constraint declared for this name (FR-007).
+            requirement_ranges: if dep.all_ranges.is_empty() {
+                dep.range.clone().into_iter().collect()
+            } else {
+                dep.all_ranges.clone()
+            },
             source_type: Some("hackage-cabal-design".to_string()),
             buildinfo_status: None,
             sbom_tier: Some("design".to_string()),
@@ -1784,8 +2025,8 @@ version: 0.1.0
                     kind: StanzaKind::Library,
                     label: None,
                     build_depends: vec![
-                        DeclaredDep { name: "base".to_string(), range: None },
-                        DeclaredDep { name: "text".to_string(), range: None },
+                        DeclaredDep { name: "base".to_string(), range: None, executable: None, all_ranges: Vec::new() },
+                        DeclaredDep { name: "text".to_string(), range: None, executable: None, all_ranges: Vec::new() },
                     ],
                     build_tool_depends: vec![],
                 },
@@ -1793,13 +2034,14 @@ version: 0.1.0
                     kind: StanzaKind::TestSuite,
                     label: Some("spec".to_string()),
                     build_depends: vec![
-                        DeclaredDep { name: "base".to_string(), range: None },
-                        DeclaredDep { name: "hspec".to_string(), range: None },
+                        DeclaredDep { name: "base".to_string(), range: None, executable: None, all_ranges: Vec::new() },
+                        DeclaredDep { name: "hspec".to_string(), range: None, executable: None, all_ranges: Vec::new() },
                     ],
                     build_tool_depends: vec![],
                 },
             ],
             hpack_generated: false,
+            skipped_entries: 0,
         };
         let unioned: HashMap<String, LifecycleScope> = collect_design_tier_deps(&manifest)
             .into_iter()

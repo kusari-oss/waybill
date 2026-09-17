@@ -946,6 +946,7 @@ cdx_anno!(c158_cdx, "waybill:enrichment-degraded",                  document);
 cdx_anno!(c159_cdx, "waybill:unresolved-declared-dep-count",         document);
 cdx_anno!(c160_cdx, "waybill:component-kind",                        component);
 cdx_anno!(c161_cdx, "waybill:resolve-ownership",                     document);
+cdx_anno!(c162_cdx, "waybill:cabal-entries-skipped",                 document);
 
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.
