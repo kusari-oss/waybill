@@ -88,3 +88,27 @@ Grep for `##[error]` when you want output, not `::error::`.
 
 This file. Also see README.md for the `report-success` / `dry_run` defect that
 run 35257496241 exposed.
+
+## Final green-path run against `latest` (post-Phase-4)
+
+| | |
+|---|---|
+| Run | [`35262048896`](https://github.com/kusari-oss/waybill/actions/runs/35262048896) |
+| Dispatched | `-f version=latest -f dry_run=true` |
+| Conclusion | **success** |
+| Attribution | `latest=success control=skipped artifact=true` → **none** |
+
+The control build was skipped, which is correct — it only runs when the target
+build fails, so the green path stays at one build.
+
+### This answers the question the canary exists to ask
+
+`latest` resolved to bpf-linker **0.11.1**; the pin is **0.11.0**. It built.
+
+There was never an upstream regression. For 36 runs the canary reported one
+anyway, and the question "can we move off the pinned version yet?" was
+unanswerable the whole time — not because the answer was hard, but because the
+instrument was broken. The answer is yes.
+
+Bumping the pin is separate work and out of scope here (spec Assumptions), but
+it is now a decision someone can actually make on evidence.
