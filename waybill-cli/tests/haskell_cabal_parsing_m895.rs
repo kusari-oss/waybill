@@ -729,3 +729,94 @@ library
          a runtime filter",
     );
 }
+
+// -------------------------------------------------------------------
+// Partial-failure reporting (cross-cutting).
+// -------------------------------------------------------------------
+
+/// The document-scope skipped-entry count, if present.
+fn skipped_count(doc: &Value) -> Option<String> {
+    doc["metadata"]["properties"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .find(|p| p["name"].as_str() == Some("waybill:cabal-entries-skipped"))
+        .and_then(|p| p["value"].as_str().map(String::from))
+}
+
+#[test]
+fn t042_one_unreadable_entry_costs_one_component_not_the_list() {
+    // FR-012, SC-006, contract A-5. The defect being fixed is emitting a
+    // guess; a sibling that parsed cleanly is not a guess, and dropping it
+    // would trade an accuracy failure for a larger completeness one.
+    let body = r#"cabal-version: 1.12
+name:           waybill-fixture-app
+version:        0.1
+
+library
+  build-depends:
+      waybill-fixture-good >=1 && <2
+    , !!!not-a-package
+    , waybill-fixture-also-good
+  default-language: Haskell2010
+"#;
+    let (doc, _d) = scan_cabal(body);
+    let names = emitted_names(&doc);
+    assert!(
+        names.contains("waybill-fixture-good") && names.contains("waybill-fixture-also-good"),
+        "both readable siblings must survive; got {names:#?}",
+    );
+    assert!(
+        !emitted_purls(&doc).iter().any(|p| p.contains('!')),
+        "an entry that is not a valid package name must not be emitted: {:#?}",
+        emitted_purls(&doc),
+    );
+    assert_eq!(
+        skipped_count(&doc).as_deref(),
+        Some("1"),
+        "exactly one entry was unreadable and the count must say so",
+    );
+}
+
+#[test]
+fn t043_the_skip_count_is_reported_even_when_zero() {
+    // FR-012b. "Fully readable" and "the field is missing" are different
+    // claims. Asserting on Option means an absent field fails here rather
+    // than only a wrong value — feeding a document without it is the check.
+    let (doc, _d) = scan_cabal(REPRO);
+    assert_eq!(
+        skipped_count(&doc).as_deref(),
+        Some("0"),
+        "a fully readable file must report zero, not omit the field",
+    );
+}
+
+#[test]
+fn t043b_the_count_is_absent_when_no_cabal_file_was_read() {
+    // SEC-2. A project with no Haskell content must be byte-identical to
+    // before this feature — reporting an honest zero everywhere would change
+    // every other document in the corpus.
+    let dir = tempfile::tempdir().unwrap();
+    std::fs::write(dir.path().join("README.md"), "no cabal here\n").unwrap();
+    let out = dir.path().join("out.cdx.json");
+    let result = Command::new(binary_path())
+        .arg("--offline")
+        .arg("sbom")
+        .arg("scan")
+        .arg("--path")
+        .arg(dir.path())
+        .arg("--format")
+        .arg("cyclonedx-json")
+        .arg("--output")
+        .arg(format!("cyclonedx-json={}", out.display()))
+        .arg("--no-deep-hash")
+        .output()
+        .unwrap();
+    assert!(result.status.success());
+    let doc: Value = serde_json::from_slice(&std::fs::read(&out).unwrap()).unwrap();
+    assert_eq!(
+        skipped_count(&doc),
+        None,
+        "a project with no .cabal file must report nothing",
+    );
+}

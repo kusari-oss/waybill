@@ -232,7 +232,7 @@ pub(crate) fn build_and_run(
         .expect("haskell registration must be present — we just registered it");
     let paths = extract_paths(haskell_reg);
 
-    finalize(paths, include_dev, exclude_set)
+    finalize(paths, include_dev, exclude_set).0
 }
 
 
@@ -320,6 +320,10 @@ struct CabalManifest {
     version: Option<String>,
     stanzas: Vec<CabalStanza>,
     hpack_generated: bool,
+    /// Milestone 895 (FR-012a) — dependency entries in this file that could
+    /// not be read. Carried on the manifest so the per-file figure survives
+    /// to the scan-wide total without a side channel.
+    skipped_entries: usize,
 }
 
 #[derive(Debug, Clone)]
@@ -638,18 +642,29 @@ pub fn read(
         stack_yaml_paths: discover_stack_yamls(rootfs, exclude_set),
         package_yaml_paths: discover_package_yamls(rootfs, exclude_set),
     };
-    finalize(paths, include_dev, exclude_set)
+    finalize(paths, include_dev, exclude_set).0
 }
 
 /// Post-walker entry — takes the discovered path lists (from either
 /// the legacy `discover_*` or the shared-walker `on_haskell_file`) and
 /// runs the parse-and-emit pipeline. Preserves the original `read()`
 /// behavior byte-for-byte on the emitted `Vec<PackageDbEntry>`.
+/// Milestone 895 (FR-012a/b) — how many dependency entries the scan could
+/// not read, and whether a `.cabal` file was read at all.
+///
+/// `None` when no `.cabal` file was found: a project with no Haskell content
+/// must stay byte-identical, and reporting an honest zero everywhere would
+/// change every other document in the corpus (SEC-2).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct HaskellParseSummary {
+    pub skipped_entries: usize,
+}
+
 pub(crate) fn finalize(
     paths: HaskellDiscoveredPaths,
     _include_dev: bool,
     _exclude_set: &ExclusionSet,
-) -> Vec<PackageDbEntry> {
+) -> (Vec<PackageDbEntry>, Option<HaskellParseSummary>) {
     let mut out: Vec<PackageDbEntry> = Vec::new();
     let mut seen_purls: HashSet<String> = HashSet::new();
 
@@ -684,8 +699,11 @@ pub(crate) fn finalize(
         && stack_lock_paths.is_empty()
         && stack_yaml_paths.is_empty()
     {
-        return out;
+        return (out, None);
     }
+    // A `.cabal` file was read, so the summary is reported even at zero
+    // (FR-012b). Accumulated across every manifest parsed below.
+    let mut skipped_entries: usize = 0;
 
     // Phase B — parse freeze files. Track parse-success per parent dir
     // so design-tier fallback (Phase G) can distinguish "lockfile exists
@@ -760,7 +778,10 @@ pub(crate) fn finalize(
             continue;
         }
         match parse_cabal_manifest(path) {
-            Ok(manifest) => cabal_manifests.push((path.clone(), manifest)),
+            Ok(manifest) => {
+                skipped_entries += manifest.skipped_entries;
+                cabal_manifests.push((path.clone(), manifest));
+            }
             Err(err) => {
                 tracing::warn!(
                     path = %path.display(),
@@ -842,7 +863,15 @@ pub(crate) fn finalize(
         }
     }
 
-    out
+    if skipped_entries > 0 {
+        tracing::warn!(
+            skipped_entries,
+            "haskell: {} dependency entr(ies) were not valid cabal package \
+             names and were skipped; their readable siblings are unaffected",
+            skipped_entries,
+        );
+    }
+    (out, Some(HaskellParseSummary { skipped_entries }))
 }
 
 // -----------------------------------------------------------------------
@@ -1073,20 +1102,24 @@ fn parse_cabal_manifest(path: &Path) -> anyhow::Result<CabalManifest> {
         .captures(&text)
         .and_then(|c| c.get(1).map(|m| m.as_str().to_string()));
     let hpack_generated = hpack_header_re().is_match(&text);
-    let stanzas = extract_stanzas(&text);
+    let (stanzas, skipped_entries) = extract_stanzas_counting(&text);
 
     Ok(CabalManifest {
         name,
         version,
         stanzas,
         hpack_generated,
+        skipped_entries,
     })
 }
 
 /// Extract per-stanza `build-depends:` + `build-tool-depends:` blocks
 /// from a *.cabal body. Per research §R4.
-fn extract_stanzas(text: &str) -> Vec<CabalStanza> {
+/// Stanzas, plus the number of dependency entries that could not be read
+/// across all of them (FR-012a).
+fn extract_stanzas_counting(text: &str) -> (Vec<CabalStanza>, usize) {
     let mut out: Vec<CabalStanza> = Vec::new();
+    let mut skipped_entries: usize = 0;
     // Collect all stanza openers + their character offsets.
     let opener_matches: Vec<_> = cabal_stanza_re()
         .captures_iter(text)
@@ -1115,8 +1148,10 @@ fn extract_stanzas(text: &str) -> Vec<CabalStanza> {
             .unwrap_or(text.len());
         let block = &text[block_start..block_end];
 
-        let build_depends = extract_declared_deps(block, "build-depends");
-        let build_tool_depends = extract_declared_deps(block, "build-tool-depends");
+        let (build_depends, skipped_deps) = extract_declared_deps(block, "build-depends");
+        let (build_tool_depends, skipped_tools) =
+            extract_declared_deps(block, "build-tool-depends");
+        skipped_entries += skipped_deps + skipped_tools;
 
         out.push(CabalStanza {
             kind: *kind,
@@ -1125,24 +1160,48 @@ fn extract_stanzas(text: &str) -> Vec<CabalStanza> {
             build_tool_depends,
         });
     }
-    out
+    (out, skipped_entries)
 }
 
 /// Every dependency declared by every `<field>:` block in a stanza.
 ///
 /// One block per occurrence (milestone 895) — the previous implementation
 /// took `Regex::captures`, singular, and saw only the first.
-fn extract_declared_deps(block: &str, field: &str) -> Vec<DeclaredDep> {
-    extract_field_blocks(block, field)
-        .iter()
-        .flat_map(|body| parse_dep_list(body))
-        .collect()
+fn extract_declared_deps(block: &str, field: &str) -> (Vec<DeclaredDep>, usize) {
+    let mut deps = Vec::new();
+    let mut skipped = 0usize;
+    for body in extract_field_blocks(block, field) {
+        let (d, s) = parse_dep_list_counting(&body);
+        deps.extend(d);
+        skipped += s;
+    }
+    (deps, skipped)
 }
 
 /// Parse a comma-separated dep list (potentially multi-line) into
 /// `Vec<DeclaredDep>`. Each entry is `<name> [<range>]`; we split on
 /// first whitespace to separate name from range.
-fn parse_dep_list(body: &str) -> Vec<DeclaredDep> {
+/// Whether a token is a legal cabal package name.
+///
+/// Cabal's grammar is alphanumerics and hyphens, with at least one component
+/// that is not purely numeric. Without this check anything surviving the
+/// comma split became a component — a `!!!not-a-package` entry was emitted as
+/// `pkg:hackage/!!!not-a-package`, which no registry resolves and which a
+/// consumer cannot distinguish from a real dependency.
+fn is_valid_cabal_package_name(name: &str) -> bool {
+    !name.is_empty()
+        && name.chars().all(|c| c.is_ascii_alphanumeric() || c == '-')
+        && name.chars().any(|c| c.is_ascii_alphabetic())
+}
+
+/// Entries, plus the number that could not be read.
+///
+/// Milestone 895 (FR-012): an unreadable entry yields nothing rather than a
+/// guess, and its readable siblings are unaffected. Closing at list
+/// granularity instead would delete the siblings — trading an accuracy
+/// failure for a larger completeness one, which is the reasoning recorded in
+/// the spec's Fail Closed clarification.
+fn parse_dep_list_counting(body: &str) -> (Vec<DeclaredDep>, usize) {
     // Flatten multi-line continuations: collapse whitespace + newlines.
     let flattened: String = body
         .lines()
@@ -1150,6 +1209,7 @@ fn parse_dep_list(body: &str) -> Vec<DeclaredDep> {
         .collect::<Vec<_>>()
         .join(" ");
     let mut out: Vec<DeclaredDep> = Vec::new();
+    let mut skipped: usize = 0;
     for entry_str in flattened.split(',') {
         let trimmed = entry_str.trim();
         if trimmed.is_empty() {
@@ -1167,6 +1227,14 @@ fn parse_dep_list(body: &str) -> Vec<DeclaredDep> {
             }
             _ => (raw_name, None),
         };
+        if !is_valid_cabal_package_name(name) {
+            skipped += 1;
+            tracing::debug!(
+                entry = %trimmed,
+                "haskell: dependency entry is not a valid cabal package name; skipping"
+            );
+            continue;
+        }
         out.push(DeclaredDep {
             name: name.to_lowercase(),
             range,
@@ -1174,7 +1242,7 @@ fn parse_dep_list(body: &str) -> Vec<DeclaredDep> {
             all_ranges: Vec::new(),
         });
     }
-    out
+    (out, skipped)
 }
 
 // -----------------------------------------------------------------------
@@ -1973,6 +2041,7 @@ version: 0.1.0
                 },
             ],
             hpack_generated: false,
+            skipped_entries: 0,
         };
         let unioned: HashMap<String, LifecycleScope> = collect_design_tier_deps(&manifest)
             .into_iter()

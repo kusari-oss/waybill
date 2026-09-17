@@ -172,6 +172,9 @@ pub struct ScanArtifacts<'a> {
     /// Pex lockfile was discovered (annotation absent; contract A-7).
     pub pants_resolve_summary:
         Option<crate::scan_fs::package_db::pants::PantsResolveSummary>,
+    /// Milestone 895 (#891) — doc-scope Haskell skipped-entry count.
+    pub haskell_parse_summary:
+        Option<crate::scan_fs::package_db::haskell::HaskellParseSummary>,
     /// Milestone 235 US4: aggregate Gradle-resolution tier summary
     /// driving the C146 `waybill:gradle-resolution-tier` doc-scope
     /// annotation. `None` iff no Gradle project was touched
@@ -413,6 +416,7 @@ impl<'a> ScanArtifacts<'a> {
             cross_ecosystem_edges_report: self.cross_ecosystem_edges_report,
             helm_extraction_mode: self.helm_extraction_mode,
             pants_resolve_summary: self.pants_resolve_summary,
+            haskell_parse_summary: self.haskell_parse_summary,
             gradle_scan_summary: self.gradle_scan_summary,
             no_binary_scan_mode: self.no_binary_scan_mode,
             image_source: self.image_source,

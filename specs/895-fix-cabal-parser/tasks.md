@@ -133,13 +133,13 @@ different ways.
 
 **Purpose**: FR-012 applies to every story's parsing path, so it lands once rather than three times.
 
-- [ ] T042 [P] Add a test asserting one unreadable entry among N emits N-1 components and reports a skip count of 1, with no sibling lost (FR-012, SC-006, contract A-5)
-- [ ] T043 [P] Add a test asserting the skip count is reported even when zero, so "fully readable" stays distinguishable from "count missing" (FR-012b). Feed a document with the field absent to confirm the check fails on absence rather than only on a wrong value
-- [ ] T044 Teeth-check T042-T043 and record what the baseline does (SC-008) — note it currently detects nothing as unreadable, so these may be regression guards rather than defect-catchers; say which
-- [ ] T045 Implement per-entry skip with a counter in `waybill-cli/src/scan_fs/package_db/haskell.rs`, counting entries rather than files or bytes (FR-012, DD-3, SEC-3)
-- [ ] T046 Emit the count document-scope, present when the reader ran and absent otherwise (FR-012a, SEC-1, SEC-2)
-- [ ] T047 Add the catalogue row for the skip count in `docs/reference/sbom-format-mapping.md` **and** its three extractor entries in `waybill-cli/src/parity/extractors/mod.rs::EXTRACTORS` in the same commit — a row without an extractor fails `every_catalog_row_has_an_extractor` and `holistic_parity`
-- [ ] T048 Run `./scripts/pre-pr.sh` and confirm zero golden churn — no Haskell project is in either corpus, so no committed fixture should move (R5)
+- [X] T042 [P] Add a test asserting one unreadable entry among N emits N-1 components and reports a skip count of 1, with no sibling lost (FR-012, SC-006, contract A-5)
+- [X] T043 [P] Add a test asserting the skip count is reported even when zero, so "fully readable" stays distinguishable from "count missing" (FR-012b). Feed a document with the field absent to confirm the check fails on absence rather than only on a wrong value
+- [X] T044 Teeth-check T042-T043 and record what the baseline does (SC-008) — note it currently detects nothing as unreadable, so these may be regression guards rather than defect-catchers; say which
+- [X] T045 Implement per-entry skip with a counter in `waybill-cli/src/scan_fs/package_db/haskell.rs`, counting entries rather than files or bytes (FR-012, DD-3, SEC-3)
+- [X] T046 Emit the count document-scope, present when the reader ran and absent otherwise (FR-012a, SEC-1, SEC-2)
+- [X] T047 Add the catalogue row for the skip count in `docs/reference/sbom-format-mapping.md` **and** its three extractor entries in `waybill-cli/src/parity/extractors/mod.rs::EXTRACTORS` in the same commit — a row without an extractor fails `every_catalog_row_has_an_extractor` and `holistic_parity`
+- [X] T048 Run `./scripts/pre-pr.sh` and confirm zero golden churn — no Haskell project is in either corpus, so no committed fixture should move (R5)
 
 **Checkpoint**: Phase A complete. The parser fix is shippable on its own.
 

@@ -163,3 +163,38 @@ All four existing Haskell integration targets pass unmodified —
 `haskell_tier_fallbacks` (5), `haskell_stack_discrimination` (5) — plus the
 23 in-src unit tests. Contract A-7 holds, and the `ghc` / stackage-resolver
 placeholder keeps its `@unspecified` shape (R2, T031).
+
+## Phase 6 — partial-failure reporting
+
+### A seventh manifestation, found writing the test
+
+There was no package-name validation at all. Anything surviving the comma
+split became a component:
+
+```
+build-depends:
+    waybill-fixture-good >=1 && <2
+  , !!!not-a-package          ->  pkg:hackage/!!!not-a-package
+  , waybill-fixture-also-good
+```
+
+`Purl::new` accepts it, so it shipped. A consumer cannot distinguish it from
+a real dependency, which is the same accuracy failure as #891's four in a
+different guise.
+
+Now rejected against cabal's package-name grammar (alphanumerics and hyphens,
+at least one letter), counted, and reported document-scope as C162
+`waybill:cabal-entries-skipped`. The readable siblings are unaffected —
+skipping is per entry, not per list.
+
+### T044 teeth-check
+
+| Test | Fails on baseline? | Why |
+|---|---|---|
+| `t042_one_unreadable_entry_costs_one_component_not_the_list` | yes | `!!!not-a-package` was emitted, and no count existed |
+| `t043_the_skip_count_is_reported_even_when_zero` | yes | the annotation did not exist |
+| `t043b_the_count_is_absent_when_no_cabal_file_was_read` | **no** | byte-identity guard (SEC-2); asserts an absence that already held |
+
+`t043` asserts on `Option`, so an absent field fails it rather than only a
+wrong value — which is what FR-012b asks for and what T043's task text
+required be checked.
