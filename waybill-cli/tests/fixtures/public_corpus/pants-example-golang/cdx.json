@@ -510,6 +510,10 @@
       {
         "name": "waybill:go-transitive-fallback-count",
         "value": "2"
+      },
+      {
+        "name": "waybill:unresolved-declared-dep-count",
+        "value": "0"
       }
     ],
     "supplier": {

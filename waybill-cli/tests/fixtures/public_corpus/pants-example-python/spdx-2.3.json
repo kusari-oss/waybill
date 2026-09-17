@@ -35,6 +35,18 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-0.7.0",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep-count\",\"value\":\"73\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-0.7.0",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:resolve-ownership\",\"value\":\"weak-classification=1;unanchored-lockfiles=0\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-0.7.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-ring-buffer-overflows\",\"value\":\"0\"}"
     },
     {
@@ -65,13 +77,13 @@
   "creationInfo": "<masked>",
   "dataLicense": "CC0-1.0",
   "documentDescribes": [
-    "SPDXRef-DocumentRoot-KJP6PADJXZ75UQE7"
+    "SPDXRef-DocumentRoot-R3EKJ5VEDBAWIASV"
   ],
   "documentNamespace": "<masked>",
   "name": "pants-example-python e8cfd79",
   "packages": [
     {
-      "SPDXID": "SPDXRef-DocumentRoot-KJP6PADJXZ75UQE7",
+      "SPDXID": "SPDXRef-DocumentRoot-R3EKJ5VEDBAWIASV",
       "downloadLocation": "NOASSERTION",
       "externalRefs": [
         {
@@ -91,6 +103,72 @@
       "name": "pants-example-python",
       "supplier": "Organization: waybill contributors",
       "versionInfo": "e8cfd79"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-L7PWGDCCLFSRLWYO",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"python-default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-kind\",\"value\":\"lockfile-resolve\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:resolve-classification-source\",\"value\":\"heuristic-or-default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:generic/python-default",
+          "referenceType": "purl"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "python-default",
+      "versionInfo": "NOASSERTION"
     },
     {
       "SPDXID": "SPDXRef-Package-THZZ7BY5LVTRT5PE",
@@ -218,6 +296,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.8\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep\",\"value\":\"[\\\"cloudpickle\\\",\\\"cogapp\\\",\\\"coverage\\\",\\\"furo\\\",\\\"hypothesis\\\",\\\"mypy\\\",\\\"myst-parser\\\",\\\"pre-commit-uv\\\",\\\"pympler\\\",\\\"pytest-codspeed\\\",\\\"pytest-mypy-plugins\\\",\\\"pytest-xdist\\\",\\\"sphinx\\\",\\\"sphinx-notfound-page\\\",\\\"sphinxcontrib-towncrier\\\",\\\"towncrier\\\"]\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -469,6 +553,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep\",\"value\":\"[\\\"coverage\\\",\\\"pre-commit\\\",\\\"pytest-benchmark\\\",\\\"tox\\\"]\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -639,6 +729,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep\",\"value\":\"[\\\"argcomplete\\\",\\\"colorama\\\",\\\"hypothesis\\\",\\\"importlib-metadata\\\",\\\"mock\\\",\\\"nose\\\",\\\"pygments\\\",\\\"requests\\\",\\\"xmlschema\\\"]\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -716,6 +812,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-0.7.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.6\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.7.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep\",\"value\":\"[\\\"certifi\\\",\\\"flake8-2020\\\",\\\"jaraco.envs\\\",\\\"jaraco.packaging\\\",\\\"jaraco.path\\\",\\\"mock\\\",\\\"paver\\\",\\\"pip\\\",\\\"pygments-github-lexers\\\",\\\"pytest-black\\\",\\\"pytest-checkdocs\\\",\\\"pytest-cov\\\",\\\"pytest-enabler\\\",\\\"pytest-flake8\\\",\\\"pytest-mypy\\\",\\\"pytest-virtualenv\\\",\\\"pytest-xdist\\\",\\\"rst.linker\\\",\\\"sphinx\\\",\\\"sphinx-inline-tabs\\\",\\\"virtualenv\\\",\\\"wheel\\\",\\\"wincertstore\\\"]\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -988,7 +1090,7 @@
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-KJP6PADJXZ75UQE7",
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-R3EKJ5VEDBAWIASV",
       "relationshipType": "DESCRIBES",
       "spdxElementId": "SPDXRef-DOCUMENT"
     },
@@ -1038,24 +1140,34 @@
       "spdxElementId": "SPDXRef-Package-Q72FCOSCIJC2P37I"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-C6BIGX26BQTR6BDH",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-KJP6PADJXZ75UQE7"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-THZZ7BY5LVTRT5PE",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-KJP6PADJXZ75UQE7"
+      "spdxElementId": "SPDXRef-Package-L7PWGDCCLFSRLWYO"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-SZPP2Q3S7JS3P5RM",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-L7PWGDCCLFSRLWYO"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-Q72FCOSCIJC2P37I",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-KJP6PADJXZ75UQE7"
+      "spdxElementId": "SPDXRef-Package-L7PWGDCCLFSRLWYO"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-V6WS5B3MCUO5V2R7",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-KJP6PADJXZ75UQE7"
+      "spdxElementId": "SPDXRef-Package-L7PWGDCCLFSRLWYO"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-C6BIGX26BQTR6BDH",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-R3EKJ5VEDBAWIASV"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-L7PWGDCCLFSRLWYO",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-R3EKJ5VEDBAWIASV"
     }
   ],
   "spdxVersion": "SPDX-2.3"

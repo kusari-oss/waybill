@@ -3061,6 +3061,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:unresolved-declared-dep",
+          "value": "pinentry"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"var/lib/dpkg\"]"
         }
@@ -9503,6 +9507,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:unresolved-declared-dep",
+          "value": "[\"cdebconf\",\"debconf-2.0\"]"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"var/lib/dpkg\"]"
         }
@@ -9578,6 +9586,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:unresolved-declared-dep",
+          "value": "debconf-2.0"
         },
         {
           "name": "waybill:workspace-member",
@@ -12673,6 +12685,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:unresolved-declared-dep",
+          "value": "perlapi-5.40.0"
         },
         {
           "name": "waybill:workspace-member",
@@ -15998,6 +16014,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:unresolved-declared-dep",
+          "value": "debconf-2.0"
         },
         {
           "name": "waybill:workspace-member",
@@ -31695,6 +31715,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:unresolved-declared-dep",
+          "value": "[\"debconf-2.0\",\"locales-all\"]"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"var/lib/dpkg\"]"
         }
@@ -33490,6 +33514,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:unresolved-declared-dep",
+          "value": "[\"debconf-2.0\",\"lsb-base\"]"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"var/lib/dpkg\"]"
         }
@@ -34106,6 +34134,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:unresolved-declared-dep",
+          "value": "debconf-2.0"
         },
         {
           "name": "waybill:workspace-member",
@@ -36159,6 +36191,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:unresolved-declared-dep",
+          "value": "debconf-2.0"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"var/lib/dpkg\"]"
         }
@@ -36250,6 +36286,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:unresolved-declared-dep",
+          "value": "debconf-2.0"
         },
         {
           "name": "waybill:workspace-member",
@@ -46566,6 +46606,10 @@
       {
         "name": "waybill:workspaces-detected",
         "value": "[\"usr/local/bin\",\"var/lib/dpkg\"]"
+      },
+      {
+        "name": "waybill:unresolved-declared-dep-count",
+        "value": "13"
       }
     ],
     "supplier": {
