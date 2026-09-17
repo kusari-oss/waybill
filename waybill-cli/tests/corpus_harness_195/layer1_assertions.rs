@@ -194,14 +194,27 @@ pub fn rust_ripgrep_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure>
     // or drop ALL `pkg:cargo/*` transitives; (b) a m194-US1-class
     // regression that reintroduces the pico-style false-positive-orphan
     // cascade would push orphan count much higher.
+    // Issue #892 — this expected `partial` until 2026-09-17, and the
+    // expectation encoded a defect rather than a property of the target.
+    //
+    // The classifier's edge filter omitted `OptionalDependsOn`, added in
+    // milestone 179 for optional and extras dependencies. CycloneDX emits
+    // every variant as an ordinary `dependsOn` edge, so ripgrep's five
+    // "orphans" were components the emitted document reached and the
+    // classifier could not see. With the filter corrected, walking
+    // `dependencies[]` from the root finds **zero** unreachable components of
+    // 61, so `complete` is the accurate verdict.
+    //
+    // Verified by walking the emitted graph rather than by trusting the
+    // annotation — the annotation is the thing that was wrong.
     let gc = cdx_graph_completeness(&sboms.cdx).unwrap_or_else(|| "<missing>".to_string());
-    if gc != "partial" {
+    if gc != "complete" {
         return Err(AssertionFailure {
             invariant_name: "graph-completeness",
             format: FailureFormat::Cdx,
             observed: gc,
-            expected: "partial (m196-empirical: BFS-orphans from operator-override root, no specific reason-code)".to_string(),
-            suggested_action: "investigate cargo reader (m064 / m087 / m088) — ripgrep drift from `partial` suggests a classifier regression",
+            expected: "complete (#892: every component reachable from the operator-override root once OptionalDependsOn counts as an edge)".to_string(),
+            suggested_action: "walk `dependencies[]` from `metadata.component.bom-ref` and compare against the reported orphan count before assuming a reader regression — a disagreement between the two is a classifier bug, not a coverage loss",
         });
     }
     if !cdx_has_component_purl(&sboms.cdx, |p| p.starts_with("pkg:cargo/")) {
