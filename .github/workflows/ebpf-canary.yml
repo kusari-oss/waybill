@@ -215,6 +215,26 @@ jobs:
           done
           [ "$missing" -eq 0 ]
 
+      # m896 — record the nightly toolchain's actual component state. This is
+      # evidence in every run, and it is what settled the question of how
+      # rust-src reaches the runner (see research R2).
+      - name: Report nightly toolchain state
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          echo "--- rustup toolchain list ---"
+          rustup toolchain list
+          echo "--- nightly components (installed) ---"
+          rustup component list --toolchain nightly | grep '(installed)' || true
+          echo "--- rust-src present? ---"
+          if rustup component list --toolchain nightly | grep -q '^rust-src.* (installed)'; then
+            echo "rust-src: INSTALLED"
+          else
+            echo "rust-src: ABSENT"
+          fi
+          echo "--- rustlib src dir ---"
+          ls -d "$(rustc +nightly --print sysroot)/lib/rustlib/src/rust/library" 2>&1 || echo "(absent)"
+
       - name: Install bpf-linker (via m234 composite)
         id: install
         uses: ./.github/actions/install-bpf-linker
