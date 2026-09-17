@@ -132,11 +132,11 @@ pinned version is known to build under this job.
 
 ### Verification (SC-003, SC-004a, SC-005)
 
-- [ ] T034 [US2] Dispatch with `break_env=true` and `dry_run=false`; confirm a new issue appears under the canary-fault title *alongside* (not replacing) #685, and that `gh issue view <n> --json body --jq .body | grep -ci 'bpf-linker/issues'` returns `0`. This is SC-003 and SC-004a in one observation.
-- [ ] T035 [US2] Inspect the same issue for the FR-005 triple — version(s), failing step, error text (SC-005). Today's reports contain none of the three.
-- [ ] T035a [US2] In the same issue from T034, confirm the FR-004c "component untested this run" line is present (SC-004a's second clause). Its absence is the failure mode where a broken canary silently implies upstream is fine.
-- [ ] T036 [US2] Confirm #685 is still open under its original title and that its history is intact after T034.
-- [ ] T037 [US2] Close the test-created canary-fault issue and record T034–T036 (run IDs, issue numbers, body excerpts) in `specs/896-fix-ebpf-canary/measurements/us2-verification.md`.
+- [X] T034 [US2] Dispatch with `break_env=true` and `dry_run=false`; confirm a new issue appears under the canary-fault title *alongside* (not replacing) #685, and that `gh issue view <n> --json body --jq .body | grep -ci 'bpf-linker/issues'` returns `0`. This is SC-003 and SC-004a in one observation.
+- [X] T035 [US2] Inspect the same issue for the FR-005 triple — version(s), failing step, error text (SC-005). Today's reports contain none of the three.
+- [X] T035a [US2] In the same issue from T034, confirm the FR-004c "component untested this run" line is present (SC-004a's second clause). Its absence is the failure mode where a broken canary silently implies upstream is fine.
+- [X] T036 [US2] Confirm #685 is still open under its original title and that its history is intact after T034.
+- [X] T037 [US2] Close the test-created canary-fault issue and record T034–T036 (run IDs, issue numbers, body excerpts) in `specs/896-fix-ebpf-canary/measurements/us2-verification.md`.
 
 **Checkpoint**: a failure of either kind is distinguishable from the issue list without opening either.
 
@@ -153,12 +153,12 @@ pinned version is known to build under this job.
 - [X] T038 [US3] In `.github/workflows/ebpf-canary.yml` `report-failure` job, compute elapsed days as `now - created_at` of the matched open issue **of that kind**, whole days. No new state: research R7 verified the issue timestamp tracks the streak start to within one run's duration (#685 created 52s after its first failing run).
 - [X] T039 [US3] In `.github/workflows/ebpf-canary.yml` `report-failure` job, include the elapsed-days figure in every failure comment so a persistent failure is distinguishable from a new one without counting comments (FR-007; the spec's edge case rules comment-counting out — a streak spanning a gap in runs gives a count that disagrees with elapsed days).
 - [X] T040 [US3] In `.github/workflows/ebpf-canary.yml` `report-failure` job, when elapsed days ≥ 30 add a prominent escalation block stating the elapsed duration and that the documented fallback is now due (FR-008). It MUST NOT be conditioned on any upstream issue having been filed (FR-007a).
-- [ ] T041 [US3] Replace the responsiveness-gated framing with "days since the streak's first failure" in **both** places it actually appears — verified by grep, since the phrase this task originally cited existed in no file:
+- [X] T041 [US3] Replace the responsiveness-gated framing with "days since the streak's first failure" in **both** places it actually appears — verified by grep, since the phrase this task originally cited existed in no file:
   (a) `.github/workflows/ebpf-canary.yml:166`, the report line reading `3. Track upstream response; if unresponsive within the 30-day fallback window (spec.md FR-011), execute downstream mitigation.` — this is the operative text and T040 already rewrites the surrounding body;
   (b) `docs/development/ebpf-toolchain.md:94-104`, where step 4's window follows step 2's "File upstream", making the clock start implicitly on a human action. State the new start condition explicitly there.
-- [ ] T042 [US3] Verify the rule against the live case: `gh issue view 685 --json createdAt` (2026-08-13T06:36:09Z) against the 30-day window, and confirm the next report for that streak escalates rather than repeating unchanged (SC-006, SC-006a). Record in `specs/896-fix-ebpf-canary/measurements/us3-verification.md`.
+- [X] T042 [US3] Verify the rule against the live case: `gh issue view 685 --json createdAt` (2026-08-13T06:36:09Z) against the 30-day window, and confirm the next report for that streak escalates rather than repeating unchanged (SC-006, SC-006a). Record in `specs/896-fix-ebpf-canary/measurements/us3-verification.md`.
 
-- [ ] T042a [US3] Verify the reset half of FR-009/SC-007, which research R8 argues but nothing observes: after a green run has closed the reports, dispatch `break_env=true` again and confirm the fresh report's elapsed days reads 0 rather than inheriting the previous streak's age.
+- [ ] T042a [US3] **DEFERRED to post-merge** (unreachable from a branch: report jobs now require the default branch — see measurements/us3-verification.md). Verify the reset half of FR-009/SC-007, which research R8 argues but nothing observes: after a green run has closed the reports, dispatch `break_env=true` again and confirm the fresh report's elapsed days reads 0 rather than inheriting the previous streak's age.
 
 **Checkpoint**: replaying #685's own history through the new rule escalates.
 
@@ -166,13 +166,13 @@ pinned version is known to build under this job.
 
 ## Phase 6: Polish & cross-cutting
 
-- [ ] T043 [P] In `docs/development/ebpf-toolchain.md`, document the two report titles, the control-build attribution rule, and the artifact check, so a maintainer reading a canary issue knows which kind they are looking at.
-- [ ] T044 [P] In `CLAUDE.md` § *eBPF toolchain pin (m234)*, update the canary sentence: it now runs a pinned control build and opens one of two titles depending on attributed cause.
-- [ ] T045 [P] Add a superseded note at the top of `specs/234-fix-ebpf-linker-regression/contracts/canary-workflow.md` pointing at `specs/896-fix-ebpf-canary/contracts/canary-workflow-v2.md`.
-- [ ] T045a Run the mandatory pre-PR gate before opening the PR: `./scripts/pre-pr.sh` (`cargo +stable clippy --workspace --all-targets -- -D warnings` and `cargo +stable test --workspace`). The constitution's wording is unconditional — *"Before opening or updating ANY pull request"* — and this feature changes no Rust, so it should pass trivially. Running it is the point; assuming it would pass is what the rule exists to prevent.
+- [X] T043 [P] In `docs/development/ebpf-toolchain.md`, document the two report titles, the control-build attribution rule, and the artifact check, so a maintainer reading a canary issue knows which kind they are looking at.
+- [X] T044 [P] In `CLAUDE.md` § *eBPF toolchain pin (m234)*, update the canary sentence: it now runs a pinned control build and opens one of two titles depending on attributed cause.
+- [X] T045 [P] Add a superseded note at the top of `specs/234-fix-ebpf-linker-regression/contracts/canary-workflow.md` pointing at `specs/896-fix-ebpf-canary/contracts/canary-workflow-v2.md`.
+- [X] T045a Run the mandatory pre-PR gate before opening the PR: `./scripts/pre-pr.sh` (`cargo +stable clippy --workspace --all-targets -- -D warnings` and `cargo +stable test --workspace`). The constitution's wording is unconditional — *"Before opening or updating ANY pull request"* — and this feature changes no Rust, so it should pass trivially. Running it is the point; assuming it would pass is what the rule exists to prevent.
 - [ ] T046 Run the full quickstart end to end (`specs/896-fix-ebpf-canary/quickstart.md` §§ 1-7) against the merged workflow and record every outcome. Section 4 (a genuine component regression) cannot be manufactured — note it as unobserved rather than claiming it passed.
 - [ ] T047 Observe the first scheduled run after merge. Green → let `report-success` close #685 and confirm it did. Red → confirm the cause is attributed correctly and the report carries evidence; a real upstream regression surfacing here is an expected outcome per the spec's Assumptions, not a failure of this feature.
-- [ ] T048 [P] File the two follow-ups recorded in `research.md`: (a) drop `+nightly` from `xtask::build_ebpf` so `waybill-ebpf/rust-toolchain.toml` governs every build site; (b) factor the eBPF build environment into one composite action consumed by all three lanes, making the research R3 divergence table structurally impossible.
+- [X] T048 [P] File the two follow-ups recorded in `research.md`: (a) drop `+nightly` from `xtask::build_ebpf` so `waybill-ebpf/rust-toolchain.toml` governs every build site; (b) factor the eBPF build environment into one composite action consumed by all three lanes, making the research R3 divergence table structurally impossible.
 
 ---
 

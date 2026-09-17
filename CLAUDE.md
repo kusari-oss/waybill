@@ -425,7 +425,16 @@ route through `.github/actions/install-bpf-linker/` (composite action).
 Un-pin by editing the env file; verify locally with
 `scripts/verify-ebpf.sh`. A daily canary
 (`.github/workflows/ebpf-canary.yml`) tests `latest` bpf-linker and
-auto-opens a deduped GitHub issue on regression. Full flow:
+auto-opens a deduped GitHub issue on regression.
+
+Since m896 it also builds the **pinned** version as a control whenever
+the target build fails, and reports under one of two titles depending on
+which the evidence supports: `[canary] bpf-linker eBPF build regression`
+(control passed, target failed) or `[canary] the eBPF canary cannot run`
+(both failed, or the run never reached the build). Attribution reads
+build outcomes only — never step position or error text. A green run
+additionally requires the artifact to exist, and only runs on the default
+branch may write to issues. Full flow:
 `docs/development/ebpf-toolchain.md`.
 
 ## Project Structure

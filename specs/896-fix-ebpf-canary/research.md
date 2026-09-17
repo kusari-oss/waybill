@@ -98,6 +98,31 @@ Command::new("cargo").current_dir(dir).args(["+nightly", "build", ...])
 file entirely — channel *and* `components`. The observed CI failure is the
 direct confirmation: nightly is present on the runner, `rust-src` is not.
 
+**Measured during implementation — R2 was incomplete.** Two probes in the same
+job (run `35259780273`):
+
+| Probe | Where | nightly components |
+|---|---|---|
+| A | immediately after `rustup toolchain install nightly --profile minimal` | `cargo`, `rust-std`, `rustc` — **no rust-src** |
+| B | immediately before the eBPF build | the same three **plus `rust-src`** |
+
+Nothing between them asks for it. The installer is **`Swatinem/rust-cache`**:
+it runs cargo in each directory listed under `workspaces:`, and this job lists
+`waybill-ebpf`. A rustup-proxied command run *inside* that directory — with no
+`+toolchain` override — resolves through `waybill-ebpf/rust-toolchain.toml` and
+rustup installs the components it declares.
+
+So the toolchain file does work, but only for commands that resolve through it.
+`cargo +nightly`, which is what xtask uses, never does. That is the precise
+shape of the original defect, and it means the explicit `components: rust-src`
+is belt **and** braces rather than redundant: without it the canary would be
+depending on a cache step's incidental side effect.
+
+It also explains why the first `break_env` switch produced a green run. Merely
+declining to *request* the component is not a break, because something else
+installs it a few steps later. The switch now removes it immediately before the
+build, after every installer has run.
+
 **Decision**: fix the canary's environment explicitly, matching the two working
 lanes. Do **not** change `xtask` in this feature.
 
