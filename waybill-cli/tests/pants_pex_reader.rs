@@ -546,6 +546,16 @@ fn us3_malformed_pants_toml_falls_back_gracefully() {
 // ---------------------------------------------------------------------
 // Phase 6 (T027) — Non-PyPI lockfile entries emit pkg:generic PURLs
 // with waybill:source-url + waybill:source-type annotations (FR-009 / Q2 A)
+//
+// Amended by #901. "Non-PyPI" no longer means "not served by
+// files.pythonhosted.org": an index-resolved wheel is a PyPI distribution
+// whichever index served it, so only VCS checkouts and local files stay
+// generic. This fixture's `mirror.example.test` entry moved from generic to
+// pypi, and the counts below moved with it.
+//
+// PyPI entries may now carry `waybill:source-url` — for a private-index one
+// that is the only record of where it came from, and #909 depends on it. They
+// still never carry `waybill:source-type`, which would restate the PURL.
 // ---------------------------------------------------------------------
 
 #[test]
@@ -584,13 +594,24 @@ fn non_pypi_entries_emit_pkg_generic_with_source_annotations() {
         let purl = c.get("purl").and_then(|p| p.as_str()).unwrap_or("");
         if purl.starts_with("pkg:pypi/") {
             pypi_count += 1;
-            // PyPI entries MUST NOT have source-url / source-type
-            // (per FR-009 — those annotations are only for non-PyPI).
-            assert_eq!(
-                get_property(c, "waybill:source-url"),
-                None,
-                "PyPI entry should not have waybill:source-url; got {c:#?}"
-            );
+            // #901 — source-url is now present exactly when the artifact came
+            // from somewhere other than the canonical host. That presence IS
+            // the private-index marker, so assert the correspondence rather
+            // than a blanket absence.
+            let name = c.get("name").and_then(|n| n.as_str()).unwrap_or("");
+            match name {
+                "waybill-fixture-url" => assert!(
+                    get_property(c, "waybill:source-url")
+                        .is_some_and(|u| u.starts_with("https://mirror.example.test/")),
+                    "private-index PyPI entry must keep its artifact URL; got {c:#?}"
+                ),
+                _ => assert_eq!(
+                    get_property(c, "waybill:source-url"),
+                    None,
+                    "canonically-hosted PyPI entry should not have waybill:source-url; got {c:#?}"
+                ),
+            }
+            // Unchanged: source-type would only restate the PURL type.
             assert_eq!(
                 get_property(c, "waybill:source-type"),
                 None,
@@ -608,23 +629,24 @@ fn non_pypi_entries_emit_pkg_generic_with_source_annotations() {
         }
     }
 
-    assert_eq!(pypi_count, 1, "expected exactly 1 pkg:pypi/ entry");
-    assert_eq!(generic_count, 3, "expected exactly 3 pkg:generic/ entries");
+    // #901 — was 1. The canonically-hosted wheel plus the private-index one.
+    assert_eq!(pypi_count, 2, "expected exactly 2 pkg:pypi/ entries");
+    // #901 — was 3. The `url` entry is now pypi; only a VCS checkout and a
+    // local file remain things that are genuinely not PyPI distributions.
+    assert_eq!(generic_count, 2, "expected exactly 2 pkg:generic/ entries");
+    assert!(
+        !generic_by_source_type.contains_key("url"),
+        "the `url` source-type no longer exists — an http(s) artifact is \
+         index-resolved and types as pypi (#901). Found: {generic_by_source_type:#?}"
+    );
 
-    // Confirm all 3 non-PyPI source types are represented + URLs match.
+    // Confirm both remaining non-PyPI source types are represented + URLs match.
     let git_url = generic_by_source_type
         .get("git")
         .expect("missing git-source entry");
     assert!(
         git_url.starts_with("git+https://example.test/"),
         "git source URL wrong: {git_url}"
-    );
-    let url_url = generic_by_source_type
-        .get("url")
-        .expect("missing url-source entry");
-    assert!(
-        url_url.starts_with("https://mirror.example.test/"),
-        "url source URL wrong: {url_url}"
     );
     let local_url = generic_by_source_type
         .get("local")
