@@ -208,6 +208,20 @@ pub struct ScanResult {
     pub no_binary_scan_mode: Option<crate::cli::scan_cmd::BinaryScanMode>,
 }
 
+/// Issue #910 — the per-entry annotation naming the resolution scope its
+/// `depends` names live in.
+///
+/// Today only the Pants Pex reader sets it, to the resolve a lockfile
+/// belongs to. The edge resolver treats it generically: any reader that
+/// records a scope gets scope-qualified lookup, and a reader that records
+/// none is unaffected.
+///
+/// Deliberately the same key the reader already emits for resolve
+/// membership rather than a second, parallel one — two keys that must agree
+/// is a bug waiting to happen, and there is no case where an entry's own
+/// resolve differs from the scope its dependency names resolve in.
+const DEPENDS_SCOPE_ANNOTATION: &str = "waybill:pants-resolve";
+
 /// Walk `root`, hash matching artifact files, match each against the path
 /// resolver, optionally consult OS package databases, and return
 /// components + a real dependency graph. The caller (typically the
@@ -618,8 +632,57 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         // every other package's metadata).
         let mut name_to_purl: std::collections::HashMap<(String, String), String> =
             std::collections::HashMap::with_capacity(db_entries.len());
+        // Issue #910 — a second index qualified by RESOLUTION SCOPE, consulted
+        // before the flat one.
+        //
+        // Some manifests name a dependency without enough information to
+        // identify it. A Pex lockfile's `requires_dists` gives a bare project
+        // name — no version, no resolve — so in a repository where several
+        // resolves pin one package at different versions, the flat
+        // `(ecosystem, name)` index holds whichever entry was inserted last
+        // and EVERY edge naming that package, in any resolve, points at that
+        // one component. Which one wins depends on `db_entries` ordering, so
+        // the emitted graph is not even deterministic.
+        //
+        // This is the fourth instance of that defect. m087 (#172) added a
+        // `<name> <version>` key for cargo, #262 for npm, m233 (#233) for
+        // golang — each time by appending one ecosystem to the condition
+        // below. A version key does not help here, because the dependency
+        // token carries no version to match on; the scope is what makes the
+        // name unambiguous again.
+        //
+        // Scope is read from the reader's own annotation rather than from a
+        // new `PackageDbEntry` field. The field would mirror m867's
+        // `depends_ecosystem` and is the better long-term shape, but
+        // `PackageDbEntry` has no `Default` and 116 exhaustive struct
+        // literals construct it, so it is deferred until a second reader
+        // needs a scope. Built from `db_entries`, i.e. BEFORE dedup, so the
+        // annotation is still the reader's own and has not been merged away.
+        let mut scoped_name_to_purl: std::collections::HashMap<
+            (String, String, String),
+            String,
+        > = std::collections::HashMap::new();
         for e in &db_entries {
             let ecosystem = e.purl.ecosystem().to_string();
+            // `as_str`, never `to_string`: the annotation is a serde_json
+            // Value, and `to_string` on a JSON string yields it WITH the
+            // quotes, so every scoped key would be `"\"app\""` and never
+            // match the lookup below. The bug would present as the scope
+            // index silently never hitting — i.e. as the defect this fixes.
+            if let Some(scope) = e
+                .extra_annotations
+                .get(DEPENDS_SCOPE_ANNOTATION)
+                .and_then(|v| v.as_str())
+            {
+                scoped_name_to_purl.insert(
+                    (
+                        ecosystem.clone(),
+                        scope.to_string(),
+                        normalize_dep_name(e.purl.ecosystem(), &e.name),
+                    ),
+                    e.purl.as_str().to_string(),
+                );
+            }
             name_to_purl.insert(
                 (ecosystem.clone(), normalize_dep_name(e.purl.ecosystem(), &e.name)),
                 e.purl.as_str().to_string(),
@@ -1008,15 +1071,32 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
             // mismatch survive across releases and two readers, so a drop
             // is now counted and localised rather than simply not happening.
             let mut unresolved_here: Vec<String> = Vec::new();
+            // Issue #910 — the scope this entry's dependency names live in,
+            // when its reader records one. `None` means the reader has not
+            // adopted and lookup is byte-identical to before.
+            let dep_scope: Option<&str> = entry
+                .extra_annotations
+                .get(DEPENDS_SCOPE_ANNOTATION)
+                .and_then(|v| v.as_str());
             for dep_name in &entry.depends {
-                let key = (
-                    dep_ecosystem.to_string(),
-                    normalize_dep_name(dep_ecosystem, dep_name),
-                );
+                let normalized = normalize_dep_name(dep_ecosystem, dep_name);
+                let key = (dep_ecosystem.to_string(), normalized.clone());
+                // Scope-qualified lookup first, flat index second. The
+                // fallback matters: a resolve may legitimately depend on a
+                // component no resolve owns (a workspace main-module, a
+                // cross-ecosystem target), and dropping those edges to gain
+                // resolve-scoping would trade one wrong graph for another.
+                let scoped_hit = dep_scope.and_then(|scope| {
+                    scoped_name_to_purl.get(&(
+                        dep_ecosystem.to_string(),
+                        scope.to_string(),
+                        normalized.clone(),
+                    ))
+                });
                 // A name that matches counts as resolved even when the edge
                 // is suppressed as a self-loop: the scan knew what it named.
                 let mut dep_resolved = false;
-                if let Some(to) = name_to_purl.get(&key) {
+                if let Some(to) = scoped_hit.or_else(|| name_to_purl.get(&key)) {
                     dep_resolved = true;
                     if to != &purl_str {
                         // Skip self-loops (can happen via provides).
