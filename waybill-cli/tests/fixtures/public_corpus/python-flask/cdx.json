@@ -10085,7 +10085,7 @@
       },
       {
         "name": "waybill:graph-completeness-reason",
-        "value": "orphaned-components-detected: 94 component(s) not reachable from root"
+        "value": "orphaned-components-detected: 23 component(s) not reachable from root"
       },
       {
         "name": "waybill:workspaces-detected",
