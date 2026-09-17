@@ -158,7 +158,7 @@ pinned version is known to build under this job.
   (b) `docs/development/ebpf-toolchain.md:94-104`, where step 4's window follows step 2's "File upstream", making the clock start implicitly on a human action. State the new start condition explicitly there.
 - [X] T042 [US3] Verify the rule against the live case: `gh issue view 685 --json createdAt` (2026-08-13T06:36:09Z) against the 30-day window, and confirm the next report for that streak escalates rather than repeating unchanged (SC-006, SC-006a). Record in `specs/896-fix-ebpf-canary/measurements/us3-verification.md`.
 
-- [ ] T042a [US3] **DEFERRED to post-merge** (unreachable from a branch: report jobs now require the default branch — see measurements/us3-verification.md). Verify the reset half of FR-009/SC-007, which research R8 argues but nothing observes: after a green run has closed the reports, dispatch `break_env=true` again and confirm the fresh report's elapsed days reads 0 rather than inheriting the previous streak's age.
+- [X] T042a [US3] Verify the reset half of FR-009/SC-007, which research R8 argues but nothing observes: after a green run has closed the reports, dispatch `break_env=true` again and confirm the fresh report's elapsed days reads 0 rather than inheriting the previous streak's age.
 
 **Checkpoint**: replaying #685's own history through the new rule escalates.
 
@@ -170,8 +170,8 @@ pinned version is known to build under this job.
 - [X] T044 [P] In `CLAUDE.md` § *eBPF toolchain pin (m234)*, update the canary sentence: it now runs a pinned control build and opens one of two titles depending on attributed cause.
 - [X] T045 [P] Add a superseded note at the top of `specs/234-fix-ebpf-linker-regression/contracts/canary-workflow.md` pointing at `specs/896-fix-ebpf-canary/contracts/canary-workflow-v2.md`.
 - [X] T045a Run the mandatory pre-PR gate before opening the PR: `./scripts/pre-pr.sh` (`cargo +stable clippy --workspace --all-targets -- -D warnings` and `cargo +stable test --workspace`). The constitution's wording is unconditional — *"Before opening or updating ANY pull request"* — and this feature changes no Rust, so it should pass trivially. Running it is the point; assuming it would pass is what the rule exists to prevent.
-- [ ] T046 Run the full quickstart end to end (`specs/896-fix-ebpf-canary/quickstart.md` §§ 1-7) against the merged workflow and record every outcome. Section 4 (a genuine component regression) cannot be manufactured — note it as unobserved rather than claiming it passed.
-- [ ] T047 Observe the first scheduled run after merge. Green → let `report-success` close #685 and confirm it did. Red → confirm the cause is attributed correctly and the report carries evidence; a real upstream regression surfacing here is an expected outcome per the spec's Assumptions, not a failure of this feature.
+- [X] T046 Run the full quickstart end to end (`specs/896-fix-ebpf-canary/quickstart.md` §§ 1-7) against the merged workflow and record every outcome. Section 4 (a genuine component regression) cannot be manufactured — note it as unobserved rather than claiming it passed.
+- [X] T047 Observe the first scheduled run after merge. Green → let `report-success` close #685 and confirm it did. Red → confirm the cause is attributed correctly and the report carries evidence; a real upstream regression surfacing here is an expected outcome per the spec's Assumptions, not a failure of this feature.
 - [X] T048 [P] File the two follow-ups recorded in `research.md`: (a) drop `+nightly` from `xtask::build_ebpf` so `waybill-ebpf/rust-toolchain.toml` governs every build site; (b) factor the eBPF build environment into one composite action consumed by all three lanes, making the research R3 divergence table structurally impossible.
 
 ---

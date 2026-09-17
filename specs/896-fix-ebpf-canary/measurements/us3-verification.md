@@ -45,14 +45,38 @@ appeared on #685.
 Claiming otherwise would be the same error this feature exists to fix: asserting
 something the evidence does not cover.
 
-## T042a — FR-009 / SC-007, reset half — DEFERRED to post-merge
+## T042a — FR-009 / SC-007, reset half — VERIFIED post-merge
 
-Requires a green run to close the reports, then a deliberate break, then
-reading the new report's elapsed days (expected: 0).
+Run on `main` after PR #906 merged, with both report jobs live (no `dry_run`,
+default branch, so nothing was suppressed). Three dispatches, in order:
 
-Not reachable from a feature branch: both report jobs now require the run to be
-on the default branch, so no branch dispatch can create or close the issues this
-check reads. The guard is worth more than the convenience — it exists because
-branch dispatches closed #685 twice during this work.
+| # | Run | Dispatch | Result |
+|---|---|---|---|
+| 1 | [`35265779655`](https://github.com/kusari-oss/waybill/actions/runs/35265779655) | `version=latest` | **success** — `report-success` ran and logged `No open canary issue to close — nothing to do.` |
+| 2 | [`35266195857`](https://github.com/kusari-oss/waybill/actions/runs/35266195857) | `+ break_env=true` | **failure** → opened [#907](https://github.com/kusari-oss/waybill/issues/907) `[canary] the eBPF canary cannot run` |
+| 3 | [`35266358705`](https://github.com/kusari-oss/waybill/actions/runs/35266358705) | `version=latest` | **success** → closed #907 |
 
-Tracked in the post-merge task list (T047).
+**The reset**: #907 carried no streak line and no escalation block — elapsed 0.
+It did not inherit #685's 35 days, because a change of attributed cause means a
+different title, which means a different issue, which means a different
+`created_at`. FR-009's second clause and SC-007 hold, observed rather than
+argued.
+
+**The recovery comment** on #907:
+
+> Canary green as of 2026-09-17T19:43:51.140Z (run .../35266358705).
+>
+> The target version built and its artifact is present, which also means the
+> canary itself is working. Closing.
+
+**The excerpt fix, in production**:
+
+```
+error: "/home/runner/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/Cargo.lock" does not exist, unable to build with the standard library, try:
+eBPF build failed with status: exit status: 101
+```
+
+Two lines, no ANSI, no compile noise — against the same defect whose first
+report (#903) showed 15 lines of `Compiling` progress in escape codes.
+
+After dispatch 3: **no open canary issues.**
