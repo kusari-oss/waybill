@@ -145,9 +145,13 @@ different ways.
 
 ---
 
-## Phase 7: Corpus target (Phase B — can land separately)
+## Phase 7: Corpus target (Phase B — DEFERRED, tracked as #898)
 
 **Purpose**: SC-002, SC-002a and SC-007. Makes the accuracy and completeness guarantees nightly checks rather than one-off measurements.
+
+**DEFERRED.** Split out of this feature: it needs a `kusari-sandbox` mirror
+created and pinned, which is repository administration the parser fix does
+not depend on. Tracked separately so the accuracy fix ships now.
 
 **⚠️ Do not start before Phase A lands.** Adding the target first would commit goldens containing the fabricated components and the dropped dependency lists, then immediately refresh them (R6).
 
@@ -164,9 +168,9 @@ different ways.
 
 ## Phase 8: Polish
 
-- [ ] T057 [P] Update `specs/895-fix-cabal-parser/measurements/README.md` with post-fix figures beside the baselines, so the before/after pair stays reproducible
-- [ ] T058 [P] Confirm scan time has not regressed. If a difference is observed, establish it by interleaved A/B on identical machine state — a separately-taken baseline attributed machine drift to the change once already in this project
-- [ ] T059 [P] Verify the walker-audit gate separately; it is not in `scripts/pre-pr.sh`. Expected to be a no-op since no file under `scan_fs/walk*` is touched, but confirm rather than assume
+- [X] T057 [P] Update `specs/895-fix-cabal-parser/measurements/README.md` with post-fix figures beside the baselines, so the before/after pair stays reproducible
+- [X] T058 [P] Confirm scan time has not regressed. If a difference is observed, establish it by interleaved A/B on identical machine state — a separately-taken baseline attributed machine drift to the change once already in this project
+- [X] T059 [P] Verify the walker-audit gate separately; it is not in `scripts/pre-pr.sh`. Expected to be a no-op since no file under `scan_fs/walk*` is touched, but confirm rather than assume
 - [ ] T060 [P] Comment on #891 with the outcome, naming which change closed each of the four original defects **and** the fifth found during analysis
 - [ ] T061 Open the PR with `./scripts/pre-pr.sh` green and every per-target `N passed; 0 failed` line enumerated
 

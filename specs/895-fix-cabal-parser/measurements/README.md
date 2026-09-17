@@ -198,3 +198,27 @@ skipping is per entry, not per list.
 `t043` asserts on `Option`, so an absent field fails it rather than only a
 wrong value — which is what FR-012b asks for and what T043's task text
 required be checked.
+
+## T058 — scan time unchanged
+
+Interleaved on identical machine state, alternating binaries within each
+round. A separately-taken baseline attributed machine drift to the change
+once already in this project.
+
+| round | baseline | after |
+|---|---:|---:|
+| 1 | 784 ms | 785 ms |
+| 2 | 781 ms | 783 ms |
+| 3 | 782 ms | 781 ms |
+| **median** | **782 ms** | **783 ms** |
+
+Measured on `lablup/backend.ai`, which exercises the whole pipeline and
+contains no Haskell — deliberately, so the figure catches an accidental
+global regression rather than only the reader under change. The Haskell path
+itself parses files of a few kilobytes and is well under a millisecond.
+
+## T059 — walker-audit gate
+
+Not run by `scripts/pre-pr.sh`, so verified separately. No file under
+`waybill-cli/src/scan_fs/walk*` is touched by this branch and
+`walk.audit-allowlist.txt` is unmodified, so the gate is a no-op.
