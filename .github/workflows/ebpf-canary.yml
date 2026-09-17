@@ -371,7 +371,15 @@ jobs:
   report-success:
     name: Close canary issue on recovery
     needs: canary
-    if: success()
+    # m896 — `dry_run` must gate this job too. Until now it guarded only
+    # report-failure, so a green dispatch from ANY branch closed the open
+    # report even with dry_run=true. That is how run 35257496241, a
+    # verification dispatch from this unmerged branch, closed #685.
+    #
+    # Closing a report is an assertion that the thing it describes is fixed.
+    # Emitting it from an unmerged branch is the same class of error as the
+    # mis-attribution this feature exists to fix, pointed the other way.
+    if: ${{ success() && github.event.inputs.dry_run != 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read

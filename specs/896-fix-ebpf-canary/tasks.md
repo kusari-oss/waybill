@@ -84,10 +84,10 @@ is under test.
 
 ### Verification (SC-001, SC-002, SC-008)
 
-- [ ] T017 [US1] Dispatch `gh workflow run ebpf-canary.yml -f version=<pinned> -f dry_run=true` and confirm `success`. This is SC-001 and the gate for the whole feature — the canary's first green run ever. Wait for it to conclude before dispatching anything else (shared concurrency posture).
-- [ ] T018 [US1] Teeth-check T016: temporarily change the `components:` value in `.github/workflows/ebpf-canary.yml`, dispatch, confirm the run fails **at the parity step and before the build**, then revert. A parity check that has never failed is not known to work.
-- [ ] T019 [US1] Teeth-check T015: temporarily make the build step in `.github/workflows/ebpf-canary.yml` delete its own artifact on success, dispatch, confirm the run is reported red with the artifact named. Revert. Without this, SC-008 is asserted rather than observed.
-- [ ] T020 [US1] Record T017–T019 outcomes (run IDs, conclusions) in `specs/896-fix-ebpf-canary/measurements/us1-verification.md`.
+- [X] T017 [US1] Dispatch `gh workflow run ebpf-canary.yml -f version=<pinned> -f dry_run=true` and confirm `success`. This is SC-001 and the gate for the whole feature — the canary's first green run ever. Wait for it to conclude before dispatching anything else (shared concurrency posture).
+- [X] T018 [US1] Teeth-check T016: temporarily change the `components:` value in `.github/workflows/ebpf-canary.yml`, dispatch, confirm the run fails **at the parity step and before the build**, then revert. A parity check that has never failed is not known to work.
+- [X] T019 [US1] Teeth-check T015: temporarily make the build step in `.github/workflows/ebpf-canary.yml` delete its own artifact on success, dispatch, confirm the run is reported red with the artifact named. Revert. Without this, SC-008 is asserted rather than observed.
+- [X] T020 [US1] Record T017–T019 outcomes (run IDs, conclusions) in `specs/896-fix-ebpf-canary/measurements/us1-verification.md`.
 
 **Checkpoint**: the canary builds. Everything downstream now has a known-good half to compare against.
 
