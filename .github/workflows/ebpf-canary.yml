@@ -472,17 +472,36 @@ jobs:
           echo "failing_step=$step" >> "$GITHUB_OUTPUT"
           echo "Attributed cause: $cause (latest=$LATEST control=$CONTROL artifact=$ARTIFACT)"
 
-          # Evidence excerpt — newest relevant log, capped. Random delimiter so
-          # log content cannot terminate the heredoc early.
+          # Evidence excerpt (FR-005). Two things a naive `tail` gets wrong,
+          # both observed on run 35260145867:
+          #
+          #  1. cargo keeps compiling other crates after the failure that
+          #     matters, so the tail of the log is compile progress and the
+          #     error is buried above it. Pull error lines first; fall back to
+          #     the tail only when none are found.
+          #  2. cargo writes ANSI colour codes, which render as `^[[92m`
+          #     litter inside a markdown code fence. Strip them.
+          #
+          # The target build is preferred over the control: it is the one
+          # testing the version under question.
           log=""
-          for c in "$RUNNER_TEMP/build-control.log" "$RUNNER_TEMP/build-latest.log" "$RUNNER_TEMP/parity.log"; do
+          for c in "$RUNNER_TEMP/build-latest.log" "$RUNNER_TEMP/build-control.log" "$RUNNER_TEMP/parity.log"; do
             if [ -s "$c" ]; then log="$c"; break; fi
           done
           delim="EXCERPT_$(openssl rand -hex 8)"
           {
             echo "error_excerpt<<$delim"
             if [ -n "$log" ]; then
-              tail -c 2000 "$log"
+              # Strip both spellings: a real ESC byte (what cargo writes into
+              # the tee'd file here) and the literal two characters "^[" (what
+              # `gh run view` emits when the same log is fetched later).
+              clean=$(sed -E 's/\x1b\[[0-9;]*[mGKH]//g; s/\^\[\[[0-9;]*[mGKH]//g' "$log")
+              hits=$(printf '%s\n' "$clean" | grep -nE '^(error|warning: unused)|does not exist|panicked at|could not find|failed with status' | head -20)
+              if [ -n "$hits" ]; then
+                echo "$hits" | cut -d: -f2-
+              else
+                printf '%s\n' "$clean" | tail -c 2000
+              fi
             else
               echo "(no captured output — the run failed before any step that tees a log)"
             fi
@@ -508,7 +527,20 @@ jobs:
   report-failure:
     name: Report canary failure
     needs: canary
-    if: failure() && github.event.inputs.dry_run != 'true'
+    # m896 — two gates, and the branch one is the load-bearing half.
+    #
+    # `dry_run` is opt-in: it only helps someone who remembers to pass it. The
+    # branch check is opt-out-proof — a run from any ref other than the default
+    # branch cannot touch production issues at all. During this feature's own
+    # development, branch dispatches mutated #685 twice; the scheduled canary
+    # always runs on the default branch, so nothing legitimate is lost.
+    #
+    # Fails closed: if `default_branch` were ever absent the comparison is
+    # false and no issue is written.
+    if: >-
+      failure()
+      && github.event.inputs.dry_run != 'true'
+      && github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -712,7 +744,14 @@ jobs:
     # Closing a report asserts the thing it describes is fixed. Emitting that
     # from a branch whose fix is not merged is the same class of error this
     # feature exists to fix, pointed the other way.
-    if: ${{ success() && github.event.inputs.dry_run != 'true' }}
+    # m896 — same two gates as report-failure. Closing a report asserts the
+    # thing it describes is fixed; a run from an unmerged branch is in no
+    # position to assert that. Run 35257496241 and run 35258931279 both closed
+    # #685 from this feature's own branch before this guard existed.
+    if: >-
+      ${{ success()
+      && github.event.inputs.dry_run != 'true'
+      && github.ref_name == github.event.repository.default_branch }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
