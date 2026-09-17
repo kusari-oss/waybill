@@ -74,8 +74,29 @@ gh pr create --title "chore(deps): bump bpf-linker to 0.12.1"
 
 ## How to triage a canary failure
 
-You see a GitHub issue titled `[canary] bpf-linker eBPF build regression`
-with labels `canary`, `ebpf`, `regression`.
+### First: read the title (m896)
+
+The canary opens one of **two** issues, and which one it is tells you who can
+act. Check the title before anything else:
+
+| Title | Meaning | Who fixes it |
+|---|---|---|
+| `[canary] bpf-linker eBPF build regression` | The pinned version built in that same run; the newer one did not. | Upstream — `aya-rs/bpf-linker` |
+| `[canary] the eBPF canary cannot run` | The canary's own environment failed. The watched version went **untested**. | Us, in this repo |
+
+The distinction is decided by a **control build against the pinned version**,
+not by which step failed or by matching error text. Both of those mis-classify
+the failure this mechanism was built after: it occurred at the build step —
+which position alone would call upstream's — and was caused by a missing
+toolchain component in the canary's own job. See
+`specs/896-fix-ebpf-canary/` for the full account; the short version is that
+36 consecutive runs reported a canary fault as an upstream regression.
+
+A canary-fault report never tells you to file upstream, and says explicitly
+that nothing was learned about the watched version in either direction. Do not
+read it as the component being healthy.
+
+### If the title says the component regressed
 
 ```bash
 # Extract the version from the issue body.
@@ -94,14 +115,44 @@ scripts/verify-ebpf.sh --version <version-from-issue>
 
 # 4. Wait for either:
 #    - Upstream fix released → bump the pin (see above).
-#    - 30-day fallback window elapses without a fix → execute downstream
-#      mitigation (see below).
+#    - The 30-day window elapses → execute downstream mitigation (below).
 ```
+
+### If the title says the canary cannot run
+
+```bash
+# 1. Read the failing step and error excerpt in the issue body.
+#    Both are included; you should not need to re-run anything to form
+#    a hypothesis.
+
+# 2. Compare this job against ci.yml's eBPF lane, which builds
+#    successfully. The canary asserts that parity itself — the
+#    "Assert toolchain parity with ci.yml" step asks rustup whether the
+#    components ci.yml declares are actually installed here.
+
+# 3. Verify a fix by dispatching against the PINNED version, which is
+#    known to build:
+gh workflow run ebpf-canary.yml -f version=<pin> -f dry_run=true
+```
+
+## The escalation clock
+
+The 30-day window runs from **the streak's first failure** — concretely, the
+`created_at` of the open report for that kind of failure. It starts on its own.
+
+This is deliberate and it is a correction. The clock used to be gated on
+upstream being *unresponsive*, which presupposes that somebody filed upstream.
+On #685 nobody did, so by that reading the clock never started: 35 days passed
+with escalation technically not yet due while the canary reported the same
+non-information every night. A window that can be stalled by inaction is not a
+window.
+
+A change of cause opens a different issue and therefore starts a new clock — a
+canary-fault streak never inherits an upstream-regression streak's age.
 
 ## Downstream mitigation (fallback path, per spec.md FR-011)
 
-If the 30-day fallback window expires without an upstream fix, execute
-one of:
+If the 30-day window expires without an upstream fix, execute one of:
 
 - **(a) Explicit LLVM install** — Add `sudo apt-get install -y llvm-<ver>`
   + `LD_LIBRARY_PATH` export to the composite action. (Not a

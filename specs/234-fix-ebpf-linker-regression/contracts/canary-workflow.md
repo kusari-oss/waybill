@@ -1,5 +1,14 @@
 # Contract: eBPF Canary Workflow
 
+> **SUPERSEDED by m896** — see
+> `specs/896-fix-ebpf-canary/contracts/canary-workflow-v2.md`.
+>
+> The workflow this describes never produced a green run: 36 runs, 36
+> failures, all reported as upstream regressions, none of which were. The v2
+> contract keeps the schedule, the watched component, the pin mechanism and
+> the title-match dedupe, and changes the build environment, the attribution
+> rule, the report shape and the escalation clock.
+
 **File**: `.github/workflows/ebpf-canary.yml`
 **Type**: GitHub Actions workflow (scheduled + workflow_dispatch)
 

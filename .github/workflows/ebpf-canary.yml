@@ -24,6 +24,14 @@ on:
         required: false
         default: false
         type: boolean
+      break_env:
+        description: >-
+          TEST-ONLY. If true, omit the rust-src toolchain component so the
+          canary fails for its own reasons. Used to exercise the canary-fault
+          report path on demand (m896 SC-003). No effect on the schedule path.
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -46,6 +54,15 @@ jobs:
     outputs:
       installed_version: ${{ steps.install.outputs.installed-version }}
       target_version: ${{ steps.resolve_target.outputs.target }}
+      # m896 — the data a report needs in order to name a cause and show
+      # evidence for it. See specs/896-fix-ebpf-canary/data-model.md.
+      pinned_version: ${{ steps.resolve_pinned.outputs.pinned }}
+      latest_build_outcome: ${{ steps.build_latest.outcome }}
+      control_build_outcome: ${{ steps.build_control.outcome }}
+      artifact_present: ${{ steps.verify_artifact.outputs.present }}
+      failing_step: ${{ steps.attribute.outputs.failing_step }}
+      error_excerpt: ${{ steps.attribute.outputs.error_excerpt }}
+      attributed_cause: ${{ steps.attribute.outputs.cause }}
 
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -67,10 +84,178 @@ jobs:
           echo "target=$target" >> "$GITHUB_OUTPUT"
           echo "Canary target: $target"
 
+      # m896 T006 — the pinned version is needed twice: as the control build's
+      # target (FR-003a) and so a report can name both versions (FR-005).
+      - name: Resolve pinned version
+        id: resolve_pinned
+        run: |
+          set -euo pipefail
+          pinned=$(grep -E '^BPF_LINKER_VERSION=' .github/env/bpf-linker.env | head -1 | cut -d= -f2)
+          if [ -z "$pinned" ]; then
+            echo "::error::BPF_LINKER_VERSION not set in .github/env/bpf-linker.env"
+            exit 1
+          fi
+          echo "pinned=$pinned" >> "$GITHUB_OUTPUT"
+          echo "Pinned bpf-linker: $pinned"
+
+      # ----------------------------------------------------------------
+      # m896 US1 — build-environment parity with ci.yml's eBPF lane.
+      #
+      # Until m896 this job installed stable Rust and nothing else, then
+      # relied on `cargo +nightly` inside xtask. `+nightly` is rustup's
+      # highest-precedence override and bypasses waybill-ebpf/rust-toolchain.toml
+      # entirely — channel AND its `components = ["rust-src"]`. So rust-src was
+      # never installed and every run since 2026-08-14 failed at the build step,
+      # reported as an upstream bpf-linker regression. 36 runs, 0 green.
+      # Evidence: specs/896-fix-ebpf-canary/measurements/.
+      # ----------------------------------------------------------------
+
+      - name: Install eBPF build deps
+        # Mirrors ci.yml's eBPF lane, retry-wrapped for the same reason
+        # (apt-get can hang for 45+ min on GHA network issues — m663).
+        uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4.0.0
+        with:
+          max_attempts: 3
+          timeout_minutes: 5
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y clang llvm libelf-dev pkg-config libssl-dev
+
+      # Install nightly FIRST so stable ends up the default toolchain for
+      # unpinned `cargo` invocations — dtolnay/rust-toolchain defaults to
+      # whichever it installed last. Same ordering, same SHA, as ci.yml.
+      - name: Install nightly Rust with rust-src
+        uses: dtolnay/rust-toolchain@5b842231ba77f5c045dba54ac5560fed2db780e2 # nightly (2026-04-25)
+        with:
+          toolchain: nightly
+          # m896 T010 — ONE step with an expression-valued `components`, never
+          # two conditional steps: the parity check below must find exactly one
+          # components declaration to reason about.
+          #
+          # Note the operand order. `inputs.break_env && '' || 'rust-src'` would
+          # be wrong in both branches: GitHub's && / || return an operand, and
+          # the empty string is falsy, so the || falls through to 'rust-src'
+          # even when break_env is true. Negating first avoids that.
+          components: ${{ !inputs.break_env && 'rust-src' || '' }}
+
+      # m896 — probe A: component state immediately after the nightly install,
+      # before anything else touches the toolchain. Paired with probe B further
+      # down, this isolates which step puts rust-src on the runner.
+      - name: Probe A — nightly components right after install
+        shell: bash
+        run: |
+          echo "requested components input: '${{ !inputs.break_env && 'rust-src' || '' }}'"
+          rustup component list --toolchain nightly | grep '(installed)' || true
+
       - name: Install stable Rust toolchain
         uses: dtolnay/rust-toolchain@21dc36fb71dd22e3317045c0c31a3f4249868b17 # stable
         with:
           toolchain: stable
+
+      - name: Make stable the default toolchain
+        # `cargo run -p xtask` runs under stable; the nested `cargo +nightly
+        # build` inside xtask selects nightly for itself.
+        run: rustup default stable
+
+      # NOTE (measured, m896): listing `waybill-ebpf` here has a side effect.
+      # rust-cache runs cargo in each listed workspace, and a rustup-proxied
+      # command run inside waybill-ebpf resolves through its rust-toolchain.toml
+      # — which declares components = ["rust-src"] — so rustup installs the
+      # component as a side effect of caching. Probe A (right after the nightly
+      # install) shows 3 components and no rust-src; probe B (before the build)
+      # shows 4 including rust-src, and nothing between them asks for it.
+      #
+      # This is why the explicit `components: rust-src` above is belt AND
+      # braces rather than redundant: the build itself uses `cargo +nightly`,
+      # which bypasses the toolchain file entirely, so it never triggers this.
+      # Relying on the side effect would make the canary depend on a cache
+      # step's incidental behaviour.
+      - name: Cache cargo + build artifacts
+        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2.9.1
+        with:
+          key: ebpf-canary
+          workspaces: |
+            .
+            waybill-ebpf
+
+      - name: Remove rustup-init (prevents `cargo +<channel>` dispatch race)
+        # See ci.yml::lint-and-test for the rationale. MUST run after
+        # Swatinem/rust-cache, whose $CARGO_HOME/bin restore re-creates it.
+        shell: bash
+        run: |
+          rm -f "$HOME/.cargo/bin/rustup-init" "$HOME/.cargo/bin/rustup-init.exe"
+          if ! cargo --version > /dev/null 2>&1; then
+            echo "ERROR: \`cargo --version\` fails — \$HOME/.cargo/bin/cargo is not a working cargo proxy."
+            ls -la "$HOME/.cargo/bin/" || true
+            exit 1
+          fi
+          echo "cargo --version OK: $(cargo --version)"
+
+      # m896 T016 / FR-010 — a divergence between this job's environment and
+      # ci.yml's must be detectable here, not discovered a month later in a
+      # misattributed issue.
+      #
+      # This checks the requirement is SATISFIED, not merely that two files
+      # spell it the same way: ci.yml is the source of truth for which
+      # components an eBPF build needs, and rustup is asked whether this runner
+      # actually has them. Text-vs-text would be defeated by the expression
+      # above, and would pass while the component was absent.
+      - name: Assert toolchain parity with ci.yml
+        id: parity
+        if: ${{ !inputs.break_env }}
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          exec > >(tee "$RUNNER_TEMP/parity.log") 2>&1
+          ci=.github/workflows/ci.yml
+          # Scope the scan to the nightly step's own block — ci.yml has six
+          # `components:` lines and an unbounded scan counts the three that
+          # follow the nightly step rather than the one inside it.
+          # No heredoc here: inside a YAML block scalar the terminator would be
+          # indented, and `<<EOF` does not accept an indented terminator.
+          parity=$(awk '
+            /dtolnay\/rust-toolchain@.*# nightly/ { inblk=1; next }
+            inblk && /^      - / { inblk=0 }
+            inblk && /components:/ { c++; if (c==1) { v=$0; sub(/.*components:[[:space:]]*/, "", v) } }
+            END { printf "%d\t%s\n", c+0, v }' "$ci")
+          count=${parity%%$'\t'*}
+          decls=${parity#*$'\t'}
+          if [ "${count:-0}" -ne 1 ] || [ -z "${decls:-}" ]; then
+            echo "::error::Expected exactly 1 components declaration under ci.yml's nightly toolchain step, found $count ('$decls'). The parity check cannot tell which line to trust — fix this check, do not skip it."
+            exit 1
+          fi
+          echo "ci.yml requires nightly components: $decls"
+          missing=0
+          for c in $(echo "$decls" | tr ',' ' '); do
+            if rustup component list --toolchain nightly | grep -q "^$c.* (installed)"; then
+              echo "  ok: $c installed"
+            else
+              echo "::error::ci.yml's eBPF lane requires nightly component '$c'; this job does not have it. The canary's environment has diverged from the working build — that divergence is the m896 defect, recurring."
+              missing=1
+            fi
+          done
+          [ "$missing" -eq 0 ]
+
+      # m896 — record the nightly toolchain's actual component state. This is
+      # evidence in every run, and it is what settled the question of how
+      # rust-src reaches the runner (see research R2).
+      - name: Probe B — nightly toolchain state before the build
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          echo "--- rustup toolchain list ---"
+          rustup toolchain list
+          echo "--- nightly components (installed) ---"
+          rustup component list --toolchain nightly | grep '(installed)' || true
+          echo "--- rust-src present? ---"
+          if rustup component list --toolchain nightly | grep -q '^rust-src.* (installed)'; then
+            echo "rust-src: INSTALLED"
+          else
+            echo "rust-src: ABSENT"
+          fi
+          echo "--- rustlib src dir ---"
+          ls -d "$(rustc +nightly --print sysroot)/lib/rustlib/src/rust/library" 2>&1 || echo "(absent)"
 
       - name: Install bpf-linker (via m234 composite)
         id: install
@@ -95,16 +280,281 @@ jobs:
             echo "Canary latest-mode installed $installed (pin is $pinned) — different, good."
           fi
 
+      # m896 T014 / FR-002a — delete before building, so the presence check
+      # below cannot be satisfied by an object left over from an earlier step.
+      # Deletion is deterministic; an mtime comparison would be a race.
+      # m896 TEST PATH — reproduce the live defect on demand by removing the
+      # component immediately before the build, after every step that could
+      # install it has run. Declining to REQUEST rust-src is not enough: the
+      # cache step installs it incidentally (see its note above), which is why
+      # the first attempt at this switch produced a green run.
+      - name: Remove rust-src (break_env only — TEST PATH)
+        if: ${{ inputs.break_env }}
+        shell: bash
+        run: |
+          rustup component remove rust-src --toolchain nightly || true
+          echo "components after removal:"
+          rustup component list --toolchain nightly | grep '(installed)' || true
+
+      - name: Remove stale eBPF artifact
+        run: rm -f waybill-ebpf/target/bpfel-unknown-none/release/waybill-ebpf
+
+      # m896 T021 — non-fatal on purpose. The job's verdict is computed from
+      # BOTH builds further down (FR-003a), so this step must not abort the job
+      # before the control build has had a chance to run.
       - name: Build eBPF kernel object
-        run: cargo run -p xtask -- ebpf
+        id: build_latest
+        if: ${{ always() && steps.parity.outcome != 'failure' }}
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo run -p xtask -- ebpf 2>&1 | tee "$RUNNER_TEMP/build-latest.log"
+
+      # m896 T015 / FR-002a / SC-008 — a build that exits zero having produced
+      # nothing is a failure. The canary's green is what authorises a version
+      # bump, so it must be backed by an artifact the canary can point at.
+      - name: Verify eBPF artifact was produced
+        id: verify_artifact
+        if: ${{ always() && steps.build_latest.outcome == 'success' }}
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          obj=waybill-ebpf/target/bpfel-unknown-none/release/waybill-ebpf
+          if [ -s "$obj" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+            echo "Artifact present: $obj ($(wc -c < "$obj") bytes)"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::error::Build reported success but produced no artifact at $obj. Reporting red — a green here would authorise a version bump on the strength of nothing having been built."
+            exit 1
+          fi
 
       - name: Build userspace binary with ebpf-tracing feature
+        if: ${{ steps.build_latest.outcome == 'success' && steps.verify_artifact.outputs.present == 'true' }}
         run: cargo build --release --features ebpf-tracing --bin waybill
+
+      # ----------------------------------------------------------------
+      # m896 US2 — the control build (FR-003a).
+      #
+      # Runs ONLY when the target build failed, so the green path stays at one
+      # build. Its job is to answer one question: does the version the project
+      # already ships still build in THIS environment? If it does not, the
+      # environment is the problem and the failure is the canary's, whichever
+      # step it happened at (SC-004a).
+      # ----------------------------------------------------------------
+
+      - name: Install pinned bpf-linker (control)
+        id: install_control
+        if: ${{ always() && steps.build_latest.outcome == 'failure' }}
+        uses: ./.github/actions/install-bpf-linker
+        with:
+          # Empty version => the composite reads .github/env/bpf-linker.env.
+          # Safe to invoke twice: the binary path's idempotency short-circuit
+          # only fires when target != 'latest' AND the installed version
+          # already matches, so this re-downloads over the target version.
+          version: ''
+          toolchain: nightly
+
+      - name: Build eBPF kernel object against the pinned version (control)
+        id: build_control
+        if: ${{ always() && steps.build_latest.outcome == 'failure' }}
+        continue-on-error: true
+        shell: bash
+        env:
+          # A separate target dir is load-bearing: sharing one lets this build
+          # reuse objects linked by the OTHER linker version and report a
+          # result that belongs to neither build.
+          CARGO_TARGET_DIR: ${{ github.workspace }}/target-control
+        run: |
+          set -o pipefail
+          rm -f "$CARGO_TARGET_DIR/bpfel-unknown-none/release/waybill-ebpf"
+          cargo run -p xtask -- ebpf 2>&1 | tee "$RUNNER_TEMP/build-control.log"
+
+      - name: Verify control artifact was produced
+        id: verify_control
+        if: ${{ always() && steps.build_control.outcome == 'success' }}
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          obj="${{ github.workspace }}/target-control/bpfel-unknown-none/release/waybill-ebpf"
+          if [ -s "$obj" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+            echo "Control artifact present ($(wc -c < "$obj") bytes)"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::error::Control build exited zero but produced no artifact."
+            exit 1
+          fi
+
+      # ----------------------------------------------------------------
+      # m896 T027 / FR-003 / FR-003b — attribution.
+      #
+      # A pure function of build OUTCOMES. It reads neither which step failed
+      # nor the text of any error, because both mis-classify the live defect:
+      # the failure that ran 35 times occurs at the build step (which position
+      # alone would call upstream's) and is caused by this job's own missing
+      # toolchain component.
+      #
+      #   latest  | control | artifact | cause
+      #   --------+---------+----------+-----------
+      #   success | (n/a)   | present  | none
+      #   success | (n/a)   | ABSENT   | canary
+      #   failure | success | -        | component
+      #   failure | failure | -        | canary      <- the live case
+      #   not run | (n/a)   | -        | canary
+      #
+      # `failing_step` and `error_excerpt` below are for the REPORT to display
+      # (FR-005). They are deliberately computed after `cause` and MUST NOT be
+      # fed back into it — wiring either one into the decision would reinstate
+      # exactly what FR-003b forbids.
+      #
+      # FR-004's veto ("no upstream attribution unless the failure was at the
+      # step exercising the component") is satisfied structurally rather than
+      # by a separate check: `component` is only reachable when the target
+      # build failed, and that build IS that step. FR-003b forbids step
+      # position as the determining basis, not as a consequence.
+      # ----------------------------------------------------------------
+      - name: Attribute the outcome
+        id: attribute
+        if: ${{ always() }}
+        shell: bash
+        env:
+          LATEST: ${{ steps.build_latest.outcome }}
+          CONTROL: ${{ steps.build_control.outcome }}
+          ARTIFACT: ${{ steps.verify_artifact.outputs.present }}
+          CONTROL_ARTIFACT: ${{ steps.verify_control.outputs.present }}
+          PARITY: ${{ steps.parity.outcome }}
+          INSTALL: ${{ steps.install.outcome }}
+        run: |
+          set -uo pipefail
+
+          # A control build only counts as passing if it also produced an
+          # artifact — otherwise "control succeeded" could rest on the same
+          # empty exit status FR-002a exists to reject.
+          control_ok=false
+          if [ "$CONTROL" = "success" ] && [ "$CONTROL_ARTIFACT" = "true" ]; then
+            control_ok=true
+          fi
+
+          if [ "$LATEST" = "success" ] && [ "$ARTIFACT" = "true" ]; then
+            cause=none
+            step=""
+          elif [ "$LATEST" = "success" ]; then
+            cause=canary
+            step="Verify eBPF artifact was produced"
+          elif [ "$LATEST" = "failure" ] && [ "$control_ok" = "true" ]; then
+            cause=component
+            step="Build eBPF kernel object"
+          elif [ "$LATEST" = "failure" ]; then
+            cause=canary
+            if [ "$CONTROL" = "success" ]; then
+              step="Build eBPF kernel object (target failed; pinned control exited zero but produced no artifact)"
+            elif [ "$CONTROL" = "failure" ]; then
+              step="Build eBPF kernel object (target AND pinned control both failed)"
+            else
+              step="Build eBPF kernel object (target failed; control build did not run)"
+            fi
+          else
+            cause=canary
+            if [ "$PARITY" = "failure" ]; then
+              step="Assert toolchain parity with ci.yml"
+            elif [ "$INSTALL" = "failure" ]; then
+              step="Install bpf-linker (via m234 composite)"
+            else
+              step="before the eBPF build ran"
+            fi
+          fi
+
+          echo "cause=$cause" >> "$GITHUB_OUTPUT"
+          echo "failing_step=$step" >> "$GITHUB_OUTPUT"
+          echo "Attributed cause: $cause (latest=$LATEST control=$CONTROL artifact=$ARTIFACT)"
+
+          # Evidence excerpt (FR-005). Two things a naive `tail` gets wrong,
+          # both observed on run 35260145867:
+          #
+          #  1. cargo keeps compiling other crates after the failure that
+          #     matters, so the tail of the log is compile progress and the
+          #     error is buried above it. Pull error lines first; fall back to
+          #     the tail only when none are found.
+          #  2. cargo writes ANSI colour codes, which render as `^[[92m`
+          #     litter inside a markdown code fence. Strip them.
+          #
+          # The target build is preferred over the control: it is the one
+          # testing the version under question.
+          log=""
+          for c in "$RUNNER_TEMP/build-latest.log" "$RUNNER_TEMP/build-control.log" "$RUNNER_TEMP/parity.log"; do
+            if [ -s "$c" ]; then log="$c"; break; fi
+          done
+          delim="EXCERPT_$(openssl rand -hex 8)"
+          {
+            echo "error_excerpt<<$delim"
+            if [ -n "$log" ]; then
+              # Strip both spellings: a real ESC byte (what cargo writes into
+              # the tee'd file here) and the literal two characters "^[" (what
+              # `gh run view` emits when the same log is fetched later).
+              clean=$(sed -E 's/\x1b\[[0-9;]*[mGKH]//g; s/\^\[\[[0-9;]*[mGKH]//g' "$log")
+              hits=$(printf '%s\n' "$clean" | grep -nE '^(error|warning: unused)|does not exist|panicked at|could not find|failed with status' | head -20)
+              if [ -n "$hits" ]; then
+                echo "$hits" | cut -d: -f2-
+              else
+                printf '%s\n' "$clean" | tail -c 2000
+              fi
+            else
+              echo "(no captured output — the run failed before any step that tees a log)"
+            fi
+            echo ""
+            echo "$delim"
+          } >> "$GITHUB_OUTPUT"
+
+          # Echo it too: the excerpt is the evidence the report will carry, and
+          # a run whose report was suppressed (dry_run, or a non-default branch)
+          # should still show what it would have said.
+          if [ "$cause" != "none" ]; then
+          echo "--- error excerpt that would be reported ---"
+          if [ -n "$log" ]; then
+            sed -E 's/\x1b\[[0-9;]*[mGKH]//g; s/\^\[\[[0-9;]*[mGKH]//g' "$log" \
+              | grep -E '^(error|warning: unused)|does not exist|panicked at|could not find|failed with status' \
+              | head -20 || echo "(no error lines matched; the report falls back to the log tail)"
+          else
+            echo "(no log captured)"
+          fi
+          fi
+
+      # m896 T028 — the job's verdict comes from the attributed cause, not from
+      # the individual continue-on-error steps. Without this a run whose builds
+      # "succeeded as steps" but produced nothing would conclude green.
+      - name: Conclude
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          cause="${{ steps.attribute.outputs.cause }}"
+          if [ "$cause" = "none" ]; then
+            echo "Canary green: target build succeeded and its artifact is present."
+            exit 0
+          fi
+          echo "::error::Canary red — attributed cause: $cause (${{ steps.attribute.outputs.failing_step }})"
+          exit 1
 
   report-failure:
     name: Report canary failure
     needs: canary
-    if: failure() && github.event.inputs.dry_run != 'true'
+    # m896 — two gates, and the branch one is the load-bearing half.
+    #
+    # `dry_run` is opt-in: it only helps someone who remembers to pass it. The
+    # branch check is opt-out-proof — a run from any ref other than the default
+    # branch cannot touch production issues at all. During this feature's own
+    # development, branch dispatches mutated #685 twice; the scheduled canary
+    # always runs on the default branch, so nothing legitimate is lost.
+    #
+    # Fails closed: if `default_branch` were ever absent the comparison is
+    # false and no issue is written.
+    if: >-
+      failure()
+      && github.event.inputs.dry_run != 'true'
+      && github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -129,59 +579,126 @@ jobs:
           # source (defense in depth against script injection).
           TARGET_VERSION: ${{ needs.canary.outputs.target_version }}
           INSTALLED_VERSION: ${{ needs.canary.outputs.installed_version }}
+          PINNED_VERSION: ${{ needs.canary.outputs.pinned_version }}
+          ATTRIBUTED_CAUSE: ${{ needs.canary.outputs.attributed_cause }}
+          FAILING_STEP: ${{ needs.canary.outputs.failing_step }}
+          ERROR_EXCERPT: ${{ needs.canary.outputs.error_excerpt }}
         with:
           script: |
-            const title = '[canary] bpf-linker eBPF build regression';
-            const target = process.env.TARGET_VERSION || '';
+            // m896 — two titles, deduped independently of each other.
+            //
+            // The component title is FROZEN: #685 lives under it and external
+            // references to it must keep resolving. The canary title is new.
+            // Dedupe is exact-title-match within the shared label set, so the
+            // two kinds coexist without further work (FR-004b) — a broken
+            // canary does not clear an outstanding upstream regression, and an
+            // outstanding upstream regression does not suppress notice that
+            // the canary has stopped working.
+            const TITLES = {
+              component: '[canary] bpf-linker eBPF build regression',
+              canary:    '[canary] the eBPF canary cannot run',
+            };
+            const ESCALATION_DAYS = 30;   // docs/development/ebpf-toolchain.md
+
+            const cause     = process.env.ATTRIBUTED_CAUSE || 'canary';
+            const title     = TITLES[cause] || TITLES.canary;
+            const target    = process.env.TARGET_VERSION || '';
             const installed = process.env.INSTALLED_VERSION || '<unknown, install failed>';
-            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-
+            const pinned    = process.env.PINNED_VERSION || '<unknown>';
+            const step      = process.env.FAILING_STEP || '<unknown>';
+            const excerpt   = (process.env.ERROR_EXCERPT || '').trim() || '(no output captured)';
+            const runUrl    = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
             const timestamp = new Date().toISOString();
-            const commentBody = [
-              `## Canary run ${context.runId} — ${timestamp}`,
-              ``,
-              `- Target bpf-linker: \`${target}\``,
-              `- Installed bpf-linker version: \`${installed}\``,
-              `- Run URL: ${runUrl}`,
-              ``,
-              `Reproduce locally:`,
-              `  \`scripts/verify-ebpf.sh --version ${installed !== '<unknown, install failed>' ? installed : target}\``,
-            ].join('\n');
 
-            const issueBody = [
-              `The eBPF-build canary at \`.github/workflows/ebpf-canary.yml\` has detected a`,
-              `regression in the bpf-linker install / build path.`,
-              ``,
-              `## Details`,
-              ``,
-              `- Installed bpf-linker version: \`${installed}\``,
-              `- Target requested: \`${target}\``,
-              `- Runner OS: ubuntu-latest`,
-              `- Run URL: ${runUrl}`,
-              ``,
-              `## Next steps`,
-              ``,
-              `1. Reproduce locally: \`scripts/verify-ebpf.sh --version ${installed !== '<unknown, install failed>' ? installed : target}\``,
-              `2. If confirmed, file upstream at https://github.com/aya-rs/bpf-linker with the log from step 1.`,
-              `3. Track upstream response; if unresponsive within the 30-day fallback window (spec.md FR-011), execute downstream mitigation.`,
-              ``,
-              `---`,
-              `_This issue was auto-opened by the eBPF canary. Comments will be`,
-              `appended by subsequent canary runs. Do not manually edit the`,
-              `body — canary uses title match for dedupe._`,
-              ``,
-              commentBody,
-            ].join('\n');
-
-            // Search for an existing open issue with the exact title.
-            const existing = await github.rest.issues.listForRepo({
+            // Find the open report for THIS kind. Its creation time is the
+            // streak's first failure — no separate state to keep, and nothing
+            // a human has to do for the clock to start (FR-007a).
+            const open = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
               state: 'open',
               labels: 'canary,ebpf,regression',
               per_page: 100,
             });
-            const match = existing.data.find(i => i.title === title);
+            const match = open.data.find(i => i.title === title);
+
+            const elapsedDays = match
+              ? Math.floor((Date.now() - new Date(match.created_at).getTime()) / 86400000)
+              : 0;
+
+            // --- evidence every report carries (FR-005) ---
+            const evidence = [
+              `- Attributed cause: **${cause}**`,
+              cause === 'component'
+                ? `- Failing version: \`${installed}\` (requested: \`${target}\`)\n- Passing control version: \`${pinned}\``
+                : `- Version tested: \`${installed}\` (requested: \`${target}\`, pin: \`${pinned}\`)`,
+              `- Failing step: \`${step}\``,
+              `- Run URL: ${runUrl}`,
+              ``,
+              `<details><summary>Error output</summary>`,
+              ``,
+              '```',
+              excerpt,
+              '```',
+              ``,
+              `</details>`,
+            ].join('\n');
+
+            // --- next steps, matched to the cause (FR-006) ---
+            const nextSteps = cause === 'component'
+              ? [
+                  `The version the project pins built fine in this same run; the newer`,
+                  `one did not. That difference is the evidence — the component regressed.`,
+                  ``,
+                  `1. Reproduce locally: \`scripts/verify-ebpf.sh --version ${installed}\``,
+                  `2. File upstream at https://github.com/aya-rs/bpf-linker with the error output above.`,
+                  `3. Link the upstream issue back here.`,
+                ].join('\n')
+              : [
+                  `**The component under test went untested this run.**`,
+                  ``,
+                  `The build the project already ships could not be produced in this`,
+                  `environment either, so nothing was learned about \`${installed}\` in`,
+                  `either direction. Do not read this report as the component being`,
+                  `healthy, and do not read it as the component being broken.`,
+                  ``,
+                  `This is the canary's own failure. Fix it here:`,
+                  ``,
+                  `1. Read the error output above and the failing step.`,
+                  `2. Compare this job's setup against \`ci.yml\`'s eBPF lane, which builds`,
+                  `   successfully — the parity step in this workflow does that check, and`,
+                  `   a divergence is the most likely cause.`,
+                  `3. Verify with a dispatch: \`gh workflow run ebpf-canary.yml -f version=${pinned} -f dry_run=true\``,
+                ].join('\n');
+
+            const escalation = elapsedDays >= ESCALATION_DAYS
+              ? [
+                  ``,
+                  `> ## ⚠️ Escalation due — ${elapsedDays} days`,
+                  `>`,
+                  `> This streak began ${elapsedDays} days ago and the documented`,
+                  `> ${ESCALATION_DAYS}-day window has elapsed. The documented fallback is`,
+                  `> now due — see \`docs/development/ebpf-toolchain.md\`.`,
+                  `>`,
+                  `> The clock runs from this report's own creation date. It does not`,
+                  `> wait on anyone having filed upstream, because a clock that does`,
+                  `> never starts when nobody does.`,
+                  ``,
+                ].join('\n')
+              : '';
+
+            const commentBody = [
+              `## Canary run ${context.runId} — ${timestamp}`,
+              elapsedDays > 0 ? `\nStreak: **${elapsedDays} day(s)** since this report was opened.` : '',
+              escalation,
+              ``,
+              evidence,
+              ``,
+              `### Next steps`,
+              ``,
+              nextSteps,
+            ].join('\n');
+
             if (match) {
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
@@ -189,60 +706,124 @@ jobs:
                 issue_number: match.number,
                 body: commentBody,
               });
-              core.info(`Appended comment to existing issue #${match.number}`);
+              core.info(`Appended comment to existing issue #${match.number} (cause=${cause}, ${elapsedDays}d)`);
             } else {
+              const header = cause === 'component'
+                ? [
+                    `The eBPF-build canary has detected a regression in the component it`,
+                    `watches. The pinned version built in this same run; the version under`,
+                    `test did not.`,
+                  ].join('\n')
+                : [
+                    `**The eBPF canary could not run.** This is a failure of the canary`,
+                    `itself, not of the component it watches.`,
+                    ``,
+                    `It is filed under its own title on purpose. A canary that cannot`,
+                    `build once reported that as an upstream regression for 35 consecutive`,
+                    `nights (#685), and the title is what a maintainer scans.`,
+                  ].join('\n');
+
               const created = await github.rest.issues.create({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 title,
-                body: issueBody,
+                body: [
+                  header,
+                  ``,
+                  `## Details`,
+                  ``,
+                  evidence,
+                  ``,
+                  `### Next steps`,
+                  ``,
+                  nextSteps,
+                  ``,
+                  `---`,
+                  `_Auto-opened by the eBPF canary. Subsequent runs append comments._`,
+                  `_Do not edit the title — dedupe matches on it._`,
+                ].join('\n'),
                 labels: ['canary', 'ebpf', 'regression'],
               });
-              core.info(`Created new issue #${created.data.number}`);
+              core.info(`Created new issue #${created.data.number} (cause=${cause})`);
             }
 
   report-success:
     name: Close canary issue on recovery
     needs: canary
-    if: success()
+    # m896 — `dry_run` must gate this job too. Until now it guarded only
+    # report-failure, so a green dispatch from ANY branch closed the open
+    # report even with dry_run=true. That is how run 35257496241, a
+    # verification dispatch from an unmerged branch, closed #685.
+    #
+    # Closing a report asserts the thing it describes is fixed. Emitting that
+    # from a branch whose fix is not merged is the same class of error this
+    # feature exists to fix, pointed the other way.
+    # m896 — same two gates as report-failure. Closing a report asserts the
+    # thing it describes is fixed; a run from an unmerged branch is in no
+    # position to assert that. Run 35257496241 and run 35258931279 both closed
+    # #685 from this feature's own branch before this guard existed.
+    if: >-
+      ${{ success()
+      && github.event.inputs.dry_run != 'true'
+      && github.ref_name == github.event.repository.default_branch }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
       issues: write
 
     steps:
-      - name: Close matching canary issue if open
+      - name: Close matching canary issues if open
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
-            const title = '[canary] bpf-linker eBPF build regression';
+            // m896 T033 / FR-009 — close per kind.
+            //
+            // A green run means the target version built AND its artifact is
+            // present, which requires the canary to be working. Both kinds are
+            // therefore genuinely resolved and both are closed.
+            //
+            // What this must never become is the pre-m896 shape: close "the"
+            // matching issue. With two titles that would let a run of one kind
+            // close an outstanding report of the other — an upstream
+            // regression marked fixed by a run that never tested it.
+            const TITLES = [
+              '[canary] bpf-linker eBPF build regression',
+              '[canary] the eBPF canary cannot run',
+            ];
             const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
             const timestamp = new Date().toISOString();
 
-            const existing = await github.rest.issues.listForRepo({
+            const open = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
               state: 'open',
               labels: 'canary,ebpf,regression',
               per_page: 100,
             });
-            const match = existing.data.find(i => i.title === title);
-            if (!match) {
-              core.info('No open canary issue to close — nothing to do.');
-              return;
-            }
 
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: match.number,
-              body: `Canary green as of ${timestamp} (run ${runUrl}). Closing.`,
-            });
-            await github.rest.issues.update({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: match.number,
-              state: 'closed',
-              state_reason: 'completed',
-            });
-            core.info(`Closed issue #${match.number}`);
+            let closed = 0;
+            for (const title of TITLES) {
+              const match = open.data.find(i => i.title === title);
+              if (!match) { continue; }
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: match.number,
+                body: [
+                  `Canary green as of ${timestamp} (run ${runUrl}).`,
+                  ``,
+                  `The target version built and its artifact is present, which also`,
+                  `means the canary itself is working. Closing.`,
+                ].join('\n'),
+              });
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: match.number,
+                state: 'closed',
+                state_reason: 'completed',
+              });
+              core.info(`Closed issue #${match.number} ("${title}")`);
+              closed++;
+            }
+            if (closed === 0) { core.info('No open canary issue to close — nothing to do.'); }
