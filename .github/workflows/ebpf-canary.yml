@@ -24,6 +24,14 @@ on:
         required: false
         default: false
         type: boolean
+      break_env:
+        description: >-
+          TEST-ONLY. If true, omit the rust-src toolchain component so the
+          canary fails for its own reasons. Used to exercise the canary-fault
+          report path on demand (m896 SC-003). No effect on the schedule path.
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -46,6 +54,15 @@ jobs:
     outputs:
       installed_version: ${{ steps.install.outputs.installed-version }}
       target_version: ${{ steps.resolve_target.outputs.target }}
+      # m896 — the data a report needs in order to name a cause and show
+      # evidence for it. See specs/896-fix-ebpf-canary/data-model.md.
+      pinned_version: ${{ steps.resolve_pinned.outputs.pinned }}
+      latest_build_outcome: ${{ steps.build_latest.outcome }}
+      control_build_outcome: ${{ steps.build_control.outcome }}
+      artifact_present: ${{ steps.verify_artifact.outputs.present }}
+      failing_step: ${{ steps.attribute.outputs.failing_step }}
+      error_excerpt: ${{ steps.attribute.outputs.error_excerpt }}
+      attributed_cause: ${{ steps.attribute.outputs.cause }}
 
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -67,10 +84,133 @@ jobs:
           echo "target=$target" >> "$GITHUB_OUTPUT"
           echo "Canary target: $target"
 
+      # m896 T006 — the pinned version is needed twice: as the control build's
+      # target (FR-003a) and so a report can name both versions (FR-005).
+      - name: Resolve pinned version
+        id: resolve_pinned
+        run: |
+          set -euo pipefail
+          pinned=$(grep -E '^BPF_LINKER_VERSION=' .github/env/bpf-linker.env | head -1 | cut -d= -f2)
+          if [ -z "$pinned" ]; then
+            echo "::error::BPF_LINKER_VERSION not set in .github/env/bpf-linker.env"
+            exit 1
+          fi
+          echo "pinned=$pinned" >> "$GITHUB_OUTPUT"
+          echo "Pinned bpf-linker: $pinned"
+
+      # ----------------------------------------------------------------
+      # m896 US1 — build-environment parity with ci.yml's eBPF lane.
+      #
+      # Until m896 this job installed stable Rust and nothing else, then
+      # relied on `cargo +nightly` inside xtask. `+nightly` is rustup's
+      # highest-precedence override and bypasses waybill-ebpf/rust-toolchain.toml
+      # entirely — channel AND its `components = ["rust-src"]`. So rust-src was
+      # never installed and every run since 2026-08-14 failed at the build step,
+      # reported as an upstream bpf-linker regression. 36 runs, 0 green.
+      # Evidence: specs/896-fix-ebpf-canary/measurements/.
+      # ----------------------------------------------------------------
+
+      - name: Install eBPF build deps
+        # Mirrors ci.yml's eBPF lane, retry-wrapped for the same reason
+        # (apt-get can hang for 45+ min on GHA network issues — m663).
+        uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4.0.0
+        with:
+          max_attempts: 3
+          timeout_minutes: 5
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y clang llvm libelf-dev pkg-config libssl-dev
+
+      # Install nightly FIRST so stable ends up the default toolchain for
+      # unpinned `cargo` invocations — dtolnay/rust-toolchain defaults to
+      # whichever it installed last. Same ordering, same SHA, as ci.yml.
+      - name: Install nightly Rust with rust-src
+        uses: dtolnay/rust-toolchain@5b842231ba77f5c045dba54ac5560fed2db780e2 # nightly (2026-04-25)
+        with:
+          toolchain: nightly
+          # m896 T010 — ONE step with an expression-valued `components`, never
+          # two conditional steps: the parity check below must find exactly one
+          # components declaration to reason about.
+          #
+          # Note the operand order. `inputs.break_env && '' || 'rust-src'` would
+          # be wrong in both branches: GitHub's && / || return an operand, and
+          # the empty string is falsy, so the || falls through to 'rust-src'
+          # even when break_env is true. Negating first avoids that.
+          components: ${{ !inputs.break_env && 'rust-src' || '' }}
+
       - name: Install stable Rust toolchain
         uses: dtolnay/rust-toolchain@21dc36fb71dd22e3317045c0c31a3f4249868b17 # stable
         with:
           toolchain: stable
+
+      - name: Make stable the default toolchain
+        # `cargo run -p xtask` runs under stable; the nested `cargo +nightly
+        # build` inside xtask selects nightly for itself.
+        run: rustup default stable
+
+      - name: Cache cargo + build artifacts
+        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2.9.1
+        with:
+          key: ebpf-canary
+          workspaces: |
+            .
+            waybill-ebpf
+
+      - name: Remove rustup-init (prevents `cargo +<channel>` dispatch race)
+        # See ci.yml::lint-and-test for the rationale. MUST run after
+        # Swatinem/rust-cache, whose $CARGO_HOME/bin restore re-creates it.
+        shell: bash
+        run: |
+          rm -f "$HOME/.cargo/bin/rustup-init" "$HOME/.cargo/bin/rustup-init.exe"
+          if ! cargo --version > /dev/null 2>&1; then
+            echo "ERROR: \`cargo --version\` fails — \$HOME/.cargo/bin/cargo is not a working cargo proxy."
+            ls -la "$HOME/.cargo/bin/" || true
+            exit 1
+          fi
+          echo "cargo --version OK: $(cargo --version)"
+
+      # m896 T016 / FR-010 — a divergence between this job's environment and
+      # ci.yml's must be detectable here, not discovered a month later in a
+      # misattributed issue.
+      #
+      # This checks the requirement is SATISFIED, not merely that two files
+      # spell it the same way: ci.yml is the source of truth for which
+      # components an eBPF build needs, and rustup is asked whether this runner
+      # actually has them. Text-vs-text would be defeated by the expression
+      # above, and would pass while the component was absent.
+      - name: Assert toolchain parity with ci.yml
+        if: ${{ !inputs.break_env }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          ci=.github/workflows/ci.yml
+          # Scope the scan to the nightly step's own block — ci.yml has six
+          # `components:` lines and an unbounded scan counts the three that
+          # follow the nightly step rather than the one inside it.
+          # No heredoc here: inside a YAML block scalar the terminator would be
+          # indented, and `<<EOF` does not accept an indented terminator.
+          parity=$(awk '
+            /dtolnay\/rust-toolchain@.*# nightly/ { inblk=1; next }
+            inblk && /^      - / { inblk=0 }
+            inblk && /components:/ { c++; if (c==1) { v=$0; sub(/.*components:[[:space:]]*/, "", v) } }
+            END { printf "%d\t%s\n", c+0, v }' "$ci")
+          count=${parity%%$'\t'*}
+          decls=${parity#*$'\t'}
+          if [ "${count:-0}" -ne 1 ] || [ -z "${decls:-}" ]; then
+            echo "::error::Expected exactly 1 components declaration under ci.yml's nightly toolchain step, found $count ('$decls'). The parity check cannot tell which line to trust — fix this check, do not skip it."
+            exit 1
+          fi
+          echo "ci.yml requires nightly components: $decls"
+          missing=0
+          for c in $(echo "$decls" | tr ',' ' '); do
+            if rustup component list --toolchain nightly | grep -q "^$c.* (installed)"; then
+              echo "  ok: $c installed"
+            else
+              echo "::error::ci.yml's eBPF lane requires nightly component '$c'; this job does not have it. The canary's environment has diverged from the working build — that divergence is the m896 defect, recurring."
+              missing=1
+            fi
+          done
+          [ "$missing" -eq 0 ]
 
       - name: Install bpf-linker (via m234 composite)
         id: install
@@ -95,10 +235,37 @@ jobs:
             echo "Canary latest-mode installed $installed (pin is $pinned) — different, good."
           fi
 
+      # m896 T014 / FR-002a — delete before building, so the presence check
+      # below cannot be satisfied by an object left over from an earlier step.
+      # Deletion is deterministic; an mtime comparison would be a race.
+      - name: Remove stale eBPF artifact
+        run: rm -f waybill-ebpf/target/bpfel-unknown-none/release/waybill-ebpf
+
       - name: Build eBPF kernel object
+        id: build_latest
         run: cargo run -p xtask -- ebpf
 
+      # m896 T015 / FR-002a / SC-008 — a build that exits zero having produced
+      # nothing is a failure. The canary's green is what authorises a version
+      # bump, so it must be backed by an artifact the canary can point at.
+      - name: Verify eBPF artifact was produced
+        id: verify_artifact
+        if: ${{ always() && steps.build_latest.outcome == 'success' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          obj=waybill-ebpf/target/bpfel-unknown-none/release/waybill-ebpf
+          if [ -s "$obj" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+            echo "Artifact present: $obj ($(wc -c < "$obj") bytes)"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::error::Build reported success but produced no artifact at $obj. Reporting red — a green here would authorise a version bump on the strength of nothing having been built."
+            exit 1
+          fi
+
       - name: Build userspace binary with ebpf-tracing feature
+        if: ${{ steps.build_latest.outcome == 'success' }}
         run: cargo build --release --features ebpf-tracing --bin waybill
 
   report-failure:
