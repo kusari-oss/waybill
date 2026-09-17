@@ -7,6 +7,128 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+## [0.8.0] — 2026-09-17
+
+### Dependency graphs stopped inventing edges, and stopped dropping them (milestones 866, 867, 883, 856, 892, 910)
+
+Six defects in one area, found by comparing the same scan across
+CycloneDX, SPDX 2.3 and SPDX 3 and asking why the three disagreed.
+
+- **Go emitted edges nothing declared.** The resolver treated every module
+  in the build list as a dependency of the main module, so a transitively
+  required module appeared as a direct one. Root out-edge counts disagreed
+  across formats, which is what surfaced it.
+- **Declared names resolved against the wrong ecosystem.** Lookup keyed on
+  the *requirer's* PURL type, so a reader that legitimately emits a
+  `pkg:generic/<dir>` application whose dependencies are gem names missed
+  every one of them — silently. Readers now record the ecosystem their
+  dependency names live in, and an unresolved name is counted rather than
+  simply not happening.
+- **PEP 621 `dynamic = ["dependencies"]`** produced a main module with no
+  edges at all.
+- **Maven versions from `dependencyManagement` and inherited coordinates**
+  went unresolved, leaving versionless components.
+- **`OptionalDependsOn` was not a graph edge.** An allowlist added in
+  milestone 179 was never extended when the variant was, so optional
+  dependencies were invisible to the completeness BFS for roughly two
+  years. Four corpus targets' orphan counts were wrong.
+- **Pex dependency edges crossed resolve boundaries.** Detailed below.
+
+### Pants monorepos have per-resolve structure (milestones 868, 894, 901, 910)
+
+A Pants repository is several dependency-resolution boundaries wearing one
+coat. waybill now emits an owning component per declared resolve, and the
+graph beneath each one is its own.
+
+- **Resolves are anchored.** Each resolve declared in `pants.toml` gets a
+  `pkg:generic/<name>` component its members hang from, so a consumer can
+  walk the graph from a resolve rather than from the repository root. A
+  lockfile found by glob is *not* anchored — its name comes from a filename
+  convention, not a declaration of ownership — and is counted instead.
+- **Edges resolve inside their own resolve.** `requires_dists` gives a bare
+  project name, so when two resolves pinned one package at different
+  versions, every edge naming it pointed at whichever component was indexed
+  last. The result also depended on scan ordering. Worth knowing if you
+  relied on the old output: the mis-resolved edge orphaned the losing
+  version, the root-fallback adopted it, and graph completeness then
+  reported `complete` over a wrong graph — so completeness never flagged
+  this.
+- **A private index no longer costs you PyPI identity.** A requirement was
+  typed `pkg:pypi` only when served from `files.pythonhosted.org`;
+  everything else became `pkg:generic` and was invisible to advisory
+  matching. On one real monorepo that was 1054 of 1826 components. Any
+  index now yields `pkg:pypi`, matching what the uv reader already did. The
+  artifact URL is retained on non-canonically-hosted components, so where a
+  package actually came from stays answerable from the document.
+- **The default resolve stays runtime-scoped**, and resolve anchors no
+  longer suppress the primary-dependency fallback.
+
+### Haskell `.cabal` parsing was wrong in seven ways (milestone 895)
+
+Measured on a real `.cabal` file: 38 dependencies emitted, **all
+malformed**, with 10 of 48 missing entirely. Now 47 of 48 emit, none
+malformed. Among the defects: a version constraint landed in the PURL's
+version slot; a field block ran past the following field; a comment was
+absorbed into the entry it followed; a build-tool coordinate was emitted as
+a package name; only the first dependency list in each section was read;
+and a stanza that began with its own field emitted nothing. The reader also
+now validates package names rather than trusting whatever it parsed.
+
+### deps.dev enrichment is batched, concurrent, and honest about what it did (milestone 839)
+
+Enrichment now issues batched, concurrent requests with a per-scan cache.
+The batch size was chosen by *measuring* the endpoint rather than reading
+its documentation: it paginates at 100 undocumented, and pages are serial
+because each needs the previous page's token, so the large batches the
+design originally assumed measured 3–4× slower for identical coverage.
+
+Two counter defects fixed alongside: the npm scope was applied twice in
+lookups, and components contributed by the dependency-graph pass were never
+licence-enriched.
+
+### `--no-go-proxy-fetch` (milestone 850)
+
+A narrow alternative to `--offline` for Go scans: keeps local resolution
+and the module cache, declines only the proxy round-trips. `--offline`
+remains the blunt instrument.
+
+### `--root-name` no longer deletes main modules (milestone 860)
+
+Overriding the root name removed the main-module components rather than
+renaming around them, so a scan run with `--root-name` lost the components
+a scan without it kept.
+
+### Cargo v1 and v2 lockfiles both parse
+
+The reader assumed v3. A v1 or v2 `Cargo.lock` produced no components.
+
+### Constitution v3.0.0 — static linkage replaced zero-C (#823, milestone 824)
+
+Principle I's test is now "does it link statically", not "does it contain
+C". Pure Rust remains a strong preference for third-party dependencies; a
+crate that vendors and compiles C is permissible when no viable pure-Rust
+equivalent exists *and* it links statically. First-party code — waybill's
+own user-space and eBPF source — stays Rust-only, and that half is
+absolute. Release binaries are now gated on a linkage baseline so the
+principle is enforced rather than asserted.
+
+### The eBPF build canary tells the truth (milestone 896)
+
+The canary that watches whether the pinned eBPF toolchain can be un-pinned
+had produced **zero green runs in its lifetime** — 36 runs, 36 failures —
+and reported every one as an upstream regression in a project that had
+nothing to fix. The failures were its own missing toolchain component.
+
+It now builds the pinned version as a control whenever the newest one
+fails, and reports under one of two titles depending on which the evidence
+supports. A failure of its own execution never directs a reader upstream,
+and says explicitly that the watched version went untested. A green run
+additionally requires the artifact to exist, because a build that exits
+zero having produced nothing is not a reason to bump anything.
+
+The answer it was unable to give for 35 nights: the newest toolchain builds
+fine.
+
 ### GitHub Actions can sign without a token dance (milestone 779)
 
 `waybill sbom scan --sign` now uses the runner's own ambient OIDC
@@ -5351,5 +5473,6 @@ per-release breakdown.
 
 ---
 
-[Unreleased]: https://github.com/kusari-sandbox/waybill/compare/v0.1.0-alpha.3...HEAD
-[0.1.0-alpha.3]: https://github.com/kusari-sandbox/waybill/releases/tag/v0.1.0-alpha.3
+[Unreleased]: https://github.com/kusari-oss/waybill/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/kusari-oss/waybill/releases/tag/v0.8.0
+[0.7.0]: https://github.com/kusari-oss/waybill/releases/tag/v0.7.0
