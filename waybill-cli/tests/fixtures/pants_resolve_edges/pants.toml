@@ -1,0 +1,6 @@
+[python]
+interpreter_constraints = [">=3.9"]
+
+[python.resolves]
+app = "3rdparty/python/app.lock"
+tools = "3rdparty/python/tools.lock"

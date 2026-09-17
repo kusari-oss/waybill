@@ -101,6 +101,7 @@ pub struct PackageDbEntry {
     /// are gem names, for instance. Keying the lookup on the requirer's own
     /// type then misses every one of them, silently.
     pub depends_ecosystem: Option<String>,
+
     /// Free-form package supplier — for dpkg, the `Maintainer:` field
     /// (e.g. `"Matthias Klose <doko@debian.org>"`). Maps directly to
     /// CycloneDX `component.supplier.name`. `None` when the source db
