@@ -232,14 +232,30 @@ pub(super) fn build_edge_adjacency(relationships: &[Relationship]) -> HashMap<St
     use waybill_common::resolution::RelationshipType as RT;
     let mut out: HashMap<String, Vec<String>> = HashMap::new();
     for rel in relationships {
-        // Only DependsOn (and its lifecycle-tagged variants) count as
-        // graph-completeness edges. Other relationship types (Contains,
-        // Describes, GeneratedFrom, ...) don't participate in the
-        // dep-graph BFS.
-        let is_dep_edge = matches!(
-            rel.relationship_type,
-            RT::DependsOn | RT::DevDependsOn | RT::BuildDependsOn | RT::TestDependsOn
-        );
+        // Issue #892 — decided by an EXHAUSTIVE match, not an allowlist.
+        //
+        // `OptionalDependsOn` was added in milestone 179 and never added to
+        // the `matches!` allowlist that used to stand here, so the classifier
+        // walked a sparser graph than the one that ships: CycloneDX's
+        // `build_dependencies` does not filter by type and emits every
+        // variant as an ordinary `dependsOn` edge. The result was an
+        // annotation contradicting the document carrying it — `python-flask`
+        // reported 94 of 108 components unreachable where walking the emitted
+        // `dependencies[]` found 23, and `lablup/backend.ai` reported 37
+        // against 34, which is what #892 was originally filed for.
+        //
+        // Every variant of this enum is a dependency flavour today, so the
+        // filter has nothing to exclude. It is written as an exhaustive match
+        // rather than deleted so that adding a NON-dependency variant later
+        // forces a decision here at compile time instead of silently
+        // shrinking or widening what reachability means.
+        let is_dep_edge = match rel.relationship_type {
+            RT::DependsOn
+            | RT::DevDependsOn
+            | RT::BuildDependsOn
+            | RT::TestDependsOn
+            | RT::OptionalDependsOn => true,
+        };
         if !is_dep_edge {
             continue;
         }
@@ -254,6 +270,52 @@ pub(super) fn build_edge_adjacency(relationships: &[Relationship]) -> HashMap<St
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
     use super::*;
+
+    /// Issue #892 — every `RelationshipType` variant must be a graph edge
+    /// for the completeness BFS.
+    ///
+    /// `OptionalDependsOn` was missing from the allowlist that used to stand
+    /// in `build_edge_adjacency` for the life of milestone 179. CycloneDX
+    /// emits every variant as an ordinary `dependsOn` edge, so the emitted
+    /// graph traversed them while the classifier did not, and the annotation
+    /// contradicted the document carrying it.
+    ///
+    /// The enum is enumerated here on purpose. Adding a variant fails this
+    /// test, and the exhaustive `match` in `build_edge_adjacency` fails the
+    /// build — so a new relationship kind cannot quietly change what
+    /// reachability means.
+    #[test]
+    fn every_relationship_variant_is_a_graph_edge() {
+        use waybill_common::resolution::{EnrichmentProvenance, RelationshipType as RT};
+
+        let edge = |rt: RT| {
+            let rels = vec![Relationship {
+                from: "a".to_string(),
+                to: "b".to_string(),
+                relationship_type: rt,
+                provenance: EnrichmentProvenance {
+                    source: "test".to_string(),
+                    data_type: "dependency-graph".to_string(),
+                },
+            }];
+            !build_edge_adjacency(&rels).is_empty()
+        };
+
+        for rt in [
+            RT::DependsOn,
+            RT::DevDependsOn,
+            RT::BuildDependsOn,
+            RT::TestDependsOn,
+            RT::OptionalDependsOn,
+        ] {
+            let label = format!("{rt:?}");
+            assert!(
+                edge(rt),
+                "{label} is a dependency edge and must participate in the BFS",
+            );
+        }
+    }
+
     use crate::generate::graph_completeness::test_support::{
         mk_component, mk_main_module, mk_workspace_root, selection_with_main_module,
     };
