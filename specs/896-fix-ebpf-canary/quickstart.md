@@ -44,10 +44,7 @@ gh workflow run ebpf-canary.yml -f version="$pinned" -f dry_run=true
 ```
 
 `dry_run=true` keeps it away from #685 while the build path is still being
-proven — **but only since m896**. Before this feature, `dry_run` guarded
-`report-failure` alone and `report-success` ran on a bare `if: success()`, so a
-green dispatch from any branch closed the open report. Run `35257496241` closed
-#685 that way during this feature's own verification. Wait, then:
+proven. Wait, then:
 
 ```bash
 gh run list --workflow=ebpf-canary.yml --limit 1 --json conclusion,databaseId
