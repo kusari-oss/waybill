@@ -138,6 +138,28 @@ jobs:
           # even when break_env is true. Negating first avoids that.
           components: ${{ !inputs.break_env && 'rust-src' || '' }}
 
+      # m896 — probe A: component state immediately after the nightly install,
+      # before anything else touches the toolchain. Paired with probe B further
+      # down, this isolates which step puts rust-src on the runner.
+      - name: Probe A — nightly components right after install
+        shell: bash
+        run: |
+          echo "requested components input: '${{ !inputs.break_env && 'rust-src' || '' }}'"
+          rustup component list --toolchain nightly | grep '(installed)' || true
+
+      # m896 — break_env removes the component outright rather than merely
+      # declining to request it. Probe A showed rust-src can reach the runner
+      # without being asked for, so "don't request it" is not a reliable break;
+      # removing it is, and it reproduces the observed failure exactly (the
+      # component absent at build time).
+      - name: Remove rust-src (break_env only — TEST PATH)
+        if: ${{ inputs.break_env }}
+        shell: bash
+        run: |
+          rustup component remove rust-src --toolchain nightly || true
+          echo "after removal:"
+          rustup component list --toolchain nightly | grep '(installed)' || true
+
       - name: Install stable Rust toolchain
         uses: dtolnay/rust-toolchain@21dc36fb71dd22e3317045c0c31a3f4249868b17 # stable
         with:
@@ -218,7 +240,7 @@ jobs:
       # m896 — record the nightly toolchain's actual component state. This is
       # evidence in every run, and it is what settled the question of how
       # rust-src reaches the runner (see research R2).
-      - name: Report nightly toolchain state
+      - name: Probe B — nightly toolchain state before the build
         if: ${{ always() }}
         shell: bash
         run: |
