@@ -509,6 +509,18 @@ jobs:
             echo "$delim"
           } >> "$GITHUB_OUTPUT"
 
+          # Echo it too: the excerpt is the evidence the report will carry, and
+          # a run whose report was suppressed (dry_run, or a non-default branch)
+          # should still show what it would have said.
+          echo "--- error excerpt that would be reported ---"
+          if [ -n "$log" ]; then
+            sed -E 's/\x1b\[[0-9;]*[mGKH]//g; s/\^\[\[[0-9;]*[mGKH]//g' "$log" \
+              | grep -E '^(error|warning: unused)|does not exist|panicked at|could not find|failed with status' \
+              | head -20 || echo "(no error lines matched; the report falls back to the log tail)"
+          else
+            echo "(no log captured)"
+          fi
+
       # m896 T028 — the job's verdict comes from the attributed cause, not from
       # the individual continue-on-error steps. Without this a run whose builds
       # "succeeded as steps" but produced nothing would conclude green.
