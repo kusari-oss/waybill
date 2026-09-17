@@ -113,18 +113,38 @@ pub(crate) struct Artifact {
     pub(crate) url: String,
 }
 
+/// The canonical PyPI artifact host. Used only to decide whether an
+/// artifact URL is worth recording (see `emits_source_url`), never to
+/// decide whether something IS a PyPI distribution — that was the m901
+/// defect.
+const CANONICAL_PYPI_HOST: &str = "https://files.pythonhosted.org/";
+
 /// Classifies an artifact URL into a source-type category, driving
 /// PURL construction (pypi vs generic) + the `waybill:source-type`
 /// annotation emission per Q2-A / FR-009.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum ArtifactSourceType {
-    /// URL starts with "https://files.pythonhosted.org/" — canonical
-    /// PyPI-hosted wheel or sdist.
+    /// Resolved from a package index over http(s) — **any** index, not
+    /// only `files.pythonhosted.org`.
+    ///
+    /// Issue #901: this used to require the canonical host, so every
+    /// requirement served by a private index or mirror was demoted to
+    /// `pkg:generic` and became invisible to advisory matching. On one
+    /// real monorepo that was 1054 of 1826 components.
+    ///
+    /// The rule now matches `pip/uv_lock.rs`, which types by source KIND
+    /// and never inspects a registry's host — so a uv project behind the
+    /// same index was already correct while this reader was not.
+    ///
+    /// What it assumes: a matching name and version means the upstream
+    /// project. That assumption can be wrong for an internally-built
+    /// package whose name collides with a real one; #909 tracks it, and
+    /// the artifact URL is retained on such components so the question
+    /// stays answerable from the emitted document.
     Pypi,
-    /// URL starts with "git+" (any transport).
+    /// URL starts with "git+" (any transport). A VCS checkout is not a
+    /// distribution of the named project, so it stays `pkg:generic`.
     Git,
-    /// URL starts with "http://" or "https://" (non-PyPI host).
-    Url,
     /// URL starts with "file://" or is an absolute local filesystem path.
     Local,
 }
@@ -135,17 +155,32 @@ impl ArtifactSourceType {
     /// Empty URL is treated as `Local` (edge case per Pex behavior when
     /// a lock entry was resolved from a wheel path without a URL prefix).
     pub(crate) fn from_url(url: &str) -> Self {
-        if url.starts_with("https://files.pythonhosted.org/") {
-            Self::Pypi
-        } else if url.starts_with("git+") {
+        if url.starts_with("git+") {
             Self::Git
         } else if url.starts_with("http://") || url.starts_with("https://") {
-            Self::Url
+            // Any index, canonical or private. Order matters: `git+https://`
+            // is checked first, or a VCS checkout would land here.
+            Self::Pypi
         } else {
             // file:// URLs + bare absolute paths + empty strings all
             // fall here — treat as local.
             Self::Local
         }
+    }
+
+    /// Whether this entry should carry `waybill:source-url`.
+    ///
+    /// Not "is it generic" — that was the pre-#901 gate, and it would now
+    /// drop the URL from exactly the components whose provenance is
+    /// non-obvious. The question is whether the URL tells a reader
+    /// something the PURL does not: for a canonical PyPI wheel it does
+    /// not, for anything else it does.
+    ///
+    /// Presence of `waybill:source-url` on a `pkg:pypi/*` component is
+    /// therefore the marker for "index-resolved, non-canonical host" —
+    /// the population #909 needs to reason about, at no extra machinery.
+    pub(crate) fn emits_source_url(self, url: &str) -> bool {
+        !matches!(self, Self::Pypi) || !url.starts_with(CANONICAL_PYPI_HOST)
     }
 
     /// Value emitted into the `waybill:source-type` annotation for
@@ -155,7 +190,6 @@ impl ArtifactSourceType {
         match self {
             Self::Pypi => "pypi",
             Self::Git => "git",
-            Self::Url => "url",
             Self::Local => "local",
         }
     }
@@ -511,15 +545,24 @@ pub(crate) fn locked_req_to_entry(
             );
         }
     }
-    // Non-PyPI entries carry source-url + source-type annotations for
-    // provenance (Q2 A).
-    if source_type != ArtifactSourceType::Pypi {
-        if let Some(a) = req.artifacts.first() {
+    // Provenance annotations (Q2 A, amended by #901).
+    //
+    // `source-url` is now gated on whether the URL is informative rather
+    // than on the PURL type: a private-index wheel is `pkg:pypi` after
+    // #901 but its host is still worth recording, and dropping it would
+    // make #909's collision question unanswerable from the document.
+    //
+    // `source-type` stays gated on the type, because for a `pkg:pypi`
+    // component it would only ever restate what the PURL already says.
+    if let Some(a) = req.artifacts.first() {
+        if source_type.emits_source_url(&a.url) {
             extra_annotations.insert(
                 "waybill:source-url".to_string(),
                 json!(&a.url),
             );
         }
+    }
+    if source_type != ArtifactSourceType::Pypi {
         extra_annotations.insert(
             "waybill:source-type".to_string(),
             json!(source_type.as_annotation_str()),
@@ -820,12 +863,46 @@ mod tests {
         );
     }
 
+    /// #901 — an http(s) artifact is index-resolved and types as PyPI
+    /// whichever host served it. This used to assert `Url`, which is the
+    /// defect: every private-index requirement was demoted to pkg:generic
+    /// and became invisible to advisory matching.
     #[test]
-    fn artifact_source_type_plain_https_non_pypi() {
+    fn artifact_source_type_private_index_is_pypi() {
         assert_eq!(
             ArtifactSourceType::from_url("https://mirror.example.test/wheels/foo-1.0.0.whl"),
-            ArtifactSourceType::Url
+            ArtifactSourceType::Pypi
         );
+    }
+
+    /// Ordering guard. `git+https://` starts with neither `http://` nor
+    /// `https://`, but a careless reordering of the branches would make it
+    /// match and turn every VCS checkout into a claimed PyPI release.
+    #[test]
+    fn artifact_source_type_git_over_https_is_not_pypi() {
+        assert_eq!(
+            ArtifactSourceType::from_url("git+https://example.test/org/repo.git@abc123"),
+            ArtifactSourceType::Git
+        );
+    }
+
+    /// #901 — the artifact URL is recorded exactly when it says something
+    /// the PURL does not. Presence on a pkg:pypi component is what marks it
+    /// as index-resolved from a non-canonical host (#909 depends on this).
+    #[test]
+    fn source_url_emitted_only_when_informative() {
+        let canonical = "https://files.pythonhosted.org/packages/xx/foo-1.0.0-py3-none-any.whl";
+        let private = "https://mirror.example.test/wheels/foo-1.0.0-py3-none-any.whl";
+        assert!(
+            !ArtifactSourceType::Pypi.emits_source_url(canonical),
+            "a canonical PyPI wheel's URL restates the PURL"
+        );
+        assert!(
+            ArtifactSourceType::Pypi.emits_source_url(private),
+            "a private-index wheel's host is the only record of its provenance"
+        );
+        assert!(ArtifactSourceType::Git.emits_source_url("git+https://example.test/r.git"));
+        assert!(ArtifactSourceType::Local.emits_source_url("file:///opt/wheels/foo.whl"));
     }
 
     #[test]
@@ -848,7 +925,6 @@ mod tests {
     fn artifact_source_type_annotation_strings() {
         assert_eq!(ArtifactSourceType::Pypi.as_annotation_str(), "pypi");
         assert_eq!(ArtifactSourceType::Git.as_annotation_str(), "git");
-        assert_eq!(ArtifactSourceType::Url.as_annotation_str(), "url");
         assert_eq!(ArtifactSourceType::Local.as_annotation_str(), "local");
     }
 }
