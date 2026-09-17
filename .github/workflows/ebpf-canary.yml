@@ -147,19 +147,6 @@ jobs:
           echo "requested components input: '${{ !inputs.break_env && 'rust-src' || '' }}'"
           rustup component list --toolchain nightly | grep '(installed)' || true
 
-      # m896 — break_env removes the component outright rather than merely
-      # declining to request it. Probe A showed rust-src can reach the runner
-      # without being asked for, so "don't request it" is not a reliable break;
-      # removing it is, and it reproduces the observed failure exactly (the
-      # component absent at build time).
-      - name: Remove rust-src (break_env only — TEST PATH)
-        if: ${{ inputs.break_env }}
-        shell: bash
-        run: |
-          rustup component remove rust-src --toolchain nightly || true
-          echo "after removal:"
-          rustup component list --toolchain nightly | grep '(installed)' || true
-
       - name: Install stable Rust toolchain
         uses: dtolnay/rust-toolchain@21dc36fb71dd22e3317045c0c31a3f4249868b17 # stable
         with:
@@ -170,6 +157,19 @@ jobs:
         # build` inside xtask selects nightly for itself.
         run: rustup default stable
 
+      # NOTE (measured, m896): listing `waybill-ebpf` here has a side effect.
+      # rust-cache runs cargo in each listed workspace, and a rustup-proxied
+      # command run inside waybill-ebpf resolves through its rust-toolchain.toml
+      # — which declares components = ["rust-src"] — so rustup installs the
+      # component as a side effect of caching. Probe A (right after the nightly
+      # install) shows 3 components and no rust-src; probe B (before the build)
+      # shows 4 including rust-src, and nothing between them asks for it.
+      #
+      # This is why the explicit `components: rust-src` above is belt AND
+      # braces rather than redundant: the build itself uses `cargo +nightly`,
+      # which bypasses the toolchain file entirely, so it never triggers this.
+      # Relying on the side effect would make the canary depend on a cache
+      # step's incidental behaviour.
       - name: Cache cargo + build artifacts
         uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2.9.1
         with:
@@ -283,6 +283,19 @@ jobs:
       # m896 T014 / FR-002a — delete before building, so the presence check
       # below cannot be satisfied by an object left over from an earlier step.
       # Deletion is deterministic; an mtime comparison would be a race.
+      # m896 TEST PATH — reproduce the live defect on demand by removing the
+      # component immediately before the build, after every step that could
+      # install it has run. Declining to REQUEST rust-src is not enough: the
+      # cache step installs it incidentally (see its note above), which is why
+      # the first attempt at this switch produced a green run.
+      - name: Remove rust-src (break_env only — TEST PATH)
+        if: ${{ inputs.break_env }}
+        shell: bash
+        run: |
+          rustup component remove rust-src --toolchain nightly || true
+          echo "components after removal:"
+          rustup component list --toolchain nightly | grep '(installed)' || true
+
       - name: Remove stale eBPF artifact
         run: rm -f waybill-ebpf/target/bpfel-unknown-none/release/waybill-ebpf
 
