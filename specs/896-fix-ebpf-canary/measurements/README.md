@@ -71,3 +71,20 @@ Worth noting because the spec's own edge cases anticipate the general shape
 ("a green run closes an outstanding report that nothing has fixed") but neither
 the spec, the plan, nor `/speckit-analyze` caught this specific instance. It
 surfaced only from running the thing.
+
+## Outcome
+
+Merged as PR #906. The canary's record before and after:
+
+| | before | after |
+|---|---|---|
+| Green runs | 0 of 36 | 4 of 4 dispatches (3 green, 1 red by design) |
+| Failure attribution | always "upstream regression" | control-build derived; `canary` / `component` / `none` |
+| Report titles | 1 | 2, deduped independently |
+| Evidence in a report | none | versions, failing step, error excerpt |
+| Escalation clock | gated on upstream responsiveness — never started | streak's first failure — starts on its own |
+| False green possible | yes (exit 0 with no artifact) | no (artifact asserted) |
+
+**And the answer to the question it exists to ask**: `latest` is bpf-linker
+0.11.1 against a 0.11.0 pin, and it builds. There was never an upstream
+regression in any of those 36 nights.
