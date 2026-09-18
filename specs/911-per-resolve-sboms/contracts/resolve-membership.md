@@ -144,12 +144,37 @@ One document per resolve that contains at least one package.
 Not inherited from the existing split. A sub-SBOM's `metadata.component` is
 chosen at emit time by m127's root-selector, which looks for the single
 `component-role = "main-module"` component — and a resolve projection has
-none. The per-resolve split therefore names its own root: the resolve's anchor
-where one exists, a synthesised root where it does not.
+none, so without intervention every sub-SBOM names the repository instead of
+itself. That is the m215 failure in a new place: 23 of 25 sub-SBOMs there
+named the repository.
 
-A synthesised root exists **only inside the split output**. Emitting one into
-the unsplit document would anchor discovered resolves by the back door, which
-FR-009 forbids.
+**Declared resolve**: the anchor is promoted to a main-module *within the
+projection*, so the document names its own resolve. Any other main-module the
+filter carried in is demoted, for the same reason m215 demotes siblings —
+more than one candidate leaves the ladder ambiguous.
+
+**Discovered resolve** — *amended during implementation*: the document names
+the **repository**, not the resolve, and nothing is synthesised.
+
+This contract originally called for a synthesised root here. Two findings
+changed it:
+
+1. **The manifest already answers the question.** Every entry carries
+   `root_purl` (`pkg:generic/default`, `pkg:generic/lint`) and the filename
+   carries the resolve slug, so a consumer maps each document to its resolve
+   without opening it.
+2. **Synthesising a component is a stronger claim than FR-009 permits.**
+   m868 declined to emit an anchor for a convention-named resolve because a
+   filename stem is not a declaration of ownership. Creating that component
+   inside split output smuggles it into a different file. Naming a resolve in
+   an annotation is information; inventing a component that owns its packages
+   is the assertion FR-009 refuses.
+
+The cost is that a discovered-resolve document is not self-describing when
+taken out of the manifest's context. A doc-scope "this document is resolve X"
+annotation would close that without inventing anything — information rather
+than ownership, the same reasoning that makes FR-007 acceptable. Filed as a
+follow-up rather than folded in here, because it is new scope.
 
 ### C-5b. When a partition is not meaningful
 

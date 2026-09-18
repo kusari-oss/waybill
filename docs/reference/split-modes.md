@@ -9,6 +9,35 @@ Two modes today; extensible to more per FR-007.
 |--|--|--|
 | `workspace` (default) | One sub-SBOM per detected main-module (m215 semantics). | You want per-package artifacts; downstream consumers key on subproject identity. |
 | `directory` | One sub-SBOM per canonicalized source directory. All main-modules whose dirs match merge into ONE SBOM. | Polyglot repos where npm + go + cargo coexist in one dir; consumers organizing by directory (Backstage, IDE plugins). |
+| `resolve` (#902) | One sub-SBOM per Pants resolve. **Selects by membership, not by walking the graph.** | Pants monorepos, where a resolve is a real dependency-resolution boundary and a vulnerability in a linting resolve should be distinguishable from one in the production resolve. |
+
+### `resolve` mode differs from the other two in kind
+
+`workspace` and `directory` both enumerate **main-modules** and walk the graph
+from each. A Pants resolve is not a main-module, and a resolve found by the
+`3rdparty/python/*.lock` convention has no anchor component at all — so there
+is nothing for a walk to start from. `resolve` mode therefore filters: a
+component belongs to resolve R when its `waybill:pants-resolve` names R.
+
+Consequences worth knowing before you consume the output:
+
+- **A package pinned by several resolves appears in several documents**, each
+  time carrying its **full** membership rather than one narrowed to the
+  containing document. So a reader triaging one resolve's SBOM can see the
+  same fix lands in another. The cost is that a document may name resolves
+  whose packages it does not contain — correct, not a dangling reference.
+- **Edges separate without being tagged.** An edge belongs to resolve R when
+  both its endpoints name R. A component in two resolves depending on a
+  package those resolves pin differently reaches BOTH versions in the unsplit
+  document, and exactly one in each per-resolve document.
+- **A declared resolve's document names itself**; a resolve discovered by
+  filename convention names the repository instead, because synthesising an
+  owning component would assert an ownership the repository never declared.
+  The manifest's `root_purl` maps every file to its resolve either way.
+  [#914](https://github.com/kusari-oss/waybill/issues/914) tracks closing that
+  difference.
+- **No resolves, or only one**, falls back to a single SBOM with a warning,
+  the same as the other modes with fewer than two boundaries.
 
 ## 2. Worked example — `workspace` mode (bare / explicit)
 

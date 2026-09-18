@@ -155,7 +155,11 @@ confirm one SBOM per resolve, each containing that resolve's packages.
 
 1. **Given** a repository with several resolves, **When** an operator
    requests a per-resolve split, **Then** one document is produced per
-   resolve, each rooted at that resolve.
+   resolve, and each is identifiable as that resolve's — by its own root
+   where the resolve is declared, and by the manifest and filename where it
+   was discovered by convention. Synthesising a root component for a
+   discovered resolve is deliberately NOT done: it would assert an ownership
+   the repository never declared, which is what FR-009 refuses.
 2. **Given** a package belonging to several resolves, **When** the split
    runs, **Then** it appears in each document whose resolve pins it.
 3. **Given** a repository whose resolves are discovered rather than declared,
