@@ -56,7 +56,7 @@ reason milestone 868 left these unanchored, and it is not being reopened.
 ### Session 2026-09-18
 
 - Q: Is a resolve identified by its bare name? → A: **No — the identity must be unambiguous across Pants language namespaces**, and the separate grouping defect this exposes is filed against shipped code rather than fixed here. `[python.resolves]` and `[jvm.resolves]` are distinct namespaces in `pants.toml`, so one repository can legitimately declare `default` in both. A bare name would let a document claim to be `default` without saying which. The shape of this identity is precisely what this feature fixes, so settling it now avoids a second consumer-visible change to the same field later. Chosen over a bare name, which is simpler and matches what component membership already carries, but inherits an ambiguity into a field created specifically to remove one. Chosen over fixing the grouping here too, which would widen a metadata feature into a correctness fix — the same scope boundary that kept #902's correctness work from being held behind its design work.
-- Q: Where should the identity live? → A: **A separate document-scope statement of its own**, not folded into the existing repository-wide ownership statement. The confusion this feature fixes is exactly that a document-scope field describes the repository rather than the document; putting a document-scoped fact in the same container reproduces it. A separate statement is absent entirely from an unsplit or non-resolve-split document, which is the correct shape rather than a field that has to be explained away. **Conditional on a Principle V audit**: if a standards-native carrier exists for "which subset of a larger document is this", it wins. The existing resolve rows are marked KEEP-NO-NATIVE for "which resolve owns this component", which is a different question and does not transfer. That audit is the plan's first research task, and this answer stands only if it comes back empty.
+- Q: Where should the identity live? → A: **A separate document-scope statement of its own**, not folded into the existing repository-wide ownership statement. The confusion this feature fixes is exactly that a document-scope field describes the repository rather than the document; putting a document-scoped fact in the same container reproduces it. A separate statement is absent entirely from an unsplit or non-resolve-split document, which is the correct shape rather than a field that has to be explained away. **Was conditional on a Principle V audit**, and the audit has since run (research R1). It did **not** come back empty: the document-subject carrier exists in all three formats and already works for a declared Python resolve. The answer stands anyway, on a different rationale than the one it was made on — that carrier names a component, and FR-006 forbids inventing the one a discovered resolve lacks, so the construct is unusable here rather than missing. The extension is justified by the parity gap around SPDX 3 `Bundle.context` instead. FR-001c carries both findings.
 - Q: Does a declared-resolve document carry the identity too, when its root already names the resolve? → A: **Yes, every per-resolve document carries it.** A consumer that must first determine whether a resolve was declared, in order to know where to read its identity, is being asked the question it came to ask. The declared case therefore states its resolve twice — in the root component and in the identity — and FR-005 requires the two agree. Chosen over carrying it only where the root does not already say so, which removes the duplication but forces every consumer to check two places and branch on provenance. Chosen over dropping the root promotion so the identity is the single source: the root of a declared-resolve document is useful on its own terms — it is what makes the document read as an SBOM *of a thing* rather than a labelled bag of components — and trading that for tidiness is a bad exchange.
 
 ## User Scenarios & Testing *(mandatory)*
@@ -142,10 +142,23 @@ document and a discovered-resolve document using one procedure. Both answer.
   repository-wide ownership statement, so that one statement describes the
   repository and another describes this document. A reader must not have to
   know which parts of one value are document-scoped.
-- **FR-001c**: A standards-native carrier MUST be audited for before an
-  extension is added, per Constitution Principle V. The existing resolve rows'
-  KEEP-NO-NATIVE finding covers "which resolve owns this component" and does
-  not transfer to "which subset of a larger document is this".
+- **FR-001c**: Per Constitution Principle V, the audit was performed and
+  **did not come back empty**. Two distinct native constructs bear on this
+  semantic and both are cited here because the distinction is what justifies
+  the extension:
+  - The **document-subject carrier** — CycloneDX `metadata.component`, SPDX
+    2.3 `documentDescribes`, SPDX 3 `rootElement` — exists in all three
+    formats and already carries this semantic for a declared Python resolve.
+    It is unusable for the rest because it names a **component**, and FR-006
+    (Principle IX) forbids inventing the one a discovered resolve lacks. The
+    native construct is therefore deliberately unused, not absent.
+  - The one native construct that could carry a document's subject **without**
+    a component is SPDX 3 `Bundle.context`. CycloneDX has no equivalent and
+    SPDX 2.3 has none. That is the parity gap the extension bridges, and the
+    catalogue row MUST name it as the justification clause.
+
+  The existing resolve rows' KEEP-NO-NATIVE finding covers "which resolve owns
+  this component", a different question that does not transfer.
 - **FR-001a**: That statement MUST be unambiguous across Pants language
   namespaces. `[python.resolves]` and `[jvm.resolves]` are separate
   namespaces, so one repository can declare the same resolve name in both, and

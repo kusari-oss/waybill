@@ -74,18 +74,19 @@ Repository root. `waybill-cli/src/scan_fs/package_db/` (namespace recording),
 - [ ] T014 [P] [US1] Write the filename-independence test (SC-003) in `waybill-cli/tests/pants_split_identity_filename.rs`: copy a document to an unrelated name and assert the answer is unchanged.
 - [ ] T015 [P] [US1] Write the namespace test (SC-002a/C-2) against the T012 fixture: two resolves sharing a name are distinguishable. Note in the test that until #919 lands they arrive merged into one document, so this asserts the identity's shape, not the split's correctness.
 - [ ] T016 [P] [US1] Write the absence test (SC-008/C-1) in `waybill-cli/tests/pants_split_identity_absence.rs`: an unsplit document, a `--split=workspace` document and a `--split=directory` document carry no identity — absent, not present-and-empty.
-- [ ] T017 [P] [US1] Write the cross-format test in `waybill-cli/tests/pants_split_identity_formats.rs`: the identity decodes to the same value in all three formats. Compare decoded values, not bytes — CycloneDX carries a property value as a string and SPDX carries structure (the m911 precedent).
+- [ ] T017 [P] [US1] Write the nothing-invented test (SC-007/FR-006/C-5) in `waybill-cli/tests/pants_split_identity_no_anchor.rs`: per-document component counts are unchanged from the T002 baseline, and no anchor component appears for a discovered resolve. **This is the guard on the constraint the whole feature is downstream of.** The easy wrong implementation synthesises the anchor m868 refused — which would make the identity trivial to derive and would pass every other test in this list.
+- [ ] T018 [P] [US1] Write the cross-format test in `waybill-cli/tests/pants_split_identity_formats.rs`: the identity decodes to the same value in all three formats. Compare decoded values, not bytes — CycloneDX carries a property value as a string and SPDX carries structure (the m911 precedent).
 
 ### Implementation
 
-- [ ] T018 [US1] Derive the identity in `waybill-cli/src/generate/split.rs::resolve_projections` from the resolve's own namespace-qualified name, **not** from the grouping key. The grouping key is the bare name and is what #919 is about; deriving from it would bake the defect into the identity.
-- [ ] T019 [US1] Handle the merged-document case (C-6): a document that represents two resolves states both. Stating either alone would be false. Self-correcting — once #919 lands the state cannot arise.
-- [ ] T020 [US1] Attach the identity to the per-document doc-scope slot from T009 in `waybill-cli/src/generate/split.rs`.
-- [ ] T021 [P] [US1] Emit it in CycloneDX at `waybill-cli/src/generate/cyclonedx/metadata.rs` (doc-scope properties, beside the C161 emission around `:764`).
-- [ ] T022 [P] [US1] Emit it in SPDX 2.3 at `waybill-cli/src/generate/spdx/annotations.rs` (beside `:764`).
-- [ ] T023 [P] [US1] Emit it in SPDX 3 at `waybill-cli/src/generate/spdx/v3_annotations.rs` (beside `:763`).
-- [ ] T024 [US1] Register the new row — next free id is **C163** — in `waybill-cli/src/parity/extractors/mod.rs` with its three extractors in `cdx.rs`, `spdx2.rs`, `spdx3.rs`. A row without matching extractors fails `every_catalog_row_has_an_extractor`.
-- [ ] T025 [US1] Write the C163 row in `docs/reference/sbom-format-mapping.md`. **The KEEP-NO-NATIVE audit must say that a native carrier EXISTS and is deliberately unused** — `metadata.component` / `documentDescribes` / `rootElement` already carry this semantic and work for declared Python resolves; they fail elsewhere only because they point at a component and FR-006 declines to invent one. The decisive reason for an annotation is parity: SPDX 3's `Bundle.context` is the one structured native option and CycloneDX has no equivalent. Claiming no construct exists would be false and would sit in the catalogue unchallenged (research R1).
+- [ ] T019 [US1] Derive the identity in `waybill-cli/src/generate/split.rs::resolve_projections` from the resolve's own namespace-qualified name, **not** from the grouping key. The grouping key is the bare name and is what #919 is about; deriving from it would bake the defect into the identity.
+- [ ] T020 [US1] Handle the merged-document case (C-6): a document that represents two resolves states both. Stating either alone would be false. Self-correcting — once #919 lands the state cannot arise.
+- [ ] T021 [US1] Attach the identity to the per-document doc-scope slot from T009 in `waybill-cli/src/generate/split.rs`.
+- [ ] T022 [P] [US1] Emit it in CycloneDX at `waybill-cli/src/generate/cyclonedx/metadata.rs` (doc-scope properties, beside the C161 emission around `:764`).
+- [ ] T023 [P] [US1] Emit it in SPDX 2.3 at `waybill-cli/src/generate/spdx/annotations.rs` (beside `:764`).
+- [ ] T024 [P] [US1] Emit it in SPDX 3 at `waybill-cli/src/generate/spdx/v3_annotations.rs` (beside `:763`).
+- [ ] T025 [US1] Register the new row — next free id is **C163** — in `waybill-cli/src/parity/extractors/mod.rs` with its three extractors in `cdx.rs`, `spdx2.rs`, `spdx3.rs`. A row without matching extractors fails `every_catalog_row_has_an_extractor`.
+- [ ] T026 [US1] Write the C163 row in `docs/reference/sbom-format-mapping.md`. **The KEEP-NO-NATIVE audit must say that a native carrier EXISTS and is deliberately unused** — `metadata.component` / `documentDescribes` / `rootElement` already carry this semantic and work for declared Python resolves; they fail elsewhere only because they point at a component and FR-006 declines to invent one. The decisive reason for an annotation is parity: SPDX 3's `Bundle.context` is the one structured native option and CycloneDX has no equivalent. Claiming no construct exists would be false and would sit in the catalogue unchallenged (research R1).
 
 **Checkpoint**: a document says what it is. US2 is unblocked.
 
@@ -99,9 +100,9 @@ Repository root. `waybill-cli/src/scan_fs/package_db/` (namespace recording),
 
 **Depends on US1.**
 
-- [ ] T026 [US2] Ensure the identity is attached to **every** per-resolve document in `waybill-cli/src/generate/split.rs`, including declared ones whose root already names the resolve (FR-004). This is the requirement most likely to be dropped as redundant; it is what stops a consumer having to establish provenance in order to know where to read identity.
-- [ ] T027 [US2] Add the agreement test (FR-005/SC-005) in `waybill-cli/tests/pants_split_identity.rs`: for a declared-Python document, the identity and `metadata.component` name the same resolve. Two fields stating one fact drift, and this session already produced two instances of that class — the C143 mis-parse risk and the C161 double-encoding.
-- [ ] T028 [US2] Add the one-procedure test (SC-004) in `waybill-cli/tests/pants_split_identity.rs`: one expression reads the identity from a declared document, a discovered document and a JVM document, with no branch on provenance.
+- [ ] T027 [US2] Ensure the identity is attached to **every** per-resolve document in `waybill-cli/src/generate/split.rs`, including declared ones whose root already names the resolve (FR-004). This is the requirement most likely to be dropped as redundant; it is what stops a consumer having to establish provenance in order to know where to read identity.
+- [ ] T028 [US2] Add the agreement test (FR-005/SC-005) in `waybill-cli/tests/pants_split_identity.rs`: for a declared-Python document, the identity and `metadata.component` name the same resolve. Two fields stating one fact drift, and this session already produced two instances of that class — the C143 mis-parse risk and the C161 double-encoding.
+- [ ] T029 [US2] Add the one-procedure test (SC-004) in `waybill-cli/tests/pants_split_identity.rs`: one expression reads the identity from a declared document, a discovered document and a JVM document, with no branch on provenance.
 
 **Checkpoint**: the feature is usable without knowing how a repository declares its resolves.
 
@@ -109,12 +110,12 @@ Repository root. `waybill-cli/src/scan_fs/package_db/` (namespace recording),
 
 ## Phase 5: Polish
 
-- [ ] T029 Teeth-check T013–T017 against the pre-change binary and record in `specs/912-split-doc-self-describing/measurements/us1-verification.md` which fail and which are guards. A test passing on both sides is a guard, not proof — label it rather than counting it.
-- [ ] T030 Run the mandatory pre-PR gate: `./scripts/pre-pr.sh`. Enumerate the per-target results rather than citing the exit code.
-- [ ] T031 Assess corpus golden impact on `waybill-cli/tests/fixtures/public_corpus/`. Expect **none**: the corpus has no per-resolve split output, so a document-scope identity that only appears in split documents cannot reach it. If a golden does move, that is a signal the identity is leaking into unsplit documents — which FR-008 forbids.
-- [ ] T032 [P] Add the C163 row and the new `--split=resolve` behaviour to `docs/reference/split-modes.md`, including that an identity is absent from non-resolve splits.
-- [ ] T033 [P] Write the CHANGELOG entry. Additive — nothing that parses today stops parsing — so it does not need the warning m911's entry led with.
-- [ ] T034 Comment on #914 and #919: what landed, and that the identity is defined so it stays correct once #919 is fixed.
+- [ ] T030 Teeth-check T013–T018 against the pre-change binary and record in `specs/912-split-doc-self-describing/measurements/us1-verification.md` which fail and which are guards. A test passing on both sides is a guard, not proof — label it rather than counting it.
+- [ ] T031 Run the mandatory pre-PR gate: `./scripts/pre-pr.sh`. Enumerate the per-target results rather than citing the exit code.
+- [ ] T032 Assess corpus golden impact on `waybill-cli/tests/fixtures/public_corpus/`. Expect **none**: the corpus has no per-resolve split output, so a document-scope identity that only appears in split documents cannot reach it. If a golden does move, that is a signal the identity is leaking into unsplit documents — which FR-008 forbids.
+- [ ] T033 [P] Add the C163 row and the new `--split=resolve` behaviour to `docs/reference/split-modes.md`, including that an identity is absent from non-resolve splits.
+- [ ] T034 [P] Write the CHANGELOG entry. Additive — nothing that parses today stops parsing — so it does not need the warning m911's entry led with.
+- [ ] T035 Comment on #914 and #919: what landed, and that the identity is defined so it stays correct once #919 is fixed.
 
 ---
 
@@ -125,11 +126,11 @@ Phase 1 (T001-T003)   the value question, and the baseline
         │             T001 can end the feature. It is first for that reason.
 Phase 2 (T004-T010)   namespace + per-document plumbing   ◀── BLOCKING
         │
-Phase 3 US1 (T011-T025)  ◀── MVP
+Phase 3 US1 (T011-T026)  ◀── MVP
         │
-Phase 4 US2 (T026-T028)  ◀── needs US1
+Phase 4 US2 (T027-T029)  ◀── needs US1
         │
-Phase 5 (T029-T034)
+Phase 5 (T030-T035)
 ```
 
 **Story independence**: US2 is not independent of US1 and the graph says so —
@@ -140,11 +141,11 @@ is shippable and is the whole of SC-001 through SC-003.
 
 - **T005, T006, T007** — three readers, three files.
 - **T011, T012** — two fixtures.
-- **T014, T015, T016, T017** — four test files.
-- **T021, T022, T023** — three emitters.
-- **T032, T033** — docs and CHANGELOG.
+- **T014 through T018** — five test files.
+- **T022, T023, T024** — three emitters.
+- **T033, T034** — docs and CHANGELOG.
 
-Not parallel: anything in `split.rs` (T018–T020, T026), and T024 must follow
+Not parallel: anything in `split.rs` (T019–T021, T027), and T025 must follow
 the emitters or the extractors have nothing to extract.
 
 ## Implementation strategy
@@ -161,7 +162,7 @@ is the largest work in the feature and it would all be spent on that premise.
 ## Verification standard
 
 1. **A test that passes against the pre-change binary is a guard, not a proof.**
-   T029 requires labelling which is which.
+   T030 requires labelling which is which.
 2. **The JVM fixture is not optional.** Anchoring is Pex-only, so Python-only
    fixtures would let a Python-only implementation pass while an entire
    ecosystem stays broken.

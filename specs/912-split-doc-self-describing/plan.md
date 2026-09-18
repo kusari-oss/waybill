@@ -52,7 +52,7 @@ piece of work here, and it touches the same three readers m911 touched.
 | **II. eBPF-Only Observation** | Not engaged — describes a document, changes nothing about discovery. **N/A.** |
 | **III. Fail Closed** | Engaged weakly and correctly: the identity is absent rather than empty where it does not apply, so "no answer" and "the question does not apply" stay distinguishable. **Pass.** |
 | **IV. Type-Driven Correctness** | The namespace is a closed set (`python`, `jvm`), which is a type rather than a string convention. **Pass.** |
-| **V. Standards-native first** | **The gate that shaped this feature.** Audited in research R1 and it did NOT come back empty — a native carrier exists and works for declared Python resolves. The annotation is justified by parity (SPDX 3 `Bundle.context` has no CycloneDX equivalent) and by FR-006's refusal to invent a component, NOT by absence. The catalogue row must say exactly that; claiming no construct exists would be false. **Pass, with the justification corrected.** |
+| **V. Standards-native first** | **The gate that shaped this feature**, and the one place the assessment needs stating carefully rather than briefly — see the note below the table. **Pass, by the parity exemption, on a narrower construct than the audit first surfaced.** |
 | **VI. Three-Crate Architecture** | No crate boundary moves. **Pass.** |
 | **VII. Test Isolation** | Fixtures crate-local and self-contained. **Pass.** |
 | **VIII. Completeness** | Not about component coverage. The related concern — that a document under-reports — is #902's, already shipped. **N/A.** |
@@ -61,6 +61,36 @@ piece of work here, and it touches the same three readers m911 touched.
 | **XI / XII. Enrichment** | Not engaged. **N/A.** |
 
 **No violations. Complexity Tracking omitted.**
+
+### Principle V in full, because the short version elides the step that matters
+
+The constitution permits a `waybill:*` field in exactly two cases: finer-grained
+information the standard cannot express, or **a parity gap where one format has
+the native field and another does not**. Two different native constructs are in
+play here, and collapsing them makes the exemption look like it fits when it
+does not:
+
+1. **The document-subject carrier** — `metadata.component`, `documentDescribes`,
+   `rootElement`. Research R1 found this in **all three** formats, already
+   working for a declared Python resolve. There is no parity gap in it. It is
+   unusable here for a different reason: it names a *component*, and FR-006
+   (Principle IX) forbids inventing the one a discovered resolve lacks.
+2. **SPDX 3 `Bundle.context`** — the only native construct that states a
+   document's subject *without* a component. CycloneDX has no equivalent;
+   SPDX 2.3 has none. **This** is the parity gap, and it is the one the
+   annotation bridges.
+
+So the honest chain is: the all-format construct is declined on Principle IX
+grounds, which leaves only a single-format construct, which is a parity gap,
+which is an enumerated exemption. Asserting "parity" without naming which
+construct would be substituting (2) for (1) silently — the exemption would
+appear to fit a carrier that is present everywhere.
+
+Worth flagging for a future constitution amendment: "the native construct
+exists but using it would require fabricating data" is a third exemption the
+enumerated list does not contain, and this feature only avoids needing it
+because `Bundle.context` happens to exist. A feature without that luck would be
+stuck between two principles with no written way out.
 
 One thing recorded rather than buried: **this feature's value has not been
 established.** R6 notes that nobody has confirmed a consumer reads a split
@@ -76,7 +106,7 @@ should not pretend the question was answered by filing the issue.
 ```text
 specs/912-split-doc-self-describing/
 ├── plan.md                      # This file
-├── spec.md                      # 11 FRs, 10 SCs, 3 clarifications
+├── spec.md                      # 12 FRs, 10 SCs, 3 clarifications
 ├── research.md                  # Phase 0 — R1..R6
 ├── data-model.md                # Phase 1 — 3 entities
 ├── quickstart.md                # Phase 1 — verification per SC
