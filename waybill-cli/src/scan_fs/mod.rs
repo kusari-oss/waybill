@@ -171,6 +171,10 @@ pub struct ScanResult {
     /// lockfile was discovered (contract A-7 byte-identity).
     pub pants_resolve_summary:
         Option<crate::scan_fs::package_db::pants::PantsResolveSummary>,
+    /// Issue #914 (m912) — resolve name → Pants language namespace(s).
+    /// Derivation input for the per-document resolve identity; never emitted.
+    pub pants_resolve_namespaces:
+        crate::scan_fs::package_db::pants_resolve::NamespaceIndex,
 
     /// Milestone 895 (#891) — Haskell skipped-entry count for the doc-scope
     /// annotation. `None` iff no `.cabal` file was read.
@@ -410,6 +414,8 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
     let mut pants_resolve_summary: Option<
         crate::scan_fs::package_db::pants::PantsResolveSummary,
     > = None;
+    let mut pants_resolve_namespaces =
+        crate::scan_fs::package_db::pants_resolve::NamespaceIndex::new();
     let mut haskell_parse_summary: Option<
         crate::scan_fs::package_db::haskell::HaskellParseSummary,
     > = None;
@@ -468,6 +474,8 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         // `HelmExtractionMode` is `Copy` — no clone needed.
         helm_extraction_mode = scan_result.diagnostics.helm_extraction_mode;
         pants_resolve_summary = scan_result.diagnostics.pants_resolve_summary;
+        pants_resolve_namespaces =
+            scan_result.diagnostics.pants_resolve_namespaces.clone();
         haskell_parse_summary = scan_result.diagnostics.haskell_parse_summary;
         // m235 US4: same clone-copy pattern — `GradleScanSummary` is
         // `Clone` but not `Copy`, so we `.clone()`.
@@ -1359,6 +1367,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         cross_ecosystem_edges_report,
         helm_extraction_mode,
         pants_resolve_summary,
+        pants_resolve_namespaces,
         haskell_parse_summary,
         gradle_scan_summary,
         scan_target_coord,

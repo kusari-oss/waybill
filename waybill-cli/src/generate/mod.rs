@@ -172,6 +172,27 @@ pub struct ScanArtifacts<'a> {
     /// Pex lockfile was discovered (annotation absent; contract A-7).
     pub pants_resolve_summary:
         Option<crate::scan_fs::package_db::pants::PantsResolveSummary>,
+    /// Issue #914 (m912) — resolve name → Pants language namespace(s).
+    /// Derivation input for [`Self::resolve_identity`]; never emitted itself.
+    pub pants_resolve_namespaces:
+        crate::scan_fs::package_db::pants_resolve::NamespaceIndex,
+    /// Issue #914 (m912) — **which resolve this document is**, as
+    /// namespace-qualified identities (`python:default`).
+    ///
+    /// The one document-scope value on this struct that is genuinely
+    /// document-scoped. Everything else here describes the repository and is
+    /// copied verbatim into every split sub-document, which is precisely the
+    /// confusion #914 exists to fix — so this is set by the split, per
+    /// projection, and is `None` everywhere else.
+    ///
+    /// `None` on an unsplit document and on `--split=workspace` /
+    /// `--split=directory`, where the question has no answer (FR-008). Absent
+    /// rather than empty, so "no resolve" and "not a per-resolve document"
+    /// stay distinguishable (FR-009, Principle III).
+    ///
+    /// Plural only in the #919 collision case, where one document really does
+    /// represent two resolves and naming either alone would be false (C-6).
+    pub resolve_identity: Option<Vec<String>>,
     /// Milestone 895 (#891) — doc-scope Haskell skipped-entry count.
     pub haskell_parse_summary:
         Option<crate::scan_fs::package_db::haskell::HaskellParseSummary>,
@@ -416,6 +437,13 @@ impl<'a> ScanArtifacts<'a> {
             cross_ecosystem_edges_report: self.cross_ecosystem_edges_report,
             helm_extraction_mode: self.helm_extraction_mode,
             pants_resolve_summary: self.pants_resolve_summary.clone(),
+            pants_resolve_namespaces: self.pants_resolve_namespaces.clone(),
+            // Deliberately NOT copied from the parent. Every other doc-scope
+            // field here is repository-wide and is copied verbatim, which is
+            // the behaviour #914 is about; this one describes the document,
+            // so the split sets it per projection and a narrow that is not a
+            // resolve projection correctly has none.
+            resolve_identity: None,
             haskell_parse_summary: self.haskell_parse_summary,
             gradle_scan_summary: self.gradle_scan_summary,
             no_binary_scan_mode: self.no_binary_scan_mode,

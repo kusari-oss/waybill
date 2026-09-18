@@ -60,7 +60,7 @@ Repository root. `waybill-cli/src/scan_fs/package_db/` (namespace recording),
 
 ### Per-document doc-scope values
 
-- [ ] T009 Add a per-document override slot for doc-scope values in `waybill-cli/src/generate/mod.rs`, set by `ScanArtifacts::narrow`. Today `narrow` copies every doc-scope field from the parent verbatim (`mod.rs:386-420`), which is why the ownership statement is identical across split documents — correct per FR-007, and also why there is nowhere to put a per-document value.
+- [X] T009 Add a per-document override slot for doc-scope values in `waybill-cli/src/generate/mod.rs`, set by `ScanArtifacts::narrow`. Today `narrow` copies every doc-scope field from the parent verbatim (`mod.rs:386-420`), which is why the ownership statement is identical across split documents — correct per FR-007, and also why there is nowhere to put a per-document value.
 - [ ] T010 Assert in `waybill-cli/tests/pants_split_resolve.rs` that the repository-wide ownership value is unchanged and still identical across a repository's documents (FR-007, SC-006). The obvious wrong fix for this whole feature is to narrow that value instead of adding a new one; this is the test that rejects it.
 
 **Checkpoint**: a namespace exists to be unambiguous about, and a place exists to put a per-document statement.
@@ -89,14 +89,14 @@ Repository root. `waybill-cli/src/scan_fs/package_db/` (namespace recording),
 
 ### Implementation
 
-- [ ] T019 [US1] Derive the identity in `waybill-cli/src/generate/split.rs::resolve_projections` from the resolve's own namespace-qualified name, **not** from the grouping key. The grouping key is the bare name and is what #919 is about; deriving from it would bake the defect into the identity.
-- [ ] T020 [US1] Handle the merged-document case (C-6): a document that represents two resolves states both. Stating either alone would be false. Self-correcting — once #919 lands the state cannot arise.
-- [ ] T021 [US1] Attach the identity to the per-document doc-scope slot from T009 in `waybill-cli/src/generate/split.rs`.
-- [ ] T022 [P] [US1] Emit it in CycloneDX at `waybill-cli/src/generate/cyclonedx/metadata.rs` (doc-scope properties, beside the C161 emission around `:764`).
-- [ ] T023 [P] [US1] Emit it in SPDX 2.3 at `waybill-cli/src/generate/spdx/annotations.rs` (beside `:764`).
-- [ ] T024 [P] [US1] Emit it in SPDX 3 at `waybill-cli/src/generate/spdx/v3_annotations.rs` (beside `:763`).
-- [ ] T025 [US1] Register the new row — next free id is **C163** — in `waybill-cli/src/parity/extractors/mod.rs` with its three extractors in `cdx.rs`, `spdx2.rs`, `spdx3.rs`. A row without matching extractors fails `every_catalog_row_has_an_extractor`.
-- [ ] T026 [US1] Write the C163 row in `docs/reference/sbom-format-mapping.md`. **The KEEP-NO-NATIVE audit must say that a native carrier EXISTS and is deliberately unused** — `metadata.component` / `documentDescribes` / `rootElement` already carry this semantic and work for declared Python resolves; they fail elsewhere only because they point at a component and FR-006 declines to invent one. The decisive reason for an annotation is parity: SPDX 3's `Bundle.context` is the one structured native option and CycloneDX has no equivalent. Claiming no construct exists would be false and would sit in the catalogue unchallenged (research R1).
+- [X] T019 [US1] Derive the identity in `waybill-cli/src/generate/split.rs::resolve_projections` from the resolve's own namespace-qualified name, **not** from the grouping key. The grouping key is the bare name and is what #919 is about; deriving from it would bake the defect into the identity.
+- [X] T020 [US1] Handle the merged-document case (C-6): a document that represents two resolves states both. Stating either alone would be false. Self-correcting — once #919 lands the state cannot arise.
+- [X] T021 [US1] Attach the identity to the per-document doc-scope slot from T009 in `waybill-cli/src/generate/split.rs`.
+- [X] T022 [P] [US1] Emit it in CycloneDX at `waybill-cli/src/generate/cyclonedx/metadata.rs` (doc-scope properties, beside the C161 emission around `:764`).
+- [X] T023 [P] [US1] Emit it in SPDX 2.3 at `waybill-cli/src/generate/spdx/annotations.rs` (beside `:764`).
+- [X] T024 [P] [US1] Emit it in SPDX 3 at `waybill-cli/src/generate/spdx/v3_annotations.rs` (beside `:763`).
+- [X] T025 [US1] Register the new row — next free id is **C163** — in `waybill-cli/src/parity/extractors/mod.rs` with its three extractors in `cdx.rs`, `spdx2.rs`, `spdx3.rs`. A row without matching extractors fails `every_catalog_row_has_an_extractor`.
+- [X] T026 [US1] Write the C163 row in `docs/reference/sbom-format-mapping.md`. **The KEEP-NO-NATIVE audit must say that a native carrier EXISTS and is deliberately unused** — `metadata.component` / `documentDescribes` / `rootElement` already carry this semantic and work for declared Python resolves; they fail elsewhere only because they point at a component and FR-006 declines to invent one. The decisive reason for an annotation is parity: SPDX 3's `Bundle.context` is the one structured native option and CycloneDX has no equivalent. Claiming no construct exists would be false and would sit in the catalogue unchallenged (research R1).
 
 **Checkpoint**: a document says what it is. US2 is unblocked.
 

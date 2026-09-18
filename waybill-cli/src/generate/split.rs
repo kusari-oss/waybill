@@ -1095,10 +1095,45 @@ fn emit_groups(
 
     // Per-group emission.
     for group in groups.iter() {
-        let sub_artifacts = base_artifacts.narrow(
+        let mut sub_artifacts = base_artifacts.narrow(
             &group.components,
             &group.relationships,
         );
+
+        // Issue #914 (m912) T019-T021 — say which resolve this document is.
+        //
+        // Derived from the namespace index and the group key, NOT from the
+        // group key alone: the key is the bare resolve name, which is what
+        // #919 merges on, so an identity built from it would bake that defect
+        // into the one field whose job is to remove ambiguity.
+        //
+        // `qualified_for` returns two identities when one name exists under
+        // both `[python.resolves]` and `[jvm.resolves]` — the #919 case, where
+        // the document genuinely represents both and naming either alone would
+        // be false (C-6). Self-correcting: once #919 lands the state cannot
+        // arise.
+        //
+        // Empty means the index never saw this resolve, so we say nothing
+        // rather than falling back to the bare name. A half-qualified identity
+        // is exactly the ambiguity FR-001a removes, and absent-not-empty keeps
+        // "cannot answer" distinguishable (Principle III).
+        if mode == SplitMode::Resolve {
+            let identities = crate::scan_fs::package_db::pants_resolve::qualified_for(
+                &base_artifacts.pants_resolve_namespaces,
+                &group.group_key,
+            );
+            if identities.is_empty() {
+                tracing::warn!(
+                    resolve = %group.group_key,
+                    "per-resolve split: no Pants language namespace recorded for this \
+                     resolve, so the document cannot state which resolve it is. The \
+                     identity is omitted rather than guessed — a bare name cannot \
+                     distinguish `[python.resolves]` from `[jvm.resolves]`."
+                );
+            } else {
+                sub_artifacts.resolve_identity = Some(identities);
+            }
+        }
         let mut entry_files: BTreeMap<String, String> = BTreeMap::new();
         let is_multi = group.members.len() >= 2;
         // Multi-member groups use the m219 <dir-slug>.multi.<ext>

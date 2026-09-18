@@ -73,6 +73,8 @@ pub struct CycloneDxBuilder {
     unresolved_declared_dep_count: usize,
     /// Milestone 868 (#887) — doc-scope Pants resolve-ownership counts.
     pants_resolve_summary: Option<crate::scan_fs::package_db::pants::PantsResolveSummary>,
+    /// Issue #914 (m912) — C163 per-document resolve identity.
+    resolve_identity: Option<Vec<String>>,
     /// Milestone 895 (#891) — doc-scope Haskell skipped-entry count.
     haskell_parse_summary: Option<crate::scan_fs::package_db::haskell::HaskellParseSummary>,
     /// Milestone 173: doc-scope Go cache-warming outcome for the C118
@@ -216,6 +218,7 @@ impl CycloneDxBuilder {
             go_transitive_fallback_count: None,
             unresolved_declared_dep_count: 0,
             pants_resolve_summary: None,
+            resolve_identity: None,
             haskell_parse_summary: None,
             go_cache_warming: None,
             go_workspace_mode: None,
@@ -441,6 +444,13 @@ impl CycloneDxBuilder {
         summary: Option<crate::scan_fs::package_db::pants::PantsResolveSummary>,
     ) -> Self {
         self.pants_resolve_summary = summary;
+        self
+    }
+
+    /// Issue #914 (m912) — C163 per-document resolve identity. `None` on
+    /// any document that is not a per-resolve split (FR-008).
+    pub fn with_resolve_identity(mut self, identity: Option<Vec<String>>) -> Self {
+        self.resolve_identity = identity;
         self
     }
 
@@ -789,6 +799,8 @@ impl CycloneDxBuilder {
             // C142 `waybill:sbom-version` property.
             self.config.sbom_version,
             self.config.enrichment_degraded.as_deref(),
+        
+            self.resolve_identity.as_deref(),
         );
         // Milestone 076 — track per-component identifier matches so
         // we can emit a warn for any selector that matched zero
