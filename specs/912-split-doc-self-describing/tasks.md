@@ -121,8 +121,8 @@ Repository root. `waybill-cli/src/scan_fs/package_db/` (namespace recording),
 ## Phase 5: Polish
 
 - [X] T030 Teeth-check T013–T018 against the pre-change binary and record in `specs/912-split-doc-self-describing/measurements/us1-verification.md` which fail and which are guards. A test passing on both sides is a guard, not proof — label it rather than counting it.
-- [ ] T031 Run the mandatory pre-PR gate: `./scripts/pre-pr.sh`. Enumerate the per-target results rather than citing the exit code.
-- [ ] T032 Assess corpus golden impact on `waybill-cli/tests/fixtures/public_corpus/`. Expect **none**: the corpus has no per-resolve split output, so a document-scope identity that only appears in split documents cannot reach it. If a golden does move, that is a signal the identity is leaking into unsplit documents — which FR-008 forbids.
+- [X] T031 Run the mandatory pre-PR gate: `./scripts/pre-pr.sh`. Enumerate the per-target results rather than citing the exit code.
+- [X] T032 Assess corpus golden impact on `waybill-cli/tests/fixtures/public_corpus/`. Expect **none**: the corpus has no per-resolve split output, so a document-scope identity that only appears in split documents cannot reach it. If a golden does move, that is a signal the identity is leaking into unsplit documents — which FR-008 forbids.
 - [X] T033 [P] Add the C163 row and the new `--split=resolve` behaviour to `docs/reference/split-modes.md`, including that an identity is absent from non-resolve splits.
 - [X] T034 [P] Write the CHANGELOG entry. Additive — nothing that parses today stops parsing — so it does not need the warning m911's entry led with.
 - [ ] T035 Comment on #914 and #919: what landed, and that the identity is defined so it stays correct once #919 is fixed.
