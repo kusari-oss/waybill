@@ -39,7 +39,7 @@
         },
         {
           "name": "waybill:pants-resolve",
-          "value": "python-default"
+          "value": "[\"python-default\"]"
         },
         {
           "name": "waybill:resolve-classification-source",
@@ -106,7 +106,7 @@
         },
         {
           "name": "waybill:pants-resolve",
-          "value": "python-default"
+          "value": "[\"python-default\"]"
         },
         {
           "name": "waybill:workspace-member",
@@ -169,7 +169,7 @@
         },
         {
           "name": "waybill:pants-resolve",
-          "value": "python-default"
+          "value": "[\"python-default\"]"
         },
         {
           "name": "waybill:requires-python",
@@ -240,7 +240,7 @@
         },
         {
           "name": "waybill:pants-resolve",
-          "value": "python-default"
+          "value": "[\"python-default\"]"
         },
         {
           "name": "waybill:requires-python",
@@ -307,7 +307,7 @@
         },
         {
           "name": "waybill:pants-resolve",
-          "value": "python-default"
+          "value": "[\"python-default\"]"
         },
         {
           "name": "waybill:requires-python",
@@ -374,7 +374,7 @@
         },
         {
           "name": "waybill:pants-resolve",
-          "value": "python-default"
+          "value": "[\"python-default\"]"
         },
         {
           "name": "waybill:requires-python",
@@ -445,7 +445,7 @@
         },
         {
           "name": "waybill:pants-resolve",
-          "value": "python-default"
+          "value": "[\"python-default\"]"
         },
         {
           "name": "waybill:requires-python",
@@ -516,7 +516,7 @@
         },
         {
           "name": "waybill:pants-resolve",
-          "value": "python-default"
+          "value": "[\"python-default\"]"
         },
         {
           "name": "waybill:requires-python",
@@ -587,7 +587,7 @@
         },
         {
           "name": "waybill:pants-resolve",
-          "value": "python-default"
+          "value": "[\"python-default\"]"
         },
         {
           "name": "waybill:requires-python",
@@ -690,7 +690,7 @@
         },
         {
           "name": "waybill:pants-resolve",
-          "value": "python-default"
+          "value": "[\"python-default\"]"
         },
         {
           "name": "waybill:requires-python",
@@ -757,7 +757,7 @@
         },
         {
           "name": "waybill:pants-resolve",
-          "value": "python-default"
+          "value": "[\"python-default\"]"
         },
         {
           "name": "waybill:workspace-member",
@@ -1004,7 +1004,7 @@
       },
       {
         "name": "waybill:resolve-ownership",
-        "value": "weak-classification=1;unanchored-lockfiles=0"
+        "value": "{\"declared\":[\"python-default\"],\"discovered\":[],\"unanchored_lockfiles\":0,\"weak_classification\":1}"
       }
     ],
     "supplier": {
@@ -1017,7 +1017,7 @@
           "name": "waybill",
           "publisher": "waybill contributors",
           "type": "application",
-          "version": "0.7.0"
+          "version": "0.8.0"
         }
       ]
     }
