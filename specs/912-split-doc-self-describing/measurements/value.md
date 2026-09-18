@@ -53,5 +53,9 @@ not Phase 3.**
 
 ## Status
 
-**Unanswered — awaiting the requester.** Recorded rather than assumed, per the
-plan's Constitution Check note.
+**Answered 2026-09-18 by the requester: build it in full.** Consumers do read
+split documents detached from the manifest, and Finding 2 stands independently
+— the namespace work is needed to make the manifest's own answer unambiguous
+whether or not the document identity ships.
+
+Phase 2 is therefore justified twice over, and all 35 tasks proceed.
