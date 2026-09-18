@@ -687,7 +687,9 @@ mod m868_resolve_component_tests {
                     // #911 — via the accessor; a direct `.as_str()` returns
                     // None once membership is an array and this would
                     // silently become an empty string.
-                    super::pants_resolve::read_single(&e.extra_annotations)
+                    crate::scan_fs::package_db::pants_resolve::read_single(
+                        &e.extra_annotations,
+                    )
                         .unwrap_or_default(),
                 )
             })

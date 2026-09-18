@@ -390,7 +390,27 @@ fn pants_fr002_fallback_recovers_uv_shape_lockfiles() {
                 .and_then(|p| p.as_str())
                 .is_some_and(|s| s.starts_with("pkg:pypi/waybill-fixture-"))
         })
-        .filter_map(|c| get_prop(c, "waybill:pants-resolve"))
+        // #911 — membership is a lex-sorted JSON array carried as
+        // JSON-in-string in CycloneDX. Decode so the assertion below keeps
+        // naming the resolve directly.
+        .flat_map(|c| {
+            get_prop(c, "waybill:pants-resolve")
+                .into_iter()
+                .flat_map(|raw| {
+                    serde_json::from_str::<serde_json::Value>(&raw)
+                        .ok()
+                        .and_then(|v| {
+                            Some(
+                                v.as_array()?
+                                    .iter()
+                                    .filter_map(|x| x.as_str())
+                                    .map(str::to_string)
+                                    .collect::<Vec<_>>(),
+                            )
+                        })
+                        .unwrap_or_else(|| vec![raw])
+                })
+        })
         .collect();
     assert!(
         resolve_tags.contains("python-default"),

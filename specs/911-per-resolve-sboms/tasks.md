@@ -41,12 +41,18 @@ something to fail against. The defect is invisible in a single run.
 
 ## Phase 2: Foundational — the four internal read-back sites
 
-**Purpose**: waybill reads this annotation back in four places, all via
-`.as_str()`. After the array change every one returns `None` and falls through
-to a default — silently. Two of them carry #910's edge-scoping fix, which
-would revert without a single test failing.
+**Purpose**: waybill reads this annotation back via `.as_str()`, which returns
+`None` once membership is an array — silently falling through to a default.
 
-This phase is not optional and not deferrable: it is the blast radius.
+**Corrected during implementation**: of the four sites the analysis listed, only
+**two are production code**, and they are the two that matter — both in
+`scan_fs/mod.rs`, both carrying #910's edge-scoping fix, which would have
+reverted with nothing failing. The other two (`pants/mod.rs:690`,
+`pants_jvm/lockfile.rs:739`) turned out to be inside `#[cfg(test)]`; they still
+need migrating, but they are test helpers, not blast radius.
+
+The phase stands. The risk was correctly identified even though its size was
+overstated by half.
 
 - [X] T004 Add a shared accessor for reading resolve membership — one function that returns the resolve names from the annotation regardless of encoding — in `waybill-cli/src/scan_fs/package_db/pants/mod.rs` (or a location all three readers and `scan_fs/mod.rs` can reach). Every read-back goes through it so a future encoding change has one site, not four.
 - [X] T005 Migrate `waybill-cli/src/scan_fs/mod.rs:674` (the scope-qualified index build, #910) to the accessor. A component whose membership is an array must still index under each of its resolves.
@@ -81,13 +87,13 @@ This phase is not optional and not deferrable: it is the blast radius.
 - [X] T016 [P] [US1] Same in `waybill-cli/src/scan_fs/package_db/pip/uv_lock.rs:227` — the uv reader stamps this when uv is a Pants resolver backend (`uv_lock.rs:188`). Easy to miss; a reader left on the scalar reintroduces exactly the cross-reader inconsistency #901 fixed.
 - [X] T017 [US1] Add the per-key union merge policy at the annotation merge in `waybill-cli/src/resolve/deduplicator.rs` (`or_insert`, currently line 214 — cite the call, not the line, which drifts). An explicit allowlist of plural keys — NOT a blanket change from `or_insert` to union, and NOT a rule inferred from the value being an array. `waybill:source-files` and `waybill:file-paths` are already arrays and already unioned by m148's dedicated pass; a generic rule would double-handle them, and unioning `waybill:sbom-tier` would produce a value true of neither side.
 - [X] T018 [US1] Ensure the union output is lex-sorted and duplicate-free at the merge site in `waybill-cli/src/resolve/deduplicator.rs`, so FR-003 holds regardless of which component won the merge.
-- [ ] T019 [US1] Update the C143 row grammar in `docs/reference/sbom-format-mapping.md:183` — value is now a lex-sorted JSON array. The row's KEEP-NO-NATIVE audit is unchanged: no CDX/SPDX native carrier has appeared for "which build-tool resolve owns this".
-- [ ] T020 [US1] Verify the C143 extractors in `waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3}.rs` still compare correctly with an array value; adjust if the comparison assumed a scalar.
+- [X] T019 [US1] Update the C143 row grammar in `docs/reference/sbom-format-mapping.md:183` — value is now a lex-sorted JSON array. The row's KEEP-NO-NATIVE audit is unchanged: no CDX/SPDX native carrier has appeared for "which build-tool resolve owns this".
+- [X] T020 [US1] Verify the C143 extractors in `waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3}.rs` still compare correctly with an array value; adjust if the comparison assumed a scalar.
 
 ### Verification
 
-- [ ] T021 [US1] Teeth-check T010–T013 against the pre-change binary and record which fail and why in `measurements/us1-verification.md`. A test that passes on both sides is a guard, not a defect test — label them as such rather than counting them as proof.
-- [ ] T022 [US1] Re-run the T003 monorepo measurement and record the after figures in `specs/911-per-resolve-sboms/measurements/us1-verification.md`: every resolve containing packages represented, none empty that is not genuinely empty (SC-002, SC-009).
+- [X] T021 [US1] Teeth-check T010–T013 against the pre-change binary and record which fail and why in `measurements/us1-verification.md`. A test that passes on both sides is a guard, not a defect test — label them as such rather than counting them as proof.
+- [X] T022 [US1] Re-run the T003 monorepo measurement and record the after figures in `specs/911-per-resolve-sboms/measurements/us1-verification.md`: every resolve containing packages represented, none empty that is not genuinely empty (SC-002, SC-009).
 
 **Checkpoint**: partitioning has something correct to partition on. US3 is unblocked.
 
