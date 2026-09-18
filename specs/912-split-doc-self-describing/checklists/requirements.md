@@ -31,24 +31,28 @@
 
 ## Notes
 
-Two mechanism decisions are deliberately left to `/speckit.clarify` rather
-than guessed, following the same practice as m911:
+All three mechanism decisions were resolved by `/speckit.clarify` on
+2026-09-18 and are recorded in the spec's Clarifications section:
 
-1. **Where the identity lives.** Extending the existing document-scope
-   ownership statement with a "this document" field, versus a separate
-   document-scope statement of its own. The first keeps one place to look and
-   one catalogue row; the second keeps a repository-wide fact and a
-   document-scoped fact from sharing a container, which is arguably what made
-   the current state confusing.
-2. **Whether a declared-resolve document carries it too.** FR-004 requires one
-   reading procedure, which implies yes. But the root already names the
-   resolve there, so it would be a second statement of the same fact — and
-   FR-005 exists because two statements can disagree.
+1. **Identity shape** — unambiguous across Pants language namespaces, not a
+   bare name. `[python.resolves]` and `[jvm.resolves]` are separate
+   namespaces.
+2. **Where it lives** — a separate document-scope statement, not folded into
+   the repository-wide ownership statement. **Conditional**: a Principle V
+   audit for a standards-native carrier is the plan's first research task, and
+   this answer stands only if it comes back empty.
+3. **Which documents carry it** — every per-resolve document, including
+   declared ones whose root already names the resolve. The duplication is
+   accepted; FR-005 requires a test that the two agree.
 
-The requirements are complete and testable without these; it is the mechanism
-that is open, which is what clarify is for.
+## A defect found while clarifying
 
-**Scope note.** This feature is small on purpose. The whole defect is that two
-files are indistinguishable on one point. It was split out of #902 rather than
-folded in precisely so that #902's correctness work was not held behind a
-metadata question.
+`--split=resolve` groups on the bare resolve name (`split.rs:219`), so two
+resolves sharing a name across Pants language namespaces merge into one
+document. That is shipped in v0.9.0 and is filed as **#919**, deliberately
+not fixed here — this feature is a metadata question and widening it into a
+correctness fix is the scope boundary that kept #902's correctness work
+unblocked. The spec is written so the identity stays correct once #919 lands.
+
+The corpus does not catch #919: its JVM target uses `default` and its Python
+target `python-default`, so they never collide.
