@@ -146,7 +146,7 @@ overstated by half.
 - [X] T038 Verify the golden churn with a masked, sorted diff — mask content-addressed SPDX 3 IDs, document IRIs, serial numbers and bom-refs. Expect THREE kinds of change and nothing else: the membership encoding, the C161 grammar, and — new with FR-011b — additional edges wherever a corpus component belongs to more than one resolve. Unlike the first two, the edge change is semantic, so it must be explained component by component rather than waved through as cascade.
 - [X] T039 [P] Write the CHANGELOG entry for FR-006b. This must be explicit that an existing reader of `waybill:pants-resolve` will **mis-parse rather than fail** — it receives an array where it expected a string and carries on. For a downstream security tool partitioning on this value, a silent mis-parse is the worse failure, which is why it is announced rather than left to be discovered.
 - [X] T040 [P] Update `docs/` wherever per-resolve SBOMs are described, including how a consumer chooses between splitting and falling back.
-- [ ] T041 Comment on #902 with before/after figures and offer the pre-release build for validation against the large monorepo. The two numbers that matter: distinct resolve names surviving, and whether any resolve is empty that is not genuinely empty.
+- [X] T041 Comment on #902 with before/after figures and offer the pre-release build for validation against the large monorepo. The two numbers that matter: distinct resolve names surviving, and whether any resolve is empty that is not genuinely empty.
 
 ---
 
