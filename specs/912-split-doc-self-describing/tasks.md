@@ -42,7 +42,17 @@ Repository root. `waybill-cli/src/scan_fs/package_db/` (namespace recording),
 
 ### The Pants language namespace
 
-- [ ] T004 Add a language-namespace type — a closed set, `python` | `jvm`, not a string — beside the membership accessor in `waybill-cli/src/scan_fs/package_db/pants_resolve.rs`, with read and write helpers mirroring the membership ones.
+> **Design note, decided at T004 and narrowing T005–T007.** The namespace is
+> threaded in-process as a `NamespaceIndex`, **not** written as a per-component
+> annotation. Two constraints forced it: C143 ships a bare-name array as of
+> v0.9.0 and qualifying it in place would be a breaking value change rather
+> than the additive one the contract promises; and C161 must stay
+> byte-identical inside a split document (FR-007/SC-006/T010), yet it is
+> populated by the Python reader alone, so teaching it about JVM resolves
+> would change its value on every JVM repository. The only thing that reaches
+> the wire is C163, the document identity derived from the index.
+
+- [X] T004 Add a language-namespace type — a closed set, `python` | `jvm`, not a string — beside the membership accessor in `waybill-cli/src/scan_fs/package_db/pants_resolve.rs`, with read and write helpers mirroring the membership ones.
 - [ ] T005 [P] Record the namespace in `waybill-cli/src/scan_fs/package_db/pants/lockfile.rs` at both emission sites, alongside `waybill:pants-resolve`.
 - [ ] T006 [P] Record it in `waybill-cli/src/scan_fs/package_db/pants_jvm/lockfile.rs`.
 - [ ] T007 [P] Record it in `waybill-cli/src/scan_fs/package_db/pip/uv_lock.rs` — uv as a Pants resolver backend is `python`. This is the reader that was easy to miss in m911 and is easy to miss again.
