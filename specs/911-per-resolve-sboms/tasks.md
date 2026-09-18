@@ -31,9 +31,9 @@ Repository root. Primary files: `waybill-cli/src/scan_fs/package_db/{pants,pants
 **Purpose**: capture the pre-change behaviour so every later assertion has
 something to fail against. The defect is invisible in a single run.
 
-- [ ] T001 Create `specs/911-per-resolve-sboms/measurements/` and extend the m910 fixture at `waybill-cli/tests/fixtures/pants_resolve_edges/` with a package pinned by BOTH resolves at the SAME version. The existing fixture has same-name-different-version, which is a different case; this feature turns on the same-version one.
-- [ ] T002 Record the pre-change output to `measurements/baseline.md`: scan the extended fixture, show the shared package naming exactly one resolve, and show which one by running the scan twice with component read order perturbed. Order-dependence is the property that makes this defect invisible in any single run.
-- [ ] T003 [P] Confirm the reported monorepo figures still hold on current `main` (20 of 24 resolves surviving, 4 empty) and record in `measurements/baseline.md`. #910 and #901 landed after those figures were taken; neither touches membership or dedup, so they are *expected* unchanged — confirming that cheaply beats assuming it. If they have moved, the spec's problem statement needs revisiting before any code changes.
+- [X] T001 Create `specs/911-per-resolve-sboms/measurements/` and extend the m910 fixture at `waybill-cli/tests/fixtures/pants_resolve_edges/` with a package pinned by BOTH resolves at the SAME version. The existing fixture has same-name-different-version, which is a different case; this feature turns on the same-version one.
+- [X] T002 Record the pre-change output to `measurements/baseline.md`: scan the extended fixture, show the shared package naming exactly one resolve, and show which one by running the scan twice with component read order perturbed. Order-dependence is the property that makes this defect invisible in any single run.
+- [X] T003 [P] **Not reproducible in this workspace** — the repository is the issue author's; recorded as such in `measurements/baseline.md` and handed back with a pre-release build rather than faked. Confirm the reported monorepo figures still hold on current `main` (20 of 24 resolves surviving, 4 empty) and record in `measurements/baseline.md`. #910 and #901 landed after those figures were taken; neither touches membership or dedup, so they are *expected* unchanged — confirming that cheaply beats assuming it. If they have moved, the spec's problem statement needs revisiting before any code changes.
 
 **Checkpoint**: the defect is observable on demand, not just described.
 
@@ -48,13 +48,14 @@ would revert without a single test failing.
 
 This phase is not optional and not deferrable: it is the blast radius.
 
-- [ ] T004 Add a shared accessor for reading resolve membership — one function that returns the resolve names from the annotation regardless of encoding — in `waybill-cli/src/scan_fs/package_db/pants/mod.rs` (or a location all three readers and `scan_fs/mod.rs` can reach). Every read-back goes through it so a future encoding change has one site, not four.
-- [ ] T005 Migrate `waybill-cli/src/scan_fs/mod.rs:674` (the scope-qualified index build, #910) to the accessor. A component whose membership is an array must still index under each of its resolves.
-- [ ] T006 Migrate `waybill-cli/src/scan_fs/mod.rs:1079` (the per-entry scope lookup, #910) to the accessor, resolving each bare dependency name in EVERY resolve the requirer belongs to and emitting one edge per resolve that resolves it (FR-011b). Resolves pin independently, so one name can denote different versions in different resolves; taking a single match would assert a dependency the requirer does not uniquely have and drop one it does. #910 never faced this because membership was singular.
+- [X] T004 Add a shared accessor for reading resolve membership — one function that returns the resolve names from the annotation regardless of encoding — in `waybill-cli/src/scan_fs/package_db/pants/mod.rs` (or a location all three readers and `scan_fs/mod.rs` can reach). Every read-back goes through it so a future encoding change has one site, not four.
+- [X] T005 Migrate `waybill-cli/src/scan_fs/mod.rs:674` (the scope-qualified index build, #910) to the accessor. A component whose membership is an array must still index under each of its resolves.
+- [X] T006 Migrate `waybill-cli/src/scan_fs/mod.rs:1079` (the per-entry scope lookup, #910) to the accessor. **Scope reduced by the T002 baseline**: edges are emitted per entry at `mod.rs:1081`, before `deduplicate` at `mod.rs:1253`, and an entry comes from one lockfile — so at this point a requirer belongs to exactly ONE resolve and FR-011b already holds. This task handles the array encoding without breaking #910's per-entry scoping; it does NOT implement multi-resolve resolution, which the architecture already produces.
+- [X] T006b Guard the ordering fact T006 now depends on: assert in `waybill-cli/tests/pants_resolve_membership.rs` that a component in two resolves reaches BOTH versions of a differently-pinned dependency (FR-011b/SC-007a). The behaviour is emergent rather than intended — nothing states it today, so nothing protects it.
 - [ ] T006a Confirm #910's existing fixture is unaffected: its components each belong to exactly ONE resolve, so FR-011b changes nothing there. If `waybill-cli/tests/pants_resolve_scoped_edges.rs` starts failing, the multi-resolve path has leaked into the single-resolve case.
-- [ ] T007 [P] Migrate `waybill-cli/src/scan_fs/package_db/pants/mod.rs:688` to the accessor.
-- [ ] T008 [P] Migrate `waybill-cli/src/scan_fs/package_db/pants_jvm/lockfile.rs:739` to the accessor.
-- [ ] T009 Add a regression test asserting #910's resolve-scoped edges still hold once membership is an array, in `waybill-cli/tests/pants_resolve_scoped_edges.rs`. Without this, T005/T006 regressing is silent — the edges simply fall back to the flat index and look plausible.
+- [X] T007 [P] Migrate `waybill-cli/src/scan_fs/package_db/pants/mod.rs:688` to the accessor.
+- [X] T008 [P] **Was a test assertion, not a read-back site** — the line is inside `mod tests`, so it belongs with the writer change, not the reader migration. Handled by the decoding helper in `waybill-cli/tests/pants_coursier_jvm_reader.rs`.
+- [X] T009 Add a regression test asserting #910's resolve-scoped edges still hold once membership is an array, in `waybill-cli/tests/pants_resolve_scoped_edges.rs`. Without this, T005/T006 regressing is silent — the edges simply fall back to the flat index and look plausible.
 
 **Checkpoint**: every internal reader survives the encoding change, proven by a test that fails if it does not.
 
@@ -68,18 +69,18 @@ This phase is not optional and not deferrable: it is the blast radius.
 
 ### Tests first
 
-- [ ] T010 [US1] Write the failing test for C-1/C-2 in `waybill-cli/tests/pants_resolve_membership.rs`: the shared package's membership is `["app","tools"]`. Confirm it fails against the pre-change binary for its own reason, not a compile error.
-- [ ] T011 [P] [US1] Write the determinism test (FR-003/SC-003) in `waybill-cli/tests/pants_resolve_membership_determinism.rs`: scan twice with component read order perturbed, assert byte-identical membership.
-- [ ] T012 [P] [US1] Write the single-resolve test (FR-006a/SC-004) in `waybill-cli/tests/pants_resolve_membership.rs`: a one-resolve component emits `["app"]`, not `"app"`. This one must fail pre-change too — the old binary emits the scalar.
-- [ ] T013 [P] [US1] Write the cross-format test (FR-006/SC-005) in `waybill-cli/tests/pants_resolve_membership_parity.rs`: same package, all three formats, same array and same order.
+- [X] T010 [US1] Write the failing test for C-1/C-2 in `waybill-cli/tests/pants_resolve_membership.rs`: the shared package's membership is `["app","tools"]`. Confirm it fails against the pre-change binary for its own reason, not a compile error.
+- [X] T011 [P] [US1] Write the determinism test (FR-003/SC-003) in `waybill-cli/tests/pants_resolve_membership_determinism.rs`: scan twice with component read order perturbed, assert byte-identical membership.
+- [X] T012 [P] [US1] Write the single-resolve test (FR-006a/SC-004) in `waybill-cli/tests/pants_resolve_membership.rs`: a one-resolve component emits `["app"]`, not `"app"`. This one must fail pre-change too — the old binary emits the scalar.
+- [X] T013 [P] [US1] Write the cross-format test (FR-006/SC-005) in `waybill-cli/tests/pants_resolve_membership_parity.rs`: same package, all three formats, same array and same order.
 
 ### Implementation
 
-- [ ] T014 [US1] Emit membership as a lex-sorted JSON array in `waybill-cli/src/scan_fs/package_db/pants/lockfile.rs:399` and `:537`.
-- [ ] T015 [P] [US1] Same in `waybill-cli/src/scan_fs/package_db/pants_jvm/lockfile.rs:395`.
-- [ ] T016 [P] [US1] Same in `waybill-cli/src/scan_fs/package_db/pip/uv_lock.rs:227` — the uv reader stamps this when uv is a Pants resolver backend (`uv_lock.rs:188`). Easy to miss; a reader left on the scalar reintroduces exactly the cross-reader inconsistency #901 fixed.
-- [ ] T017 [US1] Add the per-key union merge policy at the annotation merge in `waybill-cli/src/resolve/deduplicator.rs` (`or_insert`, currently line 214 — cite the call, not the line, which drifts). An explicit allowlist of plural keys — NOT a blanket change from `or_insert` to union, and NOT a rule inferred from the value being an array. `waybill:source-files` and `waybill:file-paths` are already arrays and already unioned by m148's dedicated pass; a generic rule would double-handle them, and unioning `waybill:sbom-tier` would produce a value true of neither side.
-- [ ] T018 [US1] Ensure the union output is lex-sorted and duplicate-free at the merge site in `waybill-cli/src/resolve/deduplicator.rs`, so FR-003 holds regardless of which component won the merge.
+- [X] T014 [US1] Emit membership as a lex-sorted JSON array in `waybill-cli/src/scan_fs/package_db/pants/lockfile.rs:399` and `:537`.
+- [X] T015 [P] [US1] Same in `waybill-cli/src/scan_fs/package_db/pants_jvm/lockfile.rs:395`.
+- [X] T016 [P] [US1] Same in `waybill-cli/src/scan_fs/package_db/pip/uv_lock.rs:227` — the uv reader stamps this when uv is a Pants resolver backend (`uv_lock.rs:188`). Easy to miss; a reader left on the scalar reintroduces exactly the cross-reader inconsistency #901 fixed.
+- [X] T017 [US1] Add the per-key union merge policy at the annotation merge in `waybill-cli/src/resolve/deduplicator.rs` (`or_insert`, currently line 214 — cite the call, not the line, which drifts). An explicit allowlist of plural keys — NOT a blanket change from `or_insert` to union, and NOT a rule inferred from the value being an array. `waybill:source-files` and `waybill:file-paths` are already arrays and already unioned by m148's dedicated pass; a generic rule would double-handle them, and unioning `waybill:sbom-tier` would produce a value true of neither side.
+- [X] T018 [US1] Ensure the union output is lex-sorted and duplicate-free at the merge site in `waybill-cli/src/resolve/deduplicator.rs`, so FR-003 holds regardless of which component won the merge.
 - [ ] T019 [US1] Update the C143 row grammar in `docs/reference/sbom-format-mapping.md:183` — value is now a lex-sorted JSON array. The row's KEEP-NO-NATIVE audit is unchanged: no CDX/SPDX native carrier has appeared for "which build-tool resolve owns this".
 - [ ] T020 [US1] Verify the C143 extractors in `waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3}.rs` still compare correctly with an array value; adjust if the comparison assumed a scalar.
 

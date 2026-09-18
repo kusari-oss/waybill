@@ -129,7 +129,24 @@ fn component_resolve_names(doc: &Value) -> Vec<(String, String)> {
                             p.get("name").and_then(|n| n.as_str())
                                 == Some("waybill:pants-resolve")
                         })
-                        .and_then(|p| p.get("value")?.as_str().map(String::from))?;
+                        .and_then(|p| p.get("value")?.as_str().map(String::from))
+                        // #911 — the value is a JSON array carried as a string
+                        // in CycloneDX. Decode so the assertions below keep
+                        // naming a resolve directly.
+                        .map(|raw| {
+                            serde_json::from_str::<Value>(&raw)
+                                .ok()
+                                .and_then(|v| {
+                                    Some(
+                                        v.as_array()?
+                                            .iter()
+                                            .filter_map(|x| x.as_str())
+                                            .collect::<Vec<_>>()
+                                            .join(","),
+                                    )
+                                })
+                                .unwrap_or(raw)
+                        })?;
                     Some((purl, resolve))
                 })
                 .collect()

@@ -67,6 +67,33 @@ fn get_property<'a>(component: &'a serde_json::Value, name: &str) -> Option<&'a 
         .and_then(|v| v.as_str())
 }
 
+/// Issue #911 — `waybill:pants-resolve` carries a lexically sorted JSON array,
+/// carried as JSON-in-string in CycloneDX (properties are spec'd as strings).
+/// Decode it so assertions can keep naming a resolve directly.
+///
+/// Returns the sole resolve. Fixtures here are single-resolve; a plural value
+/// means the fixture changed and the caller should know rather than silently
+/// see the first element.
+fn resolve_name(component: &serde_json::Value) -> Option<String> {
+    let raw = get_property(component, "waybill:pants-resolve")?;
+    let names: Vec<String> = serde_json::from_str::<serde_json::Value>(raw)
+        .ok()
+        .and_then(|v| {
+            Some(
+                v.as_array()?
+                    .iter()
+                    .filter_map(|x| x.as_str())
+                    .map(str::to_string)
+                    .collect::<Vec<_>>(),
+            )
+        })
+        .unwrap_or_else(|| vec![raw.to_string()]);
+    match names.len() {
+        1 => names.into_iter().next(),
+        _ => panic!("expected exactly one resolve, got {names:?}"),
+    }
+}
+
 /// Find the pants-coursier-jvm-sourced components in the CDX output.
 /// (The scan may also emit non-JVM components from the fixture root;
 /// this filters to just our reader's output.)
@@ -165,7 +192,7 @@ fn us1_minimal_jvm_lockfile_emits_3_maven_components() {
             c.get("purl"),
         );
         assert_eq!(
-            get_property(c, "waybill:pants-resolve"),
+            resolve_name(c).as_deref(),
             Some("default"),
             "component missing waybill:pants-resolve=default: {:?}",
             c.get("purl"),
@@ -273,7 +300,8 @@ fn us1_multi_resolve_tags_scope_per_allowlist() {
     for c in &jvm {
         let name = c.get("name").and_then(|v| v.as_str()).unwrap_or("");
         let scope = get_property(c, "waybill:lifecycle-scope");
-        let resolve = get_property(c, "waybill:pants-resolve");
+        let resolve_owned = resolve_name(c);
+        let resolve = resolve_owned.as_deref();
         if name.starts_with("runtime-") {
             // default resolve → Runtime (may be absent OR explicitly "runtime")
             assert!(
@@ -476,7 +504,7 @@ fn us3_pants_toml_custom_path_discovery() {
     for c in &jvm {
         // Config-declared name "prod" wins over filename stem.
         assert_eq!(
-            get_property(c, "waybill:pants-resolve"),
+            resolve_name(c).as_deref(),
             Some("prod"),
             "component should carry waybill:pants-resolve=prod (config wins over stem): {:?}",
             c.get("purl"),

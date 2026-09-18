@@ -391,9 +391,10 @@ pub(crate) fn entry_to_package_db_entry(
 
     // Annotations: always pants-resolve; source-url iff non-empty.
     let mut extra_annotations = std::collections::BTreeMap::new();
+    // #911 — membership is a lex-sorted JSON array, even for one resolve.
     extra_annotations.insert(
-        "waybill:pants-resolve".to_string(),
-        json!(resolve_name),
+        super::super::pants_resolve::ANNOTATION_KEY.to_string(),
+        super::super::pants_resolve::write([resolve_name]),
     );
     if let Some(url) = entry.coord.url.as_deref().filter(|s| !s.is_empty()) {
         extra_annotations.insert(

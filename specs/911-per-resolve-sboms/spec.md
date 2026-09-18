@@ -219,8 +219,13 @@ confirm one SBOM per resolve, each containing that resolve's packages.
   the encoding widens. Widening a field is not licence to change which
   resolves a package belongs to, and a component that gains or loses a
   resolve here is a defect, not a consequence.
-- **FR-006**: Membership MUST be expressed identically across every emitted
-  format, so a consumer's partition does not depend on which format it reads.
+- **FR-006**: Membership MUST decode to the same value, in the same order, in
+  every emitted format, so a consumer's partition does not depend on which
+  format it reads. Identical *bytes* is not achievable and not required:
+  CycloneDX spec'es a property value as a string, so an array is carried as
+  JSON-in-string there, while SPDX 2.3 and SPDX 3 carry a real array inside
+  their annotation envelope. The encoding is each format's business; the
+  decoded value is the contract.
 - **FR-006a**: A component belonging to one resolve MUST use the same array
   encoding as one belonging to several. A shape that changes with cardinality
   forces every consumer to handle two cases and gets the rare one wrong.

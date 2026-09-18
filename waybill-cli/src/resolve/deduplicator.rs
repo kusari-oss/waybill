@@ -210,7 +210,26 @@ pub fn deduplicate(components: Vec<ResolvedComponent>) -> Vec<ResolvedComponent>
             // Conservative merge — only inserts when the key isn't
             // already present on `best`. No upgrade-by-precedence
             // logic per key (the winner is authoritative).
+            // Issue #911 — genuinely plural keys UNION; everything else keeps
+            // the m109 first-wins rule above.
+            //
+            // An explicit allowlist, not a rule inferred from the value being
+            // an array: `waybill:source-files` and `waybill:file-paths` are
+            // already arrays and are already unioned by m148's dedicated pass,
+            // so a shape-based rule would double-handle them. And unioning a
+            // single-valued key like `waybill:sbom-tier` across a merge yields
+            // a value true of neither side.
             for (key, value) in other.extra_annotations {
+                if key == crate::scan_fs::package_db::pants_resolve::ANNOTATION_KEY {
+                    let merged = match best.extra_annotations.get(&key) {
+                        Some(existing) => {
+                            crate::scan_fs::package_db::pants_resolve::union(existing, &value)
+                        }
+                        None => value,
+                    };
+                    best.extra_annotations.insert(key, merged);
+                    continue;
+                }
                 best.extra_annotations.entry(key).or_insert(value);
             }
         }

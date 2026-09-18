@@ -396,7 +396,11 @@ pub(crate) fn resolve_component_entry(
         "waybill:component-kind".to_string(),
         json!("lockfile-resolve"),
     );
-    extra_annotations.insert("waybill:pants-resolve".to_string(), json!(resolve_name));
+    // #911 — membership is a lex-sorted JSON array, even for one resolve.
+    extra_annotations.insert(
+        super::super::pants_resolve::ANNOTATION_KEY.to_string(),
+        super::super::pants_resolve::write([resolve_name]),
+    );
     // FR-003c: whether this classification rests on a declaration or on the
     // weaker name heuristic. Recorded per component so the aggregate count is
     // reconstructible from the document rather than only asserted by it.
@@ -534,8 +538,8 @@ pub(crate) fn locked_req_to_entry(
     // Build the annotation bag.
     let mut extra_annotations = std::collections::BTreeMap::new();
     extra_annotations.insert(
-        "waybill:pants-resolve".to_string(),
-        json!(resolve_name),
+        super::super::pants_resolve::ANNOTATION_KEY.to_string(),
+        super::super::pants_resolve::write([resolve_name]),
     );
     if let Some(rp) = &req.requires_python {
         if !rp.is_empty() {

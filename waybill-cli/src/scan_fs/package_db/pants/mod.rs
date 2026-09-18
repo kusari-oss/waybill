@@ -684,11 +684,11 @@ mod m868_resolve_component_tests {
             .map(|e| {
                 (
                     e.purl.as_str().to_string(),
-                    e.extra_annotations
-                        .get("waybill:pants-resolve")
-                        .and_then(|v| v.as_str())
-                        .unwrap_or_default()
-                        .to_string(),
+                    // #911 — via the accessor; a direct `.as_str()` returns
+                    // None once membership is an array and this would
+                    // silently become an empty string.
+                    super::pants_resolve::read_single(&e.extra_annotations)
+                        .unwrap_or_default(),
                 )
             })
             .collect();

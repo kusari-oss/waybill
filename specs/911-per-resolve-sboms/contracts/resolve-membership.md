@@ -58,10 +58,21 @@ entirely.
 
 ---
 
-## C-3. Emission is identical across formats
+## C-3. Emission decodes identically across formats
 
 CycloneDX, SPDX 2.3 and SPDX 3 carry the same array, in the same order, for
-the same package (FR-006). Three readers write this annotation — Pants Pex,
+the same package (FR-006) — but not in the same bytes, and they cannot:
+
+```
+CDX    "waybill:pants-resolve" = "[\"app\",\"tools\"]"     (JSON-in-string)
+SPDX23 {"field":"waybill:pants-resolve","value":["app","tools"]}   (real array)
+SPDX3  {"field":"waybill:pants-resolve","value":["app","tools"]}   (real array)
+```
+
+CycloneDX spec'es `properties[].value` as a string, so an array can only be
+carried encoded. This is not new: `waybill:source-files` and
+`waybill:file-paths` have always been carried this way. A consumer decodes per
+format; the **decoded value** is what this contract fixes. Three readers write this annotation — Pants Pex,
 Pants coursier/JVM, and uv-as-a-Pants-backend — and all three use the array
 form. A reader left on the scalar would reintroduce exactly the cross-reader
 inconsistency #901 was about.
