@@ -31,25 +31,22 @@
 
 ## Notes
 
-Three decisions are deliberately **not** made in this spec and are left to
-`/speckit.clarify`, because each has several defensible answers with
-materially different consequences and the spec would be guessing:
+All four decisions left open by `/speckit.specify` were resolved by
+`/speckit.clarify` on 2026-09-17 and are recorded in the spec's Clarifications
+section:
 
-1. **How plural membership is expressed on the wire.** The issue offers three
-   shapes and states a preference; the codebase contains a fourth, already
-   used for exactly this many-to-many shape. FR-001/FR-006 state the
-   requirement without choosing.
-2. **What "declared versus discovered" looks like in the document.** The
-   issue offers an informational statement or a lower-confidence anchor.
-   These differ in kind: one adds information, the other changes the graph.
-   FR-007/FR-009 require the distinction be visible without choosing how.
-3. **What the split does with a package in several resolves.** FR-011 says it
-   appears in each; whether a consumer can tell it is shared, and whether
-   that changes the per-document root edges, is unresolved.
+1. **Wire shape for plural membership** — lexically sorted JSON array,
+   matching the codebase's existing plural-annotation encoding.
+2. **Uniform encoding regardless of cardinality** — always an array, accepting
+   that every Pants component's value changes and that an un-updated consumer
+   mis-parses rather than fails.
+3. **Declared versus discovered** — named at document scope; discovered
+   resolves still get no anchor.
+4. **Shared packages under split** — full membership preserved in every
+   document, not narrowed to the document's own resolve.
 
-These are recorded here rather than as `[NEEDS CLARIFICATION]` markers in the
-spec body because the requirements themselves are complete and testable — it
-is the *mechanism* that is open, which is what the clarify step is for. The
-checklist item above is marked complete on that reading; if a reviewer
-disagrees, the fix is to run `/speckit.clarify` before `/speckit.plan`, which
-is the recommendation regardless.
+One assumption is load-bearing and explicitly **not yet verified**: that
+partitioning works from membership alone, without an anchor. FR-009a and
+SC-006a exist to test it. If it fails, decision 3 is the one to reopen —
+anchoring discovered resolves becomes necessary rather than optional. The plan
+should settle this early, because two of the three user stories rest on it.

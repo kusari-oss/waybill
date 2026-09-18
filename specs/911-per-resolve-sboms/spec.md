@@ -66,7 +66,10 @@ reimplemented outside waybill, once per consumer.
 
 ### Session 2026-09-17
 
-> Pending — run `/speckit.clarify`.
+- Q: How should plural resolve membership be expressed on the wire? → A: **JSON-array-in-string, lexically sorted** (`["app","tools"]`). This is the encoding the codebase already uses for every plural annotation — `waybill:source-files`, `waybill:file-paths`, `waybill:workspace-member` — so it needs no new convention; it parses unambiguously whatever a resolve name contains; and it is the shape the consumer said is easiest to consume. Chosen over the comma-separated form used by the sibling Pants annotation (`waybill:pants-target`), which would keep the two Pants ownership annotations spelled alike but introduces a parsing ambiguity the JSON form does not have. Chosen over a second parallel annotation, which would leave two keys that must agree and a consumer reading the wrong one silently wrong.
+- Q: Does a component belonging to one resolve also switch to array form? → A: **Yes, always an array** — `["app"]` for one, `["app","tools"]` for two. A shape that varies with cardinality makes every consumer write two code paths, and the branch they exercise least is the shared-package case this feature exists to fix. Accepted cost: the value changes on every Pants component, not only shared ones, so every Pants golden churns and any existing reader of this key must update. Consistent with how 0.8.0 shipped the `pkg:generic` → `pkg:pypi` change — pre-1.0, no deprecation path. Chosen over retiring the key for a new one, which would fail loudly for un-updated consumers but costs a catalogue row change for a project that has not needed that ceremony before.
+- Q: How should the document distinguish declared from discovered resolves? → A: **Name them at document scope** — extend the existing doc-scope ownership annotation, which already counts unanchored lockfiles, to also name the resolves in each category. Purely informational: the graph is unchanged and a discovered resolve still gets no anchor, so milestone 868's refusal to assert ownership the repository never declared is preserved rather than softened with a confidence qualifier. Chosen over anchoring discovered resolves because the reach that would buy is smaller than it appears: membership is plural and complete after the first clarification, so a consumer can partition by membership without an anchor at all. The plan MUST verify that partitioning-by-membership genuinely works without an anchor (see Assumptions); if it does not, this answer is the one to revisit.
+- Q: In a per-resolve document, does a shared package keep its full membership? → A: **Yes, full membership is preserved.** The `app` document records `["app","tools"]` for a package both pin. Narrowing to `["app"]` would recreate exactly the under-reporting this feature exists to fix, moved from component scope to document scope and unrecoverable without the unsplit document. A consumer triaging one resolve's SBOM can therefore see that the same fix lands in another. Accepted cost: a per-resolve document references a resolve whose packages it does not contain, which reads oddly but is true.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -165,19 +168,26 @@ confirm one SBOM per resolve, each containing that resolve's packages.
 
 ### Edge Cases
 
-- A package pinned by many resolves — the membership value must stay bounded
-  and readable rather than growing into an unreadable field.
+- A package pinned by many resolves — the value grows with the count, and
+  the array encoding must stay readable and parseable at the high end rather
+  than being truncated or silently capped.
 - Two resolves pinning one package at *different* versions: two components,
   each with its own membership. This must not be conflated with the
   same-version case, which is one component with two memberships.
 - A resolve that declares a lockfile which contains no packages — an empty
   resolve that is genuinely empty, which must remain distinguishable from one
   emptied by the defect in Story 1.
+- A per-resolve document whose packages name resolves absent from that
+  document. This is expected under FR-011a, not a dangling reference to be
+  cleaned up, and any validation over split output must accept it.
 - A repository with both declared and discovered resolves of the same name.
 - Deduplication merging a component that carries membership with one that
   does not.
 - A consumer reading an older document, produced before this feature, where
-  membership is single-valued.
+  membership is a bare string rather than an array.
+- A consumer reading a NEW document with the OLD expectation — the failure is
+  a mis-parse rather than an error, which is why FR-006b requires it be
+  called out rather than left to be discovered.
 - The same package reached by two resolves where one classifies as a
   development resolve and the other does not.
 
@@ -185,8 +195,11 @@ confirm one SBOM per resolve, each containing that resolve's packages.
 
 ### Functional Requirements
 
-- **FR-001**: Resolve membership MUST be able to carry more than one resolve
-  for a single component, because the underlying relation is many-to-many.
+- **FR-001**: Resolve membership MUST carry every resolve that pins a
+  component, expressed as a lexically sorted JSON array, because the
+  underlying relation is many-to-many.
+- **FR-001a**: The ordering MUST be deterministic and independent of read
+  order, so two scans of one repository produce byte-identical membership.
 - **FR-002**: Membership MUST survive deduplication. When two components
   describing one package merge, the result MUST name every resolve either
   side named.
@@ -199,16 +212,32 @@ confirm one SBOM per resolve, each containing that resolve's packages.
   emitted as it is today, so the common case is undisturbed.
 - **FR-006**: Membership MUST be expressed identically across every emitted
   format, so a consumer's partition does not depend on which format it reads.
-- **FR-007**: The document MUST state, per resolve, whether that resolve was
-  declared by the repository or discovered by filename convention.
+- **FR-006a**: A component belonging to one resolve MUST use the same array
+  encoding as one belonging to several. A shape that changes with cardinality
+  forces every consumer to handle two cases and gets the rare one wrong.
+- **FR-006b**: The change to the common case MUST be stated in the release
+  notes as a consumer-visible change, because a reader of the previous scalar
+  will not fail — it will parse an array as an unexpected string and carry on.
+  A silent mis-parse in a downstream security tool is worse than a loud one.
+- **FR-007**: The document MUST name, at document scope, which resolves were
+  declared by the repository and which were discovered by filename
+  convention. A count alone does not answer the question a consumer asks.
 - **FR-008**: FR-007 MUST be answerable from the document alone, without
   access to the repository it describes.
 - **FR-009**: A resolve discovered by convention MUST NOT be presented as
-  though the repository declared it. The distinction milestone 868 drew is
-  preserved, not softened.
+  though the repository declared it, and MUST NOT gain an anchor. The
+  distinction milestone 868 drew is preserved, not softened.
+- **FR-009a**: Partitioning MUST be possible for a repository whose resolves
+  are all discovered, using membership alone. If an anchor turns out to be
+  required somewhere in the emission path, FR-009's no-anchor rule is what
+  has to give, and that is a decision to reopen rather than work around.
 - **FR-010**: An operator MUST be able to request one SBOM per resolve.
 - **FR-011**: A package belonging to several resolves MUST appear in each of
   those resolves' documents.
+- **FR-011a**: A package's membership MUST NOT be narrowed to the document it
+  appears in. A per-resolve document records the package's full membership,
+  so a reader of one resolve's SBOM can tell the package is shared and with
+  which resolves.
 - **FR-012**: When a per-resolve split cannot produce a meaningful partition
   — no resolves, or none anchored — the operator MUST be told what happened
   rather than receiving an empty or partial result silently.
@@ -222,7 +251,9 @@ confirm one SBOM per resolve, each containing that resolve's packages.
   repository's configuration or *discovered* by filename convention; the two
   differ in how much the name can be trusted to mean ownership.
 - **Membership**: the set of resolves that pin a given package. Plural by
-  nature; singular in today's output, which is the defect.
+  nature; singular in today's output, which is the defect. Carried as a
+  lexically sorted JSON array so the value is stable across runs and
+  unambiguous to parse.
 - **Anchor**: the component a resolve's packages hang from, making the
   resolve walkable as a graph. Emitted for declared resolves only.
 - **Partition**: the set of documents produced by splitting one scan per
@@ -240,16 +271,20 @@ confirm one SBOM per resolve, each containing that resolve's packages.
   reported monorepo that is 20 against 24 today, with four resolves empty.
 - **SC-003**: Two scans of one repository, with component read order
   perturbed, produce identical resolve membership.
-- **SC-004**: For a repository of single-resolve packages only, the emitted
-  membership is unchanged from the previous release.
+- **SC-004**: For a repository of single-resolve packages only, every
+  component's membership names the same one resolve it named before, and does
+  so in the same encoding a multi-resolve component uses.
 - **SC-005**: Every emitted format reports the same membership for the same
-  package.
+  package, in the same order.
 - **SC-006**: Given only an emitted document, a reader can list which
   resolves were declared and which were discovered, and the two lists
-  together account for every resolve mentioned.
+  together account for every resolve mentioned on any component.
+- **SC-006a**: A repository whose resolves are all discovered can still be
+  partitioned by membership, and the partition contains the same packages an
+  anchored repository's would.
 - **SC-007**: A per-resolve split of a repository with N resolves containing
   packages produces N documents, and a package pinned by several resolves
-  appears in each.
+  appears in each, carrying the same membership in every one.
 - **SC-008**: A per-resolve split of a repository with no anchored resolves
   produces a stated outcome, not an empty directory.
 - **SC-009**: Re-running the reported monorepo measurement shows every
@@ -265,13 +300,19 @@ confirm one SBOM per resolve, each containing that resolve's packages.
   cheap first measurement rather than an assumption to build on.
 - Milestone 868's refusal to anchor glob-discovered lockfiles stands. This
   feature makes the distinction visible; it does not relitigate it.
+- Partitioning depends on membership, not on anchors — the anchor is a
+  convenience for graph traversal. This is the assumption FR-009a exists to
+  test, and it is load-bearing for the choice not to anchor discovered
+  resolves. It is stated here because it has NOT been verified yet.
 - Deduplication's existing rule — the winner is authoritative for a key both
   sides carry — remains correct for the single-valued annotations it was
   written for. Only genuinely plural values need different treatment.
 - Existing per-component and doc-scope annotation carriers are sufficient;
-  no new emission channel is expected.
-- Consumers of documents produced before this feature continue to read them.
-  Widening a value is not a licence to break what already parses.
+  no new emission channel is expected. The annotation key itself is retained
+  rather than retired, so the catalogue row widens rather than being replaced.
+- Documents produced before this feature remain readable by whatever read
+  them then; this feature changes what waybill emits going forward, not any
+  document already written.
 - The split machinery from milestones 215 and 219 is the substrate for
   Story 3; this feature adds a mode rather than a second mechanism.
 - No change to which packages are discovered, only to how their membership is
