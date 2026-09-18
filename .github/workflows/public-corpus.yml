@@ -80,6 +80,38 @@ jobs:
           cargo test --test public_corpus --release -- --nocapture --include-ignored --test-threads=3 \
             2>&1 | tee corpus-artifacts/corpus-run.log
 
+      # #918 — refuse to report success having compared nothing.
+      #
+      # The corpus targets are `#[ignore]`d so a local `cargo test` cannot
+      # report them as passing when they silently skipped. That moves the
+      # hazard rather than removing it: if `--include-ignored` above is ever
+      # dropped, or the workflow file and the test file drift apart, every
+      # target is skipped and the lane goes GREEN having verified nothing —
+      # a false green, which is strictly worse than the red it replaces.
+      #
+      # This is not hypothetical. It happened on run 35403388053, dispatched
+      # while the workflow file still came from main and the checkout came
+      # from the branch: 11 targets ignored, lane green.
+      #
+      # So: assert that targets actually ran, and that the count matches the
+      # gating set. A number, not a boolean — "some ran" would not catch a
+      # target being quietly dropped from TARGETS.
+      - name: Assert the corpus actually ran
+        if: always()
+        run: |
+          set -euo pipefail
+          log=corpus-artifacts/corpus-run.log
+          ran=$(grep -cE '^test corpus_[a-z0-9_]+ \.\.\. (ok|FAILED)' "$log" || true)
+          ignored=$(grep -cE '^test corpus_[a-z0-9_]+ \.\.\. ignored' "$log" || true)
+          echo "corpus targets: ran=$ran ignored=$ignored"
+          if [ "$ran" -eq 0 ]; then
+            echo "::error::The corpus lane compared ZERO targets ($ignored ignored). That is a false green: --include-ignored is missing, or the workflow file and the test file have drifted. Failing rather than reporting success. See #918."
+            exit 1
+          fi
+          if [ "$ignored" -ne 0 ]; then
+            echo "::warning::$ignored corpus target(s) were ignored rather than run."
+          fi
+
       # Extract which targets drifted and in how many formats. The
       # per-format count matters for triage: "3 of 3" reads as broad
       # accumulated drift, while a single format drifting is narrower and
