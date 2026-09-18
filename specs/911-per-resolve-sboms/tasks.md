@@ -68,9 +68,9 @@ This phase is not optional and not deferrable: it is the blast radius.
 ### Tests first
 
 - [ ] T010 [US1] Write the failing test for C-1/C-2 in `waybill-cli/tests/pants_resolve_membership.rs`: the shared package's membership is `["app","tools"]`. Confirm it fails against the pre-change binary for its own reason, not a compile error.
-- [ ] T011 [P] [US1] Write the determinism test (FR-003/SC-003): scan twice with component read order perturbed, assert byte-identical membership.
-- [ ] T012 [P] [US1] Write the single-resolve test (FR-006a/SC-004): a one-resolve component emits `["app"]`, not `"app"`. This one must fail pre-change too — the old binary emits the scalar.
-- [ ] T013 [P] [US1] Write the cross-format test (FR-006/SC-005): same package, all three formats, same array and same order.
+- [ ] T011 [P] [US1] Write the determinism test (FR-003/SC-003) in `waybill-cli/tests/pants_resolve_membership_determinism.rs`: scan twice with component read order perturbed, assert byte-identical membership.
+- [ ] T012 [P] [US1] Write the single-resolve test (FR-006a/SC-004) in `waybill-cli/tests/pants_resolve_membership.rs`: a one-resolve component emits `["app"]`, not `"app"`. This one must fail pre-change too — the old binary emits the scalar.
+- [ ] T013 [P] [US1] Write the cross-format test (FR-006/SC-005) in `waybill-cli/tests/pants_resolve_membership_parity.rs`: same package, all three formats, same array and same order.
 
 ### Implementation
 
@@ -78,14 +78,14 @@ This phase is not optional and not deferrable: it is the blast radius.
 - [ ] T015 [P] [US1] Same in `waybill-cli/src/scan_fs/package_db/pants_jvm/lockfile.rs:395`.
 - [ ] T016 [P] [US1] Same in `waybill-cli/src/scan_fs/package_db/pip/uv_lock.rs:227` — the uv reader stamps this when uv is a Pants resolver backend (`uv_lock.rs:188`). Easy to miss; a reader left on the scalar reintroduces exactly the cross-reader inconsistency #901 fixed.
 - [ ] T017 [US1] Add the per-key union merge policy in `waybill-cli/src/resolve/deduplicator.rs:213`. An explicit allowlist of plural keys — NOT a blanket change from `or_insert` to union, and NOT a rule inferred from the value being an array. `waybill:source-files` and `waybill:file-paths` are already arrays and already unioned by m148's dedicated pass; a generic rule would double-handle them, and unioning `waybill:sbom-tier` would produce a value true of neither side.
-- [ ] T018 [US1] Ensure the union output is lex-sorted and duplicate-free at the merge site, so FR-003 holds regardless of which component won the merge.
+- [ ] T018 [US1] Ensure the union output is lex-sorted and duplicate-free at the merge site in `waybill-cli/src/resolve/deduplicator.rs`, so FR-003 holds regardless of which component won the merge.
 - [ ] T019 [US1] Update the C143 row grammar in `docs/reference/sbom-format-mapping.md:183` — value is now a lex-sorted JSON array. The row's KEEP-NO-NATIVE audit is unchanged: no CDX/SPDX native carrier has appeared for "which build-tool resolve owns this".
 - [ ] T020 [US1] Verify the C143 extractors in `waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3}.rs` still compare correctly with an array value; adjust if the comparison assumed a scalar.
 
 ### Verification
 
 - [ ] T021 [US1] Teeth-check T010–T013 against the pre-change binary and record which fail and why in `measurements/us1-verification.md`. A test that passes on both sides is a guard, not a defect test — label them as such rather than counting them as proof.
-- [ ] T022 [US1] Re-run the T003 monorepo measurement and record the after figures: every resolve containing packages represented, none empty that is not genuinely empty (SC-002, SC-009).
+- [ ] T022 [US1] Re-run the T003 monorepo measurement and record the after figures in `specs/911-per-resolve-sboms/measurements/us1-verification.md`: every resolve containing packages represented, none empty that is not genuinely empty (SC-002, SC-009).
 
 **Checkpoint**: partitioning has something correct to partition on. US3 is unblocked.
 
@@ -99,11 +99,11 @@ This phase is not optional and not deferrable: it is the blast radius.
 
 **Independent of US1 in code** — it extends a different annotation. Ordered second because it is worth less alone.
 
-- [ ] T023 [US2] Add a convention-only fixture (lockfiles matching `3rdparty/python/*.lock`, no `[python.resolves]`) under `waybill-cli/tests/fixtures/`.
+- [ ] T023 [US2] Add a convention-only fixture at `waybill-cli/tests/fixtures/pants_discovered_resolves/` — lockfiles matching `3rdparty/python/*.lock`, no `[python.resolves]` in `pants.toml`.
 - [ ] T024 [US2] Write the failing test for C-4/SC-006 in `waybill-cli/tests/pants_resolve_ownership.rs`: the document names which resolves were declared and which discovered, and the two lists together account for every resolve named on any component.
 - [ ] T025 [US2] Extend the C161 wire form at `waybill-cli/src/scan_fs/package_db/pants/mod.rs:385-393` to name the resolves per category. Note the existing value is a semicolon-delimited `key=value` string, not JSON — decide whether to nest a list inside that grammar or change it, and say which in the commit.
 - [ ] T026 [US2] Update the C161 row in `docs/reference/sbom-format-mapping.md` to match, and the extractors at `waybill-cli/src/parity/extractors/mod.rs:642` if the grammar changed. A catalogue row and its extractors must move together or `every_catalog_row_has_an_extractor` fails.
-- [ ] T027 [US2] Assert FR-009 still holds: a discovered resolve is named but gains **no** anchor. Naming is information, not an ownership claim the repository never made.
+- [ ] T027 [US2] Assert FR-009 still holds in `waybill-cli/tests/pants_resolve_ownership.rs`: a discovered resolve is named but gains **no** anchor component. Naming is information, not an ownership claim the repository never made.
 
 **Checkpoint**: a consumer can decide whether to split without inspecting the repository.
 
@@ -118,11 +118,11 @@ This phase is not optional and not deferrable: it is the blast radius.
 - [ ] T028 [US3] Add `SplitMode::Resolve` to the enum in `waybill-cli/src/generate/split.rs:48` and to the `--split` value surface at `waybill-cli/src/cli/scan_cmd.rs:768`.
 - [ ] T029 [US3] Implement membership-filter projection in `waybill-cli/src/generate/split.rs` — components whose membership contains resolve R, plus relationships whose endpoints are both in that set. **Not** `project_for_root`, which BFSes from a seed (`split.rs:311`): a discovered resolve has no seed, so a walk cannot reach it. Research R1 is the argument; if this drifts back to a walk, SC-006a is the check that catches it.
 - [ ] T030 [US3] Resolve the sub-document root question (C-5a): a resolve projection contains no `component-role = "main-module"`, so m127's root-selector would fall through to its synthetic-placeholder branch and name every sub-SBOM unhelpfully — the failure m215 hit and documented at `split.rs:355-380`, where 23 of 25 sub-SBOMs named the repository instead of themselves. The split must name its own root: the anchor where one exists, synthesised where it does not.
-- [ ] T031 [US3] Ensure a synthesised root exists ONLY inside split output. Emitting one into the unsplit document would anchor discovered resolves by the back door and contradict FR-009.
-- [ ] T032 [US3] Preserve full membership per document (FR-011a): the `app` document records `["app","tools"]` for a shared package, not `["app"]`. Narrowing recreates the under-reporting this feature fixes, moved to document scope and unrecoverable without re-scanning.
+- [ ] T031 [US3] Ensure a synthesised root exists ONLY inside split output, asserted in `waybill-cli/tests/pants_split_resolve.rs`. Emitting one into the unsplit document would anchor discovered resolves by the back door and contradict FR-009.
+- [ ] T032 [US3] Preserve full membership per document (FR-011a) in `waybill-cli/src/generate/split.rs`: the `app` document records `["app","tools"]` for a shared package, not `["app"]`. Narrowing recreates the under-reporting this feature fixes, moved to document scope and unrecoverable without re-scanning.
 - [ ] T033 [US3] Implement the FR-012 fallback: no resolves, or none containing packages → stated outcome plus the single-document fallback, matching the existing `roots.len() <= 1` behaviour at `split.rs:816`. Never an empty directory and exit zero.
 - [ ] T034 [US3] Write the split tests in `waybill-cli/tests/pants_split_resolve.rs` covering SC-007 (one document per resolve, shared package in each with full membership), SC-006a (a convention-only repository partitions with no anchors anywhere), C-5a (each document's root names its own resolve) and C-5b (the unpartitionable case).
-- [ ] T035 [US3] Assert C-6: `--split=workspace` and `--split=directory` output is byte-identical to before. A new mode must not perturb the two that exist.
+- [ ] T035 [US3] Assert C-6 against the existing split tests in `waybill-cli/tests/`: `--split=workspace` and `--split=directory` output is byte-identical to before. A new mode must not perturb the two that exist.
 
 **Checkpoint**: the partitioning rule lives in one place instead of once per consumer.
 
