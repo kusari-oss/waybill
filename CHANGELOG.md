@@ -7,6 +7,44 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### A per-resolve split document now says which resolve it is (#914)
+
+`--split=resolve` documents carry a new doc-scope annotation,
+`waybill:document-resolve` (catalogue row C163), naming the resolve the
+document represents as a namespace-qualified value:
+
+```
+default.generic.cdx.json   waybill:document-resolve = ["python:default"]
+lint.generic.cdx.json      waybill:document-resolve = ["python:lint"]
+```
+
+Additive — nothing that parses today stops parsing. The annotation is absent
+from unsplit documents, from `--split=workspace` / `--split=directory`, and
+from anything produced before this release; absent rather than empty, so a
+consumer can tell "not a per-resolve document" from "a resolve with no name".
+
+Before this, two documents from a repository whose resolves were discovered by
+filename convention were indistinguishable: both named the repository in
+`metadata.component`, and the repository-wide `waybill:resolve-ownership` was
+byte-identical across them. A reader holding one file saw several resolve names
+and nothing identifying the file. The same was true of **every** document from
+a JVM Pants repository, declared or not, because resolve anchoring only ever
+applied to Pex lockfiles.
+
+The name is qualified by Pants language namespace (`python:` / `jvm:`) because
+`[python.resolves]` and `[jvm.resolves]` are separate namespaces and one
+repository may declare `default` in both.
+
+No component, edge, or resolve changed. The repository-wide
+`waybill:resolve-ownership` still describes the repository and is still
+identical across a repository's split documents — narrowing it would have made
+the documents differ at the cost of the reader's view of what else exists.
+
+Known interaction: two resolves sharing a name across namespaces still merge
+into one document ([#919](https://github.com/kusari-oss/waybill/issues/919)).
+That document names both resolves rather than picking one.
+
+
 ## [0.9.0] — 2026-09-18
 
 ### Pants resolve membership is now a list, and it will silently mis-parse for existing readers (#902)

@@ -229,15 +229,6 @@ where
     }
 }
 
-/// Merge `other` into `index`, for combining per-reader indexes.
-pub fn index_merge(index: &mut NamespaceIndex, other: &NamespaceIndex) {
-    for (resolve, namespaces) in other {
-        index
-            .entry(resolve.clone())
-            .or_default()
-            .extend(namespaces.iter().copied());
-    }
-}
 
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
@@ -294,24 +285,13 @@ mod tests {
         assert!(qualified_for(&NamespaceIndex::new(), "default").is_empty());
     }
 
-    #[test]
-    fn index_merge_is_a_union() {
-        let mut a = NamespaceIndex::new();
-        index_insert(&mut a, LanguageNamespace::Python, "default");
-        let mut b = NamespaceIndex::new();
-        index_insert(&mut b, LanguageNamespace::Jvm, "default");
-        index_insert(&mut b, LanguageNamespace::Jvm, "lint");
-        index_merge(&mut a, &b);
-        assert_eq!(qualified_for(&a, "default"), vec!["jvm:default", "python:default"]);
-        assert_eq!(qualified_for(&a, "lint"), vec!["jvm:lint"]);
-    }
 
 
     /// The namespace comes from the reader, not from what the members look
     /// like — C-2 rejects ecosystem inference explicitly.
     #[test]
     fn index_record_all_takes_the_namespace_from_the_caller() {
-        let bags = vec![bag(json!(["default", "lint"])), bag(json!(["default"]))];
+        let bags = [bag(json!(["default", "lint"])), bag(json!(["default"]))];
         let mut idx = NamespaceIndex::new();
         index_record_all(&mut idx, LanguageNamespace::Jvm, bags.iter());
         assert_eq!(qualified_for(&idx, "default"), vec!["jvm:default"]);
@@ -320,7 +300,7 @@ mod tests {
 
     #[test]
     fn index_record_all_ignores_entries_without_membership() {
-        let bags = vec![BTreeMap::new()];
+        let bags = [BTreeMap::new()];
         let mut idx = NamespaceIndex::new();
         index_record_all(&mut idx, LanguageNamespace::Python, bags.iter());
         assert!(idx.is_empty());
