@@ -226,6 +226,23 @@ fn walk_mask(v: &mut serde_json::Value) {
                     );
                 }
             }
+            // SPDX 3 spells the tool as ONE concatenated string with no
+            // separate version field: `"name": "waybill-0.9.0"`. The two
+            // rules above miss it entirely, which the first valid CI-side
+            // diff caught immediately — `+ "name": "waybill-0.9.0"` showed up
+            // in all eleven SPDX-3 documents while CDX and SPDX 2.3 were
+            // clean. A third carrier, because the formats genuinely differ.
+            if let Some(name) = map.get("name").and_then(|v| v.as_str()) {
+                if name.starts_with("waybill-")
+                    && name["waybill-".len()..]
+                        .starts_with(|c: char| c.is_ascii_digit())
+                {
+                    map.insert(
+                        "name".to_string(),
+                        serde_json::Value::String("waybill-<masked>".to_string()),
+                    );
+                }
+            }
             // m196: mask SHA256 / MD5 content hashes embedded inside
             // annotation `statement:` / `comment:` / `value:` JSON-in-
             // string values (chiefly the `evidence.occurrences[]` shape
@@ -262,7 +279,7 @@ fn walk_mask(v: &mut serde_json::Value) {
         // `spdxId` alone and left every relationship endpoint, annotation
         // subject and rootElement holding the real hash.
         serde_json::Value::String(s) if s.contains("/spdx3/doc-") => {
-            *v = serde_json::Value::String(mask_doc_prefix(s));
+            *v = serde_json::Value::String(mask_document_root_id(&mask_doc_prefix(s)));
         }
         _ => {}
     }
@@ -315,6 +332,26 @@ fn mask_content_hashes_in_string(s: &str) -> String {
 /// its own document, and any structural check on one was meaningless.
 /// It also inflated every SPDX 3 diff, because an unmasked
 /// content-addressed hash cascades on any content change.
+/// #918 — `SPDXRef-DocumentRoot-<BASE32>` is content-addressed over the
+/// document namespace, which is itself content-addressed over document
+/// content INCLUDING the tool version. So it rotates on every release just
+/// as the version string does, and masking the version alone would leave the
+/// lane still drifting on every release — the exact problem this is meant to
+/// end.
+///
+/// The SPDX 3 spelling of the same identity (`.../spdx3/doc-<hash>`) has been
+/// masked since m865 for the same reason. This is its SPDX 2.3 counterpart,
+/// which that milestone did not cover because SPDX 2.3 was not the format
+/// that motivated it.
+fn mask_document_root_id(s: &str) -> String {
+    static RE: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
+    let re = RE.get_or_init(|| {
+        #[allow(clippy::unwrap_used)]
+        regex::Regex::new(r"SPDXRef-DocumentRoot-[A-Z2-7]{8,}").unwrap()
+    });
+    re.replace_all(s, "SPDXRef-DocumentRoot-<masked>").into_owned()
+}
+
 fn mask_doc_prefix(s: &str) -> String {
     let mut out = String::with_capacity(s.len());
     let mut rest = s;
