@@ -40,7 +40,7 @@ Whether a resolve was declared by the repository or discovered by convention.
 | Aspect | Today | After |
 |---|---|---|
 | Carrier | `waybill:resolve-ownership` (C161), document scope | unchanged row |
-| Value | `weak-classification=N;unanchored-lockfiles=N` | extended to *name* the resolves per category |
+| Value | `weak-classification=N;unanchored-lockfiles=N` | a JSON object naming the resolves per category |
 | Answers "how many?" | yes | yes |
 | Answers "which?" | **no** | yes (FR-007) |
 
@@ -53,9 +53,11 @@ Whether a resolve was declared by the repository or discovered by convention.
 - Discovered resolves remain unanchored (FR-009). Naming them is information;
   it is not ownership.
 
-**Constraint inherited from R5**: the existing value is a semicolon-delimited
-`key=value` string, not JSON. Extending it changes a documented grammar, and
-the catalogue row plus all three extractors move in the same change or the
+**Grammar**: the value was a semicolon-delimited `key=value` string and becomes
+a JSON object — `{"declared":[…],"discovered":[…],"weak_classification":N}`.
+Changing it is deliberate: a flat scalar cannot carry a list without a second
+delimiter level, and JSON is the encoding every other plural value here uses.
+The catalogue row plus all three extractors move in the same change, or the
 parity gate fails.
 
 ---
@@ -85,6 +87,12 @@ The components and relationships that become one sub-SBOM.
 **Selection rule**: membership filter, **not** BFS from a seed (R1). This is
 the one place this feature departs from how `--split` has worked since m215,
 and the reason is that a discovered resolve has no seed to start from.
+
+**Edge membership**: an edge belongs to resolve R when **both** its endpoints
+name R. Nothing tags edges with a resolve; the property is derived from the
+components' membership, which is what lets FR-011c work with no new mechanism.
+A component in several resolves therefore emits one edge per resolve that
+resolves a given bare name (FR-011b), and the filter separates them again.
 
 **Validation**
 

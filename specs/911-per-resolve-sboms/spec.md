@@ -70,6 +70,8 @@ reimplemented outside waybill, once per consumer.
 - Q: Does a component belonging to one resolve also switch to array form? → A: **Yes, always an array** — `["app"]` for one, `["app","tools"]` for two. A shape that varies with cardinality makes every consumer write two code paths, and the branch they exercise least is the shared-package case this feature exists to fix. Accepted cost: the value changes on every Pants component, not only shared ones, so every Pants golden churns and any existing reader of this key must update. Consistent with how 0.8.0 shipped the `pkg:generic` → `pkg:pypi` change — pre-1.0, no deprecation path. Chosen over retiring the key for a new one, which would fail loudly for un-updated consumers but costs a catalogue row change for a project that has not needed that ceremony before.
 - Q: How should the document distinguish declared from discovered resolves? → A: **Name them at document scope** — extend the existing doc-scope ownership annotation, which already counts unanchored lockfiles, to also name the resolves in each category. Purely informational: the graph is unchanged and a discovered resolve still gets no anchor, so milestone 868's refusal to assert ownership the repository never declared is preserved rather than softened with a confidence qualifier. Chosen over anchoring discovered resolves because the reach that would buy is smaller than it appears: membership is plural and complete after the first clarification, so a consumer can partition by membership without an anchor at all. The plan MUST verify that partitioning-by-membership genuinely works without an anchor (see Assumptions); if it does not, this answer is the one to revisit.
 - Q: In a per-resolve document, does a shared package keep its full membership? → A: **Yes, full membership is preserved.** The `app` document records `["app","tools"]` for a package both pin. Narrowing to `["app"]` would recreate exactly the under-reporting this feature exists to fix, moved from component scope to document scope and unrecoverable without the unsplit document. A consumer triaging one resolve's SBOM can therefore see that the same fix lands in another. Accepted cost: a per-resolve document references a resolve whose packages it does not contain, which reads oddly but is true.
+- Q: What grammar should the document-scope ownership annotation use once it names resolves rather than only counting them? → A: **A JSON object** — `{"declared":[...],"discovered":[...],"weak_classification":N}`. The value stops being a flat scalar the moment it carries a list, and every other plural value in this codebase is JSON. Chosen over nesting lists inside the existing `key=value;key=value` grammar, which needs a second delimiter level and breaks on a resolve name containing the separator. Chosen over a second doc-scope row, which leaves two rows that must agree and a consumer reading one without the other getting a partial answer. An existing reader of the count form breaks loudly rather than silently, which is the right failure here.
+- Q: A component belonging to several resolves declares a dependency by bare name. Which resolve does that name resolve in? → A: **All of them — one edge per resolve that resolves the name.** Resolves pin independently, so `shared` means `shared@1.0.0` inside `app` and `shared@2.0.0` inside `tools`; a component in both genuinely depends on both, and picking one asserts a dependency the requirer does not uniquely have while dropping one it does. For a consumer matching advisories, a dropped edge to the other version means a real vulnerability goes unattributed. Chosen over taking the first match (arbitrary, and silently incomplete) and over first-in-sorted-order (decided by the alphabet, which is presentation rather than semantics).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -174,6 +176,9 @@ confirm one SBOM per resolve, each containing that resolve's packages.
 - Two resolves pinning one package at *different* versions: two components,
   each with its own membership. This must not be conflated with the
   same-version case, which is one component with two memberships.
+- A component in two resolves depending on a name pinned at different versions
+  in each — it reaches both, which is the FR-011b case and the reason edge
+  count can rise for a repository whose packages did not change.
 - A resolve that declares a lockfile which contains no packages — an empty
   resolve that is genuinely empty, which must remain distinguishable from one
   emptied by the defect in Story 1.
@@ -205,11 +210,15 @@ confirm one SBOM per resolve, each containing that resolve's packages.
   side named.
 - **FR-003**: Membership MUST NOT depend on the order in which components
   were read. Two scans of one repository MUST record identical membership.
-- **FR-004**: The number of resolves discoverable from the emitted document
-  MUST equal the number of resolves that contain at least one package. A
-  resolve MUST NOT disappear because its packages were attributed elsewhere.
-- **FR-005**: A component belonging to exactly one resolve MUST be
-  emitted as it is today, so the common case is undisturbed.
+- **FR-004**: The number of distinct resolves named across all components'
+  membership MUST equal the number of resolves that contain at least one
+  package. A resolve MUST NOT disappear because its packages were attributed
+  elsewhere. Measured as SC-002 states it.
+- **FR-005**: A component belonging to exactly one resolve MUST name that
+  same one resolve after this change — the *set* is undisturbed even though
+  the encoding widens. Widening a field is not licence to change which
+  resolves a package belongs to, and a component that gains or loses a
+  resolve here is a defect, not a consequence.
 - **FR-006**: Membership MUST be expressed identically across every emitted
   format, so a consumer's partition does not depend on which format it reads.
 - **FR-006a**: A component belonging to one resolve MUST use the same array
@@ -221,7 +230,8 @@ confirm one SBOM per resolve, each containing that resolve's packages.
   A silent mis-parse in a downstream security tool is worse than a loud one.
 - **FR-007**: The document MUST name, at document scope, which resolves were
   declared by the repository and which were discovered by filename
-  convention. A count alone does not answer the question a consumer asks.
+  convention, as a JSON object. A count alone does not answer the question a
+  consumer asks.
 - **FR-008**: FR-007 MUST be answerable from the document alone, without
   access to the repository it describes.
 - **FR-009**: A resolve discovered by convention MUST NOT be presented as
@@ -234,6 +244,15 @@ confirm one SBOM per resolve, each containing that resolve's packages.
 - **FR-010**: An operator MUST be able to request one SBOM per resolve.
 - **FR-011**: A package belonging to several resolves MUST appear in each of
   those resolves' documents.
+- **FR-011b**: When a component belongs to several resolves, a dependency it
+  declares by bare name MUST resolve in **each** of those resolves, emitting
+  one edge per resolve that resolves the name. Resolves pin independently, so
+  one bare name can denote different versions in different resolves, and the
+  component depends on each.
+- **FR-011c**: Those edges MUST remain separable by resolve, so a per-resolve
+  document contains only the edges belonging to its own resolve. This falls
+  out of membership rather than needing the edge to be tagged: an edge belongs
+  to resolve R when both its endpoints name R.
 - **FR-011a**: A package's membership MUST NOT be narrowed to the document it
   appears in. A per-resolve document records the package's full membership,
   so a reader of one resolve's SBOM can tell the package is shared and with
@@ -285,6 +304,9 @@ confirm one SBOM per resolve, each containing that resolve's packages.
 - **SC-007**: A per-resolve split of a repository with N resolves containing
   packages produces N documents, and a package pinned by several resolves
   appears in each, carrying the same membership in every one.
+- **SC-007a**: A component in two resolves whose declared dependency is pinned
+  at different versions in each reaches **both** versions in the unsplit
+  document, and exactly one of them in each per-resolve document.
 - **SC-008**: A per-resolve split of a repository with no anchored resolves
   produces a stated outcome, not an empty directory.
 - **SC-009**: Re-running the reported monorepo measurement shows every

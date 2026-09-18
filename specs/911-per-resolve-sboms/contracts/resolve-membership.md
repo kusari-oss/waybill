@@ -76,8 +76,19 @@ inconsistency #901 was about.
 weak-classification=1;unanchored-lockfiles=0
 ```
 
-It is extended to name the resolves in each category, so a consumer can tell
-declared from discovered **from the document alone** (FR-007, FR-008).
+It becomes a **JSON object** naming the resolves in each category, so a
+consumer can tell declared from discovered **from the document alone**
+(FR-007, FR-008):
+
+```json
+{"declared":["app","tools"],"discovered":["scratch"],"weak_classification":1}
+```
+
+The grammar change is deliberate. Nesting a list inside `key=value;key=value`
+needs a second delimiter level and breaks on a resolve name containing the
+separator; JSON is what every other plural value here uses. An existing reader
+of the count form breaks **loudly** — the value is no longer `k=v` at all —
+which is the right failure mode for a format change a consumer must notice.
 
 - The declared and discovered lists together account for every resolve named
   on any component (SC-006). A resolve in membership but in neither list is a
@@ -100,6 +111,16 @@ One document per resolve that contains at least one package.
   exists for it, so nothing can be constructed to start from. One filter path
   works for declared and discovered alike; two strategies that must agree
   would disagree rarely and data-dependently, which is worse.
+- A component in several resolves resolves each bare dependency name in
+  **each** of them, emitting one edge per resolve that resolves it (FR-011b).
+  Resolves pin independently, so `shared` denotes `shared@1.0.0` in `app` and
+  `shared@2.0.0` in `tools`, and a component in both depends on both. Taking
+  one match would assert a dependency the requirer does not uniquely have and
+  drop one it does — for a consumer matching advisories, the dropped edge is a
+  vulnerability that goes unattributed.
+- Those edges separate by resolve without being tagged: **an edge belongs to
+  resolve R when both endpoints name R**. The membership filter in C-5 already
+  produces exactly this, so FR-011c needs no new mechanism.
 - A package in several resolves appears in several documents, carrying its
   **full** membership in each (FR-011a) — so a reader triaging one resolve's
   SBOM can see the same fix lands in another.
@@ -150,4 +171,6 @@ directory is not an acceptable outcome.
 | C-5 | multi-resolve fixture → one document per resolve; shared package in each |
 | C-5a | assert each sub-document's root, including for a discovered resolve |
 | C-5b | zero-resolve fixture → stated outcome, not an empty directory |
+| FR-011b | a component in two resolves, dependency pinned differently in each → both edges present in the unsplit document |
+| FR-011c | the same fixture split → each document carries exactly one of those edges |
 | C-6 | existing `--split` goldens unchanged |

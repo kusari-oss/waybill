@@ -36,6 +36,7 @@ That last choice is the plan's one real discovery. See Phase 0 R1.
 **Project Type**: CLI / SBOM emitter. Consumer-visible wire change.
 **Performance Goals**: none. A union at dedup and a filter at emit are both linear in components already walked; no new I/O, no subprocess, no network.
 **Constraints**: the annotation key is retained, not retired — the catalogue row widens. m868's refusal to anchor glob-discovered lockfiles is preserved. `--split=workspace` and `--split=directory` stay byte-identical.
+**Graph-shape change**: FR-011b means a component in several resolves emits one edge per resolve that resolves a bare dependency name. Corpus edge counts can rise for repositories whose packages did not change — the one semantic change in this feature, as distinct from the two encoding changes.
 **Scale/Scope**: three readers emit the annotation (Pex, coursier/JVM, uv-as-Pants-backend — R3); 72 corpus components carry it; one dedup merge site; one new split mode.
 
 ## Constitution Check
@@ -58,8 +59,16 @@ That last choice is the plan's one real discovery. See Phase 0 R1.
 
 **No violations. Complexity Tracking omitted.**
 
-One judgement worth recording rather than burying: this change will be
-**mis-parsed, not rejected**, by an existing reader of `waybill:pants-resolve`
+Two judgements worth recording rather than burying.
+
+**FR-011b raises edge counts.** A component in several resolves now depends on
+each resolve's pinning of a shared name — `shared@1.0.0` via `app` and
+`shared@2.0.0` via `tools`. That is more edges than before for the same
+packages. It is also the only alternative that does not drop a true edge, and a
+dropped edge is a vulnerability that goes unattributed for a consumer matching
+advisories. Principle VIII over tidiness, deliberately.
+
+The second: this change will be **mis-parsed, not rejected**, by an existing reader of `waybill:pants-resolve`
 — it gets an array where it expected a string and carries on. For a downstream
 security tool partitioning on that value, a silent mis-parse is worse than a
 loud failure. The clarify step accepted that cost on the grounds that this repo
@@ -109,6 +118,13 @@ accordingly.
 
 ## Phase ordering
 
+0. **Foundational — the internal read-back sites. BLOCKING.** Four sites in
+   waybill read this annotation via `.as_str()`; an array makes every one
+   return `None` and fall through to a default. Two of them
+   (`scan_fs/mod.rs:674` and `:1079`) carry #910's edge-scoping fix, which
+   would revert with nothing failing — the edges would fall back to the flat
+   index and look plausible. This was found during `/speckit.tasks`, after the
+   research below was written, and it is the highest-risk work in the feature.
 1. **US1 (P1) — membership is plural and survives dedup.** The array encoding
    at all three readers, the per-key union at dedup, the catalogue row and
    extractors. Gate: two resolves pinning one package both name it, and two
