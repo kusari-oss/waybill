@@ -74,7 +74,10 @@ jobs:
         run: |
           set -o pipefail
           mkdir -p corpus-artifacts
-          cargo test --test public_corpus --release -- --nocapture --test-threads=3 \
+          # --include-ignored: the corpus targets are #[ignore]d so a local
+          # `cargo test` reports them as ignored rather than as passing
+          # tests that silently skipped (#918). CI opts back in.
+          cargo test --test public_corpus --release -- --nocapture --include-ignored --test-threads=3 \
             2>&1 | tee corpus-artifacts/corpus-run.log
 
       # Extract which targets drifted and in how many formats. The
@@ -146,7 +149,17 @@ jobs:
           # `~/.cache/waybill/corpus/<source-id>/<pin>/{repo/emitted,emitted}/*.json`
           # — depth varies (git targets nest under `repo/`, OCI targets don't).
           # `**` handles both cases.
-          path: ~/.cache/waybill/corpus/**/emitted/*.json
+          # `*.json*` — NOT `*.json`. The harness writes the MASKED
+          # `<target>.<fmt>.json.actual` beside the raw emission, and the
+          # masked file is the one the comparison actually used and the one
+          # the failure message tells you to diff. `*.json` silently excluded
+          # it, so every failure artifact shipped the raw emission while the
+          # committed golden is masked: diffing them showed the masking, not
+          # the drift. That made the documented "read the diffs before
+          # regenerating" procedure impossible to execute, leaving
+          # regen-and-eyeball as the only workable path — which is how a real
+          # regression gets encoded as expected output. See #918.
+          path: ~/.cache/waybill/corpus/**/emitted/*.json*
           if-no-files-found: warn
           retention-days: 14
 

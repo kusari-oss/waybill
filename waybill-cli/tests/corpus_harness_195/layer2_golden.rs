@@ -98,13 +98,62 @@ pub fn compare_golden(
         FailureFormat::Spdx3 => FailureFormat::Spdx3,
         FailureFormat::All => unreachable!(),
     };
+    // #918 — put the first divergent lines in the LOG.
+    //
+    // Pointing at two file paths is useless in CI, where the filesystem is
+    // gone when the job ends. The common case (a handful of changed lines)
+    // should be readable without downloading anything, and a reviewer should
+    // never have to reconstruct this masking by hand to find out what moved.
+    let excerpt = first_divergences(&golden_bytes, &masked_bytes, 12);
+    eprintln!(
+        "--- {} drift, first divergences (masked, both sides) ---\n{}\n--- end excerpt; full masked output is the `.actual` file, uploaded as the `corpus-emitted-sboms` artifact ---",
+        golden.display(),
+        excerpt
+    );
+
     Err(AssertionFailure {
         invariant_name: "layer2-golden-drift",
         format: fmt_kind,
         observed: format!("emitted (masked): {}", actual_sibling.display()),
         expected: format!("golden: {}", golden.display()),
-        suggested_action: "run `diff <golden> <actual>` to inspect drift; if drift is intended, regen via WAYBILL_UPDATE_PUBLIC_CORPUS_GOLDENS=1",
+        suggested_action: "read the excerpt above; for the full diff use `xtask corpus-diff --old <golden> --new <actual>` on the `corpus-emitted-sboms` artifact. Regen via WAYBILL_UPDATE_PUBLIC_CORPUS_GOLDENS=1 ONLY once the drift is understood",
     })
+}
+
+/// First `limit` differing lines between two masked JSON documents, as a
+/// unified-ish excerpt. #918: the point is that a CI log alone should answer
+/// "what moved" for the common case.
+fn first_divergences(golden: &[u8], actual: &[u8], limit: usize) -> String {
+    let g = String::from_utf8_lossy(golden);
+    let a = String::from_utf8_lossy(actual);
+    let (gl, al): (Vec<&str>, Vec<&str>) = (g.lines().collect(), a.lines().collect());
+    let mut out = Vec::new();
+    let mut shown = 0usize;
+    for (i, (x, y)) in gl.iter().zip(al.iter()).enumerate() {
+        if x != y {
+            out.push(format!("  line {i}:\n    - {}\n    + {}", x.trim(), y.trim()));
+            shown += 1;
+            if shown >= limit {
+                out.push(format!(
+                    "  … truncated at {limit}; the two documents differ on more lines"
+                ));
+                break;
+            }
+        }
+    }
+    if gl.len() != al.len() {
+        out.push(format!(
+            "  (line counts differ: golden {} vs actual {} — content was added or removed, \
+             not just changed)",
+            gl.len(),
+            al.len()
+        ));
+    }
+    if out.is_empty() {
+        "  (no line-level difference: the documents differ only in trailing bytes)".to_string()
+    } else {
+        out.join("\n")
+    }
 }
 
 /// Structural mask of non-deterministic fields per memory
@@ -135,6 +184,46 @@ fn walk_mask(v: &mut serde_json::Value) {
             for k in volatile_keys {
                 if map.contains_key(*k) {
                     map.insert((*k).to_string(), serde_json::Value::String("<masked>".to_string()));
+                }
+            }
+
+            // #918 — the TOOL's own version, and only the tool's.
+            //
+            // waybill's version is baked into every emitted document, so a
+            // release bump drifts all 11 targets in all 3 formats at once,
+            // by construction. Six releases in seventeen days meant this lane
+            // was red after nearly every one, and a gate that is red by
+            // default gates nothing: the standing response becomes "refresh
+            // the goldens", which is exactly how a real regression gets
+            // encoded as expected output.
+            //
+            // This is deliberately NOT a blanket mask of the `version` key.
+            // Component versions are the single most load-bearing thing in
+            // these goldens — masking them would leave a gate that cannot see
+            // a dependency change. Only the two carriers that hold waybill's
+            // OWN version are masked:
+            //
+            //   CDX        metadata.tools.components[] where name == "waybill"
+            //   SPDX 2.3   annotations[].annotator  "Tool: waybill-<semver>"
+            //   SPDX 3     the same two shapes
+            //
+            // The tool version has no regression-detection value anyway: you
+            // always know which version produced a golden — it is recorded in
+            // the commit that regenerated it.
+            if map.get("name").and_then(|v| v.as_str()) == Some("waybill")
+                && map.contains_key("version")
+            {
+                map.insert(
+                    "version".to_string(),
+                    serde_json::Value::String("<masked-tool-version>".to_string()),
+                );
+            }
+            if let Some(annotator) = map.get("annotator").and_then(|v| v.as_str()) {
+                if annotator.starts_with("Tool: waybill-") {
+                    map.insert(
+                        "annotator".to_string(),
+                        serde_json::Value::String("Tool: waybill-<masked>".to_string()),
+                    );
                 }
             }
             // m196: mask SHA256 / MD5 content hashes embedded inside
