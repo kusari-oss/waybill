@@ -768,6 +768,16 @@ fn push_document_fields(
         push(out, "waybill:resolve-ownership", summary.as_wire_value());
     }
 
+    // Issue #914 (m912) — C163 doc-scope resolve identity: WHICH RESOLVE
+    // THIS DOCUMENT IS, as namespace-qualified names. Absent on an unsplit
+    // document and on `--split=workspace` / `--split=directory`, where the
+    // question has no answer (FR-008); absent rather than empty, so "not a
+    // per-resolve document" stays distinguishable from "a resolve with no
+    // name" (FR-009). Plural only in the #919 collision case (C-6).
+    if let Some(identity) = scan.resolve_identity.as_ref() {
+        push(out, "waybill:document-resolve", json!(identity));
+    }
+
     // Milestone 895 (#891) — C162 doc-scope count of `.cabal` dependency
     // entries that were not valid package names and were skipped. Absent iff
     // no `.cabal` file was read; present including zero otherwise.

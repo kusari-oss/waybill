@@ -1,0 +1,24 @@
+{
+  "pex_version": "2.10.0",
+  "requirements": [
+    "waybill-fixture-pyside==1.0.0"
+  ],
+  "locked_resolves": [
+    {
+      "locked_requirements": [
+        {
+          "project_name": "waybill-fixture-pyside",
+          "version": "1.0.0",
+          "requires_dists": [],
+          "artifacts": [
+            {
+              "algorithm": "sha256",
+              "hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+              "url": "https://files.pythonhosted.org/packages/xx/waybill_fixture_pyside-1.0.0-py3-none-any.whl"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

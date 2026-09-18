@@ -493,6 +493,17 @@ pub struct ScanDiagnostics {
     /// non-Pants scans byte-identical (contract A-7).
     pub pants_resolve_summary: Option<pants::PantsResolveSummary>,
 
+    /// Issue #914 (m912) — resolve name → the Pants language namespace(s)
+    /// that declare or discover it. Built from each reader's own output, so
+    /// the namespace comes from which reader produced an entry rather than
+    /// from what its members look like (contract C-2 rejects PURL-ecosystem
+    /// inference).
+    ///
+    /// Never emitted. It is the derivation input for the per-document resolve
+    /// identity (C163), and lives beside `pants_resolve_summary` rather than
+    /// inside it so that C161's value stays byte-identical (FR-007 / SC-006).
+    pub pants_resolve_namespaces: pants_resolve::NamespaceIndex,
+
     /// Milestone 895 (#891) — count of `.cabal` dependency entries that were
     /// not valid package names and were skipped. `None` iff no `.cabal` file
     /// was read, which keeps non-Haskell scans byte-identical.
@@ -1787,6 +1798,34 @@ pub fn read_all(
     // Milestone 868 (#887): doc-scope resolve-ownership counts. Left `None`
     // when no Pex lockfile was found, so non-Pants scans are unchanged.
     diagnostics.pants_resolve_summary = pants_resolve_summary;
+
+    // Issue #914 (m912) T005-T007 — record which Pants language namespace
+    // each resolve came from, taken from the producing reader rather than
+    // inferred from member PURLs. Three readers write resolve membership:
+    // the Pex reader here (python), uv lockfiles inside the pip reader's
+    // output (uv as a Pants python backend — the one that is easy to miss),
+    // and the coursier reader (jvm). Entries without membership are ignored,
+    // so passing the whole pip set is safe.
+    {
+        use pants_resolve::LanguageNamespace::{Jvm, Python};
+        let idx = &mut diagnostics.pants_resolve_namespaces;
+        pants_resolve::index_record_all(
+            idx,
+            Python,
+            pants_components.iter().map(|e| &e.extra_annotations),
+        );
+        pants_resolve::index_record_all(
+            idx,
+            Python,
+            shared_pilot.pip.iter().map(|e| &e.extra_annotations),
+        );
+        pants_resolve::index_record_all(
+            idx,
+            Jvm,
+            shared_pilot.pants_jvm.iter().map(|e| &e.extra_annotations),
+        );
+    }
+
     out.extend(pants_components);
 
     // Milestone 224: Pants coursier JVM lockfile reader — Maven

@@ -30,12 +30,44 @@ Consequences worth knowing before you consume the output:
   both its endpoints name R. A component in two resolves depending on a
   package those resolves pin differently reaches BOTH versions in the unsplit
   document, and exactly one in each per-resolve document.
-- **A declared resolve's document names itself**; a resolve discovered by
-  filename convention names the repository instead, because synthesising an
-  owning component would assert an ownership the repository never declared.
-  The manifest's `root_purl` maps every file to its resolve either way.
-  [#914](https://github.com/kusari-oss/waybill/issues/914) tracks closing that
-  difference.
+- **Every per-resolve document says which resolve it is**, in the doc-scope
+  `waybill:document-resolve` annotation (catalogue row C163), as a
+  namespace-qualified name:
+
+  ```
+  default.generic.cdx.json   waybill:document-resolve = ["python:default"]
+  lint.generic.cdx.json      waybill:document-resolve = ["python:lint"]
+  ```
+
+  The name is qualified because `[python.resolves]` and `[jvm.resolves]` are
+  separate namespaces in `pants.toml`, so one repository may declare `default`
+  in both and a bare name could not tell them apart.
+
+  The annotation is present on **every** per-resolve document, including those
+  whose root component already names the resolve, so a consumer needs one code
+  path rather than one per provenance. Where both are present they agree.
+
+  It is **absent** — not empty — from an unsplit document and from
+  `--split=workspace` / `--split=directory`, where the question has no answer,
+  and from anything produced before waybill 0.10.0.
+
+  This matters when a document is separated from its manifest. The manifest's
+  `root_purl` maps every file to its resolve, including discovered ones, so
+  while the two travel together either answers. A file renamed, attached to a
+  ticket, or handed to a scanner has only its own bytes.
+
+  A resolve discovered by filename convention still names the **repository** in
+  its root component, and deliberately so: synthesising an owning component
+  would assert an ownership the repository never declared
+  ([#887](https://github.com/kusari-oss/waybill/issues/887)). Naming a resolve
+  is information; inventing a component that owns its packages is a claim.
+- **Two resolves sharing a name across namespaces currently merge into one
+  document** — [#919](https://github.com/kusari-oss/waybill/issues/919), a
+  defect in shipped code. That document states both identities, because it
+  represents both and naming either alone would be false. Note the merge is
+  invisible in a repository whose *only* resolves are the colliding pair: the
+  split sees one group, decides the repository is not partitionable, and falls
+  back to a single SBOM.
 - **No resolves, or only one**, falls back to a single SBOM with a warning,
   the same as the other modes with fewer than two boundaries.
 
