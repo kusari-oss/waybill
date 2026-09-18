@@ -56,6 +56,20 @@ pub enum SplitMode {
     /// dirs match collapse into ONE group → ONE sub-SBOM. Useful for
     /// polyglot repos where Cargo + package.json coexist in one dir.
     Directory,
+    /// Issue #911 (#902 item 4) — one sub-SBOM per Pants resolve.
+    ///
+    /// Unlike the other two, this mode does **not** enumerate main-modules
+    /// and walk the graph from them. A Pants resolve is not a main-module,
+    /// and a resolve found by filename convention has no anchor component at
+    /// all, so there is nothing to walk from. Selection is a **membership
+    /// filter**: a component belongs to resolve R when its
+    /// `waybill:pants-resolve` names R.
+    ///
+    /// One filter path serves declared and discovered resolves alike. Two
+    /// strategies that must agree — BFS where an anchor exists, filter
+    /// otherwise — would disagree rarely and data-dependently, which is worse
+    /// than never agreeing.
+    Resolve,
 }
 
 impl SplitMode {
@@ -72,6 +86,11 @@ impl SplitMode {
                     s
                 }
             }
+            // Resolve mode never routes through `group_roots`, so this arm is
+            // unreachable in practice. Returning the PURL name keeps the
+            // function total rather than panicking on a state that cannot
+            // occur.
+            SplitMode::Resolve => root.purl.name().to_string(),
         }
     }
 }
@@ -163,6 +182,120 @@ pub(crate) struct SplitProjection {
     /// sibling projection. Populated post-hoc by [`compute_shared_deps`].
     #[allow(dead_code)]
     pub shared_deps_count: usize,
+}
+
+// ---------- #911: per-resolve projection (T029-T032) ----------
+
+/// Issue #911 (#902 item 4) — build one [`GroupedProjection`] per Pants
+/// resolve by **membership filter**.
+///
+/// Why not `project_for_root`: that BFSes from a seed component
+/// (`split.rs`, `project_for_root`), and the seed set is main-modules only.
+/// A resolve anchor is not a main-module, and a resolve found by filename
+/// convention has no anchor component at all — so a walk cannot reach it.
+/// Research R1 in `specs/911-per-resolve-sboms/` has the full argument.
+///
+/// **Edge selection needs no new mechanism** (FR-011c): an edge belongs to
+/// resolve R when **both** its endpoints name R. Nothing tags edges with a
+/// resolve; the property falls out of the components' membership. A component
+/// in several resolves emits one edge per resolve that resolves a given bare
+/// name (FR-011b), and this filter separates them again.
+///
+/// **Membership is not narrowed** (FR-011a): a shared package keeps its full
+/// membership inside every document it appears in, so a reader triaging one
+/// resolve's SBOM can see the same fix lands in another. A per-resolve
+/// document may therefore name resolves whose packages it does not contain.
+/// That is correct, not a dangling reference.
+fn resolve_projections(
+    components: &[ResolvedComponent],
+    relationships: &[Relationship],
+) -> Vec<GroupedProjection> {
+    use std::collections::BTreeMap as Map;
+
+    // resolve name -> its components, in input order for determinism.
+    let mut by_resolve: Map<String, Vec<ResolvedComponent>> = Map::new();
+    for c in components {
+        for name in crate::scan_fs::package_db::pants_resolve::read(&c.extra_annotations) {
+            by_resolve.entry(name).or_default().push(c.clone());
+        }
+    }
+
+    by_resolve
+        .into_iter()
+        .map(|(resolve, members)| {
+            let purls: std::collections::HashSet<&str> =
+                members.iter().map(|c| c.purl.as_str()).collect();
+            let rels: Vec<Relationship> = relationships
+                .iter()
+                .filter(|r| {
+                    purls.contains(r.from.as_str()) && purls.contains(r.to.as_str())
+                })
+                .cloned()
+                .collect();
+
+            // T030 — the sub-document's root. `metadata.component` is chosen
+            // at emit time by m127's root-selector, which looks for the single
+            // `component-role = "main-module"` component. A resolve projection
+            // has none, so the ladder would fall through to its synthetic
+            // placeholder and name every sub-SBOM unhelpfully — the failure
+            // m215 hit and documented where BFS pulled in sibling
+            // main-modules.
+            //
+            // The anchor exists for a declared resolve and not for a
+            // discovered one, so promote it where present and synthesise a
+            // naming root where absent. T031: the synthesised root is used for
+            // FILENAME and subproject id only — it is never added to the
+            // emitted component set, because emitting it would anchor a
+            // discovered resolve by the back door and contradict FR-009.
+            // T030 — promote the resolve's anchor to a main-module WITHIN
+            // this projection so m127's root-selector names the sub-document
+            // after the resolve rather than after the repository. Without
+            // this the ladder finds no main-module and falls back to the
+            // scan root: every sub-SBOM claims to be the whole monorepo,
+            // which is the m215 failure in a new place.
+            //
+            // The promotion is projection-local. `members` here is already a
+            // clone, so nothing reaches the unsplit document.
+            let mut members = members;
+            let anchor_idx = members
+                .iter()
+                .position(|c| c.purl.name() == resolve && c.purl.ecosystem() == "generic");
+            if let Some(i) = anchor_idx {
+                members[i].extra_annotations.insert(
+                    COMPONENT_ROLE_KEY.to_string(),
+                    serde_json::Value::String("main-module".to_string()),
+                );
+            }
+            // Any OTHER main-module carried in by the filter would leave the
+            // ladder with more than one candidate, which is the ambiguity
+            // m215 hit. Demote them here for the same reason it does.
+            for (i, c) in members.iter_mut().enumerate() {
+                if Some(i) != anchor_idx && is_main_module(c) {
+                    c.extra_annotations.remove(COMPONENT_ROLE_KEY);
+                }
+            }
+            let anchor = anchor_idx.map(|i| members[i].clone());
+            let root_purl = anchor
+                .as_ref()
+                .map(|c| c.purl.clone())
+                .or_else(|| Purl::new(&format!("pkg:generic/{resolve}")).ok());
+
+            let root = root_purl.map(|purl| SubprojectRoot {
+                purl_string: purl.as_str().to_string(),
+                ecosystem: purl.ecosystem().to_string(),
+                purl,
+                source_dir: std::path::PathBuf::new(),
+            });
+
+            GroupedProjection {
+                group_key: resolve,
+                members: root.into_iter().collect(),
+                components: members,
+                relationships: rels,
+                shared_deps_count: 0,
+            }
+        })
+        .collect()
 }
 
 // ---------- T008: enumerate_workspace_roots ----------
@@ -806,6 +939,20 @@ pub(crate) fn emit_split(
     scan_root: &Path,
     mode: SplitMode,
 ) -> anyhow::Result<bool> {
+    // #911 — Resolve mode does not enumerate main-modules; it filters by
+    // membership. Branch before the main-module path rather than bending
+    // `enumerate_workspace_roots` into serving two different axes.
+    if mode == SplitMode::Resolve {
+        return emit_split_by_resolve(
+            base_artifacts,
+            formats,
+            registry,
+            output_dir,
+            created,
+            waybill_version,
+            scan_root,
+        );
+    }
     let roots = enumerate_workspace_roots(base_artifacts.components, scan_root);
     // FR-009: fallback to single-SBOM emit + WARN when there aren't
     // enough boundaries to make a split meaningful. Zero boundaries
@@ -845,7 +992,87 @@ pub(crate) fn emit_split(
             base_artifacts.relationships,
         );
     }
-    let (total_unique, aggregate_shared) = compute_shared_deps_groups(&mut groups);
+    emit_groups(
+        &mut groups,
+        base_artifacts,
+        formats,
+        registry,
+        output_dir,
+        created,
+        waybill_version,
+        scan_root,
+        mode,
+        &collision_map,
+    )
+}
+
+/// Issue #911 — emit one sub-SBOM per Pants resolve.
+///
+/// Shares the whole emission tail with [`emit_split`]; only the way groups
+/// are built differs. See [`resolve_projections`] for why that is a filter
+/// rather than a graph walk.
+#[allow(clippy::too_many_arguments)]
+fn emit_split_by_resolve(
+    base_artifacts: &ScanArtifacts<'_>,
+    formats: &[String],
+    registry: &SerializerRegistry,
+    output_dir: &Path,
+    created: DateTime<Utc>,
+    waybill_version: &str,
+    scan_root: &Path,
+) -> anyhow::Result<bool> {
+    let mut groups =
+        resolve_projections(base_artifacts.components, base_artifacts.relationships);
+
+    // FR-012 / C-5b — say what happened rather than leaving an empty
+    // directory and exit zero. Mirrors the main path's `roots.len() <= 1`
+    // fallback: one resolve is a degenerate split, and zero means the scan
+    // found no Pants resolves at all.
+    if groups.len() <= 1 {
+        tracing::warn!(
+            scan_root = %scan_root.display(),
+            detected = groups.len(),
+            mode = "resolve",
+            "no partitionable Pants resolves detected — emitting a single SBOM \
+             per the --split fallback contract. A repository with one resolve \
+             is a degenerate split; a repository with none has no Pants \
+             lockfiles, or none whose components carry resolve membership."
+        );
+        return Ok(false);
+    }
+
+    emit_groups(
+        &mut groups,
+        base_artifacts,
+        formats,
+        registry,
+        output_dir,
+        created,
+        waybill_version,
+        scan_root,
+        SplitMode::Resolve,
+        // Resolve mode has no filename collisions to disambiguate: group keys
+        // are resolve names, which are unique by construction.
+        &BTreeMap::new(),
+    )
+}
+
+/// The emission tail shared by every split mode: shared-dep accounting,
+/// per-group fan-out across formats, and the manifest.
+#[allow(clippy::too_many_arguments)]
+fn emit_groups(
+    groups: &mut [GroupedProjection],
+    base_artifacts: &ScanArtifacts<'_>,
+    formats: &[String],
+    registry: &SerializerRegistry,
+    output_dir: &Path,
+    created: DateTime<Utc>,
+    waybill_version: &str,
+    scan_root: &Path,
+    mode: SplitMode,
+    collision_map: &BTreeMap<String, Vec<PathBuf>>,
+) -> anyhow::Result<bool> {
+    let (total_unique, aggregate_shared) = compute_shared_deps_groups(groups);
 
     tracing::info!(
         subproject_count = groups.len(),
@@ -867,7 +1094,7 @@ pub(crate) fn emit_split(
     manifest.shared_dep_count = aggregate_shared;
 
     // Per-group emission.
-    for group in &groups {
+    for group in groups.iter() {
         let sub_artifacts = base_artifacts.narrow(
             &group.components,
             &group.relationships,
@@ -900,7 +1127,7 @@ pub(crate) fn emit_split(
                     format_ext(fmt),
                 )
             } else {
-                filename_for(&group.members[0], fmt, &collision_map)
+                filename_for(&group.members[0], fmt, collision_map)
             };
             let sub_output_cfg = OutputConfig {
                 mikebom_version: env_pkg_version(),
@@ -993,7 +1220,7 @@ pub(crate) fn emit_split(
     tracing::info!(
         mode = %mode,
         groups = groups.len(),
-        total_main_modules = roots.len(),
+        total_axes = groups.iter().map(|g| g.members.len()).sum::<usize>(),
         "split emission complete"
     );
 

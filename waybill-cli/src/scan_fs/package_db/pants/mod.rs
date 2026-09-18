@@ -617,7 +617,7 @@ pub fn read_with_summary(scan_root: &Path) -> (Vec<PackageDbEntry>, Option<Pants
     // `None` when no Pex lockfile was found at all — that is what keeps a
     // non-Pants scan byte-identical (contract A-7). Once one was found, both
     // counts are reported even at zero (FR-003c).
-    let summary = (lockfiles_discovered > 0).then(|| PantsResolveSummary {
+    let summary = (lockfiles_discovered > 0).then_some(PantsResolveSummary {
         weak_classification_count: weak_classification,
         unanchored_lockfile_count: unanchored_lockfiles,
         declared_resolves: declared_seen,
