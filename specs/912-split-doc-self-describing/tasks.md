@@ -53,9 +53,9 @@ Repository root. `waybill-cli/src/scan_fs/package_db/` (namespace recording),
 > the wire is C163, the document identity derived from the index.
 
 - [X] T004 Add a language-namespace type — a closed set, `python` | `jvm`, not a string — beside the membership accessor in `waybill-cli/src/scan_fs/package_db/pants_resolve.rs`, with read and write helpers mirroring the membership ones.
-- [ ] T005 [P] Record the namespace in `waybill-cli/src/scan_fs/package_db/pants/lockfile.rs` at both emission sites, alongside `waybill:pants-resolve`.
-- [ ] T006 [P] Record it in `waybill-cli/src/scan_fs/package_db/pants_jvm/lockfile.rs`.
-- [ ] T007 [P] Record it in `waybill-cli/src/scan_fs/package_db/pip/uv_lock.rs` — uv as a Pants resolver backend is `python`. This is the reader that was easy to miss in m911 and is easy to miss again.
+- [X] T005 [P] Record the namespace in `waybill-cli/src/scan_fs/package_db/pants/lockfile.rs` at both emission sites, alongside `waybill:pants-resolve`.
+- [X] T006 [P] Record it in `waybill-cli/src/scan_fs/package_db/pants_jvm/lockfile.rs`.
+- [X] T007 [P] Record it in `waybill-cli/src/scan_fs/package_db/pip/uv_lock.rs` — uv as a Pants resolver backend is `python`. This is the reader that was easy to miss in m911 and is easy to miss again.
 - [ ] T008 Add a test in `waybill-cli/tests/pants_resolve_membership.rs` asserting every component carrying membership also carries a namespace. A reader that sets one without the other produces an identity that cannot satisfy FR-001a, and nothing else would catch it.
 
 ### Per-document doc-scope values

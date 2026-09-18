@@ -210,6 +210,25 @@ pub fn index_insert(index: &mut NamespaceIndex, namespace: LanguageNamespace, re
     index.entry(resolve.to_string()).or_default().insert(namespace);
 }
 
+/// Record every resolve named by `bags` as belonging to `namespace`.
+///
+/// Called once per reader with that reader's own output, so the namespace
+/// comes from **which reader produced the entry** rather than from what its
+/// members look like. Contract C-2 rejects inferring it from member PURL
+/// ecosystem: that works on today's fixtures only because every fixture
+/// resolve happens to be single-ecosystem, and a polyglot resolve would
+/// silently mis-qualify.
+pub fn index_record_all<'a, I>(index: &mut NamespaceIndex, namespace: LanguageNamespace, bags: I)
+where
+    I: IntoIterator<Item = &'a BTreeMap<String, Value>>,
+{
+    for bag in bags {
+        for resolve in read(bag) {
+            index_insert(index, namespace, &resolve);
+        }
+    }
+}
+
 /// Merge `other` into `index`, for combining per-reader indexes.
 pub fn index_merge(index: &mut NamespaceIndex, other: &NamespaceIndex) {
     for (resolve, namespaces) in other {
@@ -285,6 +304,26 @@ mod tests {
         index_merge(&mut a, &b);
         assert_eq!(qualified_for(&a, "default"), vec!["jvm:default", "python:default"]);
         assert_eq!(qualified_for(&a, "lint"), vec!["jvm:lint"]);
+    }
+
+
+    /// The namespace comes from the reader, not from what the members look
+    /// like — C-2 rejects ecosystem inference explicitly.
+    #[test]
+    fn index_record_all_takes_the_namespace_from_the_caller() {
+        let bags = vec![bag(json!(["default", "lint"])), bag(json!(["default"]))];
+        let mut idx = NamespaceIndex::new();
+        index_record_all(&mut idx, LanguageNamespace::Jvm, bags.iter());
+        assert_eq!(qualified_for(&idx, "default"), vec!["jvm:default"]);
+        assert_eq!(qualified_for(&idx, "lint"), vec!["jvm:lint"]);
+    }
+
+    #[test]
+    fn index_record_all_ignores_entries_without_membership() {
+        let bags = vec![BTreeMap::new()];
+        let mut idx = NamespaceIndex::new();
+        index_record_all(&mut idx, LanguageNamespace::Python, bags.iter());
+        assert!(idx.is_empty());
     }
 
     #[test]
