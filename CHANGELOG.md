@@ -7,6 +7,8 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+## [0.9.0] — 2026-09-18
+
 ### Pants resolve membership is now a list, and it will silently mis-parse for existing readers (#902)
 
 **If you read `waybill:pants-resolve`, this changes under you.** The value was
@@ -5521,6 +5523,7 @@ per-release breakdown.
 
 ---
 
-[Unreleased]: https://github.com/kusari-oss/waybill/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/kusari-oss/waybill/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/kusari-oss/waybill/releases/tag/v0.9.0
 [0.8.0]: https://github.com/kusari-oss/waybill/releases/tag/v0.8.0
 [0.7.0]: https://github.com/kusari-oss/waybill/releases/tag/v0.7.0
