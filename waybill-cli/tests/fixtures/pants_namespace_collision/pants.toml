@@ -1,0 +1,21 @@
+# Issue #914 (m912) — one resolve name, two Pants language namespaces.
+#
+# `[python.resolves]` and `[jvm.resolves]` are separate namespaces, so
+# `default` here names TWO different resolves with nothing in common. This is
+# the only fixture exercising FR-001a, and it doubles as the reproducer for
+# #919: the per-resolve split groups on the bare name, so today these two
+# collapse into ONE document where there should be two.
+
+[python]
+interpreter_constraints = [">=3.9"]
+
+[python.resolves]
+default = "3rdparty/python/default.lock"
+# A third, uncollided resolve. Without it the split is DEGENERATE:
+# both `default` resolves group under the bare name, the split sees one
+# group, and the fallback emits a single SBOM with no split at all. The
+# #919 merge is invisible until a second group exists to split against.
+lint = "3rdparty/python/lint.lock"
+
+[jvm.resolves]
+default = "3rdparty/jvm/default.lock"

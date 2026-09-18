@@ -56,12 +56,12 @@ Repository root. `waybill-cli/src/scan_fs/package_db/` (namespace recording),
 - [X] T005 [P] Record the namespace in `waybill-cli/src/scan_fs/package_db/pants/lockfile.rs` at both emission sites, alongside `waybill:pants-resolve`.
 - [X] T006 [P] Record it in `waybill-cli/src/scan_fs/package_db/pants_jvm/lockfile.rs`.
 - [X] T007 [P] Record it in `waybill-cli/src/scan_fs/package_db/pip/uv_lock.rs` — uv as a Pants resolver backend is `python`. This is the reader that was easy to miss in m911 and is easy to miss again.
-- [ ] T008 Add a test in `waybill-cli/tests/pants_resolve_membership.rs` asserting every component carrying membership also carries a namespace. A reader that sets one without the other produces an identity that cannot satisfy FR-001a, and nothing else would catch it.
+- [X] T008 Add a test in `waybill-cli/tests/pants_resolve_membership.rs` asserting every component carrying membership also carries a namespace. A reader that sets one without the other produces an identity that cannot satisfy FR-001a, and nothing else would catch it.
 
 ### Per-document doc-scope values
 
 - [X] T009 Add a per-document override slot for doc-scope values in `waybill-cli/src/generate/mod.rs`, set by `ScanArtifacts::narrow`. Today `narrow` copies every doc-scope field from the parent verbatim (`mod.rs:386-420`), which is why the ownership statement is identical across split documents — correct per FR-007, and also why there is nowhere to put a per-document value.
-- [ ] T010 Assert in `waybill-cli/tests/pants_split_resolve.rs` that the repository-wide ownership value is unchanged and still identical across a repository's documents (FR-007, SC-006). The obvious wrong fix for this whole feature is to narrow that value instead of adding a new one; this is the test that rejects it.
+- [X] T010 Assert in `waybill-cli/tests/pants_split_resolve.rs` that the repository-wide ownership value is unchanged and still identical across a repository's documents (FR-007, SC-006). The obvious wrong fix for this whole feature is to narrow that value instead of adding a new one; this is the test that rejects it.
 
 **Checkpoint**: a namespace exists to be unambiguous about, and a place exists to put a per-document statement.
 
@@ -75,17 +75,17 @@ Repository root. `waybill-cli/src/scan_fs/package_db/` (namespace recording),
 
 ### Fixtures first — both are load-bearing
 
-- [ ] T011 [P] [US1] Add a JVM Pants fixture at `waybill-cli/tests/fixtures/pants_jvm_resolves/` with two coursier resolves. **Not optional** (research R3): anchoring is Pex-only, so every JVM document is in the failing case, and Python-only fixtures would let a Python-only implementation look complete.
-- [ ] T012 [P] [US1] Add a namespace-collision fixture at `waybill-cli/tests/fixtures/pants_namespace_collision/` declaring the same resolve name under `[python.resolves]` and `[jvm.resolves]`. This is the only thing that exercises FR-001a, and it is also the reproducer for #919 — expect ONE document today where there should be two.
+- [X] T011 [P] [US1] Add a JVM Pants fixture at `waybill-cli/tests/fixtures/pants_jvm_resolves/` with two coursier resolves. **Not optional** (research R3): anchoring is Pex-only, so every JVM document is in the failing case, and Python-only fixtures would let a Python-only implementation look complete.
+- [X] T012 [P] [US1] Add a namespace-collision fixture at `waybill-cli/tests/fixtures/pants_namespace_collision/` declaring the same resolve name under `[python.resolves]` and `[jvm.resolves]`. This is the only thing that exercises FR-001a, and it is also the reproducer for #919 — expect ONE document today where there should be two.
 
 ### Tests
 
-- [ ] T013 [US1] Write the failing test for C-1/SC-001 in `waybill-cli/tests/pants_split_identity.rs`: each document from `pants_discovered_resolves` states its own resolve. Confirm it fails against the pre-change binary for its own reason.
-- [ ] T014 [P] [US1] Write the filename-independence test (SC-003) in `waybill-cli/tests/pants_split_identity_filename.rs`: copy a document to an unrelated name and assert the answer is unchanged.
-- [ ] T015 [P] [US1] Write the namespace test (SC-002a/C-2) against the T012 fixture: two resolves sharing a name are distinguishable. Note in the test that until #919 lands they arrive merged into one document, so this asserts the identity's shape, not the split's correctness.
-- [ ] T016 [P] [US1] Write the absence test (SC-008/C-1) in `waybill-cli/tests/pants_split_identity_absence.rs`: an unsplit document, a `--split=workspace` document and a `--split=directory` document carry no identity — absent, not present-and-empty.
-- [ ] T017 [P] [US1] Write the nothing-invented test (SC-007/FR-006/C-5) in `waybill-cli/tests/pants_split_identity_no_anchor.rs`: per-document component counts are unchanged from the T002 baseline, and no anchor component appears for a discovered resolve. **This is the guard on the constraint the whole feature is downstream of.** The easy wrong implementation synthesises the anchor m868 refused — which would make the identity trivial to derive and would pass every other test in this list.
-- [ ] T018 [P] [US1] Write the cross-format test in `waybill-cli/tests/pants_split_identity_formats.rs`: the identity decodes to the same value in all three formats. Compare decoded values, not bytes — CycloneDX carries a property value as a string and SPDX carries structure (the m911 precedent).
+- [X] T013 [US1] Write the failing test for C-1/SC-001 in `waybill-cli/tests/pants_split_identity.rs`: each document from `pants_discovered_resolves` states its own resolve. Confirm it fails against the pre-change binary for its own reason.
+- [X] T014 [P] [US1] Write the filename-independence test (SC-003) in `waybill-cli/tests/pants_split_identity_filename.rs`: copy a document to an unrelated name and assert the answer is unchanged.
+- [X] T015 [P] [US1] Write the namespace test (SC-002a/C-2) against the T012 fixture: two resolves sharing a name are distinguishable. Note in the test that until #919 lands they arrive merged into one document, so this asserts the identity's shape, not the split's correctness.
+- [X] T016 [P] [US1] Write the absence test (SC-008/C-1) in `waybill-cli/tests/pants_split_identity_absence.rs`: an unsplit document, a `--split=workspace` document and a `--split=directory` document carry no identity — absent, not present-and-empty.
+- [X] T017 [P] [US1] Write the nothing-invented test (SC-007/FR-006/C-5) in `waybill-cli/tests/pants_split_identity_no_anchor.rs`: per-document component counts are unchanged from the T002 baseline, and no anchor component appears for a discovered resolve. **This is the guard on the constraint the whole feature is downstream of.** The easy wrong implementation synthesises the anchor m868 refused — which would make the identity trivial to derive and would pass every other test in this list.
+- [X] T018 [P] [US1] Write the cross-format test in `waybill-cli/tests/pants_split_identity_formats.rs`: the identity decodes to the same value in all three formats. Compare decoded values, not bytes — CycloneDX carries a property value as a string and SPDX carries structure (the m911 precedent).
 
 ### Implementation
 
@@ -110,9 +110,9 @@ Repository root. `waybill-cli/src/scan_fs/package_db/` (namespace recording),
 
 **Depends on US1.**
 
-- [ ] T027 [US2] Ensure the identity is attached to **every** per-resolve document in `waybill-cli/src/generate/split.rs`, including declared ones whose root already names the resolve (FR-004). This is the requirement most likely to be dropped as redundant; it is what stops a consumer having to establish provenance in order to know where to read identity.
-- [ ] T028 [US2] Add the agreement test (FR-005/SC-005) in `waybill-cli/tests/pants_split_identity.rs`: for a declared-Python document, the identity and `metadata.component` name the same resolve. Two fields stating one fact drift, and this session already produced two instances of that class — the C143 mis-parse risk and the C161 double-encoding.
-- [ ] T029 [US2] Add the one-procedure test (SC-004) in `waybill-cli/tests/pants_split_identity.rs`: one expression reads the identity from a declared document, a discovered document and a JVM document, with no branch on provenance.
+- [X] T027 [US2] Ensure the identity is attached to **every** per-resolve document in `waybill-cli/src/generate/split.rs`, including declared ones whose root already names the resolve (FR-004). This is the requirement most likely to be dropped as redundant; it is what stops a consumer having to establish provenance in order to know where to read identity.
+- [X] T028 [US2] Add the agreement test (FR-005/SC-005) in `waybill-cli/tests/pants_split_identity.rs`: for a declared-Python document, the identity and `metadata.component` name the same resolve. Two fields stating one fact drift, and this session already produced two instances of that class — the C143 mis-parse risk and the C161 double-encoding.
+- [X] T029 [US2] Add the one-procedure test (SC-004) in `waybill-cli/tests/pants_split_identity.rs`: one expression reads the identity from a declared document, a discovered document and a JVM document, with no branch on provenance.
 
 **Checkpoint**: the feature is usable without knowing how a repository declares its resolves.
 
@@ -120,7 +120,7 @@ Repository root. `waybill-cli/src/scan_fs/package_db/` (namespace recording),
 
 ## Phase 5: Polish
 
-- [ ] T030 Teeth-check T013–T018 against the pre-change binary and record in `specs/912-split-doc-self-describing/measurements/us1-verification.md` which fail and which are guards. A test passing on both sides is a guard, not proof — label it rather than counting it.
+- [X] T030 Teeth-check T013–T018 against the pre-change binary and record in `specs/912-split-doc-self-describing/measurements/us1-verification.md` which fail and which are guards. A test passing on both sides is a guard, not proof — label it rather than counting it.
 - [ ] T031 Run the mandatory pre-PR gate: `./scripts/pre-pr.sh`. Enumerate the per-target results rather than citing the exit code.
 - [ ] T032 Assess corpus golden impact on `waybill-cli/tests/fixtures/public_corpus/`. Expect **none**: the corpus has no per-resolve split output, so a document-scope identity that only appears in split documents cannot reach it. If a golden does move, that is a signal the identity is leaking into unsplit documents — which FR-008 forbids.
 - [ ] T033 [P] Add the C163 row and the new `--split=resolve` behaviour to `docs/reference/split-modes.md`, including that an identity is absent from non-resolve splits.
