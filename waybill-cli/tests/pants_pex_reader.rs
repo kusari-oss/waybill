@@ -68,6 +68,33 @@ fn get_property<'a>(component: &'a serde_json::Value, name: &str) -> Option<&'a 
         .and_then(|v| v.as_str())
 }
 
+/// Issue #911 — `waybill:pants-resolve` carries a lexically sorted JSON array,
+/// carried as JSON-in-string in CycloneDX (properties are spec'd as strings).
+/// Decode it so assertions can keep naming a resolve directly.
+///
+/// Returns the sole resolve. Fixtures here are single-resolve; a plural value
+/// means the fixture changed and the caller should know rather than silently
+/// see the first element.
+fn resolve_name(component: &serde_json::Value) -> Option<String> {
+    let raw = get_property(component, "waybill:pants-resolve")?;
+    let names: Vec<String> = serde_json::from_str::<serde_json::Value>(raw)
+        .ok()
+        .and_then(|v| {
+            Some(
+                v.as_array()?
+                    .iter()
+                    .filter_map(|x| x.as_str())
+                    .map(str::to_string)
+                    .collect::<Vec<_>>(),
+            )
+        })
+        .unwrap_or_else(|| vec![raw.to_string()]);
+    match names.len() {
+        1 => names.into_iter().next(),
+        _ => panic!("expected exactly one resolve, got {names:?}"),
+    }
+}
+
 // ---------------------------------------------------------------------
 // US1 (T011 + T013 + T017a via combined subprocess) — minimal Python
 // lockfile emits 3 pypi components with hashes, deps, resolve annotation,
@@ -148,7 +175,7 @@ fn us1_minimal_python_lockfile_emits_3_pypi_components() {
         );
         // Each has waybill:pants-resolve=default in properties.
         assert_eq!(
-            get_property(c, "waybill:pants-resolve"),
+            resolve_name(c).as_deref(),
             Some("default"),
             "expected waybill:pants-resolve=default on component: {c}"
         );
@@ -256,7 +283,8 @@ fn us1_multi_resolve_tags_scope_per_allowlist() {
     // Group by resolve name via the waybill:pants-resolve annotation.
     for c in &all {
         let purl = c.get("purl").and_then(|p| p.as_str()).unwrap_or("");
-        let resolve = get_property(c, "waybill:pants-resolve").unwrap_or("<missing>");
+        let resolve_owned = resolve_name(c);
+        let resolve = resolve_owned.as_deref().unwrap_or("<missing>");
         let scope = c.get("scope").and_then(|s| s.as_str());
 
         match resolve {
@@ -374,7 +402,7 @@ fn us2_lockfile_dedups_against_requirements_txt() {
     // at least a contributor). Reconciler preserves per-reader
     // annotations on the merged component.
     assert_eq!(
-        get_property(component, "waybill:pants-resolve"),
+        resolve_name(component).as_deref(),
         Some("default"),
         "waybill:pants-resolve missing after dedup — pants entry didn't contribute"
     );
@@ -867,7 +895,7 @@ fn multi_resolve_map_central_directory_emits_all_resolves() {
             .and_then(|p| p.as_str())
             .unwrap_or("<missing-purl>")
             .to_string();
-        let resolve = get_property(c, "waybill:pants-resolve")
+        let resolve = resolve_name(c).as_deref()
             .unwrap_or("<missing-resolve>")
             .to_string();
         by_resolve.entry(resolve).or_default().push(purl);

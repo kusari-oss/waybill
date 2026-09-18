@@ -223,9 +223,13 @@ pub(crate) fn parse_uv_lock_bytes(
     // through the parse loop — the annotation bag is a BTreeMap
     // that the emit loop already populates.
     for entry in &mut entries {
+        // #911 — membership is a lex-sorted JSON array, even for one
+        // resolve. This reader is easy to overlook: it stamps the annotation
+        // when uv is a Pants resolver backend, and leaving it on the scalar
+        // would reintroduce the cross-reader inconsistency #901 fixed.
         entry.extra_annotations.insert(
-            "waybill:pants-resolve".to_string(),
-            serde_json::Value::String(pants_resolve_name.to_string()),
+            crate::scan_fs::package_db::pants_resolve::ANNOTATION_KEY.to_string(),
+            crate::scan_fs::package_db::pants_resolve::write([pants_resolve_name]),
         );
     }
     Some(entries)

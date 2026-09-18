@@ -380,6 +380,7 @@ Auto-generated from all feature plans. Last updated: 2026-09-17
 - N/A — all parsing state is in-process for a single scan, as with every reader since milestone 002. (895-fix-cabal-parser)
 - GitHub Actions YAML + POSIX bash + `actions/github-script` (Node). No Rust source changes. + existing only — `actions/checkout`, `dtolnay/rust-toolchain`, `actions/github-script`, `Swatinem/rust-cache`, the in-repo `./.github/actions/install-bpf-linker` composite, `gh` CLI (preinstalled). All SHA-pinned. **Zero new Cargo dependencies; zero new marketplace actions.** (896-fix-ebpf-canary)
 - none. Streak state is the GitHub issue's `created_at`; run state is job outputs. No new persistence. (896-fix-ebpf-canary)
+- Rust stable, workspace toolchain inherited. No nightly. `waybill-ebpf` untouched. + Existing only — `serde`/`serde_json` (array-valued annotations), `std::collections::{BTreeSet, HashMap}` (sorted union, projection index), `clap` (extend the existing `--split` `ValueEnum`), `tracing` (FR-012 diagnostic). **Zero new Cargo dependencies.** (911-per-resolve-sboms)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -524,9 +525,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 911-per-resolve-sboms: Added Rust stable, workspace toolchain inherited. No nightly. `waybill-ebpf` untouched. + Existing only — `serde`/`serde_json` (array-valued annotations), `std::collections::{BTreeSet, HashMap}` (sorted union, projection index), `clap` (extend the existing `--split` `ValueEnum`), `tracing` (FR-012 diagnostic). **Zero new Cargo dependencies.**
 - 896-fix-ebpf-canary: Added GitHub Actions YAML + POSIX bash + `actions/github-script` (Node). No Rust source changes. + existing only — `actions/checkout`, `dtolnay/rust-toolchain`, `actions/github-script`, `Swatinem/rust-cache`, the in-repo `./.github/actions/install-bpf-linker` composite, `gh` CLI (preinstalled). All SHA-pinned. **Zero new Cargo dependencies; zero new marketplace actions.**
 - 895-fix-cabal-parser: Added Rust stable, workspace toolchain inherited. No nightly. + Existing only — `regex` (already a direct dep), `serde`/`serde_json`, `tracing`. **Zero new Cargo dependencies.** No subprocess calls, no network access.
-- 868-resolve-ownership: Added Rust stable, workspace toolchain inherited. No nightly. + Existing only — `toml` (already parses `pants.toml`),
 
 
 <!-- MANUAL ADDITIONS START -->

@@ -7,6 +7,54 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Pants resolve membership is now a list, and it will silently mis-parse for existing readers (#902)
+
+**If you read `waybill:pants-resolve`, this changes under you.** The value was
+a bare resolve name; it is now a lexically sorted JSON array, and the array
+form is used even when a package belongs to a single resolve:
+
+```
+before   "waybill:pants-resolve": "app"
+after    "waybill:pants-resolve": "[\"app\",\"tools\"]"     (CycloneDX)
+after    "value": ["app","tools"]                          (SPDX 2.3 / SPDX 3)
+```
+
+A reader expecting a string will receive an array and, in most JSON tooling,
+**carry on with a wrong value rather than fail**. For anything partitioning on
+this field, that is the failure worth knowing about in advance.
+
+Why the change: the relation is many-to-many — one package at one version is
+routinely pinned by several resolves — and deduplication merged annotation
+bags first-wins, so every losing resolve's claim was dropped silently. On one
+real monorepo four resolves ended up with zero components naming them, which
+is indistinguishable from four genuinely empty resolves. The array form is
+used for a single resolve too, because a shape that varies with cardinality
+makes every consumer write two code paths and get the rare one wrong.
+
+`waybill:resolve-ownership` changed with it, and more loudly: the
+`weak-classification=<n>;unanchored-lockfiles=<m>` string is now a JSON object
+that also **names** the resolves the repository declared and those found by
+filename convention. A count told you how many resolves you could not walk
+from; it could not tell you which, so it could not tell you whether the
+repository was partitionable at all. An existing reader of the old form breaks
+outright rather than mis-parsing, since the value is no longer `k=v`.
+
+### `--split=resolve` — one SBOM per Pants resolve (#902)
+
+A Pants repository is several dependency-resolution boundaries wearing one
+coat. `--split=resolve` gives each one its own document.
+
+Selection is a membership filter rather than a graph walk, which is what lets
+it work for a repository that never declares `[python.resolves]` and relies on
+the `3rdparty/python/*.lock` convention — those resolves have no anchor to
+walk from. A package pinned by several resolves appears in each of their
+documents carrying its **full** membership, so triaging one resolve's SBOM
+shows that the same fix lands in another.
+
+A declared resolve's document names itself; a discovered one names the
+repository, and the manifest maps every file to its resolve either way
+(#914 tracks closing that difference).
+
 ## [0.8.0] — 2026-09-17
 
 ### Dependency graphs stopped inventing edges, and stopped dropping them (milestones 866, 867, 883, 856, 892, 910)

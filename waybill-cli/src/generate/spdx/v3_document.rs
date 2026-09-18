@@ -106,7 +106,7 @@ pub fn build_document(
             go_toolchains_detected: scan.go_toolchains_detected,
             cross_ecosystem_edges_report: scan.cross_ecosystem_edges_report,
             helm_extraction_mode: scan.helm_extraction_mode,
-            pants_resolve_summary: scan.pants_resolve_summary,
+            pants_resolve_summary: scan.pants_resolve_summary.clone(),
             haskell_parse_summary: scan.haskell_parse_summary,
             gradle_scan_summary: scan.gradle_scan_summary,
             no_binary_scan_mode: scan.no_binary_scan_mode,

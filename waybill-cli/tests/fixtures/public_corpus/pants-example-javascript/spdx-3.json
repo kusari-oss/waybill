@@ -9,7 +9,7 @@
     },
     {
       "creationInfo": "<masked>",
-      "name": "waybill-0.7.0",
+      "name": "waybill-0.8.0",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/tool/waybill",
       "type": "Tool"
     },

@@ -44,6 +44,7 @@ pub mod npm;
 pub mod nuget;
 pub mod opkg;
 pub mod pants;
+pub mod pants_resolve;
 pub mod pants_common;
 pub mod pants_go;
 pub mod pants_jvm;

@@ -1,7 +1,8 @@
 {
   "pex_version": "2.10.0",
   "requirements": [
-    "waybill-fixture-consumer-b==1.0.0"
+    "waybill-fixture-consumer-b==1.0.0",
+    "waybill-fixture-common==1.0.0"
   ],
   "locked_resolves": [
     {
@@ -17,6 +18,20 @@
               "algorithm": "sha256",
               "hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
               "url": "https://files.pythonhosted.org/packages/xx/waybill_fixture_consumer_b-1.0.0-py3-none-any.whl"
+            }
+          ]
+        },
+        {
+          "project_name": "waybill-fixture-common",
+          "version": "1.0.0",
+          "requires_dists": [
+            "waybill-fixture-shared"
+          ],
+          "artifacts": [
+            {
+              "algorithm": "sha256",
+              "hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "url": "https://files.pythonhosted.org/packages/xx/waybill_fixture_common-1.0.0-py3-none-any.whl"
             }
           ]
         },

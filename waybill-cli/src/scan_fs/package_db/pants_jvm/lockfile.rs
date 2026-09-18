@@ -391,9 +391,10 @@ pub(crate) fn entry_to_package_db_entry(
 
     // Annotations: always pants-resolve; source-url iff non-empty.
     let mut extra_annotations = std::collections::BTreeMap::new();
+    // #911 — membership is a lex-sorted JSON array, even for one resolve.
     extra_annotations.insert(
-        "waybill:pants-resolve".to_string(),
-        json!(resolve_name),
+        super::super::pants_resolve::ANNOTATION_KEY.to_string(),
+        super::super::pants_resolve::write([resolve_name]),
     );
     if let Some(url) = entry.coord.url.as_deref().filter(|s| !s.is_empty()) {
         extra_annotations.insert(
@@ -735,10 +736,9 @@ version = "1.0.0"
         assert_eq!(out.hashes.len(), 1);
         assert_eq!(out.sbom_tier.as_deref(), Some("source"));
         assert_eq!(
-            out.extra_annotations
-                .get("waybill:pants-resolve")
-                .and_then(|v| v.as_str()),
-            Some("default"),
+            // #911 — membership is a JSON array, even for one resolve.
+            crate::scan_fs::package_db::pants_resolve::read(&out.extra_annotations),
+            vec!["default".to_string()],
         );
         assert!(!out.extra_annotations.contains_key("waybill:source-url"));
     }

@@ -86,8 +86,26 @@ fn resolve_of(doc: &serde_json::Value, purl: &str) -> Option<String> {
             return None;
         }
         c["properties"].as_array()?.iter().find_map(|p| {
-            (p["name"].as_str()? == "waybill:pants-resolve")
-                .then(|| p["value"].as_str().unwrap_or_default().to_string())
+            if p["name"].as_str()? != "waybill:pants-resolve" {
+                return None;
+            }
+            // #911 — the value is a lex-sorted JSON array, carried as
+            // JSON-in-string in CycloneDX. These fixtures are single-resolve,
+            // so decode and take the sole name.
+            let raw = p["value"].as_str()?;
+            let names: Vec<String> = serde_json::from_str::<serde_json::Value>(raw)
+                .ok()
+                .and_then(|v| {
+                    Some(
+                        v.as_array()?
+                            .iter()
+                            .filter_map(|x| x.as_str())
+                            .map(str::to_string)
+                            .collect::<Vec<_>>(),
+                    )
+                })
+                .unwrap_or_else(|| vec![raw.to_string()]);
+            names.into_iter().next()
         })
     })
 }

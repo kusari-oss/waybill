@@ -208,19 +208,11 @@ pub struct ScanResult {
     pub no_binary_scan_mode: Option<crate::cli::scan_cmd::BinaryScanMode>,
 }
 
-/// Issue #910 — the per-entry annotation naming the resolution scope its
-/// `depends` names live in.
-///
-/// Today only the Pants Pex reader sets it, to the resolve a lockfile
-/// belongs to. The edge resolver treats it generically: any reader that
-/// records a scope gets scope-qualified lookup, and a reader that records
-/// none is unaffected.
-///
-/// Deliberately the same key the reader already emits for resolve
-/// membership rather than a second, parallel one — two keys that must agree
-/// is a bug waiting to happen, and there is no case where an entry's own
-/// resolve differs from the scope its dependency names resolve in.
-const DEPENDS_SCOPE_ANNOTATION: &str = "waybill:pants-resolve";
+// Issue #910's `DEPENDS_SCOPE_ANNOTATION` constant moved to
+// `package_db::pants_resolve::ANNOTATION_KEY` in #911, along with every read
+// of it. The rationale is unchanged and now lives beside the accessor: any
+// reader that records a resolution scope gets scope-qualified edge lookup,
+// and a reader that records none is unaffected.
 
 /// Walk `root`, hash matching artifact files, match each against the path
 /// resolver, optionally consult OS package databases, and return
@@ -664,20 +656,22 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         > = std::collections::HashMap::new();
         for e in &db_entries {
             let ecosystem = e.purl.ecosystem().to_string();
-            // `as_str`, never `to_string`: the annotation is a serde_json
-            // Value, and `to_string` on a JSON string yields it WITH the
-            // quotes, so every scoped key would be `"\"app\""` and never
-            // match the lookup below. The bug would present as the scope
-            // index silently never hitting — i.e. as the defect this fixes.
-            if let Some(scope) = e
-                .extra_annotations
-                .get(DEPENDS_SCOPE_ANNOTATION)
-                .and_then(|v| v.as_str())
+            // Issue #911 — read through the shared accessor. This used to
+            // call `.as_str()` directly, which returns `None` once membership
+            // is an array, silently disabling the whole scope index and
+            // reverting #910 with nothing failing.
+            //
+            // `read_single`, not `read`: an entry comes from one lockfile, so
+            // it belongs to exactly one resolve. Membership only becomes
+            // plural at dedup (`mod.rs:1253`), which runs AFTER edges are
+            // emitted below.
+            if let Some(scope) =
+                package_db::pants_resolve::read_single(&e.extra_annotations)
             {
                 scoped_name_to_purl.insert(
                     (
                         ecosystem.clone(),
-                        scope.to_string(),
+                        scope.clone(),
                         normalize_dep_name(e.purl.ecosystem(), &e.name),
                     ),
                     e.purl.as_str().to_string(),
@@ -1074,10 +1068,9 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
             // Issue #910 — the scope this entry's dependency names live in,
             // when its reader records one. `None` means the reader has not
             // adopted and lookup is byte-identical to before.
-            let dep_scope: Option<&str> = entry
-                .extra_annotations
-                .get(DEPENDS_SCOPE_ANNOTATION)
-                .and_then(|v| v.as_str());
+            // Issue #911 — same accessor, same reason as the index build.
+            let dep_scope: Option<String> =
+                package_db::pants_resolve::read_single(&entry.extra_annotations);
             for dep_name in &entry.depends {
                 let normalized = normalize_dep_name(dep_ecosystem, dep_name);
                 let key = (dep_ecosystem.to_string(), normalized.clone());
@@ -1086,10 +1079,10 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
                 // component no resolve owns (a workspace main-module, a
                 // cross-ecosystem target), and dropping those edges to gain
                 // resolve-scoping would trade one wrong graph for another.
-                let scoped_hit = dep_scope.and_then(|scope| {
+                let scoped_hit = dep_scope.as_ref().and_then(|scope| {
                     scoped_name_to_purl.get(&(
                         dep_ecosystem.to_string(),
-                        scope.to_string(),
+                        scope.clone(),
                         normalized.clone(),
                     ))
                 });

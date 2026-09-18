@@ -622,10 +622,18 @@ fn resolve_ownership(cdx: &Value, spdx23: &Value, spdx3: &Value) -> (Option<Stri
         .flatten()
         .find(|p| p["name"].as_str() == Some("waybill:resolve-ownership"))
         .and_then(|p| p["value"].as_str().map(String::from));
+    // #911 — the value is a JSON object. CycloneDX must carry it as a
+    // string (properties are spec'd that way); SPDX 2.3 and SPDX 3 carry the
+    // object itself. Normalise both to the decoded object so the assertions
+    // below compare meaning rather than encoding.
     let extract = |s: &str| -> Option<String> {
         let v: Value = serde_json::from_str(s).ok()?;
-        (v["field"].as_str()? == "waybill:resolve-ownership")
-            .then(|| v["value"].as_str().map(String::from))?
+        (v["field"].as_str()? == "waybill:resolve-ownership").then(|| {
+            match &v["value"] {
+                Value::String(inner) => inner.clone(),
+                other => other.to_string(),
+            }
+        })
     };
     let s2 = spdx23["annotations"]
         .as_array()
@@ -672,7 +680,10 @@ install_from_resolve = "app-runtime"
         ],
     );
     let (cdx, spdx23, spdx3) = run_scan_all_formats(dir.path());
-    let expected = Some("weak-classification=0;unanchored-lockfiles=0".to_string());
+    let expected = Some(
+        r#"{"declared":["app-runtime"],"discovered":[],"unanchored_lockfiles":0,"weak_classification":0}"#
+            .to_string(),
+    );
     assert_eq!(
         resolve_ownership(&cdx, &spdx23, &spdx3),
         (expected.clone(), expected.clone(), expected),
@@ -729,7 +740,10 @@ fn t034_a_glob_discovered_lockfile_nobody_declares_is_counted_unanchored() {
     );
     let (cdx, spdx23, spdx3) = run_scan_all_formats(dir.path());
 
-    let expected = Some("weak-classification=0;unanchored-lockfiles=1".to_string());
+    let expected = Some(
+        r#"{"declared":[],"discovered":["undeclared"],"unanchored_lockfiles":1,"weak_classification":0}"#
+            .to_string(),
+    );
     assert_eq!(
         resolve_ownership(&cdx, &spdx23, &spdx3),
         (expected.clone(), expected.clone(), expected),
@@ -757,7 +771,10 @@ fn t030_undeclared_resolves_are_counted_as_weakly_classified() {
     let dir = tempfile::tempdir().unwrap();
     two_resolve_repo(dir.path());
     let (cdx, spdx23, spdx3) = run_scan_all_formats(dir.path());
-    let expected = Some("weak-classification=2;unanchored-lockfiles=0".to_string());
+    let expected = Some(
+        r#"{"declared":["app-runtime","lint-tools"],"discovered":[],"unanchored_lockfiles":0,"weak_classification":2}"#
+            .to_string(),
+    );
     assert_eq!(
         resolve_ownership(&cdx, &spdx23, &spdx3),
         (expected.clone(), expected.clone(), expected),

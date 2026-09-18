@@ -369,8 +369,22 @@ pub fn pants_example_python_layer1(sboms: &EmittedSboms) -> Result<(), Assertion
             suggested_action: "investigate m673 (repo-root discovery gate) or m223 pex-lockfile reader — pants-example-python should emit ≥ 8 pypi components",
         });
     }
+    // #911 — membership is a lex-sorted JSON array, carried as JSON-in-string
+    // in CycloneDX. Decode and look for the resolve inside it rather than
+    // comparing the whole value, which would silently stop matching the
+    // moment a second resolve pins the same package.
     if !cdx_has_component_property(&sboms.cdx, "waybill:pants-resolve", |v| {
-        v == "python-default"
+        serde_json::from_str::<serde_json::Value>(v)
+            .ok()
+            .and_then(|parsed| {
+                Some(
+                    parsed
+                        .as_array()?
+                        .iter()
+                        .any(|x| x.as_str() == Some("python-default")),
+                )
+            })
+            .unwrap_or(false)
     }) {
         return Err(AssertionFailure {
             invariant_name: "pants-resolve-annotation-present",
@@ -417,8 +431,22 @@ pub fn pants_example_django_layer1(sboms: &EmittedSboms) -> Result<(), Assertion
             suggested_action: "investigate m673 US2 lockfile discovery — the Django dep is the primary content of this fixture's lockfile",
         });
     }
+    // #911 — membership is a lex-sorted JSON array, carried as JSON-in-string
+    // in CycloneDX. Decode and look for the resolve inside it rather than
+    // comparing the whole value, which would silently stop matching the
+    // moment a second resolve pins the same package.
     if !cdx_has_component_property(&sboms.cdx, "waybill:pants-resolve", |v| {
-        v == "python-default"
+        serde_json::from_str::<serde_json::Value>(v)
+            .ok()
+            .and_then(|parsed| {
+                Some(
+                    parsed
+                        .as_array()?
+                        .iter()
+                        .any(|x| x.as_str() == Some("python-default")),
+                )
+            })
+            .unwrap_or(false)
     }) {
         return Err(AssertionFailure {
             invariant_name: "pants-resolve-annotation-present",
