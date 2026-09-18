@@ -765,11 +765,11 @@ pub fn annotate_document(
     // Absent on every scan that discovered no Pex lockfile (contract A-7);
     // present with BOTH counts otherwise, zero included, so "nothing needed
     // guessing" stays distinguishable from "the field is missing" (FR-003c).
-    if let Some(summary) = artifacts.pants_resolve_summary {
+    if let Some(summary) = artifacts.pants_resolve_summary.as_ref() {
         push(
             &mut out,
             "waybill:resolve-ownership",
-            json!(summary.as_wire_str()),
+            summary.as_wire_value(),
         );
     }
 

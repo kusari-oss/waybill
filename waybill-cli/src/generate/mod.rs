@@ -415,7 +415,7 @@ impl<'a> ScanArtifacts<'a> {
             go_toolchains_detected: self.go_toolchains_detected,
             cross_ecosystem_edges_report: self.cross_ecosystem_edges_report,
             helm_extraction_mode: self.helm_extraction_mode,
-            pants_resolve_summary: self.pants_resolve_summary,
+            pants_resolve_summary: self.pants_resolve_summary.clone(),
             haskell_parse_summary: self.haskell_parse_summary,
             gradle_scan_summary: self.gradle_scan_summary,
             no_binary_scan_mode: self.no_binary_scan_mode,

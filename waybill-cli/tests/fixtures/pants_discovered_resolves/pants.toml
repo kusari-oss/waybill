@@ -1,0 +1,5 @@
+[python]
+interpreter_constraints = [">=3.9"]
+# Deliberately NO [python.resolves]: these lockfiles are found by the
+# 3rdparty/python/*.lock convention, so their names are a filename stem
+# rather than a declaration of ownership.

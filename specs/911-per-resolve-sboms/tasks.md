@@ -107,11 +107,11 @@ overstated by half.
 
 **Independent of US1 in code** — it extends a different annotation. Ordered second because it is worth less alone.
 
-- [ ] T023 [US2] Add a convention-only fixture at `waybill-cli/tests/fixtures/pants_discovered_resolves/` — lockfiles matching `3rdparty/python/*.lock`, no `[python.resolves]` in `pants.toml`.
-- [ ] T024 [US2] Write the failing test for C-4/SC-006 in `waybill-cli/tests/pants_resolve_ownership.rs`: the document names which resolves were declared and which discovered, and the two lists together account for every resolve named on any component.
-- [ ] T025 [US2] Replace the C161 wire form at `waybill-cli/src/scan_fs/package_db/pants/mod.rs:385-393` with a JSON object naming the resolves per category: `{"declared":[…],"discovered":[…],"weak_classification":N}`. This replaces the semicolon-delimited `key=value` grammar rather than nesting inside it — a flat scalar cannot carry a list without a second delimiter level, and JSON is what every other plural value here uses. An existing reader of the count form breaks loudly, which is the intended failure mode.
-- [ ] T026 [US2] Update the C161 row in `docs/reference/sbom-format-mapping.md` to match, and the extractors at `waybill-cli/src/parity/extractors/mod.rs:642` if the grammar changed. A catalogue row and its extractors must move together or `every_catalog_row_has_an_extractor` fails.
-- [ ] T027 [US2] Assert FR-009 still holds in `waybill-cli/tests/pants_resolve_ownership.rs`: a discovered resolve is named but gains **no** anchor component. Naming is information, not an ownership claim the repository never made.
+- [X] T023 [US2] Add a convention-only fixture at `waybill-cli/tests/fixtures/pants_discovered_resolves/` — lockfiles matching `3rdparty/python/*.lock`, no `[python.resolves]` in `pants.toml`.
+- [X] T024 [US2] Write the failing test for C-4/SC-006 in `waybill-cli/tests/pants_resolve_ownership.rs`: the document names which resolves were declared and which discovered, and the two lists together account for every resolve named on any component.
+- [X] T025 [US2] Replace the C161 wire form at `waybill-cli/src/scan_fs/package_db/pants/mod.rs:385-393` with a JSON object naming the resolves per category: `{"declared":[…],"discovered":[…],"weak_classification":N}`. This replaces the semicolon-delimited `key=value` grammar rather than nesting inside it — a flat scalar cannot carry a list without a second delimiter level, and JSON is what every other plural value here uses. An existing reader of the count form breaks loudly, which is the intended failure mode.
+- [X] T026 [US2] Update the C161 row in `docs/reference/sbom-format-mapping.md` to match, and the extractors at `waybill-cli/src/parity/extractors/mod.rs:642` if the grammar changed. A catalogue row and its extractors must move together or `every_catalog_row_has_an_extractor` fails.
+- [X] T027 [US2] Assert FR-009 still holds in `waybill-cli/tests/pants_resolve_ownership.rs`: a discovered resolve is named but gains **no** anchor component. Naming is information, not an ownership claim the repository never made.
 
 **Checkpoint**: a consumer can decide whether to split without inspecting the repository.
 

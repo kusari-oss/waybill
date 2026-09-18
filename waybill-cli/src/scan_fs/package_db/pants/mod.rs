@@ -370,7 +370,7 @@ fn dedup_by_canonical_path(candidates: Vec<DiscoveredLockfile>) -> Vec<Discovere
 ///
 /// `None` rather than a zeroed struct when no Pex lockfile was found at all,
 /// which is what keeps non-Pants scans byte-identical (contract A-7).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct PantsResolveSummary {
     /// Resolves whose lifecycle was decided by the name allowlist or the
     /// runtime default rather than by a `install_from_resolve` declaration.
@@ -380,16 +380,48 @@ pub struct PantsResolveSummary {
     /// component and no anchor edge — a filename stem is a convention, not
     /// a declaration (FR-003).
     pub unanchored_lockfile_count: usize,
+    /// Issue #911 (#902 item 3) — the resolves `[python.resolves]` NAMES,
+    /// lexically sorted. Anchored.
+    pub declared_resolves: Vec<String>,
+    /// Issue #911 — the resolves found by filename convention, lexically
+    /// sorted. Not anchored, and deliberately so (FR-009): naming them is
+    /// information, not an ownership claim the repository never made.
+    ///
+    /// A count told a consumer HOW MANY resolves it could not walk from. It
+    /// could not tell them WHICH, so it could not tell them whether the
+    /// repository was partitionable at all.
+    pub discovered_resolves: Vec<String>,
 }
 
 impl PantsResolveSummary {
-    /// Wire form for the `waybill:resolve-ownership` annotation. Fixed field
-    /// order so the value is byte-stable across runs.
+    /// Wire form for the `waybill:resolve-ownership` annotation.
+    ///
+    /// Issue #911 replaced the `key=value;key=value` string with a JSON
+    /// object. A flat scalar cannot carry a list without inventing a second
+    /// delimiter level, and JSON is the encoding every other plural value
+    /// here already uses.
+    ///
+    /// An existing reader of the count form breaks **loudly** — the value is
+    /// no longer `k=v` at all — which is the right failure for a format
+    /// change a consumer has to notice. Both name lists are lexically sorted
+    /// so the value is byte-stable across runs.
+    pub fn as_wire_value(&self) -> serde_json::Value {
+        serde_json::json!({
+            "declared": self.declared_resolves,
+            "discovered": self.discovered_resolves,
+            "weak_classification": self.weak_classification_count,
+            "unanchored_lockfiles": self.unanchored_lockfile_count,
+        })
+    }
+
+    /// Serialized form, for carriers that can only hold a string —
+    /// CycloneDX spec'es `properties[].value` that way. SPDX 2.3 and SPDX 3
+    /// take [`Self::as_wire_value`] directly, so their annotation envelopes
+    /// carry a real object rather than a string containing one. Membership
+    /// (C143) is carried the same way, and C161 matching it is the point:
+    /// two structured doc-scope values should not be encoded differently.
     pub fn as_wire_str(&self) -> String {
-        format!(
-            "weak-classification={};unanchored-lockfiles={}",
-            self.weak_classification_count, self.unanchored_lockfile_count,
-        )
+        self.as_wire_value().to_string()
     }
 }
 
@@ -418,6 +450,9 @@ pub fn read_with_summary(scan_root: &Path) -> (Vec<PackageDbEntry>, Option<Pants
         }
     };
     let mut unanchored_lockfiles: usize = 0;
+    // #911 — the same branch that counts now records WHICH.
+    let mut declared_seen: Vec<String> = Vec::new();
+    let mut discovered_seen: Vec<String> = Vec::new();
     let mut weak_classification: usize = 0;
     let default_dir_exists = scan_root.join("3rdparty").join("python").exists();
     let pants_toml_exists = scan_root.join("pants.toml").exists();
@@ -534,6 +569,7 @@ pub fn read_with_summary(scan_root: &Path) -> (Vec<PackageDbEntry>, Option<Pants
         // stem, which is a convention rather than a declaration of
         // ownership, so it stays unanchored and is counted (FR-003).
         if declared_resolve_names.contains(&candidate.resolve_name) {
+            declared_seen.push(candidate.resolve_name.clone());
             if let Some(entry) = lockfile::resolve_component_entry(
                 &lock,
                 &candidate.path,
@@ -547,8 +583,15 @@ pub fn read_with_summary(scan_root: &Path) -> (Vec<PackageDbEntry>, Option<Pants
             }
         } else {
             unanchored_lockfiles += 1;
+            discovered_seen.push(candidate.resolve_name.clone());
         }
     }
+    // Lexically sorted and deduplicated: two scans of one repository must
+    // produce a byte-identical value, and discovery order is what varies.
+    declared_seen.sort();
+    declared_seen.dedup();
+    discovered_seen.sort();
+    discovered_seen.dedup();
 
     let components_emitted = components.len();
     if unanchored_lockfiles > 0 {
@@ -574,9 +617,11 @@ pub fn read_with_summary(scan_root: &Path) -> (Vec<PackageDbEntry>, Option<Pants
     // `None` when no Pex lockfile was found at all — that is what keeps a
     // non-Pants scan byte-identical (contract A-7). Once one was found, both
     // counts are reported even at zero (FR-003c).
-    let summary = (lockfiles_discovered > 0).then_some(PantsResolveSummary {
+    let summary = (lockfiles_discovered > 0).then(|| PantsResolveSummary {
         weak_classification_count: weak_classification,
         unanchored_lockfile_count: unanchored_lockfiles,
+        declared_resolves: declared_seen,
+        discovered_resolves: discovered_seen,
     });
 
     (components, summary)

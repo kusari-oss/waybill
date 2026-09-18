@@ -764,8 +764,8 @@ fn push_document_fields(
     // Absent on every scan that discovered no Pex lockfile (contract A-7);
     // present with BOTH counts otherwise, zero included, so "nothing needed
     // guessing" stays distinguishable from "the field is missing" (FR-003c).
-    if let Some(summary) = scan.pants_resolve_summary {
-        push(out, "waybill:resolve-ownership", json!(summary.as_wire_str()));
+    if let Some(summary) = scan.pants_resolve_summary.as_ref() {
+        push(out, "waybill:resolve-ownership", summary.as_wire_value());
     }
 
     // Milestone 895 (#891) — C162 doc-scope count of `.cabal` dependency
