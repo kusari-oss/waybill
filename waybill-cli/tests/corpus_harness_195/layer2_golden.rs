@@ -278,7 +278,16 @@ fn walk_mask(v: &mut serde_json::Value) {
         // that happen to carry one. The previous version keyed on
         // `spdxId` alone and left every relationship endpoint, annotation
         // subject and rootElement holding the real hash.
-        serde_json::Value::String(s) if s.contains("/spdx3/doc-") => {
+        //
+        // #918 widened the guard. `SPDXRef-DocumentRoot-<BASE32>` is the SPDX
+        // 2.3 spelling of the same content-addressed identity and contains no
+        // `/spdx3/doc-`, so an m865-shaped guard skips it — which is exactly
+        // what happened when the DocumentRoot mask was first added *inside*
+        // this arm and silently never fired. Caught by verifying the
+        // regenerated goldens before committing them, not by a test.
+        serde_json::Value::String(s)
+            if s.contains("/spdx3/doc-") || s.contains("SPDXRef-DocumentRoot-") =>
+        {
             *v = serde_json::Value::String(mask_document_root_id(&mask_doc_prefix(s)));
         }
         _ => {}
@@ -404,6 +413,31 @@ mod m865_masking_tests {
             "no field may retain the real document id; got {text}",
         );
         assert!(text.contains("doc-<masked>"), "the shape must be preserved");
+    }
+
+    /// #918 — the SPDX 2.3 DocumentRoot id must be masked. It was not, for
+    /// one commit, because the mask lived inside a guard that only matched
+    /// SPDX 3 document IRIs. Without this test that is invisible until a
+    /// release rotates the id and the lane goes red again.
+    #[test]
+    fn spdx23_document_root_id_is_masked() {
+        let mut v = serde_json::json!({
+            "SPDXID": "SPDXRef-DocumentRoot-2Z6INX5CK3NXX4LN",
+            "documentDescribes": ["SPDXRef-DocumentRoot-2Z6INX5CK3NXX4LN"],
+        });
+        walk_mask(&mut v);
+        assert_eq!(v["SPDXID"], "SPDXRef-DocumentRoot-<masked>");
+        assert_eq!(v["documentDescribes"][0], "SPDXRef-DocumentRoot-<masked>");
+    }
+
+    /// A package SPDXID must NOT be masked — only the DocumentRoot one is
+    /// content-addressed over the tool version. Masking package ids would
+    /// leave a gate that cannot see a component identity change.
+    #[test]
+    fn package_spdx_ids_are_left_alone() {
+        let mut v = serde_json::json!({ "SPDXID": "SPDXRef-Package-ABCDEFGH12345678" });
+        walk_mask(&mut v);
+        assert_eq!(v["SPDXID"], "SPDXRef-Package-ABCDEFGH12345678");
     }
 
     /// The property the goldens were violating: after masking, every
