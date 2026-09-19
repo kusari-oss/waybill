@@ -82,6 +82,12 @@ this ships — the plural case simply stops arising.
 
 - Q: How should a consumer learn which namespace a resolve belongs to? → A: **A new per-component annotation carrying the namespace, leaving the existing membership annotation unchanged.** Additive: nothing that parses today stops parsing, and a consumer that does not care about namespaces is unaffected. Chosen over qualifying the existing membership values in place (`["python:default"]`), which is tidier — one field, no pairing question — but spends a **second** consumer-visible break on that same field within one release cycle: v0.9.0 just changed it from a bare string to an array, and asking consumers to absorb another change to the same key immediately afterwards is a worse trade than an extra catalogue row. Chosen over fixing only the grouping and keeping the namespace internal, which is the smallest milestone and leaves the emitted document unable to answer a question it demonstrably gets asked — the same class of gap #914 just closed, reintroduced one layer down. The costs accepted are a new catalogue row with its three extractors, and corpus-golden movement on every Pants target.
 
+- Q: How are two documents for same-named resolves distinguished on disk and in the manifest? → A: **Namespace-qualify the slug, but only where a collision exists** — `python-default.generic.cdx.json` / `jvm-default.generic.cdx.json`, while a repository with no collision keeps exactly today's names. Chosen over qualifying every resolve filename unconditionally, which is more predictable but renames the output of every repository that never had the defect, breaking FR-004. Chosen over reusing the existing sha8 collision fallback, which is the smallest change but opaque: a consumer could not tell which document is which without opening it. Note the existing fallback would not work here anyway — it hashes `source_dir`, and a resolve projection's synthetic root has an empty one, so both colliding resolves would hash identically and collide again. The same qualification applies to the manifest's `subproject_id` and `root_purl`.
+
+- Q: Is the resolve-ownership annotation (C161) in scope? → A: **Out of scope; filed separately.** C161 is populated by the Python reader alone — verified absent entirely from `pants-example-jvm` — so a JVM Pants repository has no resolve-ownership statement at all, and with a collision C161 would name the Python `default` while staying silent about the JVM one. That is an under-reporting defect, distinct from the mis-grouping this milestone fixes, and it predates #919. This milestone already carries a new per-component annotation, a catalogue row, three extractors and golden movement on every Pants target; adding a second consumer-visible annotation change would trade a correctness fix for a metadata expansion. Milestone 912 also deliberately pinned C161 byte-identical, and relaxing that here would undo a guarantee for a reason unrelated to this defect. Rejected the narrow variant — qualifying only the names C161 already emits — as actively worse: the field would look namespace-aware while still omitting an entire namespace.
+
+- Q: Is the namespace annotation emitted always, or only where it disambiguates? → A: **Always, on every component carrying resolve membership.** Conditional emission would make absence ambiguous — a consumer finding no namespace could not tell "this component is in no Pants resolve" from "it is, but no other resolve happened to share its name" — which is the absent-vs-empty discipline milestone 912 established, and it would force the two code paths US2 exists to remove. The cost is accepted knowingly: corpus goldens move on every Pants target. That cost is now cheap to review, because the corpus lane emits a readable masked diff as of #921; it would have been the dominant objection a day earlier.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Two resolves that share a name produce two documents (Priority: P1)
@@ -179,6 +185,14 @@ documents, no fallback warning.
   MUST produce two documents under `--split=resolve`, each containing only its
   own resolve's components.
 - **FR-002**: The grouping MUST NOT depend on the bare resolve name alone.
+- **FR-002a**: Where two resolves share a name, their documents MUST be
+  distinguishable by filename, by manifest `subproject_id`, and by manifest
+  `root_purl` — namespace-qualified in each. Where no collision exists, all
+  three MUST be unchanged.
+- **FR-002b**: The existing filename collision fallback MUST NOT be relied on
+  for this. It hashes the root's source directory, and a resolve projection's
+  synthetic root has none, so both colliding resolves hash to the same value
+  and collide again.
 - **FR-003**: A repository whose only resolves are a colliding pair MUST
   split, not fall back to a single unsplit document (FR-001's simplest case,
   which the fallback currently hides).
@@ -195,6 +209,10 @@ documents, no fallback warning.
 - **FR-006a**: The addition MUST be additive. A consumer reading membership
   today MUST keep working unchanged, and a consumer that does not care about
   namespaces MUST be able to ignore the new annotation entirely.
+- **FR-006d**: The namespace MUST be emitted on **every** component carrying
+  resolve membership, not only where a collision occurs. Its presence MUST NOT
+  depend on whether another resolve happened to share a name, so that absence
+  means exactly one thing: the component belongs to no Pants resolve.
 - **FR-006b**: The new annotation MUST carry the same value across all three
   formats, and MUST be registered in the format-parity catalogue with its
   extractors. A row carried by one emitter and not the others fails the
@@ -239,6 +257,8 @@ documents, no fallback warning.
   Today the merged document correctly states two.
 - **SC-004**: A repository whose only resolves collide produces two documents
   rather than one unsplit SBOM.
+- **SC-004a**: The two documents for a colliding pair are written to different
+  filenames, and the manifest names them distinctly.
 - **SC-005**: For every non-colliding repository, split output is
   byte-identical to before — measured across the existing Pants fixtures and
   corpus targets, not asserted.
@@ -249,8 +269,22 @@ documents, no fallback warning.
   key and value shape are unchanged from v0.9.0.
 - **SC-009**: The namespace annotation decodes to the same value in all three
   formats.
+- **SC-010**: Every component carrying resolve membership also carries a
+  namespace — measured across all Pants fixtures and corpus targets, with no
+  component having one and not the other.
 - **SC-008**: The regression suite fails if the grouping reverts to the bare
   name.
+
+## Out of Scope
+
+- **The resolve-ownership annotation (C161).** It names only resolves the
+  Python reader saw, so a JVM Pants repository gets no statement at all. Real,
+  adjacent, and more visible once names can collide — but a different defect,
+  tracked separately.
+- **Qualifying the existing membership annotation's values.** Decided against
+  in the clarification above; it stays bare, with the namespace alongside.
+- **Fixing which components, edges or resolves are discovered.** This
+  milestone changes how discovered resolves are identified and grouped.
 
 ## Assumptions
 

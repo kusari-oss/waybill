@@ -31,12 +31,17 @@
 
 ## Notes
 
-**Q1 resolved (2026-09-19): a new per-component annotation, membership left
-unchanged.** Additive, at the cost of a catalogue row with three extractors
+**All clarifications resolved (4, session 2026-09-19).** Q1 route: a new
+per-component annotation, membership left unchanged. Additive, at the cost of a catalogue row with three extractors
 and corpus-golden movement on every Pants target. Rejected: qualifying the
 membership values in place, which would be the second consumer-visible break
 to that same key in one release cycle; and keeping the namespace internal,
 which leaves the document unable to answer a question it gets asked.
+
+Three further questions were resolved in `/speckit.clarify`: filenames and
+manifest ids are namespace-qualified only on collision (FR-002a/b); C161 is out
+of scope and filed as #924; the namespace annotation is emitted unconditionally
+(FR-006d).
 
 **One thing the plan must MEASURE rather than inherit (FR-006c):** whether a
 component's namespace is singular. Across ecosystems it cannot be plural, but
