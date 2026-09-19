@@ -61,7 +61,7 @@ jobs:
     if: ${{ !inputs.skip_ebpf }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ env.TAG_NAME }}
 
@@ -153,7 +153,7 @@ jobs:
     env:
       TARGET: x86_64-unknown-linux-gnu
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ env.TAG_NAME }}
 
@@ -311,7 +311,7 @@ jobs:
     env:
       TARGET: aarch64-unknown-linux-gnu
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ env.TAG_NAME }}
 
@@ -440,7 +440,7 @@ jobs:
     env:
       TARGET: aarch64-apple-darwin
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ env.TAG_NAME }}
 
@@ -542,7 +542,7 @@ jobs:
     env:
       TARGET: x86_64-pc-windows-msvc
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ env.TAG_NAME }}
 
@@ -648,7 +648,7 @@ jobs:
       id-token: write # Required for cosign keyless OIDC token exchange.
       attestations: write # Milestone 668 FR-002: SLSA build provenance emission.
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ env.TAG_NAME }}
           # Kusari Inspector requirement: prevent token-in-.git/config
@@ -792,7 +792,7 @@ jobs:
       attestations: write # Milestone 668 FR-003: SLSA build provenance for source SBOM sidecar.
     steps:
       # Feature 229 US1 T004: checkout source tree so waybill can scan it.
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ env.TAG_NAME }}
           persist-credentials: false
