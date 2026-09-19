@@ -415,11 +415,6 @@ mod m865_masking_tests {
         assert!(text.contains("doc-<masked>"), "the shape must be preserved");
     }
 
-    /// The property the goldens were violating: after masking, every
-    /// relationship endpoint must still resolve to an element of the
-    /// same document. Without this, no structural check on a stored
-    /// golden means anything.
-
     /// #918 — the SPDX 2.3 DocumentRoot id must be masked. It was not, for
     /// one commit, because the mask lived inside a guard that only matched
     /// SPDX 3 document IRIs. Without this test that is invisible until a
@@ -445,6 +440,10 @@ mod m865_masking_tests {
         assert_eq!(v["SPDXID"], "SPDXRef-Package-ABCDEFGH12345678");
     }
 
+    /// The property the goldens were violating: after masking, every
+    /// relationship endpoint must still resolve to an element of the
+    /// same document. Without this, no structural check on a stored
+    /// golden means anything.
     #[test]
     fn masked_document_stays_internally_coherent() {
         let doc = json!({
