@@ -217,6 +217,21 @@ documents, no fallback warning.
   formats, and MUST be registered in the format-parity catalogue with its
   extractors. A row carried by one emitter and not the others fails the
   project's parity gate.
+- **FR-006e**: Per Constitution Principle V, the standards-native audit was
+  performed and **came back empty**. No CycloneDX 1.6, SPDX 2.3 or SPDX 3.0.1
+  construct models a build tool's configuration namespace, because it is a
+  Pants-specific concept. Rejected as carriers: CycloneDX `component.group`
+  and the PURL namespace segment, which are the *package's own* identity and
+  would be corrupted by writing a build-tool concept into them; CycloneDX
+  `compositions[]`, which describes an aggregate's completeness rather than
+  which section declared a dependency set; and SPDX 2.3 `Package.sourceInfo`,
+  which is undefined free text a consumer cannot parse reliably.
+
+  The extension is therefore justified by **absence**, and the catalogue row
+  MUST say so in those terms. This is deliberately *not* C163's justification:
+  that row's audit found a native carrier and declined it on other grounds. A
+  catalogue where every row claims absence is a catalogue nobody checks, so
+  the two rows must read differently.
 - **FR-006c**: Whether a component's namespace is singular MUST be established
   by measurement, not assumed. Across ecosystems it cannot be plural — a PyPI
   package cannot be pinned by a JVM resolve — but `pkg:generic/*` entries from

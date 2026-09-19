@@ -31,6 +31,21 @@
 
 ## Notes
 
+**Post-`/speckit.analyze` (2026-09-19).** Five findings resolved before
+implementation:
+
+- **D1 (CRITICAL)** — Principle V requires the audit RESULT in the spec's
+  Functional Requirements, and it was only in plan.md. FR-006e added. This is
+  the same defect m912 hit and fixed; doing the audit thoroughly and filing it
+  in the wrong artifact is a distinct failure from not doing it.
+- **C1 (HIGH)** — nothing verified that the membership annotation's key and
+  shape are unchanged, which is the guarantee the entire Option-A choice rests
+  on. New T009.
+- **C2 / C3** — T008 widened to the corpus (SC-010 names it) and to FR-007's
+  absent-not-empty rule.
+- **I1** — T019/T020 were marked parallel while explicitly conditional on
+  T018's finding.
+
 **All clarifications resolved (4, session 2026-09-19).** Q1 route: a new
 per-component annotation, membership left unchanged. Additive, at the cost of a catalogue row with three extractors
 and corpus-golden movement on every Pants target. Rejected: qualifying the
