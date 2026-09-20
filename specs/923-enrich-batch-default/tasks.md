@@ -30,7 +30,7 @@ tests), `waybill-cli/src/enrich/deps_dev_batch.rs` (endpoint constant).
 ## Phase 1: Setup
 
 - [ ] T001 Capture the pre-change baseline into `specs/923-enrich-batch-default/measurements/baseline.md`: wall clock and emitted document for all four flag combinations (`--offline`; online with deps.dev disabled; online default; online `--enrich-batch --enrich-no-cache`) against a repository of ~2,000 packages. **Record the deps.dev-disabled run explicitly** — it is what makes the attribution valid, and without it any later claim about enrichment cost is a flag-toggle inference rather than a measurement.
-- [ ] T002 Preserve the pre-change release binary for the byte-identity check in T009 and the teeth-check in T021, and note in `specs/923-enrich-batch-default/measurements/baseline.md` that a default scan currently uses the per-component path.
+- [ ] T002 Preserve the pre-change release binary for the byte-identity check in T009 and the teeth-check in T022, and note in `specs/923-enrich-batch-default/measurements/baseline.md` that a default scan currently uses the per-component path.
 
 **Checkpoint**: the cost is on record, and so is the evidence that it is deps.dev's.
 
@@ -98,12 +98,17 @@ tests), `waybill-cli/src/enrich/deps_dev_batch.rs` (endpoint constant).
 
 - [ ] T019 Add the standing check for the batch endpoint leaving `v3alpha` (FR-007c / C-9), as a scheduled workflow in `.github/workflows/` following the existing canary pattern (bpf-linker, public-corpus): probe for a non-alpha batch endpoint and open a deduped issue when one appears. **This feature accepts a risk whose entire justification is that the upstream surface is unstable**; when that stops being true the trade deserves re-examination, and nobody will look unless something says so.
 - [ ] T020 [P] Add a test pinning the batch endpoint to `v3alpha` in `waybill-cli/src/enrich/deps_dev_batch.rs`. This is the cheap floor and is **not** a substitute for T019: it catches *our* change to the URL, not upstream's graduation. Note that `v3alpha` also appears at `hash_resolver.rs:65` for a different endpoint, so the check should say which surface moved.
-- [ ] T021 Teeth-check T008, T009, T010, T013 against the preserved pre-change binary and record in `specs/923-enrich-batch-default/measurements/verification.md` which fail and which are guards. A test passing on both sides is a guard — label it rather than counting it.
-- [ ] T022 Run the mandatory pre-PR gate: `./scripts/pre-pr.sh`. Enumerate the per-target results rather than citing the exit code. Use `-j 2 --test-threads=2` if the full run exhausts memory.
-- [ ] T023 [P] Document the rationale (FR-010) in `docs/user-guide/configuration.md`, where the enrichment flags are already described: why batched is the default, that it runs against a surface its publisher documents as liable to change incompatibly, and that the fallback is what makes that acceptable. **The rationale has to survive the decision**, or a future reader mistakes the default for an oversight and reverts it.
-- [ ] T024 [P] Write the CHANGELOG entry. Lead with what an operator gets — enrichment in seconds rather than minutes — and state plainly that the legacy flag still works and that enrichment-disabled scans are unchanged.
-- [ ] T025 Confirm corpus goldens are untouched. Expect **no movement**: the harness hard-codes `--offline` (`corpus_harness_195/harness.rs:184`), so enrichment never runs there. Movement would mean the default flip reached a path that makes no network calls, which FR-008 forbids.
-- [ ] T026 Comment on #927 with what landed and the measured numbers, and on #929 noting that this feature's one-attempt guarantee depends on the sequential execution it describes — so adding concurrency must revisit FR-007a rather than silently weakening it.
+- [ ] T021 **Measure the after, not just the before (SC-001 / SC-005c / SC-008).** Re-run the T001 flag matrix against the post-change binary and record the deltas in `specs/923-enrich-batch-default/measurements/after.md`, for **two** repositories: the ~2,000-package one from T001 and a small one (tens of packages).
+  - **SC-001** — a default scan's enrichment completes in seconds, not minutes. This is the feature's headline claim and the task list previously measured only the baseline, so the claim could have shipped unverified.
+  - **SC-008** — the small repository is no slower than before. One batched request for a handful of components should not lose to a handful of individual ones, but that was an Assumption, and an assumption is what a measurement replaces.
+  - **SC-005c** — with the endpoint failing, batch attempts stay at one on **both** sizes. T013's single-input test would pass even if the breaker tripped per chunk-group; running two sizes is what distinguishes a real bound from a coincidence.
+
+- [ ] T022 Teeth-check T008, T009, T010, T013 against the preserved pre-change binary and record in `specs/923-enrich-batch-default/measurements/verification.md` which fail and which are guards. A test passing on both sides is a guard — label it rather than counting it.
+- [ ] T023 Run the mandatory pre-PR gate: `./scripts/pre-pr.sh`. Enumerate the per-target results rather than citing the exit code. Use `-j 2 --test-threads=2` if the full run exhausts memory.
+- [ ] T024 [P] Document the rationale (FR-010) in `docs/user-guide/configuration.md`, where the enrichment flags are already described: why batched is the default, that it runs against a surface its publisher documents as liable to change incompatibly, and that the fallback is what makes that acceptable. **The rationale has to survive the decision**, or a future reader mistakes the default for an oversight and reverts it.
+- [ ] T025 [P] Write the CHANGELOG entry. Lead with what an operator gets — enrichment in seconds rather than minutes — and state plainly that the legacy flag still works and that enrichment-disabled scans are unchanged.
+- [ ] T026 Confirm corpus goldens are untouched. Expect **no movement**: the harness hard-codes `--offline` (`corpus_harness_195/harness.rs:184`), so enrichment never runs there. Movement would mean the default flip reached a path that makes no network calls, which FR-008 forbids.
+- [ ] T027 Comment on #927 with what landed and the measured numbers, and on #929 noting that this feature's one-attempt guarantee depends on the sequential execution it describes — so adding concurrency must revisit FR-007a rather than silently weakening it.
 
 ---
 
@@ -120,7 +125,7 @@ Phase 4 US2 (T010-T012)   opt-out reachable + both paths tested
         │
 Phase 5 US3 (T013-T018)   circuit breaker, log, degradation
         │
-Phase 6 (T019-T026)
+Phase 6 (T019-T027)
 ```
 
 **Story independence, honestly**: US1 and US2 are **not** independent — you
@@ -134,7 +139,7 @@ Phase 3 without Phase 5.**
 ## Parallel opportunities
 
 - **T016, T017, T018** — three tests over one behaviour, separable.
-- **T020, T023, T024** — endpoint pin, docs, CHANGELOG.
+- **T020, T024, T025** — endpoint pin, docs, CHANGELOG.
 
 Most of this feature lives in `scan_cmd.rs` and `depsdev_source.rs`, so
 parallelism is genuinely limited. Marking more tasks `[P]` would be decoration.
@@ -149,6 +154,11 @@ opt-out flag cannot — it lands with T005.
 acceptable reason to change a default. Asserting it after the flip would be
 asserting it about a decision already made.
 
+**T021 exists because the first draft measured only the baseline.** The task
+list covered every correctness requirement thoroughly and left the feature's
+headline speed claim with no verification at all — a bias worth naming, since
+it would have shipped a performance feature whose performance nobody checked.
+
 **The two tests that catch a plausible non-implementation:**
 
 - **T013** counts *attempts*, because a breaker that was never wired in
@@ -158,6 +168,6 @@ asserting it about a decision already made.
 
 ## Verification standard
 
-1. **A test that passes against the pre-change binary is a guard, not a proof.** T021 requires labelling which is which.
+1. **A test that passes against the pre-change binary is a guard, not a proof.** T022 requires labelling which is which.
 2. **Where output cannot distinguish two behaviours, assert the behaviour**, not the output — attempts, selection, log lines.
 3. **Byte-identity is measured against a captured baseline**, never asserted from memory.

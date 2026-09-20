@@ -31,6 +31,23 @@
 
 ## Notes
 
+**Post-`/speckit.analyze` (2026-09-20).** Four findings resolved:
+
+- **C1 (HIGH)** — SC-001, the feature's headline speed claim, had **no
+  verification task**. The list measured the before and never the after.
+- **C2 / C3** — SC-008 (small repositories no slower) and SC-005c (the
+  attempt bound holds regardless of size) were likewise unasserted.
+- All three collapse into new **T021**, which re-runs the T001 flag matrix
+  post-change against a large *and* a small repository.
+- **I1** — FR-009 claimed no content change while carving out the degradation
+  signal, which is content. Split into FR-009 (successful scans: no change)
+  and FR-009a (failed scans: exactly one addition, strictly more information).
+
+**The pattern is worth recording, not just the fixes.** All three coverage
+gaps were performance criteria. The correctness requirements got thorough
+task coverage and the speed ones got prose — in a feature whose entire
+justification is speed.
+
 **Zero clarification markers**, because the two questions worth asking were
 already answered in the codebase rather than open:
 

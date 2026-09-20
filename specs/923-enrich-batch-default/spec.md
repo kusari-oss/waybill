@@ -201,8 +201,14 @@ full content and reports the degradation.
   look unless something tells them.
 - **FR-008**: The change MUST be inert when enrichment is disabled —
   `--offline`, deps.dev off, or sources restricted.
-- **FR-009**: The change MUST NOT alter emitted content for any existing
-  scan. Only speed changes, plus the degradation signal on failure.
+- **FR-009**: On a **successful** scan, the change MUST NOT alter emitted
+  content. Only speed changes.
+- **FR-009a**: On a scan whose batch path **failed**, the emitted document MAY
+  differ from before this change in exactly one way: it carries the
+  degradation record of FR-007. That record was previously unreachable on a
+  default scan, because the batched path was never used. This is the sole
+  content difference the feature introduces, it is confined to the failure
+  path, and it is strictly more information than before.
 - **FR-010**: Documentation MUST record that the batched path runs against an
   upstream surface its publisher describes as liable to change incompatibly,
   and that the fallback is what makes that acceptable. The rationale must
