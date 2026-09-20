@@ -29,8 +29,8 @@ tests), `waybill-cli/src/enrich/deps_dev_batch.rs` (endpoint constant).
 
 ## Phase 1: Setup
 
-- [ ] T001 Capture the pre-change baseline into `specs/923-enrich-batch-default/measurements/baseline.md`: wall clock and emitted document for all four flag combinations (`--offline`; online with deps.dev disabled; online default; online `--enrich-batch --enrich-no-cache`) against a repository of ~2,000 packages. **Record the deps.dev-disabled run explicitly** — it is what makes the attribution valid, and without it any later claim about enrichment cost is a flag-toggle inference rather than a measurement.
-- [ ] T002 Preserve the pre-change release binary for the byte-identity check in T009 and the teeth-check in T022, and note in `specs/923-enrich-batch-default/measurements/baseline.md` that a default scan currently uses the per-component path.
+- [X] T001 Capture the pre-change baseline into `specs/923-enrich-batch-default/measurements/baseline.md`: wall clock and emitted document for all four flag combinations (`--offline`; online with deps.dev disabled; online default; online `--enrich-batch --enrich-no-cache`) against a repository of ~2,000 packages. **Record the deps.dev-disabled run explicitly** — it is what makes the attribution valid, and without it any later claim about enrichment cost is a flag-toggle inference rather than a measurement.
+- [X] T002 Preserve the pre-change release binary for the byte-identity check in T009 and the teeth-check in T022, and note in `specs/923-enrich-batch-default/measurements/baseline.md` that a default scan currently uses the per-component path.
 
 **Checkpoint**: the cost is on record, and so is the evidence that it is deps.dev's.
 
@@ -40,8 +40,8 @@ tests), `waybill-cli/src/enrich/deps_dev_batch.rs` (endpoint constant).
 
 **Purpose**: FR-002 is what licenses the entire feature. If the two paths ever produce different documents, the faster one is not a valid default regardless of its speed. This lands **before** the default moves.
 
-- [ ] T003 Extend the `MockServer`-based tests in `waybill-cli/src/enrich/depsdev_source.rs` to assert **path equivalence** (FR-002 / C-2): the same input enriched via both paths yields identical package identities, identical licence values and identical edges. The helper `src(server, batch)` is already parameterised on the path, so this extends existing coverage rather than building a second harness.
-- [ ] T004 Confirm `batch_failure_falls_back_and_content_is_unchanged` (`depsdev_source.rs:1168`) still covers C-5, and note in the test what it protects: the fallback is the whole safety argument for the default, so this test failing means the default is no longer defensible — not merely that a test broke.
+- [X] T003 Extend the `MockServer`-based tests in `waybill-cli/src/enrich/depsdev_source.rs` to assert **path equivalence** (FR-002 / C-2): the same input enriched via both paths yields identical package identities, identical licence values and identical edges. The helper `src(server, batch)` is already parameterised on the path, so this extends existing coverage rather than building a second harness.
+- [X] T004 Confirm `batch_failure_falls_back_and_content_is_unchanged` (`depsdev_source.rs:1168`) still covers C-5, and note in the test what it protects: the fallback is the whole safety argument for the default, so this test failing means the default is no longer defensible — not merely that a test broke.
 
 **Checkpoint**: the property that justifies the change is asserted, before the change.
 

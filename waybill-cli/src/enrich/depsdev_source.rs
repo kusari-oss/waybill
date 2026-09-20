@@ -1161,6 +1161,92 @@ mod batch_tests {
         assert_eq!(got[2].as_ref().unwrap().licenses, vec!["BSD-3-Clause"], "z");
     }
 
+    /// Issue #927 (m923) — FR-002 / C-2. **The property that licenses the
+    /// default flip.**
+    ///
+    /// The existing `batch_failure_falls_back_and_content_is_unchanged`
+    /// covers the FAILURE path: batch dies, work falls back, content
+    /// survives. This covers the success path, which is the one a default
+    /// scan takes: batch WORKS, and its content equals what the
+    /// per-component path would have produced.
+    ///
+    /// Without this, "faster" would be an argument for changing a default
+    /// without anything asserting the two paths agree — and if they ever
+    /// disagree, the faster one is not a valid default regardless of its
+    /// speed.
+    #[tokio::test]
+    async fn both_paths_produce_the_same_content_when_batch_succeeds() {
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/v3alpha/versionbatch"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "responses": [
+                    entry("a", Some("MIT")),
+                    entry("b", None),
+                    entry("c", Some("BSD-3-Clause")),
+                ]
+            })))
+            .mount(&server)
+            .await;
+        Mock::given(method("GET"))
+            .and(path_regex(r".*/packages/a/versions/.*"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "licenses": ["MIT"], "links": [],
+            })))
+            .mount(&server)
+            .await;
+        Mock::given(method("GET"))
+            .and(path_regex(r".*/packages/b/versions/.*"))
+            .respond_with(ResponseTemplate::new(404))
+            .mount(&server)
+            .await;
+        Mock::given(method("GET"))
+            .and(path_regex(r".*/packages/c/versions/.*"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "licenses": ["BSD-3-Clause"], "links": [],
+            })))
+            .mount(&server)
+            .await;
+
+        let k = keys(&["a", "b", "c"]);
+        let batched = {
+            let s = src(&server, true);
+            let mut p = ProgressReporter::new(k.len());
+            s.fetch_many(&k, &mut p).await
+        };
+        let direct = {
+            let s = src(&server, false);
+            let mut p = ProgressReporter::new(k.len());
+            s.fetch_many(&k, &mut p).await
+        };
+
+        assert_eq!(batched.len(), direct.len(), "both paths cover every key");
+        for (i, (b, d)) in batched.iter().zip(direct.iter()).enumerate() {
+            assert_eq!(
+                b.as_ref().map(|v| v.licenses.clone()),
+                d.as_ref().map(|v| v.licenses.clone()),
+                "key {i}: batched and per-component licences differ — the paths \
+                 are not equivalent, so the faster one cannot be the default",
+            );
+            assert_eq!(
+                b.is_some(),
+                d.is_some(),
+                "key {i}: one path enriched it and the other did not",
+            );
+        }
+
+        // And the comparison is not vacuous: something was actually enriched,
+        // and something was actually left unenriched.
+        assert!(
+            batched.iter().any(|r| r.is_some()),
+            "no key was enriched — this asserted nothing"
+        );
+        assert!(
+            batched.iter().any(|r| r.is_none()),
+            "no key was left unenriched — the agreement on absence is untested"
+        );
+    }
+
     /// T027 / C-4.1, C-4.2, C-4.4. A failing batch must not fail the
     /// scan, and must produce the same content the per-component path
     /// would have.
