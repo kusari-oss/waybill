@@ -707,6 +707,7 @@ spdx3_anno!(c157_spdx3, "waybill:python-lockfile-format",                compone
 spdx3_anno!(c158_spdx3, "waybill:enrichment-degraded",                  document);
 spdx3_anno!(c159_spdx3, "waybill:unresolved-declared-dep-count",         document);
 spdx3_anno!(c160_spdx3, "waybill:component-kind",                        component);
+spdx3_anno!(c164_spdx3, "waybill:pants-resolve-namespace",                        component);
 spdx3_anno!(c161_spdx3, "waybill:resolve-ownership",                     document);
 spdx3_anno!(c163_spdx3, "waybill:document-resolve",                     document);
 spdx3_anno!(c162_spdx3, "waybill:cabal-entries-skipped",                 document);
