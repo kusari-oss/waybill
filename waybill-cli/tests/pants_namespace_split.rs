@@ -134,9 +134,31 @@ fn same_name_in_two_namespaces_yields_two_documents() {
 fn colliding_documents_have_distinct_filenames_and_manifest_entries() {
     let s = split("pants_namespace_collision");
 
+    // Guard against a vacuous pass. Before the fix there is only ONE `default`
+    // document, so "no duplicate filenames" is trivially true and this test
+    // proves nothing. Assert the collision is actually present first.
+    assert_eq!(
+        s.docs.iter().filter(|(n, _)| n.contains("default")).count(),
+        2,
+        "only one `default` document — the collision is still merged, so the \
+         filename assertions below would pass vacuously"
+    );
+
     let names: Vec<&String> = s.docs.iter().map(|(n, _)| n).collect();
     let unique: BTreeSet<&&String> = names.iter().collect();
     assert_eq!(unique.len(), names.len(), "duplicate filenames: {names:?}");
+
+    // Distinct is not enough: BOTH colliding documents must be qualified.
+    // The declared side has an m868 anchor, and taking the naming root from
+    // that anchor left it as bare `default.generic.cdx.json` while only the
+    // unanchored side became `jvm-default.…`. Distinct, asymmetric, and the
+    // bare one is indistinguishable from a repository with no collision.
+    for (n, _) in s.docs.iter().filter(|(n, _)| n.contains("default")) {
+        assert!(
+            n.starts_with("python-default.") || n.starts_with("jvm-default."),
+            "{n} is not namespace-qualified; only one side of the collision was"
+        );
+    }
 
     let m = s.manifest.expect("split-manifest.json");
     let ids: Vec<&str> = m["entries"]
@@ -186,12 +208,23 @@ fn a_collision_only_repository_still_splits() {
     );
 }
 
-/// FR-009. Only the miscount is being fixed. A repository with genuinely one
-/// resolve is still degenerate and must still fall back.
+/// FR-009. Only the miscount is being fixed. A repository with genuinely ONE
+/// resolve is still degenerate and must still fall back to a single SBOM.
+///
+/// Without this, "make the collision-only fixture split" has an obvious wrong
+/// implementation: drop the `groups.len() <= 1` check entirely. That passes
+/// US3 and silently turns every single-resolve repository into a one-document
+/// "split" it never asked for.
 #[test]
 fn a_genuinely_single_resolve_repository_still_falls_back() {
-    let s = split("pants_pex/multi_resolve_map");
-    let _ = &s.docs;
-    // multi_resolve_map has several resolves, so it splits; the degenerate
-    // case is asserted by the collision-only fixture's counterpart below.
+    let s = split("pants_coursier_jvm/minimal_jvm");
+    assert!(
+        s.warned_not_partitionable,
+        "a repository with one resolve must still hit the fallback; got documents {:?}",
+        s.docs.iter().map(|(n, _)| n).collect::<Vec<_>>()
+    );
+    assert!(
+        s.docs.is_empty(),
+        "the fallback emits a single unsplit SBOM, not split documents"
+    );
 }

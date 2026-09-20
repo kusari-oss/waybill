@@ -12,6 +12,7 @@
 //!
 //! See `specs/215-sbom-auto-split/` for spec / plan / research.
 
+use crate::scan_fs::package_db::pants_resolve::LanguageNamespace;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet, VecDeque};
 use std::path::{Path, PathBuf};
 
@@ -123,6 +124,15 @@ pub(crate) struct GroupedProjection {
     /// `--split=workspace`, equals `members[0].subproject_id()`.
     /// For `--split=directory`, equals the canonicalized source_dir.
     pub group_key: String,
+    /// #919 (m922) — the namespace-qualified resolve(s) this group represents,
+    /// e.g. `["python:default"]`. `None` for non-resolve split modes.
+    ///
+    /// Carried rather than looked up. Milestone 912 derived the C163 identity
+    /// by finding the group key in a document-scope name→namespace index, which
+    /// worked only while the key WAS the bare resolve name. Now that grouping is
+    /// qualified, the group already knows its namespace, and re-deriving it from
+    /// a slug would be both lossy and circular.
+    pub resolve_identity: Option<Vec<String>>,
     /// Every SubprojectRoot contributing to this group. Length ≥ 1.
     /// Sorted lex by `purl_string` for byte-identity.
     pub members: Vec<SubprojectRoot>,
@@ -206,6 +216,18 @@ pub(crate) struct SplitProjection {
 /// resolve's SBOM can see the same fix lands in another. A per-resolve
 /// document may therefore name resolves whose packages it does not contain.
 /// That is correct, not a dangling reference.
+/// #919 (m922) — a resolve's identity: its namespace AND its name.
+///
+/// Deliberately has no constructor from a bare string. The defect this
+/// milestone fixes is that a `String` key silently accepted a bare name where
+/// an identity was required, so making the bare name un-keyable is what stops
+/// the next person reintroducing it (Principle IV).
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Debug)]
+struct QualifiedResolve {
+    namespace: LanguageNamespace,
+    name: String,
+}
+
 fn resolve_projections(
     components: &[ResolvedComponent],
     relationships: &[Relationship],
@@ -213,16 +235,72 @@ fn resolve_projections(
     use std::collections::BTreeMap as Map;
 
     // resolve name -> its components, in input order for determinism.
-    let mut by_resolve: Map<String, Vec<ResolvedComponent>> = Map::new();
+    // #919 (m922) — key on the QUALIFIED resolve, never the bare name.
+    //
+    // `[python.resolves]` and `[jvm.resolves]` are separate namespaces, so one
+    // repository can declare `default` in both. Keying on the bare name merged
+    // the two into a single document whose contents were the union of a Python
+    // resolve and a JVM resolve.
+    //
+    // A component with membership but no namespace cannot be placed. That is
+    // unreachable with the current readers (every reader that writes membership
+    // writes a namespace, asserted by the m922 pairing test) and is warned about
+    // rather than silently dropped, because the alternative — guessing — is the
+    // defect being fixed.
+    let mut by_resolve: Map<QualifiedResolve, Vec<ResolvedComponent>> = Map::new();
     for c in components {
-        for name in crate::scan_fs::package_db::pants_resolve::read(&c.extra_annotations) {
-            by_resolve.entry(name).or_default().push(c.clone());
+        let names = crate::scan_fs::package_db::pants_resolve::read(&c.extra_annotations);
+        if names.is_empty() {
+            continue;
+        }
+        let Some(namespace) =
+            crate::scan_fs::package_db::pants_resolve::read_namespace(&c.extra_annotations)
+        else {
+            tracing::warn!(
+                purl = %c.purl.as_str(),
+                resolves = ?names,
+                "component carries Pants resolve membership but no language namespace, \
+                 so it cannot be placed in a per-resolve document. Two resolves sharing \
+                 a name are indistinguishable without it (#919)."
+            );
+            continue;
+        };
+        for name in names {
+            by_resolve
+                .entry(QualifiedResolve { namespace, name })
+                .or_default()
+                .push(c.clone());
         }
     }
 
+    // A bare name is "colliding" when it exists under more than one namespace.
+    // Only those get namespace-qualified slugs: a repository with no collision
+    // keeps byte-identical filenames, manifest ids and root PURLs (FR-004).
+    let mut namespaces_per_name: Map<&str, std::collections::BTreeSet<LanguageNamespace>> =
+        Map::new();
+    for qr in by_resolve.keys() {
+        namespaces_per_name
+            .entry(qr.name.as_str())
+            .or_default()
+            .insert(qr.namespace);
+    }
+    let colliding: std::collections::BTreeSet<String> = namespaces_per_name
+        .iter()
+        .filter(|(_, ns)| ns.len() > 1)
+        .map(|(n, _)| (*n).to_string())
+        .collect();
+
     by_resolve
         .into_iter()
-        .map(|(resolve, members)| {
+        .map(|(qualified, members)| {
+            // The slug that names this resolve on disk and in the manifest.
+            // Qualified ONLY where the bare name collides — see above.
+            let resolve = qualified.name.clone();
+            let slug = if colliding.contains(&resolve) {
+                format!("{}-{}", qualified.namespace.as_str(), resolve)
+            } else {
+                resolve.clone()
+            };
             let purls: std::collections::HashSet<&str> =
                 members.iter().map(|c| c.purl.as_str()).collect();
             let rels: Vec<Relationship> = relationships
@@ -275,10 +353,24 @@ fn resolve_projections(
                 }
             }
             let anchor = anchor_idx.map(|i| members[i].clone());
-            let root_purl = anchor
-                .as_ref()
-                .map(|c| c.purl.clone())
-                .or_else(|| Purl::new(&format!("pkg:generic/{resolve}")).ok());
+            // #919 (m922) — where the bare name collides, the NAMING root is
+            // built from the qualified slug even when an anchor exists.
+            //
+            // A declared resolve has an m868 anchor component, and the naming
+            // root was taken from that anchor's PURL — which is the bare name.
+            // So the declared side kept `default.generic.cdx.json` while the
+            // unanchored side became `jvm-default.…`: distinct, but asymmetric,
+            // and the bare one is indistinguishable from the no-collision case.
+            //
+            // This only renames the naming root. The anchor component itself is
+            // untouched and still carries its own real PURL.
+            let qualified_root = colliding
+                .contains(&resolve)
+                .then(|| Purl::new(&format!("pkg:generic/{slug}")).ok())
+                .flatten();
+            let root_purl = qualified_root
+                .or_else(|| anchor.as_ref().map(|c| c.purl.clone()))
+                .or_else(|| Purl::new(&format!("pkg:generic/{slug}")).ok());
 
             let root = root_purl.map(|purl| SubprojectRoot {
                 purl_string: purl.as_str().to_string(),
@@ -288,7 +380,13 @@ fn resolve_projections(
             });
 
             GroupedProjection {
-                group_key: resolve,
+                resolve_identity: Some(vec![
+                    crate::scan_fs::package_db::pants_resolve::qualify(
+                        qualified.namespace,
+                        &qualified.name,
+                    ),
+                ]),
+                group_key: slug,
                 members: root.into_iter().collect(),
                 components: members,
                 relationships: rels,
@@ -832,6 +930,8 @@ pub(crate) fn group_roots(
         .map(|(group_key, mut members)| {
             members.sort_by(|a, b| a.purl_string.cmp(&b.purl_string));
             GroupedProjection {
+                // Workspace/directory modes have no resolve to identify.
+                resolve_identity: None,
                 group_key,
                 members,
                 components: Vec::new(),
@@ -1118,20 +1218,25 @@ fn emit_groups(
         // is exactly the ambiguity FR-001a removes, and absent-not-empty keeps
         // "cannot answer" distinguishable (Principle III).
         if mode == SplitMode::Resolve {
-            let identities = crate::scan_fs::package_db::pants_resolve::qualified_for(
-                &base_artifacts.pants_resolve_namespaces,
-                &group.group_key,
-            );
-            if identities.is_empty() {
-                tracing::warn!(
-                    resolve = %group.group_key,
-                    "per-resolve split: no Pants language namespace recorded for this \
-                     resolve, so the document cannot state which resolve it is. The \
-                     identity is omitted rather than guessed — a bare name cannot \
-                     distinguish `[python.resolves]` from `[jvm.resolves]`."
-                );
-            } else {
-                sub_artifacts.resolve_identity = Some(identities);
+            // #919 (m922) — take the identity the grouping already computed.
+            //
+            // Milestone 912 looked the group key up in a document-scope
+            // name→namespace index, which only worked while the key was the bare
+            // resolve name. The grouping is qualified now, so the group carries
+            // its own identity and there is nothing to look up. This also makes
+            // the plural case unreachable: a group IS one qualified resolve.
+            match group.resolve_identity.as_ref() {
+                Some(identities) if !identities.is_empty() => {
+                    sub_artifacts.resolve_identity = Some(identities.clone());
+                }
+                _ => {
+                    tracing::warn!(
+                        group = %group.group_key,
+                        "per-resolve split: this group carries no qualified resolve \
+                         identity, so the document cannot state which resolve it is. \
+                         Omitted rather than guessed."
+                    );
+                }
             }
         }
         let mut entry_files: BTreeMap<String, String> = BTreeMap::new();

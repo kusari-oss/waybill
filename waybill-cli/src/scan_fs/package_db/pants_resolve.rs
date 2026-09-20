@@ -255,26 +255,6 @@ pub fn qualify(namespace: LanguageNamespace, resolve: &str) -> String {
     format!("{}:{}", namespace.as_str(), resolve)
 }
 
-/// Every qualified identity a bare resolve name maps to, lexically sorted.
-///
-/// Returns more than one only in the #919 collision case, where a document
-/// genuinely represents two resolves and naming either alone would be false
-/// (contract C-6). Returns empty when the name is unknown to the index, which
-/// a caller must treat as "cannot identify" rather than substituting the bare
-/// name — a half-qualified identity is the ambiguity this feature removes.
-pub fn qualified_for(index: &NamespaceIndex, resolve: &str) -> Vec<String> {
-    let mut out: Vec<String> = index
-        .get(resolve)
-        .map(|namespaces| namespaces.iter().map(|ns| qualify(*ns, resolve)).collect())
-        .unwrap_or_default();
-    // The explicit sort is load-bearing and was caught by its own test.
-    // `BTreeSet<LanguageNamespace>` iterates in *discriminant* order, so this
-    // returned `["python:default", "jvm:default"]` — deterministic, but not
-    // lexical, and the doc comment above promised lexical. Milestone 671 hit
-    // the identical trap with a language-grouped enum and the same fix.
-    out.sort();
-    out
-}
 
 /// Record that `resolve` exists under `namespace`.
 pub fn index_insert(index: &mut NamespaceIndex, namespace: LanguageNamespace, resolve: &str) {
@@ -371,39 +351,8 @@ mod tests {
         assert_eq!(qualify(LanguageNamespace::Jvm, "default"), "jvm:default");
     }
 
-    /// FR-001a. The whole point of the namespace: one bare name, two
-    /// resolves, two distinguishable identities.
-    #[test]
-    fn a_name_declared_in_both_namespaces_qualifies_to_both() {
-        let mut idx = NamespaceIndex::new();
-        index_insert(&mut idx, LanguageNamespace::Jvm, "default");
-        index_insert(&mut idx, LanguageNamespace::Python, "default");
-        assert_eq!(
-            qualified_for(&idx, "default"),
-            vec!["jvm:default", "python:default"]
-        );
-    }
 
-    /// Sorted, so a document's identity is byte-stable across scans the way
-    /// membership already is.
-    #[test]
-    fn qualified_for_is_order_independent() {
-        let mut a = NamespaceIndex::new();
-        index_insert(&mut a, LanguageNamespace::Python, "x");
-        index_insert(&mut a, LanguageNamespace::Jvm, "x");
-        let mut b = NamespaceIndex::new();
-        index_insert(&mut b, LanguageNamespace::Jvm, "x");
-        index_insert(&mut b, LanguageNamespace::Python, "x");
-        assert_eq!(qualified_for(&a, "x"), qualified_for(&b, "x"));
-    }
 
-    /// An unknown name yields nothing rather than the bare name. Substituting
-    /// the bare name would reintroduce exactly the ambiguity FR-001a removes,
-    /// in the one case where we know we cannot resolve it.
-    #[test]
-    fn an_unknown_resolve_does_not_fall_back_to_the_bare_name() {
-        assert!(qualified_for(&NamespaceIndex::new(), "default").is_empty());
-    }
 
 
 
@@ -414,8 +363,9 @@ mod tests {
         let bags = [bag(json!(["default", "lint"])), bag(json!(["default"]))];
         let mut idx = NamespaceIndex::new();
         index_record_all(&mut idx, LanguageNamespace::Jvm, bags.iter());
-        assert_eq!(qualified_for(&idx, "default"), vec!["jvm:default"]);
-        assert_eq!(qualified_for(&idx, "lint"), vec!["jvm:lint"]);
+        assert_eq!(idx.get("default").map(|n| n.len()), Some(1));
+        assert_eq!(idx.get("lint").map(|n| n.len()), Some(1));
+        assert!(idx["default"].contains(&LanguageNamespace::Jvm));
     }
 
     #[test]

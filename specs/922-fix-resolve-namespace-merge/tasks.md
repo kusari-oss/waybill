@@ -59,14 +59,14 @@ Repository root. `waybill-cli/src/scan_fs/package_db/` (recording),
 
 **Independent test**: split `pants_namespace_collision`. Two documents, disjoint components.
 
-- [ ] T010 [US1] Add the qualified-resolve type in `waybill-cli/src/generate/split.rs` — namespace plus name, **not constructible from a bare string**. Principle IV is doing real work here: the defect is that a `String` key silently accepted a bare name, and a type that cannot be built from one is what stops the next person reintroducing it.
-- [ ] T011 [US1] Write the failing test in `waybill-cli/tests/pants_namespace_split.rs`: `pants_namespace_collision` yields two documents whose component sets are disjoint. Confirm it fails against the pre-change binary for its own reason (one document, both namespaces).
-- [ ] T012 [US1] Change the grouping in `resolve_projections` (`waybill-cli/src/generate/split.rs`, the `by_resolve` map) to key on the qualified resolve.
-- [ ] T013 [US1] Qualify the filename slug **only where a collision exists**, in `filename_for` / the resolve projection's root construction in `waybill-cli/src/generate/split.rs`. **Do not reach for the existing sha8 collision fallback** — research R4 measured it inert here: every resolve projection's synthetic root has the same empty `source_dir`, so both colliding resolves hash identically and collide again.
-- [ ] T014 [US1] Qualify the manifest's `subproject_id` and `root_purl` on the same collision-only condition, in `waybill-cli/src/generate/split.rs`.
-- [ ] T015 [P] [US1] Test that on collision the two documents have distinct filenames and distinct manifest entries, in `waybill-cli/tests/pants_namespace_split.rs`.
-- [ ] T016 [US1] **The byte-identity test (SC-005 / FR-004)** in `waybill-cli/tests/pants_namespace_split.rs`: for every non-colliding Pants fixture, split output — filenames included — is byte-identical to the T001 baseline. This is the guard on the constraint most easily broken: a fix that qualifies unconditionally passes every other test in this list and silently renames every existing consumer's files.
-- [ ] T017 [P] [US1] In `waybill-cli/tests/pants_split_identity.rs`, test that each resulting document's C163 identity states exactly **one** resolve. m912's C-6 test asserts the merged document states two; that expectation inverts here, and the plural case stops arising.
+- [X] T010 [US1] Add the qualified-resolve type in `waybill-cli/src/generate/split.rs` — namespace plus name, **not constructible from a bare string**. Principle IV is doing real work here: the defect is that a `String` key silently accepted a bare name, and a type that cannot be built from one is what stops the next person reintroducing it.
+- [X] T011 [US1] Write the failing test in `waybill-cli/tests/pants_namespace_split.rs`: `pants_namespace_collision` yields two documents whose component sets are disjoint. Confirm it fails against the pre-change binary for its own reason (one document, both namespaces).
+- [X] T012 [US1] Change the grouping in `resolve_projections` (`waybill-cli/src/generate/split.rs`, the `by_resolve` map) to key on the qualified resolve.
+- [X] T013 [US1] Qualify the filename slug **only where a collision exists**, in `filename_for` / the resolve projection's root construction in `waybill-cli/src/generate/split.rs`. **Do not reach for the existing sha8 collision fallback** — research R4 measured it inert here: every resolve projection's synthetic root has the same empty `source_dir`, so both colliding resolves hash identically and collide again.
+- [X] T014 [US1] Qualify the manifest's `subproject_id` and `root_purl` on the same collision-only condition, in `waybill-cli/src/generate/split.rs`.
+- [X] T015 [P] [US1] Test that on collision the two documents have distinct filenames and distinct manifest entries, in `waybill-cli/tests/pants_namespace_split.rs`.
+- [X] T016 [US1] **The byte-identity test (SC-005 / FR-004)** in `waybill-cli/tests/pants_namespace_split.rs`: for every non-colliding Pants fixture, split output — filenames included — is byte-identical to the T001 baseline. This is the guard on the constraint most easily broken: a fix that qualifies unconditionally passes every other test in this list and silently renames every existing consumer's files.
+- [X] T017 [P] [US1] In `waybill-cli/tests/pants_split_identity.rs`, test that each resulting document's C163 identity states exactly **one** resolve. m912's C-6 test asserts the merged document states two; that expectation inverts here, and the plural case stops arising.
 
 **Checkpoint**: the defect is fixed. US3 becomes reachable.
 
@@ -112,10 +112,10 @@ Repository root. `waybill-cli/src/scan_fs/package_db/` (recording),
 
 **Depends on US1.**
 
-- [ ] T026 [US3] Add `waybill-cli/tests/fixtures/pants_namespace_collision_only/` — the same two colliding resolves with **no** third resolve. The existing collision fixture deliberately carries a third (`lint`) so the split runs at all; this one is the case that currently produces no split whatsoever.
-- [ ] T027 [US3] Write the failing test in `waybill-cli/tests/pants_namespace_split.rs`: that fixture yields two documents and does **not** emit the not-partitionable warning. Today: `detected=1`, fallback fires, single unsplit SBOM.
-- [ ] T028 [US3] Ensure the group count at `waybill-cli/src/generate/split.rs` (the `groups.len() <= 1` check) is taken **after** regrouping. Research R3 is explicit: a fix that regroups at emission while counting earlier leaves this case silently unsplit, behind a warning that reads like correct behaviour.
-- [ ] T029 [P] [US3] In `waybill-cli/tests/pants_namespace_split.rs`, test that a genuinely single-resolve repository (`pants_pex`) **still** falls back with the warning. Only the miscount is being fixed; the degenerate case is still degenerate (FR-009).
+- [X] T026 [US3] Add `waybill-cli/tests/fixtures/pants_namespace_collision_only/` — the same two colliding resolves with **no** third resolve. The existing collision fixture deliberately carries a third (`lint`) so the split runs at all; this one is the case that currently produces no split whatsoever.
+- [X] T027 [US3] Write the failing test in `waybill-cli/tests/pants_namespace_split.rs`: that fixture yields two documents and does **not** emit the not-partitionable warning. Today: `detected=1`, fallback fires, single unsplit SBOM.
+- [X] T028 [US3] Ensure the group count at `waybill-cli/src/generate/split.rs` (the `groups.len() <= 1` check) is taken **after** regrouping. Research R3 is explicit: a fix that regroups at emission while counting earlier leaves this case silently unsplit, behind a warning that reads like correct behaviour.
+- [X] T029 [P] [US3] In `waybill-cli/tests/pants_namespace_split.rs`, test that a genuinely single-resolve repository (`pants_pex`) **still** falls back with the warning. Only the miscount is being fixed; the degenerate case is still degenerate (FR-009).
 
 **Checkpoint**: the simplest real-world reproduction is covered.
 
@@ -128,7 +128,8 @@ Repository root. `waybill-cli/src/scan_fs/package_db/` (recording),
 - [ ] T032 Run the mandatory pre-PR gate: `./scripts/pre-pr.sh`. Enumerate the per-target results rather than citing the exit code.
 - [ ] T033 Refresh the corpus goldens via the lane (`regen_goldens=true`), **reading the diff first**. Expect movement on exactly three targets — `pants-example-django`, `-jvm`, `-python` — and **none** on `-golang` or `-javascript`, which carry no membership (research R5). Movement on those two means the annotation is being emitted where there is no resolve, which FR-006d's absence rule forbids. Never regenerate locally.
 - [ ] T034 [P] Document the behaviour in `docs/reference/split-modes.md` — that same-named resolves across namespaces now split, and that filenames qualify only on collision — and write the CHANGELOG entry. Additive on the wire, but the split's **output filenames change** for a colliding repository, which a consumer scripting against them must know.
-- [ ] T035 Comment on #919 with what landed, and on #924 noting that C161 remains Python-only and is now the last namespace-blind resolve field.
+- [ ] T035 Remove the now-vestigial m912 document-scope namespace index. Carrying the qualified identity on the group made `NamespaceIndex`, `index_record_all`, `index_insert` and the `pants_resolve_namespaces` field on `ScanArtifacts` / `ScanResult` dead weight — nothing reads them. Clippy does not flag them (pub fields on pub types), which is exactly why they will rot quietly. ~54 references across 11 files; deliberately NOT folded into the feature commits, because a large mechanical deletion buried in a behavioural change is unreviewable.
+- [ ] T036 Comment on #919 with what landed, and on #924 noting that C161 remains Python-only and is now the last namespace-blind resolve field.
 
 ---
 
