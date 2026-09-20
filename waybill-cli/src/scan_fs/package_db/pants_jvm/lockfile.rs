@@ -396,6 +396,17 @@ pub(crate) fn entry_to_package_db_entry(
         super::super::pants_resolve::ANNOTATION_KEY.to_string(),
         super::super::pants_resolve::write([resolve_name]),
     );
+    // #919 (m922) — which Pants language namespace this resolve lives in. The
+    // split groups on it; without it two resolves sharing a name merge into one
+    // document. Taken from THIS reader's identity, never inferred from the
+    // component's PURL ecosystem — a Python resolve routinely contains
+    // pkg:generic/* members, so ecosystem carries no namespace signal (R2).
+    extra_annotations.insert(
+        super::super::pants_resolve::NAMESPACE_KEY.to_string(),
+        super::super::pants_resolve::write_namespace(
+            super::super::pants_resolve::LanguageNamespace::Jvm,
+        ),
+    );
     if let Some(url) = entry.coord.url.as_deref().filter(|s| !s.is_empty()) {
         extra_annotations.insert(
             "waybill:source-url".to_string(),

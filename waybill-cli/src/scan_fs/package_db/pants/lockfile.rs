@@ -401,6 +401,17 @@ pub(crate) fn resolve_component_entry(
         super::super::pants_resolve::ANNOTATION_KEY.to_string(),
         super::super::pants_resolve::write([resolve_name]),
     );
+    // #919 (m922) — which Pants language namespace this resolve lives in. The
+    // split groups on it; without it two resolves sharing a name merge into one
+    // document. Taken from THIS reader's identity, never inferred from the
+    // component's PURL ecosystem — a Python resolve routinely contains
+    // pkg:generic/* members, so ecosystem carries no namespace signal (R2).
+    extra_annotations.insert(
+        super::super::pants_resolve::NAMESPACE_KEY.to_string(),
+        super::super::pants_resolve::write_namespace(
+            super::super::pants_resolve::LanguageNamespace::Python,
+        ),
+    );
     // FR-003c: whether this classification rests on a declaration or on the
     // weaker name heuristic. Recorded per component so the aggregate count is
     // reconstructible from the document rather than only asserted by it.
@@ -540,6 +551,17 @@ pub(crate) fn locked_req_to_entry(
     extra_annotations.insert(
         super::super::pants_resolve::ANNOTATION_KEY.to_string(),
         super::super::pants_resolve::write([resolve_name]),
+    );
+    // #919 (m922) — which Pants language namespace this resolve lives in. The
+    // split groups on it; without it two resolves sharing a name merge into one
+    // document. Taken from THIS reader's identity, never inferred from the
+    // component's PURL ecosystem — a Python resolve routinely contains
+    // pkg:generic/* members, so ecosystem carries no namespace signal (R2).
+    extra_annotations.insert(
+        super::super::pants_resolve::NAMESPACE_KEY.to_string(),
+        super::super::pants_resolve::write_namespace(
+            super::super::pants_resolve::LanguageNamespace::Python,
+        ),
     );
     if let Some(rp) = &req.requires_python {
         if !rp.is_empty() {

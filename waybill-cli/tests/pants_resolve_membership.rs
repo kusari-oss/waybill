@@ -46,6 +46,31 @@ fn scan() -> serde_json::Value {
     scan_to("cyclonedx-json", "actual.cdx.json")
 }
 
+/// m922 — scan an arbitrary Pants fixture unsplit, for the pairing check.
+fn scan_unsplit(fixture_name: &str) -> serde_json::Value {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests/fixtures")
+        .join(fixture_name);
+    let out = tempfile::tempdir().expect("tempdir");
+    let file = out.path().join("actual.cdx.json");
+    let status = Command::new(env!("CARGO_BIN_EXE_waybill"))
+        .args([
+            "sbom",
+            "scan",
+            "--path",
+            path.to_str().expect("fixture"),
+            "--offline",
+            "--format",
+            "cyclonedx-json",
+            "--output",
+            file.to_str().expect("out"),
+        ])
+        .status()
+        .expect("run waybill");
+    assert!(status.success(), "scan failed for {fixture_name}: {status}");
+    serde_json::from_slice(&std::fs::read(&file).expect("read")).expect("parse")
+}
+
 /// Decode membership from a CycloneDX property.
 ///
 /// CycloneDX spec'es `properties[].value` as a **string**, so an array is
@@ -207,4 +232,130 @@ fn membership_is_identical_across_repeated_scans() {
             "membership for {purl} differs between two scans of one repository"
         );
     }
+}
+
+// ---------------------------------------------------------------
+// Issue #919 (m922) — the per-component namespace
+// ---------------------------------------------------------------
+
+/// T008 — C-1 and FR-007. Every component that carries resolve membership
+/// carries exactly one namespace, and every component that carries no
+/// membership carries no namespace.
+///
+/// The absence half is the part that matters most: absence must mean exactly
+/// one thing ("this component is in no Pants resolve"), which is also what
+/// makes a document produced before this feature readable — the field is
+/// missing rather than blank. And this is what stops a reader being added
+/// later that writes membership without a namespace, which would silently
+/// produce components the split cannot place.
+#[test]
+fn every_component_with_membership_has_exactly_one_namespace() {
+    const MEMBERSHIP: &str = "waybill:pants-resolve";
+    const NAMESPACE: &str = "waybill:pants-resolve-namespace";
+    const KNOWN: [&str; 2] = ["python", "jvm"];
+
+    for fixture in [
+        "pants_resolve_edges",
+        "pants_discovered_resolves",
+        "pants_namespace_collision",
+        "pants_coursier_jvm/multi_resolve",
+        // NOT bare `pants_pex` — that directory is a CONTAINER of sub-fixtures
+        // (not_pants/, malformed_pants_toml/, …), so scanning its root finds one
+        // stray component and no resolve membership at all. The vacuous-pass
+        // guard below caught that on the first run.
+        "pants_pex/multi_resolve_map",
+    ] {
+        let doc = scan_unsplit(fixture);
+        let mut with_membership = 0usize;
+
+        for c in doc["components"].as_array().into_iter().flatten() {
+            let props: std::collections::BTreeMap<&str, &str> = c["properties"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter_map(|p| Some((p["name"].as_str()?, p["value"].as_str()?)))
+                .collect();
+
+            let purl = c["purl"].as_str().unwrap_or("<no purl>");
+            match (props.get(MEMBERSHIP), props.get(NAMESPACE)) {
+                (Some(_), Some(ns)) => {
+                    with_membership += 1;
+                    assert!(
+                        KNOWN.contains(ns),
+                        "{fixture}: {purl} has namespace {ns:?}, outside the closed set"
+                    );
+                }
+                (Some(_), None) => panic!(
+                    "{fixture}: {purl} carries resolve membership but NO namespace — \
+                     the split cannot place it, and #919 is exactly what happens when \
+                     a resolve cannot be told apart from another of the same name"
+                ),
+                (None, Some(ns)) => panic!(
+                    "{fixture}: {purl} carries namespace {ns:?} but no membership — \
+                     absence of membership must mean absence of namespace, or absence \
+                     stops meaning one thing (FR-007)"
+                ),
+                (None, None) => {}
+            }
+        }
+
+        assert!(
+            with_membership > 0,
+            "{fixture}: no component carried resolve membership, so this fixture \
+             asserted nothing — a vacuous pass, not a passing test"
+        );
+    }
+}
+
+/// T009 — FR-006a / SC-007 / contract C-4. **The additive guarantee.**
+///
+/// `waybill:pants-resolve` keeps its v0.9.0 key and its array-of-BARE-names
+/// value. This is the promise the entire design choice rests on: the namespace
+/// went into a *new* annotation specifically so this field would not change a
+/// second time in one release cycle — v0.9.0 had just changed it from a bare
+/// string to an array, and asking consumers to absorb another change to the
+/// same key immediately afterwards was the alternative that was rejected.
+///
+/// Nothing else in the suite checks it. The split-output byte-identity test
+/// covers a different artifact.
+#[test]
+fn membership_keeps_its_v090_key_and_bare_name_shape() {
+    let doc = scan_unsplit("pants_resolve_edges");
+    let mut checked = 0usize;
+
+    for c in doc["components"].as_array().into_iter().flatten() {
+        let Some(raw) = c["properties"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .find(|p| p["name"].as_str() == Some("waybill:pants-resolve"))
+            .and_then(|p| p["value"].as_str())
+        else {
+            continue;
+        };
+        checked += 1;
+        let purl = c["purl"].as_str().unwrap_or("<no purl>");
+
+        // Still an array, not a bare string (the v0.9.0 shape).
+        let names: Vec<String> = serde_json::from_str(raw).unwrap_or_else(|e| {
+            panic!("{purl}: membership {raw:?} is no longer a JSON array: {e}")
+        });
+
+        // Still BARE names. If the namespace had been folded in here instead
+        // of riding alongside, these would read `python:app` and every
+        // existing consumer would break.
+        for n in &names {
+            assert!(
+                !n.contains(':'),
+                "{purl}: membership name {n:?} is namespace-qualified. The namespace \
+                 belongs in waybill:pants-resolve-namespace; qualifying this field \
+                 would be the second breaking change to it in one release cycle"
+            );
+        }
+    }
+
+    assert!(
+        checked > 0,
+        "no component carried membership — this asserted nothing"
+    );
 }

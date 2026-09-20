@@ -169,6 +169,77 @@ impl std::fmt::Display for LanguageNamespace {
     }
 }
 
+// -------------------------------------------------------------------
+// Issue #919 (m922) — the namespace, PER COMPONENT.
+//
+// Milestone 912 recorded the namespace at DOCUMENT scope, which is enough to
+// say "this document represents python:default and jvm:default" and not
+// enough to say "this component belongs to the Python one". The split groups
+// on the emitted component set, and that gap is what lets two unrelated
+// resolves merge into one document.
+//
+// **Scalar, measured.** Across every corpus golden and every fixture, no
+// component belongs to resolves in two namespaces (research R1). It cannot
+// arise today: a component comes from one reader, the Python readers emit
+// `pkg:pypi/*` and `pkg:generic/*`, the coursier reader emits `pkg:maven/*`,
+// and dedup only unions components sharing a PURL — so the sets never meet.
+//
+// That is a property of which PURL types today's readers happen to emit, not
+// an invariant anything enforces. So the impossible case is DETECTED rather
+// than assumed away — see `namespace_conflict`. Guessing would file a
+// component into the wrong resolve's document, which is this milestone's own
+// defect one layer down.
+
+/// Per-component annotation key. Catalogue row C164.
+pub(crate) const NAMESPACE_KEY: &str = "waybill:pants-resolve-namespace";
+
+/// Build the per-component namespace value.
+pub fn write_namespace(namespace: LanguageNamespace) -> Value {
+    Value::String(namespace.as_str().to_string())
+}
+
+/// The component's namespace, or `None`.
+///
+/// `None` means "this component belongs to no Pants resolve" — or, after a
+/// conflict, "we could not answer". Both are honest; neither is a guess.
+pub fn read_namespace(annotations: &BTreeMap<String, Value>) -> Option<LanguageNamespace> {
+    match annotations.get(NAMESPACE_KEY)?.as_str()? {
+        "python" => Some(LanguageNamespace::Python),
+        "jvm" => Some(LanguageNamespace::Jvm),
+        other => {
+            tracing::warn!(
+                value = other,
+                "unrecognised Pants language namespace on a component; treating it as \
+                 absent rather than guessing. The namespace is a closed set."
+            );
+            None
+        }
+    }
+}
+
+/// Merge policy for the namespace when deduplication combines two components.
+///
+/// Returns the agreed value, or `None` when they disagree — the case research
+/// R1 measured as currently unreachable. On disagreement this warns and yields
+/// nothing, so the component ends up with no namespace and the split declines
+/// to place it, loudly, rather than filing it into one of two resolves by
+/// coin-flip.
+pub fn namespace_conflict(existing: &Value, incoming: &Value) -> Option<Value> {
+    if existing == incoming {
+        return Some(existing.clone());
+    }
+    tracing::warn!(
+        existing = %existing,
+        incoming = %incoming,
+        "two components merged with DIFFERENT Pants language namespaces. This is not \
+         reachable with the current readers — a component comes from one reader and \
+         the readers' PURL types do not overlap — so it means a new reader has broken \
+         that assumption. The namespace is dropped rather than guessed; the component \
+         will not be placed in a per-resolve document."
+    );
+    None
+}
+
 /// Resolve name → the namespaces that declare or discover it.
 ///
 /// Plural by necessity: a repository declaring `default` under both sections
@@ -244,6 +315,55 @@ mod tests {
 
 
     // --- m912: the language namespace ---
+
+
+    // --- m922: the per-component namespace ---
+
+    fn ns_bag(v: Value) -> BTreeMap<String, Value> {
+        let mut m = BTreeMap::new();
+        m.insert(NAMESPACE_KEY.to_string(), v);
+        m
+    }
+
+    #[test]
+    fn namespace_round_trips() {
+        for ns in [LanguageNamespace::Python, LanguageNamespace::Jvm] {
+            assert_eq!(read_namespace(&ns_bag(write_namespace(ns))), Some(ns));
+        }
+    }
+
+    #[test]
+    fn an_absent_namespace_reads_as_none() {
+        assert_eq!(read_namespace(&BTreeMap::new()), None);
+    }
+
+    /// The set is closed. An unrecognised value reads as absent rather than
+    /// passing through, so a typo cannot become a third namespace that groups
+    /// on its own.
+    #[test]
+    fn an_unrecognised_namespace_is_not_invented() {
+        assert_eq!(read_namespace(&ns_bag(json!("kotlin"))), None);
+    }
+
+    #[test]
+    fn agreeing_namespaces_merge_to_that_value() {
+        let a = write_namespace(LanguageNamespace::Python);
+        assert_eq!(namespace_conflict(&a, &a.clone()), Some(a));
+    }
+
+    /// C-3. Currently unreachable, deliberately detected anyway: guessing here
+    /// would file a component into the wrong resolve's document, which is the
+    /// defect this milestone fixes.
+    #[test]
+    fn disagreeing_namespaces_yield_nothing_rather_than_a_guess() {
+        assert_eq!(
+            namespace_conflict(
+                &write_namespace(LanguageNamespace::Python),
+                &write_namespace(LanguageNamespace::Jvm)
+            ),
+            None
+        );
+    }
 
     #[test]
     fn qualify_reads_like_a_pants_section_path() {
