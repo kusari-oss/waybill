@@ -72,7 +72,7 @@ The default is the only thing hiding that.
 ### Session 2026-09-20
 
 - Q: What happens after repeated batch failures in one scan? → A: **Circuit-break after the first failure** — stop attempting the batched path for the remainder of the scan and fall back for everything, with a log line saying so. The risk this feature accepts is exactly "upstream changes shape and every batch call starts failing"; in that world a per-chunk retry pays the batch penalty once per chunk (~23 times on the reference repository) before arriving at the slow path anyway, whereas breaking after the first failure costs one wasted round-trip and lands at roughly today's default. Chosen over the status-quo per-chunk retry, which handles a transient single-chunk blip marginally better and a persistent outage much worse, and over an N-failure threshold, which buys that transient tolerance at the cost of a tuning constant nobody would know how to pick. **Additionally**: the scan must log when the circuit breaks, and there must be a standing check that tells us when the batch endpoint leaves `v3alpha`, so the risk this feature accepts is re-examined when its premise changes rather than being inherited indefinitely.
-- Q: When does the circuit break take effect, given that batch chunks run 8-at-a-time? → A: **At the next group boundary.** The in-flight group completes; no later group attempts the batched path. Worst case is at most one concurrent group of wasted attempts rather than one per chunk. Chosen over checking before each request inside a group, which narrows the window without closing it — requests already dispatched still complete — for more state and no real gain; and over cancelling in-flight requests, which would genuinely reduce it to ~1 but adds cancellation plumbing exercised only on the failure path. The meaningful difference is ~23 wasted attempts versus at most 8, not 8 versus 1.
+- Q: When does the circuit break take effect, given that batch chunks run 8-at-a-time? → A: **Withdrawn — the premise was false, and the strict guarantee stands.** The question assumed batch chunks execute concurrently because the code groups them by `CONCURRENT_REQUESTS`. They do not: the async blocks are collected into a `Vec` and awaited one at a time, with no `join_all`, `FuturesUnordered` or `spawn` anywhere in the module. Timing corroborates independently — 23 chunks and ~6.3s of enrichment is ~0.27s per chunk, one round-trip each; eight-way concurrency would predict ~0.8s. Execution is therefore sequential, a failure is observed before the next request is issued, and breaking after the first failure costs **exactly one** wasted attempt. The weaker "at most one concurrency group" wording was written to accommodate a concurrency that does not exist and has been reverted. Recorded rather than quietly fixed because a reader comparing this spec to the code would otherwise find a doc comment (`depsdev_source.rs:187`) still asserting that concurrency is bounded at `CONCURRENT_REQUESTS`, which is true only in the sense that 1 ≤ 8.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -145,8 +145,7 @@ full content and reports the degradation.
    per chunk, and logs that it has done so.
 4. **Given** a scan whose circuit broke, **When** its wall clock is compared
    to a scan with enrichment forced down the per-component path, **Then** the
-   difference is at most one concurrent group of wasted attempts, not one per
-   chunk.
+   difference is a single wasted round-trip, not one per chunk.
 
 ---
 
@@ -160,8 +159,8 @@ full content and reports the degradation.
 - The batch endpoint changing shape incompatibly — the standing `v3alpha` risk
   this feature accepts.
 - A partial batch response: some components resolved, some not.
-- A batch failure in one member of a concurrency group while its siblings
-  succeed — the successes are kept; the break applies to later groups.
+- A batch failure on one chunk while earlier chunks succeeded — the successes
+  are kept; only later chunks are skipped.
 
 ## Requirements *(mandatory)*
 
@@ -184,9 +183,13 @@ full content and reports the degradation.
 - **FR-007**: A scan whose fast path failed MUST record that fact in its
   output, so a slower-than-expected scan is explicable rather than mysterious.
 - **FR-007a**: After a batch failure, the scan MUST stop attempting the
-  batched path for its remainder, taking effect at the next concurrency-group
-  boundary. Requests already in flight MAY complete. A persistent upstream
-  failure MUST cost at most one group of wasted attempts, not one per chunk.
+  batched path for its remainder. A persistent upstream failure MUST cost
+  exactly one wasted attempt, not one per chunk.
+
+  This is achievable because batch requests are issued sequentially — a
+  failure is observed before the next request goes out. Should that ever
+  change, this requirement becomes "at most one concurrency group" and the
+  change MUST be deliberate rather than a silent weakening.
 - **FR-007b**: The scan MUST emit a log line when it stops using the batched
   path, naming the failure that caused it. The document-scope record (FR-007)
   tells a consumer afterwards; the log tells the operator while it is
@@ -231,10 +234,10 @@ full content and reports the degradation.
   to before this change.
 - **SC-005**: With the batch endpoint failing, a scan still produces full
   enrichment content and records the degradation.
-- **SC-005a**: With the batch endpoint failing persistently, the scan makes at
-  most **one concurrency-group's worth** of batch attempts, not one per chunk
-  — measurable as attempt count. On a repository whose work spans ~23 chunks,
-  that is the difference between ~23 failed attempts and at most one group's.
+- **SC-005a**: With the batch endpoint failing persistently, the scan makes
+  **exactly one** batch attempt, not one per chunk — measurable as attempt
+  count. On a repository whose work spans ~23 chunks, that is the difference
+  between ~23 failed attempts and one.
 - **SC-005c**: The bound holds regardless of how many chunks the work spans:
   attempts do not grow with repository size once the circuit has broken.
 - **SC-005b**: An operator watching a scan whose fast path failed sees a log
