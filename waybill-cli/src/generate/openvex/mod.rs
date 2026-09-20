@@ -253,7 +253,6 @@ mod tests {
             cross_ecosystem_edges_report: None,
             helm_extraction_mode: None,
             pants_resolve_summary: None,
-            pants_resolve_namespaces: Default::default(),
             resolve_identity: None,
             haskell_parse_summary: None,
             gradle_scan_summary: None,

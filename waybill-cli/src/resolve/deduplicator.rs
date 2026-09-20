@@ -230,6 +230,39 @@ pub fn deduplicate(components: Vec<ResolvedComponent>) -> Vec<ResolvedComponent>
                     best.extra_annotations.insert(key, merged);
                     continue;
                 }
+                // #919 (m922) — the per-component namespace is SCALAR, so it
+                // agrees or it is a violated assumption. It cannot be unioned
+                // like membership: a component in two namespaces is not "in
+                // both", it is evidence that a reader broke the invariant that
+                // a component comes from one reader.
+                //
+                // Measured as unreachable today (research R1) and still
+                // handled, because guessing would file the component into one
+                // of two resolves' documents by coin-flip — this milestone's
+                // own defect, one layer down.
+                if key == crate::scan_fs::package_db::pants_resolve::NAMESPACE_KEY {
+                    match best.extra_annotations.get(&key) {
+                        Some(existing) => {
+                            match crate::scan_fs::package_db::pants_resolve::namespace_conflict(
+                                existing, &value,
+                            ) {
+                                Some(agreed) => {
+                                    best.extra_annotations.insert(key, agreed);
+                                }
+                                // Disagreement: drop it. `None` reads as
+                                // "cannot answer", and the split declines to
+                                // place the component rather than misplacing it.
+                                None => {
+                                    best.extra_annotations.remove(&key);
+                                }
+                            }
+                        }
+                        None => {
+                            best.extra_annotations.insert(key, value);
+                        }
+                    }
+                    continue;
+                }
                 best.extra_annotations.entry(key).or_insert(value);
             }
         }

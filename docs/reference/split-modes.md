@@ -61,13 +61,34 @@ Consequences worth knowing before you consume the output:
   would assert an ownership the repository never declared
   ([#887](https://github.com/kusari-oss/waybill/issues/887)). Naming a resolve
   is information; inventing a component that owns its packages is a claim.
-- **Two resolves sharing a name across namespaces currently merge into one
-  document** — [#919](https://github.com/kusari-oss/waybill/issues/919), a
-  defect in shipped code. That document states both identities, because it
-  represents both and naming either alone would be false. Note the merge is
-  invisible in a repository whose *only* resolves are the colliding pair: the
-  split sees one group, decides the repository is not partitionable, and falls
-  back to a single SBOM.
+- **Two resolves sharing a name across namespaces are different resolves, and
+  get different documents.** `[python.resolves]` and `[jvm.resolves]` are
+  separate namespaces in `pants.toml`, so a repository may declare `default` in
+  both. Grouping is on the namespace-qualified resolve, and each component
+  carries `waybill:pants-resolve-namespace` (catalogue row C164) so a consumer
+  partitioning membership itself can tell them apart too.
+
+  Where a name collides, **both** documents are namespace-qualified — filename,
+  manifest `subproject_id` and manifest `root_purl` alike:
+
+  ```
+  python-default.generic.cdx.json    the Python resolve
+  jvm-default.generic.cdx.json       the JVM resolve
+  lint.generic.cdx.json              no collision — unchanged
+  ```
+
+  Qualification applies **only** where a collision exists. A repository whose
+  resolve names are unique keeps byte-identical filenames and manifest entries.
+  Scripts that key on split filenames are affected only if the repository
+  actually has a name collision — in which case they were reading a document
+  containing two resolves' packages before.
+
+  Fixed in [#919](https://github.com/kusari-oss/waybill/issues/919); before
+  that the two merged into one document whose contents were the union of a
+  Python resolve and a JVM resolve. The merge was also invisible in a
+  repository whose *only* resolves were the colliding pair: the split counted
+  one group, decided the repository was not partitionable, and emitted **no
+  split at all**.
 - **No resolves, or only one**, falls back to a single SBOM with a warning,
   the same as the other modes with fewer than two boundaries.
 

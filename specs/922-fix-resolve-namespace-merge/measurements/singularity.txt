@@ -1,0 +1,18 @@
+FR-006c — can one component belong to resolves in more than one namespace?
+Proxy: for each resolve NAME, which PURL ecosystems do its members have?
+A resolve spanning pypi+maven is either the #919 merge, or a genuinely
+polyglot resolve — the case that would force a plural namespace.
+
+  pants-example-django
+     resolves: {'python-default': ['generic', 'pypi']}
+     components with >1 membership: 0   max membership length: 1
+     *** RESOLVE SPANNING ECOSYSTEMS: {'python-default': {'generic', 'pypi'}}
+  pants-example-jvm
+     resolves: {'default': ['maven']}
+     components with >1 membership: 0   max membership length: 1
+  pants-example-python
+     resolves: {'python-default': ['generic', 'pypi']}
+     components with >1 membership: 0   max membership length: 1
+     *** RESOLVE SPANNING ECOSYSTEMS: {'python-default': {'generic', 'pypi'}}
+
+TOTALS  targets with pants membership=3  components with plural membership=0  resolves spanning ecosystems=2

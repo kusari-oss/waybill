@@ -141,6 +141,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve-namespace\",\"value\":\"jvm\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
         }
       ],
@@ -208,6 +214,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":[\"default\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve-namespace\",\"value\":\"jvm\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -285,6 +297,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve-namespace\",\"value\":\"jvm\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
         }
       ],
@@ -352,6 +370,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":[\"default\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve-namespace\",\"value\":\"jvm\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -429,6 +453,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve-namespace\",\"value\":\"jvm\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
         }
       ],
@@ -496,6 +526,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":[\"default\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve-namespace\",\"value\":\"jvm\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -573,6 +609,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve-namespace\",\"value\":\"jvm\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
         }
       ],
@@ -640,6 +682,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":[\"default\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve-namespace\",\"value\":\"jvm\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -717,6 +765,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve-namespace\",\"value\":\"jvm\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
         }
       ],
@@ -784,6 +838,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":[\"default\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve-namespace\",\"value\":\"jvm\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -861,6 +921,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve-namespace\",\"value\":\"jvm\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
         }
       ],
@@ -928,6 +994,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":[\"default\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve-namespace\",\"value\":\"jvm\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1005,6 +1077,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve-namespace\",\"value\":\"jvm\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
         }
       ],
@@ -1072,6 +1150,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":[\"default\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve-namespace\",\"value\":\"jvm\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1149,6 +1233,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve-namespace\",\"value\":\"jvm\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
         }
       ],
@@ -1216,6 +1306,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":[\"default\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve-namespace\",\"value\":\"jvm\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1293,6 +1389,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve-namespace\",\"value\":\"jvm\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
         }
       ],
@@ -1360,6 +1462,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":[\"default\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve-namespace\",\"value\":\"jvm\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1437,6 +1545,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve-namespace\",\"value\":\"jvm\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
         }
       ],
@@ -1504,6 +1618,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":[\"default\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve-namespace\",\"value\":\"jvm\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1581,6 +1701,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve-namespace\",\"value\":\"jvm\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
         }
       ],
@@ -1648,6 +1774,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":[\"default\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve-namespace\",\"value\":\"jvm\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1725,6 +1857,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve-namespace\",\"value\":\"jvm\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
         }
       ],
@@ -1792,6 +1930,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":[\"default\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve-namespace\",\"value\":\"jvm\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1869,6 +2013,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve-namespace\",\"value\":\"jvm\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
         }
       ],
@@ -1941,6 +2091,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve-namespace\",\"value\":\"jvm\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
         }
       ],
@@ -2008,6 +2164,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":[\"default\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve-namespace\",\"value\":\"jvm\"}"
         },
         {
           "annotationDate": "<masked>",

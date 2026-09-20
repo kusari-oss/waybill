@@ -185,16 +185,37 @@ fn a_jvm_repository_identifies_its_resolves_too() {
 #[test]
 fn same_name_in_two_namespaces_is_distinguishable() {
     let s = split("pants_namespace_collision");
-    let merged = s
+
+    // **Inverted by #919 (m922), exactly as m912's contract C-6 predicted.**
+    //
+    // This test used to assert that ONE merged `default.*` document named BOTH
+    // `jvm:default` and `python:default` — the honest description of a document
+    // that really did represent two resolves. C-6 called that self-correcting:
+    // "once #919 lands the state cannot arise, and a consumer that sees two
+    // identities is looking at a defect rather than a shape it must support."
+    //
+    // #919 has landed. There are now two documents, each stating one resolve,
+    // and the plural case is unreachable.
+    let py = s
         .docs
         .iter()
-        .find(|(n, _)| n.starts_with("default."))
-        .expect("a document for `default`");
+        .find(|(n, _)| n.starts_with("python-default."))
+        .expect("a document for the Python `default` resolve");
     assert_eq!(
-        identity_cdx(&merged.1),
-        Some(vec!["jvm:default".to_string(), "python:default".to_string()]),
-        "a document representing two resolves must name both (C-6)"
+        identity_cdx(&py.1),
+        Some(vec!["python:default".to_string()]),
+        "each document now represents exactly one resolve"
     );
+
+    let jvm = s
+        .docs
+        .iter()
+        .find(|(n, _)| n.starts_with("jvm-default."))
+        .expect("a document for the JVM `default` resolve");
+    assert_eq!(identity_cdx(&jvm.1), Some(vec!["jvm:default".to_string()]));
+
+    // And they differ, which is the point of the namespace qualification.
+    assert_ne!(identity_cdx(&py.1), identity_cdx(&jvm.1));
 
     let lint = s
         .docs
@@ -211,11 +232,19 @@ fn same_name_in_two_namespaces_is_distinguishable() {
 #[test]
 fn the_collision_fixture_needs_its_third_resolve_to_split_at_all() {
     let s = split("pants_namespace_collision");
+    // **Rewritten by #919 (m922).** This asserted TWO documents — the merged
+    // `default` plus `lint` — and existed to stop anyone deleting `lint`, which
+    // would have made the split degenerate and hidden the bug entirely.
+    //
+    // With the bug fixed there are three, and the reason for the third resolve
+    // is historical rather than load-bearing: `pants_namespace_collision_only`
+    // now covers the degenerate case directly. Kept because the fixture's shape
+    // still has a story, and a future tidy-up should know why `lint` is here.
     assert_eq!(
         s.docs.len(),
-        2,
-        "two groups: the merged `default` and the uncollided `lint`. \
-         Drop `lint` and the split degenerates to one document, hiding #919."
+        3,
+        "python-default, jvm-default and lint. Before #919 this was 2, with the \
+         two `default` resolves merged into one document."
     );
 }
 

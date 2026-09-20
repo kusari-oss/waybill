@@ -49,6 +49,10 @@
           "value": "[\"default\"]"
         },
         {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"3rdparty/jvm\"]"
         }
@@ -106,6 +110,10 @@
         {
           "name": "waybill:pants-resolve",
           "value": "[\"default\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
         },
         {
           "name": "waybill:workspace-member",
@@ -167,6 +175,10 @@
           "value": "[\"default\"]"
         },
         {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"3rdparty/jvm\"]"
         }
@@ -224,6 +236,10 @@
         {
           "name": "waybill:pants-resolve",
           "value": "[\"default\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
         },
         {
           "name": "waybill:workspace-member",
@@ -285,6 +301,10 @@
           "value": "[\"default\"]"
         },
         {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"3rdparty/jvm\"]"
         }
@@ -342,6 +362,10 @@
         {
           "name": "waybill:pants-resolve",
           "value": "[\"default\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
         },
         {
           "name": "waybill:workspace-member",
@@ -403,6 +427,10 @@
           "value": "[\"default\"]"
         },
         {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"3rdparty/jvm\"]"
         }
@@ -460,6 +488,10 @@
         {
           "name": "waybill:pants-resolve",
           "value": "[\"default\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
         },
         {
           "name": "waybill:workspace-member",
@@ -521,6 +553,10 @@
           "value": "[\"default\"]"
         },
         {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"3rdparty/jvm\"]"
         }
@@ -578,6 +614,10 @@
         {
           "name": "waybill:pants-resolve",
           "value": "[\"default\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
         },
         {
           "name": "waybill:workspace-member",
@@ -639,6 +679,10 @@
           "value": "[\"default\"]"
         },
         {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"3rdparty/jvm\"]"
         }
@@ -696,6 +740,10 @@
         {
           "name": "waybill:pants-resolve",
           "value": "[\"default\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
         },
         {
           "name": "waybill:workspace-member",
@@ -757,6 +805,10 @@
           "value": "[\"default\"]"
         },
         {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"3rdparty/jvm\"]"
         }
@@ -814,6 +866,10 @@
         {
           "name": "waybill:pants-resolve",
           "value": "[\"default\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
         },
         {
           "name": "waybill:workspace-member",
@@ -875,6 +931,10 @@
           "value": "[\"default\"]"
         },
         {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"3rdparty/jvm\"]"
         }
@@ -932,6 +992,10 @@
         {
           "name": "waybill:pants-resolve",
           "value": "[\"default\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
         },
         {
           "name": "waybill:workspace-member",
@@ -993,6 +1057,10 @@
           "value": "[\"default\"]"
         },
         {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"3rdparty/jvm\"]"
         }
@@ -1050,6 +1118,10 @@
         {
           "name": "waybill:pants-resolve",
           "value": "[\"default\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
         },
         {
           "name": "waybill:workspace-member",
@@ -1111,6 +1183,10 @@
           "value": "[\"default\"]"
         },
         {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"3rdparty/jvm\"]"
         }
@@ -1168,6 +1244,10 @@
         {
           "name": "waybill:pants-resolve",
           "value": "[\"default\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
         },
         {
           "name": "waybill:workspace-member",
@@ -1229,6 +1309,10 @@
           "value": "[\"default\"]"
         },
         {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"3rdparty/jvm\"]"
         }
@@ -1286,6 +1370,10 @@
         {
           "name": "waybill:pants-resolve",
           "value": "[\"default\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
         },
         {
           "name": "waybill:workspace-member",
@@ -1347,6 +1435,10 @@
           "value": "[\"default\"]"
         },
         {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"3rdparty/jvm\"]"
         }
@@ -1404,6 +1496,10 @@
         {
           "name": "waybill:pants-resolve",
           "value": "[\"default\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
         },
         {
           "name": "waybill:workspace-member",
@@ -1465,6 +1561,10 @@
           "value": "[\"default\"]"
         },
         {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"3rdparty/jvm\"]"
         }
@@ -1524,6 +1624,10 @@
           "value": "[\"default\"]"
         },
         {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"3rdparty/jvm\"]"
         }
@@ -1581,6 +1685,10 @@
         {
           "name": "waybill:pants-resolve",
           "value": "[\"default\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
         },
         {
           "name": "waybill:workspace-member",

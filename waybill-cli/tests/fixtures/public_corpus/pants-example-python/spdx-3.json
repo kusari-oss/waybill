@@ -822,6 +822,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-BHY7BITOPELX5LRZ",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve-namespace\",\"value\":\"python\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-L7PWGDCCLFSRLWYO",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-C3UFTVYYAJU7AXCV",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.8\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-BX7RRJNTEW4YZ7I2",
@@ -849,6 +857,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-DJ7L7C6NDAXMCYY7",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"requirements.txt\",\"sha256\":\"<masked-sha256>\"}]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-SZPP2Q3S7JS3P5RM",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-DMKML2TZNR5E6MX4",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve-namespace\",\"value\":\"python\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-KRELKXZBLBWT2U2V",
       "type": "Annotation"
     },
     {
@@ -918,6 +934,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-FEZOHMO3IEEPWNKG",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve-namespace\",\"value\":\"python\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-E6CNMXCHNWAT77DO",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-FJKMFLTYWVDU4E2H",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-E6CNMXCHNWAT77DO",
@@ -929,6 +953,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-FSQHVSXWYQKANUJW",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:py:py:1.11.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-py:py:1.11.0:*:*:*:*:*:*:*\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-KRELKXZBLBWT2U2V",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-FTLQMMVTLBNXVCFB",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve-namespace\",\"value\":\"python\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-Q72FCOSCIJC2P37I",
       "type": "Annotation"
     },
     {
@@ -974,6 +1006,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-HRSGLTRWZWZVBQD4",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve-namespace\",\"value\":\"python\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZIBQF5WBZHCXASVC",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-I6I2CJUZOWKKLMUW",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"compositions\",\"value\":{\"complete_ecosystems\":[\"pypi\"]}}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>",
@@ -993,6 +1033,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-ICW44P3RPT4IEO42",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-7PGGREEYPN52BKXA",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-IGQ7YP3Y2FR2XJFD",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve-namespace\",\"value\":\"python\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-SZPP2Q3S7JS3P5RM",
       "type": "Annotation"
     },
     {
@@ -1032,6 +1080,14 @@
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-KG4ZIHIMX2HTFLZV",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"python-default.lock\"]}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-YZ2MIPQWGEB5UZRZ",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-KKRK3POHBTN4OX6U",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve-namespace\",\"value\":\"python\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-YZ2MIPQWGEB5UZRZ",
       "type": "Annotation"
     },
@@ -1110,6 +1166,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-MQTXFEBJAZSV3MU5",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve-namespace\",\"value\":\"python\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-BX7RRJNTEW4YZ7I2",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-MS4ECVLCWJMRD2KD",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-SZPP2Q3S7JS3P5RM",
@@ -1145,6 +1209,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-NQ5QZQVZHFHLY3M5",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-V6WS5B3MCUO5V2R7",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-NQOWWGZKXFBXHGUT",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve-namespace\",\"value\":\"python\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-THZZ7BY5LVTRT5PE",
       "type": "Annotation"
     },
     {
@@ -1201,6 +1273,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-PFNMHJVAB6QKF6GH",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:generation-context\",\"value\":\"filesystem-scan\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-PZCLLY5TL4SUF4K2",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve-namespace\",\"value\":\"python\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-7PGGREEYPN52BKXA",
       "type": "Annotation"
     },
     {
@@ -1273,6 +1353,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-RT5PXKNEBVS2BMVI",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requirement-ranges\",\"value\":[\"ansicolors==1.1.8\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-THZZ7BY5LVTRT5PE",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-RYAPFTAJVZ6H6LDZ",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve-namespace\",\"value\":\"python\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-V6WS5B3MCUO5V2R7",
       "type": "Annotation"
     },
     {

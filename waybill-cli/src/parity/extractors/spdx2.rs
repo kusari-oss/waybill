@@ -647,6 +647,7 @@ spdx23_anno!(c157_spdx23, "waybill:python-lockfile-format",                compo
 spdx23_anno!(c158_spdx23, "waybill:enrichment-degraded",                  document);
 spdx23_anno!(c159_spdx23, "waybill:unresolved-declared-dep-count",         document);
 spdx23_anno!(c160_spdx23, "waybill:component-kind",                        component);
+spdx23_anno!(c164_spdx23, "waybill:pants-resolve-namespace",                        component);
 spdx23_anno!(c161_spdx23, "waybill:resolve-ownership",                     document);
 spdx23_anno!(c163_spdx23, "waybill:document-resolve",                     document);
 spdx23_anno!(c162_spdx23, "waybill:cabal-entries-skipped",                 document);

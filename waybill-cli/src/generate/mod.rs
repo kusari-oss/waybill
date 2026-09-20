@@ -172,10 +172,6 @@ pub struct ScanArtifacts<'a> {
     /// Pex lockfile was discovered (annotation absent; contract A-7).
     pub pants_resolve_summary:
         Option<crate::scan_fs::package_db::pants::PantsResolveSummary>,
-    /// Issue #914 (m912) — resolve name → Pants language namespace(s).
-    /// Derivation input for [`Self::resolve_identity`]; never emitted itself.
-    pub pants_resolve_namespaces:
-        crate::scan_fs::package_db::pants_resolve::NamespaceIndex,
     /// Issue #914 (m912) — **which resolve this document is**, as
     /// namespace-qualified identities (`python:default`).
     ///
@@ -437,7 +433,6 @@ impl<'a> ScanArtifacts<'a> {
             cross_ecosystem_edges_report: self.cross_ecosystem_edges_report,
             helm_extraction_mode: self.helm_extraction_mode,
             pants_resolve_summary: self.pants_resolve_summary.clone(),
-            pants_resolve_namespaces: self.pants_resolve_namespaces.clone(),
             // Deliberately NOT copied from the parent. Every other doc-scope
             // field here is repository-wide and is copied verbatim, which is
             // the behaviour #914 is about; this one describes the document,

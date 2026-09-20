@@ -1,0 +1,17 @@
+# Issue #919 (m922) — the SIMPLEST reproduction, and the one that currently
+# produces no split at all.
+#
+# Only two resolves exist and they collide. The split groups on the bare name,
+# counts ONE group, declares the repository not partitionable, and emits a
+# single unsplit SBOM. The merge is invisible behind the degenerate-split
+# fallback — which is why `pants_namespace_collision` carries a third,
+# uncollided resolve, and why this fixture exists separately.
+
+[python]
+interpreter_constraints = [">=3.9"]
+
+[python.resolves]
+default = "3rdparty/python/default.lock"
+
+[jvm.resolves]
+default = "3rdparty/jvm/default.lock"

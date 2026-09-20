@@ -7,6 +7,41 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Same-named Pants resolves in different namespaces are no longer merged (#919)
+
+`[python.resolves]` and `[jvm.resolves]` are separate namespaces in
+`pants.toml`, so a repository can declare `default` in both. `--split=resolve`
+grouped on the bare resolve name, so those two unrelated resolves were merged
+into **one** document whose components were the union of both — a consumer
+asking for the production Python resolve silently received another namespace's
+packages.
+
+Two symptoms, one cause:
+
+- A colliding pair merged into one document.
+- If the colliding pair were a repository's *only* resolves, the split counted
+  one group, decided the repository was not partitionable, and produced **no
+  split at all**.
+
+Both are fixed. Grouping is now on the namespace-qualified resolve.
+
+**New per-component annotation `waybill:pants-resolve-namespace`** (catalogue
+row C164), carrying `python` or `jvm`, emitted on every component that carries
+resolve membership. Additive — `waybill:pants-resolve` keeps its existing key
+and its array-of-bare-names value, so consumers reading it are unaffected. The
+namespace rides alongside rather than being folded into that field, precisely
+so it would not change shape a second time in one release cycle.
+
+**Filenames change only where a name collides.** Both sides are then
+qualified — `python-default.generic.cdx.json` and `jvm-default.generic.cdx.json`
+— along with the manifest's `subproject_id` and `root_purl`. A repository with
+unique resolve names produces byte-identical output, filenames included.
+
+If you script against `--split=resolve` output and your repository has a name
+collision across namespaces, expect the filenames to change. You were
+previously reading a document that contained two resolves' packages.
+
+
 ### A per-resolve split document now says which resolve it is (#914)
 
 `--split=resolve` documents carry a new doc-scope annotation,

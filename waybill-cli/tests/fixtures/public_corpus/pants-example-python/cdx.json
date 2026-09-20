@@ -42,6 +42,10 @@
           "value": "[\"python-default\"]"
         },
         {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
+        },
+        {
           "name": "waybill:resolve-classification-source",
           "value": "heuristic-or-default"
         },
@@ -109,6 +113,10 @@
           "value": "[\"python-default\"]"
         },
         {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -170,6 +178,10 @@
         {
           "name": "waybill:pants-resolve",
           "value": "[\"python-default\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
         },
         {
           "name": "waybill:requires-python",
@@ -243,6 +255,10 @@
           "value": "[\"python-default\"]"
         },
         {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
+        },
+        {
           "name": "waybill:requires-python",
           "value": ">=3.8"
         },
@@ -310,6 +326,10 @@
           "value": "[\"python-default\"]"
         },
         {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
+        },
+        {
           "name": "waybill:requires-python",
           "value": ">=3.8"
         },
@@ -375,6 +395,10 @@
         {
           "name": "waybill:pants-resolve",
           "value": "[\"python-default\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
         },
         {
           "name": "waybill:requires-python",
@@ -448,6 +472,10 @@
           "value": "[\"python-default\"]"
         },
         {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
+        },
+        {
           "name": "waybill:requires-python",
           "value": "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
         },
@@ -519,6 +547,10 @@
           "value": "[\"python-default\"]"
         },
         {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
+        },
+        {
           "name": "waybill:requires-python",
           "value": ">=3.7"
         },
@@ -588,6 +620,10 @@
         {
           "name": "waybill:pants-resolve",
           "value": "[\"python-default\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
         },
         {
           "name": "waybill:requires-python",
@@ -693,6 +729,10 @@
           "value": "[\"python-default\"]"
         },
         {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
+        },
+        {
           "name": "waybill:requires-python",
           "value": ">=3.8"
         },
@@ -758,6 +798,10 @@
         {
           "name": "waybill:pants-resolve",
           "value": "[\"python-default\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
         },
         {
           "name": "waybill:workspace-member",

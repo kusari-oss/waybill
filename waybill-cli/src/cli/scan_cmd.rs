@@ -3426,7 +3426,6 @@ pub async fn execute(
         cross_ecosystem_edges_report,
         helm_extraction_mode,
         pants_resolve_summary,
-        pants_resolve_namespaces,
         haskell_parse_summary,
         gradle_scan_summary,
         scan_target_coord,
@@ -4357,7 +4356,6 @@ pub async fn execute(
         // signal for the C123 annotation.
         helm_extraction_mode: helm_extraction_mode.as_ref(),
         pants_resolve_summary,
-        pants_resolve_namespaces,
         // The unsplit document represents every resolve rather than one, so
         // it has no identity to state (FR-008). The split sets this per
         // projection; everything else here is repository-wide.

@@ -231,6 +231,17 @@ pub(crate) fn parse_uv_lock_bytes(
             crate::scan_fs::package_db::pants_resolve::ANNOTATION_KEY.to_string(),
             crate::scan_fs::package_db::pants_resolve::write([pants_resolve_name]),
         );
+        // #919 (m922) — which Pants language namespace this resolve lives in. The
+        // split groups on it; without it two resolves sharing a name merge into one
+        // document. Taken from THIS reader's identity, never inferred from the
+        // component's PURL ecosystem — a Python resolve routinely contains
+        // pkg:generic/* members, so ecosystem carries no namespace signal (R2).
+        entry.extra_annotations.insert(
+            crate::scan_fs::package_db::pants_resolve::NAMESPACE_KEY.to_string(),
+            crate::scan_fs::package_db::pants_resolve::write_namespace(
+                crate::scan_fs::package_db::pants_resolve::LanguageNamespace::Python,
+            ),
+        );
     }
     Some(entries)
 }

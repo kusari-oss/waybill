@@ -1,0 +1,15 @@
+Same question against the FIXTURES, which (unlike the corpus) have plural membership.
+
+  pants_coursier_jvm_multi_resolve
+     resolve -> ecosystems: {'default': ['maven'], 'junit': ['maven'], 'scalatest': ['maven']}
+     components in >1 resolve: none
+  pants_discovered_resolves
+     resolve -> ecosystems: {'default': ['pypi'], 'lint': ['pypi']}
+     components in >1 resolve: none
+  pants_namespace_collision
+     resolve -> ecosystems: {'default': ['generic', 'maven', 'pypi'], 'lint': ['generic', 'pypi']}
+     components in >1 resolve: none
+  pants_resolve_edges
+     resolve -> ecosystems: {'app': ['generic', 'pypi'], 'tools': ['generic', 'pypi']}
+     components in >1 resolve:
+        pkg:pypi/waybill-fixture-common@1.0.0  memberships=['app', 'tools']  ecosystem=pypi

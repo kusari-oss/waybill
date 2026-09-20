@@ -30,7 +30,7 @@
 // Pants reader at all.
 
 use serde_json::Value;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 /// The per-component annotation key. Catalogue row C143.
 pub(crate) const ANNOTATION_KEY: &str = "waybill:pants-resolve";
@@ -169,65 +169,90 @@ impl std::fmt::Display for LanguageNamespace {
     }
 }
 
-/// Resolve name → the namespaces that declare or discover it.
-///
-/// Plural by necessity: a repository declaring `default` under both sections
-/// maps that one name to both, which is the collision FR-001a exists for.
-pub type NamespaceIndex = BTreeMap<String, BTreeSet<LanguageNamespace>>;
+// -------------------------------------------------------------------
+// Issue #919 (m922) — the namespace, PER COMPONENT.
+//
+// Milestone 912 recorded the namespace at DOCUMENT scope, which is enough to
+// say "this document represents python:default and jvm:default" and not
+// enough to say "this component belongs to the Python one". The split groups
+// on the emitted component set, and that gap is what lets two unrelated
+// resolves merge into one document.
+//
+// **Scalar, measured.** Across every corpus golden and every fixture, no
+// component belongs to resolves in two namespaces (research R1). It cannot
+// arise today: a component comes from one reader, the Python readers emit
+// `pkg:pypi/*` and `pkg:generic/*`, the coursier reader emits `pkg:maven/*`,
+// and dedup only unions components sharing a PURL — so the sets never meet.
+//
+// That is a property of which PURL types today's readers happen to emit, not
+// an invariant anything enforces. So the impossible case is DETECTED rather
+// than assumed away — see `namespace_conflict`. Guessing would file a
+// component into the wrong resolve's document, which is this milestone's own
+// defect one layer down.
 
 /// The qualified identity of one resolve, e.g. `python:default`.
 ///
 /// The separator is `:` because it is what `pants.toml`'s own section paths
 /// read like, and because neither a namespace nor a Pants resolve name may
-/// contain one.
+/// contain one. Single spelling of the identity, used by the split's grouping
+/// and by the C163 document identity it feeds.
 pub fn qualify(namespace: LanguageNamespace, resolve: &str) -> String {
     format!("{}:{}", namespace.as_str(), resolve)
 }
 
-/// Every qualified identity a bare resolve name maps to, lexically sorted.
-///
-/// Returns more than one only in the #919 collision case, where a document
-/// genuinely represents two resolves and naming either alone would be false
-/// (contract C-6). Returns empty when the name is unknown to the index, which
-/// a caller must treat as "cannot identify" rather than substituting the bare
-/// name — a half-qualified identity is the ambiguity this feature removes.
-pub fn qualified_for(index: &NamespaceIndex, resolve: &str) -> Vec<String> {
-    let mut out: Vec<String> = index
-        .get(resolve)
-        .map(|namespaces| namespaces.iter().map(|ns| qualify(*ns, resolve)).collect())
-        .unwrap_or_default();
-    // The explicit sort is load-bearing and was caught by its own test.
-    // `BTreeSet<LanguageNamespace>` iterates in *discriminant* order, so this
-    // returned `["python:default", "jvm:default"]` — deterministic, but not
-    // lexical, and the doc comment above promised lexical. Milestone 671 hit
-    // the identical trap with a language-grouped enum and the same fix.
-    out.sort();
-    out
+/// Per-component annotation key. Catalogue row C164.
+pub(crate) const NAMESPACE_KEY: &str = "waybill:pants-resolve-namespace";
+
+/// Build the per-component namespace value.
+pub fn write_namespace(namespace: LanguageNamespace) -> Value {
+    Value::String(namespace.as_str().to_string())
 }
 
-/// Record that `resolve` exists under `namespace`.
-pub fn index_insert(index: &mut NamespaceIndex, namespace: LanguageNamespace, resolve: &str) {
-    index.entry(resolve.to_string()).or_default().insert(namespace);
-}
-
-/// Record every resolve named by `bags` as belonging to `namespace`.
+/// The component's namespace, or `None`.
 ///
-/// Called once per reader with that reader's own output, so the namespace
-/// comes from **which reader produced the entry** rather than from what its
-/// members look like. Contract C-2 rejects inferring it from member PURL
-/// ecosystem: that works on today's fixtures only because every fixture
-/// resolve happens to be single-ecosystem, and a polyglot resolve would
-/// silently mis-qualify.
-pub fn index_record_all<'a, I>(index: &mut NamespaceIndex, namespace: LanguageNamespace, bags: I)
-where
-    I: IntoIterator<Item = &'a BTreeMap<String, Value>>,
-{
-    for bag in bags {
-        for resolve in read(bag) {
-            index_insert(index, namespace, &resolve);
+/// `None` means "this component belongs to no Pants resolve" — or, after a
+/// conflict, "we could not answer". Both are honest; neither is a guess.
+pub fn read_namespace(annotations: &BTreeMap<String, Value>) -> Option<LanguageNamespace> {
+    match annotations.get(NAMESPACE_KEY)?.as_str()? {
+        "python" => Some(LanguageNamespace::Python),
+        "jvm" => Some(LanguageNamespace::Jvm),
+        other => {
+            tracing::warn!(
+                value = other,
+                "unrecognised Pants language namespace on a component; treating it as \
+                 absent rather than guessing. The namespace is a closed set."
+            );
+            None
         }
     }
 }
+
+/// Merge policy for the namespace when deduplication combines two components.
+///
+/// Returns the agreed value, or `None` when they disagree — the case research
+/// R1 measured as currently unreachable. On disagreement this warns and yields
+/// nothing, so the component ends up with no namespace and the split declines
+/// to place it, loudly, rather than filing it into one of two resolves by
+/// coin-flip.
+pub fn namespace_conflict(existing: &Value, incoming: &Value) -> Option<Value> {
+    if existing == incoming {
+        return Some(existing.clone());
+    }
+    tracing::warn!(
+        existing = %existing,
+        incoming = %incoming,
+        "two components merged with DIFFERENT Pants language namespaces. This is not \
+         reachable with the current readers — a component comes from one reader and \
+         the readers' PURL types do not overlap — so it means a new reader has broken \
+         that assumption. The namespace is dropped rather than guessed; the component \
+         will not be placed in a per-resolve document."
+    );
+    None
+}
+
+
+
+
 
 
 #[cfg(test)]
@@ -245,66 +270,67 @@ mod tests {
 
     // --- m912: the language namespace ---
 
+
+    // --- m922: the per-component namespace ---
+
+    fn ns_bag(v: Value) -> BTreeMap<String, Value> {
+        let mut m = BTreeMap::new();
+        m.insert(NAMESPACE_KEY.to_string(), v);
+        m
+    }
+
+    #[test]
+    fn namespace_round_trips() {
+        for ns in [LanguageNamespace::Python, LanguageNamespace::Jvm] {
+            assert_eq!(read_namespace(&ns_bag(write_namespace(ns))), Some(ns));
+        }
+    }
+
+    #[test]
+    fn an_absent_namespace_reads_as_none() {
+        assert_eq!(read_namespace(&BTreeMap::new()), None);
+    }
+
+    /// The set is closed. An unrecognised value reads as absent rather than
+    /// passing through, so a typo cannot become a third namespace that groups
+    /// on its own.
+    #[test]
+    fn an_unrecognised_namespace_is_not_invented() {
+        assert_eq!(read_namespace(&ns_bag(json!("kotlin"))), None);
+    }
+
+    #[test]
+    fn agreeing_namespaces_merge_to_that_value() {
+        let a = write_namespace(LanguageNamespace::Python);
+        assert_eq!(namespace_conflict(&a, &a.clone()), Some(a));
+    }
+
+    /// C-3. Currently unreachable, deliberately detected anyway: guessing here
+    /// would file a component into the wrong resolve's document, which is the
+    /// defect this milestone fixes.
+    #[test]
+    fn disagreeing_namespaces_yield_nothing_rather_than_a_guess() {
+        assert_eq!(
+            namespace_conflict(
+                &write_namespace(LanguageNamespace::Python),
+                &write_namespace(LanguageNamespace::Jvm)
+            ),
+            None
+        );
+    }
+
     #[test]
     fn qualify_reads_like_a_pants_section_path() {
         assert_eq!(qualify(LanguageNamespace::Python, "default"), "python:default");
         assert_eq!(qualify(LanguageNamespace::Jvm, "default"), "jvm:default");
     }
 
-    /// FR-001a. The whole point of the namespace: one bare name, two
-    /// resolves, two distinguishable identities.
-    #[test]
-    fn a_name_declared_in_both_namespaces_qualifies_to_both() {
-        let mut idx = NamespaceIndex::new();
-        index_insert(&mut idx, LanguageNamespace::Jvm, "default");
-        index_insert(&mut idx, LanguageNamespace::Python, "default");
-        assert_eq!(
-            qualified_for(&idx, "default"),
-            vec!["jvm:default", "python:default"]
-        );
-    }
-
-    /// Sorted, so a document's identity is byte-stable across scans the way
-    /// membership already is.
-    #[test]
-    fn qualified_for_is_order_independent() {
-        let mut a = NamespaceIndex::new();
-        index_insert(&mut a, LanguageNamespace::Python, "x");
-        index_insert(&mut a, LanguageNamespace::Jvm, "x");
-        let mut b = NamespaceIndex::new();
-        index_insert(&mut b, LanguageNamespace::Jvm, "x");
-        index_insert(&mut b, LanguageNamespace::Python, "x");
-        assert_eq!(qualified_for(&a, "x"), qualified_for(&b, "x"));
-    }
-
-    /// An unknown name yields nothing rather than the bare name. Substituting
-    /// the bare name would reintroduce exactly the ambiguity FR-001a removes,
-    /// in the one case where we know we cannot resolve it.
-    #[test]
-    fn an_unknown_resolve_does_not_fall_back_to_the_bare_name() {
-        assert!(qualified_for(&NamespaceIndex::new(), "default").is_empty());
-    }
 
 
 
-    /// The namespace comes from the reader, not from what the members look
-    /// like — C-2 rejects ecosystem inference explicitly.
-    #[test]
-    fn index_record_all_takes_the_namespace_from_the_caller() {
-        let bags = [bag(json!(["default", "lint"])), bag(json!(["default"]))];
-        let mut idx = NamespaceIndex::new();
-        index_record_all(&mut idx, LanguageNamespace::Jvm, bags.iter());
-        assert_eq!(qualified_for(&idx, "default"), vec!["jvm:default"]);
-        assert_eq!(qualified_for(&idx, "lint"), vec!["jvm:lint"]);
-    }
 
-    #[test]
-    fn index_record_all_ignores_entries_without_membership() {
-        let bags = [BTreeMap::new()];
-        let mut idx = NamespaceIndex::new();
-        index_record_all(&mut idx, LanguageNamespace::Python, bags.iter());
-        assert!(idx.is_empty());
-    }
+
+
 
     #[test]
     fn read_accepts_the_array_form() {
