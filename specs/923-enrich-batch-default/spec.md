@@ -67,6 +67,13 @@ repository, with the fast path on, waybill finds more dependency edges (2331
 vs 1214), more unique packages, and far more licences — in less wall clock.
 The default is the only thing hiding that.
 
+## Clarifications
+
+### Session 2026-09-20
+
+- Q: What happens after repeated batch failures in one scan? → A: **Circuit-break after the first failure** — stop attempting the batched path for the remainder of the scan and fall back for everything, with a log line saying so. The risk this feature accepts is exactly "upstream changes shape and every batch call starts failing"; in that world a per-chunk retry pays the batch penalty once per chunk (~23 times on the reference repository) before arriving at the slow path anyway, whereas breaking after the first failure costs one wasted round-trip and lands at roughly today's default. Chosen over the status-quo per-chunk retry, which handles a transient single-chunk blip marginally better and a persistent outage much worse, and over an N-failure threshold, which buys that transient tolerance at the cost of a tuning constant nobody would know how to pick. **Additionally**: the scan must log when the circuit breaks, and there must be a standing check that tells us when the batch endpoint leaves `v3alpha`, so the risk this feature accepts is re-examined when its premise changes rather than being inherited indefinitely.
+- Q: When does the circuit break take effect, given that batch chunks run 8-at-a-time? → A: **At the next group boundary.** The in-flight group completes; no later group attempts the batched path. Worst case is at most one concurrent group of wasted attempts rather than one per chunk. Chosen over checking before each request inside a group, which narrows the window without closing it — requests already dispatched still complete — for more state and no real gain; and over cancelling in-flight requests, which would genuinely reduce it to ~1 but adds cancellation plumbing exercised only on the failure path. The meaningful difference is ~23 wasted attempts versus at most 8, not 8 versus 1.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - A scan enriches at batch speed without being asked (Priority: P1)
@@ -133,9 +140,13 @@ full content and reports the degradation.
    completes with the same enrichment content as a successful run.
 2. **Given** that scan, **When** its document is read, **Then** it records
    that the fast path was unavailable and work fell back.
-3. **Given** repeated batch failures within one scan, **When** it runs,
-   **Then** the scan does not spend the fallback cost more times than
-   necessary.
+3. **Given** a batch failure, **When** the scan continues, **Then** it stops
+   attempting the batched path for the rest of that scan rather than retrying
+   per chunk, and logs that it has done so.
+4. **Given** a scan whose circuit broke, **When** its wall clock is compared
+   to a scan with enrichment forced down the per-component path, **Then** the
+   difference is at most one concurrent group of wasted attempts, not one per
+   chunk.
 
 ---
 
@@ -149,6 +160,8 @@ full content and reports the degradation.
 - The batch endpoint changing shape incompatibly — the standing `v3alpha` risk
   this feature accepts.
 - A partial batch response: some components resolved, some not.
+- A batch failure in one member of a concurrency group while its siblings
+  succeed — the successes are kept; the break applies to later groups.
 
 ## Requirements *(mandatory)*
 
@@ -170,6 +183,19 @@ full content and reports the degradation.
   loss of enrichment content.
 - **FR-007**: A scan whose fast path failed MUST record that fact in its
   output, so a slower-than-expected scan is explicable rather than mysterious.
+- **FR-007a**: After a batch failure, the scan MUST stop attempting the
+  batched path for its remainder, taking effect at the next concurrency-group
+  boundary. Requests already in flight MAY complete. A persistent upstream
+  failure MUST cost at most one group of wasted attempts, not one per chunk.
+- **FR-007b**: The scan MUST emit a log line when it stops using the batched
+  path, naming the failure that caused it. The document-scope record (FR-007)
+  tells a consumer afterwards; the log tells the operator while it is
+  happening, and the two audiences are different.
+- **FR-007c**: There MUST be a standing check that detects when the batch
+  endpoint leaves `v3alpha`. This feature accepts a risk whose entire
+  justification is that the upstream surface is unstable; when that stops
+  being true the decision deserves re-examination, and nobody will think to
+  look unless something tells them.
 - **FR-008**: The change MUST be inert when enrichment is disabled —
   `--offline`, deps.dev off, or sources restricted.
 - **FR-009**: The change MUST NOT alter emitted content for any existing
@@ -205,6 +231,14 @@ full content and reports the degradation.
   to before this change.
 - **SC-005**: With the batch endpoint failing, a scan still produces full
   enrichment content and records the degradation.
+- **SC-005a**: With the batch endpoint failing persistently, the scan makes at
+  most **one concurrency-group's worth** of batch attempts, not one per chunk
+  — measurable as attempt count. On a repository whose work spans ~23 chunks,
+  that is the difference between ~23 failed attempts and at most one group's.
+- **SC-005c**: The bound holds regardless of how many chunks the work spans:
+  attempts do not grow with repository size once the circuit has broken.
+- **SC-005b**: An operator watching a scan whose fast path failed sees a log
+  line saying so.
 - **SC-006**: Both paths are covered by tests that fail if either breaks.
 - **SC-007**: A script passing the current opt-in flag continues to work.
 - **SC-008**: Small repositories are no slower than before.
