@@ -30,8 +30,8 @@ Repository root. `waybill-cli/src/scan_fs/package_db/` (recording),
 
 ## Phase 1: Setup
 
-- [ ] T001 Capture the pre-change baseline into `specs/922-fix-resolve-namespace-merge/measurements/baseline.md`: split every Pants fixture by resolve and record, per fixture, the emitted filenames, per-document component PURLs, and the manifest's `subproject_id`/`root_purl`. **This is the FR-004 / SC-005 evidence and must be captured before any edit** — byte-identity for non-colliding repositories is the constraint most easily broken and least visibly.
-- [ ] T002 Preserve the pre-change release binary for the T030 teeth-check, and record in `specs/922-fix-resolve-namespace-merge/measurements/baseline.md` that `pants_namespace_collision` currently emits ONE `default.*` document containing both a Maven jar and a PyPI wheel.
+- [X] T001 Capture the pre-change baseline into `specs/922-fix-resolve-namespace-merge/measurements/baseline.md`: split every Pants fixture by resolve and record, per fixture, the emitted filenames, per-document component PURLs, and the manifest's `subproject_id`/`root_purl`. **This is the FR-004 / SC-005 evidence and must be captured before any edit** — byte-identity for non-colliding repositories is the constraint most easily broken and least visibly.
+- [X] T002 Preserve the pre-change release binary for the T030 teeth-check, and record in `specs/922-fix-resolve-namespace-merge/measurements/baseline.md` that `pants_namespace_collision` currently emits ONE `default.*` document containing both a Maven jar and a PyPI wheel.
 
 **Checkpoint**: the defect and the byte-identity baseline are both on record.
 
