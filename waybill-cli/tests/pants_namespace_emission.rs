@@ -69,7 +69,7 @@ fn an_unsplit_document_partitions_into_two_namespaces() {
     let pairs = cdx_pairs(&doc);
 
     let mut groups: BTreeSet<(String, String)> = BTreeSet::new();
-    for (_, (ns, names)) in &pairs {
+    for (ns, names) in pairs.values() {
         for n in names {
             groups.insert((ns.clone(), n.clone()));
         }
