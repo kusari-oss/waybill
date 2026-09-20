@@ -123,7 +123,7 @@ Repository root. `waybill-cli/src/scan_fs/package_db/` (recording),
 
 ## Phase 6: Polish
 
-- [ ] T030 Teeth-check T011, T015, T017, T023–T025, T027 against the preserved pre-change binary and record in `specs/922-fix-resolve-namespace-merge/measurements/verification.md` which fail and which are guards. A test passing on both sides is a guard — label it rather than counting it.
+- [X] T030 Teeth-check T011, T015, T017, T023–T025, T027 against the preserved pre-change binary and record in `specs/922-fix-resolve-namespace-merge/measurements/verification.md` which fail and which are guards. A test passing on both sides is a guard — label it rather than counting it.
 - [ ] T031 Add a polyglot Pants corpus target (FR-010) to `waybill-cli/tests/corpus_harness_195/manifest.rs`. The defect shipped because nothing in the corpus has two namespaces; `pants-example-jvm` and `pants-example-python` between them cover both namespaces but never in one repository.
 - [ ] T032 Run the mandatory pre-PR gate: `./scripts/pre-pr.sh`. Enumerate the per-target results rather than citing the exit code.
 - [ ] T033 Refresh the corpus goldens via the lane (`regen_goldens=true`), **reading the diff first**. Expect movement on exactly three targets — `pants-example-django`, `-jvm`, `-python` — and **none** on `-golang` or `-javascript`, which carry no membership (research R5). Movement on those two means the annotation is being emitted where there is no resolve, which FR-006d's absence rule forbids. Never regenerate locally.
