@@ -129,7 +129,7 @@ Repository root. `waybill-cli/src/scan_fs/package_db/` (recording),
 - [X] T033 Refresh the corpus goldens via the lane (`regen_goldens=true`), **reading the diff first**. Expect movement on exactly three targets — `pants-example-django`, `-jvm`, `-python` — and **none** on `-golang` or `-javascript`, which carry no membership (research R5). Movement on those two means the annotation is being emitted where there is no resolve, which FR-006d's absence rule forbids. Never regenerate locally.
 - [X] T034 [P] Document the behaviour in `docs/reference/split-modes.md` — that same-named resolves across namespaces now split, and that filenames qualify only on collision — and write the CHANGELOG entry. Additive on the wire, but the split's **output filenames change** for a colliding repository, which a consumer scripting against them must know.
 - [X] T035 Remove the now-vestigial m912 document-scope namespace index. Carrying the qualified identity on the group made `NamespaceIndex`, `index_record_all`, `index_insert` and the `pants_resolve_namespaces` field on `ScanArtifacts` / `ScanResult` dead weight — nothing reads them. Clippy does not flag them (pub fields on pub types), which is exactly why they will rot quietly. ~54 references across 11 files; deliberately NOT folded into the feature commits, because a large mechanical deletion buried in a behavioural change is unreviewable.
-- [ ] T036 Comment on #919 with what landed, and on #924 noting that C161 remains Python-only and is now the last namespace-blind resolve field.
+- [X] T036 Comment on #919 with what landed, and on #924 noting that C161 remains Python-only and is now the last namespace-blind resolve field.
 
 ---
 
