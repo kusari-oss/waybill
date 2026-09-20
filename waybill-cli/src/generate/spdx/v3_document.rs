@@ -107,7 +107,6 @@ pub fn build_document(
             cross_ecosystem_edges_report: scan.cross_ecosystem_edges_report,
             helm_extraction_mode: scan.helm_extraction_mode,
             pants_resolve_summary: scan.pants_resolve_summary.clone(),
-            pants_resolve_namespaces: scan.pants_resolve_namespaces.clone(),
             resolve_identity: scan.resolve_identity.clone(),
             haskell_parse_summary: scan.haskell_parse_summary,
             gradle_scan_summary: scan.gradle_scan_summary,

@@ -30,7 +30,7 @@
 // Pants reader at all.
 
 use serde_json::Value;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 /// The per-component annotation key. Catalogue row C143.
 pub(crate) const ANNOTATION_KEY: &str = "waybill:pants-resolve";
@@ -190,6 +190,16 @@ impl std::fmt::Display for LanguageNamespace {
 // component into the wrong resolve's document, which is this milestone's own
 // defect one layer down.
 
+/// The qualified identity of one resolve, e.g. `python:default`.
+///
+/// The separator is `:` because it is what `pants.toml`'s own section paths
+/// read like, and because neither a namespace nor a Pants resolve name may
+/// contain one. Single spelling of the identity, used by the split's grouping
+/// and by the C163 document identity it feeds.
+pub fn qualify(namespace: LanguageNamespace, resolve: &str) -> String {
+    format!("{}:{}", namespace.as_str(), resolve)
+}
+
 /// Per-component annotation key. Catalogue row C164.
 pub(crate) const NAMESPACE_KEY: &str = "waybill:pants-resolve-namespace";
 
@@ -240,45 +250,9 @@ pub fn namespace_conflict(existing: &Value, incoming: &Value) -> Option<Value> {
     None
 }
 
-/// Resolve name → the namespaces that declare or discover it.
-///
-/// Plural by necessity: a repository declaring `default` under both sections
-/// maps that one name to both, which is the collision FR-001a exists for.
-pub type NamespaceIndex = BTreeMap<String, BTreeSet<LanguageNamespace>>;
-
-/// The qualified identity of one resolve, e.g. `python:default`.
-///
-/// The separator is `:` because it is what `pants.toml`'s own section paths
-/// read like, and because neither a namespace nor a Pants resolve name may
-/// contain one.
-pub fn qualify(namespace: LanguageNamespace, resolve: &str) -> String {
-    format!("{}:{}", namespace.as_str(), resolve)
-}
 
 
-/// Record that `resolve` exists under `namespace`.
-pub fn index_insert(index: &mut NamespaceIndex, namespace: LanguageNamespace, resolve: &str) {
-    index.entry(resolve.to_string()).or_default().insert(namespace);
-}
 
-/// Record every resolve named by `bags` as belonging to `namespace`.
-///
-/// Called once per reader with that reader's own output, so the namespace
-/// comes from **which reader produced the entry** rather than from what its
-/// members look like. Contract C-2 rejects inferring it from member PURL
-/// ecosystem: that works on today's fixtures only because every fixture
-/// resolve happens to be single-ecosystem, and a polyglot resolve would
-/// silently mis-qualify.
-pub fn index_record_all<'a, I>(index: &mut NamespaceIndex, namespace: LanguageNamespace, bags: I)
-where
-    I: IntoIterator<Item = &'a BTreeMap<String, Value>>,
-{
-    for bag in bags {
-        for resolve in read(bag) {
-            index_insert(index, namespace, &resolve);
-        }
-    }
-}
 
 
 #[cfg(test)]
@@ -356,25 +330,7 @@ mod tests {
 
 
 
-    /// The namespace comes from the reader, not from what the members look
-    /// like — C-2 rejects ecosystem inference explicitly.
-    #[test]
-    fn index_record_all_takes_the_namespace_from_the_caller() {
-        let bags = [bag(json!(["default", "lint"])), bag(json!(["default"]))];
-        let mut idx = NamespaceIndex::new();
-        index_record_all(&mut idx, LanguageNamespace::Jvm, bags.iter());
-        assert_eq!(idx.get("default").map(|n| n.len()), Some(1));
-        assert_eq!(idx.get("lint").map(|n| n.len()), Some(1));
-        assert!(idx["default"].contains(&LanguageNamespace::Jvm));
-    }
 
-    #[test]
-    fn index_record_all_ignores_entries_without_membership() {
-        let bags = [BTreeMap::new()];
-        let mut idx = NamespaceIndex::new();
-        index_record_all(&mut idx, LanguageNamespace::Python, bags.iter());
-        assert!(idx.is_empty());
-    }
 
     #[test]
     fn read_accepts_the_array_form() {

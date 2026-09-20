@@ -472,7 +472,6 @@ pub fn build_document(
             cross_ecosystem_edges_report: artifacts.cross_ecosystem_edges_report,
             helm_extraction_mode: artifacts.helm_extraction_mode,
             pants_resolve_summary: artifacts.pants_resolve_summary.clone(),
-            pants_resolve_namespaces: artifacts.pants_resolve_namespaces.clone(),
             resolve_identity: artifacts.resolve_identity.clone(),
             haskell_parse_summary: artifacts.haskell_parse_summary,
             gradle_scan_summary: artifacts.gradle_scan_summary,
@@ -528,7 +527,6 @@ pub fn build_document(
             cross_ecosystem_edges_report: artifacts.cross_ecosystem_edges_report,
             helm_extraction_mode: artifacts.helm_extraction_mode,
             pants_resolve_summary: artifacts.pants_resolve_summary.clone(),
-            pants_resolve_namespaces: artifacts.pants_resolve_namespaces.clone(),
             resolve_identity: artifacts.resolve_identity.clone(),
             haskell_parse_summary: artifacts.haskell_parse_summary,
             gradle_scan_summary: artifacts.gradle_scan_summary,
@@ -1296,7 +1294,6 @@ mod tests {
             collisions_summary: None,
             compiler_pipeline: None,
             project_discovery_mode: None,
-            pants_resolve_namespaces: Default::default(),
             resolve_identity: None,
         }
     }
