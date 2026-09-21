@@ -54,3 +54,23 @@ where the comparison that matters gets made.
 
 A default scan (no enrichment flags) currently takes the **per-component**
 path. That is run C above: 1302 seconds.
+
+---
+
+## CORRECTION (T021) — run C does not reproduce
+
+Run C above is recorded at **1302s**. Re-run during T021 with that exact flag
+set (per-component, disk cache on, cold) it measures **15.23s** — an 85×
+discrepancy. Run D (8.5s) reproduces exactly; runs A and B are unaffected.
+
+The per-component path is bounded by `CONCURRENT_REQUESTS = 8` in a sliding
+window, which puts ~2,291 lookups near 14s. 1302s would require ~570ms per
+lookup sustained for the whole scan; nothing in the code path explains that,
+and it has not recurred. Most likely deps.dev throttling that session.
+
+**Do not cite the 1302s figure.** The reproducible comparison is in
+`after.md`: 2.4× on the enrichment phase and 100× fewer requests.
+
+The paragraph above headed "154× faster for a byte-equivalent document" is
+wrong in its multiplier. The byte-equivalence half of it holds and is what
+FR-002 turns into a test.

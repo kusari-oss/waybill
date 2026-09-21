@@ -229,8 +229,14 @@ full content and reports the degradation.
 ### Measurable Outcomes
 
 - **SC-001**: On a repository of ~2,000 packages, a default scan's enrichment
-  completes in **seconds rather than minutes** — the measured gap today is
-  1302s against 8.5s.
+  is **at least 2x faster** than the opt-out path and issues **at least 50x
+  fewer requests** — measured at 2.4x on the enrichment phase (6,082ms against
+  14,465ms) and 23 requests against 2,291. **Corrected after T021.** This
+  criterion previously read "1302s against 8.5s"; the 1302s figure did not
+  reproduce (re-measured at 15.23s with its own flags and a cold cache) and
+  was almost certainly deps.dev throttling that session. See
+  `measurements/after.md`. The request-count bound is the durable half — it
+  does not depend on the day's latency.
 - **SC-002**: Default-path and opt-out-path documents are equivalent: zero
   differing package identities, zero differing licence values, identical edge
   count.
@@ -254,9 +260,17 @@ full content and reports the degradation.
 
 ## Assumptions
 
-- The measurements in Context are reproducible with the four flag
+- ~~The measurements in Context are reproducible with the four flag
   combinations shown, and run B is the one that makes the attribution valid.
-  They are recorded in the issue rather than re-derived here.
+  They are recorded in the issue rather than re-derived here.~~
+  **FALSIFIED by T021.** Run B's attribution method is sound and run D (8.5s)
+  reproduces exactly. Run C (1302s) does not: re-run with its own flags on a
+  cold cache it measures 15.23s. The per-component path is bounded by
+  `CONCURRENT_REQUESTS = 8`, which puts its floor near 14s, not 1302s. Treat
+  any single unreplicated timing of an external service as provisional --
+  this is the failure mode `docs/development/perf-methodology.md` and the
+  CLAUDE.md "measure external behaviour" rule both warn about, reached here
+  by trusting one observation instead of repeating it.
 - Today's opt-in flag becomes a no-op rather than an error, and a new opt-out
   selects the per-component path. Removing the old flag would break scripts
   for no benefit.
