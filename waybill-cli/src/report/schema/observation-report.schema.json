@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://waybill.kusari.dev/schema/observation-report/0.1.json",
+  "title": "waybill repo observation report",
+  "description": "A machine-readable account of what waybill saw, claimed, ignored, and could not determine while traversing a repository. ALPHA: additive change is expected; see schema_version.",
+  "type": "object",
+  "required": [
+    "schema_version", "schema_stability", "tool_version", "generated_at",
+    "volatile_fields", "redaction_mode", "significance_threshold",
+    "totals", "readers", "directories"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "description": "Two-part version. Minor increments for additive change (a new field, a new enum member); major for a removal, a rename, or a change to an existing field's type or meaning. A consumer meeting an unrecognised major MUST refuse to interpret the report.",
+      "type": "object",
+      "required": ["major", "minor"],
+      "additionalProperties": false,
+      "properties": {
+        "major": { "type": "integer", "minimum": 0 },
+        "minor": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "schema_stability": {
+      "description": "Stability of this schema. `alpha` means consumers must tolerate new fields and new enum members without breaking.",
+      "type": "string",
+      "enum": ["alpha", "beta", "stable"]
+    },
+    "tool_version": { "type": "string" },
+    "generated_at": { "type": "string" },
+    "volatile_fields": {
+      "description": "Self-describing list of the fields that legitimately differ between two runs over an unchanged repository. A differ masks exactly these and needs no out-of-band knowledge, so it stays correct as the schema grows.",
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "redaction_mode": {
+      "description": "`none` retains repository-relative path segments; `paths` replaces each with a stable identifier. Absolute paths and file contents are absent in BOTH modes.",
+      "type": "string",
+      "enum": ["none", "paths"]
+    },
+    "significance_threshold": {
+      "description": "Unclaimed-file count above which an otherwise-unremarkable directory earned its own record. Two reports produced under different thresholds are NOT comparable; a consumer diffing them must check this first.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "totals": { "$ref": "#/$defs/totals" },
+    "readers": { "type": "array", "items": { "$ref": "#/$defs/readerCoverage" } },
+    "directories": { "type": "array", "items": { "$ref": "#/$defs/directory" } }
+  },
+  "$defs": {
+    "totals": {
+      "type": "object",
+      "description": "Repository-wide counts. INVARIANT: files_walked == files_claimed + files_unclaimed + sum(files_skipped). A report violating it is invalid and may be rejected outright.",
+      "required": [
+        "directories_walked", "directories_recorded", "files_walked",
+        "files_claimed", "files_unclaimed", "files_skipped"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "directories_walked": { "type": "integer", "minimum": 0 },
+        "directories_recorded": { "type": "integer", "minimum": 0 },
+        "files_walked": { "type": "integer", "minimum": 0 },
+        "files_claimed": { "type": "integer", "minimum": 0 },
+        "files_unclaimed": { "type": "integer", "minimum": 0 },
+        "files_skipped": {
+          "description": "Skip counts by reason. Reasons are enumerated rather than collapsed into a single 'other' bucket -- an 'other' bucket is where a census stops being checkable.",
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "readerCoverage": {
+      "type": "object",
+      "required": ["reader_id", "files_matched", "components_emitted"],
+      "additionalProperties": false,
+      "properties": {
+        "reader_id": { "type": "string" },
+        "files_matched": { "type": "integer", "minimum": 0 },
+        "components_emitted": {
+          "description": "Components credited to this reader, derived by sole-claimant attribution. `null` means NOT DETERMINED -- never 'produced nothing'. A reader with files_matched > 0 and components_emitted == 0 engaged and produced nothing, which is a different diagnosis from a reader that never matched.",
+          "type": ["integer", "null"],
+          "minimum": 0
+        }
+      }
+    },
+    "directory": {
+      "type": "object",
+      "required": [
+        "path", "claim_status", "claimed_by", "ecosystems",
+        "files_direct", "files_aggregated", "components_emitted"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "description": "Repository-relative. Never absolute, in any mode.",
+          "type": "string"
+        },
+        "claim_status": {
+          "description": "EXCLUSIVE. Exactly one applies. Note what is absent: there is no `indeterminate` -- ambiguity is a separate, independent field, because a directory can be claimed AND ambiguous.",
+          "type": "string",
+          "enum": ["claimed", "unclaimed", "excluded_by_policy"]
+        },
+        "claimed_by": {
+          "description": "Non-empty exactly when claim_status is `claimed`. Readers whose patterns match everything are content probes, not claimants, and never appear here.",
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "ecosystems": { "type": "array", "items": { "$ref": "#/$defs/ecosystem" } },
+        "ambiguity": { "$ref": "#/$defs/ambiguity" },
+        "files_direct": { "type": "integer", "minimum": 0 },
+        "files_aggregated": {
+          "description": "Rolled up from descendants that earned no record of their own. Kept separate from files_direct so aggregation preserves counts without pretending the files live here.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "components_emitted": { "type": "integer", "minimum": 0 },
+        "observation": { "$ref": "#/$defs/observation" }
+      }
+    },
+    "ecosystem": {
+      "type": "object",
+      "required": ["ecosystem", "evidence_marker", "support"],
+      "additionalProperties": false,
+      "properties": {
+        "ecosystem": { "type": "string" },
+        "evidence_marker": {
+          "description": "The marker FILE that produced this attribution. Attribution is marker-driven; source-file extensions alone never produce one, because a directory's marker often sits above the source it governs.",
+          "type": "string"
+        },
+        "support": { "type": "string", "enum": ["supported", "no_reader"] }
+      }
+    },
+    "ambiguity": {
+      "type": "object",
+      "description": "Independent of claim_status. Its presence never changes what claim_status says, and a consumer MUST NOT infer absence of ambiguity from a `claimed` status.",
+      "required": ["kind", "interpretations", "evidence"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "type": "string" },
+        "interpretations": {
+          "description": "Competing readings, NEVER ranked. At least two: a single interpretation is a classification and belongs in `ecosystems` instead.",
+          "type": "array",
+          "minItems": 2,
+          "items": { "type": "string" }
+        },
+        "evidence": {
+          "description": "What was observed that produced the ambiguity, so a reader can evaluate the call rather than trust it.",
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "observation": {
+      "type": "object",
+      "description": "Present when the directory is not confidently classified -- defined as: at least one ecosystem attribution AND no ambiguity record.",
+      "required": [
+        "file_count", "max_depth", "extension_histogram",
+        "content_kind", "content_sample_bytes"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "file_count": { "type": "integer", "minimum": 0 },
+        "max_depth": { "type": "integer", "minimum": 0 },
+        "extension_histogram": {
+          "description": "Observation only. MUST NOT drive an ecosystem attribution.",
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 0 }
+        },
+        "content_kind": {
+          "description": "A heuristic over a sampled prefix, reported as such. 47 binary files and 47 text files are both unclassified and mean entirely different things.",
+          "type": "string",
+          "enum": ["predominantly_binary", "predominantly_text", "mixed", "empty"]
+        },
+        "content_sample_bytes": {
+          "description": "Bytes sampled per file. Present so a reader knows the verdict came from a prefix, not the whole file.",
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}
