@@ -111,6 +111,78 @@ fn stable_id(segment: &str) -> String {
     format!("{:x}", h.finalize())[..12].to_string()
 }
 
+/// Ecosystems whose markers appear anywhere beneath `dir`, from the full
+/// census rather than only the recorded directories.
+///
+/// Subtree-scoped on purpose. A fixtures tree holds one ecosystem per
+/// subdirectory, not several in one, so a directory-local check would see
+/// nothing ambiguous about `waybill-cli/tests/` — the case SC-001 exists for.
+fn subtree_ecosystems(census: &census::Census, dir: &Path) -> BTreeMap<String, String> {
+    let table = ecosystems::unsupported_markers();
+    let mut found = BTreeMap::new();
+    for (d, c) in census.dirs() {
+        if !d.starts_with(dir) {
+            continue;
+        }
+        for name in &c.filenames {
+            if let Some(eco) = table.get(name.as_str()) {
+                found.insert(eco.clone(), name.clone());
+            } else if significance::is_marker(name) {
+                found.insert(ecosystems::ecosystem_for_marker(name).to_string(), name.clone());
+            }
+        }
+    }
+    found
+}
+
+/// FR-012b / FR-013 — ambiguity, independent of claim status.
+///
+/// A directory whose subtree spans several ecosystems and which is not itself
+/// a single project root cannot be classified from observation: it may be a
+/// polyglot project, a fixtures tree, or vendored examples. The report records
+/// the competing readings and the evidence, and ranks nothing (FR-014).
+fn detect_ambiguity(
+    census: &census::Census,
+    dir: &Path,
+    own_filenames: &BTreeSet<String>,
+) -> Option<schema::AmbiguityRecord> {
+    // A directory with its own marker is a project root; its subtree spanning
+    // several ecosystems is ordinary, not ambiguous.
+    if own_filenames.iter().any(|f| significance::is_marker(f)) {
+        return None;
+    }
+    let found = subtree_ecosystems(census, dir);
+    if found.len() < 2 {
+        return None;
+    }
+    let mut evidence: Vec<String> = found
+        .iter()
+        .map(|(eco, marker)| format!("{marker} ({eco})"))
+        .collect();
+    evidence.sort();
+    Some(schema::AmbiguityRecord {
+        kind: "multiple_ecosystem_lockfiles".to_string(),
+        interpretations: vec![
+            "a polyglot project whose subprojects are separate ecosystems".to_string(),
+            "test fixtures or vendored examples that are not this project's dependencies"
+                .to_string(),
+            "generated or build output containing copies of manifests".to_string(),
+        ],
+        evidence,
+    })
+}
+
+/// Deepest nesting below `dir`, in directory levels.
+fn subtree_depth(census: &census::Census, dir: &Path) -> u32 {
+    census
+        .dirs()
+        .keys()
+        .filter(|d| d.starts_with(dir))
+        .map(|d| d.strip_prefix(dir).map(|r| r.components().count()).unwrap_or(0) as u32)
+        .max()
+        .unwrap_or(0)
+}
+
 fn assemble(
     root: &Path,
     census: &census::Census,
@@ -118,7 +190,16 @@ fn assemble(
     redaction: RedactionMode,
 ) -> ObservationReport {
     let threshold = DEFAULT_SIGNIFICANCE_THRESHOLD;
-    let recorded = significance::partition(census, root, threshold);
+    // Ambiguity is computed BEFORE significance, because carrying an
+    // ambiguity is itself a reason to be recorded (see Significance::Ambiguous).
+    let ambiguities: BTreeMap<PathBuf, schema::AmbiguityRecord> = census
+        .dirs()
+        .iter()
+        .filter_map(|(d, c)| detect_ambiguity(census, d, &c.filenames).map(|a| (d.clone(), a)))
+        .collect();
+    let recorded = significance::partition(census, root, threshold, &|p| {
+        ambiguities.contains_key(p)
+    });
     let per_dir_components = components_by_dir(entries);
 
     // FR-005 — excluded directories are always recorded, regardless of size
@@ -152,19 +233,34 @@ fn assemble(
             };
             let claimed_by: Vec<String> =
                 r.census.claimed_by.iter().map(|id| id.as_str().to_string()).collect();
+            let attributions = ecosystems::attribute(
+                &r.census.filenames,
+                claim_status == ClaimStatus::Claimed,
+            );
+            let ambiguity = ambiguities.get(&r.path).cloned();
+            // FR-011a — "confidently classified" means at least one ecosystem
+            // attribution AND no ambiguity record. Anything else earns the
+            // observation detail, because a reader needs something to reason
+            // with where the report declines to conclude.
+            let confident = !attributions.is_empty() && ambiguity.is_none();
+            let observation = (!confident).then(|| schema::DirectoryObservationDetail {
+                file_count: r.files_direct + r.files_aggregated,
+                max_depth: subtree_depth(census, &r.path),
+                extension_histogram: content_kind::extension_histogram(&r.census.filenames),
+                content_kind: content_kind::classify_dir(&r.path, &r.census.filenames).as_str()
+                    .to_string(),
+                content_sample_bytes: content_kind::SAMPLE_BYTES,
+            });
             DirectoryObservation {
                 path: rel(root, &r.path, redaction),
                 claim_status,
-                ecosystems: ecosystems::attribute(
-                    &r.census.filenames,
-                    claim_status == ClaimStatus::Claimed,
-                ),
+                ecosystems: attributions,
                 claimed_by,
-                ambiguity: None,
+                ambiguity,
                 files_direct: r.files_direct,
                 files_aggregated: r.files_aggregated,
                 components_emitted: *per_dir_components.get(&r.path).unwrap_or(&0),
-                observation: None,
+                observation,
             }
         })
         .chain(excluded)

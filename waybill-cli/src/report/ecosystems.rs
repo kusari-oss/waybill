@@ -69,7 +69,7 @@ pub(crate) fn attribute(filenames: &std::collections::BTreeSet<String>, claimed:
 /// Best-known ecosystem name for a marker waybill reads. Coarse on purpose:
 /// the report's job here is to say *which* project shape was seen, not to
 /// re-derive the reader's own classification.
-fn ecosystem_for_marker(name: &str) -> &'static str {
+pub(crate) fn ecosystem_for_marker(name: &str) -> &'static str {
     match name {
         "go.mod" | "go.sum" => "go",
         "Cargo.toml" => "cargo",

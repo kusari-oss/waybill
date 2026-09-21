@@ -55,6 +55,14 @@ pub(crate) enum Significance {
     ScanRoot,
     HasMarker,
     Claimed,
+    /// Carries an ambiguity record.
+    ///
+    /// Added at implement time after a fixture exposed the gap: a directory
+    /// whose subtree spans several ecosystems typically has **no marker, no
+    /// claim and no files of its own** — so every other rule aggregated it
+    /// away, discarding the exact signal this feature exists to surface. An
+    /// ambiguity that is never recorded is not an observation.
+    Ambiguous,
     ExceedsThreshold,
     /// Not significant — roll into the nearest recorded ancestor.
     Aggregated,
@@ -65,6 +73,7 @@ pub(crate) fn classify(
     root: &Path,
     d: &DirCensus,
     threshold: u32,
+    ambiguous: bool,
 ) -> Significance {
     if dir == root {
         return Significance::ScanRoot;
@@ -74,6 +83,9 @@ pub(crate) fn classify(
     }
     if !d.claimed_by.is_empty() {
         return Significance::Claimed;
+    }
+    if ambiguous {
+        return Significance::Ambiguous;
     }
     if d.files_unclaimed > u64::from(threshold) {
         return Significance::ExceedsThreshold;
@@ -98,12 +110,17 @@ pub(crate) struct RecordedDir {
 /// ancestors sort before their descendants and the nearest recorded ancestor
 /// is found by walking the path upward — no ordering assumption beyond what
 /// the key type already guarantees (FR-020).
-pub(crate) fn partition(census: &Census, root: &Path, threshold: u32) -> Vec<RecordedDir> {
+pub(crate) fn partition(
+    census: &Census,
+    root: &Path,
+    threshold: u32,
+    is_ambiguous: &dyn Fn(&Path) -> bool,
+) -> Vec<RecordedDir> {
     let mut recorded: BTreeMap<PathBuf, RecordedDir> = BTreeMap::new();
     let mut deferred: Vec<(&PathBuf, &DirCensus)> = Vec::new();
 
     for (dir, d) in census.dirs() {
-        match classify(dir, root, d, threshold) {
+        match classify(dir, root, d, threshold, is_ambiguous(dir)) {
             Significance::Aggregated => deferred.push((dir, d)),
             sig => {
                 recorded.insert(
@@ -163,7 +180,7 @@ mod tests {
         let root = Path::new("/r");
         let c = census_with(root, &[("svc", &["go.mod"], false)]);
         let d = &c.dirs()[&root.join("svc")];
-        assert_eq!(classify(&root.join("svc"), root, d, 25), Significance::HasMarker);
+        assert_eq!(classify(&root.join("svc"), root, d, 25, false), Significance::HasMarker);
     }
 
     #[test]
@@ -171,7 +188,7 @@ mod tests {
         let root = Path::new("/r");
         let c = census_with(root, &[("notes", &["a.txt", "b.txt"], false)]);
         let d = &c.dirs()[&root.join("notes")];
-        assert_eq!(classify(&root.join("notes"), root, d, 25), Significance::Aggregated);
+        assert_eq!(classify(&root.join("notes"), root, d, 25, false), Significance::Aggregated);
     }
 
     /// FR-021b. The property that lets aggregation be safe: records are lost,
@@ -187,11 +204,23 @@ mod tests {
         for i in 0..5 {
             c.record_file(&deep, &format!("f{i}.txt"), &[]);
         }
-        let recorded = partition(&c, root, 25);
+        let recorded = partition(&c, root, 25, &|_| false);
         let total: u64 = recorded.iter().map(|r| r.files_direct + r.files_aggregated).sum();
         assert_eq!(total, c.files_walked(), "aggregation must not lose files");
         assert_eq!(recorded.len(), 1, "only the scan root should be recorded");
         assert_eq!(recorded[0].files_aggregated, 5);
+    }
+
+    /// An ambiguous directory is significant even with no marker, no claim
+    /// and no files of its own — which is the shape ambiguous containers
+    /// actually have.
+    #[test]
+    fn an_ambiguous_directory_is_significant_even_when_otherwise_unremarkable() {
+        let root = Path::new("/r");
+        let c = census_with(root, &[("samples", &[], false)]);
+        let d = &c.dirs()[&root.join("samples")];
+        assert_eq!(classify(&root.join("samples"), root, d, 25, false), Significance::Aggregated);
+        assert_eq!(classify(&root.join("samples"), root, d, 25, true), Significance::Ambiguous);
     }
 
     #[test]
@@ -199,6 +228,6 @@ mod tests {
         let root = Path::new("/r");
         let c = census_with(root, &[]);
         let d = &c.dirs()[root];
-        assert_eq!(classify(root, root, d, 25), Significance::ScanRoot);
+        assert_eq!(classify(root, root, d, 25, false), Significance::ScanRoot);
     }
 }
