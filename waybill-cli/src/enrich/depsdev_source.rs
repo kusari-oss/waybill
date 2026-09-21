@@ -256,15 +256,51 @@ impl DepsDevSource {
                 .map(|c| c.to_vec())
                 .collect();
             let mut batched_ok = 0usize;
+            // #927 (m923) FR-007a / C-6 — the circuit breaker.
+            //
+            // Once the batched endpoint has failed, stop asking. Without
+            // this, a persistent upstream failure pays the batch penalty
+            // once per chunk before arriving at the per-component path
+            // anyway — ~23 wasted round-trips on a 2,300-package
+            // repository.
+            //
+            // Exactly one wasted attempt is achievable because requests are
+            // issued sequentially: the failure is observed before the next
+            // one goes out. If that ever changes, this guarantee becomes
+            // "at most one concurrency group" and the weakening must be
+            // deliberate (see #929).
+            let mut batch_circuit_open = true;
             for group in chunks.chunks(CONCURRENT_REQUESTS) {
-                let mut results = Vec::new();
+                if !batch_circuit_open {
+                    // Circuit tripped: everything remaining goes straight to
+                    // the per-component path without another batch attempt.
+                    for idxs in group {
+                        still_missing.extend(idxs.iter().copied());
+                    }
+                    continue;
+                }
+                // The indices are kept BESIDE the future, not inside it.
+                // Awaiting a future is what issues its request, so a skipped
+                // chunk must be identifiable without driving it — the first
+                // version of this breaker awaited to read the indices and so
+                // sent every request it meant to skip.
+                let mut pending = Vec::new();
                 for idxs in group {
                     let ks: Vec<EnrichmentKey> =
                         idxs.iter().map(|&i| keys[i].clone()).collect();
-                    results.push(async move { (idxs.clone(), self.fetch_chunk_batched(&ks).await) });
+                    pending.push((
+                        idxs.clone(),
+                        async move { self.fetch_chunk_batched(&ks).await },
+                    ));
                 }
-                for fut in results {
-                    let (idxs, got) = fut.await;
+                for (idxs, fut) in pending {
+                    if !batch_circuit_open {
+                        // Tripped by an earlier chunk. Drop the future
+                        // unawaited — no request is issued.
+                        still_missing.extend(idxs);
+                        continue;
+                    }
+                    let got = fut.await;
                     match got {
                         Some((vals, max_age)) => {
                             let bound = self.disk.effective_max_age(max_age);
@@ -288,6 +324,20 @@ impl DepsDevSource {
                         None => {
                             self.batch_fallbacks.fetch_add(1, Ordering::Relaxed);
                             still_missing.extend(idxs);
+                            // #927 FR-007b — say so once, where an operator
+                            // watching a scan get slow will see it. The
+                            // document-scope degradation record (C158) tells
+                            // whoever reads the document later; these are
+                            // different audiences.
+                            if batch_circuit_open {
+                                warn!(
+                                    "deps.dev batch endpoint failed — abandoning the batched \
+                                     path for the rest of this scan and falling back to \
+                                     per-component requests. Enrichment content is \
+                                     unaffected; the scan will be slower."
+                                );
+                            }
+                            batch_circuit_open = false;
                         }
                     }
                 }
@@ -1159,6 +1209,111 @@ mod batch_tests {
         assert_eq!(got[0].as_ref().unwrap().licenses, vec!["MIT"], "x");
         assert!(got[1].is_none(), "y has no data upstream and must stay unenriched");
         assert_eq!(got[2].as_ref().unwrap().licenses, vec!["BSD-3-Clause"], "z");
+    }
+
+    /// Issue #927 (m923) — FR-007a / SC-005a / C-6. **Count attempts, not
+    /// output.**
+    ///
+    /// A circuit breaker that was never wired in produces byte-identical
+    /// documents: every chunk tries batch, fails, falls back, and the
+    /// content is correct either way. So the only thing that can tell you
+    /// whether the breaker exists is how many times the endpoint was hit.
+    ///
+    /// Three chunks' worth of work with a persistently failing endpoint
+    /// must produce exactly ONE batch attempt. Before this change it
+    /// produced one per chunk.
+    #[tokio::test]
+    async fn a_persistent_batch_failure_is_attempted_exactly_once() {
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/v3alpha/versionbatch"))
+            .respond_with(ResponseTemplate::new(503))
+            .mount(&server)
+            .await;
+        Mock::given(method("GET"))
+            .and(path_regex(r".*/packages/.*/versions/.*"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "licenses": ["MIT"], "links": [],
+            })))
+            .mount(&server)
+            .await;
+
+        // More keys than one batch holds, so a per-chunk retry would be
+        // visible as more than one POST.
+        let names: Vec<String> = (0..super::super::deps_dev_batch::BATCH_SIZE * 3 - 1)
+            .map(|i| format!("p{i}"))
+            .collect();
+        let refs: Vec<&str> = names.iter().map(String::as_str).collect();
+        let k = keys(&refs);
+
+        let s = src(&server, true);
+        let mut p = ProgressReporter::new(k.len());
+        let got = s.fetch_many(&k, &mut p).await;
+
+        let posts = server
+            .received_requests()
+            .await
+            .expect("recorded requests")
+            .iter()
+            .filter(|r| r.url.path().ends_with("/versionbatch"))
+            .count();
+
+        assert_eq!(
+            posts, 1,
+            "the batch endpoint must be attempted exactly once before the circuit \
+             opens; {posts} attempts means the breaker is not wired in and each \
+             chunk is retrying",
+        );
+
+        // And the fallback still did its job — speed, not coverage.
+        assert!(
+            got.iter().all(|r| r.is_some()),
+            "every key must still be enriched via the per-component fallback",
+        );
+    }
+
+    /// Issue #927 (m923) — FR-007 / C-7. The trip must still record the
+    /// degradation, so a consumer reading the document later learns the
+    /// fast path was unavailable.
+    ///
+    /// The breaker skips work; it must not skip the reporting. Counted via
+    /// `batch_fallbacks`, which is what the degradation record is derived
+    /// from.
+    #[tokio::test]
+    async fn a_trip_still_reports_the_degradation() {
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/v3alpha/versionbatch"))
+            .respond_with(ResponseTemplate::new(503))
+            .mount(&server)
+            .await;
+        Mock::given(method("GET"))
+            .and(path_regex(r".*/packages/.*/versions/.*"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "licenses": ["MIT"], "links": [],
+            })))
+            .mount(&server)
+            .await;
+
+        let names: Vec<String> = (0..super::super::deps_dev_batch::BATCH_SIZE * 2)
+            .map(|i| format!("q{i}"))
+            .collect();
+        let refs: Vec<&str> = names.iter().map(String::as_str).collect();
+        let k = keys(&refs);
+
+        let s = src(&server, true);
+        let mut p = ProgressReporter::new(k.len());
+        let got = s.fetch_many(&k, &mut p).await;
+
+        assert!(
+            s.batch_fallbacks.load(Ordering::Relaxed) > 0,
+            "the fallback counter feeds the degradation record; a trip that \
+             skipped it would leave the document claiming nothing went wrong",
+        );
+        assert!(
+            got.iter().all(|r| r.is_some()),
+            "C-5: a trip costs speed, not coverage",
+        );
     }
 
     /// Issue #927 (m923) — FR-002 / C-2. **The property that licenses the

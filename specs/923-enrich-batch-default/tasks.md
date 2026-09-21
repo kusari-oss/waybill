@@ -71,7 +71,7 @@ tests), `waybill-cli/src/enrich/deps_dev_batch.rs` (endpoint constant).
 
 - [X] T010 [US2] Test in `waybill-cli/src/enrich/depsdev_source.rs` that the opt-out selects the per-component path, again asserted as selection rather than output.
 - [X] T011 [US2] Test in `waybill-cli/tests/enrich_default.rs` that a scan passing the legacy `--enrich-batch` flag succeeds rather than erroring (SC-007).
-- [ ] T012 [US2] Make the both-paths coverage explicit in `waybill-cli/src/enrich/depsdev_source.rs` — every behavioural enrichment test runs against both selections, so neither can break silently. **The per-component path is the fallback the default's safety argument rests on**; if only the fast path is tested, that argument is untested.
+- [X] T012 [US2] Make the both-paths coverage explicit in `waybill-cli/src/enrich/depsdev_source.rs` — every behavioural enrichment test runs against both selections, so neither can break silently. **The per-component path is the fallback the default's safety argument rests on**; if only the fast path is tested, that argument is untested.
 
 **Checkpoint**: the escape hatch works and is guarded.
 
@@ -83,12 +83,12 @@ tests), `waybill-cli/src/enrich/deps_dev_batch.rs` (endpoint constant).
 
 **Independent test**: with the batch endpoint failing, a scan completes with full content, attempts batch exactly once, logs it, and records it.
 
-- [ ] T013 [US3] Write the failing test in `waybill-cli/src/enrich/depsdev_source.rs`: with the endpoint failing, the scan makes **exactly one** batch attempt (SC-005a / C-6). **Count attempts, not output** — content is unchanged either way, so an output-based test would pass with no breaker wired in at all. Today this fails with ~one attempt per chunk.
-- [ ] T014 [US3] Implement the circuit breaker in `waybill-cli/src/enrich/depsdev_source.rs`: after the first batch failure, stop attempting the batched path for the remainder of the scan. Exactness is available because requests are issued sequentially (research R2) — the failure is observed before the next request goes out.
-- [ ] T015 [US3] Emit a log line on trip in `waybill-cli/src/enrich/depsdev_source.rs`, naming the failure (FR-007b / SC-005b). This is for the operator watching a scan get slow; the document record is for whoever reads the document later. Different audiences, both needed.
+- [X] T013 [US3] Write the failing test in `waybill-cli/src/enrich/depsdev_source.rs`: with the endpoint failing, the scan makes **exactly one** batch attempt (SC-005a / C-6). **Count attempts, not output** — content is unchanged either way, so an output-based test would pass with no breaker wired in at all. Today this fails with ~one attempt per chunk.
+- [X] T014 [US3] Implement the circuit breaker in `waybill-cli/src/enrich/depsdev_source.rs`: after the first batch failure, stop attempting the batched path for the remainder of the scan. Exactness is available because requests are issued sequentially (research R2) — the failure is observed before the next request goes out.
+- [X] T015 [US3] Emit a log line on trip in `waybill-cli/src/enrich/depsdev_source.rs`, naming the failure (FR-007b / SC-005b). This is for the operator watching a scan get slow; the document record is for whoever reads the document later. Different audiences, both needed.
 - [ ] T016 [P] [US3] Test in `waybill-cli/src/enrich/depsdev_source.rs` that the log line is emitted when the circuit trips.
-- [ ] T017 [P] [US3] Test in `waybill-cli/src/enrich/depsdev_source.rs` that the existing document-scope degradation record is still emitted after a trip (FR-007 / C-7). It already works (research R4); this pins that the breaker did not bypass it.
-- [ ] T018 [P] [US3] Test in `waybill-cli/src/enrich/depsdev_source.rs` that enrichment content after a trip matches a successful run (C-5) — the breaker must not turn a speed degradation into a coverage one.
+- [X] T017 [P] [US3] Test in `waybill-cli/src/enrich/depsdev_source.rs` that the existing document-scope degradation record is still emitted after a trip (FR-007 / C-7). It already works (research R4); this pins that the breaker did not bypass it.
+- [X] T018 [P] [US3] Test in `waybill-cli/src/enrich/depsdev_source.rs` that enrichment content after a trip matches a successful run (C-5) — the breaker must not turn a speed degradation into a coverage one.
 
 **Checkpoint**: the failure path is bounded, visible, and lossless.
 
