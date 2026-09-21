@@ -53,11 +53,11 @@ tests), `waybill-cli/src/enrich/deps_dev_batch.rs` (endpoint constant).
 
 **Independent test**: scan a ~2,000-package repository with no enrichment flags; enrichment completes in seconds with unchanged licence coverage.
 
-- [ ] T005 [US1] Invert the flag in `waybill-cli/src/cli/scan_cmd.rs`: batched becomes the default and a new opt-out selects the per-component path. Note that `#[arg(long)] pub enrich_batch: bool` is clap's *flag* form — absent means `false` — so this cannot be done by adding a `default_value`; the surface has to change shape (research R1).
-- [ ] T006 [US1] Keep the existing `--enrich-batch` accepted as a no-op in `waybill-cli/src/cli/scan_cmd.rs` (FR-004 / C-4). Scripts passing it today must keep working; erroring on an unknown argument would break them louder than ignoring it.
-- [ ] T007 [US1] Update the test-helper default at `waybill-cli/src/cli/scan_cmd.rs:6057` so helper-constructed args match the new production default. A helper still defaulting to the old path would make every test exercise the path users no longer get.
-- [ ] T008 [US1] Test in `waybill-cli/src/enrich/depsdev_source.rs` that a scan with no enrichment flags selects the batched path — **asserted as path selection, not as output**, since both paths produce the same document and an output assertion would pass whether or not the flip worked.
-- [ ] T009 [US1] Test in `waybill-cli/tests/enrich_default.rs` that an enrichment-disabled scan (`--offline`) is **byte-identical** to the T001 baseline (FR-008 / FR-009 / SC-004 / C-8). The default flip must not reach a scan that makes no network calls.
+- [X] T005 [US1] Invert the flag in `waybill-cli/src/cli/scan_cmd.rs`: batched becomes the default and a new opt-out selects the per-component path. Note that `#[arg(long)] pub enrich_batch: bool` is clap's *flag* form — absent means `false` — so this cannot be done by adding a `default_value`; the surface has to change shape (research R1).
+- [X] T006 [US1] Keep the existing `--enrich-batch` accepted as a no-op in `waybill-cli/src/cli/scan_cmd.rs` (FR-004 / C-4). Scripts passing it today must keep working; erroring on an unknown argument would break them louder than ignoring it.
+- [X] T007 [US1] Update the test-helper default at `waybill-cli/src/cli/scan_cmd.rs:6057` so helper-constructed args match the new production default. A helper still defaulting to the old path would make every test exercise the path users no longer get.
+- [X] T008 [US1] Test in `waybill-cli/src/enrich/depsdev_source.rs` that a scan with no enrichment flags selects the batched path — **asserted as path selection, not as output**, since both paths produce the same document and an output assertion would pass whether or not the flip worked.
+- [X] T009 [US1] Test in `waybill-cli/tests/enrich_default.rs` that an enrichment-disabled scan (`--offline`) is **byte-identical** to the T001 baseline (FR-008 / FR-009 / SC-004 / C-8). The default flip must not reach a scan that makes no network calls.
 
 **Checkpoint**: the feature's user-visible promise is met.
 
@@ -69,8 +69,8 @@ tests), `waybill-cli/src/enrich/deps_dev_batch.rs` (endpoint constant).
 
 **Independent test**: select the per-component path explicitly; content matches the batched path.
 
-- [ ] T010 [US2] Test in `waybill-cli/src/enrich/depsdev_source.rs` that the opt-out selects the per-component path, again asserted as selection rather than output.
-- [ ] T011 [US2] Test in `waybill-cli/tests/enrich_default.rs` that a scan passing the legacy `--enrich-batch` flag succeeds rather than erroring (SC-007).
+- [X] T010 [US2] Test in `waybill-cli/src/enrich/depsdev_source.rs` that the opt-out selects the per-component path, again asserted as selection rather than output.
+- [X] T011 [US2] Test in `waybill-cli/tests/enrich_default.rs` that a scan passing the legacy `--enrich-batch` flag succeeds rather than erroring (SC-007).
 - [ ] T012 [US2] Make the both-paths coverage explicit in `waybill-cli/src/enrich/depsdev_source.rs` — every behavioural enrichment test runs against both selections, so neither can break silently. **The per-component path is the fallback the default's safety argument rests on**; if only the fast path is tested, that argument is untested.
 
 **Checkpoint**: the escape hatch works and is guarded.

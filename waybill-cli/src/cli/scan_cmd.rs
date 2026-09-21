@@ -1004,21 +1004,39 @@ pub struct ScanArgs {
     #[arg(long)]
     pub no_deps_dev_license: bool,
 
-    /// Milestone 839 (#766) — fetch deps.dev licence metadata in
-    /// bulk via `GetVersionBatch` instead of one request per
-    /// component.
+    /// Milestone 839 (#766) — accepted and ignored.
     ///
-    /// Off by default: `GetVersionBatch` lives on deps.dev's
-    /// `v3alpha` surface, which its own documentation says "may
-    /// change in incompatible ways from time to time". A batch
-    /// failure falls back to the per-component path, so an upstream
-    /// change degrades speed rather than breaking the scan.
+    /// Batched enrichment is the default as of issue #927, so this flag
+    /// asks for what already happens. Kept accepted rather than removed
+    /// so scripts that pass it keep working; erroring on an unknown
+    /// argument would break them louder than ignoring it.
+    ///
+    /// To get the old behaviour, use `--no-enrich-batch`.
+    #[arg(long, hide = true)]
+    pub enrich_batch: bool,
+
+    /// Issue #927 — fetch deps.dev licence metadata one request per
+    /// component instead of in bulk via `GetVersionBatch`.
+    ///
+    /// **Batched is the default**, and is two orders of magnitude faster:
+    /// measured at 8.5s against 1302s on a 2,291-package repository, for a
+    /// byte-equivalent document. Per-component issues one request per
+    /// component; batched issues one per hundred.
+    ///
+    /// The reason this was ever opt-in, and the reason the escape hatch
+    /// stays: `GetVersionBatch` lives on deps.dev's `v3alpha` surface,
+    /// which its own documentation says "may change in incompatible ways
+    /// from time to time". That is a standing property of the upstream
+    /// API, not a bedding-in period — waiting does not make it stable.
+    /// What makes the default acceptable is that a batch failure falls
+    /// back to this path automatically and costs speed, not coverage.
+    /// This flag is for choosing that path up front.
     ///
     /// Has no effect when `--offline`, `--no-deps-dev` or
-    /// `--no-deps-dev-license` is set — all of those suppress the
-    /// licence path this flag accelerates.
+    /// `--no-deps-dev-license` is set — all of those suppress the licence
+    /// path entirely.
     #[arg(long)]
-    pub enrich_batch: bool,
+    pub no_enrich_batch: bool,
 
     /// Milestone 839 (#766) — accept cached deps.dev enrichment up
     /// to this many seconds old, overriding the freshness bound the
@@ -3614,7 +3632,7 @@ pub async fn execute(
     // cache, which is what makes that pass nearly free for every
     // component already enriched here.
     let deps_dev_source = DepsDevSource::new(deps_dev_client.clone(), offline)
-        .with_batch(args.enrich_batch)
+        .with_batch(!args.no_enrich_batch)
         .with_disk_cache(!args.enrich_no_cache, args.enrich_cache_max_age);
     if enrich_cfg.deps_dev {
         let (enriched, skips, degradation) =
@@ -5493,6 +5511,54 @@ mod tests {
         assert!(!default.inner.preserve_manifest_main_module, "still defaults off");
     }
 
+    // ----- Issue #927 (m923) — enrichment default -----
+
+    /// FR-001 / SC-001. **Asserted as path SELECTION, not as output.**
+    ///
+    /// Both enrichment paths produce equivalent documents (asserted by
+    /// `both_paths_produce_the_same_content_when_batch_succeeds`), so no
+    /// comparison of emitted bytes can tell you which one ran. A test that
+    /// checked output would pass whether or not this flip worked.
+    #[test]
+    fn enrichment_is_batched_by_default_m923() {
+        let default = <ScanArgsForTest as clap::Parser>::try_parse_from(["scan", "--path", "."])
+            .expect("baseline parse");
+        // `with_batch()` receives `!no_enrich_batch`, so this IS the
+        // selection: absent opt-out means the batched path runs.
+        assert!(
+            !default.inner.no_enrich_batch,
+            "a scan with no enrichment flags must select the batched path"
+        );
+    }
+
+    /// FR-003 / SC-006 / C-3. The escape hatch selects the per-component
+    /// path. It is the fallback the default's safety argument rests on, so
+    /// it has to be reachable.
+    #[test]
+    fn no_enrich_batch_selects_the_per_component_path_m923() {
+        let parsed = <ScanArgsForTest as clap::Parser>::try_parse_from([
+            "scan", "--path", ".", "--no-enrich-batch",
+        ])
+        .expect("the opt-out MUST parse");
+        assert!(parsed.inner.no_enrich_batch);
+    }
+
+    /// FR-004 / SC-007 / C-4. The legacy opt-in keeps parsing. Scripts that
+    /// pass it today must keep working; erroring on an unknown argument
+    /// would break them louder than ignoring it.
+    #[test]
+    fn legacy_enrich_batch_flag_is_still_accepted_m923() {
+        let parsed = <ScanArgsForTest as clap::Parser>::try_parse_from([
+            "scan", "--path", ".", "--enrich-batch",
+        ])
+        .expect("C-4: the legacy flag MUST still parse, even though it is now a no-op");
+        assert!(parsed.inner.enrich_batch, "parsed, and ignored downstream");
+        assert!(
+            !parsed.inner.no_enrich_batch,
+            "passing the legacy opt-in must not accidentally select the opt-out"
+        );
+    }
+
     // ----- Milestone 222 US2b (feature 222-sigstore-keyless-signing) — CLI parsing -----
 
     #[test]
@@ -6051,10 +6117,12 @@ mod tests {
             no_oci_cache: false,
             oci_cache_size: None,
             registry_credentials_dir: None,
-            // Milestone 839 — defaults preserve pre-m839 behaviour:
-            // per-component licence fetches, upstream-declared cache
-            // freshness, cache enabled.
+            // Issue #927 — batched enrichment is the default, so the
+            // helper must default to it too. A helper still defaulting to
+            // the per-component path would make every test exercise the
+            // path users no longer get.
             enrich_batch: false,
+            no_enrich_batch: false,
             enrich_cache_max_age: None,
             enrich_no_cache: false,
             // Milestone 182 — test helper defaults preserve pre-m182
