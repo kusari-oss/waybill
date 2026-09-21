@@ -91,6 +91,8 @@ Reports are meant to be sent to maintainers. Paths leak internal project names, 
 2. **Given** a report, **When** it is validated against the published schema, **Then** validation succeeds and every field in the document is described by the schema.
 3. **Given** two reports produced from the same unchanged repository, **When** they are compared, **Then** they are identical except for fields explicitly declared volatile — so a maintainer can diff submissions and see only real change.
 4. **Given** a report produced by an older tool version, **When** it is read by a consumer expecting a newer schema, **Then** the schema version is present and unambiguous so the consumer can decide how to proceed.
+5. **Given** a repository with sensitive directory names, **When** a report is produced in redaction mode, **Then** no original segment name appears anywhere in the document, while nesting depth and the recurrence of identical segments are still evident.
+6. **Given** any report, **When** a recipient opens it, **Then** the redaction mode that produced it is stated in the document itself.
 
 ---
 
@@ -137,7 +139,11 @@ Reports are meant to be sent to maintainers. Paths leak internal project names, 
 - **FR-016**: The report MUST be a machine-readable document with a published schema, and MUST carry an explicit schema version.
 - **FR-017**: The schema MUST be marked unstable/alpha, and consumers MUST be expected to tolerate the addition of new fields without breaking.
 - **FR-018**: The report MUST be readable by both a person and a language model without bespoke tooling — named fields and explicit enumerated values, not positional or compact encodings.
-- **FR-019**: The default report MUST contain no absolute filesystem paths and no content excerpted from any scanned file.
+- **FR-019**: The report MUST contain no absolute filesystem paths and no content excerpted from any scanned file, in **any** mode. Absolute paths leak home directories and usernames with no compensating value, and file contents are never the report's subject.
+- **FR-019a**: Repository-relative directory paths are **retained by default**. They carry the structural information that makes a report actionable to a maintainer: `tools/codegen/` identifies a gap, `7f3a91/` does not.
+- **FR-019b**: A redaction mode MUST be available that replaces each path segment with a stable identifier, preserving nesting depth and cross-report correlation of repeated segments while removing the names themselves.
+- **FR-019c**: Every report MUST declare its own redaction mode in a top-level field, so a reader always knows whether an absent name was absent or removed.
+- **FR-019d**: The redaction mode MUST be discoverable at the moment it matters — the command's own output MUST tell an operator that a stricter mode exists, rather than requiring them to find it in documentation before they share anything.
 - **FR-020**: The report MUST be deterministic: two runs against an unchanged repository MUST produce identical documents except for fields explicitly declared volatile, and those fields MUST be enumerated in the schema.
 - **FR-021**: The report MUST be bounded in size independently of repository size, degrading to aggregates rather than growing a per-file listing without limit.
 - **FR-022**: The report MUST be producible without network access.
@@ -171,6 +177,8 @@ Reports are meant to be sent to maintainers. Paths leak internal project names, 
 - **SC-008**: Report size stays bounded: the report for a repository an order of magnitude larger than another is not an order of magnitude larger.
 - **SC-009**: Producing a report leaves emitted SBOM content byte-identical to a run that does not produce one, across all supported formats.
 - **SC-010**: For a repository containing marker files from at least three ecosystems waybill does not support, all three are named with an explicit no-reader status.
+- **SC-011**: In redaction mode, no original path segment from the repository appears anywhere in the report, verified mechanically against the repository's actual directory names; and two directories sharing a segment still share an identifier, so structure survives.
+- **SC-012**: Every report states its redaction mode, and an operator who runs the command in the default mode is told in its output that a stricter mode exists.
 
 ## Assumptions
 
@@ -178,10 +186,18 @@ Reports are meant to be sent to maintainers. Paths leak internal project names, 
 - **Reports are produced on demand, not as a side effect of every scan.** An operator investigating a gap asks for a report; a routine scan does not pay for one. This keeps FR-024 trivially true and avoids taxing the common path.
 - **The unsupported-ecosystem table starts small and grows from evidence.** It is seeded with a modest set of well-known markers and extended as incoming reports reveal what is actually encountered. Completeness at v1 is not a goal.
 - **"Binary versus text" is a heuristic, and is reported as such.** A standard content-sniffing approach is assumed sufficient; the report describes what was observed, not a guarantee about file semantics.
-- **Repository-relative paths are retained by default; absolute paths never are.** Absolute paths leak home directories and usernames with no compensating value. Repository-relative paths carry the structural information that makes the report useful. See the clarification below on whether relative paths need redaction as well.
+- **Repository-relative paths are retained by default; absolute paths never are** (resolved — see Clarifications). The operator is assumed to read a report before sharing it, which FR-019d supports by advertising the stricter mode at the point of use.
 - **The schema is expected to change.** It ships marked alpha (FR-017), and consumers are expected to tolerate additive change. Stability is a goal for the *shape* of recurring records, not a compatibility guarantee.
 - **This repository is the primary test fixture.** Its `waybill-cli/tests/` tree is a genuine, non-synthetic instance of the hardest case in the feature (SC-001), which makes it a better fixture than anything constructed for the purpose.
 
-## Outstanding Clarification
+## Clarifications
 
-- **FR-019 / default redaction of repository-relative paths**: [NEEDS CLARIFICATION: The default strips absolute paths and file contents. Should repository-relative directory paths (e.g. `services/billing/`) also be redacted by default — replaced with stable per-segment hashes that preserve structure and correlation but not names — or retained by default with redaction offered as an opt-in mode? Retaining them makes reports substantially more useful to a maintainer; redacting them makes reports safe to send without review. This choice materially changes the artifact's value and its adoption, and no default is obviously correct.]
+### Session 2026-09-21
+
+- Q: Should repository-relative directory paths be redacted by default, or retained with redaction as an opt-in? → A: **Retained by default**, with an opt-in redaction mode (FR-019a / FR-019b).
+
+**Rationale, recorded because the trade is real.** The purpose of this report is that operators send it to maintainers for support, and redaction-by-default destroys the signal that makes that work: a `deno.json` under `tools/codegen/` is actionable, the same marker under an opaque identifier is not. Retaining names matches how build logs and stack traces are already shared.
+
+The cost is that an operator who forwards a report without reading it may disclose internal product or customer names. Three things bound that risk, and all three are requirements rather than intentions: reports are never transmitted automatically (FR-023), the stricter mode is surfaced in the command's own output rather than buried in documentation (FR-019d), and every report states which mode produced it (FR-019c) so a recipient is never guessing.
+
+Absolute paths and file contents are excluded unconditionally in both modes (FR-019) — that part was never in question.

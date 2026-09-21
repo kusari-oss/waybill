@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [X] No [NEEDS CLARIFICATION] markers remain
 - [X] Requirements are testable and unambiguous
 - [X] Success criteria are measurable
 - [X] Success criteria are technology-agnostic (no implementation details)
@@ -31,12 +31,13 @@
 
 ## Notes
 
-**One outstanding clarification** — the default redaction level for
-repository-relative paths (FR-019). It is the only item blocking this
-checklist. It was left open deliberately rather than defaulted: it is a
-privacy decision that materially changes both the artifact's usefulness and
-whether operators will send reports at all, and neither answer is obviously
-correct.
+**All items pass.** The one outstanding clarification — the default redaction
+level for repository-relative paths — was resolved on 2026-09-21: paths are
+retained by default, with an opt-in redaction mode (FR-019a / FR-019b). It was
+put to the user rather than defaulted because it is a privacy decision that
+changes both the artifact's usefulness and whether operators will send reports
+at all. The rationale and the three requirements that bound the residual risk
+are recorded in the spec's Clarifications section.
 
 **On "no implementation details"**: the Context section cites
 `walk_registry/dispatch.rs:30` and the existing per-reader dispatch counters.
