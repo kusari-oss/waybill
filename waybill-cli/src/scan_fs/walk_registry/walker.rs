@@ -56,6 +56,13 @@ pub struct SharedWalker<'reg, 'ex> {
     dir_index: DirIndex,
     metrics: WalkerMetrics,
     output: HashMap<ReaderId, Mutex<Vec<PackageDbEntry>>>,
+    /// Milestone 924 (#932) — optional observation census.
+    ///
+    /// `None` on every ordinary scan, which is the overwhelmingly common
+    /// case: no allocation, no bookkeeping, and the emitted SBOM is
+    /// byte-identical to a pre-feature build (FR-024 / SC-009). Attached only
+    /// by `waybill repo report`.
+    census: Option<crate::report::census::Census>,
 }
 
 impl<'reg, 'ex> SharedWalker<'reg, 'ex> {
@@ -77,6 +84,7 @@ impl<'reg, 'ex> SharedWalker<'reg, 'ex> {
             max_depth: DEFAULT_MAX_DEPTH,
             visited: HashSet::new(),
             dir_index: DirIndex::new(),
+            census: None,
             metrics: WalkerMetrics::new(&reader_ids),
             output,
         }
@@ -264,6 +272,16 @@ impl<'reg, 'ex> SharedWalker<'reg, 'ex> {
                 dispatch::dispatch_file(file, registrations, &ctx, scope)
             };
             self.metrics.tick_file(&dispatched_to);
+            // m924 (#932) — retain what dispatch already decided. No extra
+            // traversal, no extra match work: `dispatched_to` is the claimed
+            // set, and `is_empty()` is "unclaimed" (research R1).
+            if let Some(census) = self.census.as_mut() {
+                let name = file
+                    .file_name()
+                    .map(|n| n.to_string_lossy().into_owned())
+                    .unwrap_or_default();
+                census.record_file(&canonical, &name, &dispatched_to);
+            }
         }
 
         // Recurse into subdirs. Each subdir carries EITHER the current

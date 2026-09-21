@@ -39,6 +39,7 @@ mod enrich;
 mod error;
 mod generate;
 mod policy;
+mod report;
 mod resolve;
 mod sbom;
 mod scan_fs;

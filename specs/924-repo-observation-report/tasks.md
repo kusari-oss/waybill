@@ -24,9 +24,9 @@ partial one.
 
 **Purpose**: Establish the baseline that FR-024 / SC-009 are measured against, before any code changes.
 
-- [ ] T001 Capture the pre-change SBOM baseline: run `waybill sbom scan` against this repository and the polyglot reference repo in all three formats, storing outputs under `specs/924-repo-observation-report/measurements/baseline/`. SC-009 asserts byte-identity against these, and they cannot be reconstructed after the walker is touched.
-- [ ] T002 Create the module skeleton at `waybill-cli/src/report/mod.rs` with `census`, `significance`, `content_kind`, `ecosystems`, `schema` submodules declared and empty, wired into `waybill-cli/src/lib.rs` (or `main.rs` module tree) so later tasks compile in isolation.
-- [ ] T003 [P] Record in `specs/924-repo-observation-report/measurements/baseline/README.md` exactly which binary and commit produced the T001 baselines, and the cache state of every enrichment source at capture time. A baseline whose conditions are unstated is not a baseline.
+- [X] T001 Capture the pre-change SBOM baseline: run `waybill sbom scan` against this repository and the polyglot reference repo in all three formats, storing outputs under `specs/924-repo-observation-report/measurements/baseline/`. SC-009 asserts byte-identity against these, and they cannot be reconstructed after the walker is touched.
+- [X] T002 Create the module skeleton at `waybill-cli/src/report/mod.rs` with `census`, `significance`, `content_kind`, `ecosystems`, `schema` submodules declared and empty, wired into `waybill-cli/src/lib.rs` (or `main.rs` module tree) so later tasks compile in isolation.
+- [X] T003 [P] Record in `specs/924-repo-observation-report/measurements/baseline/README.md` exactly which binary and commit produced the T001 baselines, and the cache state of every enrichment source at capture time. A baseline whose conditions are unstated is not a baseline.
 
 ---
 
@@ -36,10 +36,10 @@ partial one.
 
 ⚠️ **No user story can start until T004–T007 are complete.**
 
-- [ ] T004 In `waybill-cli/src/scan_fs/walk_registry/walker.rs`, retain the existing `dispatched_to` value (already bound at line ~264) and route it to a census sink alongside the existing `self.metrics.tick_file(&dispatched_to)` call. **Add no traversal and change no dispatch behaviour** — this file is on the hot path of every scan and carries byte-identity guarantees for 21 migrated readers.
-- [ ] T005 Add the census accumulator in `waybill-cli/src/report/census.rs`: per-directory claimed/unclaimed/skipped tallies keyed by canonical path, plus per-reader `files_matched`. Accumulation only — no classification, no policy.
-- [ ] T006 [P] Define the report root types in `waybill-cli/src/report/schema.rs` per `data-model.md`: `ObservationReport`, `RepositoryTotals`, `ReaderCoverage`, with serde derives and the two-part `schema_version`.
-- [ ] T007 Prove T004 changed nothing observable: re-run the T001 scans and assert byte-identity against the stored baselines (SC-009). **Run this before building anything on top** — a regression introduced here would otherwise be discovered several stories later, with the cause buried.
+- [X] T004 In `waybill-cli/src/scan_fs/walk_registry/walker.rs`, retain the existing `dispatched_to` value (already bound at line ~264) and route it to a census sink alongside the existing `self.metrics.tick_file(&dispatched_to)` call. **Add no traversal and change no dispatch behaviour** — this file is on the hot path of every scan and carries byte-identity guarantees for 21 migrated readers.
+- [X] T005 Add the census accumulator in `waybill-cli/src/report/census.rs`: per-directory claimed/unclaimed/skipped tallies keyed by canonical path, plus per-reader `files_matched`. Accumulation only — no classification, no policy.
+- [X] T006 [P] Define the report root types in `waybill-cli/src/report/schema.rs` per `data-model.md`: `ObservationReport`, `RepositoryTotals`, `ReaderCoverage`, with serde derives and the two-part `schema_version`.
+- [X] T007 Prove T004 changed nothing observable: re-run the T001 scans and assert byte-identity against the stored baselines (SC-009). **Run this before building anything on top** — a regression introduced here would otherwise be discovered several stories later, with the cause buried.
 
 ---
 
