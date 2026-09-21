@@ -55,6 +55,25 @@ pub(crate) fn build(
 ) -> anyhow::Result<ObservationReport> {
     census::enable_report_mode();
 
+    // FR-022 / FR-022b — force the Go transitive resolver offline.
+    //
+    // Measured, not assumed: with a Go module present and no offline signal,
+    // the resolver reads $GOPROXY and is prepared to fetch
+    // (`graph_resolver.rs` proxy tier). It avoided the network in testing only
+    // because the module happened to be in the local module cache, which made
+    // an earlier SC-007 test pass for the wrong reason.
+    //
+    // `read_all` has no offline parameter, so this uses the resolver's own
+    // documented gate at `graph_resolver.rs:1147`. Set here rather than
+    // exposed as a flag: no operator input can turn it off, which is the
+    // sense in which FR-022b's guarantee is structural. Transitive edges are
+    // not needed by any requirement in this feature -- components come from
+    // readers -- so nothing is lost.
+    //
+    // Safe in-process because the report command performs one scan and exits;
+    // tests drive the binary as a subprocess.
+    std::env::set_var("WAYBILL_OFFLINE", "1");
+
     let scan = crate::scan_fs::package_db::read_all(
         root,
         None,
@@ -269,10 +288,43 @@ fn assemble(
     // FR-004 — every reader carries BOTH counts. A reader absent from the
     // census matched nothing; one present with no components engaged and
     // produced nothing. Different diagnoses, so both must be expressible.
-    let emitted_per_reader: BTreeMap<String, u64> = census::take_emitted()
-        .into_iter()
-        .map(|(id, n)| (id.as_str().to_string(), n))
-        .collect();
+    // FR-004 — attribute components to readers via sole directory claim.
+    //
+    // The walker's own per-reader output map covers only readers that emit
+    // *during* the walk; most emit in a later phase, so that map reported 0
+    // for 27 of 28 readers while the SBOM held 5,552 components. Zero there
+    // is indistinguishable from "not tracked", and emitting it as 0 asserted
+    // something false.
+    //
+    // A component is credited to a reader when that reader is the SOLE
+    // claimant of the directory its source path sits in. Ambiguous
+    // directories credit nobody, and a reader with nothing attributable gets
+    // `None` rather than `0`.
+    let _walker_emitted = census::take_emitted();
+    let mut attributed: BTreeMap<String, u64> = BTreeMap::new();
+    let mut attributable_readers: BTreeSet<String> = BTreeSet::new();
+    for (dir, n) in &per_dir_components {
+        if let Some(d) = census.dirs().get(dir) {
+            if d.claimed_by.len() == 1 {
+                if let Some(id) = d.claimed_by.iter().next() {
+                    *attributed.entry(id.as_str().to_string()).or_insert(0) += n;
+                    attributable_readers.insert(id.as_str().to_string());
+                }
+            }
+        }
+    }
+    // A reader that solely claimed at least one directory has a determined
+    // count, even when that count is zero -- that is a real
+    // "matched but produced nothing" signal. A reader that never solely
+    // claimed anything has no determination to report.
+    for d in census.dirs().values() {
+        if d.claimed_by.len() == 1 {
+            if let Some(id) = d.claimed_by.iter().next() {
+                attributable_readers.insert(id.as_str().to_string());
+            }
+        }
+    }
+    let emitted_per_reader = &attributed;
     let mut reader_ids: BTreeSet<String> =
         census.per_reader_files().keys().map(|id| id.as_str().to_string()).collect();
     reader_ids.extend(emitted_per_reader.keys().cloned());
@@ -285,7 +337,9 @@ fn assemble(
                 .find(|(k, _)| k.as_str() == id)
                 .map(|(_, v)| *v)
                 .unwrap_or(0),
-            components_emitted: *emitted_per_reader.get(&id).unwrap_or(&0),
+            components_emitted: attributable_readers
+                .contains(&id)
+                .then(|| *emitted_per_reader.get(&id).unwrap_or(&0)),
             reader_id: id,
         })
         .collect();

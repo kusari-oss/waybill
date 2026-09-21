@@ -133,7 +133,7 @@ partial one.
 - [ ] T043 Re-run T007's byte-identity check at final state (SC-009): emitted SBOM content byte-identical to the T001 baselines across all three formats.
 - [ ] T044 Confirm corpus goldens are untouched. Expect **no movement** — this feature emits no SBOM content. Movement means FR-024 has been violated somewhere.
 - [ ] T045 Run the mandatory pre-PR gate: `./scripts/pre-pr.sh`. Enumerate the per-target results rather than citing the exit code; use `-j 2 --test-threads=2` if the full run exhausts memory.
-- [ ] T046 Resolve the FR-022b qualification raised in `plan.md`: either amend the spec's "structural rather than flag-dependent" wording to match what R5 found, or record why the stronger wording stands. **Do not leave the spec claiming a guarantee the implementation does not provide.**
+- [X] T046 Resolve the FR-022b qualification raised in `plan.md`: either amend the spec's "structural rather than flag-dependent" wording to match what R5 found, or record why the stronger wording stands. **Do not leave the spec claiming a guarantee the implementation does not provide.**
 - [ ] T047 Comment on #932 with what landed, the T039 measurements, and the schema version shipped.
 
 ---

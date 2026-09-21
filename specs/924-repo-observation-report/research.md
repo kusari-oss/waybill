@@ -150,6 +150,30 @@ hard-coded value rather than proving an absence.
 component counts and FR-004's matched-but-produced-nothing distinction both
 require it, and those are two of the more diagnostic signals in the feature).
 
+### CORRECTION at implement time
+
+R5 concluded the report path "constructs resolution with offline semantics
+unconditionally". **It did not, because there was no way to.** `read_all` takes
+no offline parameter, so the report path passed nothing and the Go resolver ran
+with its default, network-capable behaviour.
+
+Measured with an uncached module and an empty `GOMODCACHE`:
+
+| | proxy tier | wall clock |
+|---|---|---|
+| `sbom scan` (control, no forced offline) | attempts fetch, `connection refused` | **5.196s** |
+| `repo report` (after the fix) | `proxy_count=0`, falls to gosum | **0.039s** |
+
+Fixed by setting the resolver's own documented gate (`WAYBILL_OFFLINE`,
+`graph_resolver.rs:1147`) inside `report::build`. Only *transitive edge*
+resolution is affected; components come from readers, so no requirement loses
+anything.
+
+**What made this findable was a control.** The report path alone looked fine —
+`proxy_count=0` on both sides — because the test module happened to be cached.
+Running the same fixture through a command that does *not* force offline is
+what separated "did not need the network" from "was never going to use it".
+
 ---
 
 ## R6 — Seeding the unsupported-ecosystem table (FR-007, FR-009)

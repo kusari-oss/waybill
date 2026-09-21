@@ -166,34 +166,51 @@ fn aggregated_directories_keep_their_counts_m924() {
 
 /// SC-007 / FR-022b — the report path makes no network request.
 ///
-/// Run with every proxy variable pointed at an unroutable address and **no**
-/// offline flag passed. If the path reached an enriching or fetching stage it
-/// would fail or hang; success means it never tried.
+/// **This fixture is deliberately hostile.** An earlier version of this test
+/// used a repository with no Go module at all and passed without exercising
+/// anything: the network-capable path is the Go transitive resolver, and it
+/// never ran. A later version added a Go module that happened to be in the
+/// local module cache, so the resolver short-circuited before the proxy tier
+/// and the test passed for the second wrong reason.
 ///
-/// This guards a hard-coded value rather than proving an absence — research R5
-/// found that resolution contains network-capable code and is told not to use
-/// it, so "structural" holds in the sense that no operator input can turn it
-/// on, not that no such code exists. The plan says so plainly and so does this.
+/// This one names a module that cannot be cached and points `GOMODCACHE` at an
+/// empty directory, so the proxy tier is the only remaining option. Measured
+/// against a control: `sbom scan` on the same fixture attempts the fetch and
+/// fails with `connection refused` after ~5s; the report path reaches the
+/// gosum tier with `proxy_count=0` in ~0.04s.
 #[test]
 fn the_report_makes_no_network_request_m924() {
-    let d = fixture();
-    let out = d.path().join("offline.json");
+    let d = tempfile::tempdir().unwrap();
+    let r = d.path();
+    w(r, "go.mod",
+      b"module example.com/waybill-fixture-uncached\n\ngo 1.21\n\n        require github.com/waybill-fixture/definitely-not-cached v1.2.3\n");
+    w(r, "go.sum",
+      b"github.com/waybill-fixture/definitely-not-cached v1.2.3         h1:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\n");
+    w(r, "main.go", b"package main\n");
+
+    let empty_cache = d.path().join("empty-modcache");
+    std::fs::create_dir_all(&empty_cache).unwrap();
+    let out = r.join("offline.json");
+
+    let started = std::time::Instant::now();
     let st = Command::new(binary_path())
-        .args([
-            "repo", "report",
-            "--path", d.path().to_str().unwrap(),
-            "--output", out.to_str().unwrap(),
-        ])
+        .args(["repo", "report", "--path", r.to_str().unwrap(),
+               "--output", out.to_str().unwrap()])
+        .env("GOPROXY", "http://127.0.0.1:1")
+        .env("GOMODCACHE", empty_cache.to_str().unwrap())
         .env("HTTPS_PROXY", "http://127.0.0.1:1")
         .env("HTTP_PROXY", "http://127.0.0.1:1")
-        .env("ALL_PROXY", "http://127.0.0.1:1")
-        .env("GOPROXY", "http://127.0.0.1:1")
         .status()
         .unwrap();
+    let elapsed = started.elapsed();
+
+    assert!(st.success(), "the report path failed with the network unreachable: {st:?}");
     assert!(
-        st.success(),
-        "the report path attempted a network call: every proxy points at an \
-         unroutable address and no offline flag was passed, yet it failed ({st:?})",
+        elapsed < std::time::Duration::from_secs(3),
+        "the report took {elapsed:?}. A run that long against an unroutable \
+         proxy means it attempted a fetch and waited for the failure -- the \
+         control (`sbom scan`) takes ~5s on this fixture for exactly that \
+         reason, and the report path should take ~0.04s.",
     );
     let rep: serde_json::Value =
         serde_json::from_slice(&std::fs::read(&out).unwrap()).unwrap();

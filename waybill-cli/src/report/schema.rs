@@ -116,11 +116,28 @@ pub(crate) struct DirectoryObservation {
 /// `components_emitted == 0` (a reader that engaged and produced nothing) and
 /// `files_matched == 0` (a reader that never saw a candidate) are different
 /// diagnoses with different fixes. A single number conflates them.
+///
+/// # `components_emitted` is optional, and `null` is not `0`
+///
+/// A component does not record which reader produced it, so this is **derived
+/// by attribution**: a component is credited to a reader when that reader is
+/// the *sole* claimant of the directory the component's source path sits in.
+/// Where a directory has several claimants the components are not attributed,
+/// and the field is `null`.
+///
+/// `null` means **not determined**, never "produced nothing". Emitting `0`
+/// there was the first implementation's behaviour and it was actively
+/// misleading: the report said "pip matched 157 files and emitted 0
+/// components", which reads as a defect in pip and was false. A report that
+/// asserts what its evidence does not support is the thing FR-014 forbids,
+/// and that applies to the report's own bookkeeping as much as to the
+/// repository it describes.
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct ReaderCoverage {
     pub(crate) reader_id: String,
     pub(crate) files_matched: u64,
-    pub(crate) components_emitted: u64,
+    /// `None` ⇒ not determined. See the type docs.
+    pub(crate) components_emitted: Option<u64>,
 }
 
 #[derive(Debug, Clone, Serialize)]
