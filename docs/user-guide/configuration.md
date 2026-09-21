@@ -183,6 +183,91 @@ A scheduled check watches for the endpoint leaving `v3alpha`
 valid while no stable equivalent exists, and it should be revisited when one
 does.
 
+## Repository observation report
+
+`waybill repo report` answers a different question from `sbom scan`: not "what
+is in this repository" but **"what did waybill understand, ignore, and fail to
+determine here"**.
+
+```sh
+waybill repo report --path . --output report.json
+```
+
+Use it when a scan produced fewer components than you expected and you cannot
+tell whether that is correct. The report names, per directory, which readers
+claimed files, which directories nothing recognised, and which could not be
+classified at all.
+
+| Flag | Description |
+|---|---|
+| `--path <DIR>` | Repository to observe. Defaults to `.`. |
+| `--output <FILE>` | Where to write. Defaults to stdout. |
+| `--redact` | Replace repository-relative path segments with stable identifiers. |
+| `--exclude-path <PATH>` | Skip subtrees. Same semantics as `sbom scan`. |
+
+### What the report is for
+
+Three questions it answers directly:
+
+- **Is my project shape supported?** Directories with `claim_status: claimed`
+  were recognised. Ones with an ecosystem named and `support: no_reader` are a
+  known gap — waybill can see what they are and has no reader for them.
+- **Did a reader engage and produce nothing?** `files_matched > 0` with
+  `components_emitted: 0` is a parse failure or an unsupported dialect, not a
+  coverage gap. The two need opposite responses.
+- **What could not be determined?** Directories carrying an `ambiguity` record,
+  with the competing interpretations and the evidence behind each.
+
+### Ambiguity is an answer, not a failure
+
+The report does not guess. A directory holding lockfiles from several
+ecosystems may be a polyglot project, test fixtures, or vendored examples, and
+nothing observable distinguishes them — so it records the ambiguity and the
+evidence rather than picking one.
+
+Where a directory cannot be classified at all, it still carries what *was*
+observable: file count, depth, whether the contents are predominantly binary or
+text, and an extension histogram. A directory of 47 binary files and one of 47
+text files are both unclassified and mean very different things.
+
+### Sharing a report
+
+The report retains **repository-relative** directory names by default, because
+those are what make it actionable to someone who cannot see your repository.
+It never contains absolute paths or any content read from a scanned file, in
+either mode.
+
+If directory names are themselves sensitive:
+
+```sh
+waybill repo report --path . --redact --output report.json
+```
+
+Segments become stable identifiers: nesting depth and repeated segments still
+correlate, the names do not survive. Every report states which mode produced
+it in `redaction_mode`, so a recipient never has to guess whether a missing
+name was absent or removed.
+
+Nothing is ever sent anywhere automatically. Sharing is something you do after
+reading the file.
+
+### Comparing two reports
+
+Check `significance_threshold` first. It governs which directories earned their
+own record, and **two reports produced under different thresholds are not
+comparable**.
+
+To diff two runs, mask the fields the document itself declares volatile rather
+than hard-coding a list — that stays correct as the schema grows:
+
+```sh
+jq -r '.volatile_fields[]' report.json
+```
+
+The schema is versioned `major.minor` and marked **alpha**. Minor bumps are
+additive; a major bump means a field was removed, renamed, or changed meaning,
+and a consumer should refuse a major it does not recognise rather than guess.
+
 ## Permission model
 
 - **`waybill trace capture` / `waybill trace run`** require Linux kernel

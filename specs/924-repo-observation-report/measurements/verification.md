@@ -70,3 +70,25 @@ defects:
    observed the first run's output file and the determinism test failed. This
    is also a real hazard for operators: `--output` inside the scan root
    perturbs the very thing being reported on.
+
+## T045 — pre-PR gate
+
+```
+>>> cargo +stable clippy --workspace --all-targets -j 2 -- -D warnings   exit=0
+>>> cargo +stable test --workspace --no-fail-fast -j 2 -- --test-threads=2  exit=0
+
+316 suites ok, 0 FAILED
+total: 5969 passed; 0 failed; 28 ignored
+```
+
+## T044 — corpus goldens
+
+22 passed, 8 failed — **identical to `origin/main`**. The eight are the known
+local-vs-CI divergence (a warm local module cache resolves edges a clean runner
+cannot), not movement from this feature, which emits no SBOM content at all.
+
+## T043 — SC-009 at final state
+
+6/6: two repositories × three formats. CycloneDX and SPDX 2.3 by masked line
+comparison, SPDX 3 semantically — see `verify_sc009.py` for why one strategy
+does not fit all three.

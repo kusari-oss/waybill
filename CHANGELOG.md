@@ -7,6 +7,48 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### New: `waybill repo report` — what waybill understood, and what it did not (#932)
+
+A new subcommand answering a question `sbom scan` cannot: **which parts of
+your repository did waybill recognise, and which did it not?**
+
+```sh
+waybill repo report --path . --output report.json
+```
+
+Until now, an under-reporting scan was silent in both directions. You received
+an SBOM with fewer components than expected and no indication why, and a
+maintainer handed a bug report had no structured way to learn what your
+repository looked like.
+
+The report gives, per directory: which readers claimed files, which readers
+engaged and produced nothing (a parse failure, not a coverage gap — different
+problem, opposite fix), which directories nothing recognised, and which could
+not be classified at all.
+
+**Ambiguity is recorded, not guessed.** A directory holding lockfiles from
+several ecosystems may be a polyglot project, test fixtures, or vendored
+examples; nothing observable tells them apart, so the report states the
+competing interpretations and the evidence rather than choosing. Directories it
+cannot classify still carry what was observable — file count, depth, whether
+contents are predominantly binary or text, an extension histogram.
+
+**Ecosystems waybill has no reader for are named**, not left as "unknown", so a
+gap is actionable rather than mysterious.
+
+**Safe to share.** Repository-relative names are kept by default because they
+are what make a report useful to someone who cannot see your repository; the
+report never contains absolute paths or file contents in any mode, and
+`--redact` replaces path segments with stable identifiers while preserving
+structure. Nothing is ever transmitted automatically.
+
+The output is a versioned JSON document with a published schema, currently
+marked **alpha** — expect additive change.
+
+**Emitted SBOM content is unchanged.** Producing a report runs no enrichment,
+makes no network request, and leaves every format byte-identical.
+
+
 ### License enrichment is now batched by default (#927)
 
 A scan's deps.dev license lookups now go out in batches of 100 instead of one
