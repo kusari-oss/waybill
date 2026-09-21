@@ -384,6 +384,28 @@ impl GradleCliFlags {
     }
 }
 
+/// Issue #927 (m923) — FR-001/FR-003/FR-004. Builds the deps.dev source with
+/// the enrichment path the operator's flags select.
+///
+/// Extracted from the call site on purpose. The decision it encodes — absent
+/// `--no-enrich-batch`, take the batched path — is the whole of this feature,
+/// and it was previously expressed inline where no test could reach it. The
+/// three m923 CLI tests asserted on clap's parse of the flag instead, and a
+/// mutation of the inline wiring to `.with_batch(false)` left all three green
+/// while every scan silently took the slow path. Routing construction through
+/// a named function puts the wiring under test.
+fn build_deps_dev_source(
+    client: DepsDevClient,
+    offline: bool,
+    args: &ScanArgs,
+) -> DepsDevSource {
+    DepsDevSource::new(client, offline)
+        // The legacy `--enrich-batch` is deliberately not consulted: it is a
+        // no-op kept so existing scripts keep parsing (FR-004).
+        .with_batch(!args.no_enrich_batch)
+        .with_disk_cache(!args.enrich_no_cache, args.enrich_cache_max_age)
+}
+
 #[derive(Args, Debug)]
 pub struct ScanArgs {
     /// Directory to walk for package artifacts.
@@ -3631,9 +3653,8 @@ pub async fn execute(
     // second pass shares it — and therefore shares its in-memory
     // cache, which is what makes that pass nearly free for every
     // component already enriched here.
-    let deps_dev_source = DepsDevSource::new(deps_dev_client.clone(), offline)
-        .with_batch(!args.no_enrich_batch)
-        .with_disk_cache(!args.enrich_no_cache, args.enrich_cache_max_age);
+    let deps_dev_source =
+        build_deps_dev_source(deps_dev_client.clone(), offline, &args);
     if enrich_cfg.deps_dev {
         let (enriched, skips, degradation) =
             enrich_components(&deps_dev_source, &mut components).await;
@@ -5513,21 +5534,38 @@ mod tests {
 
     // ----- Issue #927 (m923) — enrichment default -----
 
+    /// Build the source the way `run()` does, from a parsed command line.
+    ///
+    /// Going through `build_deps_dev_source` rather than re-deriving the
+    /// decision here is the point: a test that recomputes `!no_enrich_batch`
+    /// itself agrees with the production wiring only by coincidence, and
+    /// keeps agreeing after the wiring changes.
+    fn source_for(argv: &[&str]) -> crate::enrich::depsdev_source::DepsDevSource {
+        let parsed =
+            <ScanArgsForTest as clap::Parser>::try_parse_from(argv).expect("args must parse");
+        build_deps_dev_source(
+            DepsDevClient::new(std::time::Duration::from_secs(5)),
+            false,
+            &parsed.inner,
+        )
+    }
+
     /// FR-001 / SC-001. **Asserted as path SELECTION, not as output.**
     ///
     /// Both enrichment paths produce equivalent documents (asserted by
     /// `both_paths_produce_the_same_content_when_batch_succeeds`), so no
-    /// comparison of emitted bytes can tell you which one ran. A test that
-    /// checked output would pass whether or not this flip worked.
+    /// comparison of emitted bytes can tell you which one ran.
+    ///
+    /// This asserts on the constructed source, not on the parsed flag. The
+    /// earlier version checked `!args.no_enrich_batch` and was found during
+    /// the T022 teeth-check to pass against the *pre-change* default — it was
+    /// testing clap, not the flip, and a mutation of the wiring to
+    /// `.with_batch(false)` left it green while every scan took the slow path.
     #[test]
     fn enrichment_is_batched_by_default_m923() {
-        let default = <ScanArgsForTest as clap::Parser>::try_parse_from(["scan", "--path", "."])
-            .expect("baseline parse");
-        // `with_batch()` receives `!no_enrich_batch`, so this IS the
-        // selection: absent opt-out means the batched path runs.
         assert!(
-            !default.inner.no_enrich_batch,
-            "a scan with no enrichment flags must select the batched path"
+            source_for(&["scan", "--path", "."]).is_batched(),
+            "a scan with no enrichment flags must select the batched path",
         );
     }
 
@@ -5541,6 +5579,10 @@ mod tests {
         ])
         .expect("the opt-out MUST parse");
         assert!(parsed.inner.no_enrich_batch);
+        assert!(
+            !source_for(&["scan", "--path", ".", "--no-enrich-batch"]).is_batched(),
+            "--no-enrich-batch must actually reach the source, not just parse",
+        );
     }
 
     /// FR-004 / SC-007 / C-4. The legacy opt-in keeps parsing. Scripts that
@@ -5556,6 +5598,11 @@ mod tests {
         assert!(
             !parsed.inner.no_enrich_batch,
             "passing the legacy opt-in must not accidentally select the opt-out"
+        );
+        assert!(
+            source_for(&["scan", "--path", ".", "--enrich-batch"]).is_batched(),
+            "the legacy opt-in must still land on the batched path — as a no-op \
+             it selects what the default already selects",
         );
     }
 

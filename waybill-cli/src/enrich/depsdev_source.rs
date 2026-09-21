@@ -121,6 +121,16 @@ impl DepsDevSource {
     }
 
     /// Milestone 839 (FR-002) — enable the bulk path for this source.
+    /// Test-only: which enrichment path this source will take.
+    ///
+    /// Exists because the #927 default flip is otherwise unobservable — both
+    /// paths emit the same document, so nothing in the output distinguishes
+    /// them and a test that inspects bytes passes either way.
+    #[cfg(test)]
+    pub(crate) fn is_batched(&self) -> bool {
+        self.batch
+    }
+
     pub fn with_batch(mut self, batch: bool) -> Self {
         self.batch = batch;
         self
