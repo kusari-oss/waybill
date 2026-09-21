@@ -85,3 +85,27 @@ The comparison is demonstrably sensitive: the first version of the test used a
 fresh tempdir per run, the scan-root path appears throughout the document, and
 it failed. That was the test's bug, not the product's, and it is also proof
 that the mask is not swallowing real differences.
+
+## T026 — corpus goldens
+
+**No movement attributable to this change.** The harness hard-codes
+`--offline` (`corpus_harness_195/harness.rs:184`), so enrichment never runs
+there and the default flip cannot reach it.
+
+Verified by comparison rather than by assertion: the suite was run on this
+branch and on an `origin/main` worktree at `a7ecd7c6`, and produced the
+**identical** result both times — 22 passed, 8 failed, the same eight targets
+(`go_cobra`, `image_postgres16`, `maven_guice`, `npm_express`,
+`pants_example_golang`, `pants_example_javascript`, `python_flask`,
+`rust_ripgrep`).
+
+Those eight are the known local-vs-CI divergence, not a regression: they fail
+on the `graph-completeness` invariant with `observed: complete, expected:
+partial`, which is what a warm local module cache produces — edges resolve
+locally that a clean CI runner cannot resolve. The lane is green in CI on
+`main` (run of 2026-09-20 06:37). This is why goldens are CI-generated and
+never local.
+
+The authoritative check is the lane run against this branch, dispatched with
+`--ref 923-enrich-batch-default` (omitting `--ref` takes the workflow file
+from `main` against a branch checkout, which produced a false green in #918).
