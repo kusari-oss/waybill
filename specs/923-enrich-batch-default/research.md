@@ -57,7 +57,7 @@ Code structure and measurement agree.
    filed as **#929**.
 3. ~6.3s of the 8.5s is sequential network wait. Out of scope — this feature
    is a default flip, and turning it into a concurrency milestone would put
-   the 154× win behind unrelated risk.
+   the win behind unrelated risk.
 
 **This is the finding that most changed the plan**, and it was only visible by
 reading how the futures are *driven* rather than how they are *grouped*.
@@ -113,10 +113,20 @@ existing coverage explicit and adding the circuit-breaker case.
 
 ## R6 — What is NOT established
 
-The 154× figure comes from **one** repository, on one network, on one day.
-It is enough to justify the flip — the direction is not in doubt and the
-mechanism is understood — but it is not a benchmark. Anyone quoting it as a
-general speedup is overstating what was measured.
+~~The 154× figure comes from **one** repository, on one network, on one day.~~
+
+**Superseded by T021, and the caution here did not go far enough.** The 154×
+figure was not merely un-generalisable — it was **misattributed**. The 1302s
+it rests on is ~98% ClearlyDefined, not deps.dev (**#930**). The measured
+deps.dev effect is **2.4x on the enrichment phase and 100x on request count**,
+from paired runs on that same single repository — so the "one repository, one
+network, one day" caveat still applies to the 2.4x, and the request-count
+bound is the one that does not depend on the day.
+
+The lesson this section should have carried: a figure derived by *toggling a
+flag* needs the per-source timings the tool already logs before it is quoted
+at all. Un-generalisable and wrong are different failures, and only the
+second one was present.
 
 The honest general claim: **per-component enrichment issues one request per
 component; batched issues one per hundred.** The ratio on any given repository

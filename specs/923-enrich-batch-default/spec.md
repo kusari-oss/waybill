@@ -15,6 +15,23 @@ the fast path already exists but is off by default.
 Measured on a public polyglot repository — ~6,200 files, Go plus two yarn
 workspaces, 2,291 packages:
 
+> **CORRECTED after T021 — read this before the table below.**
+> The table's run C (1302s) is real but is **not** deps.dev. That run's log
+> shows deps.dev at 16,550ms and ClearlyDefined at 1,283s. A both-caches-cold
+> re-run reproduces deps.dev at 16,651ms (0.6% apart) with ClearlyDefined at
+> 695s. **deps.dev is 1–2% of run C; ClearlyDefined is 97–98%** — tracked in
+> **#930**. The "run B isolates deps.dev" argument below is **false**:
+> `--no-deps-dev` leaves ClearlyDefined enabled (`scan_cmd.rs:2361`), and B
+> was fast only because the cold run had already warmed ClearlyDefined's disk
+> cache. The original text is kept unedited beneath for the record.
+>
+> **What this feature is actually worth**, measured with paired runs:
+> deps.dev enrichment **14,465ms → 6,082ms (2.4x)** and **2,291 → 23
+> requests (100x)**. See `measurements/after.md`.
+
+<details>
+<summary>Original (uncorrected) Context as written before T021</summary>
+
 | run | network | deps.dev | wall clock | licensed components |
 |---|---|---|---|---|
 | A | off | — | 3.0s | 0 |
@@ -37,6 +54,11 @@ serial (C) vs batch (D)
 ```
 
 **154× faster for the same document.**
+
+</details>
+
+The output-equivalence block above is the one part that survives review
+unchanged, and it is what FR-002 turns into a test.
 
 ### Why it is off today, and why that reason is not what it appears
 

@@ -8,7 +8,10 @@ Each section maps to a success criterion and states what the answer is
 ```sh
 # today's default — per-component
 time waybill sbom scan --path <repo-with-~2000-packages> --output /tmp/a.cdx.json
-# ~1302s on the reference repository
+# ~16.6s of deps.dev on the reference repository.
+# (A full online scan there is ~700-1300s, but ~98% of that is
+#  ClearlyDefined, not deps.dev — see #930. Add --no-clearly-defined
+#  to time deps.dev on its own.)
 
 # the path this feature makes default
 time waybill sbom scan --path <same> --enrich-batch --enrich-no-cache --output /tmp/b.cdx.json
@@ -37,7 +40,9 @@ default regardless of its speed.
 time waybill sbom scan --path <repo> --output /tmp/c.cdx.json     # no flags
 ```
 
-Seconds, not minutes. Today this is the 1302s path.
+Enrichment drops from ~14.5s to ~6.1s, and from 2,291 requests to 23.
+(Do not expect the total scan time to move much: on the reference
+repository ClearlyDefined dominates it — #930.)
 
 ## 3. SC-004 / C-8 — disabled enrichment is untouched
 

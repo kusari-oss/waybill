@@ -5,10 +5,16 @@
 
 ## Summary
 
-Enrichment is the slowest thing waybill does by two orders of magnitude, and
-the fast path already exists behind an opt-in flag. Measured: 1302s
-per-component against 8.5s batched, for output with zero differing package
-identities, zero differing licence values and an identical edge count.
+deps.dev enrichment has a fast path that already exists behind an opt-in
+flag. Measured with paired runs: **14,465ms per-component against 6,082ms
+batched**, and **2,291 requests against 23**, for output with zero differing
+package identities, zero differing licence values and an identical edge count.
+
+> **Corrected after T021.** This read "Enrichment is the slowest thing waybill
+> does by two orders of magnitude … 1302s per-component against 8.5s batched".
+> The 1302s is real but is ~98% **ClearlyDefined**, not deps.dev — see
+> `measurements/after.md` and **#930**. deps.dev is ~16.6s on that repository
+> and always was.
 
 The work is a default flip plus the guards that make it defensible: a circuit
 breaker so a persistent upstream failure costs one wasted attempt, a log line
