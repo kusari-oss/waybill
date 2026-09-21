@@ -84,7 +84,26 @@ impl<'reg, 'ex> SharedWalker<'reg, 'ex> {
             max_depth: DEFAULT_MAX_DEPTH,
             visited: HashSet::new(),
             dir_index: DirIndex::new(),
-            census: None,
+            // One relaxed load per walker, not per file (m924 / #932).
+            census: if crate::report::census::report_mode_enabled() {
+                // Probe for readers whose patterns match anything at all.
+                // Determined, not hard-coded: a reader that changes its
+                // patterns changes this answer automatically.
+                let probes = [
+                    "waybill-probe-zz9",
+                    "waybill-probe-zz9.qqq",
+                    "aaaa",
+                ];
+                let catch_all: std::collections::BTreeSet<ReaderId> = registry
+                    .registrations()
+                    .iter()
+                    .filter(|r| probes.iter().all(|p| r.patterns.is_match(p)))
+                    .map(|r| r.reader_id)
+                    .collect();
+                Some(crate::report::census::Census::new().with_catch_all(catch_all))
+            } else {
+                None
+            },
             metrics: WalkerMetrics::new(&reader_ids),
             output,
         }
@@ -118,6 +137,9 @@ impl<'reg, 'ex> SharedWalker<'reg, 'ex> {
         scope: Option<&HashSet<ReaderId>>,
     ) {
         if depth_remaining == 0 {
+            if let Some(census) = self.census.as_mut() {
+                census.record_skip(crate::report::census::SkipReason::DepthLimit, 0);
+            }
             return;
         }
 
@@ -132,6 +154,9 @@ impl<'reg, 'ex> SharedWalker<'reg, 'ex> {
             return;
         };
         if !self.visited.insert(canonical.clone()) {
+            if let Some(census) = self.census.as_mut() {
+                census.record_skip(crate::report::census::SkipReason::AlreadyVisited, 0);
+            }
             return;
         }
 
@@ -145,6 +170,18 @@ impl<'reg, 'ex> SharedWalker<'reg, 'ex> {
                     path = %current.display(),
                     "safe_walk-equivalent: skipping directory matched by ExclusionSet (m113)",
                 );
+                // m924 (#932) FR-005 — an excluded directory is an
+                // observation, not an absence. "You told me to skip this" and
+                // "I did not understand this" demand opposite responses, so
+                // the report must be able to tell them apart. Counting the
+                // files inside costs one read_dir of a directory we are about
+                // to abandon, and without it the census silently under-reports.
+                if let Some(census) = self.census.as_mut() {
+                    let n = std::fs::read_dir(current)
+                        .map(|rd| rd.flatten().filter(|e| e.path().is_file()).count() as u64)
+                        .unwrap_or(0);
+                    census.record_excluded_dir(&canonical, n);
+                }
                 return;
             }
         }
@@ -158,6 +195,9 @@ impl<'reg, 'ex> SharedWalker<'reg, 'ex> {
                 path = %current.display(),
                 "safe_walk-equivalent: read_dir failed; skipping contents",
             );
+            if let Some(census) = self.census.as_mut() {
+                census.record_skip(crate::report::census::SkipReason::Unreadable, 0);
+            }
             return;
         };
 
@@ -259,6 +299,10 @@ impl<'reg, 'ex> SharedWalker<'reg, 'ex> {
         // any callback that consults `ctx.dir_index()` for the current
         // directory sees a fully populated view.
         self.dir_index.insert(canonical.clone(), filenames);
+        if let Some(census) = self.census.as_mut() {
+            // A directory that exists and holds nothing is an observation.
+            census.touch_dir(&canonical);
+        }
 
         // Dispatch file-visit events.
         for file in &files {
@@ -309,8 +353,20 @@ impl<'reg, 'ex> SharedWalker<'reg, 'ex> {
     /// Consume the walker, emit the FR-009 diagnostic log, and return
     /// per-reader outputs. Mutex poisoning (from a panicked reader per
     /// C4) is accepted — `into_inner` recovers the vector.
-    pub fn finish(self) -> HashMap<ReaderId, Vec<PackageDbEntry>> {
+    pub fn finish(mut self) -> HashMap<ReaderId, Vec<PackageDbEntry>> {
         self.metrics.emit();
+        // m924 (#932) — hand the census off before the walker is consumed.
+        if let Some(census) = self.census.take() {
+            let emitted: std::collections::BTreeMap<ReaderId, u64> = self
+                .output
+                .iter()
+                .map(|(id, m)| {
+                    let n = m.lock().map(|v| v.len() as u64).unwrap_or(0);
+                    (*id, n)
+                })
+                .collect();
+            crate::report::census::deposit(census, emitted);
+        }
         let mut out: HashMap<ReaderId, Vec<PackageDbEntry>> =
             HashMap::with_capacity(self.output.len());
         for (id, mutex) in self.output {

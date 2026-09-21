@@ -78,3 +78,33 @@ Re-run after `walk_registry/walker.rs` gained the census hook:
 6/6. SC-009 holds at the foundational gate. Checked here rather than at the end
 of the milestone so that a regression on the hot path is attributed to the one
 commit that could have caused it.
+
+---
+
+## SC-009 needs two comparison strategies, not one
+
+Verified again at the end of US1 via `../verify_sc009.py`. Getting there took
+three corrections to the mask, each of which would otherwise have read as a
+regression:
+
+1. **The `git describe` version string** (m053's ladder) embeds commit count
+   and hash into any component versioned from the repository itself. It moves
+   on **every commit**, so an unmasked self-scan differs from its baseline the
+   moment one more commit lands.
+2. **Content-addressed identifiers** — `SPDXRef-<BASE32>`, `/spdx3/doc-…`,
+   `/pkg-…` — are hashes over content that *includes* that version string.
+   Masking the version does not mask the ids derived from it.
+3. **SPDX 3 cannot be compared by masked lines at all.** Its `@graph` order
+   follows those ids, so any id perturbation reorders the graph. Measured:
+   **62,336 differing lines** across a document with **53,877 elements, an
+   identical type histogram, and an identical name multiset** — semantically
+   the same document.
+
+So SPDX 3 is compared semantically (element count, type histogram, name
+multiset) and the other two by masked lines. Both strategies live in
+`verify_sc009.py` so the next person does not rediscover this.
+
+**The polyglot reference repo passed all three at every stage.** It is an
+external tree that this branch does not modify, which is what made it possible
+to tell "the baseline is stale" apart from "the walker regressed" — the whole
+reason two targets were captured rather than one.

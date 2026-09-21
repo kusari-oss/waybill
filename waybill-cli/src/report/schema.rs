@@ -46,6 +46,10 @@ pub(crate) enum ClaimStatus {
 }
 
 /// FR-007 — whether waybill has a reader for an observed ecosystem.
+///
+/// Constructed by the US2 ecosystem-attribution phase; declared here with the
+/// rest of the document shape so the contract lives in one file.
+#[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub(crate) enum EcosystemSupport {

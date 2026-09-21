@@ -15,3 +15,4 @@ pub mod scan_cmd;
 pub mod trace_binding_cmd;
 pub mod verify;
 pub mod verify_binding_cmd;
+pub mod report_cmd;

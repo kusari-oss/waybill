@@ -90693,7 +90693,7 @@
    "version": "1.0"
   },
   {
-   "bom-ref": "pkg:generic/bench@v0.9.0-nightly.20260920-8-gcd759e02",
+   "bom-ref": "pkg:generic/bench@v0.9.0-nightly.20260920-<describe>",
    "evidence": {
     "identity": [
      {
@@ -90731,9 +90731,9 @@
      "value": "[\"waybill-cli/tests/fixtures/project_discovery/cargo_workspace_with_independent_neighbor/bench\"]"
     }
    ],
-   "purl": "pkg:generic/bench@v0.9.0-nightly.20260920-8-gcd759e02",
+   "purl": "pkg:generic/bench@v0.9.0-nightly.20260920-<describe>",
    "type": "library",
-   "version": "v0.9.0-nightly.20260920-8-gcd759e02"
+   "version": "v0.9.0-nightly.20260920-<describe>"
   },
   {
    "bom-ref": "pkg:generic/foo@1.0?layer=include_chain&openembedded=true",
@@ -90975,7 +90975,7 @@
    "version": "f597fb026637"
   },
   {
-   "bom-ref": "pkg:generic/gemfile_application@v0.9.0-nightly.20260920-8-gcd759e02",
+   "bom-ref": "pkg:generic/gemfile_application@v0.9.0-nightly.20260920-<describe>",
    "evidence": {
     "identity": [
      {
@@ -91013,9 +91013,9 @@
      "value": "[\"waybill-cli/tests/fixtures/gemfile_application\"]"
     }
    ],
-   "purl": "pkg:generic/gemfile_application@v0.9.0-nightly.20260920-8-gcd759e02",
+   "purl": "pkg:generic/gemfile_application@v0.9.0-nightly.20260920-<describe>",
    "type": "library",
-   "version": "v0.9.0-nightly.20260920-8-gcd759e02"
+   "version": "v0.9.0-nightly.20260920-<describe>"
   },
   {
    "bom-ref": "pkg:generic/layer-a@2?layer=layer-a&openembedded=true",
@@ -369121,8 +369121,8 @@
     "pkg:gem/fixture-libonly@1.0.0",
     "pkg:gem/m215-ruby-svc@3.1.0",
     "pkg:generic/App@0.0.0",
-    "pkg:generic/bench@v0.9.0-nightly.20260920-8-gcd759e02",
-    "pkg:generic/gemfile_application@v0.9.0-nightly.20260920-8-gcd759e02",
+    "pkg:generic/bench@v0.9.0-nightly.20260920-<describe>",
+    "pkg:generic/gemfile_application@v0.9.0-nightly.20260920-<describe>",
     "pkg:generic/layer-a@2?layer=layer-a&openembedded=true",
     "pkg:generic/layer-b@1?layer=layer-b&openembedded=true",
     "pkg:generic/meta-fixture-autoinc@1?layer=meta-fixture-autoinc&openembedded=true",
@@ -380834,7 +380834,7 @@
    "dependsOn": [
     "pkg:gem/waybill-fixture-rack@3.0.9.1"
    ],
-   "ref": "pkg:generic/bench@v0.9.0-nightly.20260920-8-gcd759e02"
+   "ref": "pkg:generic/bench@v0.9.0-nightly.20260920-<describe>"
   },
   {
    "dependsOn": [],
@@ -381687,7 +381687,7 @@
     "pkg:gem/json@2.7.1",
     "pkg:gem/rack@3.0.9"
    ],
-   "ref": "pkg:generic/gemfile_application@v0.9.0-nightly.20260920-8-gcd759e02"
+   "ref": "pkg:generic/gemfile_application@v0.9.0-nightly.20260920-<describe>"
   },
   {
    "dependsOn": [],
