@@ -66,11 +66,11 @@ Some directories cannot be classified from observation alone. Rather than guessi
 
 **Why this priority**: It is what makes the report trustworthy — a report that guesses wrong is worse than one that declines. It builds on US1 and US2 and is the part most likely to need iteration, so it follows them.
 
-**Independent Test**: Run against this repository. `waybill-cli/tests/` contains 89 lockfiles across several ecosystems — 27 `go.mod`, 24 `package.json`, 21 `Cargo.toml` — none of which are waybill's dependencies. Confirm the report marks this as indeterminate with the competing interpretations stated, rather than either treating them as dependencies or silently ignoring them.
+**Independent Test**: Run against this repository. `waybill-cli/tests/` contains 89 lockfiles across several ecosystems — 27 `go.mod`, 24 `package.json`, 21 `Cargo.toml` — none of which are waybill's dependencies. Confirm the report records it as **claimed** (readers did match those lockfiles) **and** carrying an ambiguity record stating the competing interpretations — rather than treating them as dependencies, silently ignoring them, or letting the claim suppress the ambiguity.
 
 **Acceptance Scenarios**:
 
-1. **Given** a directory containing lockfiles from multiple different ecosystems, **When** the report is produced, **Then** it is recorded as indeterminate, listing the ecosystems present and the candidate interpretations (polyglot project / test fixtures / vendored examples).
+1. **Given** a directory containing lockfiles from multiple different ecosystems, **When** the report is produced, **Then** it carries an ambiguity record listing every ecosystem present and the candidate interpretations (polyglot project / test fixtures / vendored examples), **independently of** whatever claim status applies.
 2. **Given** a directory that cannot be classified at all, **When** the report is produced, **Then** the report still records file count, maximum depth, the proportion of contents that are binary versus text, and an extension histogram.
 3. **Given** a directory whose contents are entirely binary, **When** the report is produced, **Then** that fact is explicit and distinguishable from a directory of the same size whose contents are entirely text.
 4. **Given** an ambiguous directory, **When** a reader consults the report, **Then** no field asserts a classification the evidence does not support — ambiguity is a recorded state, never resolved by preference.
@@ -129,6 +129,7 @@ Reports are meant to be sent to maintainers. Paths leak internal project names, 
 #### Typed uncertainty (US3)
 
 - **FR-011**: For any directory not confidently classified, the report MUST record: file count, maximum depth, an extension histogram, and the proportion of files that are binary versus text.
+- **FR-011a**: **"Confidently classified" is defined** as: the directory carries at least one ecosystem attribution **and** no ambiguity record. Any other combination — no attribution, or an attribution alongside an ambiguity — is not confident, and the FR-011 detail MUST be emitted. The term gates whether observation detail appears, so it cannot be left to a reader's judgement.
 - **FR-012**: The report MUST represent ambiguity as first-class data carrying the competing interpretations, never as a missing or null value.
 - **FR-012a**: A directory's **claim status** MUST be exclusive — exactly one of: claimed by one or more readers; unclaimed; excluded by policy. Consumers can therefore rely on every recorded directory having exactly one claim status.
 - **FR-012b**: A directory's **ambiguity record** MUST be independent of its claim status and MAY accompany any of them. A claimed directory can be ambiguous, and an unclaimed one can be unambiguous. Claiming and ambiguity are separate observations about the same directory and MUST NOT be collapsed into a single verdict — doing so discards the signal this feature exists to surface.

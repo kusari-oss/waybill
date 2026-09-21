@@ -58,7 +58,7 @@ scan/exclusion boundary, or is unclaimed and exceeds `significance_threshold`.
 | `files_direct` | u64 | Files directly in this directory. |
 | `files_aggregated` | u64 | Rolled up from descendants that earned no record (FR-021b). |
 | `components_emitted` | u64 | FR-006. Zero here with a non-empty `claimed_by` is the FR-004 signal. |
-| `observation` | `DirectoryObservationDetail?` | Present when not confidently classified (FR-011). |
+| `observation` | `DirectoryObservationDetail?` | Present when not confidently classified, as defined by FR-011a: ≥1 ecosystem attribution **and** no ambiguity record. |
 
 **Why `claim_status` and `ambiguity` are separate fields**: a single verdict
 cannot express "claimed **and** ambiguous", and that is the exact shape of
@@ -109,7 +109,7 @@ interpretation is a classification, and belongs in `ecosystems` instead.
 
 ## DirectoryObservationDetail
 
-Present when the directory is not confidently classified (FR-011).
+Present when the directory is not confidently classified (FR-011 / FR-011a — ≥1 attribution and no ambiguity).
 
 | Field | Type | Notes |
 |---|---|---|

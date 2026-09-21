@@ -49,7 +49,7 @@ partial one.
 
 **Independent test**: Run against a repository mixing supported and unsupported project types; the report names claimed directories with their readers, lists unclaimed ones, and its totals reconcile.
 
-- [ ] T008 [P] [US1] Write the reconciliation test in `waybill-cli/tests/repo_report_census.rs` asserting FR-003 / SC-003: `files_walked == files_claimed + files_unclaimed + Σ files_skipped`, on a fixture with all three categories present. **This test must fail before T010 exists.**
+- [ ] T008 [P] [US1] Write the reconciliation test in `waybill-cli/tests/repo_report_census.rs` asserting FR-003 / SC-003: `files_walked == files_claimed + files_unclaimed + Σ files_skipped`, on a fixture with all three categories present. The fixture MUST include an excluded-by-policy directory, and the test MUST assert it is reported distinctly from an unrecognised one (FR-005) — the two demand opposite responses and nothing else covers the distinction. **This test must fail before T010 exists.**
 - [ ] T009 [P] [US1] Write the FR-004 test in `waybill-cli/tests/repo_report_census.rs` asserting that a reader which matched files but emitted zero components is reported distinctly from one that never matched. Build a fixture containing a deliberately malformed manifest of a supported ecosystem — matched-but-yielded-nothing is unobservable without one.
 - [ ] T010 [US1] Implement the significance decision in `waybill-cli/src/report/significance.rs` per FR-021a: record if marker-bearing, claimed, a scan/exclusion boundary, or unclaimed and over the threshold; otherwise aggregate into the nearest recorded ancestor. Default threshold **25** (research R3).
 - [ ] T011 [US1] Implement aggregation in `waybill-cli/src/report/significance.rs` per FR-021b so an aggregated directory's counts roll into its nearest recorded ancestor, keeping `files_direct` and `files_aggregated` distinct per `data-model.md`.
@@ -73,6 +73,7 @@ partial one.
 - [ ] T018 [US2] **Write the anti-staleness test** in `waybill-cli/tests/repo_report_ecosystems.rs`: assert no entry in `ecosystems.data` matches any pattern in the live reader registry. This table is exactly the shape that rots — a reader lands and the table keeps announcing the ecosystem unsupported — and this project has already shipped that bug class undetected for roughly two years. The test must fail if an entry is added for an ecosystem that already has a reader.
 - [ ] T019 [US2] Implement marker lookup in `waybill-cli/src/report/ecosystems.rs` producing `EcosystemAttribution` records with `evidence_marker` and `support` per `data-model.md`.
 - [ ] T020 [P] [US2] Write the FR-008 negative test in `waybill-cli/tests/repo_report_ecosystems.rs`: a directory containing only source files of an unsupported language, with **no** marker, is reported unrecognised and is **not** assigned an ecosystem. Extensions must not produce attribution.
+- [ ] T020a [P] [US2] Write the **positive** ecosystem test in `waybill-cli/tests/repo_report_ecosystems.rs` for SC-010: a fixture containing markers for at least three ecosystems waybill does not support reports all three, each with an explicit `no_reader` status. T020 only proves the negative case; without this, an implementation that names nothing at all still passes.
 - [ ] T021 [US2] Distinguish supported-but-yielded-nothing from unsupported in the emitted record (spec US2 scenario 2) — the reader exists and produced nothing is a different problem from no reader existing, and the report must not merge them.
 
 **Checkpoint**: unclaimed directories are now actionable where a marker exists.
@@ -86,10 +87,12 @@ partial one.
 **Independent test**: Run against this repository; `waybill-cli/tests/` is reported claimed **and** ambiguous, naming the competing interpretations.
 
 - [ ] T022 [P] [US3] Implement content-kind sampling in `waybill-cli/src/report/content_kind.rs` per research R4: NUL byte in the first 8 KiB ⇒ binary, else valid UTF-8 ⇒ text, else binary. Emit `content_sample_bytes` so a reader knows the verdict came from a sample.
+- [ ] T022a [P] [US3] Write the FR-010 guard in `waybill-cli/tests/repo_report_ambiguity.rs`: assert the file-tier `SourceShape` variant set is unchanged by this feature. FR-010 is a **negative** requirement with no other enforcement — widening that allowlist silently changes emitted SBOM content, and nothing currently fails if someone does.
 - [ ] T023 [US3] Implement `DirectoryObservationDetail` assembly in `waybill-cli/src/report/mod.rs` per FR-011: file count, max depth, extension histogram, content kind — for every directory not confidently classified.
 - [ ] T024 [US3] Implement `AmbiguityRecord` in `waybill-cli/src/report/mod.rs` per FR-012b, independent of `claim_status`, with `interpretations` (≥2, never ranked) and `evidence` (FR-015).
 - [ ] T025 [US3] Detect the multi-ecosystem-lockfile case (FR-013) and emit an ambiguity record listing every ecosystem observed, selecting none as authoritative.
 - [ ] T026 [US3] **Write the SC-001 self-test** in `waybill-cli/tests/repo_report_ambiguity.rs` against this repository: `waybill-cli/tests/` must carry a claim status reflecting that readers matched its lockfiles **and** an ambiguity record. Assert both. A report showing `claimed` with no ambiguity means the two-field model has collapsed back into a single verdict — the exact defect the clarification session removed.
+- [ ] T026a [US3] Write the **independence** test in `waybill-cli/tests/repo_report_ambiguity.rs` for SC-014: every recorded directory carries exactly one claim status, and ambiguity records appear on **both** claimed and unclaimed directories in a fixture built to contain each. This verifies the two-field model that clarification Q2 introduced — currently the feature's newest guarantee and its least tested.
 - [ ] T027 [P] [US3] Write the content-kind discrimination test in `waybill-cli/tests/repo_report_ambiguity.rs`: two fixture directories of equal file count, one all binary and one all text, produce different `content_kind` values. This is the field that makes an unclassified directory actionable.
 - [ ] T028 [US3] Assert FR-014 in `waybill-cli/tests/repo_report_ambiguity.rs`: no directory carrying an ambiguity record also carries a single authoritative ecosystem attribution — the report never resolves ambiguity by preference.
 
@@ -108,8 +111,10 @@ partial one.
 - [ ] T031 [US4] **Prove T030 has teeth**: temporarily emit a field absent from the schema, confirm the test fails, restore, confirm it passes. Record both outcomes in `specs/924-repo-observation-report/measurements/verification.md`. A schema gate that stubs `$ref` resolution validates nothing while appearing green — this project has hit that exact failure before, so a passing test is not evidence until the failing direction is observed.
 - [ ] T032 [US4] Implement the `--redact` mode in `waybill-cli/src/report/mod.rs` per FR-019b: each path segment replaced by a stable identifier, identical segments mapping identically within a report so nesting and repetition survive.
 - [ ] T033 [US4] Emit `redaction_mode` unconditionally (FR-019c) and surface the stricter mode in the command's own output (FR-019d) — an operator must learn it exists at the moment they are about to share, not from documentation they read afterwards.
+- [ ] T033a [P] [US4] Write the discoverability test in `waybill-cli/tests/repo_report_schema.rs` for SC-012: running in the default mode, the command's own output mentions that a stricter redaction mode exists. FR-019d's advertisement is the safeguard that justified retaining paths by default; T033 implements it and nothing verifies it.
 - [ ] T034 [P] [US4] Write the redaction test in `waybill-cli/tests/repo_report_schema.rs` for SC-011: assert mechanically that no original directory name from the fixture appears anywhere in a redacted report, and that two directories sharing a segment still share an identifier.
 - [ ] T035 [P] [US4] Write the FR-019 unconditional test in `waybill-cli/tests/repo_report_schema.rs` for SC-004: **in both modes**, zero absolute paths and zero bytes excerpted from any scanned file.
+- [ ] T035a [P] [US4] Write the default-mode test in `waybill-cli/tests/repo_report_schema.rs` for FR-019a: in the **default** mode a known fixture directory name appears verbatim in the report, and `redaction_mode` reads `none`. Without this, a default silently flipped to `paths` passes every other test while quietly destroying the report's usefulness.
 - [ ] T036 [US4] Emit `volatile_fields` as a self-describing list (FR-020 / C-5) so a differ needs no out-of-band knowledge and stays correct as the schema grows.
 - [ ] T037 [US4] Write the determinism test in `waybill-cli/tests/repo_report_schema.rs` for SC-005: two consecutive runs are byte-identical after masking exactly the fields `volatile_fields` names — read from the document, not hard-coded in the test.
 - [ ] T038 [P] [US4] Write the unknown-enum-member test in `waybill-cli/tests/repo_report_schema.rs` for SC-015 / FR-017c: a consumer meeting an unknown enumeration member preserves and surfaces it rather than coercing or dropping it; a consumer meeting an unrecognised major refuses the report.
@@ -122,6 +127,7 @@ partial one.
 
 - [ ] T039 Measure the report against real repositories and record in `specs/924-repo-observation-report/measurements/after.md`: `directories_recorded` versus `directories_walked` for this repository, the polyglot reference repo, and at least three corpus targets. **Validate the threshold-25 choice from research R3 against the shipped implementation** — R3 measured a proxy, not the real significance rule, and the two can disagree.
 - [ ] T040 Confirm SC-008 empirically from T039's numbers: a repository an order of magnitude larger does not produce an order of magnitude more records. If it does, the threshold or the significance rule is wrong — say so rather than adjusting the criterion.
+- [ ] T039a Verify SC-002 once, and record the outcome in `specs/924-repo-observation-report/measurements/after.md`: hand a report for an unfamiliar repository to a reader with **no** access to that repository, and record whether they can name every ecosystem present and say which waybill supports. It is a judgement test, not an automated one — but SC-002 is the criterion that most directly encodes why this feature exists, and an unrun criterion is not a criterion.
 - [ ] T041 [P] Document the subcommand in `docs/user-guide/`, covering what the report answers, the redaction trade, and that `significance_threshold` must match before two reports are compared.
 - [ ] T042 [P] Write the CHANGELOG entry. Lead with what an operator gets — a readable account of what waybill did and did not understand — and state plainly that emitted SBOM content is unchanged.
 - [ ] T043 Re-run T007's byte-identity check at final state (SC-009): emitted SBOM content byte-identical to the T001 baselines across all three formats.
@@ -141,13 +147,13 @@ Phase 2 (Foundational)   T004 → T005 → T006 → T007     ⚠️ BLOCKS ALL S
                               ↓
 Phase 3 (US1, P1)        T008,T009 [P] → T010 → T011 → T012 → T013 → T014 → T015,T016
                               ↓                                    ← MVP ships here
-Phase 4 (US2, P2)        T017 [P] → T018 → T019 → T020,T021
+Phase 4 (US2, P2)        T017 [P] → T018 → T019 → T020,T020a,T021
                               ↓
-Phase 5 (US3, P3)        T022 [P] → T023 → T024 → T025 → T026 → T027,T028
+Phase 5 (US3, P3)        T022,T022a [P] → T023 → T024 → T025 → T026 → T026a → T027,T028
                               ↓
-Phase 6 (US4, P4)        T029 [P] → T030 → T031 → T032 → T033 → T034..T038
+Phase 6 (US4, P4)        T029 [P] → T030 → T031 → T032 → T033 → T033a,T034..T038,T035a
                               ↓
-Phase 7 (Polish)         T039 → T040 → T041..T047
+Phase 7 (Polish)         T039 → T039a → T040 → T041..T047
 ```
 
 **Story independence**: US2, US3 and US4 each depend only on US1's census existing. They do not depend on each other and could be reordered or dropped without invalidating what shipped before them.
