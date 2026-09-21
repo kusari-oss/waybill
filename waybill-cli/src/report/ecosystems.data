@@ -1,0 +1,28 @@
+# Milestone 924 (#932) — markers for ecosystems waybill does not read yet.
+#
+# Format: <marker-filename> <TAB> <ecosystem>
+# Lines beginning `#` and blank lines are ignored.
+#
+# FR-009: this is DATA. Adding an entry requires no code change, so the table
+# can grow as incoming reports reveal what operators actually have.
+#
+# INVARIANT, enforced by test (research R6): no entry here may name a marker
+# that a registered reader already claims. A table that keeps announcing an
+# ecosystem as unsupported after a reader lands is worse than no table — it
+# sends a maintainer looking for a gap that was closed. This project has
+# already shipped that class of bug once, in an enum allowlist that silently
+# missed variants added later and survived roughly two years.
+#
+# When a reader lands for an ecosystem below, DELETE its line. The test will
+# tell you, loudly, if you forget.
+
+deno.json	deno
+deno.jsonc	deno
+Pipfile	python-pipenv
+pixi.toml	python-pixi
+build.zig	zig
+build.zig.zon	zig
+shard.yml	crystal
+Project.toml	julia
+nimble.toml	nim
+dune-project	ocaml

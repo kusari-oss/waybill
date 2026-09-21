@@ -155,8 +155,11 @@ fn assemble(
             DirectoryObservation {
                 path: rel(root, &r.path, redaction),
                 claim_status,
+                ecosystems: ecosystems::attribute(
+                    &r.census.filenames,
+                    claim_status == ClaimStatus::Claimed,
+                ),
                 claimed_by,
-                ecosystems: Vec::new(),
                 ambiguity: None,
                 files_direct: r.files_direct,
                 files_aggregated: r.files_aggregated,
