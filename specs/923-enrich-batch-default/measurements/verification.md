@@ -109,3 +109,18 @@ never local.
 The authoritative check is the lane run against this branch, dispatched with
 `--ref 923-enrich-batch-default` (omitting `--ref` takes the workflow file
 from `main` against a branch checkout, which produced a false green in #918).
+
+## T023 — pre-PR gate
+
+```
+>>> cargo +stable clippy --workspace --all-targets -j 2 -- -D warnings    exit=0
+>>> cargo +stable test --workspace --no-fail-fast -j 2 -- --test-threads=2  exit=0
+
+312 suites ok, 0 FAILED
+total: 5930 passed; 0 failed; 28 ignored
+```
+
+The unconstrained run was OOM-killed partway through the test phase (it had
+cleared clippy and 41 suites). `-j 2 --test-threads=2` is what the task
+anticipated. `--no-fail-fast` is there so one failing binary cannot hide the
+rest.

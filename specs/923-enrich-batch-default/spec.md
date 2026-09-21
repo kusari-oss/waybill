@@ -228,15 +228,18 @@ full content and reports the degradation.
 
 ### Measurable Outcomes
 
-- **SC-001**: On a repository of ~2,000 packages, a default scan's enrichment
-  is **at least 2x faster** than the opt-out path and issues **at least 50x
-  fewer requests** — measured at 2.4x on the enrichment phase (6,082ms against
-  14,465ms) and 23 requests against 2,291. **Corrected after T021.** This
-  criterion previously read "1302s against 8.5s"; the 1302s figure did not
-  reproduce (re-measured at 15.23s with its own flags and a cold cache) and
-  was almost certainly deps.dev throttling that session. See
-  `measurements/after.md`. The request-count bound is the durable half — it
-  does not depend on the day's latency.
+- **SC-001**: On a repository of ~2,000 packages, a default scan's deps.dev
+  enrichment is **at least 2x faster** than the opt-out path and issues **at
+  least 50x fewer requests** — measured at 2.4x on the enrichment phase
+  (6,082ms against 14,465ms) and 23 requests against 2,291.
+  **Corrected twice after T021.** This read "1302s against 8.5s". The 1302s
+  is real but is **ClearlyDefined**, not deps.dev: the same run logs deps.dev
+  at 16,550ms, and a both-caches-cold re-run reproduces deps.dev at 16,651ms
+  with ClearlyDefined at 695s. An intermediate correction claiming the 1302s
+  "did not reproduce" was itself wrong — it re-measured with the
+  ClearlyDefined cache warm. See `measurements/after.md`; the real cost is
+  tracked in #930. The request-count bound is the durable half — it does not
+  depend on the day's latency.
 - **SC-002**: Default-path and opt-out-path documents are equivalent: zero
   differing package identities, zero differing licence values, identical edge
   count.
@@ -261,16 +264,19 @@ full content and reports the degradation.
 ## Assumptions
 
 - ~~The measurements in Context are reproducible with the four flag
-  combinations shown, and run B is the one that makes the attribution valid.
-  They are recorded in the issue rather than re-derived here.~~
-  **FALSIFIED by T021.** Run B's attribution method is sound and run D (8.5s)
-  reproduces exactly. Run C (1302s) does not: re-run with its own flags on a
-  cold cache it measures 15.23s. The per-component path is bounded by
-  `CONCURRENT_REQUESTS = 8`, which puts its floor near 14s, not 1302s. Treat
-  any single unreplicated timing of an external service as provisional --
-  this is the failure mode `docs/development/perf-methodology.md` and the
-  CLAUDE.md "measure external behaviour" rule both warn about, reached here
-  by trusting one observation instead of repeating it.
+  combinations shown, and run B is the one that makes the attribution valid.~~
+  **FALSIFIED by T021.** The measurements reproduce; the *attribution* does
+  not. Run B (`--no-deps-dev`) does not isolate deps.dev, because it leaves
+  ClearlyDefined enabled — so the B->C delta is both sources, of which
+  ClearlyDefined is 97–98%. Run B was fast only because the cold run had
+  already warmed ClearlyDefined's disk cache.
+  Two lessons, both already written down elsewhere in this repo and both
+  ignored here: **read the per-source timings the tool already logs** instead
+  of inferring cost from flag toggles (`docs/development/perf-methodology.md`),
+  and when a re-measurement contradicts an earlier one, **suspect the
+  experiment before inventing a cause for the gap** — the "deps.dev
+  throttling" explanation offered mid-T021 had no evidence and was an artifact
+  of clearing one of two caches.
 - Today's opt-in flag becomes a no-op rather than an error, and a new opt-out
   selects the per-component path. Removing the old flag would break scripts
   for no benefit.

@@ -57,20 +57,39 @@ path. That is run C above: 1302 seconds.
 
 ---
 
-## CORRECTION (T021) — run C does not reproduce
+## CORRECTION (T021) — run C is real, but it is not deps.dev
 
-Run C above is recorded at **1302s**. Re-run during T021 with that exact flag
-set (per-component, disk cache on, cold) it measures **15.23s** — an 85×
-discrepancy. Run D (8.5s) reproduces exactly; runs A and B are unaffected.
+Run C above (1302s) happened and was timed correctly. **It is almost entirely
+ClearlyDefined.** The run's own log:
 
-The per-component path is bounded by `CONCURRENT_REQUESTS = 8` in a sliding
-window, which puts ~2,291 lookups near 14s. 1302s would require ~570ms per
-lookup sustained for the whole scan; nothing in the code path explains that,
-and it has not recurred. Most likely deps.dev throttling that session.
+```
+deps.dev licence enrichment complete  elapsed_ms=16550  network_lookups=2291
+ClearlyDefined enrichment starting    unique_coords=2291  concurrency=8
+   ... 1283 seconds ...
+ClearlyDefined enriched components with concluded licenses  count=1203
+real 1302.31
+```
 
-**Do not cite the 1302s figure.** The reproducible comparison is in
-`after.md`: 2.4× on the enrichment phase and 100× fewer requests.
+Re-run with **both** caches cold: deps.dev 16.65s (0.6% from the original),
+ClearlyDefined 695s, total 714.50s. ClearlyDefined is 97–98% of the runtime
+in both runs and varies about 2x between them; deps.dev is 1–2% and stable.
 
-The paragraph above headed "154× faster for a byte-equivalent document" is
-wrong in its multiplier. The byte-equivalence half of it holds and is what
-FR-002 turns into a test.
+### Everything below this line in the "Run B" section is wrong
+
+The claim that run B isolates deps.dev — and therefore that B->C is "deps.dev
+alone: ~1300 of the 1302 seconds" — **is false**. `--no-deps-dev` does not
+disable ClearlyDefined (`scan_cmd.rs:2361`:
+`clearly_defined: !args.no_clearly_defined`). Run B measured 2.2s because it
+ran after the cold run had populated the 47 MB ClearlyDefined disk cache, not
+because ClearlyDefined was off.
+
+The per-source timings that settle this were in the log being summarised when
+that paragraph was written. The paragraph congratulating itself on avoiding
+the flag-toggle attribution error commits it.
+
+"154x faster for a byte-equivalent document" is wrong in its multiplier. The
+byte-equivalence half holds and is what FR-002 turns into a test.
+
+**Do not cite the 1302s as a deps.dev figure.** The reproducible deps.dev
+comparison is in `after.md`: 14,465ms -> 6,082ms and 2,291 -> 23 requests.
+The 1302s belongs to #930.
