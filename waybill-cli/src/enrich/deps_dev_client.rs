@@ -120,7 +120,15 @@ impl DepsDevClient {
     /// surface, which the API docs say "may change in incompatible
     /// ways from time to time". Derived from `base_url` rather than
     /// hard-coded so the test override reaches it too.
-    fn version_batch_url(&self) -> String {
+    /// Test-only: identifies which mock server this client talks to, so a
+    /// shared test sink can filter out emissions from tests running
+    /// concurrently in the same binary.
+    #[cfg(test)]
+    pub(crate) fn base_url(&self) -> &str {
+        &self.base_url
+    }
+
+    pub(crate) fn version_batch_url(&self) -> String {
         format!("{}/versionbatch", self.base_url.replace("/v3", "/v3alpha"))
     }
 

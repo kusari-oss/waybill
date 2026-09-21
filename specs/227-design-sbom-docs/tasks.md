@@ -140,7 +140,7 @@ Optional secondary edit: `docs/reference/reading-a-waybill-sbom.md` (cross-link 
 
   Each issue references this docs milestone as the surfacer. Runs in parallel with the writing tasks — has no file dependency on the doc's content.
 
-- [ ] T020 Commit + push the branch, open PR against `main`. PR body links to the audit doc (`docs/audits/2026-08-04-nuget-realworld.md`) as motivating context. After push, visually verify the new tier section renders correctly on GitHub's `docs/` viewer without extra plugins (F-04 remediation for FR-009) — check that tables lay out cleanly, fenced code blocks highlight, anchor links resolve, and no smart-quote / unicode-collision artifacts survived the paste. Runs after all Phase 6 verification tasks pass.
+- [X] T020 Commit + push the branch, open PR against `main`. **Opened as [#663](https://github.com/kusari-oss/waybill/pull/663)**. PR body links to the audit doc (`docs/audits/2026-08-04-nuget-realworld.md`) as motivating context. After push, visually verify the new tier section renders correctly on GitHub's `docs/` viewer without extra plugins (F-04 remediation for FR-009) — check that tables lay out cleanly, fenced code blocks highlight, anchor links resolve, and no smart-quote / unicode-collision artifacts survived the paste. Runs after all Phase 6 verification tasks pass.
 
 ---
 

@@ -7,6 +7,33 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### License enrichment is now batched by default (#927)
+
+A scan's deps.dev license lookups now go out in batches of 100 instead of one
+request per package. On a 2,291-package repository that is **23 requests
+instead of 2,291**, and enrichment takes about 6s rather than about 14s.
+
+Nothing about the document changes: same components, same licenses, same
+edges. Both paths are covered by a test that fails if they ever disagree.
+
+**Scans with enrichment disabled are unchanged.** `--offline` makes no
+network calls, so the batching choice cannot reach it.
+
+**`--enrich-batch` still works.** It is now a no-op — batching is what it
+asked for and batching is what you get — kept so existing scripts keep
+running rather than failing on an unknown argument.
+
+**`--no-enrich-batch` is new**, and takes the per-component path
+unconditionally.
+
+The batch endpoint lives on deps.dev's `v3alpha` surface, which its publisher
+documents as liable to change incompatibly. That is why the fallback exists:
+if the batch endpoint fails, the scan falls back to per-component requests
+and still produces full enrichment — it just takes longer. The fallback is
+tried once per scan, not once per batch, and a scan that took it says so in
+its log and in the emitted document.
+
+
 ### Same-named Pants resolves in different namespaces are no longer merged (#919)
 
 `[python.resolves]` and `[jvm.resolves]` are separate namespaces in

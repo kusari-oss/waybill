@@ -201,4 +201,44 @@ mod tests {
         let body = build_body(&[k("serde")], Some("tok".into()));
         assert!(body.contains(r#""pageToken":"tok""#), "{body}");
     }
+
+    /// Issue #927 (m923) — FR-007c / T020. **Pin the surface this feature
+    /// bet on.**
+    ///
+    /// Making batched enrichment the default accepts a dependency on
+    /// `v3alpha`, which deps.dev documents as liable to "change in
+    /// incompatible ways from time to time". That trade was made knowingly;
+    /// this test makes it visible when *we* change the URL.
+    ///
+    /// It is the cheap floor, not the whole guard. It cannot see upstream
+    /// graduating the endpoint to a stable surface — only the scheduled
+    /// check (T019) can, and this test is not a substitute for it.
+    ///
+    /// Note `v3alpha` appears twice in the tree for two unrelated surfaces:
+    /// the batch endpoint here, and hash-based lookup at
+    /// `resolve/hash_resolver.rs`. A failure here means the **enrichment
+    /// batch** endpoint moved; hash resolution has its own assertion and is
+    /// not implicated.
+    #[test]
+    fn the_batch_endpoint_is_pinned_to_v3alpha() {
+        let url = crate::enrich::deps_dev_client::DepsDevClient::new(std::time::Duration::from_secs(5)).version_batch_url();
+        assert_eq!(
+            url, "https://api.deps.dev/v3alpha/versionbatch",
+            "the enrichment batch endpoint moved. If upstream graduated it off \
+             v3alpha this is good news and FR-007c's risk argument should be \
+             revisited; if this is an accidental edit it silently changes which \
+             API the default path calls",
+        );
+    }
+
+    /// Companion to the pin: the alpha path must be derived from the base
+    /// URL, not hard-coded, or the test override stops reaching it and every
+    /// batch test above would quietly exercise a URL no mock serves.
+    #[test]
+    fn the_alpha_path_is_derived_from_the_base_url() {
+        let url = crate::enrich::deps_dev_client::DepsDevClient::new(std::time::Duration::from_secs(5))
+            .with_base_url("http://127.0.0.1:9/v3")
+            .version_batch_url();
+        assert_eq!(url, "http://127.0.0.1:9/v3alpha/versionbatch");
+    }
 }

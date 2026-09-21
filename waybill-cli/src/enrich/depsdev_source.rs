@@ -72,6 +72,30 @@ pub struct DepsDevSource {
     network_lookups: AtomicUsize,
 }
 
+/// Issue #927 (m923) — FR-007b. The operator-facing message emitted once
+/// when the batch circuit trips.
+///
+/// Named rather than inlined so the test asserts on the same string the
+/// operator reads. An inlined literal and a test copy drift independently,
+/// and the drift is invisible until someone is reading a scan log wondering
+/// why it got slow.
+pub(crate) const BATCH_TRIP_WARNING: &str = "deps.dev batch endpoint failed — \
+     abandoning the batched path for the rest of this scan and falling back to \
+     per-component requests. Enrichment content is unaffected; the scan will be \
+     slower.";
+
+/// Test-only sink for [`BATCH_TRIP_WARNING`] emissions.
+///
+/// A `tracing` subscriber cannot be used here: other tests in this binary
+/// install global subscribers that preempt a thread-local `set_default`, so
+/// the capture comes back empty depending on what else is running. Same
+/// finding and same remedy as m774's summary-log test in
+/// `scan_fs/package_db/golang/legacy.rs`.
+#[cfg(test)]
+#[allow(clippy::type_complexity)]
+pub(crate) static BATCH_TRIP_SINK: std::sync::Mutex<Option<(String, Vec<String>)>> =
+    std::sync::Mutex::new(None);
+
 impl DepsDevSource {
     /// Create a new deps.dev enrichment source. When `offline` is true
     /// the source skips every API call (serves as a cheap no-op) —
@@ -97,6 +121,16 @@ impl DepsDevSource {
     }
 
     /// Milestone 839 (FR-002) — enable the bulk path for this source.
+    /// Test-only: which enrichment path this source will take.
+    ///
+    /// Exists because the #927 default flip is otherwise unobservable — both
+    /// paths emit the same document, so nothing in the output distinguishes
+    /// them and a test that inspects bytes passes either way.
+    #[cfg(test)]
+    pub(crate) fn is_batched(&self) -> bool {
+        self.batch
+    }
+
     pub fn with_batch(mut self, batch: bool) -> Self {
         self.batch = batch;
         self
@@ -256,15 +290,51 @@ impl DepsDevSource {
                 .map(|c| c.to_vec())
                 .collect();
             let mut batched_ok = 0usize;
+            // #927 (m923) FR-007a / C-6 — the circuit breaker.
+            //
+            // Once the batched endpoint has failed, stop asking. Without
+            // this, a persistent upstream failure pays the batch penalty
+            // once per chunk before arriving at the per-component path
+            // anyway — ~23 wasted round-trips on a 2,300-package
+            // repository.
+            //
+            // Exactly one wasted attempt is achievable because requests are
+            // issued sequentially: the failure is observed before the next
+            // one goes out. If that ever changes, this guarantee becomes
+            // "at most one concurrency group" and the weakening must be
+            // deliberate (see #929).
+            let mut batch_circuit_open = true;
             for group in chunks.chunks(CONCURRENT_REQUESTS) {
-                let mut results = Vec::new();
+                if !batch_circuit_open {
+                    // Circuit tripped: everything remaining goes straight to
+                    // the per-component path without another batch attempt.
+                    for idxs in group {
+                        still_missing.extend(idxs.iter().copied());
+                    }
+                    continue;
+                }
+                // The indices are kept BESIDE the future, not inside it.
+                // Awaiting a future is what issues its request, so a skipped
+                // chunk must be identifiable without driving it — the first
+                // version of this breaker awaited to read the indices and so
+                // sent every request it meant to skip.
+                let mut pending = Vec::new();
                 for idxs in group {
                     let ks: Vec<EnrichmentKey> =
                         idxs.iter().map(|&i| keys[i].clone()).collect();
-                    results.push(async move { (idxs.clone(), self.fetch_chunk_batched(&ks).await) });
+                    pending.push((
+                        idxs.clone(),
+                        async move { self.fetch_chunk_batched(&ks).await },
+                    ));
                 }
-                for fut in results {
-                    let (idxs, got) = fut.await;
+                for (idxs, fut) in pending {
+                    if !batch_circuit_open {
+                        // Tripped by an earlier chunk. Drop the future
+                        // unawaited — no request is issued.
+                        still_missing.extend(idxs);
+                        continue;
+                    }
+                    let got = fut.await;
                     match got {
                         Some((vals, max_age)) => {
                             let bound = self.disk.effective_max_age(max_age);
@@ -288,6 +358,37 @@ impl DepsDevSource {
                         None => {
                             self.batch_fallbacks.fetch_add(1, Ordering::Relaxed);
                             still_missing.extend(idxs);
+                            // #927 FR-007b — say so once, where an operator
+                            // watching a scan get slow will see it. The
+                            // document-scope degradation record (C158) tells
+                            // whoever reads the document later; these are
+                            // different audiences.
+                            //
+                            // "Once" is guaranteed by the skip at the top of
+                            // this loop: once the circuit is open no later
+                            // chunk awaits its future, so no later chunk can
+                            // reach this branch. A second `if
+                            // batch_circuit_open` here stood until T016 and
+                            // was unreachable-when-false — it only masked
+                            // the breaker being removed, which is precisely
+                            // what the test needs to be able to see.
+                            {
+                                warn!("{BATCH_TRIP_WARNING}");
+                                #[cfg(test)]
+                                if let Some((for_base, sink)) = BATCH_TRIP_SINK
+                                    .lock()
+                                    .expect("batch trip sink mutex poisoned")
+                                    .as_mut()
+                                {
+                                    // Scoped: sibling tests in this binary trip
+                                    // the circuit too, against their own mock
+                                    // servers.
+                                    if for_base == self.client.base_url() {
+                                        sink.push(BATCH_TRIP_WARNING.to_string());
+                                    }
+                                }
+                            }
+                            batch_circuit_open = false;
                         }
                     }
                 }
@@ -1161,6 +1262,197 @@ mod batch_tests {
         assert_eq!(got[2].as_ref().unwrap().licenses, vec!["BSD-3-Clause"], "z");
     }
 
+    /// Issue #927 (m923) — FR-007a / SC-005a / C-6. **Count attempts, not
+    /// output.**
+    ///
+    /// A circuit breaker that was never wired in produces byte-identical
+    /// documents: every chunk tries batch, fails, falls back, and the
+    /// content is correct either way. So the only thing that can tell you
+    /// whether the breaker exists is how many times the endpoint was hit.
+    ///
+    /// Three chunks' worth of work with a persistently failing endpoint
+    /// must produce exactly ONE batch attempt. Before this change it
+    /// produced one per chunk.
+    #[tokio::test]
+    async fn a_persistent_batch_failure_is_attempted_exactly_once() {
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/v3alpha/versionbatch"))
+            .respond_with(ResponseTemplate::new(503))
+            .mount(&server)
+            .await;
+        Mock::given(method("GET"))
+            .and(path_regex(r".*/packages/.*/versions/.*"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "licenses": ["MIT"], "links": [],
+            })))
+            .mount(&server)
+            .await;
+
+        // More keys than one batch holds, so a per-chunk retry would be
+        // visible as more than one POST.
+        let names: Vec<String> = (0..super::super::deps_dev_batch::BATCH_SIZE * 3 - 1)
+            .map(|i| format!("p{i}"))
+            .collect();
+        let refs: Vec<&str> = names.iter().map(String::as_str).collect();
+        let k = keys(&refs);
+
+        let s = src(&server, true);
+        let mut p = ProgressReporter::new(k.len());
+        let got = s.fetch_many(&k, &mut p).await;
+
+        let posts = server
+            .received_requests()
+            .await
+            .expect("recorded requests")
+            .iter()
+            .filter(|r| r.url.path().ends_with("/versionbatch"))
+            .count();
+
+        assert_eq!(
+            posts, 1,
+            "the batch endpoint must be attempted exactly once before the circuit \
+             opens; {posts} attempts means the breaker is not wired in and each \
+             chunk is retrying",
+        );
+
+        // And the fallback still did its job — speed, not coverage.
+        assert!(
+            got.iter().all(|r| r.is_some()),
+            "every key must still be enriched via the per-component fallback",
+        );
+    }
+
+    /// Issue #927 (m923) — FR-007 / C-7. The trip must still record the
+    /// degradation, so a consumer reading the document later learns the
+    /// fast path was unavailable.
+    ///
+    /// The breaker skips work; it must not skip the reporting. Counted via
+    /// `batch_fallbacks`, which is what the degradation record is derived
+    /// from.
+    #[tokio::test]
+    async fn a_trip_still_reports_the_degradation() {
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/v3alpha/versionbatch"))
+            .respond_with(ResponseTemplate::new(503))
+            .mount(&server)
+            .await;
+        Mock::given(method("GET"))
+            .and(path_regex(r".*/packages/.*/versions/.*"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "licenses": ["MIT"], "links": [],
+            })))
+            .mount(&server)
+            .await;
+
+        let names: Vec<String> = (0..super::super::deps_dev_batch::BATCH_SIZE * 2)
+            .map(|i| format!("q{i}"))
+            .collect();
+        let refs: Vec<&str> = names.iter().map(String::as_str).collect();
+        let k = keys(&refs);
+
+        let s = src(&server, true);
+        let mut p = ProgressReporter::new(k.len());
+        let got = s.fetch_many(&k, &mut p).await;
+
+        assert!(
+            s.batch_fallbacks.load(Ordering::Relaxed) > 0,
+            "the fallback counter feeds the degradation record; a trip that \
+             skipped it would leave the document claiming nothing went wrong",
+        );
+        assert!(
+            got.iter().all(|r| r.is_some()),
+            "C-5: a trip costs speed, not coverage",
+        );
+    }
+
+    /// Issue #927 (m923) — FR-002 / C-2. **The property that licenses the
+    /// default flip.**
+    ///
+    /// The existing `batch_failure_falls_back_and_content_is_unchanged`
+    /// covers the FAILURE path: batch dies, work falls back, content
+    /// survives. This covers the success path, which is the one a default
+    /// scan takes: batch WORKS, and its content equals what the
+    /// per-component path would have produced.
+    ///
+    /// Without this, "faster" would be an argument for changing a default
+    /// without anything asserting the two paths agree — and if they ever
+    /// disagree, the faster one is not a valid default regardless of its
+    /// speed.
+    #[tokio::test]
+    async fn both_paths_produce_the_same_content_when_batch_succeeds() {
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/v3alpha/versionbatch"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "responses": [
+                    entry("a", Some("MIT")),
+                    entry("b", None),
+                    entry("c", Some("BSD-3-Clause")),
+                ]
+            })))
+            .mount(&server)
+            .await;
+        Mock::given(method("GET"))
+            .and(path_regex(r".*/packages/a/versions/.*"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "licenses": ["MIT"], "links": [],
+            })))
+            .mount(&server)
+            .await;
+        Mock::given(method("GET"))
+            .and(path_regex(r".*/packages/b/versions/.*"))
+            .respond_with(ResponseTemplate::new(404))
+            .mount(&server)
+            .await;
+        Mock::given(method("GET"))
+            .and(path_regex(r".*/packages/c/versions/.*"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "licenses": ["BSD-3-Clause"], "links": [],
+            })))
+            .mount(&server)
+            .await;
+
+        let k = keys(&["a", "b", "c"]);
+        let batched = {
+            let s = src(&server, true);
+            let mut p = ProgressReporter::new(k.len());
+            s.fetch_many(&k, &mut p).await
+        };
+        let direct = {
+            let s = src(&server, false);
+            let mut p = ProgressReporter::new(k.len());
+            s.fetch_many(&k, &mut p).await
+        };
+
+        assert_eq!(batched.len(), direct.len(), "both paths cover every key");
+        for (i, (b, d)) in batched.iter().zip(direct.iter()).enumerate() {
+            assert_eq!(
+                b.as_ref().map(|v| v.licenses.clone()),
+                d.as_ref().map(|v| v.licenses.clone()),
+                "key {i}: batched and per-component licences differ — the paths \
+                 are not equivalent, so the faster one cannot be the default",
+            );
+            assert_eq!(
+                b.is_some(),
+                d.is_some(),
+                "key {i}: one path enriched it and the other did not",
+            );
+        }
+
+        // And the comparison is not vacuous: something was actually enriched,
+        // and something was actually left unenriched.
+        assert!(
+            batched.iter().any(|r| r.is_some()),
+            "no key was enriched — this asserted nothing"
+        );
+        assert!(
+            batched.iter().any(|r| r.is_none()),
+            "no key was left unenriched — the agreement on absence is untested"
+        );
+    }
+
     /// T027 / C-4.1, C-4.2, C-4.4. A failing batch must not fail the
     /// scan, and must produce the same content the per-component path
     /// would have.
@@ -1201,6 +1493,150 @@ mod batch_tests {
         }
         assert!(batched.iter().all(|r| r.is_some()), "the scan completes with full enrichment");
     }
+
+    /// Issue #927 (m923) — FR-007b / SC-005b / T016. **The operator-facing
+    /// half of the trip.**
+    ///
+    /// `a_trip_still_reports_the_degradation` covers the counter, which is
+    /// what the document-scope record is derived from and therefore what a
+    /// consumer reads *later*. This covers the other audience: someone
+    /// watching a scan that just got slower, who needs to be told why while
+    /// it is happening. Different channels; a change can break one without
+    /// touching the other.
+    ///
+    /// Captured through a `#[cfg(test)]` sink rather than a `tracing`
+    /// subscriber. A thread-local `set_default` subscriber comes back empty
+    /// here depending on which other tests share the binary — measured, not
+    /// assumed: this test passed alone and failed three times out of three
+    /// under `--bin waybill enrich::`. m774 hit the same thing and reached
+    /// the same remedy.
+    #[tokio::test]
+    async fn a_trip_says_so_in_the_log() {
+        struct SinkGuard;
+        impl Drop for SinkGuard {
+            fn drop(&mut self) {
+                *BATCH_TRIP_SINK.lock().expect("sink mutex") = None;
+            }
+        }
+
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/v3alpha/versionbatch"))
+            .respond_with(ResponseTemplate::new(503))
+            .mount(&server)
+            .await;
+        Mock::given(method("GET"))
+            .and(path_regex(r".*/packages/.*/versions/.*"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "licenses": ["MIT"], "links": [],
+            })))
+            .mount(&server)
+            .await;
+
+        let _guard = SinkGuard;
+        *BATCH_TRIP_SINK.lock().expect("sink mutex") = Some((format!("{}/v3", server.uri()), Vec::new()));
+
+        // Three chunks: a message emitted per failing chunk instead of per
+        // trip would show up as three entries.
+        let names: Vec<String> = (0..super::super::deps_dev_batch::BATCH_SIZE * 3)
+            .map(|i| format!("l{i}"))
+            .collect();
+        let refs: Vec<&str> = names.iter().map(String::as_str).collect();
+        let k = keys(&refs);
+
+        let s = src(&server, true);
+        let mut p = ProgressReporter::new(k.len());
+        let got = s.fetch_many(&k, &mut p).await;
+
+        let emitted = BATCH_TRIP_SINK
+            .lock()
+            .expect("sink mutex")
+            .clone()
+            .expect("sink was installed")
+            .1;
+
+        assert_eq!(
+            emitted.len(),
+            1,
+            "the trip must be announced exactly once — {} emissions means the \
+             operator gets one line per failing chunk, which on a large scan is \
+             the log spam the circuit breaker exists to avoid",
+            emitted.len(),
+        );
+        assert!(
+            BATCH_TRIP_WARNING.contains("batch endpoint failed"),
+            "the message must name the cause",
+        );
+        assert!(
+            BATCH_TRIP_WARNING.contains("Enrichment content is unaffected"),
+            "the message must say the slowdown is not a correctness problem, or \
+             an operator reads it as data loss",
+        );
+        assert!(
+            got.iter().all(|r| r.is_some()),
+            "and the fallback still enriched everything",
+        );
+    }
+
+    /// Issue #927 (m923) — SC-005c. **The bound must not grow with the
+    /// repository.**
+    ///
+    /// `a_persistent_batch_failure_is_attempted_exactly_once` proves one
+    /// attempt at one size. That is consistent with a breaker that resets
+    /// per concurrency group, which would still be O(1) at three chunks and
+    /// O(n) at thirty. Running the identical scenario at two sizes is what
+    /// separates "one attempt" from "one attempt per group".
+    ///
+    /// Asserted rather than measured against the live endpoint, because a
+    /// live measurement would depend on deps.dev actually failing.
+    #[tokio::test]
+    async fn the_attempt_bound_does_not_grow_with_repository_size() {
+        for chunks in [3usize, 10usize] {
+            let server = MockServer::start().await;
+            Mock::given(method("POST"))
+                .and(path("/v3alpha/versionbatch"))
+                .respond_with(ResponseTemplate::new(503))
+                .mount(&server)
+                .await;
+            Mock::given(method("GET"))
+                .and(path_regex(r".*/packages/.*/versions/.*"))
+                .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                    "licenses": ["MIT"], "links": [],
+                })))
+                .mount(&server)
+                .await;
+
+            let names: Vec<String> = (0..super::super::deps_dev_batch::BATCH_SIZE * chunks)
+                .map(|i| format!("s{i}"))
+                .collect();
+            let refs: Vec<&str> = names.iter().map(String::as_str).collect();
+            let k = keys(&refs);
+
+            let s = src(&server, true);
+            let mut p = ProgressReporter::new(k.len());
+            let got = s.fetch_many(&k, &mut p).await;
+
+            let posts = server
+                .received_requests()
+                .await
+                .expect("recorded requests")
+                .iter()
+                .filter(|r| r.url.path().ends_with("/versionbatch"))
+                .count();
+
+            assert_eq!(
+                posts, 1,
+                "{chunks} chunks produced {posts} batch attempts; the bound is one \
+                 per scan regardless of size, and a count that tracks the chunk \
+                 count means the breaker resets somewhere it should not",
+            );
+            assert!(
+                got.iter().all(|r| r.is_some()),
+                "{chunks} chunks: coverage must survive the trip",
+            );
+        }
+    }
+
 }
 
 #[cfg(test)]

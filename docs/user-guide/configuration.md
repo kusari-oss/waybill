@@ -134,6 +134,55 @@ through the deps.dev enrichment pass. License coverage for npm, pip, gem,
 and Maven is largely unaffected because their manifests carry license info
 locally.
 
+## License enrichment (deps.dev)
+
+waybill fills in licenses the local manifests do not carry by querying
+[deps.dev](https://deps.dev). This is the only outbound call a default scan
+makes that materially affects the document, and `--offline` disables it.
+
+| Flag | Description |
+|---|---|
+| `--no-enrich-batch` | Look each package up individually instead of in batches. |
+| `--enrich-batch` | Accepted and ignored. Batching is the default; the flag remains so existing scripts keep working. |
+| `--enrich-no-cache` | Bypass the on-disk response cache. |
+| `--enrich-cache-max-age <SECS>` | Override the cache freshness bound. |
+
+### Why batching is the default
+
+Batched lookups ask for up to 100 packages per request. On a 2,291-package
+repository that is **23 requests instead of 2,291** — and measured end to
+end, enrichment takes about 6s rather than about 14s.
+
+The request count is the more important number, and the more durable one.
+The per-component path's cost scales with per-request round-trip time, so
+the time saving shrinks on a fast link and grows on a slow one; the 100x
+reduction in load placed on a free public API does not move either way.
+
+### The trade this default accepts
+
+The batch endpoint lives on deps.dev's `v3alpha` surface, which its
+publisher documents as liable to "change in incompatible ways from time to
+time". A default that depends on an unstable API needs a reason, and the
+reason is that it degrades rather than breaks:
+
+- If the batch endpoint fails, waybill falls back to per-component requests
+  for the rest of the scan. **Enrichment content is unaffected** — the same
+  licenses, the same components, the same edges. The scan is slower.
+- It tries the batch endpoint **once**. A persistent failure costs one
+  wasted request, not one per batch.
+- A scan that fell back says so, in a log line while it runs and in a
+  document-scope annotation afterwards, so a slow scan is diagnosable and a
+  degraded document is identifiable after the fact.
+
+Pass `--no-enrich-batch` to take the per-component path unconditionally. It
+produces the same document; it is there for anyone who needs to avoid the
+alpha surface entirely.
+
+A scheduled check watches for the endpoint leaving `v3alpha`
+(`.github/workflows/deps-dev-alpha-canary.yml`) — the argument above is only
+valid while no stable equivalent exists, and it should be revisited when one
+does.
+
 ## Permission model
 
 - **`waybill trace capture` / `waybill trace run`** require Linux kernel

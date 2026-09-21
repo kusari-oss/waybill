@@ -1,0 +1,243 @@
+# Issue #927 (m923) — FR-007c / T019.
+#
+# Making batched deps.dev enrichment the DEFAULT accepts a dependency on
+# `v3alpha`, a surface whose publisher documents it as liable to "change in
+# incompatible ways from time to time". That trade was made deliberately, and
+# its entire justification is that no stable equivalent exists.
+#
+# When that stops being true the trade deserves re-examining — and nobody will
+# look unless something says so. This is the something.
+#
+# It watches two ways round:
+#
+#   graduated — the batch endpoint appears on a non-alpha surface. Good news;
+#               the risk argument in FR-007c should be revisited and the client
+#               moved off alpha.
+#   withdrawn — the alpha endpoint stops answering. The default path has lost
+#               its fast route and every scan is silently falling back.
+#
+# The in-tree test `the_batch_endpoint_is_pinned_to_v3alpha` catches *our*
+# edits to the URL. It cannot see either of the above, because neither
+# involves a change to this repository. That is why both exist.
+name: deps.dev alpha canary
+
+on:
+  schedule:
+    # Weekly, Mondays 07:00 UTC. An API surface graduating is a matter of
+    # months, not hours — daily would be noise for a signal that moves slowly.
+    - cron: '0 7 * * 1'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Probe and report in the log, but do not touch issues'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deps-dev-alpha-canary
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    outputs:
+      verdict: ${{ steps.probe.outputs.verdict }}
+      evidence: ${{ steps.probe.outputs.evidence }}
+    steps:
+      - name: Probe the batch endpoint across deps.dev surfaces
+        id: probe
+        run: |
+          set -uo pipefail
+
+          # The smallest well-formed GetVersionBatch body. Shape mirrors
+          # `waybill-cli/src/enrich/deps_dev_batch.rs::build_body`; if that
+          # changes shape this probe should change with it.
+          BODY='{"requests":[{"versionKey":{"system":"CARGO","name":"serde","version":"1.0.0"}}]}'
+
+          probe() {
+            curl -s -o /dev/null -w '%{http_code}' -m 30 \
+              -X POST -H 'Content-Type: application/json' \
+              -d "$BODY" "https://api.deps.dev/$1/versionbatch" 2>/dev/null || echo "000"
+          }
+
+          stable=$(probe v3)
+          beta=$(probe v3beta)
+          alpha=$(probe v3alpha)
+
+          echo "v3/versionbatch      -> $stable"
+          echo "v3beta/versionbatch  -> $beta"
+          echo "v3alpha/versionbatch -> $alpha"
+
+          # Baseline measured 2026-09-20: v3=404, v3beta=404, v3alpha=200.
+          verdict=ok
+          if [ "$stable" = "200" ] || [ "$beta" = "200" ]; then
+            verdict=graduated
+          elif [ "$alpha" != "200" ]; then
+            # 000 is a transport failure, not an API change. Reporting one as
+            # the other would make this canary cry wolf on every network
+            # hiccup, so retry before concluding the endpoint is gone.
+            sleep 30
+            alpha=$(probe v3alpha)
+            echo "v3alpha retry -> $alpha"
+            if [ "$alpha" != "200" ]; then
+              verdict=withdrawn
+            fi
+          fi
+
+          echo "verdict=$verdict" >> "$GITHUB_OUTPUT"
+          {
+            echo "evidence<<EOF"
+            echo "| surface | POST /versionbatch |"
+            echo "|---|---|"
+            echo "| \`v3\` (stable) | $stable |"
+            echo "| \`v3beta\` | $beta |"
+            echo "| \`v3alpha\` (what waybill calls) | $alpha |"
+            echo ""
+            echo "Baseline recorded 2026-09-20: v3=404, v3beta=404, v3alpha=200."
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+          echo "::notice::deps.dev alpha canary verdict: $verdict"
+
+  report:
+    needs: probe
+    if: >-
+      needs.probe.outputs.verdict != 'ok'
+      && github.event.inputs.dry_run != 'true'
+      && github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Ensure labels exist
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh label create canary --color EDEDED --description "Auto-opened by a scheduled canary" --repo "$GITHUB_REPOSITORY" 2>/dev/null || true
+          gh label create enrichment --color 0E8A16 --description "deps.dev enrichment path" --repo "$GITHUB_REPOSITORY" 2>/dev/null || true
+
+      - name: Open or update the canary issue
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          VERDICT: ${{ needs.probe.outputs.verdict }}
+          EVIDENCE: ${{ needs.probe.outputs.evidence }}
+        with:
+          script: |
+            // Two titles, deduped independently: graduation and withdrawal are
+            // different problems with different responses, and one must not
+            // suppress notice of the other.
+            const TITLES = {
+              graduated: '[canary] deps.dev batch endpoint has left v3alpha',
+              withdrawn: '[canary] deps.dev v3alpha batch endpoint stopped answering',
+            };
+            const verdict  = process.env.VERDICT;
+            const title    = TITLES[verdict];
+            if (!title) { core.setFailed(`unexpected verdict: ${verdict}`); return; }
+
+            const evidence = process.env.EVIDENCE || '(no evidence captured)';
+            const runUrl   = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const stamp    = new Date().toISOString();
+
+            const body = verdict === 'graduated'
+              ? [
+                  `The deps.dev \`GetVersionBatch\` endpoint now answers on a non-alpha surface.`,
+                  ``,
+                  evidence,
+                  ``,
+                  `**Why this was watched.** Making batched enrichment the default (#927,`,
+                  `m923) accepted a dependency on \`v3alpha\`, and the justification for`,
+                  `accepting it was that no stable equivalent existed. That premise has`,
+                  `changed.`,
+                  ``,
+                  `**What to do.** Move \`version_batch_url()\` in`,
+                  `\`waybill-cli/src/enrich/deps_dev_client.rs\` off the alpha surface,`,
+                  `update \`the_batch_endpoint_is_pinned_to_v3alpha\` in`,
+                  `\`deps_dev_batch.rs\`, and revisit FR-007c in`,
+                  `\`specs/923-enrich-batch-default/spec.md\` — the risk it documents is`,
+                  `smaller now and the wording should say so.`,
+                  ``,
+                  `- Run: ${runUrl}`,
+                  `- Last checked: ${stamp}`,
+                ].join('\n')
+              : [
+                  `The deps.dev \`v3alpha\` batch endpoint stopped answering. Probed twice,`,
+                  `30s apart, to rule out a transport hiccup.`,
+                  ``,
+                  evidence,
+                  ``,
+                  `**Impact.** Scans are not broken — the circuit breaker falls back to`,
+                  `per-component requests and enrichment content is unaffected (FR-005 /`,
+                  `SC-005). They are slower, and they issue ~100x more requests. Every`,
+                  `default scan is now taking the fallback.`,
+                  ``,
+                  `**What to do.** Find where the endpoint moved to and repoint`,
+                  `\`version_batch_url()\`; if it is gone for good, reconsider whether the`,
+                  `batched default still earns its place.`,
+                  ``,
+                  `- Run: ${runUrl}`,
+                  `- Last checked: ${stamp}`,
+                ].join('\n');
+
+            const open = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: 'open', labels: 'canary,enrichment', per_page: 100,
+            });
+            const match = open.data.find(i => i.title === title);
+
+            if (match) {
+              // Already reported. Add a dated comment rather than a second
+              // issue, so the report carries how long this has been true.
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: match.number,
+                body: `Still true as of ${stamp}.\n\n${evidence}\n\n- Run: ${runUrl}`,
+              });
+              core.notice(`updated existing issue #${match.number}`);
+            } else {
+              const created = await github.rest.issues.create({
+                owner: context.repo.owner, repo: context.repo.repo,
+                title, body, labels: ['canary', 'enrichment'],
+              });
+              core.notice(`opened issue #${created.data.number}`);
+            }
+
+  clear:
+    needs: probe
+    if: >-
+      needs.probe.outputs.verdict == 'ok'
+      && github.event.inputs.dry_run != 'true'
+      && github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Close the canary issues if the surface is back to baseline
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const TITLES = [
+              '[canary] deps.dev batch endpoint has left v3alpha',
+              '[canary] deps.dev v3alpha batch endpoint stopped answering',
+            ];
+            const open = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: 'open', labels: 'canary,enrichment', per_page: 100,
+            });
+            for (const issue of open.data.filter(i => TITLES.includes(i.title))) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: issue.number,
+                body: `Surface is back to the recorded baseline (v3=404, v3beta=404, v3alpha=200). Closing.`,
+              });
+              await github.rest.issues.update({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: issue.number, state: 'closed',
+              });
+              core.notice(`closed #${issue.number}`);
+            }
