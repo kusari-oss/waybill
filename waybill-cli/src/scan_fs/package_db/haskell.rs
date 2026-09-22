@@ -667,6 +667,9 @@ pub(crate) fn finalize(
 ) -> (Vec<PackageDbEntry>, Option<HaskellParseSummary>) {
     let mut out: Vec<PackageDbEntry> = Vec::new();
     let mut seen_purls: HashSet<String> = HashSet::new();
+    // Design-tier declarations are keyed per (PURL, manifest) — see the
+    // emit loop below for why a PURL-only key loses data (#936).
+    let mut seen_design_decls: HashSet<(String, PathBuf)> = HashSet::new();
 
     let HaskellDiscoveredPaths {
         mut cabal_paths,
@@ -809,6 +812,15 @@ pub(crate) fn finalize(
     // Phase E — Q3 Hpack detect-and-warn (FR-015).
     emit_hpack_warnings(&cabal_manifests, &package_yaml_paths);
 
+    // Every package DEFINED in this scan. A `build-depends:` naming one of
+    // these is an intra-repository edge to a package that already emits as a
+    // main module with a real version — not a Hackage dependency to be
+    // invented as a versionless component (#936).
+    let local_package_names: HashSet<String> = cabal_manifests
+        .iter()
+        .filter_map(|(_, m)| m.name.clone())
+        .collect();
+
     // Phase F — emit lockfile-derived components.
     for entry in &freeze_entries {
         let component = build_freeze_component(entry);
@@ -868,9 +880,31 @@ pub(crate) fn finalize(
             }
         }
         if !has_local_successful_lockfile && !any_successful_lockfile {
-            for component in build_design_tier_components(manifest, cabal_path) {
-                let purl_key = component.purl.as_str().to_string();
-                if seen_purls.insert(purl_key) {
+            for component in
+                build_design_tier_components(manifest, cabal_path, &local_package_names)
+            {
+                // Keyed by (PURL, manifest) rather than PURL alone (#936).
+                //
+                // The same dependency declared in two manifests is two
+                // declarations, and they routinely differ: `moat.cabal` pins
+                // `base >=4.11 && <4.22` while `examples/readme/readme.cabal`
+                // pins `base >=4.14 && <4.15`. A PURL-only key dropped the
+                // whole second component — its constraint AND its manifest
+                // path — so whichever file sorted first silently defined the
+                // dependency for the entire repository, and the m148
+                // source-files union had nothing left to union.
+                //
+                // Emitting one component per declaration lets the existing
+                // downstream passes do their job: `canonicalize_source_files_by_purl`
+                // unions the manifest paths, and `deduplicate` unions the
+                // constraints. Within a single manifest the PURL still
+                // collapses, so a dep named in several stanzas of one file
+                // stays one component.
+                let key = (
+                    component.purl.as_str().to_string(),
+                    cabal_path.to_path_buf(),
+                );
+                if seen_design_decls.insert(key) {
                     out.push(component);
                 }
             }
@@ -1639,13 +1673,23 @@ fn build_main_module(
 fn build_design_tier_components(
     manifest: &CabalManifest,
     cabal_path: &Path,
+    local_package_names: &HashSet<String>,
 ) -> Vec<PackageDbEntry> {
     let mut out = Vec::new();
     // Filter out self-ref: the main-module's own package name doesn't emit
     // as a separate dep component (would collide via PURL dedup anyway).
+    //
+    // The filter spans EVERY package defined in this scan, not just this
+    // manifest's own name (#936). A `build-depends:` on a sibling package in
+    // the same repository names a local package, which already emits as a
+    // main module carrying its real version. Emitting it again from the
+    // dependant's manifest produces a second, VERSIONLESS component for the
+    // same package — a phantom that is unreachable from the root and drags
+    // `waybill:graph-completeness` to `partial` for a reason that is an
+    // artifact of the scan rather than a property of the project.
     let main_name = manifest.name.clone().unwrap_or_default();
     for (dep, scope) in collect_design_tier_deps(manifest) {
-        if dep.name == main_name {
+        if dep.name == main_name || local_package_names.contains(&dep.name) {
             continue;
         }
         // Milestone 895 (#891) — a declared dependency has no RESOLVED version,
@@ -1671,17 +1715,21 @@ fn build_design_tier_components(
             Err(_) => continue,
         };
         let mut extra_annotations = base_annotations("hackage-cabal-design");
-        // Milestone 199: always-array shape. Haskell design-tier writes
-        // plural (1-element for its own single-dep case); reconciler may
-        // later accumulate onto a survivor if a source-tier match exists.
-        extra_annotations.insert(
-            "waybill:requirement-ranges".to_string(),
-            serde_json::json!(if dep.all_ranges.is_empty() {
-                dep.range.clone().into_iter().collect::<Vec<_>>()
-            } else {
-                dep.all_ranges.clone()
-            }),
-        );
+        // `waybill:requirement-ranges` is NOT written into the annotation bag.
+        //
+        // It used to be written here AND into the typed `requirement_ranges`
+        // field below, and the emitters render both — so every component
+        // carried the property twice (#940). Worse than redundant: only the
+        // typed field participates in the cross-manifest union, so once a
+        // dependency was declared in two manifests the annotation copy held a
+        // stale subset of the constraints while the typed copy held the truth.
+        // Two properties of the same name disagreeing is a worse document than
+        // either alone.
+        //
+        // The typed field is the carrier, as it is for every other reader
+        // (dart, cocoapods, composer, scala, pip, npm). The emitter maps it to
+        // C20 `waybill:requirement-ranges` across all three formats, so the
+        // wire contract is unchanged.
         // Milestone 895 (#891) — the executable a `build-tool-depends` entry
         // names. The identifier carries the package alone so it resolves
         // against the registry; this keeps the pair the project declared
