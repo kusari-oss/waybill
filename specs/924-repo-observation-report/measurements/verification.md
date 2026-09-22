@@ -123,3 +123,23 @@ output. The same defect had already been found and fixed in
 
 Whether it caused this failure is unknown. It was capable of causing one, which
 is reason enough.
+
+## Re-verification after `covered_by` (FR-008a)
+
+The emitted shape changed, so everything was re-run.
+
+```
+>>> cargo +stable clippy --workspace --all-targets -j 2 -- -D warnings   exit=0
+>>> cargo +stable test --workspace --no-fail-fast -j 2 -- --test-threads=2  exit=0
+
+316 suites ok, 0 FAILED
+total: 5971 passed; 0 failed; 28 ignored
+```
+
+SC-009 passes on its gating target. The self target is now advisory — see
+`baseline/README.md` for why a local cargo registry makes it unable to answer
+the question SC-009 asks.
+
+Schema conformance still has teeth after the additive bump: `covered_by` is in
+`required` with `additionalProperties: false` intact, so emitting it without a
+schema entry would fail exactly as T031's mutations did.

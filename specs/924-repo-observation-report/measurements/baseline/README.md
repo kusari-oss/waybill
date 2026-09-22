@@ -108,3 +108,32 @@ multiset) and the other two by masked lines. Both strategies live in
 external tree that this branch does not modify, which is what made it possible
 to tell "the baseline is stale" apart from "the walker regressed" — the whole
 reason two targets were captured rather than one.
+
+---
+
+## The self target is advisory. A condition this file failed to state.
+
+This README says a baseline whose conditions are unstated is not a baseline,
+then omitted one: **how many crate sources are unpacked under
+`~/.cargo/registry/src/`.**
+
+The cargo reader reads a crate's real `authors` field when its source is
+present locally and falls back to `crates.io` when it is not. Every
+`cargo build` unpacks more crates, so this repository's own SBOM changes on
+any machine that builds — with no code change at all.
+
+Measured during the `covered_by` work: **11 supplier entities appeared**
+between two runs separated only by builds. Component count identical at 5,552;
+`winapi`'s supplier went from `crates.io` to
+`Peter Atashian <retep998@gmail.com>`. 1,662 crate sources are now unpacked,
+the newest dated the same day.
+
+So the self target cannot answer "did this change alter SBOM output?" on a
+development machine. **`verify_sc009.py` now gates on the polyglot target
+only** — an external tree this branch never modifies, with no cargo-registry
+dependence — and reports the self target as advisory with the reason.
+
+This is the same failure as m923's 1302s baseline in different clothing: a
+comparison invalidated by state that was never held equal. The general rule
+this repository keeps relearning is that a baseline must state **every** input
+that can move, and a local package cache is an input.

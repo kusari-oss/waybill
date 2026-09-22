@@ -42,6 +42,19 @@ def compare(fmt, base, now):
     same = masked(base) == masked(now)
     return same, "masked byte-identical" if same else "masked content differs"
 
+# `self` is ADVISORY, not gating. See the note in baseline/README.md: this
+# repository's own SBOM depends on how many crate sources happen to be unpacked
+# under ~/.cargo/registry/src/, because the cargo reader reads a crate's real
+# `authors` field when the source is present and falls back to "crates.io" when
+# it is not. Every `cargo build` unpacks more, so the self baseline drifts on any
+# machine that builds -- measured: 11 supplier entities appeared with no code
+# change, e.g. winapi "crates.io" -> "Peter Atashian <retep998@gmail.com>".
+#
+# `poly` is an external tree this branch never modifies and has no cargo-registry
+# dependence, so it is the target that can actually answer "did this change alter
+# SBOM output?". It gates.
+GATING = {"poly"}
+
 if __name__ == "__main__":
     base_dir, now_dir = Path(sys.argv[1]), Path(sys.argv[2])
     ok = True
@@ -49,10 +62,16 @@ if __name__ == "__main__":
         for target in ("self", "poly"):
             base = base_dir / f"{target}.{fmt}.json"
             now = now_dir / f"w-{target}-{fmt}.json"
+            gating = target in GATING
             if not (base.exists() and now.exists()):
-                print(f"  ? {fmt:16} {target:5} missing input"); ok = False; continue
+                print(f"  ? {fmt:16} {target:5} missing input")
+                ok &= not gating
+                continue
             good, why = compare(fmt, base, now)
-            print(f"  {'✓' if good else '✗'} {fmt:16} {target:5} {why}")
-            ok &= good
-    print(f"SC-009: {'PASS' if ok else 'FAIL'}")
+            mark = "✓" if good else ("✗" if gating else "~")
+            tag = "" if gating else "  (advisory: cargo-registry drift)"
+            print(f"  {mark} {fmt:16} {target:5} {why}{tag}")
+            if gating:
+                ok &= good
+    print(f"SC-009: {'PASS' if ok else 'FAIL'}  (gating targets: {sorted(GATING)})")
     sys.exit(0 if ok else 1)
