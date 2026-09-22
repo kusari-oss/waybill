@@ -709,10 +709,24 @@ pub(crate) fn finalize(
     // so design-tier fallback (Phase G) can distinguish "lockfile exists
     // and parsed cleanly" from "lockfile exists but failed to parse"
     // (the FR-009 fallback case).
+    //
+    // A parse that yields ZERO usable entries counts as the latter. FR-009
+    // covers a malformed lockfile; a lockfile that parses and produces
+    // nothing is indistinguishable from one for this purpose, and treating
+    // it as authoritative deletes every dependency from the document — the
+    // suppression below would fire with nothing to replace what it silenced.
     let mut freeze_entries: Vec<CabalFreezeEntry> = Vec::new();
     let mut successful_freeze_dirs: HashSet<PathBuf> = HashSet::new();
     for path in &freeze_paths {
         match parse_cabal_freeze(path) {
+            Ok(entries) if entries.is_empty() => {
+                tracing::warn!(
+                    path = %path.display(),
+                    "haskell: cabal.project.freeze parsed but yielded no usable \
+                     constraints; treating as no lockfile and falling back to \
+                     design-tier from sibling *.cabal (FR-009)",
+                );
+            }
             Ok(entries) => {
                 freeze_entries.extend(entries);
                 if let Some(dir) = path.parent() {
@@ -953,6 +967,37 @@ fn discover_by_filename(
 // cabal.project.freeze parsing (T011 + research §R2)
 // -----------------------------------------------------------------------
 
+/// Strip cabal's scope qualifier from a constraint entry.
+///
+/// Real `cabal v2-freeze` output qualifies every constraint by scope:
+///
+/// ```text
+/// constraints: any.aeson ==2.2.3.0,
+///              setup.Cabal ==3.10.3.0,
+/// ```
+///
+/// A Cabal package name cannot contain `.`, so a dot inside the first token is
+/// unambiguously a qualifier separator. Everything up to and including the last
+/// dot of that token is the qualifier.
+///
+/// This existed as a gap rather than a decision: FR-002 already requires
+/// extracting "each `==<version>` exact-pin constraint from the `constraints:`
+/// block", and a qualified entry is one of those. Both the unit fixtures and
+/// the integration fixture were hand-written with unqualified names, so the
+/// parser had never been run against output `cabal` actually produces — and
+/// against real output it extracted nothing at all.
+fn strip_constraint_qualifier(entry: &str) -> &str {
+    let Some(first_token) = entry.split_whitespace().next() else {
+        return entry;
+    };
+    match first_token.rfind('.') {
+        // `+1` to drop the dot itself. A trailing dot leaves an empty name,
+        // which the regexes then reject — the same outcome as before.
+        Some(idx) => &entry[idx + 1..],
+        None => entry,
+    }
+}
+
 fn parse_cabal_freeze(path: &Path) -> anyhow::Result<Vec<CabalFreezeEntry>> {
     let text = std::fs::read_to_string(path)
         .map_err(|e| anyhow::anyhow!("read failed: {e}"))?;
@@ -975,7 +1020,7 @@ fn parse_cabal_freeze(path: &Path) -> anyhow::Result<Vec<CabalFreezeEntry>> {
 
     let mut out: Vec<CabalFreezeEntry> = Vec::new();
     for entry_str in flattened.split(',') {
-        let trimmed = entry_str.trim();
+        let trimmed = strip_constraint_qualifier(entry_str.trim());
         if trimmed.is_empty() {
             continue;
         }
