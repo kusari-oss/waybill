@@ -15,7 +15,16 @@ fn w(dir: &Path, rel: &str, body: &[u8]) {
 }
 
 fn run_report(root: &Path) -> serde_json::Value {
-    let out = root.join("report.json");
+    // Written OUTSIDE the scanned tree. A report placed inside it becomes a
+    // file in the very directory being reported on: it inflates file counts,
+    // can tip a directory over the significance threshold, and makes a second
+    // run observe the first run's output. Found while investigating a census
+    // failure that did not reproduce; the hazard is real whether or not it
+    // caused that one.
+    static N: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+    let seq = N.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    let out = std::env::temp_dir()
+        .join(format!("m924-{}-{}-{seq}.json", module_path!().replace("::", "_"), std::process::id()));
     let st = Command::new(binary_path())
         .args(["repo", "report", "--path", root.to_str().unwrap(),
                "--output", out.to_str().unwrap()])

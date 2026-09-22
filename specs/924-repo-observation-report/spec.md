@@ -123,6 +123,9 @@ Reports are meant to be sent to maintainers. Paths leak internal project names, 
 
 - **FR-007**: The report MUST match unclaimed marker files against a curated table of ecosystems waybill does not yet support, and name the ecosystem where a marker matches.
 - **FR-008**: Ecosystem identification MUST be marker-file-driven. Source-file extensions MUST NOT alone be used to assign an ecosystem, because a directory's marker may sit above the source files it governs. Extension histograms are recorded as observation (FR-011) and MAY inform a stated-as-weak signal, never a classification.
+- **FR-008a**: A directory with no marker of its own MUST report the nearest enclosing directory that declares one. `go.mod` governs its subtree until a nested `go.mod`, and Cargo workspaces, `package.json`, `pom.xml` and `pyproject.toml` follow the same nearest-enclosing-marker rule. **Added at implement time**: without it, a single-module repository reports every large source directory as unrecognised — measured at 26 such directories on a real Go repository with no gaps at all, which makes the report's first impression actively wrong.
+- **FR-008b**: Coverage is a **positional** fact and MUST NOT be read as an attribution. A directory inside a Go module is not thereby claimed to be Go; FR-008's marker requirement is unchanged.
+- **FR-008c**: Coverage MUST NOT suppress a record, and MUST NOT be presented as the inverse of a gap. Build output sits under its project root too, so a large covered directory stays visible with its size. And a directory holding an unsupported ecosystem's marker is *its own* project root — therefore covered, and still a gap. The report distinguishes three reader questions: a **known gap** (`support: no_reader`), an **ambiguity**, and **unknown territory** (no coverage and no attribution).
 - **FR-009**: The unsupported-ecosystem table MUST be data, editable without code changes, so it can be extended as reports reveal new gaps.
 - **FR-010**: The report MUST NOT widen or reuse the file-tier source-shape allowlist that governs SBOM emission; ecosystem naming is a separate concern and changing that allowlist would change emitted SBOM content.
 
@@ -203,6 +206,7 @@ Carried from issue #932's stated non-goals, recorded here so they bound the work
 - **SC-013**: On a repository containing a deep tree of directories that are neither marked, claimed, nor oversized, those directories produce no records of their own, yet the census still reconciles exactly (SC-003) — demonstrating that aggregation loses records without losing counts.
 - **SC-009**: Producing a report leaves emitted SBOM content byte-identical to a run that does not produce one, across all supported formats.
 - **SC-010**: For a repository containing marker files from at least three ecosystems waybill does not support, all three are named with an explicit no-reader status.
+- **SC-016**: On a single-module repository, no directory governed by that module is reported as unknown territory. Measured on a Go repository with one root `go.mod`: **28 directories covered, 0 unknown**, against 26 reported as unrecognised before FR-008a. A large covered directory keeps its record and its size — verified at 753,375 files.
 - **SC-011**: In redaction mode, no original path segment from the repository appears anywhere in the report, verified mechanically against the repository's actual directory names; and two directories sharing a segment still share an identifier, so structure survives.
 - **SC-012**: Every report states its redaction mode, and an operator who runs the command in the default mode is told in its output that a stricter mode exists.
 
@@ -226,6 +230,7 @@ Carried from issue #932's stated non-goals, recorded here so they bound the work
 - Q: Is a directory's classification a single exclusive verdict, or can claim and ambiguity coexist? → A: **Two independent fields** — an exclusive claim status, plus an optional ambiguity record that may accompany any claim status (FR-012a / FR-012b).
 - Q: What compatibility contract does the alpha schema version carry? → A: **Two-part major.minor** — minor is additive and consumers carry on; major means removal, rename or changed meaning, and consumers MUST refuse an unrecognised major (FR-017a / FR-017b / FR-017c).
 - Q: How much of the scan pipeline must run to produce a report? → A: **Walk, readers and resolution; enrichment and SBOM emission skipped** (FR-022a / FR-022b).
+- Q: Should a subdirectory under a project root be treated as part of that project by default? → A: **Yes** — nearest-enclosing-marker coverage, as a positional fact that neither suppresses the record nor answers the gap question (FR-008a / FR-008b / FR-008c). Schema minor bump 0.1 → 0.2, additive per FR-017a.
 
 **Rationale, recorded because the trade is real.** The purpose of this report is that operators send it to maintainers for support, and redaction-by-default destroys the signal that makes that work: a `deno.json` under `tools/codegen/` is actionable, the same marker under an opaque identifier is not. Retaining names matches how build logs and stack traces are already shared.
 

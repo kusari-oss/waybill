@@ -17,7 +17,7 @@ pub(crate) struct SchemaVersion {
 }
 
 /// The version this build emits. Bump deliberately, per contract C-2.
-pub(crate) const SCHEMA_VERSION: SchemaVersion = SchemaVersion { major: 0, minor: 1 };
+pub(crate) const SCHEMA_VERSION: SchemaVersion = SchemaVersion { major: 0, minor: 2 };
 
 /// FR-019c — always present, in both modes, so a reader never has to infer
 /// whether an absent name was absent or removed.
@@ -102,6 +102,34 @@ pub(crate) struct DirectoryObservation {
     pub(crate) ecosystems: Vec<EcosystemAttribution>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) ambiguity: Option<AmbiguityRecord>,
+    /// The nearest enclosing directory that declares a project root, rendered
+    /// in the same redaction mode as `path`. `null` when nothing encloses it.
+    ///
+    /// A **positional fact, not an attribution**. Saying a directory is covered
+    /// by the module above it is not the same as claiming the directory is that
+    /// ecosystem — FR-008 still forbids inferring an ecosystem from source-file
+    /// extensions. `go.mod` governs its subtree until a nested `go.mod`, and the
+    /// same nearest-enclosing-marker rule holds for Cargo workspaces,
+    /// `package.json`, `pom.xml` and `pyproject.toml`.
+    ///
+    /// **Covered is not the same as uninteresting.** A build-output tree sits
+    /// under its project root too, and a very large covered directory is still
+    /// worth seeing.
+    ///
+    /// **Nor is coverage the opposite of a gap.** There are three distinct
+    /// questions and this field answers only the third:
+    ///
+    /// | question | query |
+    /// |---|---|
+    /// | known gap — we can see what it is and have no reader | `ecosystems[].support == "no_reader"` |
+    /// | ambiguous — the evidence does not decide | `ambiguity != null` |
+    /// | unknown territory — nothing recognised it and nothing owns it | `covered_by == null && ecosystems == []` |
+    ///
+    /// A directory holding `deno.json` is its own project root, so it *is*
+    /// covered, and it is still a gap. Reading `covered_by == null` as "gap"
+    /// would miss every ecosystem waybill can name but cannot read — which is
+    /// the most actionable category in the report.
+    pub(crate) covered_by: Option<String>,
     pub(crate) files_direct: u64,
     /// Rolled up from descendants that earned no record of their own
     /// (FR-021b). Kept separate from `files_direct` so aggregation preserves

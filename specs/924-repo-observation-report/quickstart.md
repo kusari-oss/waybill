@@ -46,8 +46,16 @@ jq -r '.directories[]
 ```
 
 Directories naming an ecosystem with `support: no_reader` are the actionable
-ones — a known gap. Ones reporting `unrecognised` carry the FR-011 detail
-instead:
+ones — a known gap. Note they are typically *covered* (a marker makes a
+directory its own project root), so `covered_by == null` is **not** the gap
+query; it finds unknown territory:
+
+```sh
+jq -r '.directories[] | select(.covered_by == null and (.ecosystems | length) == 0)
+       | .path' /tmp/waybill-self.json
+```
+
+Ones reporting nothing recognised carry the FR-011 detail instead:
 
 ```sh
 jq -r '.directories[]

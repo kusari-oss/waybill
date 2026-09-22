@@ -207,16 +207,40 @@ classified at all.
 
 ### What the report is for
 
-Three questions it answers directly:
+Four questions it answers directly:
 
 - **Is my project shape supported?** Directories with `claim_status: claimed`
-  were recognised. Ones with an ecosystem named and `support: no_reader` are a
-  known gap — waybill can see what they are and has no reader for them.
+  were recognised.
+- **Where are the known gaps?** `ecosystems[].support == "no_reader"` — waybill
+  can see what the directory is and has no reader for it. The most actionable
+  category in the report.
 - **Did a reader engage and produce nothing?** `files_matched > 0` with
   `components_emitted: 0` is a parse failure or an unsupported dialect, not a
-  coverage gap. The two need opposite responses.
+  coverage gap. The two need opposite responses. `components_emitted: null`
+  means *not determined* — never "produced nothing".
 - **What could not be determined?** Directories carrying an `ambiguity` record,
   with the competing interpretations and the evidence behind each.
+
+### `covered_by`, and what it does *not* mean
+
+A directory with no marker of its own reports the nearest project root above
+it. `go.mod` governs its subtree until a nested `go.mod`, and Cargo workspaces,
+`package.json`, `pom.xml` and `pyproject.toml` all behave the same way. Without
+this, every large source directory in a single-module repository reads as
+unrecognised — 26 of them, on a real Go repository with no gaps at all.
+
+It is a **positional** fact. A directory inside a Go module is not thereby
+claimed to *be* Go; ecosystem attribution still requires a marker file.
+
+Two things it is **not**:
+
+- **Not the opposite of a gap.** A directory holding `deno.json` is its own
+  project root, so it is covered — and it is still a gap. Use
+  `ecosystems[].support == "no_reader"` for known gaps, and
+  `covered_by == null && ecosystems == []` for genuinely unknown territory.
+- **Not a reason to stop looking.** Build output sits under its project root
+  too. A covered directory holding three-quarters of a million files is still
+  worth seeing; sort by `files_direct` to find it.
 
 ### Ambiguity is an answer, not a failure
 

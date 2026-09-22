@@ -92,3 +92,34 @@ cannot), not movement from this feature, which emits no SBOM content at all.
 6/6: two repositories × three formats. CycloneDX and SPDX 2.3 by masked line
 comparison, SPDX 3 semantically — see `verify_sc009.py` for why one strategy
 does not fit all three.
+
+## An unreproduced census failure, recorded rather than dismissed
+
+During the `covered_by` work, one run of `repo_report_census` reported
+**6 passed, 1 failed**. It has not reproduced since:
+
+| condition | runs | result |
+|---|---|---|
+| quiet | 5 | all pass, 1.17–1.22s |
+| under deliberate 6-way CPU load | 3 | all pass, 1.25–1.26s |
+| after the harness fix below | 4 | all pass |
+
+**I do not have a cause, and I am not calling it a flake.** Two things are
+worth writing down.
+
+**First, a gap in how I ran it.** The failing invocation grepped only for
+`^test result` lines, so it never captured *which* test failed. The suite had
+run in 5.67s against a normal 1.2s, which suggested the 3-second wall-clock
+bound in the network test — but deliberate CPU load does not reproduce it, and
+that theory is unsupported. A run that can fail without recording what failed
+is a harness defect independent of the bug.
+
+**Second, a real hazard closed on the way past.** Both `repo_report_census` and
+`repo_report_ecosystems` wrote each report **into the directory being scanned**.
+That inflates file counts in the tree being reported on, can tip a directory
+over the significance threshold, and makes a second run observe the first run's
+output. The same defect had already been found and fixed in
+`repo_report_schema` and was not carried across. It is fixed in all three now.
+
+Whether it caused this failure is unknown. It was capable of causing one, which
+is reason enough.

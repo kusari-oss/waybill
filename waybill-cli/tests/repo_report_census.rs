@@ -50,7 +50,16 @@ fn fixture() -> tempfile::TempDir {
 }
 
 fn run_report(root: &Path, extra: &[&str]) -> serde_json::Value {
-    let out = root.join("report.json");
+    // Written OUTSIDE the scanned tree. A report placed inside it becomes a
+    // file in the very directory being reported on: it inflates file counts,
+    // can tip a directory over the significance threshold, and makes a second
+    // run observe the first run's output. Found while investigating a census
+    // failure that did not reproduce; the hazard is real whether or not it
+    // caused that one.
+    static N: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+    let seq = N.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    let out = std::env::temp_dir()
+        .join(format!("m924-{}-{}-{seq}.json", module_path!().replace("::", "_"), std::process::id()));
     let mut args: Vec<&str> = vec![
         "repo", "report", "--path", root.to_str().unwrap(),
         "--output", out.to_str().unwrap(),
@@ -230,4 +239,87 @@ fn the_report_states_its_significance_threshold_m924() {
     assert_eq!(rep["schema_stability"], "alpha");
     assert!(rep["schema_version"]["major"].as_u64().is_some());
     assert!(rep["volatile_fields"].as_array().unwrap().iter().any(|v| v == "generated_at"));
+}
+
+/// A directory with no marker of its own is **covered by** the nearest project
+/// root above it. This is the nearest-enclosing-marker rule: a `go.mod` governs
+/// its subtree until a nested one, and Cargo workspaces, `package.json`,
+/// `pom.xml` and `pyproject.toml` behave the same way.
+///
+/// It is a **positional fact, not an attribution** — FR-008 still forbids
+/// inferring an ecosystem from source-file extensions. Saying a directory sits
+/// inside a Go module is not saying the directory is Go.
+///
+/// Without this, a single-module repository reports every large source
+/// directory as unrecognised: measured on a real Go repository, 26 directories
+/// under one root `go.mod` read as 26 gaps in a repository that has none.
+#[test]
+fn a_directory_under_a_project_root_reports_its_coverage_m924() {
+    let d = tempfile::tempdir().unwrap();
+    let r = d.path();
+
+    // A project root, with a big unmarked source directory beneath it.
+    w(r, "svc/go.mod", b"module example.com/waybill-fixture-svc\n\ngo 1.21\n");
+    for i in 0..30 {
+        w(r, &format!("svc/internal/handler/h{i}.go"), b"package handler\n");
+    }
+    // A big directory with NO project root anywhere above it.
+    for i in 0..30 {
+        w(r, &format!("loose/blob{i}.txt"), b"unowned\n");
+    }
+
+    let rep = run_report(r, &[]);
+    let dirs = rep["directories"].as_array().unwrap();
+    let find = |p: &str| dirs.iter().find(|o| o["path"] == p)
+        .unwrap_or_else(|| panic!("{p} must be recorded; got {:?}",
+            dirs.iter().map(|o| &o["path"]).collect::<Vec<_>>()));
+
+    assert_eq!(
+        find("svc/internal/handler")["covered_by"], "svc",
+        "a directory beneath a go.mod is covered by it — not a gap",
+    );
+    assert!(
+        find("loose")["covered_by"].is_null(),
+        "a directory with no project root above it is genuinely uncovered",
+    );
+    assert!(
+        find("svc")["covered_by"].is_null(),
+        "a project root is not covered by itself — the search is over strict ancestors",
+    );
+
+    // UNKNOWN TERRITORY -- one of three reader queries, and the only one this
+    // field answers. A known gap (an unsupported ecosystem's marker) is its own
+    // project root, so it is covered and still a gap; reading `covered_by ==
+    // null` as "gap" would miss the most actionable category in the report.
+    let unknown: Vec<&str> = dirs.iter()
+        .filter(|o| o["covered_by"].is_null() && o["path"] != ".")
+        .map(|o| o["path"].as_str().unwrap())
+        .collect();
+    assert!(unknown.contains(&"loose"), "unknown: {unknown:?}");
+    assert!(!unknown.contains(&"svc/internal/handler"),
+        "covered source directories are not unknown territory: {unknown:?}");
+}
+
+/// Coverage does not mean uninteresting.
+///
+/// Build output sits under its project root too. If coverage suppressed a
+/// record, #934's 749,947-file `target/debug/deps` would vanish from the
+/// report — and that is the most useful thing this report has found. Coverage
+/// answers "is this a gap?"; `files_direct` answers "is this disproportionate?".
+#[test]
+fn a_covered_directory_is_still_recorded_with_its_size_m924() {
+    let d = tempfile::tempdir().unwrap();
+    let r = d.path();
+    w(r, "go.mod", b"module example.com/waybill-fixture-root\n\ngo 1.21\n");
+    for i in 0..40 {
+        w(r, &format!("generated/out/blob{i}.bin"), b"\0\0build output\0");
+    }
+
+    let rep = run_report(r, &[]);
+    let o = rep["directories"].as_array().unwrap().iter()
+        .find(|o| o["path"] == "generated/out")
+        .expect("a large covered directory must still be recorded");
+    assert_eq!(o["covered_by"], ".", "it is covered by the root module");
+    assert!(o["files_direct"].as_u64().unwrap() >= 40,
+        "and its size is still reported, so bulk stays visible: {o}");
 }

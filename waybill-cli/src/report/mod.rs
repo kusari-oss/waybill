@@ -105,6 +105,20 @@ fn components_by_dir(entries: &[crate::scan_fs::package_db::PackageDbEntry]) -> 
     m
 }
 
+/// The nearest enclosing project root, or `None` when nothing encloses it.
+///
+/// Strictly an ancestor search: a project root is not covered by itself.
+fn nearest_project_root(dir: &Path, roots: &BTreeSet<PathBuf>) -> Option<PathBuf> {
+    let mut cur = dir.parent();
+    while let Some(p) = cur {
+        if roots.contains(p) {
+            return Some(p.to_path_buf());
+        }
+        cur = p.parent();
+    }
+    None
+}
+
 /// Render a path repository-relative. **Never absolute, in any mode**
 /// (FR-019) — absolute paths leak home directories and usernames and buy
 /// nothing.
@@ -221,6 +235,16 @@ fn assemble(
     });
     let per_dir_components = components_by_dir(entries);
 
+    // Project roots: recorded directories that declare a marker of their own.
+    // A directory with no marker inherits coverage from the nearest of these
+    // above it — the nearest-enclosing-marker rule that Go, Cargo, npm, Maven
+    // and Python all follow.
+    let project_roots: BTreeSet<PathBuf> = recorded
+        .iter()
+        .filter(|r| r.census.filenames.iter().any(|f| significance::is_marker(f)))
+        .map(|r| r.path.clone())
+        .collect();
+
     // FR-005 — excluded directories are always recorded, regardless of size
     // or markers. An operator who excluded something needs to see that the
     // report knows it was excluded, not merely that it is absent.
@@ -233,6 +257,8 @@ fn assemble(
             claimed_by: Vec::new(),
             ecosystems: Vec::new(),
             ambiguity: None,
+            covered_by: nearest_project_root(dir, &project_roots)
+                .map(|p| rel(root, &p, redaction)),
             files_direct: *files,
             files_aggregated: 0,
             components_emitted: 0,
@@ -276,6 +302,8 @@ fn assemble(
                 ecosystems: attributions,
                 claimed_by,
                 ambiguity,
+                covered_by: nearest_project_root(&r.path, &project_roots)
+                    .map(|p| rel(root, &p, redaction)),
                 files_direct: r.files_direct,
                 files_aggregated: r.files_aggregated,
                 components_emitted: *per_dir_components.get(&r.path).unwrap_or(&0),

@@ -55,6 +55,7 @@ scan/exclusion boundary, or is unclaimed and exceeds `significance_threshold`.
 | `claimed_by` | list of reader ids | Non-empty iff `claim_status == claimed`. |
 | `ecosystems` | list of `EcosystemAttribution` | Zero or more. Independent of `claim_status` (FR-013). |
 | `ambiguity` | `AmbiguityRecord?` | Optional, independent of `claim_status` (FR-012b). |
+| `covered_by` | `string?` | Nearest enclosing project root (FR-008a), same redaction mode as `path`. `null` when nothing encloses it. Positional, not an attribution (FR-008b). |
 | `files_direct` | u64 | Files directly in this directory. |
 | `files_aggregated` | u64 | Rolled up from descendants that earned no record (FR-021b). |
 | `components_emitted` | u64 | FR-006. Zero here with a non-empty `claimed_by` is the FR-004 signal. |

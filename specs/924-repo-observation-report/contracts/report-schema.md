@@ -96,6 +96,29 @@ lockfiles across ecosystems — 27 `go.mod`, 24 `package.json`, 21 `Cargo.toml`
 — which readers do claim, and which are not waybill's dependencies. Claimed
 and ambiguous simultaneously, and the ambiguity is the more important half.
 
+## C-10 — Coverage, and the three questions it does not collapse
+
+A directory with no marker reports `covered_by`: the nearest enclosing
+directory that declares one. Positional, never an attribution — a directory
+inside a Go module is not claimed to be Go.
+
+Consumers MUST NOT read `covered_by == null` as "gap". Three separate queries:
+
+| question | query |
+|---|---|
+| known gap | `ecosystems[].support == "no_reader"` |
+| ambiguous | `ambiguity != null` |
+| unknown territory | `covered_by == null && ecosystems == []` |
+
+A directory holding an unsupported ecosystem's marker is *its own* project
+root, so it is covered **and** a gap. Collapsing the first query into the
+third would hide every ecosystem waybill can name but cannot read — the most
+actionable category the report produces.
+
+Coverage also never suppresses a record. A build-output tree sits under its
+project root; a covered directory holding 753,375 files is still worth seeing,
+and `files_direct` is how it is found.
+
 ## C-8 — What the report never does
 
 - Never transmits itself anywhere (FR-023).
