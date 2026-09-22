@@ -1,0 +1,145 @@
+# Verification record — milestone 924 (#932)
+
+## T031 — the schema gate has teeth
+
+A schema gate that stubs `$ref` resolution validates nothing while reporting
+green. This repository has shipped that failure before, so SC-006's test is
+not trusted on a passing run alone: the **failing** direction was observed.
+
+Both mutations were applied to the emitting code, run, and reverted.
+
+| mutation | result |
+|---|---|
+| emit a field absent from the schema | **FAILED** — `Additional properties are not allowed ('undocumented_teeth_probe' was unexpected)` |
+| emit an enum value outside the schema's set | **FAILED** — `"totally_made_up" is not one of "claimed", "unclaimed" or "excluded_by_policy"` |
+| restored | 7 passed |
+
+The first mutation is the one that matters for SC-006's second half — "the
+schema describes every field emitted". `additionalProperties: false` on every
+object is what makes that checkable rather than aspirational: a field added to
+the report without a matching schema entry fails here instead of drifting
+quietly.
+
+## T022a — the FR-010 guard
+
+FR-010 forbids this feature widening the file-tier `SourceShape` allowlist,
+which governs SBOM emission. It is a **negative** requirement with no other
+enforcement — nothing else in the suite fails if the allowlist grows. The test
+pins the variant count at 21 and names the consequence in its failure message.
+
+## T018 — the ecosystem table cannot rot silently
+
+Proven by mutation: adding `Cargo.toml` to `ecosystems.data` fails with
+
+```
+ecosystems.data is STALE — a reader now claims these markers, so the table is
+telling maintainers a closed gap is still open. Delete the offending lines:
+  Cargo.toml (cargo-but-we-do-support-this) is claimed by ["cargo"]
+```
+
+## SC-007 — two earlier versions passed without exercising anything
+
+Recorded because the pattern is the point, not the specific bug.
+
+| version | fixture | why it passed |
+|---|---|---|
+| 1 | no Go module at all | the network-capable path never ran |
+| 2 | Go module already in the local module cache | the resolver short-circuited before the proxy tier |
+| 3 (current) | uncached module, `GOMODCACHE` empty | the proxy tier is the only option left |
+
+Version 3 additionally asserts a **wall-clock bound**: a run against an
+unroutable proxy that takes longer than 3s attempted a fetch and waited for
+the failure. Measured control on the same fixture — `sbom scan`, which does
+not force offline — takes **5.196s** and logs `connection refused`; the report
+path takes **0.039s** with `proxy_count=0`.
+
+**A control is what made the defect findable.** The report path alone looked
+correct on both sides. Running the same fixture through a command that does
+*not* force offline is what separated "did not need the network" from "was
+never going to use it".
+
+## Harness bugs found, recorded so they are not rediscovered
+
+Two of my own, both of which produced failures that looked like product
+defects:
+
+1. **Shared output path keyed on process id.** Every test in a binary shares a
+   pid and cargo runs them in parallel, so they overwrote each other's reports
+   and failed in whichever order they finished.
+2. **Report written into the directory being scanned.** The second run then
+   observed the first run's output file and the determinism test failed. This
+   is also a real hazard for operators: `--output` inside the scan root
+   perturbs the very thing being reported on.
+
+## T045 — pre-PR gate
+
+```
+>>> cargo +stable clippy --workspace --all-targets -j 2 -- -D warnings   exit=0
+>>> cargo +stable test --workspace --no-fail-fast -j 2 -- --test-threads=2  exit=0
+
+316 suites ok, 0 FAILED
+total: 5969 passed; 0 failed; 28 ignored
+```
+
+## T044 — corpus goldens
+
+22 passed, 8 failed — **identical to `origin/main`**. The eight are the known
+local-vs-CI divergence (a warm local module cache resolves edges a clean runner
+cannot), not movement from this feature, which emits no SBOM content at all.
+
+## T043 — SC-009 at final state
+
+6/6: two repositories × three formats. CycloneDX and SPDX 2.3 by masked line
+comparison, SPDX 3 semantically — see `verify_sc009.py` for why one strategy
+does not fit all three.
+
+## An unreproduced census failure, recorded rather than dismissed
+
+During the `covered_by` work, one run of `repo_report_census` reported
+**6 passed, 1 failed**. It has not reproduced since:
+
+| condition | runs | result |
+|---|---|---|
+| quiet | 5 | all pass, 1.17–1.22s |
+| under deliberate 6-way CPU load | 3 | all pass, 1.25–1.26s |
+| after the harness fix below | 4 | all pass |
+
+**I do not have a cause, and I am not calling it a flake.** Two things are
+worth writing down.
+
+**First, a gap in how I ran it.** The failing invocation grepped only for
+`^test result` lines, so it never captured *which* test failed. The suite had
+run in 5.67s against a normal 1.2s, which suggested the 3-second wall-clock
+bound in the network test — but deliberate CPU load does not reproduce it, and
+that theory is unsupported. A run that can fail without recording what failed
+is a harness defect independent of the bug.
+
+**Second, a real hazard closed on the way past.** Both `repo_report_census` and
+`repo_report_ecosystems` wrote each report **into the directory being scanned**.
+That inflates file counts in the tree being reported on, can tip a directory
+over the significance threshold, and makes a second run observe the first run's
+output. The same defect had already been found and fixed in
+`repo_report_schema` and was not carried across. It is fixed in all three now.
+
+Whether it caused this failure is unknown. It was capable of causing one, which
+is reason enough.
+
+## Re-verification after `covered_by` (FR-008a)
+
+The emitted shape changed, so everything was re-run.
+
+```
+>>> cargo +stable clippy --workspace --all-targets -j 2 -- -D warnings   exit=0
+>>> cargo +stable test --workspace --no-fail-fast -j 2 -- --test-threads=2  exit=0
+
+316 suites ok, 0 FAILED
+total: 5971 passed; 0 failed; 28 ignored
+```
+
+SC-009 passes on its gating target. The self target is now advisory — see
+`baseline/README.md` for why a local cargo registry makes it unable to answer
+the question SC-009 asks.
+
+Schema conformance still has teeth after the additive bump: `covered_by` is in
+`required` with `additionalProperties: false` intact, so emitting it without a
+schema entry would fail exactly as T031's mutations did.

@@ -1,6 +1,6 @@
 # waybill Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-09-20
+Auto-generated from all feature plans. Last updated: 2026-09-21
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -387,6 +387,8 @@ Auto-generated from all feature plans. Last updated: 2026-09-20
 - none. Per-component metadata, emitted and never read back. (922-fix-resolve-namespace-merge)
 - Rust stable, workspace toolchain inherited. No nightly. `waybill-ebpf` untouched. + Existing only — `clap` (flag surface), `tracing` (the log line). **Zero new Cargo dependencies.** (923-enrich-batch-default)
 - unchanged. The batched path populates and reads the same enrichment cache. (923-enrich-batch-default)
+- Rust stable, workspace toolchain inherited. No nightly. + Existing only — `serde`/`serde_json` (repor (924-repo-observation-report)
+- None. The report is written to an operator-named path; no cache, (924-repo-observation-report)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -531,9 +533,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 924-repo-observation-report: Added Rust stable, workspace toolchain inherited. No nightly. + Existing only — `serde`/`serde_json` (repor
 - 923-enrich-batch-default: Added Rust stable, workspace toolchain inherited. No nightly. `waybill-ebpf` untouched. + Existing only — `clap` (flag surface), `tracing` (the log line). **Zero new Cargo dependencies.**
 - 922-fix-resolve-namespace-merge: Added Rust stable, workspace toolchain inherited. No nightly. `waybill-ebpf` untouched. + Existing only — `serde`/`serde_json`, `tracing`. **Zero new Cargo dependencies.**
-- 912-split-doc-self-describing: Added Rust stable, workspace toolchain inherited. No nightly. `waybill-ebpf` untouched. + Existing only — `serde`/`serde_json` (annotation value), `tracing`. **Zero new Cargo dependencies.**
 
 
 <!-- MANUAL ADDITIONS START -->

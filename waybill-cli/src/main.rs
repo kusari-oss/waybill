@@ -39,6 +39,7 @@ mod enrich;
 mod error;
 mod generate;
 mod policy;
+mod report;
 mod resolve;
 mod sbom;
 mod scan_fs;
@@ -280,6 +281,9 @@ enum Commands {
     /// docs/reference/identifiers.md §11 for the consumer-side
     /// verification recipe. (Milestone 108 US4.)
     Fingerprints(cli::fingerprints_cmd::FingerprintsCommand),
+    /// Repository observation — what waybill understood, ignored, and could
+    /// not determine (milestone 924, issue #932).
+    Repo(cli::report_cmd::RepoCommand),
 }
 
 #[tokio::main]
@@ -407,5 +411,6 @@ async fn main() -> anyhow::Result<std::process::ExitCode> {
             Ok(std::process::ExitCode::from(0))
         }
         Commands::Fingerprints(cmd) => cli::fingerprints_cmd::execute(cmd).await,
+        Commands::Repo(cmd) => cli::report_cmd::execute(cmd),
     }
 }
