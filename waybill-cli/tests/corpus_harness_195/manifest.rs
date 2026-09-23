@@ -34,6 +34,7 @@ pub enum Ecosystem {
     Npm,
     Python,
     JavaMaven,
+    Haskell,
     PolyglotImage,
 }
 
@@ -205,6 +206,34 @@ pub const TARGETS: &[CorpusTarget] = &[
                     Pants-managed JavaScript monorepo — regression-locks \
                     issue #760 option-B behavior",
         layer1: super::layer1_assertions::pants_example_javascript_layer1,
+    },
+    // #898 — Haskell source target. The FIRST Haskell target in either
+    // corpus; its absence is what let the #891 defects live, and the gap
+    // recurred as #937, #936, #938 and #943 in a single week, each found by
+    // hand rather than by a gate.
+    //
+    // Pinned upstream by SHA rather than through a kusari-sandbox mirror,
+    // matching go-cobra / rust-ripgrep / npm-express / python-flask /
+    // maven-guice. A commit SHA is already immutable; the Pants examples are
+    // mirrored for reasons specific to them.
+    //
+    // Verified at this revision before pinning: no `cabal.project.freeze` and
+    // no `stack.yaml.lock` (so the design-tier path is exercised, not a
+    // lockfile path); six `*.cabal` manifests across six directories, one
+    // reached through a `benchmarks/examples -> ../examples` symlink; eight
+    // `build-depends:` blocks and five conditional branches in the root
+    // manifest; 58 distinct declared dependencies, 48 of them in `aeson.cabal`
+    // alone. That denominator is what SC-002 measures against.
+    CorpusTarget {
+        name: "haskell-aeson",
+        source: SourceKind::Git { clone_url: "https://github.com/haskell/aeson" },
+        pinned: PinnedRef::Sha {
+            // v2.3.2.0 — resolved via `git ls-remote --tags https://github.com/haskell/aeson v2.3.2.0`
+            hex: "682162c66d26a770fbfb6271c797e646bc5c4f2e",
+        },
+        ecosystem: Ecosystem::Haskell,
+        exercises: "m143 .cabal design-tier emission + #936 cross-manifest constraint union + #938 per-dependency lockfile scoping + #943 case-preserving Hackage identifiers",
+        layer1: super::layer1_assertions::haskell_aeson_layer1,
     },
 ];
 

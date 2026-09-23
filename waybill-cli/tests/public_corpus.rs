@@ -161,6 +161,16 @@ fn corpus_pants_example_javascript() {
     run_target("pants-example-javascript");
 }
 
+// #898 — the first Haskell target in either corpus. Its absence is what let
+// the #891 defects live, and the gap recurred as #937, #936, #938 and #943
+// inside one week, each found by scanning a repository by hand rather than by
+// a gate. See `layer1_assertions::haskell_aeson_layer1` for the four tripwires.
+#[test]
+#[ignore = "public-corpus target: needs WAYBILL_RUN_PUBLIC_CORPUS=1 and a populated corpus cache. Ignored rather than silently early-returning: a gated test that prints `skipping` and reports `ok` is indistinguishable from one that compared goldens, and a green local run then implies corpus coverage it does not have. CI passes --include-ignored. See #918."]
+fn corpus_haskell_aeson() {
+    run_target("haskell-aeson");
+}
+
 // -----------------------------------------------------------------------
 // US4 — byte-identity across two consecutive runs (opt-in-within-opt-in)
 // -----------------------------------------------------------------------

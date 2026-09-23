@@ -730,3 +730,127 @@ pub fn image_postgres16_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFail
     }
     Ok(())
 }
+
+// -----------------------------------------------------------------------
+// haskell-aeson (#898)
+// -----------------------------------------------------------------------
+
+/// The first Haskell target in either corpus.
+///
+/// That absence is what let the #891 defects live as long as they did, and it
+/// recurred: between 2026-09-21 and 2026-09-23 this reader needed four separate
+/// fixes (#937, #936, #938, #943), every one of them found by scanning a real
+/// repository by hand rather than by a gate. `aeson` is chosen so those four
+/// classes are all exercised by one document, checked nightly instead of
+/// measured once.
+///
+/// Measured at the pinned revision under the harness invocation (`--root-name
+/// haskell-aeson --root-version 682162c6`), which matters — the operator
+/// override drops the ecosystem main-module PURL per m077:
+///
+///   - 63 components, 61 of them `pkg:hackage/*`, 61 design-tier
+///   - graph-completeness `partial`, reason `transitive-edges-unresolvable:
+///     hackage` — honest, since the repository carries no `cabal.project.freeze`
+///     and no `stack.yaml.lock`, so transitive resolution is genuinely
+///     unavailable rather than merely unattempted
+///   - six `*.cabal` manifests across six directories, one of them reached
+///     through a `benchmarks/examples -> ../examples` symlink
+pub fn haskell_aeson_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
+    // Tripwire 1 — the reader produces Hackage identifiers at all. Any
+    // regression that breaks `.cabal` parsing outright lands here first.
+    if !cdx_has_component_purl(&sboms.cdx, |p| p.starts_with("pkg:hackage/")) {
+        return Err(AssertionFailure {
+            invariant_name: "hackage-components-present",
+            format: FailureFormat::Cdx,
+            observed: "no pkg:hackage/* components at all".to_string(),
+            expected: "61 pkg:hackage/* components from six *.cabal manifests".to_string(),
+            suggested_action: "investigate the m143 haskell reader — `.cabal` build-depends extraction is broken",
+        });
+    }
+
+    // Tripwire 2 (#943) — Hackage names are case-sensitive, and this repository
+    // declares three that carry capitals. A lowercasing regression makes
+    // `QuickCheck` into `quickcheck`, which resolves to nothing; it also makes
+    // `Diff` into `diff`, which resolves to a REAL BUT DIFFERENT package and so
+    // fails silently with a confident wrong answer. This assertion is the only
+    // thing in the corpus that would notice.
+    if !cdx_has_component_purl(&sboms.cdx, |p| p == "pkg:hackage/QuickCheck") {
+        return Err(AssertionFailure {
+            invariant_name: "hackage-purl-case-preserved",
+            format: FailureFormat::Cdx,
+            observed: "pkg:hackage/QuickCheck absent (check for pkg:hackage/quickcheck)".to_string(),
+            expected: "pkg:hackage/QuickCheck, byte-for-byte as declared in aeson.cabal".to_string(),
+            suggested_action: "a case-folding regression in the haskell reader (#943). Hackage is case-sensitive: `quickcheck` 404s and `diff` names a different package than `Diff`. Case may be folded where names are MATCHED, never where identity is MINTED",
+        });
+    }
+
+    // Tripwire 3 (#936) — `base` is declared in all six manifests with differing
+    // bounds. Before the fix the emitted component kept whichever manifest
+    // sorted first and discarded the rest, so a consumer read one subproject's
+    // constraint as the whole repository's. A regression collapses this back to
+    // a single citation.
+    let base_multi_manifest = sboms
+        .cdx
+        .get("components")
+        .and_then(|c| c.as_array())
+        .map(|arr| {
+            arr.iter().any(|c| {
+                c.get("name").and_then(|n| n.as_str()) == Some("base")
+                    && c.get("properties")
+                        .and_then(|p| p.as_array())
+                        .map(|props| {
+                            props.iter().any(|p| {
+                                p.get("name").and_then(|n| n.as_str())
+                                    == Some("waybill:source-files")
+                                    && p.get("value")
+                                        .and_then(|v| v.as_str())
+                                        .and_then(|v| {
+                                            serde_json::from_str::<Vec<String>>(v).ok()
+                                        })
+                                        .map(|files| files.len() > 1)
+                                        .unwrap_or(false)
+                            })
+                        })
+                        .unwrap_or(false)
+            })
+        })
+        .unwrap_or(false);
+    if !base_multi_manifest {
+        return Err(AssertionFailure {
+            invariant_name: "cross-manifest-declarations-unioned",
+            format: FailureFormat::Cdx,
+            observed: "`base` cites at most one source manifest".to_string(),
+            expected: "`base` cites all six *.cabal manifests that declare it".to_string(),
+            suggested_action: "a #936 regression: design-tier components keyed on PURL alone discard every declaration after the first, losing both the constraint and the manifest path. They must key on (PURL, manifest) so the union passes can see them",
+        });
+    }
+
+    // Tripwire 4 (#938) — no lockfile exists here, so every dependency must
+    // reach design tier. A suppression regression empties the document while
+    // leaving the main modules, which is why component-count alone is a poor
+    // check and tier is the right one.
+    if !cdx_has_component_property(&sboms.cdx, "waybill:sbom-tier", |v| v == "design") {
+        return Err(AssertionFailure {
+            invariant_name: "design-tier-emission-not-suppressed",
+            format: FailureFormat::Cdx,
+            observed: "no design-tier components".to_string(),
+            expected: "61 design-tier components — the repository has no cabal.project.freeze and no stack.yaml.lock".to_string(),
+            suggested_action: "a #938 regression: design-tier emission suppressed without a lockfile supplying pins to replace what was silenced",
+        });
+    }
+
+    // Tripwire 5 — completeness stays honestly `partial`. Flipping to
+    // `complete` here would mean transitive edges were claimed for a repository
+    // that pins nothing, which is invention rather than improvement.
+    let gc = cdx_graph_completeness(&sboms.cdx).unwrap_or_else(|| "<missing>".to_string());
+    if gc != "partial" {
+        return Err(AssertionFailure {
+            invariant_name: "graph-completeness",
+            format: FailureFormat::Cdx,
+            observed: gc,
+            expected: "partial (reason `transitive-edges-unresolvable: hackage` — no freeze file, no stack lockfile)".to_string(),
+            suggested_action: "if this flipped to `complete`, check whether transitive edges were fabricated rather than resolved; if to `unknown`/`missing`, the haskell reader likely stopped emitting entirely",
+        });
+    }
+    Ok(())
+}
