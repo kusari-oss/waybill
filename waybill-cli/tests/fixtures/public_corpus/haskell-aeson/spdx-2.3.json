@@ -159,12 +159,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in stack.yaml / .cabal; no stack.yaml.lock fallback\"}"
         },
         {
@@ -232,12 +226,6 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -315,12 +303,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in stack.yaml / .cabal; no stack.yaml.lock fallback\"}"
         },
         {
@@ -393,12 +375,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-main-module\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"benchmarks\\\"]\"}"
         }
       ],
@@ -460,12 +436,6 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:demoted-from-main-module\",\"value\":\"true\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-main-module\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -537,12 +507,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-main-module\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -556,7 +520,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "aeson",
       "versionInfo": "2.3.2.0"
     },
@@ -604,12 +568,6 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"attoparsec-aeson/attoparsec-aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -687,12 +645,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-main-module\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"attoparsec-aeson\\\"]\"}"
         }
       ],
@@ -706,7 +658,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "attoparsec-aeson",
       "versionInfo": "2.2.2.1"
     },
@@ -754,12 +706,6 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:demoted-from-main-module\",\"value\":\"true\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-main-module\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -837,12 +783,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in stack.yaml / .cabal; no stack.yaml.lock fallback\"}"
         },
         {
@@ -915,12 +855,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in stack.yaml / .cabal; no stack.yaml.lock fallback\"}"
         },
         {
@@ -982,12 +916,6 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"benchmarks/aeson-benchmarks.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1071,12 +999,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in stack.yaml / .cabal; no stack.yaml.lock fallback\"}"
         },
         {
@@ -1138,12 +1060,6 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1215,12 +1131,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in stack.yaml / .cabal; no stack.yaml.lock fallback\"}"
         },
         {
@@ -1282,12 +1192,6 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"benchmarks/aeson-benchmarks.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1371,12 +1275,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in stack.yaml / .cabal; no stack.yaml.lock fallback\"}"
         },
         {
@@ -1444,12 +1342,6 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1533,12 +1425,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in stack.yaml / .cabal; no stack.yaml.lock fallback\"}"
         },
         {
@@ -1600,12 +1486,6 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"benchmarks/aeson-benchmarks.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1678,12 +1558,6 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1767,12 +1641,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in stack.yaml / .cabal; no stack.yaml.lock fallback\"}"
         },
         {
@@ -1851,12 +1719,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in stack.yaml / .cabal; no stack.yaml.lock fallback\"}"
         },
         {
@@ -1924,12 +1786,6 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -2007,12 +1863,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in stack.yaml / .cabal; no stack.yaml.lock fallback\"}"
         },
         {
@@ -2080,12 +1930,6 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:ghc-stdlib\",\"value\":\"true\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -2169,12 +2013,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in stack.yaml / .cabal; no stack.yaml.lock fallback\"}"
         },
         {
@@ -2242,12 +2080,6 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -2325,12 +2157,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in stack.yaml / .cabal; no stack.yaml.lock fallback\"}"
         },
         {
@@ -2398,12 +2224,6 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"benchmarks/aeson-benchmarks.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -2481,12 +2301,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in stack.yaml / .cabal; no stack.yaml.lock fallback\"}"
         },
         {
@@ -2554,12 +2368,6 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -2637,12 +2445,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in stack.yaml / .cabal; no stack.yaml.lock fallback\"}"
         },
         {
@@ -2715,12 +2517,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in stack.yaml / .cabal; no stack.yaml.lock fallback\"}"
         },
         {
@@ -2787,12 +2583,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in stack.yaml / .cabal; no stack.yaml.lock fallback\"}"
         },
         {
@@ -2854,12 +2644,6 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"benchmarks/aeson-benchmarks.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -2932,12 +2716,6 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3021,12 +2799,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in stack.yaml / .cabal; no stack.yaml.lock fallback\"}"
         },
         {
@@ -3094,12 +2866,6 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3183,12 +2949,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in stack.yaml / .cabal; no stack.yaml.lock fallback\"}"
         },
         {
@@ -3256,12 +3016,6 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3339,12 +3093,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in stack.yaml / .cabal; no stack.yaml.lock fallback\"}"
         },
         {
@@ -3417,12 +3165,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in stack.yaml / .cabal; no stack.yaml.lock fallback\"}"
         },
         {
@@ -3490,12 +3232,6 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3579,12 +3315,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in stack.yaml / .cabal; no stack.yaml.lock fallback\"}"
         },
         {
@@ -3657,12 +3387,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in stack.yaml / .cabal; no stack.yaml.lock fallback\"}"
         },
         {
@@ -3730,12 +3454,6 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3819,12 +3537,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in stack.yaml / .cabal; no stack.yaml.lock fallback\"}"
         },
         {
@@ -3898,12 +3610,6 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3987,12 +3693,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in stack.yaml / .cabal; no stack.yaml.lock fallback\"}"
         },
         {
@@ -4071,12 +3771,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in stack.yaml / .cabal; no stack.yaml.lock fallback\"}"
         },
         {
@@ -4149,12 +3843,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-main-module\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"text-iso8601\\\"]\"}"
         }
       ],
@@ -4216,12 +3904,6 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -4299,12 +3981,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in stack.yaml / .cabal; no stack.yaml.lock fallback\"}"
         },
         {
@@ -4372,12 +4048,6 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -4461,12 +4131,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in stack.yaml / .cabal; no stack.yaml.lock fallback\"}"
         },
         {
@@ -4534,12 +4198,6 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -4617,12 +4275,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in stack.yaml / .cabal; no stack.yaml.lock fallback\"}"
         },
         {
@@ -4690,12 +4342,6 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -4773,12 +4419,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in stack.yaml / .cabal; no stack.yaml.lock fallback\"}"
         },
         {
@@ -4846,12 +4486,6 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"hackage-cabal-design\"}"
         },
         {
           "annotationDate": "<masked>",
