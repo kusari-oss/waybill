@@ -718,6 +718,11 @@ pub(crate) fn finalize(
     // nothing is indistinguishable from one for this purpose, and treating
     // it as authoritative deletes every dependency from the document — the
     // suppression below would fire with nothing to replace what it silenced.
+    // Canonical lockfile directory -> the set of dependency names that
+    // lockfile actually pins (#938). Both cabal freeze files and Stack
+    // lockfiles contribute; a directory absent from this map is governed by
+    // no lockfile at all.
+    let mut pins_by_dir: HashMap<PathBuf, HashSet<String>> = HashMap::new();
     let mut freeze_entries: Vec<CabalFreezeEntry> = Vec::new();
     let mut successful_freeze_dirs: HashSet<PathBuf> = HashSet::new();
     for path in &freeze_paths {
@@ -731,10 +736,27 @@ pub(crate) fn finalize(
                 );
             }
             Ok(entries) => {
-                freeze_entries.extend(entries);
+                // Record WHICH dependencies this lockfile actually pins, not
+                // merely that it parsed (#938). Suppression is decided per
+                // dependency below, so "a lockfile exists here" is not enough
+                // information to decide anything.
                 if let Some(dir) = path.parent() {
+                    let canon = std::fs::canonicalize(dir)
+                        .unwrap_or_else(|_| dir.to_path_buf());
+                    let slot = pins_by_dir.entry(canon).or_default();
+                    for e in &entries {
+                        // Only an EXACT pin suppresses the manifest's own
+                        // declaration. A `RangeConstraint` carries the same
+                        // class of information `build-depends` already does —
+                        // an acceptable set, not a chosen member — so it is
+                        // not grounds for silencing the declaration.
+                        if let CabalFreezeEntry::ExactPin { name, .. } = e {
+                            slot.insert(name.to_lowercase());
+                        }
+                    }
                     successful_freeze_dirs.insert(dir.to_path_buf());
                 }
+                freeze_entries.extend(entries);
             }
             Err(err) => {
                 tracing::warn!(
@@ -753,11 +775,18 @@ pub(crate) fn finalize(
     for path in &stack_lock_paths {
         match parse_stack_lock(path) {
             Ok((entries, snapshots)) => {
-                stack_lock_entries.extend(entries);
-                stack_snapshots.extend(snapshots);
                 if let Some(dir) = path.parent() {
+                    let canon = std::fs::canonicalize(dir)
+                        .unwrap_or_else(|_| dir.to_path_buf());
+                    let slot = pins_by_dir.entry(canon).or_default();
+                    for e in &entries {
+                        // Stack lockfile entries are always exact versions.
+                        slot.insert(e.name.to_lowercase());
+                    }
                     stack_lock_dirs.insert(dir.to_path_buf());
                 }
+                stack_lock_entries.extend(entries);
+                stack_snapshots.extend(snapshots);
             }
             Err(err) => {
                 tracing::warn!(
@@ -848,22 +877,29 @@ pub(crate) fn finalize(
     // Per FR-009 + sc005 remediation: "successful lockfile parse" determines
     // the fallback path, not mere file presence — malformed freeze files
     // should still trigger design-tier emission.
-    let any_successful_lockfile =
-        !successful_freeze_dirs.is_empty() || !stack_lock_dirs.is_empty();
+    //
+    // #938 — suppression is decided PER DEPENDENCY, against the lockfile that
+    // GOVERNS this `*.cabal`, rather than against a repository-global flag.
+    //
+    // The global flag was wrong twice over. A lockfile anywhere in the tree
+    // suppressed design-tier emission everywhere, so a package in an unrelated
+    // directory with no lockfile of its own simply lost its dependencies — the
+    // suppression fired with nothing to replace what it silenced. And within a
+    // governed directory it was all-or-nothing, so a dependency the lockfile
+    // does not mention was dropped too: it got no pin (the lockfile is silent
+    // on it) and no fallback (the lockfile suppressed it).
+    //
+    // A lockfile is authoritative about what it describes and says nothing
+    // about anything else. Cabal itself scopes `cabal.project.freeze` to the
+    // project that owns it.
     for (cabal_path, manifest) in &cabal_manifests {
         let cabal_dir = cabal_path.parent().map(|d| {
             std::fs::canonicalize(d).unwrap_or_else(|_| d.to_path_buf())
         });
-        let has_local_successful_lockfile = cabal_dir
-            .as_ref()
-            .map(|d| {
-                successful_freeze_dirs.iter().any(|fd| {
-                    std::fs::canonicalize(fd).unwrap_or_else(|_| fd.clone()) == *d
-                }) || stack_lock_dirs.iter().any(|fd| {
-                    std::fs::canonicalize(fd).unwrap_or_else(|_| fd.clone()) == *d
-                })
-            })
-            .unwrap_or(false);
+        // The pins supplied by the lockfile governing THIS `*.cabal`, if any.
+        let governing_pins: Option<&HashSet<String>> =
+            cabal_dir.as_ref().and_then(|d| pins_by_dir.get(d));
+        let has_local_successful_lockfile = governing_pins.is_some();
         let union_dep_names = collect_design_tier_deps(manifest)
             .into_iter()
             .map(|(dep, _scope)| dep.name.clone())
@@ -871,7 +907,7 @@ pub(crate) fn finalize(
         if let Some(main) = build_main_module(
             manifest,
             cabal_path,
-            has_local_successful_lockfile || any_successful_lockfile,
+            has_local_successful_lockfile,
             &union_dep_names,
         ) {
             let purl_key = main.purl.as_str().to_string();
@@ -879,10 +915,22 @@ pub(crate) fn finalize(
                 out.push(main);
             }
         }
-        if !has_local_successful_lockfile && !any_successful_lockfile {
+        {
             for component in
                 build_design_tier_components(manifest, cabal_path, &local_package_names)
             {
+                // A dependency keeps its design-tier entry unless the
+                // governing lockfile actually pins it (#938). With no
+                // governing lockfile, nothing is suppressed.
+                // Cabal package names are compared case-insensitively here
+                // because the freeze parser lowercases the names it extracts
+                // while `build-depends:` preserves the declared spelling
+                // (`QuickCheck`, `Cabal`).
+                if governing_pins
+                    .is_some_and(|pins| pins.contains(&component.name.to_lowercase()))
+                {
+                    continue;
+                }
                 // Keyed by (PURL, manifest) rather than PURL alone (#936).
                 //
                 // The same dependency declared in two manifests is two
@@ -1429,8 +1477,23 @@ fn build_freeze_component(entry: &CabalFreezeEntry) -> PackageDbEntry {
             }
         }
         CabalFreezeEntry::RangeConstraint { name, range } => {
-            let sanitized = sanitize_purl_version(range);
-            let purl_str = format!("pkg:hackage/{name}@{sanitized}");
+            // Versionless, like every other design-tier component (#938).
+            //
+            // This used to sanitise the RANGE into the version slot, producing
+            // `pkg:hackage/base@>=4.11_&&_<4.22` — syntactically a PURL,
+            // semantically meaningless, resolvable against nothing. m895
+            // removed exactly that shape from the `build-depends:` path; the
+            // freeze path kept it, and nothing noticed because a range-only
+            // freeze entry also suppressed the design-tier component that
+            // would have contradicted it.
+            //
+            // Now that a range no longer suppresses the declaration (FR-007d),
+            // the two would BOTH emit, and a fake-versioned PURL is a distinct
+            // component from the real versionless one — one dependency, two
+            // entries. Dropping the fabricated version makes the PURLs equal,
+            // so the m936 union merges them into one component carrying both
+            // constraints, which is what the project actually declared.
+            let purl_str = format!("pkg:hackage/{name}");
             let purl = Purl::new(&purl_str).unwrap_or_else(|_| fallback_purl());
             let mut extra_annotations = base_annotations("hackage-freeze");
             apply_ghc_stdlib_annotation(&mut extra_annotations, name);
@@ -1445,7 +1508,7 @@ fn build_freeze_component(entry: &CabalFreezeEntry) -> PackageDbEntry {
                 depends_ecosystem: None,
                 purl,
                 name: name.clone(),
-                version: sanitized,
+                version: String::new(),
                 arch: None,
                 source_path: String::new(),
                 depends: Vec::new(),
@@ -1848,15 +1911,6 @@ fn apply_ghc_stdlib_annotation(
             serde_json::Value::String("true".to_string()),
         );
     }
-}
-
-fn sanitize_purl_version(raw: &str) -> String {
-    raw.chars()
-        .map(|c| match c {
-            '/' | '?' | '#' | ' ' => '_',
-            other => other,
-        })
-        .collect()
 }
 
 fn fallback_purl() -> Purl {
