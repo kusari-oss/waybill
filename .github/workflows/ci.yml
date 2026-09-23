@@ -249,6 +249,11 @@ jobs:
       - name: Install stable Rust
         uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable (2026-04-25)
         with:
+          # Must match `channel` in rust-toolchain.toml. Without this the
+          # action installs `stable`, then rustup auto-installs the pinned
+          # toolchain on the first cargo call — two downloads per job.
+          # Measured on PR #944: +2m18s linux, +5m43s macOS, +6m03s windows.
+          toolchain: "1.98.1"
           components: clippy
 
       - name: Cache cargo + build artifacts
@@ -467,6 +472,11 @@ jobs:
       - name: Install stable Rust
         uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable (2026-04-25)
         with:
+          # Must match `channel` in rust-toolchain.toml. Without this the
+          # action installs `stable`, then rustup auto-installs the pinned
+          # toolchain on the first cargo call — two downloads per job.
+          # Measured on PR #944: +2m18s linux, +5m43s macOS, +6m03s windows.
+          toolchain: "1.98.1"
           components: clippy
 
       - name: Cache cargo + build artifacts
@@ -534,6 +544,11 @@ jobs:
       - name: Install stable Rust
         uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable (2026-04-25)
         with:
+          # Must match `channel` in rust-toolchain.toml. Without this the
+          # action installs `stable`, then rustup auto-installs the pinned
+          # toolchain on the first cargo call — two downloads per job.
+          # Measured on PR #944: +2m18s linux, +5m43s macOS, +6m03s windows.
+          toolchain: "1.98.1"
           components: clippy
 
       - name: Cache cargo + build artifacts
@@ -649,6 +664,11 @@ jobs:
       - name: Install stable Rust
         uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable (2026-04-25)
         with:
+          # Must match `channel` in rust-toolchain.toml. Without this the
+          # action installs `stable`, then rustup auto-installs the pinned
+          # toolchain on the first cargo call — two downloads per job.
+          # Measured on PR #944: +2m18s linux, +5m43s macOS, +6m03s windows.
+          toolchain: "1.98.1"
           components: clippy
 
       - name: Make stable the default toolchain
@@ -778,6 +798,11 @@ jobs:
       - name: Install stable Rust
         uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable (2026-04-25)
         with:
+          # Must match `channel` in rust-toolchain.toml. Without this the
+          # action installs `stable`, then rustup auto-installs the pinned
+          # toolchain on the first cargo call — two downloads per job.
+          # Measured on PR #944: +2m18s linux, +5m43s macOS, +6m03s windows.
+          toolchain: "1.98.1"
           components: clippy
 
       - name: Cache cargo + build artifacts
