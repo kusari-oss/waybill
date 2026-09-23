@@ -174,7 +174,13 @@ fn emit_for_lockfile(path: &Path, doc: &FlakeLockDocument) -> Vec<PackageDbEntry
             depends,
             maintainer: None,
             licenses: Vec::new(),
-            lifecycle_scope: None,
+            // FR-007a — a flake input is part of the BUILD ENVIRONMENT, not of
+            // the project's dependency closure. This makes
+            // `apply_lifecycle_scope_to_edges` rewrite any edge pointing here
+            // from `DependsOn` to `BuildDependsOn`, which emits SPDX 2.3
+            // `BUILD_DEPENDENCY_OF` and a filterable CycloneDX non-runtime
+            // scope. A consumer filtering to runtime drops these on that signal.
+            lifecycle_scope: Some(waybill_common::resolution::LifecycleScope::Build),
             requirement_ranges: Vec::new(),
             source_type: Some(id.source_type.to_string()),
             buildinfo_status: None,
@@ -240,6 +246,107 @@ pub(crate) fn finalize(paths: NixDiscoveredPaths) -> Vec<PackageDbEntry> {
         }
     }
     out
+}
+
+/// FR-007 — attach the flake's own inputs to the project that builds with them.
+///
+/// Runs after every reader, because the thing an input attaches to comes from a
+/// different reader entirely: the project's main module. A reader cannot emit
+/// this edge from where it sits — relationships are built from `entry.depends`
+/// resolved by name with `from` set to the entry's own PURL, and the document
+/// root is chosen by the root selector at emit time.
+///
+/// Only inputs that **nothing else depends on** are attached. An input declared
+/// by another input already has its edge from that declarer (FR-008), and
+/// re-parenting it to the project would misreport who asked for it.
+///
+/// The edge is emitted as `DependsOn` and rewritten to `BuildDependsOn` by
+/// `apply_lifecycle_scope_to_edges`, because every emitted input carries
+/// `LifecycleScope::Build`.
+pub(crate) fn attach_inputs_to_projects(
+    components: &[waybill_common::resolution::ResolvedComponent],
+    relationships: &mut Vec<waybill_common::resolution::Relationship>,
+) {
+    use waybill_common::resolution::{EnrichmentProvenance, Relationship, RelationshipType};
+
+    // Inputs that already have an inbound edge are spoken for.
+    let depended_on: std::collections::HashSet<&str> =
+        relationships.iter().map(|r| r.to.as_str()).collect();
+
+    let flake_inputs: Vec<&waybill_common::resolution::ResolvedComponent> = components
+        .iter()
+        .filter(|c| c.source_type.as_deref() == Some("nix-flake-input"))
+        .filter(|c| !depended_on.contains(c.purl.as_str()))
+        .collect();
+    if flake_inputs.is_empty() {
+        return;
+    }
+
+    // A main module is what becomes the document root. Matching on the
+    // directory the lockfile governs keeps the #938 scoping rule: a flake in
+    // one directory speaks for that directory's project, not the whole tree.
+    let main_modules: Vec<(&str, &waybill_common::resolution::ResolvedComponent)> = components
+        .iter()
+        .filter(|c| {
+            c.source_type
+                .as_deref()
+                .is_some_and(|t| t.ends_with("main-module"))
+        })
+        .filter_map(|c| {
+            c.evidence
+                .source_file_paths
+                .first()
+                .and_then(|p| Path::new(p).parent())
+                .and_then(|d| d.to_str())
+                .map(|d| (d, c))
+        })
+        .collect();
+    if main_modules.is_empty() {
+        return;
+    }
+
+    let mut added = 0usize;
+    for input in &flake_inputs {
+        let Some(flake_dir) = input
+            .evidence
+            .source_file_paths
+            .first()
+            .and_then(|p| Path::new(p).parent())
+            .and_then(|d| d.to_str())
+        else {
+            continue;
+        };
+        // Longest matching prefix: the project nearest the flake owns it.
+        let owner = main_modules
+            .iter()
+            .filter(|(dir, _)| dir.starts_with(flake_dir))
+            .max_by_key(|(dir, _)| dir.len());
+        let Some((_, main)) = owner else { continue };
+        if main.purl.as_str() == input.purl.as_str() {
+            continue;
+        }
+        relationships.push(Relationship {
+            from: main.purl.as_str().to_string(),
+            to: input.purl.as_str().to_string(),
+            relationship_type: RelationshipType::DependsOn,
+            provenance: EnrichmentProvenance {
+                source: input
+                    .evidence
+                    .source_file_paths
+                    .first()
+                    .cloned()
+                    .unwrap_or_default(),
+                data_type: "nix-flake-input".to_string(),
+            },
+        });
+        added += 1;
+    }
+    if added > 0 {
+        tracing::info!(
+            edges = added,
+            "nix: attached flake inputs to the projects they build (FR-007, build-scoped)"
+        );
+    }
 }
 
 #[cfg(test)]
@@ -423,6 +530,129 @@ mod tests {
             !e2[0].extra_annotations.contains_key("waybill:nix-original-pin-state"),
             "an exact revision cannot move, so there is no pin-state to report"
         );
+    }
+
+    fn rc(purl: &str, source_type: &str, path: &str) -> waybill_common::resolution::ResolvedComponent {
+        use waybill_common::resolution::{ResolutionEvidence, ResolutionTechnique};
+        let p = waybill_common::types::purl::Purl::new(purl).unwrap();
+        waybill_common::resolution::ResolvedComponent {
+            build_inclusion: None,
+            name: p.name().to_string(),
+            version: p.version().unwrap_or("0.0.0").to_string(),
+            purl: p,
+            evidence: ResolutionEvidence {
+                technique: ResolutionTechnique::PackageDatabase,
+                confidence: 1.0,
+                source_connection_ids: vec![],
+                source_file_paths: vec![path.to_string()],
+                deps_dev_match: None,
+            },
+            licenses: vec![],
+            concluded_licenses: vec![],
+            hashes: vec![],
+            supplier: None,
+            cpes: vec![],
+            advisories: vec![],
+            occurrences: vec![],
+            lifecycle_scope: None,
+            requirement_ranges: Vec::new(),
+            source_type: Some(source_type.to_string()),
+            sbom_tier: None,
+            buildinfo_status: None,
+            evidence_kind: None,
+            binary_class: None,
+            binary_stripped: None,
+            linkage_kind: None,
+            detected_go: None,
+            confidence: None,
+            binary_packed: None,
+            npm_role: None,
+            raw_version: None,
+            parent_purl: None,
+            co_owned_by: None,
+            shade_relocation: None,
+            external_references: vec![],
+            extra_annotations: Default::default(),
+            binary_role: None,
+        }
+    }
+
+    /// FR-007 — a root-declared input attaches to the project that builds it.
+    #[test]
+    fn a_root_declared_input_attaches_to_the_projects_main_module() {
+        let components = vec![
+            rc("pkg:hackage/proj@1.0", "hackage-main-module", "/r/proj.cabal"),
+            rc("pkg:github/o/nixpkgs@abc", "nix-flake-input", "/r/flake.lock"),
+        ];
+        let mut rels = Vec::new();
+        attach_inputs_to_projects(&components, &mut rels);
+        assert_eq!(rels.len(), 1, "expected one project->input edge, got {rels:?}");
+        assert_eq!(rels[0].from, "pkg:hackage/proj@1.0");
+        assert_eq!(rels[0].to, "pkg:github/o/nixpkgs@abc");
+    }
+
+    /// FR-008 — an input another input already declares is NOT re-parented.
+    #[test]
+    fn a_transitively_declared_input_is_not_attached_to_the_project() {
+        use waybill_common::resolution::{EnrichmentProvenance, Relationship, RelationshipType};
+        let components = vec![
+            rc("pkg:hackage/proj@1.0", "hackage-main-module", "/r/proj.cabal"),
+            rc("pkg:github/o/parent@aaa", "nix-flake-input", "/r/flake.lock"),
+            rc("pkg:github/o/child@bbb", "nix-flake-input", "/r/flake.lock"),
+        ];
+        let mut rels = vec![Relationship {
+            from: "pkg:github/o/parent@aaa".to_string(),
+            to: "pkg:github/o/child@bbb".to_string(),
+            relationship_type: RelationshipType::DependsOn,
+            provenance: EnrichmentProvenance {
+                source: "/r/flake.lock".to_string(),
+                data_type: "package-database-depends".to_string(),
+            },
+        }];
+        attach_inputs_to_projects(&components, &mut rels);
+        let added: Vec<_> = rels.iter().filter(|r| r.from.starts_with("pkg:hackage/")).collect();
+        assert_eq!(
+            added.len(), 1,
+            "only the input nothing else depends on attaches to the project; the \
+             child already has its edge from its declarer (FR-008). got {added:?}"
+        );
+        assert_eq!(added[0].to, "pkg:github/o/parent@aaa");
+    }
+
+    /// FR-011 — a flake in one directory does not attach to another directory's
+    /// project. The #938 scoping rule, applied to this edge too.
+    #[test]
+    fn a_flake_attaches_to_the_nearest_project_not_an_unrelated_one() {
+        let components = vec![
+            rc("pkg:hackage/outer@1.0", "hackage-main-module", "/r/outer.cabal"),
+            rc("pkg:hackage/inner@2.0", "hackage-main-module", "/r/sub/inner.cabal"),
+            rc("pkg:github/o/dep@abc", "nix-flake-input", "/r/sub/flake.lock"),
+        ];
+        let mut rels = Vec::new();
+        attach_inputs_to_projects(&components, &mut rels);
+        assert_eq!(rels.len(), 1);
+        assert_eq!(
+            rels[0].from, "pkg:hackage/inner@2.0",
+            "the flake in /r/sub belongs to the project in /r/sub, not the outer one"
+        );
+    }
+
+    /// FR-007a — the edge must be build-scoped once the scope rewrite runs.
+    /// Asserting only that an edge exists would pass under a plain DependsOn,
+    /// which is the thing FR-007a forbids.
+    #[test]
+    fn every_emitted_input_carries_build_scope() {
+        let doc = parse_flake_lock_str(REAL_SINGLE_INPUT).unwrap();
+        for e in emit_for_lockfile(Path::new("/x/flake.lock"), &doc) {
+            assert_eq!(
+                e.lifecycle_scope,
+                Some(waybill_common::resolution::LifecycleScope::Build),
+                "a flake input is part of the build environment, not the \
+                 dependency closure (FR-007a). Without Build scope the edge \
+                 stays a plain DependsOn and claims the project depends on \
+                 nixpkgs the way it depends on its libraries"
+            );
+        }
     }
 
     #[test]

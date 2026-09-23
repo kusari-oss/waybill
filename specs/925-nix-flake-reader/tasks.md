@@ -80,13 +80,13 @@ represent a `follows` alias.
 
 ### Tests for User Story 2
 
-- [ ] T026 [P] [US2] Write `waybill-cli/tests/nix_flake_lock_graph.rs` asserting contract C-5: walking `dependencies[]` from the document root reaches every emitted input component (SC-003)
-- [ ] T027 [P] [US2] Extend `waybill-cli/tests/nix_flake_lock_graph.rs` to assert a nested input is an edge from its declaring input, not re-parented to the root (FR-008)
+- [X] T026 [P] [US2] Write `waybill-cli/tests/nix_flake_lock_graph.rs` asserting contract C-5: walking `dependencies[]` from the document root reaches every emitted input component (SC-003)
+- [X] T027 [P] [US2] Extend `waybill-cli/tests/nix_flake_lock_graph.rs` to assert a nested input is an edge from its declaring input, not re-parented to the root (FR-008)
 
 ### Implementation for User Story 2
 
-- [ ] T028 [US2] Emit a **build-scoped** edge from the consuming project to each root-declared input in `waybill-cli/src/scan_fs/package_db/nix/mod.rs` — `RelationshipType::BuildDependsOn` / `LifecycleScope::Build`, NOT a plain `DependsOn` (FR-007, FR-007a). The obstacle to solve: relationships are built from `entry.depends` resolved by name with `from` set to the entry's own PURL, while the document root's ref is chosen by the root selector at emit time, so a reader cannot emit this edge from where it sits
-- [ ] T028a [US2] Assert in `waybill-cli/tests/nix_flake_lock_graph.rs` that the project→input edge carries build scope and NOT runtime — a consumer filtering to runtime dependencies must drop flake inputs on that signal alone (FR-007a). Asserting only that an edge exists would pass under the wrong edge kind
+- [X] T028 [US2] Emit a **build-scoped** edge from the consuming project to each root-declared input in `waybill-cli/src/scan_fs/package_db/nix/mod.rs` — `RelationshipType::BuildDependsOn` / `LifecycleScope::Build`, NOT a plain `DependsOn` (FR-007, FR-007a). The obstacle to solve: relationships are built from `entry.depends` resolved by name with `from` set to the entry's own PURL, while the document root's ref is chosen by the root selector at emit time, so a reader cannot emit this edge from where it sits
+- [X] T028a [US2] Assert in `waybill-cli/tests/nix_flake_lock_graph.rs` that the project→input edge carries build scope and NOT runtime — a consumer filtering to runtime dependencies must drop flake inputs on that signal alone (FR-007a). Asserting only that an edge exists would pass under the wrong edge kind
 - [X] T029 [US2] Emit edges between input components for non-root nodes that declare their own inputs in `waybill-cli/src/scan_fs/package_db/nix/mod.rs`, resolving `Follows` edges to their target (FR-008, research R4)
 
 **Checkpoint**: SC-003 met; inputs are connected rather than merely present.
