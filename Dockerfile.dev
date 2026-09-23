@@ -1,4 +1,8 @@
-FROM rust:1.88-bookworm
+# Must match `channel` in rust-toolchain.toml. This image builds the main
+# workspace, and the repo's toolchain file is copied in, so a mismatch makes
+# rustup download the pinned toolchain inside the container -- slow, and it
+# defeats the point of pinning the base image at all.
+FROM rust:1.98.1-bookworm
 
 # eBPF build dependencies + curl/jq for ad-hoc tooling inside the container.
 RUN apt-get update && apt-get install -y \
