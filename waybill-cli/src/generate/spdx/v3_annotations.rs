@@ -610,6 +610,15 @@ fn push_document_fields(
                 json!(stats.unreadable_skipped.to_string()),
             );
         }
+        // #934 (C168): directories the shared default-descent skip
+        // set suppressed. Zero on `--image` scans by design.
+        if stats.build_dir_skipped > 0 {
+            push(
+                out,
+                "waybill:file-inventory-skipped-build-dirs",
+                json!(stats.build_dir_skipped.to_string()),
+            );
+        }
     }
 
     // C22 os-release-missing-fields

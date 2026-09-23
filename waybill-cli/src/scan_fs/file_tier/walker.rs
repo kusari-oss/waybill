@@ -110,6 +110,24 @@ pub(crate) struct WalkerConfig<'a> {
     /// operator's `--file-inventory=<value>` +
     /// `--file-inventory-source-shapes=<comma-list>` flag pair.
     pub source_tree_restriction: Option<Option<&'a super::source_shape::SourceShapeSet>>,
+    /// **Milestone 934 (#934)**: honor the shared default-descent
+    /// skip set ([`crate::scan_fs::package_db::project_roots::should_skip_default_descent`])
+    /// — `target`, `node_modules`, `vendor`, `dist`, `build`, `out`,
+    /// `coverage`, `venv`, `__pycache__`, and dot-prefixed names.
+    ///
+    /// The file-tier walker drives its own `safe_walk` rather than
+    /// participating in the m664 shared-walker registry, so it never
+    /// consulted that skip set. On any Rust repository with a
+    /// populated `target/` the result was hundreds of thousands of
+    /// build artifacts emitted as file-tier components, none of them
+    /// claimed by any reader.
+    ///
+    /// `true` for directory scans, so the file-tier walker honors the
+    /// same descent contract as every package-DB reader. `false` for
+    /// `--image` scans: an extracted container rootfs legitimately
+    /// contains `vendor/`, `build/` and dot-prefixed paths that a
+    /// forensic inventory must keep.
+    pub skip_build_dirs: bool,
 }
 
 /// Diagnostic skip-counters. Emitted as document-level annotations
@@ -137,6 +155,12 @@ pub(crate) struct WalkerStats {
     /// Files hashed AND surviving every filter — converted to
     /// `FileTierEntry` records.
     pub emitted: usize,
+    /// **Milestone 934 (#934)**: directories whose descent was
+    /// suppressed by the shared default-descent skip set. Counts
+    /// directories, not the files underneath them — the walker never
+    /// enumerates those, which is the point. Always zero when
+    /// [`WalkerConfig::skip_build_dirs`] is `false`.
+    pub build_dir_skipped: usize,
 }
 
 /// Walk the rootfs, classify + hash + dedupe each file, and return
@@ -153,9 +177,38 @@ pub(crate) fn walk_file_tier(
     let mut entries: HashMap<String, FileTierEntry> = HashMap::new();
     let mut stats = WalkerStats::default();
 
+    // #934: `safe_walk`'s `should_skip` is `Fn`, not `FnMut`, so the
+    // skip counter cannot live in `stats` until the walk returns.
+    let build_dir_skipped = std::cell::Cell::new(0usize);
+
+    let should_skip = |candidate: &Path, _root: &Path| {
+        if is_vcs_metadata_name(candidate) {
+            return true;
+        }
+        // #934: honor the same default-descent skip set the package-DB
+        // readers use. Directory scans only — see
+        // `WalkerConfig::skip_build_dirs`.
+        if cfg.skip_build_dirs
+            && candidate
+                .file_name()
+                .and_then(|n| n.to_str())
+                .is_some_and(
+                    crate::scan_fs::package_db::project_roots::should_skip_default_descent,
+                )
+        {
+            build_dir_skipped.set(build_dir_skipped.get() + 1);
+            tracing::debug!(
+                dir = %candidate.display(),
+                "file-tier walker: skipping build/dependency directory"
+            );
+            return true;
+        }
+        false
+    };
+
     let walk_cfg = crate::scan_fs::walk::WalkConfig {
         max_depth: 32,
-        should_skip: &|candidate, _root| is_vcs_metadata_name(candidate),
+        should_skip: &should_skip,
         exclude_set: cfg.exclude_set,
     };
 
@@ -279,6 +332,7 @@ pub(crate) fn walk_file_tier(
         })
         .collect();
     out.sort_by(|a, b| a.sha256_hex.cmp(&b.sha256_hex));
+    stats.build_dir_skipped = build_dir_skipped.get();
     (out, stats)
 }
 
@@ -401,11 +455,103 @@ mod tests {
             exclusion_globs: &g,
             dedupe_index: &d,
             exclude_set: &empty_exclude(),
+        skip_build_dirs: false,
         source_tree_restriction: None,
         };
         let (entries, stats) = walk_file_tier(tmp.path(), &cfg);
         assert!(entries.is_empty());
         assert_eq!(stats.emitted, 0);
+    }
+
+    // ---- #934: default-descent skip set ----
+
+    /// The control. With `skip_build_dirs: false` (the `--image`
+    /// path), an ELF under `target/debug/deps/` IS inventoried. Without
+    /// this the sibling test below would pass even if the walker had
+    /// stopped emitting that file for some unrelated reason.
+    #[test]
+    fn m934_build_dir_is_walked_when_skip_disabled() {
+        let tmp = TempDir::new().unwrap();
+        let payload = b"\x7FELF\x02\x01\x01\x00build-artifact";
+        write_file(tmp.path(), "target/debug/deps/libfoo.rlib", payload);
+        let g = make_globs();
+        let d = empty_dedupe();
+        let cfg = WalkerConfig {
+            size_limit_bytes: 100 * 1024 * 1024,
+            exclusion_globs: &g,
+            dedupe_index: &d,
+            exclude_set: &empty_exclude(),
+            skip_build_dirs: false,
+            source_tree_restriction: None,
+        };
+        let (entries, stats) = walk_file_tier(tmp.path(), &cfg);
+        assert_eq!(entries.len(), 1, "image-path walk must still inventory target/");
+        assert_eq!(entries[0].paths[0], PathBuf::from("target/debug/deps/libfoo.rlib"));
+        assert_eq!(stats.build_dir_skipped, 0);
+    }
+
+    /// The fix. Same tree, `skip_build_dirs: true` (the directory-scan
+    /// path): nothing under `target/` is emitted, and the counter says
+    /// one directory was declined.
+    #[test]
+    fn m934_build_dir_is_skipped_when_enabled() {
+        let tmp = TempDir::new().unwrap();
+        let payload = b"\x7FELF\x02\x01\x01\x00build-artifact";
+        write_file(tmp.path(), "target/debug/deps/libfoo.rlib", payload);
+        let g = make_globs();
+        let d = empty_dedupe();
+        let cfg = WalkerConfig {
+            size_limit_bytes: 100 * 1024 * 1024,
+            exclusion_globs: &g,
+            dedupe_index: &d,
+            exclude_set: &empty_exclude(),
+            skip_build_dirs: true,
+            source_tree_restriction: None,
+        };
+        let (entries, stats) = walk_file_tier(tmp.path(), &cfg);
+        assert!(entries.is_empty(), "target/ must not be inventoried on a directory scan");
+        assert_eq!(stats.build_dir_skipped, 1);
+    }
+
+    /// The skip is by directory base name, so it must not swallow
+    /// content that merely lives NEAR a build directory, nor a file
+    /// whose own name collides with a skip-set entry.
+    #[test]
+    fn m934_skip_is_scoped_to_directory_names() {
+        let tmp = TempDir::new().unwrap();
+        let elf = b"\x7FELF\x02\x01\x01\x00keep-me";
+        // A real source-tree binary that must survive.
+        write_file(tmp.path(), "bin/real-tool", elf);
+        // A FILE (not a directory) named `target` must not be skipped:
+        // `should_skip` gates descent, and the visit callback does not
+        // consult the skip set.
+        write_file(tmp.path(), "target", elf);
+        // Nested build dir under a legitimate path still goes.
+        write_file(tmp.path(), "crates/inner/target/debug/junk.rlib", elf);
+        let g = make_globs();
+        let d = empty_dedupe();
+        let cfg = WalkerConfig {
+            size_limit_bytes: 100 * 1024 * 1024,
+            exclusion_globs: &g,
+            dedupe_index: &d,
+            exclude_set: &empty_exclude(),
+            skip_build_dirs: true,
+            source_tree_restriction: None,
+        };
+        let (entries, _stats) = walk_file_tier(tmp.path(), &cfg);
+        // All three files share one payload, so they collapse to a
+        // single hash entry; assert on the PATH set instead of len().
+        let paths: Vec<String> = entries
+            .iter()
+            .flat_map(|e| e.paths.iter())
+            .map(|p| p.to_string_lossy().into_owned())
+            .collect();
+        assert!(paths.contains(&"bin/real-tool".to_string()), "got {paths:?}");
+        assert!(paths.contains(&"target".to_string()), "a FILE named target must survive: {paths:?}");
+        assert!(
+            !paths.iter().any(|p| p.contains("junk.rlib")),
+            "nested target/ must be skipped: {paths:?}"
+        );
     }
 
     #[test]
@@ -420,6 +566,7 @@ mod tests {
             exclusion_globs: &g,
             dedupe_index: &d,
             exclude_set: &empty_exclude(),
+        skip_build_dirs: false,
         source_tree_restriction: None,
         };
         let (entries, stats) = walk_file_tier(tmp.path(), &cfg);
@@ -442,6 +589,7 @@ mod tests {
             exclusion_globs: &g,
             dedupe_index: &d,
             exclude_set: &empty_exclude(),
+        skip_build_dirs: false,
         source_tree_restriction: None,
         };
         let (entries, stats) = walk_file_tier(tmp.path(), &cfg);
@@ -463,6 +611,7 @@ mod tests {
             exclusion_globs: &g,
             dedupe_index: &d,
             exclude_set: &empty_exclude(),
+        skip_build_dirs: false,
         source_tree_restriction: None,
         };
         let (entries, _stats) = walk_file_tier(tmp.path(), &cfg);
@@ -538,6 +687,7 @@ mod tests {
             exclusion_globs: &g,
             dedupe_index: &d,
             exclude_set: &empty_exclude(),
+        skip_build_dirs: false,
         source_tree_restriction: None,
         };
         let (entries, stats) = walk_file_tier(tmp.path(), &cfg);
@@ -559,6 +709,7 @@ mod tests {
             exclusion_globs: &g,
             dedupe_index: &d,
             exclude_set: &empty_exclude(),
+        skip_build_dirs: false,
         source_tree_restriction: None,
         };
         let (entries, stats) = walk_file_tier(tmp.path(), &cfg);
@@ -578,6 +729,7 @@ mod tests {
             exclusion_globs: &g,
             dedupe_index: &d,
             exclude_set: &empty_exclude(),
+        skip_build_dirs: false,
         source_tree_restriction: None,
         };
         let (entries, stats) = walk_file_tier(tmp.path(), &cfg);
@@ -598,6 +750,7 @@ mod tests {
             exclusion_globs: &g,
             dedupe_index: &d,
             exclude_set: &empty_exclude(),
+        skip_build_dirs: false,
         source_tree_restriction: None,
         };
         let (entries, stats) = walk_file_tier(tmp.path(), &cfg);
@@ -621,6 +774,7 @@ mod tests {
             exclusion_globs: &g,
             dedupe_index: &d,
             exclude_set: &empty_exclude(),
+        skip_build_dirs: false,
         source_tree_restriction: None,
         };
         let (entries, _stats) = walk_file_tier(tmp.path(), &cfg);
@@ -658,6 +812,7 @@ mod tests {
             exclusion_globs: &g,
             dedupe_index: &d,
             exclude_set: &empty_exclude(),
+        skip_build_dirs: false,
         source_tree_restriction: None,
         };
         let (entries, stats) = walk_file_tier(tmp.path(), &cfg);
@@ -682,6 +837,7 @@ mod tests {
             exclusion_globs: &g,
             dedupe_index: &d,
             exclude_set: &empty_exclude(),
+        skip_build_dirs: false,
         source_tree_restriction: None,
         };
         let (entries, stats) = walk_file_tier(tmp.path(), &cfg);
@@ -706,6 +862,7 @@ mod tests {
             exclusion_globs: &g,
             dedupe_index: &d,
             exclude_set: &empty_exclude(),
+        skip_build_dirs: false,
         source_tree_restriction: None,
         };
         let (entries, stats) = walk_file_tier(tmp.path(), &cfg);
@@ -740,6 +897,7 @@ mod tests {
             exclusion_globs: &g,
             dedupe_index: &d,
             exclude_set: &empty_exclude(),
+        skip_build_dirs: false,
         source_tree_restriction: None,
         };
         let (entries, _stats) = walk_file_tier(tmp.path(), &cfg);
@@ -805,6 +963,7 @@ mod tests {
             exclusion_globs: &g,
             dedupe_index: &d,
             exclude_set: &empty_exclude(),
+        skip_build_dirs: false,
         source_tree_restriction: None,
         };
         let (entries, _stats) = walk_file_tier(tmp.path(), &cfg);
@@ -894,6 +1053,7 @@ mod tests {
                 exclusion_globs: &g,
                 dedupe_index: &d,
                 exclude_set: &empty_exclude(),
+            skip_build_dirs: false,
             source_tree_restriction: None,
             };
             let (_entries, _stats) = walk_file_tier(tmp.path(), &cfg);
@@ -938,6 +1098,7 @@ mod tests {
             exclusion_globs: &g,
             dedupe_index: &d,
             exclude_set: &empty_exclude(),
+        skip_build_dirs: false,
         source_tree_restriction: None,
         };
         // The call returns without panic. Component count is NOT

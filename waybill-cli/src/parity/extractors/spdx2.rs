@@ -538,6 +538,7 @@ spdx23_anno!(c91_spdx23, "waybill:component-tier", component);
 spdx23_anno!(c92_spdx23, "waybill:file-paths", component);
 spdx23_anno!(c93_spdx23, "waybill:file-inventory-skipped-oversize", document);
 spdx23_anno!(c94_spdx23, "waybill:file-inventory-skipped-special-files", document);
+spdx23_anno!(c168_spdx23, "waybill:file-inventory-skipped-build-dirs", document);
 spdx23_anno!(c95_spdx23, "waybill:file-inventory-unreadable", document);
 spdx23_anno!(c96_spdx23, "waybill:file-paths-truncated", component);
 spdx23_anno!(c97_spdx23, "waybill:file-inventory-mode", document);

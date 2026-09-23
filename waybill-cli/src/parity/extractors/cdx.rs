@@ -757,6 +757,7 @@ cdx_anno!(c91_cdx, "waybill:component-tier", component);
 cdx_anno!(c92_cdx, "waybill:file-paths", component);
 cdx_anno!(c93_cdx, "waybill:file-inventory-skipped-oversize", document);
 cdx_anno!(c94_cdx, "waybill:file-inventory-skipped-special-files", document);
+cdx_anno!(c168_cdx, "waybill:file-inventory-skipped-build-dirs", document);
 cdx_anno!(c95_cdx, "waybill:file-inventory-unreadable", document);
 cdx_anno!(c96_cdx, "waybill:file-paths-truncated", component);
 cdx_anno!(c97_cdx, "waybill:file-inventory-mode", document);

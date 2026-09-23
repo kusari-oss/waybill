@@ -480,7 +480,14 @@ pub fn build_document(
             source_document_binding: artifacts.source_document_binding,
             identifiers: artifacts.identifiers,
             component_identifiers: artifacts.component_identifiers,
-            file_inventory_stats: None,
+            // #934: forwarded, not dropped — for the same reason the
+            // m671 note below gives for the mode marker. Hard-coding
+            // `None` here meant C93/C94/C95 (and C168) never reached
+            // SPDX 2.3 on the production path: `annotate_document`
+            // reads this view, not the caller's artifacts. The CDX and
+            // SPDX 3 emitters were unaffected, so the catalog's
+            // `SymmetricEqual` claim for those rows was false.
+            file_inventory_stats: artifacts.file_inventory_stats,
             // Milestone 671 T010 — propagate the outer mode + source-
             // shape restriction so the C156 (source-tree) + m133 US4
             // (`full`) markers reach `annotate_document`. The
@@ -535,7 +542,14 @@ pub fn build_document(
             source_document_binding: artifacts.source_document_binding,
             identifiers: artifacts.identifiers,
             component_identifiers: artifacts.component_identifiers,
-            file_inventory_stats: None,
+            // #934: forwarded, not dropped — for the same reason the
+            // m671 note below gives for the mode marker. Hard-coding
+            // `None` here meant C93/C94/C95 (and C168) never reached
+            // SPDX 2.3 on the production path: `annotate_document`
+            // reads this view, not the caller's artifacts. The CDX and
+            // SPDX 3 emitters were unaffected, so the catalog's
+            // `SymmetricEqual` claim for those rows was false.
+            file_inventory_stats: artifacts.file_inventory_stats,
             // Milestone 671 T010 — propagate the outer mode + source-
             // shape restriction so the C156 (source-tree) + m133 US4
             // (`full`) markers reach `annotate_document`. The

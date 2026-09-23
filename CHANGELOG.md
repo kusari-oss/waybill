@@ -7,6 +7,40 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Fixed: a default scan no longer inventories `target/` (#934)
+
+A default `waybill sbom scan --path .` against this repository emitted a
+**118 MB** CycloneDX document in **89 seconds**. It now emits **12.8 MB** in
+**9.8 seconds** — the same 5,350 package-tier components (5,222 source,
+114 design, 14 analyzed), with 52,425 file-tier build artifacts removed.
+
+The file-tier walker drives its own `safe_walk` rather than participating in
+the m664 shared-walker registry, so it never consulted the default-descent
+skip set that every package-DB reader honours. It inventoried `target/` in
+full: on this repository that was 52,374 components out of 52,581 file-tier
+components, none of them claimed by any reader.
+
+The issue attributed this to maven's contract-C10 `descend_into: [target]`
+override opening the directory to the file-tier walker. Measurement shows
+otherwise: with `--file-inventory=off` and maven's override untouched, the
+document is 12.6 MB and the package-tier counts are unchanged. The shared
+walker's traversal of `target/` claims nothing at all — it costs ~3 seconds
+and yields zero components. The file-tier walker would have walked `target/`
+even with no reader declaring any override.
+
+- **Directory scans only.** `--image` scans keep the full inventory: an
+  extracted container rootfs legitimately contains `vendor/`, `build/` and
+  dot-prefixed paths that a forensic inventory must keep.
+- **One file leaves the inventory that is not a build artifact.** The shared
+  skip set also declines dot-prefixed directories, so content such as
+  `.devcontainer/on-create-command.sh` is no longer emitted. This is the same
+  contract every package reader already applied; the file-tier walker was the
+  one component not honouring it.
+- **New C168 `waybill:file-inventory-skipped-build-dirs`** — a document-scope
+  count of directories declined, across all three formats (Principle X). It
+  reads 37 on this repository. Absent on `--image` scans by construction.
+
+
 ### New: Nix `flake.lock` inputs appear in the SBOM (#946)
 
 waybill claimed none of a Nix repository's files. On a public Haskell library
