@@ -1,0 +1,4265 @@
+{
+  "bomFormat": "CycloneDX",
+  "components": [
+    {
+      "bom-ref": "pkg:hackage/Diff",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "Diff",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\">=0.4    && <0.6  || ^>=1.0.2\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:hackage/Diff",
+      "scope": "excluded",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/OneTuple",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "OneTuple",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^>=0.4.1.1\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:hackage/OneTuple",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/QuickCheck",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "QuickCheck",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\",\"text-iso8601/text-iso8601.cabal\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\">=2.14.3   && <2.19\",\"^>=2.14.3   || ^>=2.15    || ^>=2.16.0.0 || ^>=2.17.1.0 || ^>=2.18.0.0\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\",\"text-iso8601\"]"
+        }
+      ],
+      "purl": "pkg:hackage/QuickCheck",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/aeson-benchmarks@0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "benchmarks/aeson-benchmarks.cabal"
+          }
+        ]
+      },
+      "name": "aeson-benchmarks",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"benchmarks/aeson-benchmarks.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-main-module"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-main-module"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"benchmarks\"]"
+        }
+      ],
+      "purl": "pkg:hackage/aeson-benchmarks@0",
+      "type": "library",
+      "version": "0"
+    },
+    {
+      "bom-ref": "pkg:hackage/aeson-examples@0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "examples/aeson-examples.cabal"
+          }
+        ]
+      },
+      "name": "aeson-examples",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"examples/aeson-examples.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-main-module"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-main-module"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"examples\"]"
+        }
+      ],
+      "purl": "pkg:hackage/aeson-examples@0",
+      "type": "library",
+      "version": "0"
+    },
+    {
+      "bom-ref": "pkg:hackage/aeson@2.3.2.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "aeson",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-main-module"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-main-module"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:hackage/aeson@2.3.2.0",
+      "type": "library",
+      "version": "2.3.2.0"
+    },
+    {
+      "bom-ref": "pkg:hackage/attoparsec",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "attoparsec-aeson/attoparsec-aeson.cabal"
+          }
+        ]
+      },
+      "name": "attoparsec",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"attoparsec-aeson/attoparsec-aeson.cabal\",\"attoparsec-iso8601/attoparsec-iso8601.cabal\",\"text-iso8601/text-iso8601.cabal\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\">=0.14.2   && <0.15\",\">=0.14.4  && <0.15\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"attoparsec-aeson\",\"attoparsec-iso8601\",\"text-iso8601\"]"
+        }
+      ],
+      "purl": "pkg:hackage/attoparsec",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/attoparsec-aeson@2.2.2.1",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "attoparsec-aeson/attoparsec-aeson.cabal"
+          }
+        ]
+      },
+      "name": "attoparsec-aeson",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"attoparsec-aeson/attoparsec-aeson.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-main-module"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-main-module"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"attoparsec-aeson\"]"
+        }
+      ],
+      "purl": "pkg:hackage/attoparsec-aeson@2.2.2.1",
+      "type": "library",
+      "version": "2.2.2.1"
+    },
+    {
+      "bom-ref": "pkg:hackage/attoparsec-iso8601@1.1.1.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "attoparsec-iso8601/attoparsec-iso8601.cabal"
+          }
+        ]
+      },
+      "name": "attoparsec-iso8601",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"attoparsec-iso8601/attoparsec-iso8601.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-main-module"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-main-module"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"attoparsec-iso8601\"]"
+        }
+      ],
+      "purl": "pkg:hackage/attoparsec-iso8601@1.1.1.0",
+      "type": "library",
+      "version": "1.1.1.0"
+    },
+    {
+      "bom-ref": "pkg:hackage/base",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "base",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\",\"attoparsec-aeson/attoparsec-aeson.cabal\",\"attoparsec-iso8601/attoparsec-iso8601.cabal\",\"benchmarks/aeson-benchmarks.cabal\",\"examples/aeson-examples.cabal\",\"text-iso8601/text-iso8601.cabal\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"<5\",\">=4.12.0.0 && <5\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\",\"attoparsec-aeson\",\"attoparsec-iso8601\",\"benchmarks\",\"examples\",\"text-iso8601\"]"
+        }
+      ],
+      "purl": "pkg:hackage/base",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/base-compat",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "base-compat",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:hackage/base-compat",
+      "scope": "excluded",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/base-compat-batteries",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "benchmarks/aeson-benchmarks.cabal"
+          }
+        ]
+      },
+      "name": "base-compat-batteries",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"benchmarks/aeson-benchmarks.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"benchmarks\"]"
+        }
+      ],
+      "purl": "pkg:hackage/base-compat-batteries",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/base-orphans",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "base-orphans",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\">=0.5.3  && <0.10\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:hackage/base-orphans",
+      "scope": "excluded",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/base16-bytestring",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "base16-bytestring",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\",\"benchmarks/aeson-benchmarks.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\",\"benchmarks\"]"
+        }
+      ],
+      "purl": "pkg:hackage/base16-bytestring",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/blaze-builder",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "benchmarks/aeson-benchmarks.cabal"
+          }
+        ]
+      },
+      "name": "blaze-builder",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"benchmarks/aeson-benchmarks.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"benchmarks\"]"
+        }
+      ],
+      "purl": "pkg:hackage/blaze-builder",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/buffer-builder",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "benchmarks/aeson-benchmarks.cabal"
+          }
+        ]
+      },
+      "name": "buffer-builder",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"benchmarks/aeson-benchmarks.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"benchmarks\"]"
+        }
+      ],
+      "purl": "pkg:hackage/buffer-builder",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/bytestring",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "bytestring",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\",\"attoparsec-aeson/attoparsec-aeson.cabal\",\"benchmarks/aeson-benchmarks.cabal\",\"examples/aeson-examples.cabal\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\">=0.10.8.2 && <0.13\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\",\"attoparsec-aeson\",\"benchmarks\",\"examples\"]"
+        }
+      ],
+      "purl": "pkg:hackage/bytestring",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/character-ps",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "character-ps",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\",\"attoparsec-aeson/attoparsec-aeson.cabal\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^>=0.1\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\",\"attoparsec-aeson\"]"
+        }
+      ],
+      "purl": "pkg:hackage/character-ps",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/containers",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "containers",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\",\"benchmarks/aeson-benchmarks.cabal\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\">=0.6.0.1  && <0.9\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\",\"benchmarks\"]"
+        }
+      ],
+      "purl": "pkg:hackage/containers",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/criterion",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "benchmarks/aeson-benchmarks.cabal"
+          }
+        ]
+      },
+      "name": "criterion",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"benchmarks/aeson-benchmarks.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"benchmarks\"]"
+        }
+      ],
+      "purl": "pkg:hackage/criterion",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/data-fix",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "data-fix",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^>=0.3.2\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:hackage/data-fix",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/deepseq",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "deepseq",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\",\"benchmarks/aeson-benchmarks.cabal\",\"examples/aeson-examples.cabal\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\">=1.4.4.0  && <1.6\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\",\"benchmarks\",\"examples\"]"
+        }
+      ],
+      "purl": "pkg:hackage/deepseq",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/directory",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "directory",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:hackage/directory",
+      "scope": "excluded",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/dlist",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "dlist",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^>=1.0\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:hackage/dlist",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/exceptions",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "exceptions",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\">=0.10.4   && <0.11\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:hackage/exceptions",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/filepath",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "filepath",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\",\"benchmarks/aeson-benchmarks.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\",\"benchmarks\"]"
+        }
+      ],
+      "purl": "pkg:hackage/filepath",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/generic-deriving",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "generic-deriving",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\">=1.10   && <1.15\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:hackage/generic-deriving",
+      "scope": "excluded",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/generically",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "generically",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\">=0.1 && <0.2\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:hackage/generically",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/hashable",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "hashable",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\",\"benchmarks/aeson-benchmarks.cabal\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^>=1.4.6.0  || ^>=1.5.0.0\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\",\"benchmarks\"]"
+        }
+      ],
+      "purl": "pkg:hackage/hashable",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/hermes-json",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "benchmarks/aeson-benchmarks.cabal"
+          }
+        ]
+      },
+      "name": "hermes-json",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"benchmarks/aeson-benchmarks.cabal\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\">=0.2.0.1 && <0.3\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"benchmarks\"]"
+        }
+      ],
+      "purl": "pkg:hackage/hermes-json",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/indexed-traversable",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "indexed-traversable",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^>=0.1.2\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:hackage/indexed-traversable",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/integer-conversion",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "integer-conversion",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\",\"attoparsec-aeson/attoparsec-aeson.cabal\",\"attoparsec-iso8601/attoparsec-iso8601.cabal\",\"text-iso8601/text-iso8601.cabal\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\">=0.1      && <0.2\",\"^>=0.1\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\",\"attoparsec-aeson\",\"attoparsec-iso8601\",\"text-iso8601\"]"
+        }
+      ],
+      "purl": "pkg:hackage/integer-conversion",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/integer-gmp",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "integer-gmp",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:hackage/integer-gmp",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/integer-logarithms",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "integer-logarithms",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\">=1      && <1.1\",\"^>=1.0.3.1\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:hackage/integer-logarithms",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/json",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "benchmarks/aeson-benchmarks.cabal"
+          }
+        ]
+      },
+      "name": "json",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"benchmarks/aeson-benchmarks.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"benchmarks\"]"
+        }
+      ],
+      "purl": "pkg:hackage/json",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/json-builder",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "benchmarks/aeson-benchmarks.cabal"
+          }
+        ]
+      },
+      "name": "json-builder",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"benchmarks/aeson-benchmarks.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"benchmarks\"]"
+        }
+      ],
+      "purl": "pkg:hackage/json-builder",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/network-uri",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "network-uri",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^>=2.6.4.1\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:hackage/network-uri",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/nothunks",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "nothunks",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\">=0.1.4 && <0.4\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:hackage/nothunks",
+      "scope": "excluded",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/primitive",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "primitive",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^>=0.8.0.0  || ^>=0.9.0.0\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:hackage/primitive",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/quickcheck-instances",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "quickcheck-instances",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\",\"text-iso8601/text-iso8601.cabal\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\">=0.3.29 && <0.5\",\">=0.3.29.1 && <0.5\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\",\"text-iso8601\"]"
+        }
+      ],
+      "purl": "pkg:hackage/quickcheck-instances",
+      "scope": "excluded",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/scientific",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "scientific",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\",\"attoparsec-aeson/attoparsec-aeson.cabal\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\">=0.3.7.0  && <0.4\",\"^>=0.3.7.0\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\",\"attoparsec-aeson\"]"
+        }
+      ],
+      "purl": "pkg:hackage/scientific",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/semialign",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "semialign",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^>=1.3      || ^>=1.4\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:hackage/semialign",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/strict",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "strict",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^>=0.5\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:hackage/strict",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/tagged",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "tagged",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\",\"benchmarks/aeson-benchmarks.cabal\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^>=0.8.7\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\",\"benchmarks\"]"
+        }
+      ],
+      "purl": "pkg:hackage/tagged",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/tasty",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "tasty",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\",\"text-iso8601/text-iso8601.cabal\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\">=1.4.3    && <1.6\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\",\"text-iso8601\"]"
+        }
+      ],
+      "purl": "pkg:hackage/tasty",
+      "scope": "excluded",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/tasty-bench",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "benchmarks/aeson-benchmarks.cabal"
+          }
+        ]
+      },
+      "name": "tasty-bench",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"benchmarks/aeson-benchmarks.cabal\",\"text-iso8601/text-iso8601.cabal\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\">=0.3.4   && <0.5\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"benchmarks\",\"text-iso8601\"]"
+        }
+      ],
+      "purl": "pkg:hackage/tasty-bench",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/tasty-golden",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "tasty-golden",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:hackage/tasty-golden",
+      "scope": "excluded",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/tasty-hunit",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "tasty-hunit",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\",\"text-iso8601/text-iso8601.cabal\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\">=0.10.0.3 && <0.11\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\",\"text-iso8601\"]"
+        }
+      ],
+      "purl": "pkg:hackage/tasty-hunit",
+      "scope": "excluded",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/tasty-quickcheck",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "tasty-quickcheck",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\",\"text-iso8601/text-iso8601.cabal\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\">=0.10.2   && <0.12\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\",\"text-iso8601\"]"
+        }
+      ],
+      "purl": "pkg:hackage/tasty-quickcheck",
+      "scope": "excluded",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/template-haskell",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "template-haskell",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\">=2.14.0.0 && <2.25\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:hackage/template-haskell",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/text",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "text",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\",\"attoparsec-aeson/attoparsec-aeson.cabal\",\"attoparsec-iso8601/attoparsec-iso8601.cabal\",\"benchmarks/aeson-benchmarks.cabal\",\"examples/aeson-examples.cabal\",\"text-iso8601/text-iso8601.cabal\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"<2\",\">=1.2.3.0  && <1.3  || >=2.0 && <2.2\",\">=1.2.3.0  && <1.3.0.0 || >=2.0 && <2.2\",\">=2\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\",\"attoparsec-aeson\",\"attoparsec-iso8601\",\"benchmarks\",\"examples\",\"text-iso8601\"]"
+        }
+      ],
+      "purl": "pkg:hackage/text",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/text-iso8601@0.2.0.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "text-iso8601/text-iso8601.cabal"
+          }
+        ]
+      },
+      "name": "text-iso8601",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"text-iso8601/text-iso8601.cabal\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-main-module"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:demoted-from-main-module",
+          "value": "true"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-main-module"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"text-iso8601\"]"
+        }
+      ],
+      "purl": "pkg:hackage/text-iso8601@0.2.0.0",
+      "type": "library",
+      "version": "0.2.0.0"
+    },
+    {
+      "bom-ref": "pkg:hackage/text-short",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "text-short",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^>=0.1.5\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:hackage/text-short",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/th-abstraction",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "th-abstraction",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^>=0.5.0.0  || ^>=0.6.0.0 || ^>=0.7.0.0\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:hackage/th-abstraction",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/these",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "these",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^>=1.2\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:hackage/these",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/time",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "time",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\",\"attoparsec-iso8601/attoparsec-iso8601.cabal\",\"benchmarks/aeson-benchmarks.cabal\",\"examples/aeson-examples.cabal\",\"text-iso8601/text-iso8601.cabal\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\">=1.8.0.2  && <1.16\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:ghc-stdlib",
+          "value": "true"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\",\"attoparsec-iso8601\",\"benchmarks\",\"examples\",\"text-iso8601\"]"
+        }
+      ],
+      "purl": "pkg:hackage/time",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/time-compat",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "time-compat",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\",\"attoparsec-iso8601/attoparsec-iso8601.cabal\",\"text-iso8601/text-iso8601.cabal\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\">=1.9.4    && <1.10\",\">=1.9.6 && <1.10\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\",\"attoparsec-iso8601\",\"text-iso8601\"]"
+        }
+      ],
+      "purl": "pkg:hackage/time-compat",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/unordered-containers",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "unordered-containers",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\",\"benchmarks/aeson-benchmarks.cabal\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^>=0.2.10.0\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\",\"benchmarks\"]"
+        }
+      ],
+      "purl": "pkg:hackage/unordered-containers",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/uuid-types",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "uuid-types",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^>=1.0.5\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:hackage/uuid-types",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/vector",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "vector",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\",\"attoparsec-aeson/attoparsec-aeson.cabal\",\"benchmarks/aeson-benchmarks.cabal\",\"examples/aeson-examples.cabal\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\">=0.12.0.1 && <0.14\",\"^>=0.13.0.0\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\",\"attoparsec-aeson\",\"benchmarks\",\"examples\"]"
+        }
+      ],
+      "purl": "pkg:hackage/vector",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:hackage/witherable",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "aeson.cabal"
+          }
+        ]
+      },
+      "name": "witherable",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"aeson.cabal\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^>=0.4.2    || ^>=0.5\"]"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:evidence-kind",
+          "value": "cabal-pkg-descriptor"
+        },
+        {
+          "name": "waybill:source-type",
+          "value": "hackage-cabal-design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:hackage/witherable",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:generic/file-tier?content-sha256=ace62ed50008570b74f411076e8d5d035003919759ec67d44fb9bbb21aee0605",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 1.0,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 1.0,
+                "technique": "hash-comparison"
+              }
+            ]
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "ace62ed50008570b74f411076e8d5d035003919759ec67d44fb9bbb21aee0605"
+        }
+      ],
+      "name": "run-hlint.sh",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"run-hlint.sh\"]"
+        },
+        {
+          "name": "waybill:component-tier",
+          "value": "file"
+        },
+        {
+          "name": "waybill:file-paths",
+          "value": "[\"run-hlint.sh\"]"
+        }
+      ],
+      "type": "file",
+      "version": ""
+    },
+    {
+      "bom-ref": "pkg:generic/file-tier?content-sha256=dd23e782fb6be3fe0079f0239c71fa48f378577ff7cc5bd9e694006240346ec8",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 1.0,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 1.0,
+                "technique": "hash-comparison"
+              }
+            ]
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "dd23e782fb6be3fe0079f0239c71fa48f378577ff7cc5bd9e694006240346ec8"
+        }
+      ],
+      "name": "Setup.lhs",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"Setup.lhs\"]"
+        },
+        {
+          "name": "waybill:component-tier",
+          "value": "file"
+        },
+        {
+          "name": "waybill:file-paths",
+          "value": "[\"Setup.lhs\"]"
+        }
+      ],
+      "type": "file",
+      "version": ""
+    }
+  ],
+  "compositions": [
+    {
+      "aggregate": "incomplete_first_party_only",
+      "assemblies": [
+        "haskell-aeson@682162c"
+      ]
+    },
+    {
+      "aggregate": "complete",
+      "dependencies": [
+        "haskell-aeson@682162c"
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "dependsOn": [
+        "pkg:hackage/aeson-benchmarks@0",
+        "pkg:hackage/aeson-examples@0",
+        "pkg:hackage/aeson@2.3.2.0",
+        "pkg:hackage/attoparsec-aeson@2.2.2.1",
+        "pkg:hackage/attoparsec-iso8601@1.1.1.0",
+        "pkg:hackage/text-iso8601@0.2.0.0"
+      ],
+      "ref": "haskell-aeson@682162c"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/file-tier?content-sha256=ace62ed50008570b74f411076e8d5d035003919759ec67d44fb9bbb21aee0605"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/file-tier?content-sha256=dd23e782fb6be3fe0079f0239c71fa48f378577ff7cc5bd9e694006240346ec8"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/Diff"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/OneTuple"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/QuickCheck"
+    },
+    {
+      "dependsOn": [
+        "pkg:hackage/aeson@2.3.2.0",
+        "pkg:hackage/attoparsec-aeson@2.2.2.1",
+        "pkg:hackage/base",
+        "pkg:hackage/base-compat-batteries",
+        "pkg:hackage/base16-bytestring",
+        "pkg:hackage/blaze-builder",
+        "pkg:hackage/buffer-builder",
+        "pkg:hackage/bytestring",
+        "pkg:hackage/containers",
+        "pkg:hackage/criterion",
+        "pkg:hackage/deepseq",
+        "pkg:hackage/filepath",
+        "pkg:hackage/hashable",
+        "pkg:hackage/hermes-json",
+        "pkg:hackage/json",
+        "pkg:hackage/json-builder",
+        "pkg:hackage/tagged",
+        "pkg:hackage/tasty-bench",
+        "pkg:hackage/text",
+        "pkg:hackage/time",
+        "pkg:hackage/unordered-containers",
+        "pkg:hackage/vector"
+      ],
+      "ref": "pkg:hackage/aeson-benchmarks@0"
+    },
+    {
+      "dependsOn": [
+        "pkg:hackage/aeson@2.3.2.0",
+        "pkg:hackage/base",
+        "pkg:hackage/bytestring",
+        "pkg:hackage/deepseq",
+        "pkg:hackage/text",
+        "pkg:hackage/time",
+        "pkg:hackage/vector"
+      ],
+      "ref": "pkg:hackage/aeson-examples@0"
+    },
+    {
+      "dependsOn": [
+        "pkg:hackage/Diff",
+        "pkg:hackage/OneTuple",
+        "pkg:hackage/QuickCheck",
+        "pkg:hackage/base",
+        "pkg:hackage/base-compat",
+        "pkg:hackage/base-orphans",
+        "pkg:hackage/base16-bytestring",
+        "pkg:hackage/bytestring",
+        "pkg:hackage/character-ps",
+        "pkg:hackage/containers",
+        "pkg:hackage/data-fix",
+        "pkg:hackage/deepseq",
+        "pkg:hackage/directory",
+        "pkg:hackage/dlist",
+        "pkg:hackage/exceptions",
+        "pkg:hackage/filepath",
+        "pkg:hackage/generic-deriving",
+        "pkg:hackage/generically",
+        "pkg:hackage/hashable",
+        "pkg:hackage/indexed-traversable",
+        "pkg:hackage/integer-conversion",
+        "pkg:hackage/integer-gmp",
+        "pkg:hackage/integer-logarithms",
+        "pkg:hackage/network-uri",
+        "pkg:hackage/nothunks",
+        "pkg:hackage/primitive",
+        "pkg:hackage/quickcheck-instances",
+        "pkg:hackage/scientific",
+        "pkg:hackage/semialign",
+        "pkg:hackage/strict",
+        "pkg:hackage/tagged",
+        "pkg:hackage/tasty",
+        "pkg:hackage/tasty-golden",
+        "pkg:hackage/tasty-hunit",
+        "pkg:hackage/tasty-quickcheck",
+        "pkg:hackage/template-haskell",
+        "pkg:hackage/text",
+        "pkg:hackage/text-iso8601@0.2.0.0",
+        "pkg:hackage/text-short",
+        "pkg:hackage/th-abstraction",
+        "pkg:hackage/these",
+        "pkg:hackage/time",
+        "pkg:hackage/time-compat",
+        "pkg:hackage/unordered-containers",
+        "pkg:hackage/uuid-types",
+        "pkg:hackage/vector",
+        "pkg:hackage/witherable"
+      ],
+      "ref": "pkg:hackage/aeson@2.3.2.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/attoparsec"
+    },
+    {
+      "dependsOn": [
+        "pkg:hackage/aeson@2.3.2.0",
+        "pkg:hackage/attoparsec",
+        "pkg:hackage/base",
+        "pkg:hackage/bytestring",
+        "pkg:hackage/character-ps",
+        "pkg:hackage/integer-conversion",
+        "pkg:hackage/scientific",
+        "pkg:hackage/text",
+        "pkg:hackage/vector"
+      ],
+      "ref": "pkg:hackage/attoparsec-aeson@2.2.2.1"
+    },
+    {
+      "dependsOn": [
+        "pkg:hackage/attoparsec",
+        "pkg:hackage/base",
+        "pkg:hackage/integer-conversion",
+        "pkg:hackage/text",
+        "pkg:hackage/time",
+        "pkg:hackage/time-compat"
+      ],
+      "ref": "pkg:hackage/attoparsec-iso8601@1.1.1.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/base"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/base-compat"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/base-compat-batteries"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/base-orphans"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/base16-bytestring"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/blaze-builder"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/buffer-builder"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/bytestring"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/character-ps"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/containers"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/criterion"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/data-fix"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/deepseq"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/directory"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/dlist"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/exceptions"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/filepath"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/generic-deriving"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/generically"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/hashable"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/hermes-json"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/indexed-traversable"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/integer-conversion"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/integer-gmp"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/integer-logarithms"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/json"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/json-builder"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/network-uri"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/nothunks"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/primitive"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/quickcheck-instances"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/scientific"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/semialign"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/strict"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/tagged"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/tasty"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/tasty-bench"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/tasty-golden"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/tasty-hunit"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/tasty-quickcheck"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/template-haskell"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/text"
+    },
+    {
+      "dependsOn": [
+        "pkg:hackage/QuickCheck",
+        "pkg:hackage/attoparsec",
+        "pkg:hackage/attoparsec-iso8601@1.1.1.0",
+        "pkg:hackage/base",
+        "pkg:hackage/integer-conversion",
+        "pkg:hackage/quickcheck-instances",
+        "pkg:hackage/tasty",
+        "pkg:hackage/tasty-bench",
+        "pkg:hackage/tasty-hunit",
+        "pkg:hackage/tasty-quickcheck",
+        "pkg:hackage/text",
+        "pkg:hackage/time",
+        "pkg:hackage/time-compat"
+      ],
+      "ref": "pkg:hackage/text-iso8601@0.2.0.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/text-short"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/th-abstraction"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/these"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/time"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/time-compat"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/unordered-containers"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/uuid-types"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/vector"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:hackage/witherable"
+    }
+  ],
+  "metadata": {
+    "authors": [
+      {
+        "name": "waybill"
+      }
+    ],
+    "component": {
+      "bom-ref": "haskell-aeson@682162c",
+      "cpe": "cpe:2.3:a:waybill:haskell-aeson:682162c:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "comment": "auto-detected from git remote `origin`",
+          "type": "vcs",
+          "url": "https://github.com/haskell/aeson"
+        }
+      ],
+      "name": "haskell-aeson",
+      "purl": "pkg:generic/haskell-aeson@682162c",
+      "type": "application",
+      "version": "682162c"
+    },
+    "licenses": [
+      {
+        "license": {
+          "id": "CC0-1.0"
+        }
+      }
+    ],
+    "lifecycles": [
+      {
+        "phase": "design"
+      }
+    ],
+    "properties": [
+      {
+        "name": "waybill:generation-context",
+        "value": "filesystem-scan"
+      },
+      {
+        "name": "waybill:cisa-2026-lifecycle",
+        "value": "after-build"
+      },
+      {
+        "name": "waybill:os-release-missing-fields",
+        "value": "ID,VERSION_ID"
+      },
+      {
+        "name": "waybill:trace-integrity-ring-buffer-overflows",
+        "value": "0"
+      },
+      {
+        "name": "waybill:trace-integrity-events-dropped",
+        "value": "0"
+      },
+      {
+        "name": "waybill:trace-integrity-uprobe-attach-failures",
+        "value": "0"
+      },
+      {
+        "name": "waybill:trace-integrity-kprobe-attach-failures",
+        "value": "0"
+      },
+      {
+        "name": "waybill:graph-completeness",
+        "value": "partial"
+      },
+      {
+        "name": "waybill:graph-completeness-reason",
+        "value": "transitive-edges-unresolvable: hackage"
+      },
+      {
+        "name": "waybill:workspaces-detected",
+        "value": "[\".\",\"attoparsec-aeson\",\"attoparsec-iso8601\",\"benchmarks\",\"examples\",\"text-iso8601\"]"
+      },
+      {
+        "name": "waybill:unresolved-declared-dep-count",
+        "value": "0"
+      },
+      {
+        "name": "waybill:cabal-entries-skipped",
+        "value": "0"
+      }
+    ],
+    "supplier": {
+      "name": "waybill contributors"
+    },
+    "timestamp": "<masked>",
+    "tools": {
+      "components": [
+        {
+          "name": "waybill",
+          "publisher": "waybill contributors",
+          "type": "application",
+          "version": "<masked-tool-version>"
+        }
+      ]
+    }
+  },
+  "serialNumber": "<masked>",
+  "specVersion": "1.6",
+  "version": 1,
+  "vulnerabilities": []
+}
