@@ -79,6 +79,7 @@ use serde::Deserialize;
 
 use waybill_common::resolution::LifecycleScope;
 use waybill_common::types::purl::Purl;
+use waybill_common::types::license::SpdxExpression;
 
 use super::exclude_path::ExclusionSet;
 use super::PackageDbEntry;
@@ -318,6 +319,14 @@ struct StackSnapshot {
 struct CabalManifest {
     name: Option<String>,
     version: Option<String>,
+    /// The project's own declared license (#954).
+    ///
+    /// Licenses otherwise reach a component only through enrichment, and the
+    /// main module is the LOCAL project — usually not a published package, so
+    /// there is no registry record to enrich from. If it is not read here it is
+    /// absent from the document permanently, and "what is this licensed under"
+    /// is among the first questions an SBOM is asked.
+    license: Option<SpdxExpression>,
     stanzas: Vec<CabalStanza>,
     hpack_generated: bool,
     /// Milestone 895 (FR-012a) — dependency entries in this file that could
@@ -488,6 +497,15 @@ fn cabal_name_re() -> &'static Regex {
 fn cabal_version_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| Regex::new(r"(?mi)^version:\s*(\S+)").expect("static cabal-version regex"))
+}
+
+/// `license:` in a `.cabal` file. Captures to end-of-line rather than `\S+`
+/// because an SPDX expression contains spaces — `BSD-3-Clause OR Apache-2.0`
+/// would otherwise be truncated to `BSD-3-Clause`, silently narrowing the
+/// project's own licensing claim.
+fn cabal_license_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(r"(?mi)^license:[ \t]*(\S[^\r\n]*)").expect("static cabal-license regex"))
 }
 
 fn cabal_stanza_re() -> &'static Regex {
@@ -1237,9 +1255,37 @@ fn parse_cabal_manifest(path: &Path) -> anyhow::Result<CabalManifest> {
     let hpack_generated = hpack_header_re().is_match(&text);
     let (stanzas, skipped_entries) = extract_stanzas_counting(&text);
 
+    // #954 — the project's own declared license.
+    //
+    // Canonicalised through `SpdxExpression::try_canonical`, following the m152
+    // RPM precedent: a `.cabal` may carry a string that is not a valid SPDX
+    // expression (legacy `AllRightsReserved`, a bare `LICENSE` filename, or a
+    // pre-SPDX spelling), and emitting an unverified string as though it were a
+    // license identifier is worse than emitting nothing. A value that will not
+    // canonicalise is logged and dropped rather than passed through.
+    let license = cabal_license_re()
+        .captures(&text)
+        .and_then(|c| c.get(1))
+        .map(|m| m.as_str().trim())
+        .filter(|raw| !raw.is_empty())
+        .and_then(|raw| match SpdxExpression::try_canonical(raw) {
+            Ok(expr) => Some(expr),
+            Err(err) => {
+                tracing::debug!(
+                    path = %path.display(),
+                    raw = raw,
+                    error = %err,
+                    "haskell: `license:` is not a valid SPDX expression; omitted \
+                     rather than emitted unverified (#954)"
+                );
+                None
+            }
+        });
+
     Ok(CabalManifest {
         name,
         version,
+        license,
         stanzas,
         hpack_generated,
         skipped_entries,
@@ -1727,7 +1773,11 @@ fn build_main_module(
         source_path: cabal_path.to_string_lossy().into_owned(),
         depends,
         maintainer: None,
-        licenses: Vec::new(),
+        // #954 — the project's own declared license. This component is the
+        // local project, which is usually not a published package, so
+        // enrichment has no registry record to draw on: read here or absent
+        // forever.
+        licenses: manifest.license.iter().cloned().collect(),
         lifecycle_scope: None,
         requirement_ranges: Vec::new(),
         source_type: Some("hackage-main-module".to_string()),
@@ -2193,6 +2243,7 @@ version: 0.1.0
         let manifest = CabalManifest {
             name: Some("my-app".to_string()),
             version: Some("0.1.0".to_string()),
+            license: None,
             stanzas: vec![
                 CabalStanza {
                     kind: StanzaKind::Library,
