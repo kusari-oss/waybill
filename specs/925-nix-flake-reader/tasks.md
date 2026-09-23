@@ -16,9 +16,9 @@ tests at `waybill-cli/tests/`, fixtures at `waybill-cli/tests/fixtures/nix/`.
 
 ## Phase 1: Setup (Shared Infrastructure)
 
-- [ ] T001 Create the reader module skeleton at `waybill-cli/src/scan_fs/package_db/nix/mod.rs` with `lockfile` and `identity` submodules declared
-- [ ] T002 Declare the `nix` module in `waybill-cli/src/scan_fs/package_db/mod.rs` alongside the existing readers
-- [ ] T003 Register a `ReaderRegistration` matching `flake.lock` in `waybill-cli/src/scan_fs/package_db/nix/mod.rs`, with no `on_dir` and no `descend_into` override (FR-001, research R6)
+- [X] T001 Create the reader module skeleton at `waybill-cli/src/scan_fs/package_db/nix/mod.rs` with `lockfile` and `identity` submodules declared
+- [X] T002 Declare the `nix` module in `waybill-cli/src/scan_fs/package_db/mod.rs` alongside the existing readers
+- [X] T003 Register a `ReaderRegistration` matching `flake.lock` in `waybill-cli/src/scan_fs/package_db/nix/mod.rs`, with no `on_dir` and no `descend_into` override (FR-001, research R6)
 
 ---
 
@@ -27,10 +27,10 @@ tests at `waybill-cli/tests/`, fixtures at `waybill-cli/tests/fixtures/nix/`.
 **Blocks every user story.** Nothing below can be built on a parser that cannot
 represent a `follows` alias.
 
-- [ ] T004 [P] Define `LockedRef` and `OriginalRef` in `waybill-cli/src/scan_fs/package_db/nix/lockfile.rs` per data-model.md Entities 3 and 4
-- [ ] T005 [P] Define `FlakeLockDocument` and `FlakeNode` in `waybill-cli/src/scan_fs/package_db/nix/lockfile.rs` per data-model.md Entities 1 and 2
-- [ ] T006 Define `InputEdge` in `waybill-cli/src/scan_fs/package_db/nix/lockfile.rs` as a discriminated type — `NodeRef(String)` from a JSON string, `Follows(Vec<String>)` from a JSON array (research R3, Principle IV)
-- [ ] T007 Implement `parse_flake_lock` in `waybill-cli/src/scan_fs/package_db/nix/lockfile.rs`, rejecting `version != 7` as `UnrecognisedVersion` and invalid JSON as `Malformed`, distinguishing the two in the diagnostic only (FR-010, data-model.md Entity 1 state)
+- [X] T004 [P] Define `LockedRef` and `OriginalRef` in `waybill-cli/src/scan_fs/package_db/nix/lockfile.rs` per data-model.md Entities 3 and 4
+- [X] T005 [P] Define `FlakeLockDocument` and `FlakeNode` in `waybill-cli/src/scan_fs/package_db/nix/lockfile.rs` per data-model.md Entities 1 and 2
+- [X] T006 Define `InputEdge` in `waybill-cli/src/scan_fs/package_db/nix/lockfile.rs` as a discriminated type — `NodeRef(String)` from a JSON string, `Follows(Vec<String>)` from a JSON array (research R3, Principle IV)
+- [X] T007 Implement `parse_flake_lock` in `waybill-cli/src/scan_fs/package_db/nix/lockfile.rs`, rejecting `version != 7` as `UnrecognisedVersion` and invalid JSON as `Malformed`, distinguishing the two in the diagnostic only (FR-010, data-model.md Entity 1 state)
 - [ ] T008 [P] Add verbatim real-format fixtures under `waybill-cli/tests/fixtures/nix/`: a single-`github`-input lockfile, a `tarball` input carrying `rev` but no owner/repo, a `follows` alias with an array-valued `inputs` entry, and a non-root node declaring its own inputs — copied from the lockfiles measured in research.md, not hand-written
 - [ ] T009 [P] Add constructed failure fixtures: `waybill-cli/tests/fixtures/nix/malformed/flake.lock` (invalid JSON), `.../unknown-version/flake.lock` (`version: 99`), `.../no-inputs/flake.lock`, and `.../two-flakes/{a,b}/flake.lock` for the per-directory scoping case
 - [ ] T010 Unit-test `parse_flake_lock` in `waybill-cli/src/scan_fs/package_db/nix/lockfile.rs` against every fixture from T008 and T009, asserting `follows` entries parse as `Follows` and never as `NodeRef`
@@ -49,21 +49,21 @@ represent a `follows` alias.
 
 - [ ] T011 [P] [US1] Write `waybill-cli/tests/nix_flake_lock_reader.rs` asserting contract C-1 and FR-002: one component per identifiable locked input, and none for root, `path`, `indirect` or `follows` aliases
 - [ ] T012 [P] [US1] Extend `waybill-cli/tests/nix_flake_lock_reader.rs` with contracts C-2 and C-3: a `github` input emits `pkg:github/<owner>/<repo>@<rev>` byte-for-byte, a `tarball` input emits `pkg:generic/<name>@<rev>`, and each component's `version` field equals the locked `rev` verbatim — untruncated, not normalised, not replaced by `lastModified`. The identifier and the version field are different slots; asserting the PURL contains the rev says nothing about which value populated `version`
-- [ ] T012a [P] [US1] Extend `waybill-cli/tests/nix_flake_lock_reader.rs` asserting no emitted PURL begins with `pkg:nix` (FR-013c, contract C-2). Kept separate from T012 so a mutation breaking one is not masked by the other passing: T012 asserts what IS emitted, this asserts what must never be
+- [X] T012a [P] [US1] Extend `waybill-cli/tests/nix_flake_lock_reader.rs` asserting no emitted PURL begins with `pkg:nix` (FR-013c, contract C-2). Kept separate from T012 so a mutation breaking one is not masked by the other passing: T012 asserts what IS emitted, this asserts what must never be
 - [ ] T013 [P] [US1] Extend `waybill-cli/tests/nix_flake_lock_reader.rs` with contract C-4: no native checksum field is populated for these components, and the NAR hash appears in its annotation with the `sha256-` prefix intact
 
 ### Implementation for User Story 1
 
-- [ ] T014 [US1] Implement host-typed identifier construction in `waybill-cli/src/scan_fs/package_db/nix/identity.rs` for `github`, `gitlab` and `sourcehut` inputs with a known `rev` (FR-013a), following the m128 `yocto/recipe.rs` pattern rather than calling its `SRC_URI`-shaped helper
-- [ ] T015 [US1] Implement the `pkg:generic/<name>@<rev>` fallback in `waybill-cli/src/scan_fs/package_db/nix/identity.rs` for `tarball` and `git` inputs, carrying the upstream URL through the existing source-url / source-type annotation channel (FR-013b)
-- [ ] T016 [US1] Skip `path` and `indirect` inputs in `waybill-cli/src/scan_fs/package_db/nix/mod.rs` (FR-003), and decline to emit an input with no `rev`, recording the omission rather than passing over it silently (data-model.md Entity 3 validation)
-- [ ] T017 [US1] Resolve `follows` aliases to their target node in `waybill-cli/src/scan_fs/package_db/nix/mod.rs` so no second component is minted for one underlying pin (FR-004)
-- [ ] T018 [US1] Record each input's upstream source location using the target formats' native field in `waybill-cli/src/scan_fs/package_db/nix/mod.rs` (FR-005, contract C-5's native-first half)
-- [ ] T019 [US1] Emit the NAR hash verbatim, SRI prefix intact, into its annotation in `waybill-cli/src/scan_fs/package_db/nix/mod.rs`, and populate no native checksum field (FR-009, FR-009a, contract A-1)
-- [ ] T020 [US1] Add the NAR-hash annotation row to `docs/reference/sbom-format-mapping.md` (FR-009b)
-- [ ] T021 [US1] Add matching NAR-hash extractors to `waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3}.rs` and register the row in `waybill-cli/src/parity/extractors/mod.rs`, or `every_catalog_row_has_an_extractor` and `holistic_parity` fail by construction (FR-009b)
-- [ ] T022 [US1] Sort emitted inputs by a total order over the identifier before emission in `waybill-cli/src/scan_fs/package_db/nix/mod.rs` — `nodes` is a JSON object and its iteration order is not a guarantee (SC-006, the #948 failure mode)
-- [ ] T023 [US1] Scope each `flake.lock` to the directory that contains it in `waybill-cli/src/scan_fs/package_db/nix/mod.rs`, so one lockfile never speaks for another directory (FR-011, contract C-9, the #938 rule applied from the start)
+- [X] T014 [US1] Implement host-typed identifier construction in `waybill-cli/src/scan_fs/package_db/nix/identity.rs` for `github`, `gitlab` and `sourcehut` inputs with a known `rev` (FR-013a), following the m128 `yocto/recipe.rs` pattern rather than calling its `SRC_URI`-shaped helper
+- [X] T015 [US1] Implement the `pkg:generic/<name>@<rev>` fallback in `waybill-cli/src/scan_fs/package_db/nix/identity.rs` for `tarball` and `git` inputs, carrying the upstream URL through the existing source-url / source-type annotation channel (FR-013b)
+- [X] T016 [US1] Skip `path` and `indirect` inputs in `waybill-cli/src/scan_fs/package_db/nix/mod.rs` (FR-003), and decline to emit an input with no `rev`, recording the omission rather than passing over it silently (data-model.md Entity 3 validation)
+- [X] T017 [US1] Resolve `follows` aliases to their target node in `waybill-cli/src/scan_fs/package_db/nix/mod.rs` so no second component is minted for one underlying pin (FR-004)
+- [X] T018 [US1] Record each input's upstream source location using the target formats' native field in `waybill-cli/src/scan_fs/package_db/nix/mod.rs` (FR-005, contract C-5's native-first half)
+- [X] T019 [US1] Emit the NAR hash verbatim, SRI prefix intact, into its annotation in `waybill-cli/src/scan_fs/package_db/nix/mod.rs`, and populate no native checksum field (FR-009, FR-009a, contract A-1)
+- [X] T020 [US1] Add the NAR-hash annotation row to `docs/reference/sbom-format-mapping.md` (FR-009b)
+- [X] T021 [US1] Add matching NAR-hash extractors to `waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3}.rs` and register the row in `waybill-cli/src/parity/extractors/mod.rs`, or `every_catalog_row_has_an_extractor` and `holistic_parity` fail by construction (FR-009b)
+- [X] T022 [US1] Sort emitted inputs by a total order over the identifier before emission in `waybill-cli/src/scan_fs/package_db/nix/mod.rs` — `nodes` is a JSON object and its iteration order is not a guarantee (SC-006, the #948 failure mode)
+- [X] T023 [US1] Scope each `flake.lock` to the directory that contains it in `waybill-cli/src/scan_fs/package_db/nix/mod.rs`, so one lockfile never speaks for another directory (FR-011, contract C-9, the #938 rule applied from the start)
 - [ ] T024 [US1] Assert the repo-report census counts `flake.lock` as claimed in `waybill-cli/tests/repo_report_census.rs` — it should follow from the T003 registration, so this task is verification, and a failure means the registration did not take (FR-014)
 - [ ] T024a [US1] Add the Nix files this feature does NOT read — `flake.nix`, `default.nix`, `shell.nix`, `*.nix` — to `waybill-cli/src/report/ecosystems.data` as recognised-but-unread markers, so they report as a known ecosystem rather than as wholly unknown. SC-004 requires zero Nix files unrecognised, and `flake.lock` alone is one of six on the reference repository
 - [ ] T025 [P] [US1] Add a determinism test to `waybill-cli/tests/nix_flake_lock_reader.rs`: two scans of one fixture emit a byte-identical component sequence (SC-006)
@@ -86,7 +86,7 @@ represent a `follows` alias.
 ### Implementation for User Story 2
 
 - [ ] T028 [US2] Emit an edge from the consuming project to each root-declared input in `waybill-cli/src/scan_fs/package_db/nix/mod.rs` (FR-007)
-- [ ] T029 [US2] Emit edges between input components for non-root nodes that declare their own inputs in `waybill-cli/src/scan_fs/package_db/nix/mod.rs`, resolving `Follows` edges to their target (FR-008, research R4)
+- [X] T029 [US2] Emit edges between input components for non-root nodes that declare their own inputs in `waybill-cli/src/scan_fs/package_db/nix/mod.rs`, resolving `Follows` edges to their target (FR-008, research R4)
 
 **Checkpoint**: SC-003 met; inputs are connected rather than merely present.
 
@@ -105,9 +105,9 @@ represent a `follows` alias.
 
 ### Implementation for User Story 3
 
-- [ ] T032 [US3] Emit the pre-resolution reference annotation in `waybill-cli/src/scan_fs/package_db/nix/mod.rs`, only when `original` differs from `locked` (FR-006, contract A-2)
-- [ ] T033 [US3] Add the original-reference annotation row to `docs/reference/sbom-format-mapping.md` (FR-009b applies to this annotation too)
-- [ ] T034 [US3] Add matching original-reference extractors to `waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3}.rs` and register the row in `waybill-cli/src/parity/extractors/mod.rs` (FR-009b, which binds this annotation as it does the NAR hash)
+- [X] T032 [US3] Emit the pre-resolution reference annotation in `waybill-cli/src/scan_fs/package_db/nix/mod.rs`, only when `original` differs from `locked` (FR-006, contract A-2)
+- [X] T033 [US3] Add the original-reference annotation row to `docs/reference/sbom-format-mapping.md` (FR-009b applies to this annotation too)
+- [X] T034 [US3] Add matching original-reference extractors to `waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3}.rs` and register the row in `waybill-cli/src/parity/extractors/mod.rs` (FR-009b, which binds this annotation as it does the NAR hash)
 
 **Checkpoint**: all three user stories complete.
 

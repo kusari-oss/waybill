@@ -265,6 +265,11 @@ impl ReaderId {
     /// callback. Migrated in milestone-664 US2 T050.
     pub const DART: ReaderId = ReaderId::new("dart");
 
+    /// Nix reader (milestone 925) — collects `flake.lock` during the shared
+    /// descent. No directory filter: a lockfile is found wherever the walker
+    /// already goes, and each governs only its own directory (FR-011).
+    pub const NIX: ReaderId = ReaderId::new("nix");
+
     /// Composer reader — collects `composer.json` manifests during the
     /// shared descent (`vendor/` is in the shared walker's default
     /// skip set — matches the legacy `should_skip_manifest_descent`
@@ -344,6 +349,7 @@ pub(crate) const ALL_READER_IDS: &[ReaderId] = &[
     ReaderId::COCOAPODS,
     ReaderId::COMPOSER,
     ReaderId::DART,
+    ReaderId::NIX,
     ReaderId::ELIXIR,
     ReaderId::SWIFT,
     ReaderId::VCPKG,
