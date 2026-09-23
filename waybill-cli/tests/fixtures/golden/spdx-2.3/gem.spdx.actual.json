@@ -4,61 +4,67 @@
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.1.0-alpha.69",
+      "annotator": "Tool: waybill-0.9.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:generation-context\",\"value\":\"filesystem-scan\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.1.0-alpha.69",
+      "annotator": "Tool: waybill-0.9.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cisa-2026-lifecycle\",\"value\":\"after-build\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.1.0-alpha.69",
+      "annotator": "Tool: waybill-0.9.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:os-release-missing-fields\",\"value\":[\"ID\",\"VERSION_ID\"]}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.1.0-alpha.69",
+      "annotator": "Tool: waybill-0.9.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness\",\"value\":\"complete\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.1.0-alpha.69",
+      "annotator": "Tool: waybill-0.9.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspaces-detected\",\"value\":\"[\\\".\\\"]\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.1.0-alpha.69",
+      "annotator": "Tool: waybill-0.9.0",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep-count\",\"value\":\"2\"}"
+    },
+    {
+      "annotationDate": "1970-01-01T00:00:00Z",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-0.9.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-ring-buffer-overflows\",\"value\":\"0\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.1.0-alpha.69",
+      "annotator": "Tool: waybill-0.9.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-events-dropped\",\"value\":\"0\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.1.0-alpha.69",
+      "annotator": "Tool: waybill-0.9.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-uprobe-attach-failures\",\"value\":[]}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.1.0-alpha.69",
+      "annotator": "Tool: waybill-0.9.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-kprobe-attach-failures\",\"value\":[]}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.1.0-alpha.69",
+      "annotator": "Tool: waybill-0.9.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"compositions\",\"value\":{\"complete_ecosystems\":[\"gem\"]}}"
     }
   ],
@@ -66,19 +72,19 @@
     "comment": "Scope: manifest (declared transitives included). Observed lifecycle phases: pre-build. Per-component scope detail in waybill:sbom-tier annotations.",
     "created": "1970-01-01T00:00:00Z",
     "creators": [
-      "Tool: waybill-0.1.0-alpha.69",
+      "Tool: waybill-0.9.0",
       "Organization: waybill contributors"
     ]
   },
   "dataLicense": "CC0-1.0",
   "documentDescribes": [
-    "SPDXRef-DocumentRoot-UZGSX7SQ6LXCFH5Q"
+    "SPDXRef-DocumentRoot-POAMS2LRLD3UNL5E"
   ],
-  "documentNamespace": "https://waybill.kusari.dev/spdx/CZ57EPXXSCCL6P5PNGQOYS3SQUZIO32F",
-  "name": "simple-bundle",
+  "documentNamespace": "https://waybill.kusari.dev/spdx/XIBPDH5A6LMSCOTLUM75LVWYEIA4QRNB",
+  "name": "Waybill source scan (identity unavailable)",
   "packages": [
     {
-      "SPDXID": "SPDXRef-DocumentRoot-UZGSX7SQ6LXCFH5Q",
+      "SPDXID": "SPDXRef-DocumentRoot-POAMS2LRLD3UNL5E",
       "downloadLocation": "NOASSERTION",
       "externalRefs": [
         {
@@ -105,31 +111,31 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"Gemfile.lock\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"Gemfile.lock\",\"sha256\":\"541146cad7a90425593c9bebc8585f7897fe8d185ef853b592afc4e9af8e3065\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -159,31 +165,31 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"Gemfile.lock\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"Gemfile.lock\",\"sha256\":\"541146cad7a90425593c9bebc8585f7897fe8d185ef853b592afc4e9af8e3065\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -213,31 +219,31 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"Gemfile.lock\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"Gemfile.lock\",\"sha256\":\"541146cad7a90425593c9bebc8585f7897fe8d185ef853b592afc4e9af8e3065\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -267,31 +273,31 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"Gemfile.lock\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"Gemfile.lock\",\"sha256\":\"541146cad7a90425593c9bebc8585f7897fe8d185ef853b592afc4e9af8e3065\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -321,31 +327,31 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"Gemfile.lock\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"Gemfile.lock\",\"sha256\":\"541146cad7a90425593c9bebc8585f7897fe8d185ef853b592afc4e9af8e3065\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -375,31 +381,31 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"Gemfile.lock\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"Gemfile.lock\",\"sha256\":\"541146cad7a90425593c9bebc8585f7897fe8d185ef853b592afc4e9af8e3065\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -429,31 +435,31 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"Gemfile.lock\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"Gemfile.lock\",\"sha256\":\"541146cad7a90425593c9bebc8585f7897fe8d185ef853b592afc4e9af8e3065\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -483,31 +489,31 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"Gemfile.lock\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"Gemfile.lock\",\"sha256\":\"541146cad7a90425593c9bebc8585f7897fe8d185ef853b592afc4e9af8e3065\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -537,31 +543,31 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"Gemfile.lock\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"Gemfile.lock\",\"sha256\":\"541146cad7a90425593c9bebc8585f7897fe8d185ef853b592afc4e9af8e3065\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -591,37 +597,37 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"path\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"Gemfile.lock\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"Gemfile.lock\",\"sha256\":\"541146cad7a90425593c9bebc8585f7897fe8d185ef853b592afc4e9af8e3065\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -651,37 +657,37 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"git\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"Gemfile.lock\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"Gemfile.lock\",\"sha256\":\"541146cad7a90425593c9bebc8585f7897fe8d185ef853b592afc4e9af8e3065\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -711,31 +717,31 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"Gemfile.lock\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"Gemfile.lock\",\"sha256\":\"541146cad7a90425593c9bebc8585f7897fe8d185ef853b592afc4e9af8e3065\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -765,31 +771,37 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"Gemfile.lock\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"Gemfile.lock\",\"sha256\":\"541146cad7a90425593c9bebc8585f7897fe8d185ef853b592afc4e9af8e3065\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep\",\"value\":\"diff-lcs\"}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -819,31 +831,37 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"Gemfile.lock\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"Gemfile.lock\",\"sha256\":\"541146cad7a90425593c9bebc8585f7897fe8d185ef853b592afc4e9af8e3065\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep\",\"value\":\"diff-lcs\"}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -873,31 +891,31 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"Gemfile.lock\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"Gemfile.lock\",\"sha256\":\"541146cad7a90425593c9bebc8585f7897fe8d185ef853b592afc4e9af8e3065\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -927,31 +945,31 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"Gemfile.lock\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"Gemfile.lock\",\"sha256\":\"541146cad7a90425593c9bebc8585f7897fe8d185ef853b592afc4e9af8e3065\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -981,31 +999,31 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"Gemfile.lock\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"Gemfile.lock\",\"sha256\":\"541146cad7a90425593c9bebc8585f7897fe8d185ef853b592afc4e9af8e3065\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -1032,47 +1050,47 @@
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-UZGSX7SQ6LXCFH5Q",
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-POAMS2LRLD3UNL5E",
       "relationshipType": "DESCRIBES",
       "spdxElementId": "SPDXRef-DOCUMENT"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-X445XBQQTVVT2QRP",
+      "relatedSpdxElement": "SPDXRef-Package-XTKK2VQX4KVZ2WZU",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-YWCQDJ2BTHI5GSS3"
+      "spdxElementId": "SPDXRef-DocumentRoot-POAMS2LRLD3UNL5E"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-G4RUEL22CLJMBZFD",
+      "relatedSpdxElement": "SPDXRef-Package-YNQ5SQJBK7DHJ5GJ",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-X445XBQQTVVT2QRP"
+      "spdxElementId": "SPDXRef-DocumentRoot-POAMS2LRLD3UNL5E"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-TF7KZG636E2WYOG4",
+      "relatedSpdxElement": "SPDXRef-Package-YWCQDJ2BTHI5GSS3",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-X445XBQQTVVT2QRP"
+      "spdxElementId": "SPDXRef-DocumentRoot-POAMS2LRLD3UNL5E"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-MZIZNOZFXPTTL3A7",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-M2UW7GZUIUH5QD3L"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-MZIZNOZFXPTTL3A7",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-PMPBKMPDRNPMKQSQ"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-4JPHR2PPVHB67S4U",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-X445XBQQTVVT2QRP"
+      "spdxElementId": "SPDXRef-Package-TJEJTY3TK6WNJVKY"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-MFSMZPHRYON4RF6E",
+      "relatedSpdxElement": "SPDXRef-Package-4JPHR2PPVHB67S4U",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-X445XBQQTVVT2QRP"
+      "spdxElementId": "SPDXRef-Package-TR5HW53UTITK2X66"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-FRJBYOVWWI6W3FKC",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-X445XBQQTVVT2QRP"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-TJEJTY3TK6WNJVKY",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-X445XBQQTVVT2QRP"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-GMGKOLOFGMASIEY4",
+      "relatedSpdxElement": "SPDXRef-Package-4JPHR2PPVHB67S4U",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-X445XBQQTVVT2QRP"
     },
@@ -1082,14 +1100,44 @@
       "spdxElementId": "SPDXRef-Package-X445XBQQTVVT2QRP"
     },
     {
+      "relatedSpdxElement": "SPDXRef-Package-FRJBYOVWWI6W3FKC",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-X445XBQQTVVT2QRP"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-G4RUEL22CLJMBZFD",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-X445XBQQTVVT2QRP"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-GMGKOLOFGMASIEY4",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-X445XBQQTVVT2QRP"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-MFSMZPHRYON4RF6E",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-X445XBQQTVVT2QRP"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-TF7KZG636E2WYOG4",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-X445XBQQTVVT2QRP"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-TJEJTY3TK6WNJVKY",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-X445XBQQTVVT2QRP"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-TR5HW53UTITK2X66",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-X445XBQQTVVT2QRP"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-4JPHR2PPVHB67S4U",
+      "relatedSpdxElement": "SPDXRef-Package-MZIZNOZFXPTTL3A7",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-TJEJTY3TK6WNJVKY"
+      "spdxElementId": "SPDXRef-Package-Y5OXYUAJ2AR7ARAQ"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-M2UW7GZUIUH5QD3L",
@@ -1107,39 +1155,9 @@
       "spdxElementId": "SPDXRef-Package-YNQ5SQJBK7DHJ5GJ"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-MZIZNOZFXPTTL3A7",
+      "relatedSpdxElement": "SPDXRef-Package-X445XBQQTVVT2QRP",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-M2UW7GZUIUH5QD3L"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-MZIZNOZFXPTTL3A7",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-PMPBKMPDRNPMKQSQ"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-MZIZNOZFXPTTL3A7",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-Y5OXYUAJ2AR7ARAQ"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-4JPHR2PPVHB67S4U",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-TR5HW53UTITK2X66"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-XTKK2VQX4KVZ2WZU",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-UZGSX7SQ6LXCFH5Q"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-YWCQDJ2BTHI5GSS3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-UZGSX7SQ6LXCFH5Q"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-YNQ5SQJBK7DHJ5GJ",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-UZGSX7SQ6LXCFH5Q"
+      "spdxElementId": "SPDXRef-Package-YWCQDJ2BTHI5GSS3"
     }
   ],
   "spdxVersion": "SPDX-2.3"

@@ -215,12 +215,12 @@
       "spdxElementId": "SPDXRef-DOCUMENT"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-ZKB4GX3JBL66K2UG",
+      "relatedSpdxElement": "SPDXRef-Package-B4LWOOIZZFVGZUVY",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-KBNX5THKJG2XKO6R"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-B4LWOOIZZFVGZUVY",
+      "relatedSpdxElement": "SPDXRef-Package-ZKB4GX3JBL66K2UG",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-KBNX5THKJG2XKO6R"
     }

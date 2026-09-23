@@ -66,6 +66,30 @@ pub enum SpdxRelationshipType {
     BuiltFrom,
 }
 
+impl SpdxRelationshipType {
+    /// The SPDX 2.3 `relationshipType` string, matching the serde rename.
+    ///
+    /// Written as an exhaustive match rather than derived from the enum's
+    /// declaration order: sorting on a discriminant would silently reorder
+    /// every emitted document the next time a variant is inserted in the
+    /// middle of the list, and a new variant added here is a compile error
+    /// rather than a wrong sort key.
+    fn as_spdx_str(self) -> &'static str {
+        match self {
+            Self::Describes => "DESCRIBES",
+            Self::DependsOn => "DEPENDS_ON",
+            Self::DevDependencyOf => "DEV_DEPENDENCY_OF",
+            Self::BuildDependencyOf => "BUILD_DEPENDENCY_OF",
+            Self::TestDependencyOf => "TEST_DEPENDENCY_OF",
+            Self::ProvidedDependencyOf => "PROVIDED_DEPENDENCY_OF",
+            Self::OptionalDependencyOf => "OPTIONAL_DEPENDENCY_OF",
+            Self::Contains => "CONTAINS",
+            Self::ContainedBy => "CONTAINED_BY",
+            Self::BuiltFrom => "BUILT_FROM",
+        }
+    }
+}
+
 /// One SPDX 2.3 relationship edge.
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct SpdxRelationship {
@@ -349,6 +373,36 @@ pub fn build_relationships(
     }
 
     out
+}
+
+/// Put the relationship array in a deterministic order.
+///
+/// Called once at document assembly, AFTER every producer has contributed —
+/// `build_relationships` is not the only one. `document.rs` appends
+/// file-tier and view edges, and `mod.rs` appends the m072 cross-tier
+/// BUILT_FROM edge. Sorting inside `build_relationships` alone leaves those
+/// trailing, which is how the first attempt at this fix was caught.
+///
+/// Every edge is pushed while walking `artifacts.components` or
+/// `artifacts.relationships`, so the array inherited whatever order the scan
+/// produced — and that is not stable across runs since the walker and resolver
+/// became parallel (m772-m774). The other two emitters were already immune:
+/// CycloneDX accumulates into `BTreeMap<String, BTreeSet<String>>`
+/// (`cyclonedx/dependencies.rs`), and SPDX 3 sorts explicitly
+/// (`v3_relationships::sort_by_spdx_id`). SPDX 2.3 alone preserved input order.
+///
+/// Caught by the #898 corpus target: the same pinned revision emitted an
+/// identical SET of 111 relationships in two CI runs, in different orders, so
+/// the golden comparison failed while packages, CycloneDX and SPDX 3 matched.
+pub(crate) fn sort_relationships(relationships: &mut [SpdxRelationship]) {
+    relationships.sort_by(|a, b| {
+        a.source
+            .as_str()
+            .cmp(b.source.as_str())
+            .then_with(|| a.kind.as_spdx_str().cmp(b.kind.as_spdx_str()))
+            .then_with(|| a.target.as_str().cmp(b.target.as_str()))
+            .then_with(|| a.comment.cmp(&b.comment))
+    });
 }
 
 #[cfg(test)]

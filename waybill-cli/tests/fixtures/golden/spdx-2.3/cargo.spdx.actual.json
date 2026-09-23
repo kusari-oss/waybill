@@ -4,61 +4,67 @@
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.1.0-alpha.69",
+      "annotator": "Tool: waybill-0.9.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:generation-context\",\"value\":\"filesystem-scan\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.1.0-alpha.69",
+      "annotator": "Tool: waybill-0.9.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cisa-2026-lifecycle\",\"value\":\"after-build\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.1.0-alpha.69",
+      "annotator": "Tool: waybill-0.9.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:os-release-missing-fields\",\"value\":[\"ID\",\"VERSION_ID\"]}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.1.0-alpha.69",
+      "annotator": "Tool: waybill-0.9.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness\",\"value\":\"complete\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.1.0-alpha.69",
+      "annotator": "Tool: waybill-0.9.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspaces-detected\",\"value\":\"[\\\".\\\"]\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.1.0-alpha.69",
+      "annotator": "Tool: waybill-0.9.0",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep-count\",\"value\":\"0\"}"
+    },
+    {
+      "annotationDate": "1970-01-01T00:00:00Z",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-0.9.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-ring-buffer-overflows\",\"value\":\"0\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.1.0-alpha.69",
+      "annotator": "Tool: waybill-0.9.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-events-dropped\",\"value\":\"0\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.1.0-alpha.69",
+      "annotator": "Tool: waybill-0.9.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-uprobe-attach-failures\",\"value\":[]}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.1.0-alpha.69",
+      "annotator": "Tool: waybill-0.9.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-kprobe-attach-failures\",\"value\":[]}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.1.0-alpha.69",
+      "annotator": "Tool: waybill-0.9.0",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"compositions\",\"value\":{\"complete_ecosystems\":[\"cargo\"]}}"
     }
   ],
@@ -66,19 +72,19 @@
     "comment": "Scope: manifest (declared transitives included). Observed lifecycle phases: pre-build. Per-component scope detail in waybill:sbom-tier annotations.",
     "created": "1970-01-01T00:00:00Z",
     "creators": [
-      "Tool: waybill-0.1.0-alpha.69",
+      "Tool: waybill-0.9.0",
       "Organization: waybill contributors"
     ]
   },
   "dataLicense": "CC0-1.0",
   "documentDescribes": [
-    "SPDXRef-DocumentRoot-2UOAANH2ZIOZBPB2"
+    "SPDXRef-DocumentRoot-J26SWINYZQPY4BG5"
   ],
-  "documentNamespace": "https://waybill.kusari.dev/spdx/VE5EYMFO2L4HVKZVGULODRGGPXO4JKJC",
-  "name": "lockfile-v3",
+  "documentNamespace": "https://waybill.kusari.dev/spdx/O5UABRALV5C6L7PGUQFSWVEEDZFWYRMZ",
+  "name": "Waybill source scan (identity unavailable)",
   "packages": [
     {
-      "SPDXID": "SPDXRef-DocumentRoot-2UOAANH2ZIOZBPB2",
+      "SPDXID": "SPDXRef-DocumentRoot-J26SWINYZQPY4BG5",
       "downloadLocation": "NOASSERTION",
       "externalRefs": [
         {
@@ -105,31 +111,31 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"Cargo.lock\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"Cargo.lock\",\"sha256\":\"f00c7931fa093368d65ff334b4c4b584111e55e444b00165607c680a9442e172\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -144,6 +150,11 @@
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:anyhow:anyhow:1.0.80:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://crates.io/api/v1/crates/anyhow/1.0.80/download",
+          "referenceType": "distribution"
         },
         {
           "referenceCategory": "OTHER",
@@ -164,37 +175,37 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"Cargo.lock\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"Cargo.lock\",\"sha256\":\"f00c7931fa093368d65ff334b4c4b584111e55e444b00165607c680a9442e172\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -209,6 +220,11 @@
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:my-app:my-app:0.1.0:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://crates.io/api/v1/crates/my-app/0.1.0/download",
+          "referenceType": "distribution"
         },
         {
           "referenceCategory": "OTHER",
@@ -229,37 +245,37 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"git\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"Cargo.lock\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"Cargo.lock\",\"sha256\":\"f00c7931fa093368d65ff334b4c4b584111e55e444b00165607c680a9442e172\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -274,6 +290,11 @@
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:my-fork:my-fork:0.1.0:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://crates.io/api/v1/crates/my-fork/0.1.0/download",
+          "referenceType": "distribution"
         },
         {
           "referenceCategory": "OTHER",
@@ -294,31 +315,31 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"Cargo.lock\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"Cargo.lock\",\"sha256\":\"f00c7931fa093368d65ff334b4c4b584111e55e444b00165607c680a9442e172\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -333,6 +354,11 @@
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:proc-macro2:proc-macro2:1.0.76:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://crates.io/api/v1/crates/proc-macro2/1.0.76/download",
+          "referenceType": "distribution"
         },
         {
           "referenceCategory": "OTHER",
@@ -353,31 +379,31 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"Cargo.lock\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"Cargo.lock\",\"sha256\":\"f00c7931fa093368d65ff334b4c4b584111e55e444b00165607c680a9442e172\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -392,6 +418,11 @@
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:quote:quote:1.0.35:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://crates.io/api/v1/crates/quote/1.0.35/download",
+          "referenceType": "distribution"
         },
         {
           "referenceCategory": "OTHER",
@@ -412,31 +443,31 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"Cargo.lock\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"Cargo.lock\",\"sha256\":\"f00c7931fa093368d65ff334b4c4b584111e55e444b00165607c680a9442e172\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -451,6 +482,11 @@
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:serde:serde:1.0.197:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://crates.io/api/v1/crates/serde/1.0.197/download",
+          "referenceType": "distribution"
         },
         {
           "referenceCategory": "OTHER",
@@ -471,31 +507,31 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"Cargo.lock\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"Cargo.lock\",\"sha256\":\"f00c7931fa093368d65ff334b4c4b584111e55e444b00165607c680a9442e172\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -510,6 +546,11 @@
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:serde_derive:serde_derive:1.0.197:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://crates.io/api/v1/crates/serde_derive/1.0.197/download",
+          "referenceType": "distribution"
         },
         {
           "referenceCategory": "OTHER",
@@ -530,31 +571,31 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"Cargo.lock\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"Cargo.lock\",\"sha256\":\"f00c7931fa093368d65ff334b4c4b584111e55e444b00165607c680a9442e172\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -569,6 +610,11 @@
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:syn:syn:2.0.48:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://crates.io/api/v1/crates/syn/2.0.48/download",
+          "referenceType": "distribution"
         },
         {
           "referenceCategory": "OTHER",
@@ -589,31 +635,31 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"Cargo.lock\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"Cargo.lock\",\"sha256\":\"f00c7931fa093368d65ff334b4c4b584111e55e444b00165607c680a9442e172\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -628,6 +674,11 @@
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:unicode-ident:unicode-ident:1.0.12:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://crates.io/api/v1/crates/unicode-ident/1.0.12/download",
+          "referenceType": "distribution"
         },
         {
           "referenceCategory": "OTHER",
@@ -648,37 +699,37 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"Cargo.lock\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"Cargo.lock\",\"sha256\":\"f00c7931fa093368d65ff334b4c4b584111e55e444b00165607c680a9442e172\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.1.0-alpha.69",
+          "annotator": "Tool: waybill-0.9.0",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -696,6 +747,11 @@
         },
         {
           "referenceCategory": "OTHER",
+          "referenceLocator": "https://crates.io/api/v1/crates/workspace-local/0.1.0/download",
+          "referenceType": "distribution"
+        },
+        {
+          "referenceCategory": "OTHER",
           "referenceLocator": "https://crates.io/crates/workspace-local/0.1.0",
           "referenceType": "website"
         }
@@ -710,17 +766,17 @@
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-2UOAANH2ZIOZBPB2",
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-J26SWINYZQPY4BG5",
       "relationshipType": "DESCRIBES",
       "spdxElementId": "SPDXRef-DOCUMENT"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-IYTSKXZIE4RF3PSV",
+      "relatedSpdxElement": "SPDXRef-Package-7I3OEASNAR5ZCRZY",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-7I3OEASNAR5ZCRZY"
+      "spdxElementId": "SPDXRef-DocumentRoot-J26SWINYZQPY4BG5"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-UFXHU3P5DZAY42HF",
+      "relatedSpdxElement": "SPDXRef-Package-AMQQ7AE3OQIQRIZH",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-7I3OEASNAR5ZCRZY"
     },
@@ -730,7 +786,7 @@
       "spdxElementId": "SPDXRef-Package-7I3OEASNAR5ZCRZY"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-AMQQ7AE3OQIQRIZH",
+      "relatedSpdxElement": "SPDXRef-Package-IYTSKXZIE4RF3PSV",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-7I3OEASNAR5ZCRZY"
     },
@@ -740,9 +796,9 @@
       "spdxElementId": "SPDXRef-Package-7I3OEASNAR5ZCRZY"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-E3KDPHV32PPHGGT4",
+      "relatedSpdxElement": "SPDXRef-Package-UFXHU3P5DZAY42HF",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-Z72PVEYDZTEVUFVQ"
+      "spdxElementId": "SPDXRef-Package-7I3OEASNAR5ZCRZY"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-Z72PVEYDZTEVUFVQ",
@@ -750,14 +806,19 @@
       "spdxElementId": "SPDXRef-Package-7QZEBQB7QRFNI5M5"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-CDE3XEXSDOGUXIZT",
+      "relatedSpdxElement": "SPDXRef-Package-7QZEBQB7QRFNI5M5",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-UFXHU3P5DZAY42HF"
+      "spdxElementId": "SPDXRef-Package-BKMD7Y4M3VJPWGQM"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-E3KDPHV32PPHGGT4",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-BKMD7Y4M3VJPWGQM"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-Z72PVEYDZTEVUFVQ",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-CDE3XEXSDOGUXIZT"
+      "spdxElementId": "SPDXRef-Package-BKMD7Y4M3VJPWGQM"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-7QZEBQB7QRFNI5M5",
@@ -772,22 +833,17 @@
     {
       "relatedSpdxElement": "SPDXRef-Package-Z72PVEYDZTEVUFVQ",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-BKMD7Y4M3VJPWGQM"
+      "spdxElementId": "SPDXRef-Package-CDE3XEXSDOGUXIZT"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-7QZEBQB7QRFNI5M5",
+      "relatedSpdxElement": "SPDXRef-Package-CDE3XEXSDOGUXIZT",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-BKMD7Y4M3VJPWGQM"
+      "spdxElementId": "SPDXRef-Package-UFXHU3P5DZAY42HF"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-E3KDPHV32PPHGGT4",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-BKMD7Y4M3VJPWGQM"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-7I3OEASNAR5ZCRZY",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-2UOAANH2ZIOZBPB2"
+      "spdxElementId": "SPDXRef-Package-Z72PVEYDZTEVUFVQ"
     }
   ],
   "spdxVersion": "SPDX-2.3"
