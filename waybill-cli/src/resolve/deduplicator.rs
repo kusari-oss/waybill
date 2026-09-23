@@ -112,16 +112,31 @@ pub fn deduplicate(components: Vec<ResolvedComponent>) -> Vec<ResolvedComponent>
                 }
                 _ => None,
             };
-            // Milestone 199: preserve first-wins for `requirement_ranges`
-            // at dedup time. Multi-declaration accumulation happens at the
-            // reconciler layer instead, where the reconciler sees distinct
-            // design-tier components (kept separate because they typically
-            // differ by `parent_purl` when declared under different
-            // workspace-packages). Extending here risks losing the 1:1
-            // range↔manifest correspondence when `evidence.source_file_paths`
-            // dedupes but `requirement_ranges` doesn't.
+            // Union `requirement_ranges` across the group (#936).
+            //
+            // This was first-wins, on the m199 reasoning that multi-declaration
+            // accumulation belongs to the reconciler. That holds only when a
+            // source-tier survivor exists for the reconciler to accumulate ONTO.
+            // With no lockfile every component is design-tier, the reconciler
+            // never fires, and first-wins silently discarded every constraint
+            // but one: a library requiring `base >=4.11 && <4.22` and an example
+            // requiring `base >=4.14 && <4.15` emitted only the example's, which
+            // a consumer reads as the library's — false, and far narrower than
+            // the truth. Dropping a constraint is not a smaller error than
+            // failing to correlate it with its manifest.
+            //
+            // Set-union, sorted, so the result is order-independent: the group
+            // arrives in confidence order, which is not stable across runs.
+            // Single-declaration components are unaffected (a 1-element vec
+            // unions to itself), so this is a no-op everywhere except the
+            // multi-manifest case that was losing data.
             if best.requirement_ranges.is_empty() {
                 best.requirement_ranges = other.requirement_ranges;
+            } else if !other.requirement_ranges.is_empty() {
+                let mut merged: std::collections::BTreeSet<String> =
+                    best.requirement_ranges.drain(..).collect();
+                merged.extend(other.requirement_ranges);
+                best.requirement_ranges = merged.into_iter().collect();
             }
             // Capture `other.source_type` once — it drives both
             // the "adopt when None" rule and the "is other a
