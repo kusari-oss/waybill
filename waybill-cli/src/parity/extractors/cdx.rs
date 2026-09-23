@@ -948,6 +948,7 @@ cdx_anno!(c160_cdx, "waybill:component-kind",                        component);
 cdx_anno!(c164_cdx, "waybill:pants-resolve-namespace",                        component);
 cdx_anno!(c165_cdx, "waybill:nix-nar-hash",     component);
 cdx_anno!(c166_cdx, "waybill:nix-original-ref", component);
+cdx_anno!(c167_cdx, "waybill:nix-original-pin-state", component);
 cdx_anno!(c161_cdx, "waybill:resolve-ownership",                     document);
 cdx_anno!(c163_cdx, "waybill:document-resolve",                     document);
 cdx_anno!(c162_cdx, "waybill:cabal-entries-skipped",                 document);

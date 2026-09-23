@@ -711,6 +711,7 @@ spdx3_anno!(c164_spdx3, "waybill:pants-resolve-namespace",                      
 
 spdx3_anno!(c165_spdx3, "waybill:nix-nar-hash",     component);
 spdx3_anno!(c166_spdx3, "waybill:nix-original-ref", component);spdx3_anno!(c161_spdx3, "waybill:resolve-ownership",                     document);
+spdx3_anno!(c167_spdx3, "waybill:nix-original-pin-state", component);
 spdx3_anno!(c163_spdx3, "waybill:document-resolve",                     document);
 spdx3_anno!(c162_spdx3, "waybill:cabal-entries-skipped",                 document);
 

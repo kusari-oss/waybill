@@ -120,11 +120,19 @@ fn emit_for_lockfile(path: &Path, doc: &FlakeLockDocument) -> Vec<PackageDbEntry
         }
 
         // FR-006 — what was asked for, when it differs from what was resolved.
+        //
+        // Two carriers because these are two facts. The pin STATE answers
+        // "would re-locking move this?" for every input; the ref NAME says
+        // which branch or tag, and only exists when the author wrote one.
+        // Folding them into one string would make a value of `default-branch`
+        // indistinguishable from a branch actually called `default-branch`.
         if let Some(orig) = node.original.as_ref() {
-            if orig.differs_from(locked) {
-                if let Some(moving) = orig.moving_ref() {
-                    extra.insert("waybill:nix-original-ref".to_string(), json!(moving));
-                }
+            let state = orig.pin_state(locked);
+            if let Some(s) = state.as_annotation() {
+                extra.insert("waybill:nix-original-pin-state".to_string(), json!(s));
+            }
+            if let lockfile::OriginalPinState::NamedRef(r) = state {
+                extra.insert("waybill:nix-original-ref".to_string(), json!(r));
             }
         }
 
@@ -348,6 +356,49 @@ mod tests {
     }
 
     #[test]
+    fn an_input_tracking_the_default_branch_says_so() {
+        // The gap this test exists for: an `original` with neither `ref` nor
+        // `rev` means "track the default branch", which is the MOST moving
+        // reference there is — and it was emitting nothing at all. On a real
+        // repository that silence covered five of six inputs, so a consumer
+        // asking "would re-locking move this?" got no answer for any of them.
+        let lock = REAL_SINGLE_INPUT.replace(
+            r#""owner": "NixOS", "ref": "nixos-unstable", "repo": "nixpkgs", "type": "github""#,
+            r#""owner": "NixOS", "repo": "nixpkgs", "type": "github""#,
+        );
+        let doc = parse_flake_lock_str(&lock).unwrap();
+        let e = &emit_for_lockfile(Path::new("/x/flake.lock"), &doc)[0];
+        assert_eq!(
+            e.extra_annotations.get("waybill:nix-original-pin-state").and_then(|v| v.as_str()),
+            Some("default-branch")
+        );
+        assert!(
+            !e.extra_annotations.contains_key("waybill:nix-original-ref"),
+            "no ref was written, so there is no name to report — the pin STATE \
+             carries the fact, the ref NAME carries the name"
+        );
+    }
+
+    #[test]
+    fn the_pin_state_and_the_ref_name_are_separate_carriers() {
+        // A branch literally called `default-branch` must stay distinguishable
+        // from an input that names no branch at all. That is why these are two
+        // keys rather than one string with a sentinel value.
+        let lock = REAL_SINGLE_INPUT.replace(r#""ref": "nixos-unstable""#, r#""ref": "default-branch""#);
+        let doc = parse_flake_lock_str(&lock).unwrap();
+        let e = &emit_for_lockfile(Path::new("/x/flake.lock"), &doc)[0];
+        assert_eq!(
+            e.extra_annotations.get("waybill:nix-original-pin-state").and_then(|v| v.as_str()),
+            Some("branch-or-tag"),
+            "a branch NAMED `default-branch` is still a named branch"
+        );
+        assert_eq!(
+            e.extra_annotations.get("waybill:nix-original-ref").and_then(|v| v.as_str()),
+            Some("default-branch")
+        );
+    }
+
+    #[test]
     fn the_original_ref_is_recorded_only_when_it_differs() {
         let doc = parse_flake_lock_str(REAL_SINGLE_INPUT).unwrap();
         let entries = emit_for_lockfile(Path::new("/x/flake.lock"), &doc);
@@ -367,6 +418,10 @@ mod tests {
         assert!(
             !e2[0].extra_annotations.contains_key("waybill:nix-original-ref"),
             "an original that already names the locked revision adds nothing"
+        );
+        assert!(
+            !e2[0].extra_annotations.contains_key("waybill:nix-original-pin-state"),
+            "an exact revision cannot move, so there is no pin-state to report"
         );
     }
 

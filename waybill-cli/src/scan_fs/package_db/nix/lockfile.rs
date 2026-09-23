@@ -100,22 +100,58 @@ pub(crate) struct OriginalRef {
     pub(crate) rev: Option<String>,
 }
 
+/// What the author actually pinned to, before the lockfile resolved it.
+///
+/// The three cases are genuinely different answers to "would re-locking move
+/// this?", and the third is the one that was being dropped. An `original` with
+/// neither `ref` nor `rev` means *track the default branch* — the most moving
+/// reference there is — and emitting nothing for it left five of six inputs on
+/// a real repository silent about whether they were pinned.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum OriginalPinState<'a> {
+    /// The author named an exact revision. Re-locking changes nothing, and
+    /// there is nothing worth recording (User Story 3, scenario 2).
+    Exact,
+    /// The author named a branch or tag. Re-locking may move it.
+    NamedRef(&'a str),
+    /// The author named neither. Nix tracks the default branch; re-locking
+    /// will move it whenever upstream's default branch moves.
+    DefaultBranch,
+}
+
 impl OriginalRef {
-    /// Whether this original adds anything the locked reference does not.
-    ///
-    /// An `original` that already names the locked revision is not a
-    /// difference worth recording — emitting it would be noise (FR-006, and
-    /// User Story 3's second acceptance scenario).
-    pub(crate) fn differs_from(&self, locked: &LockedRef) -> bool {
-        match (&self.rev, &locked.rev) {
-            (Some(a), Some(b)) if a == b => false,
-            _ => self.git_ref.is_some() || self.rev.as_deref() != locked.rev.as_deref(),
+    /// Classify what the author pinned to.
+    pub(crate) fn pin_state(&self, locked: &LockedRef) -> OriginalPinState<'_> {
+        if let Some(rev) = self.rev.as_deref() {
+            // An explicit revision that matches the lock is exact. One that
+            // disagrees is a malformed lockfile rather than a moving pin, and
+            // is reported as exact so nothing is invented about it.
+            let _ = locked;
+            return if rev.is_empty() {
+                OriginalPinState::DefaultBranch
+            } else {
+                OriginalPinState::Exact
+            };
+        }
+        match self.git_ref.as_deref() {
+            Some(r) if !r.is_empty() => OriginalPinState::NamedRef(r),
+            _ => OriginalPinState::DefaultBranch,
         }
     }
+}
 
-    /// The moving part, when there is one.
-    pub(crate) fn moving_ref(&self) -> Option<&str> {
-        self.git_ref.as_deref()
+impl OriginalPinState<'_> {
+    /// The closed enum written to `waybill:nix-original-pin-state`.
+    ///
+    /// A separate key from the ref NAME on purpose: a value of
+    /// `"default-branch"` in the name field would be indistinguishable from a
+    /// branch literally called `default-branch`. Two facts, two carriers.
+    pub(crate) fn as_annotation(&self) -> Option<&'static str> {
+        match self {
+            Self::Exact => None,
+            Self::NamedRef(_) => Some("branch-or-tag"),
+            Self::DefaultBranch => Some("default-branch"),
+        }
     }
 }
 
