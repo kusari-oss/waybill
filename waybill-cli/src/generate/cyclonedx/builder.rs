@@ -1596,6 +1596,32 @@ impl CycloneDxBuilder {
             // Milestone 127: filter out internal-only keys (the
             // `waybill:is-workspace-root` signal that drives root-selector
             // logic but is NOT meant to surface in emitted SBOMs).
+            // Issue #940: a property name already emitted from a typed field
+            // must not be emitted again from the bag.
+            //
+            // Seven readers populate BOTH slots for the same fact — cocoapods,
+            // composer, dart, elixir, erlang, haskell and scala — and the
+            // emitter rendered each, so `waybill:source-type` appeared twice on
+            // every component they produced: 61 components across the public
+            // corpus, 21 on one reference repository.
+            //
+            // The m145 US3 guard below covers this, but only for a hardcoded
+            // list (`waybill:source-files`) and only by skipping the bag entry
+            // UNCONDITIONALLY. That is unsafe to extend: `source_type` is an
+            // `Option`, so a reader may write the annotation without setting
+            // the typed field, and an unconditional skip would then drop the
+            // value entirely rather than deduplicate it. Composer and dart do
+            // write more annotations than typed fields.
+            //
+            // So the check is what was already emitted, not what might be. It
+            // needs no list, cannot lose a value that has no other source, and
+            // covers keys added later — which matters because this defect was
+            // reintroduced in new code (the m925 nix reader) days after the
+            // issue describing it was written.
+            let emitted_names: std::collections::HashSet<String> = properties
+                .iter()
+                .filter_map(|p| p.get("name").and_then(|n| n.as_str()).map(str::to_string))
+                .collect();
             for (key, value) in &component.extra_annotations {
                 if crate::generate::root_selector::is_internal_emission_key(key)
                     || crate::generate::root_selector::is_field_owned_annotation_key(key)
@@ -1606,6 +1632,20 @@ impl CycloneDxBuilder {
                     // `c.evidence.source_file_paths` higher up in
                     // this function — re-emitting from the bag
                     // would double-stamp and produce value drift.
+                    continue;
+                }
+                if emitted_names.contains(key.as_str()) {
+                    // Already emitted from a typed field above (#940). The
+                    // typed slot wins: it is emitted first, and where the two
+                    // have diverged it was the typed one that carried the
+                    // current value (m925's requirement-ranges, where the bag
+                    // held a stale subset after the dedup pass unioned the
+                    // typed field).
+                    tracing::debug!(
+                        component = %component.purl.as_str(),
+                        key = key.as_str(),
+                        "cdx: annotation duplicates a field-derived property; keeping the field value (#940)"
+                    );
                     continue;
                 }
                 let value_str = match value {

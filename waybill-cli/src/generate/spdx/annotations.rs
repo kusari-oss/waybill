@@ -377,6 +377,23 @@ pub fn annotate_component(
     // Milestone 127: filter out internal-only keys (the
     // `waybill:is-workspace-root` signal that drives root-selector
     // logic but is NOT meant to surface in emitted SBOMs).
+    // Issue #940 — same conditional dedup as the CycloneDX builder. SPDX 2.3
+    // carried the identical 21 duplicated `waybill:source-type` annotations on
+    // the reference repository, from the same cause: seven readers populate
+    // both the typed field and the bag, and both were rendered.
+    //
+    // SPDX 3 does not show this, but only because m166 added a dedup by
+    // `spdxId` — forced by a SHACL cardinality constraint that makes duplicate
+    // `Annotation.statement` a validation failure. CDX and SPDX 2.3 have no
+    // such constraint, so nothing surfaced the same root cause here.
+    let emitted_fields: std::collections::HashSet<String> = out
+        .iter()
+        .filter_map(|a| {
+            serde_json::from_str::<serde_json::Value>(&a.comment)
+                .ok()
+                .and_then(|v| v.get("field").and_then(|f| f.as_str()).map(str::to_string))
+        })
+        .collect();
     for (key, value) in &c.extra_annotations {
         if crate::generate::root_selector::is_internal_emission_key(key)
             || crate::generate::root_selector::is_field_owned_annotation_key(key)
@@ -385,6 +402,12 @@ pub fn annotate_component(
             // from a field-derived source (e.g., `waybill:source-files`
             // comes from `c.evidence.source_file_paths` at line ~302
             // above) — re-emitting from the bag double-stamps.
+            continue;
+        }
+        if emitted_fields.contains(key.as_str()) {
+            // Already emitted from a typed field (#940). Conditional rather
+            // than a hardcoded skip-list, so a key the bag is the ONLY source
+            // for is never dropped.
             continue;
         }
         push(&mut out, key, value.clone());
