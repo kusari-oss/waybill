@@ -18,7 +18,7 @@ tests at `waybill-cli/tests/`, fixtures at `waybill-cli/tests/fixtures/nix/`.
 
 - [ ] T001 Create the reader module skeleton at `waybill-cli/src/scan_fs/package_db/nix/mod.rs` with `lockfile` and `identity` submodules declared
 - [ ] T002 Declare the `nix` module in `waybill-cli/src/scan_fs/package_db/mod.rs` alongside the existing readers
-- [ ] T003 Register a `ReaderRegistration` matching `flake.lock` in `waybill-cli/src/scan_fs/package_db/nix/mod.rs`, with no `on_dir` and no `descend_into` override per research R6
+- [ ] T003 Register a `ReaderRegistration` matching `flake.lock` in `waybill-cli/src/scan_fs/package_db/nix/mod.rs`, with no `on_dir` and no `descend_into` override (FR-001, research R6)
 
 ---
 
@@ -47,8 +47,9 @@ represent a `follows` alias.
 
 ### Tests for User Story 1
 
-- [ ] T011 [P] [US1] Write `waybill-cli/tests/nix_flake_lock_reader.rs` asserting contract C-1: one component per identifiable locked input, and none for root, `path`, `indirect` or `follows` aliases
-- [ ] T012 [P] [US1] Extend `waybill-cli/tests/nix_flake_lock_reader.rs` with contract C-2: a `github` input emits `pkg:github/<owner>/<repo>@<rev>` byte-for-byte, and a `tarball` input emits `pkg:generic/<name>@<rev>` — asserting the identifier string, not merely that a component exists
+- [ ] T011 [P] [US1] Write `waybill-cli/tests/nix_flake_lock_reader.rs` asserting contract C-1 and FR-002: one component per identifiable locked input, and none for root, `path`, `indirect` or `follows` aliases
+- [ ] T012 [P] [US1] Extend `waybill-cli/tests/nix_flake_lock_reader.rs` with contracts C-2 and C-3: a `github` input emits `pkg:github/<owner>/<repo>@<rev>` byte-for-byte, a `tarball` input emits `pkg:generic/<name>@<rev>`, and each component's `version` field equals the locked `rev` verbatim — untruncated, not normalised, not replaced by `lastModified`. The identifier and the version field are different slots; asserting the PURL contains the rev says nothing about which value populated `version`
+- [ ] T012a [P] [US1] Extend `waybill-cli/tests/nix_flake_lock_reader.rs` asserting no emitted PURL begins with `pkg:nix` (FR-013c, contract C-2). Kept separate from T012 so a mutation breaking one is not masked by the other passing: T012 asserts what IS emitted, this asserts what must never be
 - [ ] T013 [P] [US1] Extend `waybill-cli/tests/nix_flake_lock_reader.rs` with contract C-4: no native checksum field is populated for these components, and the NAR hash appears in its annotation with the `sha256-` prefix intact
 
 ### Implementation for User Story 1
@@ -99,14 +100,14 @@ represent a `follows` alias.
 
 ### Tests for User Story 3
 
-- [ ] T030 [P] [US3] Write `waybill-cli/tests/nix_flake_lock_original_ref.rs` asserting both the branch and the locked revision are recoverable when they differ
-- [ ] T031 [P] [US3] Extend `waybill-cli/tests/nix_flake_lock_original_ref.rs` asserting no annotation is emitted when `original` already names the locked revision (US3 acceptance scenario 2)
+- [ ] T030 [P] [US3] Write `waybill-cli/tests/nix_flake_lock_original_ref.rs` asserting both the branch and the locked revision are recoverable when they differ (FR-006, contracts C-6 and A-2, US3 acceptance scenario 1)
+- [ ] T031 [P] [US3] Extend `waybill-cli/tests/nix_flake_lock_original_ref.rs` asserting no annotation is emitted when `original` already names the locked revision (FR-006, US3 acceptance scenario 2)
 
 ### Implementation for User Story 3
 
 - [ ] T032 [US3] Emit the pre-resolution reference annotation in `waybill-cli/src/scan_fs/package_db/nix/mod.rs`, only when `original` differs from `locked` (FR-006, contract A-2)
 - [ ] T033 [US3] Add the original-reference annotation row to `docs/reference/sbom-format-mapping.md` (FR-009b applies to this annotation too)
-- [ ] T034 [US3] Add matching original-reference extractors to `waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3}.rs` and register the row in `waybill-cli/src/parity/extractors/mod.rs`
+- [ ] T034 [US3] Add matching original-reference extractors to `waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3}.rs` and register the row in `waybill-cli/src/parity/extractors/mod.rs` (FR-009b, which binds this annotation as it does the NAR hash)
 
 **Checkpoint**: all three user stories complete.
 
@@ -116,7 +117,7 @@ represent a `follows` alias.
 
 - [ ] T035 [P] Write `waybill-cli/tests/nix_flake_lock_failure_modes.rs` asserting contract C-7: a malformed lockfile and an unrecognised-version lockfile each emit no components, warn naming the file, and leave every other ecosystem's component count identical to a scan of the same tree with the file removed (FR-010, SC-007)
 - [ ] T036 [P] Add an SC-005 test to `waybill-cli/tests/nix_flake_lock_failure_modes.rs`: adding a `flake.lock` to a tree never reduces the component count for any other ecosystem — the property #937 and #938 were both violations of
-- [ ] T037 [P] Add an SC-002 test to `waybill-cli/tests/nix_flake_lock_failure_modes.rs` asserting a scan of a `flake.lock` tree produces identical output with and without `--offline`
+- [ ] T037 [P] Add an SC-002 test to `waybill-cli/tests/nix_flake_lock_failure_modes.rs` asserting a scan of a `flake.lock` tree produces identical output with and without `--offline`, AND succeeds with `nix` absent from `PATH` (FR-013, contract C-8). SC-002 has two clauses — no network and no Nix installation — and only the first is otherwise tested; on a developer machine that has Nix, an accidental dependency on it would pass every other check
 - [ ] T038 [P] Add an FR-012 test to `waybill-cli/tests/nix_flake_lock_failure_modes.rs` asserting a flake present without a lockfile records why no inputs were emitted rather than emitting nothing silently
 - [ ] T039 Teeth-check every new test in `waybill-cli/tests/nix_*.rs` by mutation: revert each fix in turn and confirm the intended test fails and the others do not, recording the matrix in the PR. A test that passes under its own mutation proves nothing
 - [ ] T040 Run the mandatory pre-PR gate (`./scripts/pre-pr.sh`) and enumerate per-target results, checking for `exited abnormally` and `error[E` as well as `test result: FAILED` — a target that dies prints no `test result:` line

@@ -98,8 +98,10 @@ waybill-cli/src/parity/extractors/   # FR-009b: one extractor per format
 docs/reference/sbom-format-mapping.md # FR-009b: catalogue rows
 
 waybill-cli/tests/
-├── nix_flake_lock_reader.rs        # C-1..C-3, C-6, FR-013
-├── nix_flake_lock_failure_modes.rs # C-7, FR-010/FR-012, SC-007
+├── nix_flake_lock_reader.rs        # C-1..C-4, FR-002, FR-013
+├── nix_flake_lock_graph.rs         # C-5, FR-007/FR-008, SC-003
+├── nix_flake_lock_original_ref.rs  # C-6, FR-006, A-2
+├── nix_flake_lock_failure_modes.rs # C-7, C-8, FR-010/FR-012, SC-002, SC-007
 └── fixtures/nix/                   # shapes from quickstart.md
 ```
 
