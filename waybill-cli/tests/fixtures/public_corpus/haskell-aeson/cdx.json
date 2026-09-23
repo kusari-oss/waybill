@@ -50,10 +50,6 @@
           "value": "cabal-pkg-descriptor"
         },
         {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
-        },
-        {
           "name": "waybill:unresolved-reason",
           "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
@@ -109,10 +105,6 @@
         {
           "name": "waybill:evidence-kind",
           "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -171,10 +163,6 @@
           "value": "cabal-pkg-descriptor"
         },
         {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
-        },
-        {
           "name": "waybill:unresolved-reason",
           "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
@@ -231,10 +219,6 @@
           "value": "true"
         },
         {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
           "name": "waybill:workspace-member",
           "value": "[\"benchmarks\"]"
         }
@@ -288,10 +272,6 @@
           "value": "true"
         },
         {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
           "name": "waybill:workspace-member",
           "value": "[\"examples\"]"
         }
@@ -322,6 +302,14 @@
           }
         ]
       },
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "aeson",
       "properties": [
         {
@@ -343,10 +331,6 @@
         {
           "name": "waybill:demoted-from-main-module",
           "value": "true"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
         },
         {
           "name": "waybill:workspace-member",
@@ -402,10 +386,6 @@
           "value": "cabal-pkg-descriptor"
         },
         {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
-        },
-        {
           "name": "waybill:unresolved-reason",
           "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
@@ -439,6 +419,14 @@
           }
         ]
       },
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "attoparsec-aeson",
       "properties": [
         {
@@ -460,10 +448,6 @@
         {
           "name": "waybill:demoted-from-main-module",
           "value": "true"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
         },
         {
           "name": "waybill:workspace-member",
@@ -517,10 +501,6 @@
         {
           "name": "waybill:demoted-from-main-module",
           "value": "true"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
         },
         {
           "name": "waybill:workspace-member",
@@ -580,10 +560,6 @@
           "value": "true"
         },
         {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
-        },
-        {
           "name": "waybill:unresolved-reason",
           "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
@@ -640,10 +616,6 @@
           "value": "cabal-pkg-descriptor"
         },
         {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
-        },
-        {
           "name": "waybill:unresolved-reason",
           "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
@@ -695,10 +667,6 @@
         {
           "name": "waybill:evidence-kind",
           "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -761,10 +729,6 @@
           "value": "cabal-pkg-descriptor"
         },
         {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
-        },
-        {
           "name": "waybill:unresolved-reason",
           "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
@@ -816,10 +780,6 @@
         {
           "name": "waybill:evidence-kind",
           "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -874,10 +834,6 @@
           "value": "cabal-pkg-descriptor"
         },
         {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
-        },
-        {
           "name": "waybill:unresolved-reason",
           "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
@@ -928,10 +884,6 @@
         {
           "name": "waybill:evidence-kind",
           "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -994,10 +946,6 @@
           "value": "true"
         },
         {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
-        },
-        {
           "name": "waybill:unresolved-reason",
           "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
@@ -1052,10 +1000,6 @@
         {
           "name": "waybill:evidence-kind",
           "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -1118,10 +1062,6 @@
           "value": "true"
         },
         {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
-        },
-        {
           "name": "waybill:unresolved-reason",
           "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
@@ -1172,10 +1112,6 @@
         {
           "name": "waybill:evidence-kind",
           "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -1232,10 +1168,6 @@
         {
           "name": "waybill:evidence-kind",
           "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -1298,10 +1230,6 @@
           "value": "true"
         },
         {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
-        },
-        {
           "name": "waybill:unresolved-reason",
           "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
@@ -1362,10 +1290,6 @@
           "value": "true"
         },
         {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
-        },
-        {
           "name": "waybill:unresolved-reason",
           "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
@@ -1421,10 +1345,6 @@
         {
           "name": "waybill:evidence-kind",
           "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -1483,10 +1403,6 @@
           "value": "cabal-pkg-descriptor"
         },
         {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
-        },
-        {
           "name": "waybill:unresolved-reason",
           "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
@@ -1541,10 +1457,6 @@
         {
           "name": "waybill:ghc-stdlib",
           "value": "true"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -1607,10 +1519,6 @@
           "value": "cabal-pkg-descriptor"
         },
         {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
-        },
-        {
           "name": "waybill:unresolved-reason",
           "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
@@ -1666,10 +1574,6 @@
         {
           "name": "waybill:evidence-kind",
           "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -1728,10 +1632,6 @@
           "value": "cabal-pkg-descriptor"
         },
         {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
-        },
-        {
           "name": "waybill:unresolved-reason",
           "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
@@ -1786,10 +1686,6 @@
         {
           "name": "waybill:evidence-kind",
           "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -1848,10 +1744,6 @@
           "value": "cabal-pkg-descriptor"
         },
         {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
-        },
-        {
           "name": "waybill:unresolved-reason",
           "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
@@ -1906,10 +1798,6 @@
         {
           "name": "waybill:evidence-kind",
           "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -1968,10 +1856,6 @@
           "value": "true"
         },
         {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
-        },
-        {
           "name": "waybill:unresolved-reason",
           "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
@@ -2028,10 +1912,6 @@
           "value": "cabal-pkg-descriptor"
         },
         {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
-        },
-        {
           "name": "waybill:unresolved-reason",
           "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
@@ -2084,10 +1964,6 @@
           "value": "cabal-pkg-descriptor"
         },
         {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
-        },
-        {
           "name": "waybill:unresolved-reason",
           "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
@@ -2138,10 +2014,6 @@
         {
           "name": "waybill:evidence-kind",
           "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -2198,10 +2070,6 @@
         {
           "name": "waybill:evidence-kind",
           "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -2264,10 +2132,6 @@
           "value": "cabal-pkg-descriptor"
         },
         {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
-        },
-        {
           "name": "waybill:unresolved-reason",
           "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
@@ -2323,10 +2187,6 @@
         {
           "name": "waybill:evidence-kind",
           "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -2389,10 +2249,6 @@
           "value": "cabal-pkg-descriptor"
         },
         {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
-        },
-        {
           "name": "waybill:unresolved-reason",
           "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
@@ -2448,10 +2304,6 @@
         {
           "name": "waybill:evidence-kind",
           "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -2510,10 +2362,6 @@
           "value": "cabal-pkg-descriptor"
         },
         {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
-        },
-        {
           "name": "waybill:unresolved-reason",
           "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
@@ -2570,10 +2418,6 @@
           "value": "cabal-pkg-descriptor"
         },
         {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
-        },
-        {
           "name": "waybill:unresolved-reason",
           "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
@@ -2628,10 +2472,6 @@
         {
           "name": "waybill:evidence-kind",
           "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -2694,10 +2534,6 @@
           "value": "cabal-pkg-descriptor"
         },
         {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
-        },
-        {
           "name": "waybill:unresolved-reason",
           "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
@@ -2755,10 +2591,6 @@
           "value": "cabal-pkg-descriptor"
         },
         {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
-        },
-        {
           "name": "waybill:unresolved-reason",
           "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
@@ -2813,10 +2645,6 @@
         {
           "name": "waybill:evidence-kind",
           "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -2880,10 +2708,6 @@
           "value": "cabal-pkg-descriptor"
         },
         {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
-        },
-        {
           "name": "waybill:unresolved-reason",
           "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
@@ -2943,10 +2767,6 @@
         {
           "name": "waybill:evidence-kind",
           "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -3010,10 +2830,6 @@
           "value": "true"
         },
         {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
-        },
-        {
           "name": "waybill:unresolved-reason",
           "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
@@ -3074,10 +2890,6 @@
           "value": "true"
         },
         {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
-        },
-        {
           "name": "waybill:unresolved-reason",
           "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
@@ -3134,10 +2946,6 @@
           "value": "true"
         },
         {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
           "name": "waybill:workspace-member",
           "value": "[\"text-iso8601\"]"
         }
@@ -3189,10 +2997,6 @@
         {
           "name": "waybill:evidence-kind",
           "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -3251,10 +3055,6 @@
           "value": "cabal-pkg-descriptor"
         },
         {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
-        },
-        {
           "name": "waybill:unresolved-reason",
           "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
@@ -3309,10 +3109,6 @@
         {
           "name": "waybill:evidence-kind",
           "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -3375,10 +3171,6 @@
           "value": "true"
         },
         {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
-        },
-        {
           "name": "waybill:unresolved-reason",
           "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
@@ -3433,10 +3225,6 @@
         {
           "name": "waybill:evidence-kind",
           "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -3495,10 +3283,6 @@
           "value": "cabal-pkg-descriptor"
         },
         {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
-        },
-        {
           "name": "waybill:unresolved-reason",
           "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
@@ -3553,10 +3337,6 @@
         {
           "name": "waybill:evidence-kind",
           "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -3615,10 +3395,6 @@
           "value": "cabal-pkg-descriptor"
         },
         {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
-        },
-        {
           "name": "waybill:unresolved-reason",
           "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
@@ -3673,10 +3449,6 @@
         {
           "name": "waybill:evidence-kind",
           "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-cabal-design"
         },
         {
           "name": "waybill:unresolved-reason",
