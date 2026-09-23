@@ -1,0 +1,31 @@
+# Pins the compiler the main workspace builds with.
+#
+# Why an exact version rather than `channel = "stable"`: `stable` is a moving
+# target, and a silent move is expensive here. When rustup advanced stable from
+# 1.97.0 to 1.98.1, this repository's `target/` directory ended up holding
+# artifacts from BOTH compilers. Ordinary test targets rebuilt; doctests did
+# not, and failed with
+#
+#   error[E0514]: found crate `serde` compiled by an incompatible version of rustc
+#
+# on three targets at once (`-p waybill --doc`, `-p waybill-common --doc`,
+# `-p xtask --doc`). The tree had to be cleaned and rebuilt from scratch to
+# recover. Nothing in the repository recorded which compiler was expected, so
+# there was no way to notice the drift before it broke the gate.
+#
+# An exact pin also closes a correctness gap. CLAUDE.md states that
+# `scripts/pre-pr.sh` runs "the exact commands CI runs" — but CI installs
+# whatever `dtolnay/rust-toolchain@…  # stable` resolves to on the day, while a
+# developer's `cargo +stable` resolves to whatever their last `rustup update`
+# fetched. Those could differ, and a lint or a diagnostic that fires on only one
+# of them makes the local gate an unreliable predictor of CI.
+#
+# This file does NOT govern `waybill-ebpf`, which carries its own
+# `rust-toolchain.toml` pinning nightly for the aya kernel-side build. See #904
+# for why `xtask::build_ebpf`'s `+nightly` override currently bypasses it.
+#
+# To bump: change `channel`, run `./scripts/pre-pr.sh`, and expect a full
+# rebuild — a compiler change invalidates every artifact by design.
+[toolchain]
+channel = "1.98.1"
+components = ["clippy"]

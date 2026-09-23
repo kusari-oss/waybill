@@ -468,6 +468,16 @@ first failure — preferred over invoking them by hand so the flag
 set stays aligned with CI.
 
 These are the exact commands CI runs (`.github/workflows/ci.yml`).
+
+The compiler is pinned in `rust-toolchain.toml` (workspace root) so that
+"exact" is true of the toolchain as well as the flags. Without it, CI
+resolved `stable` on the day of the run while a developer resolved whatever
+their last `rustup update` fetched. When stable moved 1.97.0 → 1.98.1, the
+local `target/` ended up holding artifacts from both compilers and three
+doctest targets failed with `error[E0514]: found crate ... compiled by an
+incompatible version of rustc`; the tree had to be cleaned and rebuilt.
+Bumping the pin is a deliberate edit, and costs a full rebuild by design.
+`waybill-ebpf` keeps its own nightly pin — see #904.
 `cargo test -p waybill` alone is insufficient: it does not run clippy,
 and clippy's `--all-targets` enforces `clippy::unwrap_used` inside
 `#[cfg(test)]` modules too (the `waybill-cli` crate root deny'ies it
