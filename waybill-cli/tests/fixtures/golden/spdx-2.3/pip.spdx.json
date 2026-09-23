@@ -533,7 +533,22 @@
       "spdxElementId": "SPDXRef-DOCUMENT"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-Z2NM5GYCT4SAIAVF",
+      "relatedSpdxElement": "SPDXRef-Package-6PK6TYQPA2QWXM26",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-E2F5CRMEHQJNYSSF"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-E7GW44NAPCTLSLSL",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-E2F5CRMEHQJNYSSF"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ND26YIDZX2IHEVKH",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-E2F5CRMEHQJNYSSF"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-IGBIL3UCACAQFOM3",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-6PK6TYQPA2QWXM26"
     },
@@ -548,24 +563,9 @@
       "spdxElementId": "SPDXRef-Package-6PK6TYQPA2QWXM26"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-IGBIL3UCACAQFOM3",
+      "relatedSpdxElement": "SPDXRef-Package-Z2NM5GYCT4SAIAVF",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-6PK6TYQPA2QWXM26"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-ND26YIDZX2IHEVKH",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-E2F5CRMEHQJNYSSF"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-E7GW44NAPCTLSLSL",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-E2F5CRMEHQJNYSSF"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-6PK6TYQPA2QWXM26",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-E2F5CRMEHQJNYSSF"
     }
   ],
   "spdxVersion": "SPDX-2.3"

@@ -353,11 +353,6 @@
       "spdxElementId": "SPDXRef-DOCUMENT"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-SFZ6ZH3BHKUFYZNC",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-VJOSOSHLR676HQII"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-LM6FBYXSKLDBXQVU",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-VJOSOSHLR676HQII"
@@ -369,6 +364,11 @@
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-QUIZBKSWTOAVWLHQ",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-VJOSOSHLR676HQII"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-SFZ6ZH3BHKUFYZNC",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-VJOSOSHLR676HQII"
     }

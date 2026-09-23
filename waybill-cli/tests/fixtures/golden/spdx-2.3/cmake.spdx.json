@@ -352,17 +352,17 @@
       "spdxElementId": "SPDXRef-DOCUMENT"
     },
     {
+      "relatedSpdxElement": "SPDXRef-Package-3ECZZDDDHD3O6FKS",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-6E543TJSVJVDSNNI"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-6JWGJCRVPGZ5RSBG",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-6E543TJSVJVDSNNI"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-JCUJXG5KKFFE45OL",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-6E543TJSVJVDSNNI"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-3ECZZDDDHD3O6FKS",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-6E543TJSVJVDSNNI"
     },

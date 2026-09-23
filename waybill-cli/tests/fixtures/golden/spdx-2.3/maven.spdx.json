@@ -350,9 +350,9 @@
       "spdxElementId": "SPDXRef-DOCUMENT"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-MVONQLC7NTCYCDSJ",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-Q7X32JLRPGCHW46Q"
+      "relatedSpdxElement": "SPDXRef-Package-Q7X32JLRPGCHW46Q",
+      "relationshipType": "TEST_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-B7B65U5T2YH5ZD5T"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-BE4OZRGHG4BEYMYQ",
@@ -360,9 +360,9 @@
       "spdxElementId": "SPDXRef-Package-Q7X32JLRPGCHW46Q"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-Q7X32JLRPGCHW46Q",
-      "relationshipType": "TEST_DEPENDENCY_OF",
-      "spdxElementId": "SPDXRef-Package-B7B65U5T2YH5ZD5T"
+      "relatedSpdxElement": "SPDXRef-Package-MVONQLC7NTCYCDSJ",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-Q7X32JLRPGCHW46Q"
     }
   ],
   "spdxVersion": "SPDX-2.3"

@@ -267,6 +267,11 @@ impl SbomSerializer for Spdx2_3JsonSerializer {
             });
         }
 
+        // Last thing before serialization, so every producer above is
+        // covered — build_relationships, the document.rs file/view edges and
+        // the m072 BUILT_FROM edge alike.
+        relationships::sort_relationships(&mut doc.relationships);
+
         let json_str = serde_json::to_string_pretty(&doc)
             .context("serializing SPDX 2.3 document to JSON")?;
         let mut out = vec![EmittedArtifact {
