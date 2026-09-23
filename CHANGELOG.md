@@ -7,6 +7,61 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+## [0.10.0-alpha.1] - 2026-09-23
+
+### Haskell: four defects that made a `.cabal` project's SBOM wrong (#937, #936, #938, #943)
+
+Scanning a real Haskell project surfaced four independent defects in the
+`.cabal` reader, three of which produced **fewer or wrong** components than
+declaring nothing at all would have.
+
+- **A real `cabal.project.freeze` deleted dependencies (#937).** Real
+  `cabal v2-freeze` output qualifies every constraint by scope (`any.aeson
+  ==2.2.3.0`). The parser could not match a qualified name and extracted
+  nothing, while the empty parse still counted as a successful lockfile and
+  suppressed the design-tier fallback. On a public library that meant 22
+  components became 2. Pinning your dependencies produced a strictly worse
+  document than not pinning them.
+
+- **A dependency declared in two manifests kept only one manifest's
+  constraint (#936).** A library requiring `base >=4.11 && <4.22` alongside an
+  example requiring `>=4.14 && <4.15` emitted only the example's — which a
+  consumer reads as the library's requirement. Both constraints and both
+  manifest paths are now carried. A `build-depends:` on a sibling package also
+  no longer mints a second, versionless phantom component.
+
+- **A lockfile in one directory silenced the whole repository (#938).**
+  Suppression is now decided per dependency, against the lockfile that governs
+  that `*.cabal`. A lockfile is authoritative about what it describes and says
+  nothing about anything else. A partial freeze at a repository root was
+  reducing a 21-component document to 5.
+
+- **Hackage identifiers were lowercased (#943).** Hackage names are
+  case-sensitive: `pkg:hackage/quickcheck` resolves to nothing, and
+  `pkg:hackage/diff` resolves to a **different package** than `Diff` — a
+  confident wrong answer rather than a loud failure. Case is now preserved
+  where identity is minted and folded only where names are matched.
+
+### SPDX 2.3 relationship order is now deterministic (#948)
+
+Two scans of an unchanged tree emitted the same relationships in different
+orders, so consecutive SBOMs of the same source differed in bytes and anyone
+diffing across builds saw phantom changes. The order was inherited from the
+scan, which stopped being stable when the walker and resolver became parallel.
+
+CycloneDX (`BTreeMap`/`BTreeSet`) and SPDX 3 (explicit sort) were already
+immune; SPDX 2.3 alone preserved input order. It now sorts at final document
+assembly by `(spdxElementId, relationshipType, relatedSpdxElement)`.
+
+### The compiler is pinned (#944)
+
+`rust-toolchain.toml` pins the workspace compiler. Previously CI resolved
+`stable` on the day of the run while a developer resolved whatever their last
+`rustup update` fetched, so `scripts/pre-pr.sh` was not in fact running "the
+exact commands CI runs". A silent move from 1.97.0 to 1.98.1 left a build tree
+holding artifacts from both compilers and broke three doctest targets.
+
+
 ### New: `waybill repo report` — what waybill understood, and what it did not (#932)
 
 A new subcommand answering a question `sbom scan` cannot: **which parts of
