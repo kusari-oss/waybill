@@ -46,6 +46,11 @@ Every emitted input component is reachable from the document root by walking
 dependency edges (FR-007, SC-003). Inputs declared by other inputs are expressed
 as edges between those components, not re-parented to the root (FR-008).
 
+The project-to-input edge is **build-scoped** (FR-007a): SPDX 2.3
+`BUILD_DEPENDENCY_OF`, and a CycloneDX non-runtime scope. A consumer filtering
+to runtime dependencies may rely on flake inputs being excluded by that filter —
+they are what the project was *built with*, not what it depends on.
+
 ## C-6 — The original reference, when it differs
 
 When an input's `original` differs from its `locked` reference, the document

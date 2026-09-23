@@ -53,6 +53,10 @@ through the pinned nixpkgs) is explicitly out of scope; see Out of Scope.
 - Q: How should a flake input be identified, given purl has no `nix` type? → A: Host-typed where the input type has a purl equivalent and a revision is known (`pkg:github/<owner>/<repo>@<rev>`, gitlab, sourcehut); `pkg:generic/<name>@<rev>` with the upstream URL carried as source annotations otherwise; `path` and `indirect` inputs not emitted. Mirrors the milestone-128 FR-002a decision for Yocto `SRC_URI` + `SRCREV`, which went host-typed because OSV's commit and ecosystem queries return advisories directly against host-typed PURLs. A native `pkg:nix` type is unresolved upstream and is tracked separately for research.
 - Q: How should a flake input's `narHash` be represented, given it covers a NAR serialization rather than file bytes? → A: Record it verbatim in a `waybill:` annotation that names what it covers, and emit no native checksum field. Emitting it as a native checksum would assert that the component's content hashes to that value, which is false for any consumer that verifies it, and the encoding differs too (SRI base64 vs hex). Accuracy (Principle IX) outranks native-first (Principle V) where the native field would carry a false statement.
 
+### Session 2026-09-24
+
+- Q: What kind of edge attaches a flake input to the consuming project? → A: A **build-scoped** edge — `BuildDependsOn` / `LifecycleScope::Build`, emitting SPDX 2.3 `BUILD_DEPENDENCY_OF` and a filterable CycloneDX non-runtime scope. A plain `DependsOn` would assert that the project depends on its flake inputs the way it depends on its library dependencies, which is false: measured on two real projects, the flake supplies the build environment while the dependency set comes from the language's own manifests. Build scope makes SC-003 true by fact rather than by fiat, and lets a consumer filtering to runtime drop these cleanly.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - The build's pinned inputs appear in the SBOM (Priority: P1)
@@ -182,6 +186,15 @@ input's hash covers a NAR serialization rather than the bytes of a file.
 - **FR-007**: System MUST express the relationship between the consuming project
   and each input, such that every emitted input is reachable from the document
   root.
+- **FR-007a**: That relationship MUST be **build-scoped** — the target formats'
+  build-dependency semantics, not an ordinary runtime dependency. **Added after
+  the 2026-09-24 clarification.** FR-007 as first written mandated an edge
+  without saying which, and the obvious reading produces a false statement: a
+  flake input is part of the build environment, not of the project's dependency
+  closure. Emitting it as an ordinary dependency would put it in the same bucket
+  as the project's library dependencies and hand vulnerability matching a target
+  that is not in the shipped artifact. A consumer filtering to runtime
+  dependencies MUST be able to drop flake inputs on that signal alone.
 - **FR-008**: System MUST express an input's own declared inputs as
   relationships rather than flattening them, when the lockfile records them.
 - **FR-009**: System MUST NOT present a flake input's `narHash` as though it
@@ -293,3 +306,12 @@ input's hash covers a NAR serialization rather than the bytes of a file.
   than an observation of a built artefact.
 - Repositories may contain several independent flakes; per-directory scoping
   follows the rule established for Haskell lockfiles in #938.
+- The flake supplies the **build environment**, while the project's dependency
+  set comes from its language-native manifests. True of both projects measured
+  (a cabal library and a Haskell web client, each resolving dependencies through
+  cabal/stack while the flake pins the toolchain). FR-007a's build scope follows
+  from this. **A project that uses Nix as its actual dependency source** — a
+  Nix-packaged application whose runtime closure comes from nixpkgs — would be
+  understated by build scope. No such project was observed, and designing for an
+  unobserved case would be speculation; recorded here so the limit is explicit
+  rather than discovered later.
