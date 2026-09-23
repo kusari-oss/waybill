@@ -20,6 +20,7 @@ pub mod cocoapods;
 pub mod composer;
 pub mod conan;
 pub mod dart;
+pub mod nix;
 mod control_file;
 pub mod copyright;
 pub mod dpkg;
@@ -2138,6 +2139,11 @@ pub fn read_all(
     // Milestone 664 US2 T050: dart splice from shared-walker pilot.
     out.extend(std::mem::take(&mut shared_pilot.dart));
 
+    // Milestone 925 (#946): Nix flake.lock splice. The lockfile pins every
+    // build input by exact revision; before this, waybill claimed none of a
+    // Nix repository's files.
+    out.extend(std::mem::take(&mut shared_pilot.nix));
+
     // Milestone 140: Elixir/Mix ecosystem reader. One main-module
     // per `mix.exs` (FR-012) + lockfile-driven (FR-002) + design-tier
     // from Podfile-equivalent `mix.exs` (FR-005) emission. Three
@@ -2440,6 +2446,7 @@ struct SharedPilotOutput {
     cocoapods: Vec<PackageDbEntry>,
     composer: Vec<PackageDbEntry>,
     dart: Vec<PackageDbEntry>,
+    nix: Vec<PackageDbEntry>,
     elixir: Vec<PackageDbEntry>,
     swift: Vec<PackageDbEntry>,
     vcpkg: Vec<PackageDbEntry>,
@@ -2597,6 +2604,9 @@ fn run_shared_walker_pilot(
         builder = builder.register(r);
     }
     if let Some(r) = register("dart", dart::registration()) {
+        builder = builder.register(r);
+    }
+    if let Some(r) = register("nix", nix::registration()) {
         builder = builder.register(r);
     }
     if let Some(r) = register("elixir", elixir::registration()) {
@@ -2860,6 +2870,18 @@ fn run_shared_walker_pilot(
         })
         .unwrap_or_default();
 
+    // Milestone 925 (#946) — Nix flake.lock. One source-tier component per
+    // pinned input. Each lockfile governs its own directory (FR-011).
+    let nix_entries = registry
+        .registrations()
+        .iter()
+        .find(|r| r.reader_id == ReaderId::NIX)
+        .map(|reg| {
+            let paths = nix::extract_paths(reg);
+            nix::finalize(paths)
+        })
+        .unwrap_or_default();
+
     // Elixir — 2 walkers consolidated (`mix.lock` + `mix.exs`) with
     // ancestor-path filter for `_build`/`deps`/`priv`/`cover`.
     let elixir_entries = registry
@@ -2995,6 +3017,7 @@ fn run_shared_walker_pilot(
         cocoapods: cocoapods_entries,
         composer: composer_entries,
         dart: dart_entries,
+        nix: nix_entries,
         elixir: elixir_entries,
         swift: swift_entries,
         vcpkg: vcpkg_entries,

@@ -1486,6 +1486,8 @@ impl CycloneDxBuilder {
                             | "cabal-freeze"
                             | "stack-yaml-lock"
                             | "cabal-pkg-descriptor"
+                            // Milestone 925 (#946) — Nix flake.lock reader.
+                            | "nix-flake-lock"
                             // Milestone 169 (T013, closes #500) — ipk
                             // archive-file reader + opkg installed-DB
                             // hardening. See spec.md FR-009 + FR-015.
@@ -1512,6 +1514,7 @@ impl CycloneDxBuilder {
                      cocoapods-podfile | cocoapods-manifest-lock | mix-lock | mix-exs | \
                      rebar-lock | rebar-config | app-src | sbt-lock | sbt-build | \
                      cabal-freeze | stack-yaml-lock | cabal-pkg-descriptor | \
+                     nix-flake-lock | \
                      ipk-file | opkg-status-db)"
                 );
                 properties.push(json!({

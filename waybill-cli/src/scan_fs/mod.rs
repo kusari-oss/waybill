@@ -1241,6 +1241,12 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
     // `spdx/v3_relationships.rs`'s emission). Runs after all other
     // resolution + filtering steps so the target component's scope
     // is final by the time edges are typed.
+    // Milestone 925 FR-007 — attach flake inputs to the project that builds
+    // with them. Must run BEFORE the scope rewrite below: it emits `DependsOn`
+    // edges which that pass then types as `BuildDependsOn` from the inputs'
+    // `LifecycleScope::Build`.
+    package_db::nix::attach_inputs_to_projects(&components, &mut relationships);
+
     apply_lifecycle_scope_to_edges(&components, &mut relationships);
 
     let components = deduplicate(components);

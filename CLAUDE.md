@@ -1,6 +1,6 @@
 # waybill Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-09-21
+Auto-generated from all feature plans. Last updated: 2026-09-23
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -389,6 +389,8 @@ Auto-generated from all feature plans. Last updated: 2026-09-21
 - unchanged. The batched path populates and reads the same enrichment cache. (923-enrich-batch-default)
 - Rust stable, workspace toolchain inherited. No nightly. + Existing only — `serde`/`serde_json` (repor (924-repo-observation-report)
 - None. The report is written to an operator-named path; no cache, (924-repo-observation-report)
+- Rust stable, workspace toolchain (now pinned in (925-nix-flake-reader)
+- N/A — all state in-process per scan, matching every reader since (925-nix-flake-reader)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -543,9 +545,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 925-nix-flake-reader: Added Rust stable, workspace toolchain (now pinned in
 - 924-repo-observation-report: Added Rust stable, workspace toolchain inherited. No nightly. + Existing only — `serde`/`serde_json` (repor
 - 923-enrich-batch-default: Added Rust stable, workspace toolchain inherited. No nightly. `waybill-ebpf` untouched. + Existing only — `clap` (flag surface), `tracing` (the log line). **Zero new Cargo dependencies.**
-- 922-fix-resolve-namespace-merge: Added Rust stable, workspace toolchain inherited. No nightly. `waybill-ebpf` untouched. + Existing only — `serde`/`serde_json`, `tracing`. **Zero new Cargo dependencies.**
 
 
 <!-- MANUAL ADDITIONS START -->

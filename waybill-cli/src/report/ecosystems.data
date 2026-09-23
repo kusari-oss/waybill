@@ -26,3 +26,13 @@ shard.yml	crystal
 Project.toml	julia
 nimble.toml	nim
 dune-project	ocaml
+
+# Milestone 925 (#946) — Nix. `flake.lock` IS read (the nix reader emits one
+# component per pinned input), so it is NOT listed here: the census counts it
+# as claimed via reader dispatch. The files below are the ones this milestone
+# deliberately does NOT read — Nix expressions are evaluated, not parsed, and
+# that is out of scope. Listing them makes a Nix repository report them as a
+# recognised ecosystem waybill does not read, rather than as wholly unknown.
+flake.nix	nix
+default.nix	nix
+shell.nix	nix
