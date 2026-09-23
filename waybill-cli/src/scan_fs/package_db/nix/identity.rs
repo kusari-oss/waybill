@@ -32,6 +32,26 @@ fn host_typed_purl_type(flake_type: &str) -> Option<&'static str> {
     }
 }
 
+/// Whether the purl-spec type definition declares namespace and name
+/// case-insensitive, and therefore requires lowercasing.
+///
+/// Checked against the published type definitions rather than assumed:
+///
+/// - `github-definition.json`    — `case_sensitive: false`, "It is not case
+///   sensitive and shall be lowercased." (both namespace and name)
+/// - `bitbucket-definition.json` — identical wording
+/// - `gitlab`, `sourcehut`       — **no definition file exists**, so there is
+///   no rule to follow and the declared spelling is preserved
+///
+/// This is the opposite of the #943 decision for Hackage, and deliberately so.
+/// The rule is not "preserve case" or "fold case" — it is "follow the registry's
+/// own rule", which has to be checked per ecosystem. Hackage names are
+/// case-sensitive (`Diff` and `diff` are different packages); GitHub namespaces
+/// are not, and two SBOMs of the same repository must join on PURL.
+fn requires_lowercasing(purl_type: &str) -> bool {
+    matches!(purl_type, "github" | "bitbucket")
+}
+
 /// Input types that name something local or registry-indirect, with no
 /// published upstream identity to put in a document (FR-003).
 pub(crate) fn is_unpublishable(flake_type: &str) -> bool {
@@ -73,11 +93,20 @@ pub(crate) fn identify(node_key: &str, locked: &LockedRef) -> Option<InputIdenti
         locked.owner.as_deref(),
         locked.repo.as_deref(),
     ) {
+        // Canonical form per the type's own definition. Without this the same
+        // upstream yields two identifiers — a lockfile writing `NixOS/nixpkgs`
+        // and one writing `nixos/nixpkgs` produce components that will not join
+        // across two SBOMs of the same dependency.
+        let (owner, repo) = if requires_lowercasing(purl_type) {
+            (owner.to_ascii_lowercase(), repo.to_ascii_lowercase())
+        } else {
+            (owner.to_string(), repo.to_string())
+        };
         let purl_str = format!("pkg:{purl_type}/{owner}/{repo}@{rev}");
         if let Ok(purl) = Purl::new(&purl_str) {
             return Some(InputIdentity {
                 purl,
-                name: repo.to_string(),
+                name: repo.clone(),
                 version: rev.to_string(),
                 source_url: locked.url.clone(),
                 source_type: "nix-flake-input",
@@ -157,6 +186,38 @@ mod tests {
             identify("x", &locked("github", Some("o"), Some("r"), None)).is_none(),
             "identity IS the locked revision (FR-002); without one there is nothing to emit"
         );
+    }
+
+    #[test]
+    fn github_namespace_and_name_are_lowercased_to_canonical_form() {
+        // purl-spec `github-definition.json`: namespace and name are
+        // `case_sensitive: false` — "It is not case sensitive and shall be
+        // lowercased." Without this, one lockfile writing `NixOS/nixpkgs` and
+        // another writing `nixos/nixpkgs` produce two identifiers for one
+        // upstream, and two SBOMs of the same dependency will not join.
+        let l = locked("github", Some("NixOS"), Some("NixPkgs"), Some("abc123"));
+        let id = identify("nixpkgs", &l).unwrap();
+        assert_eq!(id.purl.as_str(), "pkg:github/nixos/nixpkgs@abc123");
+        assert_eq!(id.name, "nixpkgs", "the component name follows the canonical repo name");
+    }
+
+    #[test]
+    fn a_type_with_no_purl_definition_keeps_its_declared_case() {
+        // `gitlab` and `sourcehut` have NO definition file in purl-spec, so
+        // there is no lowercasing rule to follow and inventing one would be a
+        // guess. Checked, not assumed — the opposite of the github case.
+        let l = locked("gitlab", Some("MixedCase"), Some("RepoName"), Some("abc123"));
+        let id = identify("x", &l).unwrap();
+        assert_eq!(id.purl.as_str(), "pkg:gitlab/MixedCase/RepoName@abc123");
+    }
+
+    #[test]
+    fn the_revision_is_never_case_folded() {
+        // A git revision is a hex digest; lowercasing it is harmless today but
+        // the rule being applied is about NAMESPACE and NAME, not version.
+        let l = locked("github", Some("NixOS"), Some("nixpkgs"), Some("ABCDEF123"));
+        let id = identify("x", &l).unwrap();
+        assert!(id.purl.as_str().ends_with("@ABCDEF123"), "got {}", id.purl.as_str());
     }
 
     #[test]

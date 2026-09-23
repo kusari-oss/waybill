@@ -101,11 +101,12 @@ fn emit_for_lockfile(path: &Path, doc: &FlakeLockDocument) -> Vec<PackageDbEntry
             continue;
         };
 
+        // `waybill:source-type` is NOT written here. The typed `source_type`
+        // field below is its carrier, and the emitters render both — writing
+        // both is what makes the property appear twice on every component
+        // (#940). Every other reader that sets both has the same defect; this
+        // one does not add to it.
         let mut extra: BTreeMap<String, serde_json::Value> = BTreeMap::new();
-        extra.insert(
-            "waybill:source-type".to_string(),
-            json!(id.source_type),
-        );
 
         // FR-009a — the NAR hash, verbatim, SRI prefix intact, in an
         // annotation and never in a native checksum field. It is a SHA-256
@@ -366,6 +367,21 @@ mod tests {
         assert!(
             !e2[0].extra_annotations.contains_key("waybill:nix-original-ref"),
             "an original that already names the locked revision adds nothing"
+        );
+    }
+
+    #[test]
+    fn source_type_is_carried_once_not_twice() {
+        // #940: a reader that sets BOTH the typed `source_type` field and a
+        // `waybill:source-type` annotation makes the property appear twice on
+        // every emitted component, because the emitters render both. This
+        // reader carries it in the typed field only.
+        let doc = parse_flake_lock_str(REAL_SINGLE_INPUT).unwrap();
+        let e = &emit_for_lockfile(Path::new("/x/flake.lock"), &doc)[0];
+        assert!(e.source_type.is_some(), "the typed field is the carrier");
+        assert!(
+            !e.extra_annotations.contains_key("waybill:source-type"),
+            "writing the annotation as well duplicates the property on the wire"
         );
     }
 
