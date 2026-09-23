@@ -669,6 +669,14 @@
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-G7Z4VLNKDJGCP5XTMDSA2MXQ/anno-IFXMZ2APJW6LAZSZ",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-inventory-skipped-build-dirs\",\"value\":\"1\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-G7Z4VLNKDJGCP5XTMDSA2MXQ",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-G7Z4VLNKDJGCP5XTMDSA2MXQ/anno-J2A3NBODIAVWHMVU",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".venv/lib/python3.12/site-packages/idna-3.6.dist-info\\\"]\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-G7Z4VLNKDJGCP5XTMDSA2MXQ/pkg-KVTB5ZDMEOOSAO3A",

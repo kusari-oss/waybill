@@ -322,6 +322,14 @@ pub fn build_metadata(
                 "value": stats.unreadable_skipped.to_string(),
             }));
         }
+        // #934: directories whose descent the shared default-descent
+        // skip set suppressed. Zero on `--image` scans by design.
+        if stats.build_dir_skipped > 0 {
+            properties.push(json!({
+                "name": "waybill:file-inventory-skipped-build-dirs",
+                "value": stats.build_dir_skipped.to_string(),
+            }));
+        }
     }
 
     // Feature 005 SC-009 / FR-006 / FR-009: when /etc/os-release fields

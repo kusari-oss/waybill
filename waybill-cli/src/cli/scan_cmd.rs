@@ -4283,6 +4283,9 @@ pub async fn execute(
             dedupe_index: &dedupe_index,
             exclude_set: &exclude_set,
             source_tree_restriction,
+            // #934: directory scans honor the shared default-descent
+            // skip set; `--image` rootfs scans keep the full inventory.
+            skip_build_dirs: args.image.is_none(),
         };
         let (entries, stats) =
             scan_fs::file_tier::walker::walk_file_tier(&root_path, &walker_cfg);

@@ -596,6 +596,15 @@ pub fn annotate_document(
                 json!(stats.unreadable_skipped.to_string()),
             );
         }
+        // #934: directories the shared default-descent skip set
+        // suppressed. Zero on `--image` scans by design.
+        if stats.build_dir_skipped > 0 {
+            push(
+                &mut out,
+                "waybill:file-inventory-skipped-build-dirs",
+                json!(stats.build_dir_skipped.to_string()),
+            );
+        }
     }
 
     // C22 os-release-missing-fields — CDX emits as
