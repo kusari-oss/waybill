@@ -1108,7 +1108,10 @@ fn parse_cabal_freeze(path: &Path) -> anyhow::Result<Vec<CabalFreezeEntry>> {
         }
         // Try exact-pin first (most common in freeze files).
         if let Some(caps) = exact_pin_re().captures(trimmed) {
-            let name = caps.get(1).map(|m| m.as_str().to_lowercase());
+            // Declared spelling preserved (#943) — Hackage names are
+            // case-sensitive. Matching against declarations is done
+            // case-insensitively at the comparison site instead.
+            let name = caps.get(1).map(|m| m.as_str().to_string());
             let version = caps.get(2).map(|m| m.as_str().to_string());
             if let (Some(name), Some(version)) = (name, version) {
                 out.push(CabalFreezeEntry::ExactPin { name, version });
@@ -1122,7 +1125,8 @@ fn parse_cabal_freeze(path: &Path) -> anyhow::Result<Vec<CabalFreezeEntry>> {
         }
         // Fall through to range constraint (catch-all).
         if let Some(caps) = range_constraint_re().captures(trimmed) {
-            let name = caps.get(1).map(|m| m.as_str().to_lowercase());
+            // Declared spelling preserved (#943).
+            let name = caps.get(1).map(|m| m.as_str().to_string());
             let range = caps.get(2).map(|m| m.as_str().to_string());
             if let (Some(name), Some(range)) = (name, range) {
                 out.push(CabalFreezeEntry::RangeConstraint { name, range });
@@ -1194,7 +1198,8 @@ fn split_hackage_coord(coord: &str) -> Option<(String, String)> {
     // Stack's `original.hackage` may include a `@sha256:...` suffix; strip it.
     let coord = coord.split('@').next().unwrap_or(coord);
     let dash_idx = coord.rfind('-')?;
-    let name = coord[..dash_idx].to_lowercase();
+    // Declared spelling preserved (#943).
+    let name = coord[..dash_idx].to_string();
     let version = coord[dash_idx + 1..].to_string();
     if name.is_empty() || version.is_empty() {
         return None;
@@ -1222,9 +1227,10 @@ fn parse_cabal_manifest(path: &Path) -> anyhow::Result<CabalManifest> {
     let text = std::fs::read_to_string(path)
         .map_err(|e| anyhow::anyhow!("read failed: {e}"))?;
 
+    // Declared spelling preserved (#943).
     let name = cabal_name_re()
         .captures(&text)
-        .and_then(|c| c.get(1).map(|m| m.as_str().to_lowercase()));
+        .and_then(|c| c.get(1).map(|m| m.as_str().to_string()));
     let version = cabal_version_re()
         .captures(&text)
         .and_then(|c| c.get(1).map(|m| m.as_str().to_string()));
@@ -1363,7 +1369,18 @@ fn parse_dep_list_counting(body: &str) -> (Vec<DeclaredDep>, usize) {
             continue;
         }
         out.push(DeclaredDep {
-            name: name.to_lowercase(),
+            // The DECLARED spelling, verbatim (#943).
+            //
+            // Hackage package names are case-sensitive. Lowercasing produced
+            // `pkg:hackage/quickcheck` for `QuickCheck` (which resolves to
+            // nothing) and `pkg:hackage/diff` for `Diff` — and `diff` is a
+            // real, DIFFERENT package, so that one failed silently with a
+            // confident wrong answer rather than a 404.
+            //
+            // Case folding still happens wherever names are MATCHED (against
+            // freeze pins, against local package names); it just no longer
+            // happens where identity is MINTED.
+            name: name.to_string(),
             range,
             executable,
             all_ranges: Vec::new(),
@@ -1660,7 +1677,9 @@ fn build_main_module(
                 .parent()
                 .and_then(|p| p.file_name())
                 .and_then(|s| s.to_str())
-                .map(|s| s.to_lowercase())
+                // Directory name used verbatim (#943); folding its case
+                // would be one more guess on top of the fallback itself.
+                .map(|s| s.to_string())
         })
         .unwrap_or_else(|| "unknown".to_string());
     if name.is_empty() {
@@ -1752,7 +1771,14 @@ fn build_design_tier_components(
     // artifact of the scan rather than a property of the project.
     let main_name = manifest.name.clone().unwrap_or_default();
     for (dep, scope) in collect_design_tier_deps(manifest) {
-        if dep.name == main_name || local_package_names.contains(&dep.name) {
+        // Compared case-insensitively (#943): identity now preserves the
+        // declared spelling, and two manifests in one repository may spell the
+        // same local package differently.
+        if dep.name.eq_ignore_ascii_case(&main_name)
+            || local_package_names
+                .iter()
+                .any(|l| l.eq_ignore_ascii_case(&dep.name))
+        {
             continue;
         }
         // Milestone 895 (#891) — a declared dependency has no RESOLVED version,
