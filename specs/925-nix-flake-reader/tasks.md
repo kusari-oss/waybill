@@ -31,9 +31,9 @@ represent a `follows` alias.
 - [X] T005 [P] Define `FlakeLockDocument` and `FlakeNode` in `waybill-cli/src/scan_fs/package_db/nix/lockfile.rs` per data-model.md Entities 1 and 2
 - [X] T006 Define `InputEdge` in `waybill-cli/src/scan_fs/package_db/nix/lockfile.rs` as a discriminated type — `NodeRef(String)` from a JSON string, `Follows(Vec<String>)` from a JSON array (research R3, Principle IV)
 - [X] T007 Implement `parse_flake_lock` in `waybill-cli/src/scan_fs/package_db/nix/lockfile.rs`, rejecting `version != 7` as `UnrecognisedVersion` and invalid JSON as `Malformed`, distinguishing the two in the diagnostic only (FR-010, data-model.md Entity 1 state)
-- [ ] T008 [P] Add verbatim real-format fixtures under `waybill-cli/tests/fixtures/nix/`: a single-`github`-input lockfile, a `tarball` input carrying `rev` but no owner/repo, a `follows` alias with an array-valued `inputs` entry, and a non-root node declaring its own inputs — copied from the lockfiles measured in research.md, not hand-written
-- [ ] T009 [P] Add constructed failure fixtures: `waybill-cli/tests/fixtures/nix/malformed/flake.lock` (invalid JSON), `.../unknown-version/flake.lock` (`version: 99`), `.../no-inputs/flake.lock`, and `.../two-flakes/{a,b}/flake.lock` for the per-directory scoping case
-- [ ] T010 Unit-test `parse_flake_lock` in `waybill-cli/src/scan_fs/package_db/nix/lockfile.rs` against every fixture from T008 and T009, asserting `follows` entries parse as `Follows` and never as `NodeRef`
+- [X] T008 [P] Add verbatim real-format fixtures under `waybill-cli/tests/fixtures/nix/`: a single-`github`-input lockfile, a `tarball` input carrying `rev` but no owner/repo, a `follows` alias with an array-valued `inputs` entry, and a non-root node declaring its own inputs — copied from the lockfiles measured in research.md, not hand-written
+- [X] T009 [P] Add constructed failure fixtures: `waybill-cli/tests/fixtures/nix/malformed/flake.lock` (invalid JSON), `.../unknown-version/flake.lock` (`version: 99`), `.../no-inputs/flake.lock`, and `.../two-flakes/{a,b}/flake.lock` for the per-directory scoping case
+- [X] T010 Unit-test `parse_flake_lock` in `waybill-cli/src/scan_fs/package_db/nix/lockfile.rs` against every fixture from T008 and T009, asserting `follows` entries parse as `Follows` and never as `NodeRef`
 
 **Checkpoint**: the lockfile parses into types that cannot silently mistake an alias for a pin.
 
@@ -47,10 +47,10 @@ represent a `follows` alias.
 
 ### Tests for User Story 1
 
-- [ ] T011 [P] [US1] Write `waybill-cli/tests/nix_flake_lock_reader.rs` asserting contract C-1 and FR-002: one component per identifiable locked input, and none for root, `path`, `indirect` or `follows` aliases
-- [ ] T012 [P] [US1] Extend `waybill-cli/tests/nix_flake_lock_reader.rs` with contracts C-2 and C-3: a `github` input emits `pkg:github/<owner>/<repo>@<rev>` byte-for-byte, a `tarball` input emits `pkg:generic/<name>@<rev>`, and each component's `version` field equals the locked `rev` verbatim — untruncated, not normalised, not replaced by `lastModified`. The identifier and the version field are different slots; asserting the PURL contains the rev says nothing about which value populated `version`
+- [X] T011 [P] [US1] Write `waybill-cli/tests/nix_flake_lock_reader.rs` asserting contract C-1 and FR-002: one component per identifiable locked input, and none for root, `path`, `indirect` or `follows` aliases
+- [X] T012 [P] [US1] Extend `waybill-cli/tests/nix_flake_lock_reader.rs` with contracts C-2 and C-3: a `github` input emits `pkg:github/<owner>/<repo>@<rev>` byte-for-byte, a `tarball` input emits `pkg:generic/<name>@<rev>`, and each component's `version` field equals the locked `rev` verbatim — untruncated, not normalised, not replaced by `lastModified`. The identifier and the version field are different slots; asserting the PURL contains the rev says nothing about which value populated `version`
 - [X] T012a [P] [US1] Extend `waybill-cli/tests/nix_flake_lock_reader.rs` asserting no emitted PURL begins with `pkg:nix` (FR-013c, contract C-2). Kept separate from T012 so a mutation breaking one is not masked by the other passing: T012 asserts what IS emitted, this asserts what must never be
-- [ ] T013 [P] [US1] Extend `waybill-cli/tests/nix_flake_lock_reader.rs` with contract C-4: no native checksum field is populated for these components, and the NAR hash appears in its annotation with the `sha256-` prefix intact
+- [X] T013 [P] [US1] Extend `waybill-cli/tests/nix_flake_lock_reader.rs` with contract C-4: no native checksum field is populated for these components, and the NAR hash appears in its annotation with the `sha256-` prefix intact
 
 ### Implementation for User Story 1
 
@@ -64,9 +64,9 @@ represent a `follows` alias.
 - [X] T021 [US1] Add matching NAR-hash extractors to `waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3}.rs` and register the row in `waybill-cli/src/parity/extractors/mod.rs`, or `every_catalog_row_has_an_extractor` and `holistic_parity` fail by construction (FR-009b)
 - [X] T022 [US1] Sort emitted inputs by a total order over the identifier before emission in `waybill-cli/src/scan_fs/package_db/nix/mod.rs` — `nodes` is a JSON object and its iteration order is not a guarantee (SC-006, the #948 failure mode)
 - [X] T023 [US1] Scope each `flake.lock` to the directory that contains it in `waybill-cli/src/scan_fs/package_db/nix/mod.rs`, so one lockfile never speaks for another directory (FR-011, contract C-9, the #938 rule applied from the start)
-- [ ] T024 [US1] Assert the repo-report census counts `flake.lock` as claimed in `waybill-cli/tests/repo_report_census.rs` — it should follow from the T003 registration, so this task is verification, and a failure means the registration did not take (FR-014)
-- [ ] T024a [US1] Add the Nix files this feature does NOT read — `flake.nix`, `default.nix`, `shell.nix`, `*.nix` — to `waybill-cli/src/report/ecosystems.data` as recognised-but-unread markers, so they report as a known ecosystem rather than as wholly unknown. SC-004 requires zero Nix files unrecognised, and `flake.lock` alone is one of six on the reference repository
-- [ ] T025 [P] [US1] Add a determinism test to `waybill-cli/tests/nix_flake_lock_reader.rs`: two scans of one fixture emit a byte-identical component sequence (SC-006)
+- [X] T024 [US1] Assert the repo-report census counts `flake.lock` as claimed in `waybill-cli/tests/repo_report_census.rs` — it should follow from the T003 registration, so this task is verification, and a failure means the registration did not take (FR-014)
+- [X] T024a [US1] Add the Nix files this feature does NOT read — `flake.nix`, `default.nix`, `shell.nix`, `*.nix` — to `waybill-cli/src/report/ecosystems.data` as recognised-but-unread markers, so they report as a known ecosystem rather than as wholly unknown. SC-004 requires zero Nix files unrecognised, and `flake.lock` alone is one of six on the reference repository
+- [X] T025 [P] [US1] Add a determinism test to `waybill-cli/tests/nix_flake_lock_reader.rs`: two scans of one fixture emit a byte-identical component sequence (SC-006)
 
 **Checkpoint**: SC-001 and SC-004 are met by this phase alone — the MVP.
 
@@ -101,8 +101,8 @@ represent a `follows` alias.
 
 ### Tests for User Story 3
 
-- [ ] T030 [P] [US3] Write `waybill-cli/tests/nix_flake_lock_original_ref.rs` asserting both the branch and the locked revision are recoverable when they differ (FR-006, contracts C-6 and A-2, US3 acceptance scenario 1)
-- [ ] T031 [P] [US3] Extend `waybill-cli/tests/nix_flake_lock_original_ref.rs` asserting no annotation is emitted when `original` already names the locked revision (FR-006, US3 acceptance scenario 2)
+- [X] T030 [P] [US3] Write `waybill-cli/tests/nix_flake_lock_original_ref.rs` asserting both the branch and the locked revision are recoverable when they differ (FR-006, contracts C-6 and A-2, US3 acceptance scenario 1)
+- [X] T031 [P] [US3] Extend `waybill-cli/tests/nix_flake_lock_original_ref.rs` asserting no annotation is emitted when `original` already names the locked revision (FR-006, US3 acceptance scenario 2)
 
 ### Implementation for User Story 3
 
@@ -116,14 +116,14 @@ represent a `follows` alias.
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T035 [P] Write `waybill-cli/tests/nix_flake_lock_failure_modes.rs` asserting contract C-7: a malformed lockfile and an unrecognised-version lockfile each emit no components, warn naming the file, and leave every other ecosystem's component count identical to a scan of the same tree with the file removed (FR-010, SC-007)
-- [ ] T036 [P] Add an SC-005 test to `waybill-cli/tests/nix_flake_lock_failure_modes.rs`: adding a `flake.lock` to a tree never reduces the component count for any other ecosystem — the property #937 and #938 were both violations of
-- [ ] T037 [P] Add an SC-002 test to `waybill-cli/tests/nix_flake_lock_failure_modes.rs` asserting a scan of a `flake.lock` tree produces identical output with and without `--offline`, AND succeeds with `nix` absent from `PATH` (FR-013, contract C-8). SC-002 has two clauses — no network and no Nix installation — and only the first is otherwise tested; on a developer machine that has Nix, an accidental dependency on it would pass every other check
-- [ ] T038 [P] Add an FR-012 test to `waybill-cli/tests/nix_flake_lock_failure_modes.rs` asserting a flake present without a lockfile records why no inputs were emitted rather than emitting nothing silently
-- [ ] T039 Teeth-check every new test in `waybill-cli/tests/nix_*.rs` by mutation: revert each fix in turn and confirm the intended test fails and the others do not, recording the matrix in the PR. A test that passes under its own mutation proves nothing
-- [ ] T040 Run the mandatory pre-PR gate (`./scripts/pre-pr.sh`) and enumerate per-target results, checking for `exited abnormally` and `error[E` as well as `test result: FAILED` — a target that dies prints no `test result:` line
-- [ ] T041 [P] Add a `CHANGELOG.md` entry under `[Unreleased]` describing what a Nix repository's SBOM gains
-- [ ] T042 Verify SC-001 and SC-004 against the reference repository by hand, recording before/after figures in the PR
+- [X] T035 [P] Write `waybill-cli/tests/nix_flake_lock_failure_modes.rs` asserting contract C-7: a malformed lockfile and an unrecognised-version lockfile each emit no components, warn naming the file, and leave every other ecosystem's component count identical to a scan of the same tree with the file removed (FR-010, SC-007)
+- [X] T036 [P] Add an SC-005 test to `waybill-cli/tests/nix_flake_lock_failure_modes.rs`: adding a `flake.lock` to a tree never reduces the component count for any other ecosystem — the property #937 and #938 were both violations of
+- [X] T037 [P] Add an SC-002 test to `waybill-cli/tests/nix_flake_lock_failure_modes.rs` asserting a scan of a `flake.lock` tree produces identical output with and without `--offline`, AND succeeds with `nix` absent from `PATH` (FR-013, contract C-8). SC-002 has two clauses — no network and no Nix installation — and only the first is otherwise tested; on a developer machine that has Nix, an accidental dependency on it would pass every other check
+- [X] T038 [P] Add an FR-012 test to `waybill-cli/tests/nix_flake_lock_failure_modes.rs` asserting a flake present without a lockfile records why no inputs were emitted rather than emitting nothing silently
+- [X] T039 Teeth-check every new test in `waybill-cli/tests/nix_*.rs` by mutation: revert each fix in turn and confirm the intended test fails and the others do not, recording the matrix in the PR. A test that passes under its own mutation proves nothing
+- [X] T040 Run the mandatory pre-PR gate (`./scripts/pre-pr.sh`) and enumerate per-target results, checking for `exited abnormally` and `error[E` as well as `test result: FAILED` — a target that dies prints no `test result:` line
+- [X] T041 [P] Add a `CHANGELOG.md` entry under `[Unreleased]` describing what a Nix repository's SBOM gains
+- [X] T042 Verify SC-001 and SC-004 against the reference repository by hand, recording before/after figures in the PR
 
 ---
 

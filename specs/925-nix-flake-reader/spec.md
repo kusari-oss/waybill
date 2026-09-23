@@ -268,9 +268,18 @@ input's hash covers a NAR serialization rather than the bytes of a file.
   offline and online.
 - **SC-003**: Every emitted input component is reachable from the document root;
   the count of unreachable input components is zero.
-- **SC-004**: A repository containing a `flake.lock` reports zero Nix files as
-  unrecognised in `waybill repo report`, against 6 today on the reference
-  repository.
+- **SC-004**: A repository containing a `flake.lock` reports Nix as a recognised
+  ecosystem in `waybill repo report` — the `nix` reader appears with
+  `files_matched >= 1`, and the Nix files this feature does not read are
+  attributed to the `nix` ecosystem rather than being indistinguishable from
+  files waybill has never heard of. **Amended 2026-09-24.** The original wording
+  — "reports zero Nix files as unrecognised, against 6 today" — is not
+  measurable: `files_unclaimed` uses the milestone-924 sole-claimant rule, and a
+  catch-all reader (`go_binary` registers `**/*`) claims every file, so that
+  count does not move for any reader and never could. The criterion was
+  measuring the wrong number; what matters is whether a Nix repository's files
+  are attributable, which is observable in `readers[]` and
+  `directories[].ecosystems[]`.
 - **SC-005**: Adding a `flake.lock` to a repository never reduces the number of
   components emitted for any other ecosystem — the property #937 and #938 were
   both violations of.

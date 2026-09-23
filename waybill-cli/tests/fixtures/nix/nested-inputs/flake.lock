@@ -1,0 +1,19 @@
+{
+  "nodes": {
+    "flake-parts": {
+      "inputs": { "nixpkgs-lib": ["nixpkgs"] },
+      "locked": { "owner": "waybill-fixture-org", "repo": "flake-parts",
+                  "rev": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                  "narHash": "sha256-BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=", "type": "github" },
+      "original": { "owner": "waybill-fixture-org", "repo": "flake-parts", "type": "github" }
+    },
+    "nixpkgs": {
+      "locked": { "owner": "NixOS", "repo": "nixpkgs",
+                  "rev": "cccccccccccccccccccccccccccccccccccccccc",
+                  "narHash": "sha256-CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC=", "type": "github" },
+      "original": { "owner": "NixOS", "ref": "nixos-unstable", "repo": "nixpkgs", "type": "github" }
+    },
+    "root": { "inputs": { "flake-parts": "flake-parts", "nixpkgs": "nixpkgs" } }
+  },
+  "root": "root", "version": 7
+}

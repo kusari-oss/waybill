@@ -7,6 +7,43 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### New: Nix `flake.lock` inputs appear in the SBOM (#946)
+
+waybill claimed none of a Nix repository's files. On a public Haskell library
+`waybill repo report` recorded 65 of 70 unclaimed, every Nix file among them —
+so the artefact that actually pins the build was absent from the document.
+
+Every input a `flake.lock` pins now emits as a source-tier component identified
+by its exact revision, attached to the project that builds with it. Measured on
+two public repositories: 1 and 6 inputs respectively, where previously there
+were none.
+
+- **Build-scoped, not runtime.** A flake input is the build *environment*, not
+  part of the project's dependency closure. Edges emit as SPDX 2.3
+  `BUILD_DEPENDENCY_OF` and a CycloneDX non-runtime scope, so a consumer
+  filtering to runtime dependencies drops them on that signal alone. Emitting
+  them as ordinary dependencies would hand vulnerability matching a target that
+  is not in the shipped artifact.
+- **The NAR hash is annotated, never a native checksum.** A `narHash` is
+  SRI-encoded base64 over a NAR serialization of a directory tree; every native
+  checksum field means a hash over the component's bytes and expects hex.
+  Filling one would be a false statement a verifier would act on.
+- **`follows` aliases resolve to the pin they name** rather than minting a
+  duplicate component, and an input declared by another input keeps its edge
+  from that declarer instead of being flattened onto the project.
+- **Identifiers are canonical.** `github` and `bitbucket` namespaces are
+  lowercased per their purl type definitions, so two SBOMs of the same upstream
+  join. No `pkg:nix` identifier is invented while the upstream type remains
+  unresolved.
+- **What was asked for is recorded alongside what was resolved.** Each input
+  says whether re-locking would move it — an input tracking the default branch
+  is marked as such, which on one measured repository covered five of six
+  inputs that previously said nothing.
+
+No Nix evaluation, no subprocess, no network: the reader parses the lockfile
+only, and the scan produces identical output offline and online.
+
+
 ## [0.10.0-alpha.1] - 2026-09-23
 
 ### Haskell: four defects that made a `.cabal` project's SBOM wrong (#937, #936, #938, #943)
