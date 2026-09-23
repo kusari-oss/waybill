@@ -160,6 +160,11 @@ jobs:
       - name: Install stable Rust (x86_64 target)
         uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable (2026-04-25)
         with:
+          # Must match `channel` in rust-toolchain.toml. Without this the action
+          # installs `stable`, then rustup auto-installs the pinned toolchain on
+          # the first cargo call -- two downloads per job. Measured on PR #944:
+          # +2m18s linux, +5m43s macOS, +6m03s windows.
+          toolchain: "1.98.1"
           targets: x86_64-unknown-linux-gnu
 
       - name: Cache cargo + cross-compiled build
@@ -318,6 +323,11 @@ jobs:
       - name: Install stable Rust (aarch64 target)
         uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable (2026-04-25)
         with:
+          # Must match `channel` in rust-toolchain.toml. Without this the action
+          # installs `stable`, then rustup auto-installs the pinned toolchain on
+          # the first cargo call -- two downloads per job. Measured on PR #944:
+          # +2m18s linux, +5m43s macOS, +6m03s windows.
+          toolchain: "1.98.1"
           targets: aarch64-unknown-linux-gnu
 
       - name: Cache cargo + cross-compiled build
@@ -447,6 +457,11 @@ jobs:
       - name: Install stable Rust (aarch64-apple-darwin)
         uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable (2026-04-25)
         with:
+          # Must match `channel` in rust-toolchain.toml. Without this the action
+          # installs `stable`, then rustup auto-installs the pinned toolchain on
+          # the first cargo call -- two downloads per job. Measured on PR #944:
+          # +2m18s linux, +5m43s macOS, +6m03s windows.
+          toolchain: "1.98.1"
           targets: aarch64-apple-darwin
 
       - name: Cache cargo + build
@@ -549,6 +564,11 @@ jobs:
       - name: Install stable Rust (x86_64-pc-windows-msvc)
         uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable (2026-04-25)
         with:
+          # Must match `channel` in rust-toolchain.toml. Without this the action
+          # installs `stable`, then rustup auto-installs the pinned toolchain on
+          # the first cargo call -- two downloads per job. Measured on PR #944:
+          # +2m18s linux, +5m43s macOS, +6m03s windows.
+          toolchain: "1.98.1"
           targets: x86_64-pc-windows-msvc
 
       - name: Cache cargo + build

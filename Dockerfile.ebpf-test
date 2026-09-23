@@ -13,7 +13,11 @@
 # script runs the trace + assertion. Exits 0 on success, non-zero
 # on any failure.
 
-FROM rust:1.88-bookworm
+# Must match `channel` in rust-toolchain.toml. This image builds the main
+# workspace, and the repo's toolchain file is copied in, so a mismatch makes
+# rustup download the pinned toolchain inside the container -- slow, and it
+# defeats the point of pinning the base image at all.
+FROM rust:1.98.1-bookworm
 
 # eBPF build deps + runtime tools the trace-run needs (gcc for the
 # fixture's compiler-invocation traffic; jq for the assertion script;
