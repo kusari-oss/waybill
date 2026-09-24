@@ -63,15 +63,16 @@ series present at the revision.
 | `series` | e.g. `9.6.x` |
 | `boot_libraries` | names bound to `null` in the **top-level** package-override attrset |
 
-**Validation**: a nulled name belongs here only when it is also a package in
-the `PackageSet` (R3). `editedCabalFile` is nulled but is not a package, so it
-is excluded; `directory-ospath-streaming` is nulled at deeper attrset nesting
-in GHC 9.4.x but IS a package at v0.3, so it belongs. Nesting depth was tried
-as the discriminator and rejected by measurement — it drops the second case.
+**Validation**: every nulled name belongs here, unfiltered (R3). Two narrower
+rules were tried and rejected by measurement — nesting depth drops
+`directory-ospath-streaming` (a real package at v0.3), and package-set
+membership drops `rts`, `ghc-platform`, `ghc-toolchain` and
+`system-cxx-std-lib` (real GHC-bundled packages, absent from the package set
+precisely because they are never built from Hackage). `editedCabalFile` stays
+in and is inert: this set is only consulted for names a project declared.
 
-**Measured shape**: 40/40/41 nulled bindings at GHC 9.4.x/9.6.x/9.10.x, of
-which 36/35/37 are packages (R3); across all eight series, 50 in union and 32
-in intersection (R4).
+**Measured shape**: 35–47 nulled bindings per series at the pinned revision;
+across all eight series, 50 in union and 32 in intersection (R3, R4).
 
 ---
 
@@ -115,7 +116,7 @@ Unresolved { reason }
 
 | reason | when |
 |---|---|
-| `compiler-supplied` | the name is in the candidate boot-library union (FR-014a) |
+| `compiler-supplied` | the name is nulled by any candidate compiler (FR-014a) |
 | `absent-from-package-set` | reached the revision; the name is not in it |
 | `source-unreachable` | could not reach, refused, unauthorized, or timed out (FR-017) |
 | `no-exact-revision` | the lock pins a moving reference (FR-012) |

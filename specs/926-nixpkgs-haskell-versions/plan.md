@@ -92,7 +92,7 @@ waybill-cli/src/scan_fs/package_db/
 │       ├── cache.rs                          # per-revision cache (R5)
 │       ├── package_set.rs                    # parse name -> (version, sha256) (R1)
 │       ├── nix_base32.rs                     # base32 -> 32 bytes -> hex (R2)
-│       └── boot_libraries.rs                 # nulled set ∩ package set (R3)
+│       └── boot_libraries.rs                 # nulled set, unfiltered (R3)
 └── haskell.rs                                # MODIFIED: consume ResolutionOutcome
 
 waybill-cli/src/generate/

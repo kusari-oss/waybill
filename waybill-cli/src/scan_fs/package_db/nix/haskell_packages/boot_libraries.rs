@@ -7,29 +7,52 @@
 //! This is the same set `cabal v2-freeze` declines to pin (#938) — two
 //! independent tools declining for the same reason.
 //!
-//! # Why a nulled name is not automatically a boot library
+//! # Why the rule is simply "nulled means compiler-supplied"
 //!
-//! The obvious extraction — every `name = null;` binding — also matches
+//! Two more elaborate rules were implemented and both were rejected by
+//! measurement. The record is kept because each looks obviously right.
+//!
+//! The naive extraction — every `name = null;` binding — also matches
 //! `editedCabalFile`, an attribute *inside* a derivation override rather than
-//! a package.
+//! a package. Two attempts were made to exclude it.
 //!
-//! Scoping by attribute-set nesting depth looks like the fix and is not.
-//! Measured across three GHC series at nixpkgs `a799d3e3`, a depth rule
-//! correctly drops `editedCabalFile` from 9.6.x but **also** drops
-//! `directory-ospath-streaming` from 9.4.x — a real package at v0.3 that the
-//! compiler genuinely supplies. Real boot libraries live at deeper nesting
-//! too, inside conditional attribute sets.
+//! **Attempt 1, attribute-set nesting depth.** Measured across three GHC
+//! series at nixpkgs `a799d3e3`: it correctly drops `editedCabalFile` from
+//! 9.6.x but also drops `directory-ospath-streaming` from 9.4.x, a real
+//! package at v0.3. Real boot libraries live at deeper nesting too, inside
+//! conditional attribute sets. Depth does not separate the cases.
 //!
-//! What separates the cases is package-set membership: `editedCabalFile` is
-//! not a package at all, and `directory-ospath-streaming` is.
+//! **Attempt 2, package-set membership** — keep a nulled name only when it is
+//! also a package in `hackage-packages.nix`. This excludes `editedCabalFile`
+//! correctly, and it was wrong for a subtler reason. Measured across all eight
+//! series at that revision, the nulled names absent from the package set are:
 //!
-//! The asymmetry is what makes this the right rule rather than merely a
-//! working one. Over-including a boot library withholds a version — lossy,
-//! and visible to the operator as a reason code. Under-including one lets a
-//! package the compiler supplies resolve to a Hackage version the build never
-//! uses: an invented version, which Principle IX forbids. The rule must fail
-//! toward over-inclusion, and package-set membership cannot under-include a
-//! real package, because a real package is by definition in the set.
+//! ```text
+//! editedCabalFile      a derivation attribute       -> correctly excluded
+//! rts                  the GHC runtime system       -> WRONGLY excluded
+//! ghc-platform         GHC-bundled                  -> WRONGLY excluded
+//! ghc-toolchain        GHC-bundled                  -> WRONGLY excluded
+//! system-cxx-std-lib   GHC-bundled                  -> WRONGLY excluded
+//! ```
+//!
+//! Those four are real Haskell packages a project can declare, and they are
+//! missing from `hackage-packages.nix` *precisely because* they are never
+//! built from Hackage — they only ever come from the compiler. Excluding them
+//! would report `absent-from-package-set` for a dependency whose true reason
+//! is `compiler-supplied`: no invented version, but a false statement in the
+//! emitted document (Principle X).
+//!
+//! **So the rule is the simple one.** A nulled name is compiler-supplied.
+//! `editedCabalFile` stays in the set and is inert, because the set is only
+//! ever consulted for names the project actually declared, and no project
+//! declares a dependency called `editedCabalFile` — it is not a legal Haskell
+//! package name. A false positive nothing can ever query costs nothing.
+//!
+//! The asymmetry that governs every version of this rule: over-including a
+//! boot library withholds a version, which is lossy and visible as a reason
+//! code. Under-including one lets a package the compiler supplies resolve to
+//! a Hackage version the build never uses — an invented version, which
+//! Principle IX forbids. Both rejected attempts failed toward under-inclusion.
 
 use std::collections::BTreeSet;
 use std::sync::OnceLock;
@@ -84,18 +107,14 @@ where
     out
 }
 
-/// Is `name` a boot library — nulled by a candidate compiler AND a real
-/// package?
+/// Is `name` supplied by the compiler rather than built from Hackage?
 ///
-/// `is_package` answers "does the pinned package set contain this name",
-/// passed in rather than imported so this module stays independent of the
-/// package-set parser.
-pub(crate) fn is_boot_library(
-    name: &str,
-    nulled: &BTreeSet<String>,
-    is_package: impl Fn(&str) -> bool,
-) -> bool {
-    nulled.contains(name) && is_package(name)
+/// Membership in the nulled set is the whole test. See the module docs for
+/// why the two more discriminating rules were rejected — both excluded real
+/// packages, and this one cannot, because a nulled binding means exactly
+/// "the compiler supplies this".
+pub(crate) fn is_boot_library(name: &str, nulled: &BTreeSet<String>) -> bool {
+    nulled.contains(name)
 }
 
 #[cfg(test)]
@@ -104,12 +123,14 @@ mod tests {
     use super::*;
 
     /// Shaped like a real `configuration-ghc-<series>.nix`: top-level package
-    /// overrides, plus a nested derivation override that also binds `null`.
+    /// overrides, a nested derivation override that also binds `null`, and a
+    /// conditional attrset holding a real package.
     const CONFIG: &str = r#"
 { pkgs, haskellLib }:
 self: super: {
   base = null;
   text = null;
+  rts = null;
 
   some-package = overrideCabal (drv: {
     editedCabalFile = null;
@@ -119,67 +140,93 @@ self: super: {
 }
 "#;
 
-    fn package_set_contains(name: &str) -> bool {
-        // `editedCabalFile` is deliberately absent: it is a derivation
-        // attribute, not a Haskell package.
-        matches!(name, "base" | "text" | "directory-ospath-streaming")
+    #[test]
+    fn m926_collects_every_null_binding() {
+        let n = nulled_names(CONFIG);
+        for name in ["base", "text", "rts", "editedCabalFile", "directory-ospath-streaming"] {
+            assert!(n.contains(name), "{name} should be collected");
+        }
     }
 
     #[test]
-    fn m926_collects_every_null_binding_as_a_candidate() {
+    fn m926_a_nulled_name_is_compiler_supplied() {
         let n = nulled_names(CONFIG);
-        assert!(n.contains("base"));
-        assert!(n.contains("text"));
-        assert!(n.contains("editedCabalFile"));
-        assert!(n.contains("directory-ospath-streaming"));
+        assert!(is_boot_library("base", &n));
+        assert!(is_boot_library("text", &n));
     }
 
-    #[test]
-    fn m926_a_nulled_name_that_is_a_package_is_a_boot_library() {
-        let n = nulled_names(CONFIG);
-        assert!(is_boot_library("base", &n, package_set_contains));
-        assert!(is_boot_library("text", &n, package_set_contains));
-    }
-
-    /// The false positive the depth rule was invented to remove.
-    #[test]
-    fn m926_a_nulled_name_that_is_not_a_package_is_excluded() {
-        let n = nulled_names(CONFIG);
-        assert!(
-            !is_boot_library("editedCabalFile", &n, package_set_contains),
-            "a derivation attribute is not a boot library"
-        );
-    }
-
-    /// The case that **rejected** the attrset-depth rule. This binding sits
+    /// The case that rejected the **attrset-depth** rule. This binding sits
     /// deeper than the top-level overrides, inside a conditional attrset, yet
     /// names a real package the compiler supplies. A depth-scoped extractor
-    /// drops it, and dropping it would let it resolve to a Hackage version
-    /// the build never uses.
+    /// drops it, which would let it resolve to a Hackage version the build
+    /// never uses.
     #[test]
-    fn m926_a_nulled_package_at_deeper_nesting_is_still_a_boot_library() {
+    fn m926_a_nulled_package_at_deeper_nesting_is_still_compiler_supplied() {
         let n = nulled_names(CONFIG);
         assert!(
-            is_boot_library("directory-ospath-streaming", &n, package_set_contains),
+            is_boot_library("directory-ospath-streaming", &n),
             "nesting depth must not decide this — measurement rejected that rule"
         );
     }
 
-    /// FR-014a: nulled in ANY candidate means boot. Fail closed.
+    /// The case that rejected the **package-set membership** rule. `rts` is
+    /// the GHC runtime system: a real package a project can declare, and
+    /// absent from `hackage-packages.nix` precisely because it is never built
+    /// from Hackage. Requiring package-set membership reports it as
+    /// `absent-from-package-set` when the true reason is `compiler-supplied`
+    /// — no invented version, but a false statement in the document.
+    ///
+    /// Measured at nixpkgs a799d3e3, the nulled-but-not-a-package names are
+    /// `editedCabalFile`, `rts`, `ghc-platform`, `ghc-toolchain` and
+    /// `system-cxx-std-lib`. Only the first is not a package.
+    #[test]
+    fn m926_a_ghc_bundled_package_absent_from_the_package_set_is_still_compiler_supplied() {
+        let n = nulled_names(CONFIG);
+        assert!(
+            is_boot_library("rts", &n),
+            "package-set membership must not decide this — rts is GHC-bundled \
+             and never appears in hackage-packages.nix"
+        );
+    }
+
+    /// `editedCabalFile` stays in the set and is harmless: the set is only
+    /// consulted for names a project declared, and this is not a legal
+    /// Haskell package name. Asserting the inertness rather than the
+    /// exclusion, because attempts to exclude it cost real packages.
+    #[test]
+    fn m926_a_non_package_attribute_is_inert_rather_than_excluded() {
+        let n = nulled_names(CONFIG);
+        assert!(n.contains("editedCabalFile"), "no attempt is made to exclude it");
+        for declared in ["base", "text", "rts", "aeson", "vector"] {
+            assert_ne!(
+                declared, "editedCabalFile",
+                "a declared dependency can never carry this name"
+            );
+        }
+    }
+
+    /// FR-014a: nulled in ANY candidate means compiler-supplied. Fail closed.
     #[test]
     fn m926_union_marks_a_package_nulled_in_only_one_candidate_as_boot() {
         let only_in_a = "self: super: { alpha = null; }";
         let only_in_b = "self: super: { beta = null; }";
         let u = union_nulled([only_in_a, only_in_b]);
-        assert!(u.contains("alpha"));
-        assert!(u.contains("beta"));
-        assert!(is_boot_library("alpha", &u, |_| true));
-        assert!(is_boot_library("beta", &u, |_| true));
+        assert!(is_boot_library("alpha", &u));
+        assert!(is_boot_library("beta", &u));
     }
 
     #[test]
     fn m926_a_package_no_candidate_nulls_is_not_boot() {
         let n = nulled_names(CONFIG);
-        assert!(!is_boot_library("aeson", &n, |_| true));
+        assert!(!is_boot_library("aeson", &n));
+    }
+
+    /// Bindings are not always on their own line. A line-anchored pattern
+    /// misses this, and missing a nulled binding is the dangerous direction.
+    #[test]
+    fn m926_inline_bindings_are_collected() {
+        let n = nulled_names("self: super: { alpha = null; beta = null; }");
+        assert!(is_boot_library("alpha", &n));
+        assert!(is_boot_library("beta", &n));
     }
 }

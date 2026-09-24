@@ -81,29 +81,30 @@ def parse_nulled_boot_libs(text: str) -> set:
 def classify(declared, nulled, index):
     """Partition declared names into (resolved, boot, absent).
 
-    A nulled name counts as a boot library only when it is ALSO a package
-    in the package set. That single test is what separates the two cases
-    an earlier version of this probe conflated:
+    A nulled name is compiler-supplied. That is the whole test, and two more
+    discriminating rules were tried and rejected by measurement:
 
-      editedCabalFile             nulled, NOT a package  -> not a boot lib
-      directory-ospath-streaming  nulled, IS a package    -> boot lib
+      attrset nesting depth  -> also drops directory-ospath-streaming,
+                                a real package at v0.3 nulled at depth
+                                in GHC 9.4.x
+      package-set membership -> also drops rts, ghc-platform,
+                                ghc-toolchain and system-cxx-std-lib,
+                                real GHC-bundled packages absent from
+                                hackage-packages.nix precisely BECAUSE
+                                they are never built from Hackage
 
-    An attrset-nesting-depth rule was tried first and rejected by
-    measurement: at nixpkgs a799d3e3 it correctly dropped
-    `editedCabalFile` from GHC 9.6.x but ALSO dropped
-    `directory-ospath-streaming` from 9.4.x, which is a real package at
-    v0.3 that the compiler genuinely supplies. Depth does not separate
-    the cases; package-set membership does.
+    The only nulled name at nixpkgs a799d3e3 that is genuinely not a package
+    is `editedCabalFile`, a derivation attribute. It is left in the set and
+    is inert: the set is only consulted for names a project declared, and no
+    project declares a dependency by that name.
 
-    The asymmetry decides it. Over-including a boot library withholds a
-    version, which is merely lossy. Under-including one lets a package
-    the compiler supplies resolve to a Hackage version the build never
-    uses — an invented version, which Principle IX forbids. The rule must
-    fail toward over-inclusion.
+    The asymmetry governs. Over-including withholds a version; under-including
+    lets a compiler-supplied package resolve to a Hackage version the build
+    never uses. Both rejected rules failed toward under-inclusion.
     """
     resolved, boot, absent = {}, [], []
     for name in declared:
-        if name in nulled and name in index:
+        if name in nulled:
             boot.append(name)
         elif name in index:
             resolved[name] = index[name]

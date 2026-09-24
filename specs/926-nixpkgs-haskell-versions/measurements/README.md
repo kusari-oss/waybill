@@ -32,47 +32,53 @@ exactly, and the sampled versions match the three the issue quoted. The
 core premise of the issue is confirmed: **design tier → source tier, with
 content hashes, for a repository shipping no lockfile.**
 
-## M2 — A nulled name is a boot library only if it is also a package
+## M2 — A nulled name is compiler-supplied; two narrower rules were wrong
 
 `configuration-ghc-<series>.nix` binds boot libraries to `null`, meaning
-"ships with the compiler, do not build from Hackage" — so those packages
-have no `hackage-packages.nix` version for that package set.
+"ships with the compiler, do not build from Hackage".
 
-| GHC series | `= null;` bindings | of which are packages |
+| GHC series | `= null;` bindings | also in the package set |
 |---|---|---|
-| 9.4.x | 40 | **36** |
-| 9.6.x | 40 | **35** |
-| 9.10.x | 41 | **37** |
+| 9.0.x | 35 | 34 |
+| 9.4.x | 40 | 36 |
+| 9.6.x | 40 | 35 |
+| 9.8.x | 41 | 37 |
+| 9.10.x | 41 | 37 |
+| 9.12.x | 44 | 40 |
+| 9.14.x | 46 | 42 |
+| 9.16.x | 47 | 43 |
 
-Across all eight series present at this revision: 50 names in union, 32 in
-intersection — the sets are **not identical**. Symmetric difference,
-9.4.x vs 9.10.x: only in 9.4.x `directory-ospath-streaming`, `libiserv`;
-only in 9.10.x `os-string`, `semaphore-compat`, `xhtml`.
+Across all eight: 50 names in union, 32 in intersection — the sets are **not
+identical**, so a hardcoded list of "the seven boot libraries" would be wrong.
+The nulled set must be read at the pinned revision.
 
-**Design consequence 1**: a hardcoded list of "the seven boot libraries"
-would be wrong. The nulled set must be read from the per-compiler
-configuration at the pinned revision.
+**Two attempts to narrow the set were both rejected by measurement.**
 
-**Design consequence 2 — and this one reversed an earlier decision.** The
-naive extraction also reports `editedCabalFile`, an attribute of a
-derivation override rather than a package. Scoping by attribute-set
-nesting depth removes it, and that rule was implemented first. Measurement
-then rejected it: the depth rule *also* removed
-`directory-ospath-streaming` from GHC 9.4.x, which is a real package at
-v0.3 that the compiler genuinely supplies. Real boot libraries live at
-deeper nesting too.
+*Attribute-set nesting depth* drops `editedCabalFile` from 9.6.x correctly,
+and also drops `directory-ospath-streaming` from 9.4.x — a real package at
+v0.3. Real boot libraries live at deeper nesting too.
 
-The discriminator that works is package-set membership:
+*Package-set membership* drops `editedCabalFile` correctly, and also drops
+four real packages. The nulled names absent from the package set are exactly:
 
-| name | nulled | in the package set | boot library? |
-|---|---|---|---|
-| `editedCabalFile` | yes | no | no |
-| `directory-ospath-streaming` | yes (9.4.x) | yes, v0.3 | yes |
-| `base` | yes | yes, v4.22.0.0 | yes |
+| name | real package? |
+|---|---|
+| `editedCabalFile` | no — a derivation attribute |
+| `rts` | **yes** — the GHC runtime system |
+| `ghc-platform` | **yes** — GHC-bundled |
+| `ghc-toolchain` | **yes** — GHC-bundled |
+| `system-cxx-std-lib` | **yes** — GHC-bundled |
 
-The asymmetry decides it. Over-including a boot library withholds a
-version; under-including one invents a version the build never uses. The
-depth rule failed toward the dangerous direction.
+Those four are missing from `hackage-packages.nix` *because* they are never
+built from Hackage. Excluding them reports `absent-from-package-set` where the
+truth is `compiler-supplied`.
+
+**The rule is therefore the simple one**: nulled means compiler-supplied.
+`editedCabalFile` is left in and is inert — the set is only consulted for
+names a project declared, and that is not a legal package name.
+
+Over-including withholds a version; under-including invents one. Both
+rejected rules failed toward under-inclusion.
 
 ## M3 — The 12-of-19 split could not be reproduced, and the direction is against it
 

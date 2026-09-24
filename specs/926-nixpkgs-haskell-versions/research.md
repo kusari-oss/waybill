@@ -67,23 +67,22 @@ work.
 
 ---
 
-## R3 — A nulled name is a boot library iff it is also a package
+## R3 — A nulled name is compiler-supplied, and that is the whole rule
 
-**Decision**: Treat a name bound to `null` in a per-compiler configuration as
-a boot library **only when that name is also a package in the package set**.
-Do not use attribute-set nesting depth. Do not use indentation.
+**Decision**: Treat any name bound to `null` in a candidate compiler
+configuration as compiler-supplied. Do not filter that set further.
 
-**This decision reverses an earlier one in this same document, because
-measurement disproved it.** The history is worth keeping, since the rejected
-rule is the one that looks obviously right.
+**Two more discriminating rules were implemented and both were rejected by
+measurement.** The record is kept because each looks obviously right, and
+because both failed in the same direction.
 
-*First attempt.* The naive extraction `^\s*name\s*=\s*null\s*;` reports
-`editedCabalFile`, which is an attribute of a derivation override rather than a
-Haskell package. At this revision it sits at a deeper attrset nesting depth
-than the real boot libraries, so scoping by depth — keeping only the
-shallowest null bindings — removes it. That rule was implemented.
+The naive extraction also matches `editedCabalFile`, an attribute inside a
+derivation override rather than a package. Two attempts were made to exclude
+it.
 
-*Measurement rejected it.* Run across three GHC series, the depth rule removed:
+### Attempt 1 — attribute-set nesting depth
+
+Keep only the shallowest null bindings. Measured across three GHC series:
 
 | series | removed by the depth rule | correct? |
 |---|---|---|
@@ -92,40 +91,47 @@ shallowest null bindings — removes it. That rule was implemented.
 | 9.10.x | nothing | ✅ |
 
 Real boot libraries also live at deeper nesting, inside conditional attribute
-sets. Depth does not separate the two cases.
+sets. Depth does not separate the cases.
 
-*What does separate them*: package-set membership.
+### Attempt 2 — package-set membership
 
-| name | nulled | in the package set | boot library? |
-|---|---|---|---|
-| `editedCabalFile` | yes | **no** | no — a derivation attribute |
-| `directory-ospath-streaming` | yes (9.4.x) | yes, v0.3 | yes |
-| `base` | yes | yes, v4.22.0.0 | yes |
+Keep a nulled name only when it is also a package in `hackage-packages.nix`.
+This excludes `editedCabalFile` correctly and is still wrong. Measured across
+all eight series at this revision, the nulled names absent from the package
+set are exactly five:
 
-**The asymmetry is what makes this the right rule, not merely a working one.**
-Over-including a boot library withholds a version — lossy, and visible as a
-reason code. Under-including one lets a package the compiler supplies resolve
-to a Hackage version the build never uses: an invented version, which
-Principle IX forbids outright. The depth rule failed toward under-inclusion.
-Package-set membership cannot under-include a real package, because a real
-package is by definition in the set.
-
-The false positive the depth rule was built to remove turns out to be
-**harmless in production** anyway: `editedCabalFile` is not a legal Haskell
-package name, so no project can declare it as a dependency. It only ever
-inflated a count in this document.
-
-**Measured**, nulled bindings vs. those that are actually packages:
-
-| series | `= null;` bindings | of which are packages |
+| name | a real Haskell package? | excluding it would be |
 |---|---|---|
-| 9.4.x | 40 | 36 |
-| 9.6.x | 40 | 35 |
-| 9.10.x | 41 | 37 |
+| `editedCabalFile` | no — a derivation attribute | correct |
+| `rts` | **yes** — the GHC runtime system | **wrong** |
+| `ghc-platform` | **yes** — GHC-bundled | **wrong** |
+| `ghc-toolchain` | **yes** — GHC-bundled | **wrong** |
+| `system-cxx-std-lib` | **yes** — GHC-bundled | **wrong** |
 
-**Consequence**: FR-004's obligation is satisfied by reading the nulled set and
-intersecting it with the package set. No Nix nesting parser is required, which
-removes the most delicate piece of parsing from the implementation.
+Those four are absent from `hackage-packages.nix` *precisely because* they are
+never built from Hackage — they only ever come from the compiler, which is the
+definition of a boot library. Excluding them would report
+`absent-from-package-set` for a dependency whose true reason is
+`compiler-supplied`: no invented version, but a false statement in the emitted
+document (Principle X).
+
+### What the rule actually is
+
+Nulled means compiler-supplied. `editedCabalFile` stays in the set and is
+**inert**, because the set is only ever consulted for names the project
+declared, and `editedCabalFile` is not a legal Haskell package name. A false
+positive that nothing can ever query costs nothing — and both attempts to
+remove it cost real packages.
+
+**The asymmetry that governs every version of this rule.** Over-including a
+boot library withholds a version: lossy, and visible to the operator as a
+reason code. Under-including one lets a package the compiler supplies resolve
+to a Hackage version the build never uses — an invented version, which
+Principle IX forbids. Both rejected attempts failed toward under-inclusion.
+
+**Consequence**: FR-004 is satisfied by reading the nulled set, with no
+further filtering, no Nix nesting parser and no dependency on the package-set
+parser. This is the simplest of the three designs and the only correct one.
 
 ---
 
