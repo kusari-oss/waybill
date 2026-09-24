@@ -493,6 +493,7 @@ pub fn build_document(
             // None here is precisely the defect that kept C93/C94/C95 out of
             // SPDX 2.3 for three milestones (#934).
             nixpkgs_haskell_degraded: artifacts.nixpkgs_haskell_degraded,
+            nixpkgs_haskell_resolution: artifacts.nixpkgs_haskell_resolution,
             // Milestone 671 T010 — propagate the outer mode + source-
             // shape restriction so the C156 (source-tree) + m133 US4
             // (`full`) markers reach `annotate_document`. The
@@ -560,6 +561,7 @@ pub fn build_document(
             // None here is precisely the defect that kept C93/C94/C95 out of
             // SPDX 2.3 for three milestones (#934).
             nixpkgs_haskell_degraded: artifacts.nixpkgs_haskell_degraded,
+            nixpkgs_haskell_resolution: artifacts.nixpkgs_haskell_resolution,
             // Milestone 671 T010 — propagate the outer mode + source-
             // shape restriction so the C156 (source-tree) + m133 US4
             // (`full`) markers reach `annotate_document`. The
@@ -1309,6 +1311,7 @@ mod tests {
             component_identifiers: &[],
             file_inventory_stats: None,
             nixpkgs_haskell_degraded: None,
+            nixpkgs_haskell_resolution: None,
             file_inventory_mode: None,
             file_inventory_source_shapes: None,
             root_override: crate::generate::RootComponentOverride::default(),

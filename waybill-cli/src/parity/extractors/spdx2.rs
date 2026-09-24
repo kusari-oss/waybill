@@ -658,6 +658,7 @@ spdx23_anno!(c170_spdx23, "waybill:haskell-version-unresolved-reason", component
 spdx23_anno!(c171_spdx23, "waybill:nixpkgs-candidate-compilers", component);
 spdx23_anno!(c172_spdx23, "waybill:nixpkgs-version-disagreement", component);
 spdx23_anno!(c173_spdx23, "waybill:nixpkgs-haskell-degraded", document);
+spdx23_anno!(c174_spdx23, "waybill:nixpkgs-haskell-resolution", document);
 spdx23_anno!(c163_spdx23, "waybill:document-resolve",                     document);
 spdx23_anno!(c162_spdx23, "waybill:cabal-entries-skipped",                 document);
 

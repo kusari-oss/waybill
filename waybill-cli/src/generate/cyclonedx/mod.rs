@@ -165,6 +165,9 @@ impl SbomSerializer for CycloneDxJsonSerializer {
             // Milestone 133 US3 — file-tier walker diagnostic counters.
             .with_file_inventory_stats(scan.file_inventory_stats.cloned())
             .with_nixpkgs_haskell_degraded(scan.nixpkgs_haskell_degraded.map(str::to_string))
+            .with_nixpkgs_haskell_resolution(
+                scan.nixpkgs_haskell_resolution.map(str::to_string),
+            )
             // Milestone 133 US4 — propagate `--file-inventory` mode
             // label so `metadata.properties[]` carries the
             // `waybill:file-inventory-mode = "full"` override marker
