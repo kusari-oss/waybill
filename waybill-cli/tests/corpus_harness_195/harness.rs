@@ -85,6 +85,10 @@ pub enum CorpusInfraError {
     SbomEmission { target: &'static str, stderr: String, missing_files: Vec<PathBuf> },
     CacheIo { path: PathBuf, kind: std::io::ErrorKind },
     OciToolMissing,
+    /// #969 — a target whose `flake.lock` pins nixpkgs could not have its
+    /// Haskell package set hydrated, so the offline scan would resolve
+    /// nothing and the assertions would be vacuous rather than failing.
+    NixpkgsHydration { target: &'static str, stderr: String },
 }
 
 impl std::fmt::Display for CorpusInfraError {
@@ -103,6 +107,12 @@ impl std::fmt::Display for CorpusInfraError {
                 writeln!(f, "invariant: git-clone")?;
                 writeln!(f, "target:    {target}")?;
                 writeln!(f, "next:      check network / verify pinned URL still resolves publicly")?;
+                writeln!(f, "underlying error: {}", truncate_stderr(stderr))?;
+            }
+            CorpusInfraError::NixpkgsHydration { target, stderr } => {
+                writeln!(f, "invariant: nixpkgs-hydration")?;
+                writeln!(f, "target:    {target}")?;
+                writeln!(f, "next:      check network / verify the nixpkgs revision pinned by the target's flake.lock is still fetchable")?;
                 writeln!(f, "underlying error: {}", truncate_stderr(stderr))?;
             }
             CorpusInfraError::OciPull { target, stderr } => {
@@ -181,6 +191,11 @@ pub fn scan_target(target: &CorpusTarget) -> Result<EmittedSboms, CorpusInfraErr
 
     let bin = env!("CARGO_BIN_EXE_waybill");
     let mut cmd = std::process::Command::new(bin);
+    // #969: point waybill at the corpus-owned nixpkgs cache, hydrated above.
+    // Never the developer's `~/.cache/waybill/nixpkgs` -- a stale local copy
+    // there could make a red run look green, and a corpus run must not write
+    // to the machine's own cache.
+    cmd.env("WAYBILL_NIXPKGS_CACHE", cache.nixpkgs_cache_dir());
     cmd.arg("--offline"); // Corpus scans MUST NOT hit the network
                           // from the waybill side — network activity
                           // is confined to the cache-hydration step.

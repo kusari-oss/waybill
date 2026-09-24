@@ -854,3 +854,212 @@ pub fn haskell_aeson_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure
     }
     Ok(())
 }
+
+// -----------------------------------------------------------------------
+// haskell-language-server (#969)
+// -----------------------------------------------------------------------
+
+/// Document-scope property value, or `None`.
+fn cdx_doc_property(cdx: &serde_json::Value, name: &str) -> Option<String> {
+    cdx.get("metadata")?
+        .get("properties")?
+        .as_array()?
+        .iter()
+        .find(|p| p.get("name").and_then(|n| n.as_str()) == Some(name))
+        .and_then(|p| p.get("value"))
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+}
+
+/// Every `pkg:hackage/*` component, with its properties flattened.
+fn hackage_components(
+    cdx: &serde_json::Value,
+) -> Vec<(&serde_json::Value, std::collections::BTreeMap<String, String>)> {
+    cdx.get("components")
+        .and_then(|c| c.as_array())
+        .map(|arr| {
+            arr.iter()
+                .filter(|c| {
+                    c.get("purl")
+                        .and_then(|p| p.as_str())
+                        .is_some_and(|p| p.starts_with("pkg:hackage/"))
+                })
+                .map(|c| {
+                    let props = c
+                        .get("properties")
+                        .and_then(|p| p.as_array())
+                        .map(|arr| {
+                            arr.iter()
+                                .filter_map(|p| {
+                                    Some((
+                                        p.get("name")?.as_str()?.to_string(),
+                                        p.get("value")?.as_str()?.to_string(),
+                                    ))
+                                })
+                                .collect()
+                        })
+                        .unwrap_or_default();
+                    (c, props)
+                })
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+/// The first corpus target that exercises nixpkgs-backed Haskell version
+/// resolution (#947 / milestone 926).
+///
+/// `haskell-aeson` carries no `flake.lock`, so that entire code path had no
+/// corpus coverage at all: all four of its defects were caught by hand or by
+/// CI, none by a test. The decisive one — the gate requiring the *author's*
+/// reference to pin an exact revision, rather than the *lock* — resolved 0 of
+/// 19 and 0 of 44 on two real repositories, and every fixture written for the
+/// milestone encoded the same assumption as the code, so the whole suite
+/// agreed with the bug.
+///
+/// Measured at the pinned revision under the harness invocation
+/// (`--offline`, corpus-owned nixpkgs cache, `--root-name
+/// haskell-language-server --root-version 1b4b3c6b`):
+///
+///   - 204 components, 165 of them `pkg:hackage/*`
+///   - 97 resolved through nixpkgs, **all 97** with a version AND a native
+///     SHA-256; 0 with provenance but no version
+///   - 25 versionless, **all 25** carrying a reason
+///     (`compiler-supplied` ×24, `absent-from-package-set` ×1)
+///   - document-scope C174 naming revision `cbb5cf35…`, `resolved: 97`,
+///     `disagreements: 9`
+///
+/// The floors below sit well above the pre-fix baseline (43 versioned, 0
+/// resolved) so a gate regression cannot squeak past, while leaving room for
+/// nixpkgs content to drift — layer 2's golden pins the exact numbers.
+pub fn haskell_language_server_layer1(
+    sboms: &EmittedSboms,
+) -> Result<(), AssertionFailure> {
+    // Tripwire 1 — the pass ran and named the revision it resolved through.
+    //
+    // This is the assertion the #947 gate bug would have tripped: a broken
+    // gate degrades before any retrieval, so C174 carries `revision: null`
+    // and nothing resolves. It is also the assertion that could not be
+    // written before #973, because a successful pass recorded nothing at
+    // document scope at all.
+    let c174 = cdx_doc_property(&sboms.cdx, "waybill:nixpkgs-haskell-resolution");
+    let revision_named = c174
+        .as_deref()
+        .and_then(|v| serde_json::from_str::<serde_json::Value>(v).ok())
+        .and_then(|v| v.get("revision").and_then(|r| r.as_str()).map(str::to_string))
+        .filter(|r| !r.is_empty());
+    if revision_named.as_deref() != Some("cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73") {
+        return Err(AssertionFailure {
+            invariant_name: "nixpkgs-revision-resolved",
+            format: FailureFormat::Cdx,
+            observed: format!("waybill:nixpkgs-haskell-resolution = {c174:?}"),
+            expected: "revision cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73, as pinned by the target's own flake.lock".to_string(),
+            suggested_action: "the nixpkgs-Haskell pass did not resolve. Check the flake.lock gate (#947 FR-012 — the LOCK pins the revision, not the author's `original` reference) and the offline cache path (#975 — `--offline` must read the corpus-owned cache, not refuse it). A null revision with a `degraded` reason names which",
+        });
+    }
+
+    let hackage = hackage_components(&sboms.cdx);
+    let resolved: Vec<_> = hackage
+        .iter()
+        .filter(|(_, p)| p.contains_key("waybill:nixpkgs-resolved-via"))
+        .collect();
+
+    // Tripwire 2 — resolution actually assigned versions at scale.
+    //
+    // Pre-fix this repository resolved 0. A floor of 80 (measured: 97)
+    // cannot be met by accident and cannot be met at all by a degraded pass.
+    if resolved.len() < 80 {
+        return Err(AssertionFailure {
+            invariant_name: "nixpkgs-resolution-scale",
+            format: FailureFormat::Cdx,
+            observed: format!("{} components resolved through nixpkgs", resolved.len()),
+            expected: "at least 80 (measured 97 at the pinned revision)".to_string(),
+            suggested_action: "resolution ran but assigned far fewer versions than the pinned nixpkgs carries. Suspect the package-set parser (#970 — keying must be on the ATTRIBUTE, not `pname`) or the boot-library rule over-claiming",
+        });
+    }
+
+    // Tripwire 3 (Principle IX) — never assert a version without provenance,
+    // and never claim provenance without the artifacts that justify it.
+    //
+    // The decoded nixpkgs source hash is the SHA-256 of the package's Hackage
+    // tarball, which is why it is emitted in the NATIVE checksum field. A
+    // component carrying resolution provenance but no version, or a version
+    // but no hash, means the two halves have come apart.
+    let missing_version = resolved.iter().filter(|(c, _)| c.get("version").is_none()).count();
+    let missing_hash = resolved
+        .iter()
+        .filter(|(c, _)| {
+            !c.get("hashes")
+                .and_then(|h| h.as_array())
+                .is_some_and(|arr| {
+                    arr.iter().any(|h| h.get("alg").and_then(|a| a.as_str()) == Some("SHA-256"))
+                })
+        })
+        .count();
+    if missing_version > 0 || missing_hash > 0 {
+        return Err(AssertionFailure {
+            invariant_name: "nixpkgs-resolution-is-complete-per-component",
+            format: FailureFormat::Cdx,
+            observed: format!(
+                "{missing_version} components claim nixpkgs provenance with no version; \
+                 {missing_hash} with no native SHA-256"
+            ),
+            expected: "0 of each — provenance, version and source hash are assigned together".to_string(),
+            suggested_action: "a component carrying `waybill:nixpkgs-resolved-via` asserts the pinned revision supplied its version. Emitting that without the version, or without the tarball digest that backs it, is an unbacked claim (Principle IX)",
+        });
+    }
+
+    // Tripwire 4 (Principle X) — nothing is left silently versionless.
+    //
+    // A versionless component with no reason is indistinguishable from one
+    // the reader never considered. This is the invariant that made the two
+    // wrong boot rules visible during #947.
+    let unreasoned: Vec<&str> = hackage
+        .iter()
+        .filter(|(c, p)| {
+            c.get("version").is_none()
+                && !p.contains_key("waybill:haskell-version-unresolved-reason")
+        })
+        .filter_map(|(c, _)| c.get("name").and_then(|n| n.as_str()))
+        .collect();
+    if !unreasoned.is_empty() {
+        return Err(AssertionFailure {
+            invariant_name: "every-versionless-haskell-component-has-a-reason",
+            format: FailureFormat::Cdx,
+            observed: format!(
+                "{} versionless component(s) with no reason, e.g. {:?}",
+                unreasoned.len(),
+                &unreasoned[..unreasoned.len().min(5)]
+            ),
+            expected: "0 — every versionless Hackage component names why".to_string(),
+            suggested_action: "a versionless component with no `waybill:haskell-version-unresolved-reason` cannot be told apart from one the reader never looked at (C151 / Principle X)",
+        });
+    }
+
+    // Tripwire 5 — boot libraries stay versionless.
+    //
+    // `base`, `bytestring`, `containers` and friends ship WITH the compiler;
+    // nixpkgs has entries for some of them whose versions a GHC-built project
+    // never uses. Two rules during #947 under-included boot libraries, each
+    // time letting a package-set version through — the dangerous direction,
+    // because the result is a confident wrong version carrying a real hash.
+    // A collapse of the boot rule shows up here as this count falling.
+    let boot = hackage
+        .iter()
+        .filter(|(_, p)| {
+            p.get("waybill:haskell-version-unresolved-reason").map(String::as_str)
+                == Some("compiler-supplied")
+        })
+        .count();
+    if boot < 15 {
+        return Err(AssertionFailure {
+            invariant_name: "boot-libraries-remain-compiler-supplied",
+            format: FailureFormat::Cdx,
+            observed: format!("{boot} components classified compiler-supplied"),
+            expected: "at least 15 (measured 24 at the pinned revision)".to_string(),
+            suggested_action: "boot libraries are taking versions from the package set. A GHC-built project uses the compiler's copy, so the nixpkgs entry is a version the build never sees — asserted with that other tarball's hash. Check `boot_libraries::union_nulled` and the candidate-series union (#947 FR-014a), and the offline hydration of every `configuration-ghc-*.nix` (#975)",
+        });
+    }
+
+    Ok(())
+}

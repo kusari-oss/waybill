@@ -235,6 +235,50 @@ pub const TARGETS: &[CorpusTarget] = &[
         exercises: "m143 .cabal design-tier emission + #936 cross-manifest constraint union + #938 per-dependency lockfile scoping + #943 case-preserving Hackage identifiers",
         layer1: super::layer1_assertions::haskell_aeson_layer1,
     },
+    // #969 — the FIRST corpus target that exercises nixpkgs-backed Haskell
+    // version resolution. `haskell-aeson` has no `flake.lock` at all, so the
+    // whole #947 code path was uncovered by any corpus target; every one of
+    // its four defects was caught by hand or by CI, none by a test.
+    //
+    // The decisive property is the `flake.lock` shape. Verified at the
+    // pinned tag (not merely at master):
+    //
+    //   locked   {owner: NixOS, repo: nixpkgs, rev: cbb5cf35…}
+    //   original {owner: NixOS, repo: nixpkgs, ref: nixpkgs-unstable}
+    //
+    // `original.ref` set with `original.rev` ABSENT, and `locked.rev`
+    // present. That is the ordinary shape -- and it is exactly what the
+    // #947 gate rejected, resolving 0 of 19 and 0 of 44 on two real
+    // repositories. Every fixture written for that milestone encoded the
+    // same assumption as the code, so the whole suite agreed with the bug.
+    // This target would have failed on its first CI run.
+    //
+    // Also verified at this revision: `flake.lock` present,
+    // `cabal.project.freeze` and `stack.yaml.lock` ABSENT (so the design
+    // tier is exercised, not a lockfile path), and `flake.nix` naming five
+    // GHC series (ghc96/98/910/912/914), which is what drives the candidate
+    // set the boot-library union is taken over.
+    //
+    // Size was measured before pinning rather than assumed: 25.9 MB against
+    // `haskell/aeson`'s 41.5 MB, so this does NOT raise the corpus's largest
+    // clone.
+    CorpusTarget {
+        name: "haskell-language-server",
+        source: SourceKind::Git {
+            clone_url: "https://github.com/haskell/haskell-language-server",
+        },
+        pinned: PinnedRef::Sha {
+            // 2.15.0.0 -- resolved via
+            // `git ls-remote --tags https://github.com/haskell/haskell-language-server 2.15.0.0`
+            hex: "1b4b3c6bdd2bf8d1e1182e2e770f5dea9198db80",
+        },
+        ecosystem: Ecosystem::Haskell,
+        exercises: "m926 nixpkgs-backed Haskell version resolution (#947) -- \
+                    the flake.lock gate, package-set version + native SHA-256 \
+                    assignment, boot-library classification, and the #973 \
+                    document-scope resolution record",
+        layer1: super::layer1_assertions::haskell_language_server_layer1,
+    },
 ];
 
 // -----------------------------------------------------------------------
