@@ -385,6 +385,48 @@ fn no_credentials_required() {
     );
 }
 
+/// #978 — every target must have its three goldens committed.
+///
+/// `compare_golden` writes the golden and returns `Ok` when none exists, so a
+/// target added without goldens **passes silently, forever**: CI discards the
+/// workspace each run, so it re-writes and re-passes every night while
+/// comparing nothing. That is not hypothetical — `haskell-language-server`
+/// landed in #977 with no goldens and reported `ok`; they arrived only in
+/// #979.
+///
+/// The silent-write behaviour is reasonable for bootstrapping a new target.
+/// What was missing is anything that notices the bootstrap never finished.
+/// This runs in the DEFAULT cargo lane — not behind
+/// `WAYBILL_RUN_PUBLIC_CORPUS` — so it fires at PR time on the machine of
+/// whoever adds the target, rather than nightly and unread.
+///
+/// It is three `Path::exists` per target: no network, no scan, no fixtures.
+#[test]
+fn every_target_has_committed_goldens() {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("tests/fixtures/public_corpus");
+    let mut missing: Vec<String> = Vec::new();
+    for t in TARGETS {
+        for f in ["cdx.json", "spdx-2.3.json", "spdx-3.json"] {
+            let p = root.join(t.name).join(f);
+            if !p.exists() {
+                missing.push(format!("{}/{f}", t.name));
+            }
+        }
+    }
+    assert!(
+        missing.is_empty(),
+        "#978: {} golden file(s) are missing, so those targets pass while \
+         comparing nothing:\n  {}\n\n\
+         Generate them through CI -- `gh workflow run \"Public corpus regression\" \
+         -f branch=<your-branch> -f regen_goldens=true`, then install the \
+         `corpus-goldens-regen` artifact. Never locally: see rule zero in \
+         docs/development/refreshing-corpus-goldens.md.",
+        missing.len(),
+        missing.join("\n  ")
+    );
+}
+
 /// FR-002 / SC-002 — cross-ecosystem coverage assertion.
 #[test]
 fn cross_ecosystem_coverage_check() {
