@@ -1,9 +1,3 @@
-#![allow(dead_code)] // Lifted by T016/T017, which wire this into the
-// Haskell reader. Until then every item here is reachable only from its own
-// tests. Same posture as `file_tier/walker.rs` carried between m133 US1.A
-// and US1.B; the alternative is wiring a half-built resolver into the scan
-// path to keep the linter quiet.
-
 //! Milestone 926 (#947) — resolve Haskell dependency versions through the
 //! nixpkgs revision pinned in `flake.lock`.
 //!
@@ -116,12 +110,14 @@ impl UnresolvedReason {
 
 impl From<&FetchError> for UnresolvedReason {
     fn from(e: &FetchError) -> Self {
+        // A 404 at the package-set path means the source was reached but
+        // carries no Haskell package set. That is not "absent from the
+        // package set" — there is no package set — so it degrades the same
+        // way an unreachable source does.
+        //
+        // There is no arm for an unsupported source shape: that is detected
+        // before any retrieval, when `Location::from_locked` declines.
         match e {
-            FetchError::UnsupportedSource => UnresolvedReason::SourceUnsupported,
-            // A 404 at the package-set path means the source was reached but
-            // carries no Haskell package set. That is not "absent from the
-            // package set" — there is no package set — so it degrades the
-            // same way an unreachable source does.
             FetchError::NotFound
             | FetchError::Unauthorized
             | FetchError::Unreachable(_)
@@ -380,5 +376,629 @@ mod tests {
         ] {
             assert_eq!(r.as_str(), s);
         }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Orchestration (T016): retrieve, classify, and enrich in place.
+// ---------------------------------------------------------------------------
+
+use std::path::Path;
+
+use waybill_common::resolution::ResolvedComponent;
+use waybill_common::types::hash::ContentHash;
+
+/// Annotation keys. Registered as catalog rows by T031.
+pub(crate) const ANN_RESOLVED_VIA: &str = "waybill:nixpkgs-resolved-via";
+pub(crate) const ANN_UNRESOLVED_REASON: &str = "waybill:haskell-version-unresolved-reason";
+pub(crate) const ANN_CANDIDATE_COMPILERS: &str = "waybill:nixpkgs-candidate-compilers";
+
+/// Options the operator controls.
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct ResolveOptions {
+    /// `--offline` (FR-009).
+    pub(crate) offline: bool,
+    /// The feature's own opt-out (FR-015a).
+    pub(crate) disabled: bool,
+}
+
+// The FR-019 budget is not carried here: it belongs to the retrieval
+// boundary, and `HttpSource` already owns it. Duplicating it would create two
+// places to change and one of them would drift.
+
+/// Outcome of one enrichment pass, for the document-scope record (T044).
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub(crate) struct EnrichmentSummary {
+    /// Dependencies that gained a version.
+    pub(crate) resolved: usize,
+    /// Dependencies left versionless, by reason.
+    pub(crate) unresolved: std::collections::BTreeMap<String, usize>,
+    /// Revision resolved against, when there was one.
+    pub(crate) revision: Option<String>,
+    /// Set when the whole pass degraded (FR-008, contract C7).
+    pub(crate) degraded_reason: Option<String>,
+}
+
+impl EnrichmentSummary {
+    fn note_unresolved(&mut self, reason: &UnresolvedReason) {
+        *self
+            .unresolved
+            .entry(reason.as_str().to_string())
+            .or_insert(0) += 1;
+    }
+}
+
+/// Is this component a Haskell dependency this pass may enrich?
+///
+/// Deliberately narrow. Enrichment never introduces a component
+/// (Principle XII constraint 1) and never touches one that already has a
+/// version — a version from a project-local freeze file outranks a
+/// nixpkgs-resolved one (FR-013, contract C6).
+fn is_enrichable(c: &ResolvedComponent) -> bool {
+    c.purl.as_str().starts_with("pkg:hackage/") && c.version.is_empty()
+}
+
+/// Enrich Haskell components with versions from the pinned nixpkgs.
+///
+/// Returns `None` when the gate (contract C1) did not open, which is the
+/// common case: a repository with no flake, or no Haskell dependencies, does
+/// no work and produces no annotation (SC-009).
+pub(crate) fn enrich(
+    scan_root: &Path,
+    components: &mut [ResolvedComponent],
+    opts: ResolveOptions,
+    source: &dyn fetch::RevisionSource,
+) -> Option<EnrichmentSummary> {
+    if opts.disabled {
+        return None;
+    }
+    // Gate half 2 first: it is free, and a repository with no Haskell
+    // dependencies must not even read the lockfile (SC-009).
+    if !components.iter().any(is_enrichable) {
+        return None;
+    }
+    let lock_path = scan_root.join("flake.lock");
+    if !lock_path.exists() {
+        return None;
+    }
+    let doc = match super::lockfile::parse_flake_lock(&lock_path) {
+        Ok(d) => d,
+        Err(e) => {
+            tracing::debug!(error = ?e, "nixpkgs-haskell: flake.lock unparseable");
+            return None;
+        }
+    };
+    // Gate half 1: a nixpkgs-shaped input pinned to an exact revision.
+    let pinned = match pinned_nixpkgs(&doc) {
+        Ok(p) => p,
+        Err(reason) => return Some(degrade_all(components, reason)),
+    };
+    if opts.offline {
+        return Some(degrade_all(components, UnresolvedReason::Offline));
+    }
+    let Some(location) = pinned.location.clone() else {
+        return Some(degrade_all(components, UnresolvedReason::SourceUnsupported));
+    };
+
+    // Retrieve the package set, preferring the cache (FR-010, SC-005).
+    let text = match cached_or_fetch(
+        source,
+        &location,
+        &pinned.revision,
+        HACKAGE_PACKAGES_PATH,
+        HACKAGE_PACKAGES_KEY,
+    ) {
+        Ok(t) => t,
+        Err(e) => {
+            let reason = UnresolvedReason::from(&e);
+            tracing::info!(
+                revision = %pinned.revision,
+                reason = reason.as_str(),
+                "nixpkgs-haskell: degrading, package set unavailable"
+            );
+            return Some(degrade_all(components, reason));
+        }
+    };
+    let packages = package_set::parse(&text);
+    tracing::debug!(
+        revision = %pinned.revision,
+        packages = packages.len(),
+        "nixpkgs-haskell: package set parsed"
+    );
+    if packages.is_empty() {
+        return Some(degrade_all(components, UnresolvedReason::SourceUnreachable));
+    }
+
+    // Boot libraries, unioned across every candidate compiler (FR-014a).
+    let (boot, candidates) = boot_set(source, &location, &pinned.revision, scan_root);
+
+    let mut summary = EnrichmentSummary {
+        revision: Some(pinned.revision.clone()),
+        ..Default::default()
+    };
+    let candidate_note = (candidates.len() > 1).then(|| {
+        serde_json::Value::String(candidates.join(","))
+    });
+
+    for c in components.iter_mut().filter(|c| is_enrichable(c)) {
+        match classify(&c.name, &packages, &boot, &pinned.revision) {
+            ResolutionOutcome::Resolved {
+                version,
+                source_hash,
+                revision,
+            } => {
+                apply_resolved(c, &version, source_hash.as_deref(), &revision, pinned.matched_by);
+                summary.resolved += 1;
+            }
+            ResolutionOutcome::Unresolved { reason } => {
+                summary.note_unresolved(&reason);
+                c.extra_annotations.insert(
+                    ANN_UNRESOLVED_REASON.to_string(),
+                    serde_json::Value::String(reason.as_str().to_string()),
+                );
+                // FR-014b: only meaningful when the compiler was ambiguous.
+                if reason == UnresolvedReason::CompilerSupplied {
+                    if let Some(v) = candidate_note.clone() {
+                        c.extra_annotations
+                            .insert(ANN_CANDIDATE_COMPILERS.to_string(), v);
+                    }
+                }
+            }
+        }
+    }
+    Some(summary)
+}
+
+/// Attach a resolved version, its hash and its provenance.
+///
+/// The hash goes into `hashes`, which every emitter already maps to its
+/// format's **native** checksum field — research R2 verified this value is a
+/// flat SHA-256 of the source tarball, so a `waybill:` annotation would
+/// violate Principle V.
+fn apply_resolved(
+    c: &mut ResolvedComponent,
+    version: &str,
+    source_hash: Option<&str>,
+    revision: &str,
+    matched_by: NixpkgsMatch,
+) {
+    c.version = version.to_string();
+    // The PURL must carry the version too, or the component is versioned in
+    // one place and not the other.
+    if let Ok(p) = waybill_common::types::purl::Purl::new(&format!(
+        "pkg:hackage/{}@{}",
+        c.name, version
+    )) {
+        c.purl = p;
+    }
+    if let Some(hex) = source_hash {
+        // `ContentHash::sha256` validates both the alphabet and the 64-char
+        // width. A value that fails here contributes no hash rather than a
+        // malformed one, which is the same posture the decoder takes
+        // (Principle IX). It should be unreachable: the decoder already
+        // rejected anything that was not 32 bytes.
+        match ContentHash::sha256(hex) {
+            Ok(h) => c.hashes.push(h),
+            Err(e) => tracing::debug!(
+                error = %e,
+                package = %c.name,
+                "nixpkgs-haskell: refusing a source hash that failed validation"
+            ),
+        }
+    }
+    c.sbom_tier = Some("source".to_string());
+    c.extra_annotations.insert(
+        ANN_RESOLVED_VIA.to_string(),
+        serde_json::json!({
+            "source": "nixpkgs",
+            "revision": revision,
+            "matched-by": matched_by.as_str(),
+        }),
+    );
+}
+
+/// Mark every enrichable component unresolved with one reason.
+fn degrade_all(
+    components: &mut [ResolvedComponent],
+    reason: UnresolvedReason,
+) -> EnrichmentSummary {
+    let mut summary = EnrichmentSummary {
+        degraded_reason: Some(reason.as_str().to_string()),
+        ..Default::default()
+    };
+    for c in components.iter_mut().filter(|c| is_enrichable(c)) {
+        summary.note_unresolved(&reason);
+        c.extra_annotations.insert(
+            ANN_UNRESOLVED_REASON.to_string(),
+            serde_json::Value::String(reason.as_str().to_string()),
+        );
+    }
+    summary
+}
+
+/// Read a revision's file from cache, retrieving it only on a miss.
+fn cached_or_fetch(
+    source: &dyn fetch::RevisionSource,
+    location: &Location,
+    rev: &str,
+    path: &str,
+    key: &str,
+) -> Result<String, FetchError> {
+    if let Some(hit) = cache::read(rev, key) {
+        return Ok(hit);
+    }
+    let text = source.fetch(location, rev, path)?;
+    cache::write(rev, key, &text);
+    Ok(text)
+}
+
+/// GHC series a flake might name, newest first.
+const KNOWN_GHC_SERIES: &[&str] = &[
+    "9.16.x", "9.14.x", "9.12.x", "9.10.x", "9.8.x", "9.6.x", "9.4.x", "9.0.x",
+];
+
+/// Union the boot libraries of every candidate compiler, and name the
+/// candidates.
+///
+/// Candidates come from an explicit `haskell.packages.ghc<NN>` path in the
+/// project's flake when one is found, and from every known series otherwise.
+/// A configuration that cannot be retrieved contributes nothing rather than
+/// aborting: a missing series is not a reason to stop resolving.
+fn boot_set(
+    source: &dyn fetch::RevisionSource,
+    location: &Location,
+    rev: &str,
+    scan_root: &Path,
+) -> (BTreeSet<String>, Vec<String>) {
+    let candidates = candidate_series(scan_root);
+    let mut texts: Vec<String> = Vec::new();
+    for series in &candidates {
+        let path = format!("pkgs/development/haskell-modules/configuration-ghc-{series}.nix");
+        let key = format!("configuration-ghc-{series}.nix");
+        if let Ok(text) = cached_or_fetch(source, location, rev, &path, &key) {
+            texts.push(text);
+        }
+    }
+    let boot = boot_libraries::union_nulled(texts.iter().map(String::as_str));
+    (boot, candidates)
+}
+
+/// Which compiler package sets the project might build against.
+///
+/// Scans the flake textually for `haskell.packages.ghc<NN>`. `flake.nix` is a
+/// program rather than data, and evaluating it would need a host `nix`
+/// (Principle I), so an explicit attribute path is the available signal.
+/// Finding none falls back to every known series — conservative, and the
+/// union rule makes that safe (FR-014a).
+fn candidate_series(scan_root: &Path) -> Vec<String> {
+    let Ok(text) = std::fs::read_to_string(scan_root.join("flake.nix")) else {
+        return KNOWN_GHC_SERIES.iter().map(|s| s.to_string()).collect();
+    };
+    let mut found: BTreeSet<String> = BTreeSet::new();
+    for series in KNOWN_GHC_SERIES {
+        // `9.6.x` in a config filename is `ghc96` in an attribute path.
+        let attr: String = format!("ghc{}", series.trim_end_matches(".x").replace('.', ""));
+        if text.contains(&attr) {
+            found.insert((*series).to_string());
+        }
+    }
+    if found.is_empty() {
+        KNOWN_GHC_SERIES.iter().map(|s| s.to_string()).collect()
+    } else {
+        found.into_iter().collect()
+    }
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod enrich_tests {
+    use super::*;
+    use crate::testing::EnvGuard;
+
+    const LOCK: &str = r#"{
+      "nodes": {
+        "nixpkgs": {
+          "locked": { "type": "github", "owner": "NixOS", "repo": "nixpkgs",
+                      "rev": "a799d3e3886da994fa307f817a6bc705ae538eeb" },
+          "original": { "type": "github", "owner": "NixOS", "repo": "nixpkgs",
+                        "rev": "a799d3e3886da994fa307f817a6bc705ae538eeb" }
+        },
+        "root": { "inputs": { "nixpkgs": "nixpkgs" } }
+      },
+      "root": "root", "version": 7
+    }"#;
+
+    /// Hermetic stand-in for the network. Records every path requested so a
+    /// test can assert that nothing was retrieved at all (SC-009).
+    struct StubSource {
+        packages: String,
+        config: String,
+        requests: std::cell::RefCell<Vec<String>>,
+        fail: Option<FetchError>,
+    }
+
+    impl StubSource {
+        fn new(packages: &str, config: &str) -> Self {
+            Self {
+                packages: packages.to_string(),
+                config: config.to_string(),
+                requests: std::cell::RefCell::new(Vec::new()),
+                fail: None,
+            }
+        }
+        fn failing(e: FetchError) -> Self {
+            Self {
+                packages: String::new(),
+                config: String::new(),
+                requests: std::cell::RefCell::new(Vec::new()),
+                fail: Some(e),
+            }
+        }
+        fn request_count(&self) -> usize {
+            self.requests.borrow().len()
+        }
+    }
+
+    impl fetch::RevisionSource for StubSource {
+        fn fetch(&self, _l: &Location, _rev: &str, path: &str) -> Result<String, FetchError> {
+            self.requests.borrow_mut().push(path.to_string());
+            if let Some(e) = &self.fail {
+                return Err(e.clone());
+            }
+            if path.ends_with("hackage-packages.nix") {
+                Ok(self.packages.clone())
+            } else {
+                Ok(self.config.clone())
+            }
+        }
+    }
+
+    /// A design-tier Haskell dependency: named, versionless, no hash.
+    fn comp(name: &str) -> ResolvedComponent {
+        use waybill_common::resolution::{ResolutionEvidence, ResolutionTechnique};
+        let purl =
+            waybill_common::types::purl::Purl::new(&format!("pkg:hackage/{name}")).unwrap();
+        ResolvedComponent {
+            build_inclusion: None,
+            name: name.to_string(),
+            version: String::new(),
+            purl,
+            evidence: ResolutionEvidence {
+                technique: ResolutionTechnique::UrlPattern,
+                confidence: 0.95,
+                source_connection_ids: vec![],
+                source_file_paths: vec![],
+                deps_dev_match: None,
+            },
+            licenses: vec![],
+            concluded_licenses: vec![],
+            hashes: vec![],
+            supplier: None,
+            cpes: vec![],
+            advisories: vec![],
+            occurrences: vec![],
+            lifecycle_scope: None,
+            requirement_ranges: Vec::new(),
+            source_type: None,
+            sbom_tier: Some("design".to_string()),
+            buildinfo_status: None,
+            evidence_kind: None,
+            binary_class: None,
+            binary_stripped: None,
+            linkage_kind: None,
+            detected_go: None,
+            confidence: None,
+            binary_packed: None,
+            npm_role: None,
+            raw_version: None,
+            parent_purl: None,
+            co_owned_by: None,
+            shade_relocation: None,
+            external_references: vec![],
+            extra_annotations: Default::default(),
+            binary_role: None,
+        }
+    }
+
+    /// A non-Haskell component, for the "nothing to enrich" gate.
+    fn other_comp() -> ResolvedComponent {
+        let mut c = comp("x");
+        c.purl = waybill_common::types::purl::Purl::new("pkg:cargo/serde@1.0.0").unwrap();
+        c.version = "1.0.0".to_string();
+        c
+    }
+
+    fn fixture_root(lock: Option<&str>, flake: Option<&str>) -> tempfile::TempDir {
+        let d = tempfile::tempdir().unwrap();
+        if let Some(l) = lock {
+            std::fs::write(d.path().join("flake.lock"), l).unwrap();
+        }
+        if let Some(f) = flake {
+            std::fs::write(d.path().join("flake.nix"), f).unwrap();
+        }
+        d
+    }
+
+    const PACKAGES: &str = r#"
+      mkDerivation { pname = "waybill-fixture-liba"; version = "1.2.3"; sha256 = "1zym9yia0is8wxfd6d1ldwvvghwxg4ww3y4lrxnyb2nk60ig29ly"; }
+      mkDerivation { pname = "waybill-fixture-boot"; version = "9.9.9"; sha256 = "091h1ifc1srv803rrkzc8mgvhpsnw6cn6r0mqqs44ss1shjaan6r"; }
+    "#;
+    const CONFIG: &str = r#"self: super: { waybill-fixture-boot = null; }"#;
+
+    fn opts() -> ResolveOptions {
+        ResolveOptions { offline: false, disabled: false }
+    }
+
+    fn isolated_cache() -> tempfile::TempDir {
+        let t = tempfile::tempdir().unwrap();
+        std::env::set_var(cache::CACHE_ENV, t.path());
+        t
+    }
+
+    /// US1: a declared dependency the revision carries gains an exact version
+    /// and a native SHA-256, and leaves design tier.
+    #[test]
+    fn m926_resolves_a_declared_dependency_with_a_native_hash() {
+        let _g = EnvGuard::acquire();
+        let _c = isolated_cache();
+        let root = fixture_root(Some(LOCK), Some("haskell.packages.ghc96"));
+        let src = StubSource::new(PACKAGES, CONFIG);
+        let mut comps = vec![comp("waybill-fixture-liba")];
+
+        let s = enrich(root.path(), &mut comps, opts(), &src).unwrap();
+
+        assert_eq!(s.resolved, 1);
+        assert_eq!(comps[0].version, "1.2.3");
+        assert_eq!(comps[0].sbom_tier.as_deref(), Some("source"));
+        assert_eq!(comps[0].hashes.len(), 1);
+        assert_eq!(
+            comps[0].hashes[0].value.as_str(),
+            "9e26f12230d38ae56dcf94f8c139799dc3b7376f3434d35ce74847a0a24fd5ff"
+        );
+        assert!(comps[0].extra_annotations.contains_key(ANN_RESOLVED_VIA));
+        std::env::remove_var(cache::CACHE_ENV);
+    }
+
+    /// US2 + FR-014c: a boot library is present in the package set WITH a
+    /// version, and must still not resolve.
+    #[test]
+    fn m926_a_boot_library_never_takes_the_package_sets_version() {
+        let _g = EnvGuard::acquire();
+        let _c = isolated_cache();
+        let root = fixture_root(Some(LOCK), Some("haskell.packages.ghc96"));
+        let src = StubSource::new(PACKAGES, CONFIG);
+        let mut comps = vec![comp("waybill-fixture-boot")];
+
+        let s = enrich(root.path(), &mut comps, opts(), &src).unwrap();
+
+        assert_eq!(s.resolved, 0);
+        assert!(comps[0].version.is_empty(), "no version may be invented");
+        assert!(comps[0].hashes.is_empty(), "no hash either");
+        assert_ne!(comps[0].sbom_tier.as_deref(), Some("source"));
+        assert_eq!(
+            comps[0].extra_annotations.get(ANN_UNRESOLVED_REASON),
+            Some(&serde_json::Value::String("compiler-supplied".into()))
+        );
+        std::env::remove_var(cache::CACHE_ENV);
+    }
+
+    /// SC-009: a repository with no Haskell dependencies retrieves nothing.
+    #[test]
+    fn m926_no_haskell_dependencies_means_no_retrieval() {
+        let _g = EnvGuard::acquire();
+        let _c = isolated_cache();
+        let root = fixture_root(Some(LOCK), None);
+        let src = StubSource::new(PACKAGES, CONFIG);
+        let mut comps = vec![other_comp()];
+
+        assert!(enrich(root.path(), &mut comps, opts(), &src).is_none());
+        assert_eq!(src.request_count(), 0);
+        std::env::remove_var(cache::CACHE_ENV);
+    }
+
+    /// FR-012 / SC-007: no flake.lock means no change at all.
+    #[test]
+    fn m926_no_flake_lock_means_no_change() {
+        let _g = EnvGuard::acquire();
+        let _c = isolated_cache();
+        let root = fixture_root(None, None);
+        let src = StubSource::new(PACKAGES, CONFIG);
+        let mut comps = vec![comp("waybill-fixture-liba")];
+
+        assert!(enrich(root.path(), &mut comps, opts(), &src).is_none());
+        assert_eq!(src.request_count(), 0);
+        assert!(comps[0].version.is_empty());
+        assert!(comps[0].extra_annotations.is_empty());
+        std::env::remove_var(cache::CACHE_ENV);
+    }
+
+    /// FR-009: offline degrades without retrieving.
+    #[test]
+    fn m926_offline_degrades_without_retrieving() {
+        let _g = EnvGuard::acquire();
+        let _c = isolated_cache();
+        let root = fixture_root(Some(LOCK), None);
+        let src = StubSource::new(PACKAGES, CONFIG);
+        let mut comps = vec![comp("waybill-fixture-liba")];
+
+        let s = enrich(root.path(), &mut comps, ResolveOptions { offline: true, ..opts() }, &src).unwrap();
+
+        assert_eq!(src.request_count(), 0);
+        assert_eq!(s.degraded_reason.as_deref(), Some("offline"));
+        assert!(comps[0].version.is_empty());
+        std::env::remove_var(cache::CACHE_ENV);
+    }
+
+    /// FR-015a: the opt-out disables this feature and nothing else.
+    #[test]
+    fn m926_the_opt_out_flag_disables_the_pass() {
+        let _g = EnvGuard::acquire();
+        let _c = isolated_cache();
+        let root = fixture_root(Some(LOCK), None);
+        let src = StubSource::new(PACKAGES, CONFIG);
+        let mut comps = vec![comp("waybill-fixture-liba")];
+
+        assert!(enrich(root.path(), &mut comps, ResolveOptions { disabled: true, ..opts() }, &src).is_none());
+        assert_eq!(src.request_count(), 0);
+        std::env::remove_var(cache::CACHE_ENV);
+    }
+
+    /// FR-017 / C7: an unreachable source degrades every dependency with a
+    /// reason, and invents nothing.
+    #[test]
+    fn m926_an_unreachable_source_degrades_with_a_reason() {
+        let _g = EnvGuard::acquire();
+        let _c = isolated_cache();
+        let root = fixture_root(Some(LOCK), None);
+        let src = StubSource::failing(FetchError::Unauthorized);
+        let mut comps = vec![comp("waybill-fixture-liba")];
+
+        let s = enrich(root.path(), &mut comps, opts(), &src).unwrap();
+
+        assert_eq!(s.degraded_reason.as_deref(), Some("source-unreachable"));
+        assert!(comps[0].version.is_empty());
+        assert_eq!(
+            comps[0].extra_annotations.get(ANN_UNRESOLVED_REASON),
+            Some(&serde_json::Value::String("source-unreachable".into()))
+        );
+        std::env::remove_var(cache::CACHE_ENV);
+    }
+
+    /// FR-010 / SC-005: a revision already retrieved is not retrieved again.
+    #[test]
+    fn m926_a_cached_revision_is_not_retrieved_again() {
+        let _g = EnvGuard::acquire();
+        let _c = isolated_cache();
+        let root = fixture_root(Some(LOCK), Some("haskell.packages.ghc96"));
+        let mut comps = vec![comp("waybill-fixture-liba")];
+
+        let first = StubSource::new(PACKAGES, CONFIG);
+        enrich(root.path(), &mut comps, opts(), &first).unwrap();
+        assert!(first.request_count() > 0, "the first scan must retrieve");
+
+        let mut comps2 = vec![comp("waybill-fixture-liba")];
+        let second = StubSource::new(PACKAGES, CONFIG);
+        enrich(root.path(), &mut comps2, opts(), &second).unwrap();
+
+        assert_eq!(second.request_count(), 0, "the second scan must not retrieve");
+        assert_eq!(comps2[0].version, "1.2.3", "and must still resolve");
+        std::env::remove_var(cache::CACHE_ENV);
+    }
+
+    /// FR-013 / C6: a component that already has a version is untouched — a
+    /// local freeze file outranks nixpkgs.
+    #[test]
+    fn m926_an_already_versioned_component_is_left_alone() {
+        let _g = EnvGuard::acquire();
+        let _c = isolated_cache();
+        let root = fixture_root(Some(LOCK), Some("haskell.packages.ghc96"));
+        let src = StubSource::new(PACKAGES, CONFIG);
+        let mut c = comp("waybill-fixture-liba");
+        c.version = "0.0.1-from-freeze".to_string();
+        let mut comps = vec![c];
+
+        assert!(enrich(root.path(), &mut comps, opts(), &src).is_none());
+        assert_eq!(comps[0].version, "0.0.1-from-freeze");
+        std::env::remove_var(cache::CACHE_ENV);
     }
 }

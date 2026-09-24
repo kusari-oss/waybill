@@ -98,9 +98,11 @@ pub(crate) enum FetchError {
     Unreachable(String),
     /// Exceeded the operator's budget (FR-019).
     TimedOut,
-    /// The lock pins a shape this reader cannot retrieve a single file from.
-    UnsupportedSource,
 }
+
+// There is deliberately no `UnsupportedSource` variant. An unsupported pin
+// shape is recognised by `Location::from_locked` returning `None`, before any
+// retrieval is attempted, so it can never arrive as a fetch failure.
 
 /// The retrieval boundary.
 ///

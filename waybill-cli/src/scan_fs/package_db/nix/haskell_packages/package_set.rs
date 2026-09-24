@@ -55,10 +55,6 @@ impl PackageSet {
         self.entries.get(name)
     }
 
-    pub(crate) fn contains(&self, name: &str) -> bool {
-        self.entries.contains_key(name)
-    }
-
     pub(crate) fn len(&self) -> usize {
         self.entries.len()
     }

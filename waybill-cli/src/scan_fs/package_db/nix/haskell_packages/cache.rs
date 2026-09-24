@@ -10,7 +10,7 @@
 //! measured rev), which is why caching is a requirement rather than an
 //! optimisation.
 
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 /// Environment variable redirecting the cache root.
 ///
@@ -98,11 +98,6 @@ pub(crate) fn write(rev: &str, file_key: &str, contents: &str) {
     }
 }
 
-/// Is this revision's file already cached?
-pub(crate) fn is_cached(rev: &str, file_key: &str) -> bool {
-    entry_path(rev, file_key).is_some_and(|p| Path::new(&p).exists())
-}
-
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
@@ -126,11 +121,8 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         std::env::set_var(CACHE_ENV, tmp.path());
 
-        assert!(!is_cached(REV, "hackage-packages.nix"));
         assert_eq!(read(REV, "hackage-packages.nix"), None);
-
         write(REV, "hackage-packages.nix", "contents");
-        assert!(is_cached(REV, "hackage-packages.nix"));
         assert_eq!(read(REV, "hackage-packages.nix").as_deref(), Some("contents"));
 
         std::env::remove_var(CACHE_ENV);

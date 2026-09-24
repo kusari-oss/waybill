@@ -4225,6 +4225,41 @@ pub async fn execute(
     // binary / enrichment step so the FR-011 hybrid dedupe sees the
     // full claim set. Default `off` in US1.B — preserves pre-
     // milestone-133 byte-identity. US1.C flips the default to
+    // Milestone 926 (#947) — resolve Haskell dependency versions through the
+    // nixpkgs revision pinned in `flake.lock`.
+    //
+    // Invoked here rather than inside `scan_path` because it needs the
+    // operator's flags, and `scan_path` already takes fourteen positional
+    // parameters (#844). It runs after resolution so it sees final
+    // components, and before emission so the versions it attaches reach
+    // every format.
+    //
+    // The pass gates itself: a repository without both a nixpkgs-shaped
+    // pinned input and at least one Haskell dependency does no work and
+    // produces no annotation (SC-009).
+    let nixpkgs_haskell_summary = {
+        use scan_fs::package_db::nix::haskell_packages as nhp;
+        let source = nhp::fetch::HttpSource::new(args.nixpkgs_timeout_secs);
+        nhp::enrich(
+            &root_path,
+            &mut components,
+            nhp::ResolveOptions {
+                offline,
+                disabled: args.no_nixpkgs_haskell,
+            },
+            &source,
+        )
+    };
+    if let Some(s) = &nixpkgs_haskell_summary {
+        tracing::info!(
+            resolved = s.resolved,
+            unresolved = ?s.unresolved,
+            revision = ?s.revision,
+            degraded = ?s.degraded_reason,
+            "nixpkgs-haskell: version resolution complete"
+        );
+    }
+
     // `orphan`. `full` mode forwards an empty `DedupeIndex` so every
     // surviving content-shape match emits regardless of coverage.
     let file_inventory_mode = scan_fs::file_tier::FileInventoryMode::parse(&args.file_inventory)
