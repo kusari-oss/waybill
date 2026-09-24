@@ -62,6 +62,19 @@ fn run_target(name: &str) {
         Ok(s) => s,
         Err(infra_err) => panic!("{infra_err}"),
     };
+    // Layer 0 — document integrity, identical for every target (#980).
+    //
+    // Runs before the per-target tripwires because what it catches is not
+    // ecosystem-specific: any pass that rewrites a component identity after
+    // the dependency edges are built disconnects that component, in every
+    // format, without either format raising an error. Schema validation
+    // cannot see this class — CycloneDX has no referential-integrity rule
+    // for `bom-ref`, and SPDX drops the relationship rather than dangling it.
+    if let Err(fail) = corpus_harness_195::layer1_assertions::layer0_document_integrity(
+        target.name, &sboms,
+    ) {
+        panic!("{fail}");
+    }
     // Layer 1 — fast-fail with class-of-bug diagnostic.
     if let Err(fail) = (target.layer1)(&sboms) {
         panic!("{fail}");

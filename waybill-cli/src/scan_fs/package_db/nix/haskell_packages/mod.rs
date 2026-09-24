@@ -455,6 +455,49 @@ pub(crate) struct EnrichmentSummary {
     /// revision's (FR-013). The local value is kept; the difference is
     /// recorded.
     pub(crate) disagreements: usize,
+    /// PURL rewrites this pass performed, as `(before, after)` (#980).
+    ///
+    /// Assigning a version changes the component's PURL, and the PURL is the
+    /// identity the dependency graph keys on — `Relationship::from` / `::to`
+    /// are PURL strings. The edges were built before this pass ran, so every
+    /// rewrite silently orphans its component unless the endpoints are
+    /// rewritten too. The caller MUST apply these; `apply_renames` does it.
+    pub(crate) renames: Vec<(String, String)>,
+}
+
+/// Rewrite dependency-edge endpoints after a pass changed component PURLs
+/// (#980, invariant I2).
+///
+/// I2 — "every edge endpoint must resolve to a component present in the
+/// document" — is named in `generate::graph_completeness` (m860, FR-001,
+/// C-3.3). Before #980 it was only ever asserted against a hand-built
+/// fixture, never against a real emission, which is how a pass that rewrote
+/// identities without touching edges shipped: CycloneDX kept edges pointing
+/// at the old PURL, and SPDX dropped the relationships entirely — 66% of the
+/// graph on a real project, with neither format raising an error.
+pub(crate) fn apply_renames(
+    renames: &[(String, String)],
+    relationships: &mut [waybill_common::resolution::Relationship],
+) -> usize {
+    if renames.is_empty() {
+        return 0;
+    }
+    let map: std::collections::HashMap<&str, &str> = renames
+        .iter()
+        .map(|(a, b)| (a.as_str(), b.as_str()))
+        .collect();
+    let mut rewritten = 0usize;
+    for r in relationships.iter_mut() {
+        if let Some(new) = map.get(r.from.as_str()) {
+            r.from = (*new).to_string();
+            rewritten += 1;
+        }
+        if let Some(new) = map.get(r.to.as_str()) {
+            r.to = (*new).to_string();
+            rewritten += 1;
+        }
+    }
+    rewritten
 }
 
 impl EnrichmentSummary {
@@ -646,6 +689,7 @@ pub(crate) fn enrich(
                     &revision,
                     pinned.matched_by,
                     pinned.pin_state,
+                    &mut summary.renames,
                 );
                 summary.resolved += 1;
             }
@@ -681,14 +725,26 @@ fn apply_resolved(
     revision: &str,
     matched_by: NixpkgsMatch,
     pin_state: &str,
+    renames: &mut Vec<(String, String)>,
 ) {
     c.version = version.to_string();
     // The PURL must carry the version too, or the component is versioned in
     // one place and not the other.
+    //
+    // #980: the PURL is also the dependency graph's identity
+    // (`Relationship::from`/`::to` are PURL strings) and the edges were built
+    // before this pass runs, so the rewrite is recorded and the endpoints
+    // updated by `apply_renames`. Changing identity without changing the
+    // edges orphans the component in every format.
     if let Ok(p) = waybill_common::types::purl::Purl::new(&format!(
         "pkg:hackage/{}@{}",
         c.name, version
     )) {
+        let before = c.purl.as_str().to_string();
+        let after = p.as_str().to_string();
+        if before != after {
+            renames.push((before, after));
+        }
         c.purl = p;
     }
     if let Some(hex) = source_hash {

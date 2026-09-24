@@ -462,6 +462,97 @@ fn m975_offline_with_no_cache_still_degrades() {
     );
 }
 
+/// #980 / invariant I2: every edge endpoint must resolve to a component
+/// present in the document.
+///
+/// I2 is not a new idea — it is named in
+/// `generate::graph_completeness` (m860, FR-001, C-3.3) and asserted there
+/// against a hand-built three-element fixture. It had never been checked on
+/// a real emitted document, which is how #980 shipped: the nixpkgs pass
+/// assigns a version and rewrites the component's PURL, but the PURL is the
+/// identity the dependency graph keys on and the edges were already built.
+/// Every component the feature successfully resolved became unreachable.
+///
+/// The symptom is format-specific and neither format errors:
+///   CycloneDX keeps the edge pointing at the pre-resolution PURL
+///   SPDX drops the relationship entirely — schema-valid and wrong
+///
+/// So this asserts the invariant directly rather than trusting either
+/// format's own validity.
+#[test]
+fn m980_no_dependency_edge_points_at_a_component_that_does_not_exist() {
+    let cache = seed_cache(&["9.6.x"]);
+    let d = scan(&fixture("resolvable"), Some(cache.path()), &[]);
+
+    let mut refs: std::collections::HashSet<String> = d.cdx["components"]
+        .as_array()
+        .expect("components")
+        .iter()
+        .filter_map(|c| c["bom-ref"].as_str().map(str::to_string))
+        .collect();
+    if let Some(root) = d.cdx["metadata"]["component"]["bom-ref"].as_str() {
+        refs.insert(root.to_string());
+    }
+
+    let mut dangling: Vec<String> = Vec::new();
+    if let Some(deps) = d.cdx["dependencies"].as_array() {
+        for e in deps {
+            let from = e["ref"].as_str().unwrap_or("?");
+            for t in e["dependsOn"].as_array().into_iter().flatten() {
+                let t = t.as_str().unwrap_or("?");
+                if !refs.contains(t) {
+                    dangling.push(format!("{from} -> {t}"));
+                }
+            }
+        }
+    }
+    assert!(
+        dangling.is_empty(),
+        "invariant I2 violated: {} edge(s) point at a bom-ref no component has.\n  {}\n\
+         A component whose version was resolved must keep its inbound edges; \
+         rewriting its PURL without rewriting the endpoints orphans it (#980).",
+        dangling.len(),
+        dangling.join("\n  ")
+    );
+}
+
+/// #980: the resolved components must still be REACHABLE, not merely
+/// referenced. A graph can be free of dangling edges and still have dropped
+/// them — which is exactly how SPDX fails here, silently and schema-validly.
+#[test]
+fn m980_a_resolved_component_is_still_reachable_from_the_root() {
+    let cache = seed_cache(&["9.6.x"]);
+    let d = scan(&fixture("resolvable"), Some(cache.path()), &[]);
+
+    // `waybill-fixture-liba` resolves to 1.2.3 from the pinned package set.
+    // Before #980 it kept its version and lost its edge.
+    let target = d.cdx["components"]
+        .as_array()
+        .expect("components")
+        .iter()
+        .find(|c| c["name"].as_str() == Some("waybill-fixture-liba"))
+        .and_then(|c| c["bom-ref"].as_str())
+        .expect("the fixture's resolvable dependency must be emitted")
+        .to_string();
+
+    let referenced = d.cdx["dependencies"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .any(|e| {
+            e["dependsOn"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .any(|t| t.as_str() == Some(target.as_str()))
+        });
+    assert!(
+        referenced,
+        "a resolved dependency must remain an edge target; \
+         {target} is emitted but nothing depends on it (#980)"
+    );
+}
+
 /// #973 (C174): a pass that SUCCEEDS must say so at document scope.
 ///
 /// Before this, the document named nixpkgs only on failure — a scan that
