@@ -21926,6 +21926,10 @@
         "value": "after-build"
       },
       {
+        "name": "waybill:file-inventory-skipped-build-dirs",
+        "value": "1"
+      },
+      {
         "name": "waybill:os-release-missing-fields",
         "value": "ID,VERSION_ID"
       },

@@ -293,11 +293,50 @@ A green lane is not evidence of a working lane — this repo has shipped a
 schema gate that passed because its `$ref`s resolved to stubs and it
 validated nothing.
 
-Pick a mutation that reaches every target and every format. Milestone
-840 used the version constant in `waybill-cli/build.rs`, which lands in
-CDX `metadata.tools`, SPDX 2.3 `annotations[].annotator` and SPDX 3
-`createdBy` — three different structures, so a format whose comparison
-silently no-ops cannot hide behind the other two.
+Pick a mutation that reaches every target and every format.
+
+> **Do not use the version constant.** Milestone 840 used the version in
+> `waybill-cli/build.rs`, on the grounds that it lands in CDX
+> `metadata.tools`, SPDX 2.3 `annotations[].annotator` and SPDX 3
+> `createdBy`. That advice is **stale**: #918 subsequently made
+> `mask_nondeterministic` mask waybill's own version in all three of
+> those carriers, precisely so a release bump would stop drifting the
+> lane. Dispatched in #979 it produced `1 of 3 formats drifted` — SPDX 3
+> only, and then only via the content-addressed ID cascade, not the
+> version field itself. It therefore demonstrates nothing about the CDX
+> and SPDX 2.3 comparisons, which is the whole point of this step.
+>
+> Any mutation you pick must be checked against `mask_nondeterministic`
+> first. A masked mutation produces a green lane and looks exactly like a
+> broken gate.
+
+What worked in #979: rename every component at the single point all three
+emitters read from — in `scan_cmd.rs`, immediately before `ScanArtifacts`
+is built:
+
+```rust
+for c in components.iter_mut() {
+    c.name.push_str("-CORPUSGATEPROBE");
+}
+```
+
+That lands in CDX `components[].name`, SPDX 2.3 `packages[].name` and
+SPDX 3 `@graph[].name`, none of which is masked.
+
+Expect **`3 of 3 formats drifted`** for most targets. Two will differ, and
+both are explainable rather than faults — check that yours match:
+
+- `pants-example-javascript` reports `2 of 3`. Its SPDX 3 golden is
+  JS-filtered down to almost nothing, so that format's comparison is not
+  demonstrated by a component-level mutation.
+- `haskell-aeson` panics at **layer 1** (`public_corpus.rs:67`) rather
+  than layer 2, because renaming components trips its `base` tripwire
+  first. Layer 1 firing is healthy, but it means that target's layer 2 is
+  not demonstrated either.
+
+So a component-rename mutation demonstrates all three formats on 11 of 13
+targets. If you need the remaining two, mutate something those targets'
+layer 1 does not inspect.
 
 **Compile the mutation locally before dispatching**
 (`cargo build -p waybill --bin waybill`). The first attempt at this in
