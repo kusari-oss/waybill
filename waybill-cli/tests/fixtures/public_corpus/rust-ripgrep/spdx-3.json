@@ -4684,6 +4684,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-IPZXEEAAWQ5653L4",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-inventory-skipped-build-dirs\",\"value\":\"2\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-ITIFUEZI4FVC6DRU",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"Cargo.lock\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-XBBYHIWF52W2LWLL",

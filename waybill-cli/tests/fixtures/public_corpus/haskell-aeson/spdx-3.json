@@ -5439,6 +5439,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-RWRM5WFQYA7TYNRM",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-inventory-skipped-build-dirs\",\"value\":\"1\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-RXSSRSRN7LW54HTT",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in stack.yaml / .cabal; no stack.yaml.lock fallback\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-KQXE2YSXK4RPHRMA",

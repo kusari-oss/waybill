@@ -1064,6 +1064,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-WVMFBCIA5METWL5D",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-inventory-skipped-build-dirs\",\"value\":\"1\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-WVS46GH4RNQVKGW4",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:detected-go\",\"value\":\"true\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-W22BABVIRD4LH6CG",

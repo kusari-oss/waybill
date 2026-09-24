@@ -9078,46 +9078,6 @@
       },
       "type": "library",
       "version": "3.23.0"
-    },
-    {
-      "bom-ref": "pkg:generic/file-tier?content-sha256=b863a4cb17ddda2276b26ca97949e480a04fdd89000d8b3a292a95907cd0dafa",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 1.0,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 1.0,
-                "technique": "hash-comparison"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "b863a4cb17ddda2276b26ca97949e480a04fdd89000d8b3a292a95907cd0dafa"
-        }
-      ],
-      "name": "on-create-command.sh",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\".devcontainer/on-create-command.sh\"]"
-        },
-        {
-          "name": "waybill:component-tier",
-          "value": "file"
-        },
-        {
-          "name": "waybill:file-paths",
-          "value": "[\".devcontainer/on-create-command.sh\"]"
-        }
-      ],
-      "type": "file",
-      "version": ""
     }
   ],
   "compositions": [
@@ -9361,10 +9321,6 @@
     }
   ],
   "dependencies": [
-    {
-      "dependsOn": [],
-      "ref": "pkg:generic/file-tier?content-sha256=b863a4cb17ddda2276b26ca97949e480a04fdd89000d8b3a292a95907cd0dafa"
-    },
     {
       "dependsOn": [],
       "ref": "pkg:pypi/alabaster@0.7.16"
@@ -10058,6 +10014,10 @@
       {
         "name": "waybill:cisa-2026-lifecycle",
         "value": "after-build"
+      },
+      {
+        "name": "waybill:file-inventory-skipped-build-dirs",
+        "value": "2"
       },
       {
         "name": "waybill:os-release-missing-fields",
