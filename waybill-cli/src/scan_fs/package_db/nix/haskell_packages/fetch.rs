@@ -98,6 +98,13 @@ pub(crate) enum FetchError {
     Unreachable(String),
     /// Exceeded the operator's budget (FR-019).
     TimedOut,
+    /// `--offline` is set and the artifact is not in the local cache (#975).
+    ///
+    /// Distinct from the transport failures above because it is not a failure
+    /// of the source: nothing was attempted. It is the one variant that must
+    /// abort a *partial* retrieval rather than being tolerated, since
+    /// tolerating it silently under-classifies boot libraries.
+    OfflineCacheMiss,
 }
 
 // There is deliberately no `UnsupportedSource` variant. An unsupported pin

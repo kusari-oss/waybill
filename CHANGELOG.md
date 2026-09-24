@@ -7,6 +7,45 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Fixed: `--offline` refused the local nixpkgs cache (#975)
+
+`--offline` short-circuited the nixpkgs-Haskell pass **above** every
+retrieval, so a scan with the pinned revision already on disk resolved
+nothing. Measured on `haskell/haskell-language-server` @ `2.15.0.0` with the
+16 MB cache hydrated for exactly the revision its `flake.lock` pins:
+
+| | versioned | resolved | SHA-256 | reasons |
+|---|---|---|---|---|
+| warm cache, online | 140 | 97 | 97 | `compiler-supplied` ×24, `absent-from-package-set` ×1 |
+| warm cache, `--offline` (before) | 43 | **0** | **0** | `offline` ×122 |
+| warm cache, `--offline` (after) | 140 | 97 | 97 | `compiler-supplied` ×24, `absent-from-package-set` ×1 |
+
+Nothing was fetched in any of these runs. The middle one declined to read a
+file. The flag's own help promises enrichment *"falls back to what can be
+derived from the local filesystem"* — a cache read is the local filesystem,
+and the key is the pinned revision, which is immutable, so a hit cannot be
+stale.
+
+The offline check now lives inside `cached_or_fetch`, which refuses the
+network call but still reads the cache. A cold offline scan degrades exactly
+as before. Post-fix, an offline scan of a hydrated cache is **byte-identical**
+to an online one (masking serial number and timestamp).
+
+**The dangerous case is fail-closed.** `boot_set` tolerates a missing compiler
+configuration, because a series that genuinely is not in nixpkgs must not
+abort the pass. An offline cache miss is the opposite situation — the
+configuration exists and we declined to look — and tolerating it yields an
+*empty* boot set, so every boot library takes a version from the package set
+instead of being classified `compiler-supplied`: a version the build never
+uses, asserted with a source hash and full provenance. That is the same
+under-inclusion direction that produced two wrong boot rules during #947, and
+offline it would have been silent. A cache miss while offline now degrades the
+whole pass (Principle III), with a regression test that pins it.
+
+Unblocks the version- and hash-level assertions proposed for a Nix-built
+Haskell corpus target (#969), which the public-corpus harness cannot make
+while it passes `--offline` unconditionally.
+
 ### Added: a successful nixpkgs Haskell resolution is now recorded in the document (#973)
 
 A scan that resolved Haskell versions through a pinned nixpkgs used to record,
