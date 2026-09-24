@@ -126,31 +126,62 @@ impl HttpSource {
 }
 
 impl RevisionSource for HttpSource {
+    /// Retrieve one file, on a dedicated OS thread.
+    ///
+    /// The thread is not an optimisation — it is required for correctness.
+    /// `reqwest::blocking` builds its own Tokio runtime, and dropping that
+    /// runtime inside another one panics in
+    /// `tokio::runtime::blocking::shutdown`. The scan CLI's `execute` is an
+    /// `async fn`, so every call here is already inside a runtime. Spawning a
+    /// plain `std::thread` gives the blocking client a context with no
+    /// ambient runtime, which is what it requires.
+    ///
+    /// This is the same posture m173's Go cache-warmer takes: synchronous
+    /// work on its own thread rather than woven into the async runtime.
+    ///
+    /// It was missed locally because a warm cache short-circuits before any
+    /// client is built, and the fixture that exercises it happens to pin the
+    /// same revision a real scan had already cached. CI, starting cold, hit
+    /// it on the first run.
     fn fetch(&self, location: &Location, rev: &str, path: &str) -> Result<String, FetchError> {
         let url = location.raw_url(rev, path);
-        let client = reqwest::blocking::Client::builder()
-            .timeout(self.timeout)
-            // No credential resolution by design (FR-018): a private mirror
-            // degrades rather than prompting or reading ambient tokens.
-            .build()
-            .map_err(|e| FetchError::Unreachable(e.to_string()))?;
+        let timeout = self.timeout;
 
-        let resp = client.get(&url).send().map_err(|e| {
-            if e.is_timeout() {
-                FetchError::TimedOut
-            } else {
-                FetchError::Unreachable(e.to_string())
-            }
-        })?;
+        std::thread::scope(|scope| {
+            scope
+                .spawn(move || {
+                    let client = reqwest::blocking::Client::builder()
+                        .timeout(timeout)
+                        // No credential resolution by design (FR-018): a
+                        // private mirror degrades rather than prompting or
+                        // reading ambient tokens.
+                        .build()
+                        .map_err(|e| FetchError::Unreachable(e.to_string()))?;
 
-        match resp.status().as_u16() {
-            200 => resp
-                .text()
-                .map_err(|e| FetchError::Unreachable(e.to_string())),
-            401 | 403 => Err(FetchError::Unauthorized),
-            404 => Err(FetchError::NotFound),
-            other => Err(FetchError::Unreachable(format!("HTTP {other}"))),
-        }
+                    let resp = client.get(&url).send().map_err(|e| {
+                        if e.is_timeout() {
+                            FetchError::TimedOut
+                        } else {
+                            FetchError::Unreachable(e.to_string())
+                        }
+                    })?;
+
+                    match resp.status().as_u16() {
+                        200 => resp
+                            .text()
+                            .map_err(|e| FetchError::Unreachable(e.to_string())),
+                        401 | 403 => Err(FetchError::Unauthorized),
+                        404 => Err(FetchError::NotFound),
+                        other => Err(FetchError::Unreachable(format!("HTTP {other}"))),
+                    }
+                })
+                .join()
+                // A panic inside the worker degrades like any other failure
+                // rather than propagating and aborting the scan (FR-008).
+                .unwrap_or_else(|_| {
+                    Err(FetchError::Unreachable("retrieval thread panicked".into()))
+                })
+        })
     }
 }
 
