@@ -96,9 +96,21 @@ const PACKAGES: &str = r#"
       version = "3.3.3";
       sha256 = "091h1ifc1srv803rrkzc8mgvhpsnw6cn6r0mqqs44ss1shjaan6r";
   }) { };
+  waybill-fixture-aliased_2_0_10 = callPackage ({ mkDerivation }: mkDerivation {
+      pname = "waybill-fixture-aliased";
+      version = "2.0.10";
+      sha256 = "091h1ifc1srv803rrkzc8mgvhpsnw6cn6r0mqqs44ss1shjaan6r";
+  }) { };
 "#;
 
-const CONFIG: &str = "self: super: { waybill-fixture-boot = null; }\n";
+/// #984: the real configuration both nulls boot libraries AND rebinds bare
+/// names onto versioned attributes. The fixture now carries both shapes,
+/// because a fixture with only the shape the parser already handled is how
+/// the alias gap stayed invisible through milestone 926.
+const CONFIG: &str = "self: super: {\n  \
+    waybill-fixture-boot = null;\n  \
+    waybill-fixture-aliased = doDistribute self.waybill-fixture-aliased_2_0_10;\n\
+}\n";
 
 /// Seed the per-revision cache so the resolved path runs with no network.
 fn seed_cache(series: &[&str]) -> tempfile::TempDir {
@@ -891,6 +903,56 @@ fn m985_the_opt_out_keeps_declared_resolution() {
         .find(|(c, _)| c["name"].as_str() == Some("waybill-fixture-liba"))
         .expect("liba");
     assert_eq!(liba.0["version"].as_str(), Some("1.2.3"));
+}
+
+/// #984: a dependency whose bare name exists only via a compiler-configuration
+/// alias must resolve, not report `absent-from-package-set`.
+///
+/// nixpkgs writes `os-string = doDistribute self.os-string_2_0_10;` in
+/// `configuration-ghc-*.nix`; `hackage-packages.nix` carries only the
+/// versioned attribute. Before #984 the resolver read that file solely for
+/// `= null;` bindings, so such a name resolved to nothing even though a
+/// version was available.
+#[test]
+fn m984_an_aliased_dependency_resolves_through_its_target() {
+    let cache = seed_cache(&["9.6.x"]);
+    let d = scan(&fixture("resolvable"), Some(cache.path()), &[]);
+
+    assert_eq!(
+        cdx_prop(&d.cdx, "waybill-fixture-aliased", "waybill:haskell-version-unresolved-reason"),
+        None,
+        "an aliased name must not be reported unresolved"
+    );
+    let comp = d.cdx["components"]
+        .as_array()
+        .expect("components")
+        .iter()
+        .find(|c| c["name"].as_str() == Some("waybill-fixture-aliased"))
+        .expect("the aliased dependency must be emitted");
+    assert_eq!(
+        comp["version"].as_str(),
+        Some("2.0.10"),
+        "must take the version of the attribute the alias points at"
+    );
+}
+
+/// #984: an alias must never override a name the package set defines in its
+/// own right. The direct hit wins.
+#[test]
+fn m984_a_direct_package_set_hit_is_not_overridden_by_an_alias() {
+    let cache = seed_cache(&["9.6.x"]);
+    let d = scan(&fixture("resolvable"), Some(cache.path()), &[]);
+    assert!(
+        cdx_prop(&d.cdx, "waybill-fixture-liba", "waybill:nixpkgs-resolved-via").is_some(),
+        "liba resolves directly from the package set"
+    );
+    let comp = d.cdx["components"]
+        .as_array()
+        .expect("components")
+        .iter()
+        .find(|c| c["name"].as_str() == Some("waybill-fixture-liba"))
+        .expect("liba");
+    assert_eq!(comp["version"].as_str(), Some("1.2.3"));
 }
 
 /// #980 / invariant I2: every edge endpoint must resolve to a component
