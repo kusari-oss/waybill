@@ -14,6 +14,14 @@ lockfile (#946) without ever consulting what it points at.
 All nixpkgs behaviour cited below is observed, not estimated. See
 `measurements/` for the probe and `measurements/README.md` for the numbers.
 
+## Clarifications
+
+### Session 2026-09-24
+
+- Q: When a flake offers several GHC package sets and none can be established, which set do non-boot dependencies resolve against, and what happens to boot libraries? → A: Resolve against the per-compiler set when the flake names exactly one; when it names several, resolve every dependency that is non-boot in **all** candidate sets, and emit boot libraries versionless with the candidate compilers recorded.
+- Q: Is resolution through the pinned revision active by default or opt-in? → A: Active by default, honoring `--offline` and a dedicated opt-out flag. With the caveat that the pinned source may be an internal or private mirror rather than upstream nixpkgs, and egress to it may be blocked or require credentials — so the fetch target is derived from the lock entry itself and an unreachable or unauthorized source degrades cleanly with its own reason code.
+- Q: Does resolution cover declared dependencies only, or the transitive closure? → A: Declared dependencies only in this feature. The transitive closure is a follow-up, gated on measuring how many components it adds — the package set carries each derivation's dependency list, but the probe did not parse it, so the multiplier is unmeasured.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - A Nix-built Haskell project gets real versions (Priority: P1)
@@ -111,11 +119,25 @@ components carry different, machine-readable resolution provenance.
   rewritten revision, or a rate limit. The scan MUST complete and fall back to
   today's versionless design-tier behaviour rather than fail or hang.
 - **The declaring project selects more than one compiler.** The #947 target's
-  flake offers three GHC package sets. Which one was built is not recorded in
-  `flake.lock`. See FR-005 and the clarification below.
+  flake offers three GHC package sets; which was built is not recorded in
+  `flake.lock`. Resolution proceeds for dependencies that are non-boot in every
+  candidate set, and the rest stay versionless with the candidates recorded
+  (FR-014a, FR-014b). Measured: all three candidate series null the same nine
+  packages from the sampled set, so this is rarely lossy in practice (M2).
 - **The boot-library set differs by compiler.** Measured: 40 nulled attributes
   at GHC 9.4.x and 9.6.x, 41 at 9.10.x, with a five-package symmetric
   difference (M2). A fixed list would be wrong.
+- **The pinned input is an internal or private mirror.** A `flake.lock` may pin
+  a fork, an internal mirror, or a self-hosted forge rather than upstream
+  nixpkgs. Retrieval targets whatever the lock names (FR-016). If that host is
+  unreachable from the scanning environment, or refuses access, or requires
+  credentials, the scan degrades to versionless with a reason distinct from
+  "reached but had no such package set" (FR-017), never prompts (FR-018), and
+  never hangs (FR-019).
+- **Egress is blocked entirely.** A network-restricted or air-gapped build
+  environment reaches no host at all. Indistinguishable in effect from an
+  unreachable source, and handled the same way; `--offline` remains the
+  explicit way to declare this up front.
 - **The nixpkgs layout changes.** `hackage-packages.nix` is a generated file at
   a path that is not a stable public interface. If it is absent or unparseable
   at the pinned revision, behave as unreachable rather than emit partial
@@ -137,6 +159,12 @@ components carry different, machine-readable resolution provenance.
 - **FR-001**: The system MUST resolve a declared Haskell dependency to the
   exact version recorded for it by the nixpkgs revision pinned in the
   project's `flake.lock`, when that revision's package set contains it.
+- **FR-001a**: Resolution applies to dependencies the project itself declares.
+  The system MUST NOT walk the pinned revision's derivation graph to discover
+  and emit dependencies the project does not declare. *(Scope decision, not a
+  capability limit: the package set does carry each derivation's dependency
+  list. Deferred because the number of components it would add is unmeasured,
+  and this spec admits no unmeasured figures.)*
 - **FR-002**: The system MUST record the source hash that revision carries for
   a resolved dependency, alongside the version.
 - **FR-003**: The system MUST promote a dependency resolved this way out of
@@ -170,13 +198,40 @@ components carry different, machine-readable resolution provenance.
   lockfile or freeze file MUST take precedence over a nixpkgs-resolved version,
   and the system MUST record when the two disagree rather than silently
   preferring one.
-- **FR-014**: When the project selects more than one compiler and no single
-  one can be established, the system MUST [NEEDS CLARIFICATION: see Q1 —
-  emit boot libraries versionless with the candidate compilers recorded, emit
-  one component per compiler, or require an operator-supplied selection].
-- **FR-015**: Resolution through the pinned revision MUST be
-  [NEEDS CLARIFICATION: see Q2 — active by default, or opt-in behind an
-  operator flag].
+- **FR-014**: When the project's flake names exactly one compiler package set,
+  the system MUST resolve against that set's configuration.
+- **FR-014a**: When the flake names more than one candidate compiler package
+  set and no single one can be established, the system MUST resolve a
+  dependency only if it is non-boot in **every** candidate set, and MUST treat
+  a dependency nulled in **any** candidate set as a boot library. *(Fail
+  closed, Constitution Principle III: a package whose status differs across
+  candidates cannot be resolved without knowing which compiler was used.)*
+- **FR-014b**: The system MUST record the candidate compiler package sets it
+  considered on every dependency left versionless under FR-014a, so the
+  operator can see what the ambiguity was.
+- **FR-014c**: The system MUST NOT emit one component variant per candidate
+  compiler, and MUST NOT resolve against the default package set when the
+  flake names a compiler-specific one. *(The default set contains versions the
+  build does not use; emitting them would violate Principle IX.)*
+- **FR-015**: Resolution through the pinned revision MUST be active by default,
+  and MUST fire only when the project both pins a nixpkgs-shaped input in
+  `flake.lock` and declares Haskell dependencies. A repository meeting neither
+  condition MUST perform no additional work.
+- **FR-015a**: The system MUST provide an operator flag that disables
+  resolution without disabling all network access.
+- **FR-016**: The system MUST derive the retrieval target from the pinned
+  input's own recorded location in `flake.lock` — its type, owner, repository
+  or URL — and MUST NOT assume the input is upstream nixpkgs. A pinned input
+  may be a fork, an internal mirror, or a self-hosted forge.
+- **FR-017**: The system MUST treat a pinned source that cannot be reached,
+  that refuses access, or that requires credentials as the unreachable case of
+  FR-008, and MUST record a reason distinguishing it from a source that was
+  reached but did not contain the expected package set.
+- **FR-018**: The system MUST NOT prompt for credentials, and MUST NOT retry a
+  refused source in a way that would block the scan.
+- **FR-019**: Retrieval MUST be bounded in time, and exceeding that bound MUST
+  degrade to the FR-008 unreachable path rather than extend the scan
+  indefinitely.
 
 ### Key Entities
 
@@ -216,6 +271,12 @@ components carry different, machine-readable resolution provenance.
   records the degradation at document scope.
 - **SC-007**: A repository with no `flake.lock` produces a document
   byte-identical to one produced before this feature.
+- **SC-008**: A scan whose pinned source is unreachable, refuses access, or
+  requires credentials completes within the bound of FR-019, prompts for
+  nothing, and records a reason distinguishing that case from a reachable
+  source lacking the package set.
+- **SC-009**: A repository that declares no Haskell dependencies, or pins no
+  nixpkgs-shaped input, performs no retrieval at all.
 
 Deliberately **not** a success criterion: any fixed "N of 19 dependencies
 resolved" figure. #947 reports 12 of 19; the probe measures 10 of 19 against a
@@ -245,6 +306,11 @@ be a criterion. See `measurements/README.md` §M3.
   the same set `cabal v2-freeze` declines to pin (#938). Two independent tools
   declining for the same reason is treated as a real constraint, not a gap to
   paper over.
+- **The pinned input is not assumed to be upstream nixpkgs.** Every measurement
+  in `measurements/` was taken against the public upstream repository because
+  that is what the #947 target pins, but the feature keys off the lock entry
+  (FR-016). An internal mirror of nixpkgs carries the same file layout, so
+  resolution works against it when it is reachable.
 - **The measurement target is referred to by its pinned revision, not by name**,
   per the project's external-name policy. The nixpkgs half of every measurement
   is reproducible from the revision alone.
@@ -261,6 +327,11 @@ be a criterion. See `measurements/README.md` §M3.
 
 ## Out of Scope
 
+- **The transitive closure.** Resolving versions for packages the project does
+  not itself declare, by walking the pinned revision's derivation dependency
+  lists. Feasible from the same artifact and closer to what a
+  `cabal.project.freeze` provides, but the component-count multiplier is
+  unmeasured. Follow-up, gated on measuring it first.
 - Any change to how non-Haskell nixpkgs packages are identified or emitted.
 - Resolving Haskell versions for projects that do not build through Nix.
 - Evaluating the flake, building anything, or invoking a host `nix`.
