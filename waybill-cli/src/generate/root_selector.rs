@@ -441,9 +441,13 @@ pub fn is_internal_emission_key(key: &str) -> bool {
     // is_workspace_root stamping) is internal-only — same treatment
     // as `waybill:is-workspace-root`. It never appears in emitted
     // CDX/SPDX SBOMs.
+    // Milestone 925 FR-007: the Nix reader's root-input marker drives
+    // flake-input attachment in `scan_fs` and is likewise internal.
     matches!(
         key,
-        IS_WORKSPACE_ROOT_KEY | "waybill:is-cargo-workspace-toplevel"
+        IS_WORKSPACE_ROOT_KEY
+            | "waybill:is-cargo-workspace-toplevel"
+            | crate::scan_fs::package_db::nix::ROOT_INPUT_KEY
     )
 }
 

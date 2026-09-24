@@ -16,7 +16,7 @@
 //! - A `tarball` input carries a `rev` despite having no `owner`/`repo`, so it
 //!   is identifiable rather than skippable. That affected 2 of 5 samples.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
 /// The schema version this parser understands.
@@ -214,6 +214,21 @@ impl FlakeLockDocument {
     /// The map's own copy of a node key, so the borrow outlives the lookup.
     fn key_of(&self, candidate: &str) -> Option<&str> {
         self.nodes.get_key_value(candidate).map(|(k, _)| k.as_str())
+    }
+
+    /// Node keys the root declares as inputs, with `follows` aliases resolved
+    /// to the node they name. These are the project's direct inputs (FR-007).
+    pub(crate) fn root_input_keys(&self) -> BTreeSet<&str> {
+        self.nodes
+            .get(&self.root_key)
+            .map(|root| {
+                root.inputs
+                    .values()
+                    .filter_map(|edge| self.resolve(edge))
+                    .filter(|k| *k != self.root_key)
+                    .collect()
+            })
+            .unwrap_or_default()
     }
 
     /// Every node that should become a component, in deterministic order.

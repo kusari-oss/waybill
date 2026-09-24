@@ -98,26 +98,49 @@ fn the_project_to_input_edge_is_build_scoped_not_runtime() {
     );
 }
 
-/// FR-008 — an input declared by another input keeps its edge from that
-/// declarer and is NOT re-parented to the project.
+/// FR-007 + FR-008 — the root is attached to exactly the inputs the lockfile's
+/// root node declares, and an input reached through another input keeps that
+/// edge too.
+///
+/// The fixture's root declares BOTH `flake-parts` and `nixpkgs`, and
+/// `flake-parts` follows the root's `nixpkgs`. An earlier version of this test
+/// read that as "the root declares one input" and asserted a single root edge,
+/// which locked in a reader that dropped the project's direct nixpkgs edge on
+/// every flake whose inputs follow it.
 #[test]
-fn a_transitively_declared_input_is_not_re_parented_to_the_root() {
+fn the_root_is_attached_to_exactly_its_declared_inputs() {
     let d = project_with_flake("nested-inputs");
     let v = scan(d.path(), "cyclonedx-json", "json");
     let root = v["metadata"]["component"]["bom-ref"].as_str().unwrap();
 
-    let root_targets: BTreeSet<&str> = v["dependencies"].as_array().unwrap().iter()
-        .find(|x| x["ref"].as_str() == Some(root))
-        .and_then(|x| x["dependsOn"].as_array())
-        .map(|a| a.iter().filter_map(|t| t.as_str()).collect())
-        .unwrap_or_default();
+    let targets_of = |r: &str| -> BTreeSet<String> {
+        v["dependencies"].as_array().unwrap().iter()
+            .find(|x| x["ref"].as_str() == Some(r))
+            .and_then(|x| x["dependsOn"].as_array())
+            .map(|a| a.iter().filter_map(|t| t.as_str()).map(String::from).collect())
+            .unwrap_or_default()
+    };
 
-    let nix_from_root: Vec<&str> = root_targets.iter().copied()
+    let nix_from_root: BTreeSet<String> = targets_of(root).into_iter()
         .filter(|t| t.starts_with("pkg:github/")).collect();
+    let names: BTreeSet<&str> = nix_from_root.iter()
+        .filter_map(|p| p.rsplit('/').next())
+        .filter_map(|n| n.split('@').next())
+        .collect();
     assert_eq!(
-        nix_from_root.len(), 1,
-        "the fixture's root declares ONE input (flake-parts); nixpkgs is reached \
-         through it via a follows alias. Two root edges would mean the nested \
-         input was flattened onto the project. got {nix_from_root:?}"
+        names,
+        BTreeSet::from(["flake-parts", "nixpkgs"]),
+        "the root node declares flake-parts and nixpkgs; the project gets an edge \
+         to each and to nothing else. got {nix_from_root:?}"
+    );
+
+    let flake_parts = nix_from_root.iter()
+        .find(|p| p.contains("/flake-parts@")).unwrap();
+    let nixpkgs = nix_from_root.iter()
+        .find(|p| p.contains("/nixpkgs@")).unwrap();
+    assert!(
+        targets_of(flake_parts).contains(nixpkgs),
+        "flake-parts reaches nixpkgs through a follows alias; that edge stays \
+         (FR-008) alongside the root's own"
     );
 }
