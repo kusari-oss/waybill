@@ -391,6 +391,8 @@ Auto-generated from all feature plans. Last updated: 2026-09-23
 - None. The report is written to an operator-named path; no cache, (924-repo-observation-report)
 - Rust stable, workspace toolchain (now pinned in (925-nix-flake-reader)
 - N/A — all state in-process per scan, matching every reader since (925-nix-flake-reader)
+- Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. No nightly. `waybill-ebpf` untouched. + Existing only — `reqwest` (workspace, `rustls-tls`) for retrieval, `serde`/`serde_json` for annotation values, `sha2` + `data-encoding` for hex encoding, `tracing`, `anyhow`/`thiserror`, `clap` for the opt-out flag. The Nix-base32 decoder is ~20 lines of stdlib arithmetic (custom alphabet, reversed bit order — no crate provides it). **Zero new Cargo dependencies.** (926-nixpkgs-haskell-versions)
+- Per-revision cache at `~/.cache/waybill/nixpkgs/<rev>/`, mirroring the m090 / m108 / m195 pinned-SHA layout. Immutable revision → no TTL, no invalidation. (926-nixpkgs-haskell-versions)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -545,9 +547,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 926-nixpkgs-haskell-versions: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. No nightly. `waybill-ebpf` untouched. + Existing only — `reqwest` (workspace, `rustls-tls`) for retrieval, `serde`/`serde_json` for annotation values, `sha2` + `data-encoding` for hex encoding, `tracing`, `anyhow`/`thiserror`, `clap` for the opt-out flag. The Nix-base32 decoder is ~20 lines of stdlib arithmetic (custom alphabet, reversed bit order — no crate provides it). **Zero new Cargo dependencies.**
 - 925-nix-flake-reader: Added Rust stable, workspace toolchain (now pinned in
 - 924-repo-observation-report: Added Rust stable, workspace toolchain inherited. No nightly. + Existing only — `serde`/`serde_json` (repor
-- 923-enrich-batch-default: Added Rust stable, workspace toolchain inherited. No nightly. `waybill-ebpf` untouched. + Existing only — `clap` (flag surface), `tracing` (the log line). **Zero new Cargo dependencies.**
 
 
 <!-- MANUAL ADDITIONS START -->
