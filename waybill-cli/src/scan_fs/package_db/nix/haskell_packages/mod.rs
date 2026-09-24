@@ -299,8 +299,16 @@ mod tests {
     fn pkgs(pairs: &[(&str, &str)]) -> package_set::PackageSet {
         let body: String = pairs
             .iter()
+            // Real shape: a top-level attribute binding, which is what the
+            // parser keys on (#970). A bare `mkDerivation` block with no
+            // attribute head is not something nixpkgs ever emits, and a
+            // fixture in that shape is why #970 went unnoticed.
             .map(|(n, v)| {
-                format!(r#"mkDerivation {{ pname = "{n}"; version = "{v}"; }}"#)
+                format!(
+                    "  {n} = callPackage ({{ mkDerivation }}: mkDerivation {{\n\
+                           pname = \"{n}\"; version = \"{v}\";\n\
+                     }}) {{ }};\n"
+                )
             })
             .collect::<Vec<_>>()
             .join("\n");
@@ -888,9 +896,18 @@ mod enrich_tests {
     }
 
     const PACKAGES: &str = r#"
-      mkDerivation { pname = "waybill-fixture-liba"; version = "1.2.3"; sha256 = "1zym9yia0is8wxfd6d1ldwvvghwxg4ww3y4lrxnyb2nk60ig29ly"; }
-      mkDerivation { pname = "waybill-fixture-boot"; version = "9.9.9"; sha256 = "091h1ifc1srv803rrkzc8mgvhpsnw6cn6r0mqqs44ss1shjaan6r"; }
-    "#;
+  waybill-fixture-liba = callPackage ({ mkDerivation }: mkDerivation {
+      pname = "waybill-fixture-liba";
+      version = "1.2.3";
+      sha256 = "1zym9yia0is8wxfd6d1ldwvvghwxg4ww3y4lrxnyb2nk60ig29ly";
+  }) { };
+
+  waybill-fixture-boot = callPackage ({ mkDerivation }: mkDerivation {
+      pname = "waybill-fixture-boot";
+      version = "9.9.9";
+      sha256 = "091h1ifc1srv803rrkzc8mgvhpsnw6cn6r0mqqs44ss1shjaan6r";
+  }) { };
+"#;
     const CONFIG: &str = r#"self: super: { waybill-fixture-boot = null; }"#;
 
     fn opts() -> ResolveOptions {
