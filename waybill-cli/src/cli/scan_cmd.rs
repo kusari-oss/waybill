@@ -4426,14 +4426,6 @@ pub async fn execute(
     let nixpkgs_haskell_resolution_json: Option<String> = nixpkgs_haskell_summary
         .as_ref()
         .map(|s| s.to_document_value().to_string());
-    // TEMPORARY MUTATION (#979 step 10) -- reverted in the next commit.
-    // Renames every component at the single point all three emitters read
-    // from, so CDX `components[].name`, SPDX 2.3 `packages[].name` and
-    // SPDX 3 `@graph[].name` all move. None is masked, unlike the tool
-    // version the refresh procedure suggests (see the PR body).
-    for c in components.iter_mut() {
-        c.name.push_str("-CORPUSGATEPROBE");
-    }
     let artifacts = ScanArtifacts {
         nixpkgs_haskell_degraded,
         nixpkgs_haskell_resolution: nixpkgs_haskell_resolution_json.as_deref(),
