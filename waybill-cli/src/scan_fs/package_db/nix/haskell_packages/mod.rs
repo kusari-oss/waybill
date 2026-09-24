@@ -127,6 +127,8 @@ impl From<&FetchError> for UnresolvedReason {
             | FetchError::Unauthorized
             | FetchError::Unreachable(_)
             | FetchError::TimedOut => UnresolvedReason::SourceUnreachable,
+            // #975: nothing was attempted, so the source is not implicated.
+            FetchError::OfflineCacheMiss => UnresolvedReason::Offline,
         }
     }
 }
@@ -538,9 +540,12 @@ pub(crate) fn enrich(
         Ok(p) => p,
         Err(reason) => return Some(degrade_all(components, reason)),
     };
-    if opts.offline {
-        return Some(degrade_all(components, UnresolvedReason::Offline));
-    }
+    // #975: the offline check used to sit HERE, above every retrieval, so a
+    // scan with the pinned revision already cached resolved nothing. It now
+    // lives inside `cached_or_fetch`, which refuses the network call but
+    // still reads the cache, and surfaces `OfflineCacheMiss` when the cache
+    // genuinely lacks the artifact. A cold offline scan degrades exactly as
+    // it did before.
     let Some(location) = pinned.location.clone() else {
         return Some(degrade_all(components, UnresolvedReason::SourceUnsupported));
     };
@@ -552,6 +557,7 @@ pub(crate) fn enrich(
         &pinned.revision,
         HACKAGE_PACKAGES_PATH,
         HACKAGE_PACKAGES_KEY,
+        opts.offline,
     ) {
         Ok(t) => t,
         Err(e) => {
@@ -575,7 +581,22 @@ pub(crate) fn enrich(
     }
 
     // Boot libraries, unioned across every candidate compiler (FR-014a).
-    let (boot, candidates) = boot_set(source, &location, &pinned.revision, scan_root);
+    // #975: a partial cache must not half-resolve. An offline miss on any
+    // compiler configuration degrades the whole pass rather than proceeding
+    // with an empty boot set.
+    let (boot, candidates) =
+        match boot_set(source, &location, &pinned.revision, scan_root, opts.offline) {
+            Ok(v) => v,
+            Err(e) => {
+                let reason = UnresolvedReason::from(&e);
+                tracing::info!(
+                    revision = %pinned.revision,
+                    reason = reason.as_str(),
+                    "nixpkgs-haskell: degrading, compiler configuration unavailable"
+                );
+                return Some(degrade_all(components, reason));
+            }
+        };
 
     let mut summary = EnrichmentSummary {
         revision: Some(pinned.revision.clone()),
@@ -717,15 +738,26 @@ fn degrade_all(
 }
 
 /// Read a revision's file from cache, retrieving it only on a miss.
+/// Retrieve one artifact, preferring the local cache (#975).
+///
+/// `offline` refuses the *network* call, not the cache read. A cache read is
+/// the local filesystem, which is what `--offline` promises to fall back to,
+/// and the key is the pinned revision — immutable, so a hit cannot be stale.
+/// Before #975 the offline check sat in `enrich`, above this function, so a
+/// fully-hydrated cache resolved nothing.
 fn cached_or_fetch(
     source: &dyn fetch::RevisionSource,
     location: &Location,
     rev: &str,
     path: &str,
     key: &str,
+    offline: bool,
 ) -> Result<String, FetchError> {
     if let Some(hit) = cache::read(rev, key) {
         return Ok(hit);
+    }
+    if offline {
+        return Err(FetchError::OfflineCacheMiss);
     }
     let text = source.fetch(location, rev, path)?;
     cache::write(rev, key, &text);
@@ -749,18 +781,29 @@ fn boot_set(
     location: &Location,
     rev: &str,
     scan_root: &Path,
-) -> (BTreeSet<String>, Vec<String>) {
+    offline: bool,
+) -> Result<(BTreeSet<String>, Vec<String>), FetchError> {
     let candidates = candidate_series(scan_root);
     let mut texts: Vec<String> = Vec::new();
     for series in &candidates {
         let path = format!("pkgs/development/haskell-modules/configuration-ghc-{series}.nix");
         let key = format!("configuration-ghc-{series}.nix");
-        if let Ok(text) = cached_or_fetch(source, location, rev, &path, &key) {
-            texts.push(text);
+        match cached_or_fetch(source, location, rev, &path, &key, offline) {
+            Ok(text) => texts.push(text),
+            // #975 — the one error that must NOT be tolerated. Every other
+            // failure means the series genuinely is not there, and the union
+            // rule makes a missing series safe. An offline cache miss means
+            // the opposite: the configuration exists and we simply declined
+            // to look. Tolerating it yields an EMPTY boot set, so every boot
+            // library takes a version from the package set instead of being
+            // classified `compiler-supplied` — a version the build never
+            // uses, asserted with a source hash. Principle III: fail closed.
+            Err(e @ FetchError::OfflineCacheMiss) => return Err(e),
+            Err(_) => {}
         }
     }
     let boot = boot_libraries::union_nulled(texts.iter().map(String::as_str));
-    (boot, candidates)
+    Ok((boot, candidates))
 }
 
 /// Which compiler package sets the project might build against.

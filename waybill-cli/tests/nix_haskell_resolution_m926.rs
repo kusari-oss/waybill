@@ -394,6 +394,74 @@ fn m926_degradation_is_recorded_at_document_scope() {
     assert!(mentions(&d.spdx3, "waybill:nixpkgs-haskell-degraded"), "C173 missing from SPDX 3");
 }
 
+/// #975: `--offline` must read the local cache, not refuse it.
+///
+/// A cache read is the local filesystem, which is what `--offline`'s own help
+/// promises to fall back to. The key is the pinned revision, which is
+/// immutable, so a hit cannot be stale. Before the fix this resolved 0 with
+/// every byte already on disk.
+#[test]
+fn m975_offline_resolves_from_a_hydrated_cache() {
+    let cache = seed_cache(&["9.6.x"]);
+    let d = scan(&fixture("resolvable"), Some(cache.path()), &["--offline"]);
+
+    assert!(
+        mentions(&d.cdx, "waybill:nixpkgs-resolved-via"),
+        "a hydrated cache must serve an offline scan; nothing here needs the network"
+    );
+    assert!(
+        !mentions(&d.cdx, "\"offline\""),
+        "no component should be blamed on being offline when the cache had it"
+    );
+}
+
+/// #975, the dangerous case: a PARTIAL cache must degrade, not half-resolve.
+///
+/// `boot_set` swallows every retrieval error (`if let Ok(text)`), so a cache
+/// holding the package set but not the `configuration-ghc-*.nix` files would
+/// produce an EMPTY boot set. A boot library would then take a version from
+/// the package set instead of being classified `compiler-supplied`: a version
+/// the build never uses, asserted with a source hash and full provenance.
+///
+/// The fixture makes this concrete — `waybill-fixture-boot` is present in the
+/// package set at `9.9.9` AND nulled by the compiler configuration, so losing
+/// the configuration silently turns it into a resolved `9.9.9`.
+///
+/// That is the same under-inclusion direction that produced two wrong boot
+/// rules during #947, and offline it would be silent. Principle III says fail
+/// closed, so a cache miss while offline degrades the whole pass.
+#[test]
+fn m975_a_partial_cache_degrades_rather_than_misclassifying_boot_libraries() {
+    // Package set present, NO configuration-ghc-*.nix.
+    let cache = seed_cache(&[]);
+    let d = scan(&fixture("resolvable"), Some(cache.path()), &["--offline"]);
+
+    assert_eq!(
+        cdx_prop(&d.cdx, "waybill-fixture-boot", "waybill:haskell-version-unresolved-reason")
+            .as_deref(),
+        Some("offline"),
+        "a boot library must not be resolved from a package set whose boot \
+         configuration was unavailable"
+    );
+    assert!(
+        !mentions(&d.cdx, "waybill:nixpkgs-resolved-via"),
+        "a partial cache must resolve nothing at all, not a subset"
+    );
+}
+
+/// #975: a cold cache offline still degrades exactly as it did before.
+#[test]
+fn m975_offline_with_no_cache_still_degrades() {
+    let empty = tempfile::tempdir().unwrap();
+    let d = scan(&fixture("resolvable"), Some(empty.path()), &["--offline"]);
+    assert_eq!(
+        cdx_prop(&d.cdx, "waybill-fixture-liba", "waybill:haskell-version-unresolved-reason")
+            .as_deref(),
+        Some("offline"),
+        "an empty cache offline is still offline"
+    );
+}
+
 /// #973 (C174): a pass that SUCCEEDS must say so at document scope.
 ///
 /// Before this, the document named nixpkgs only on failure — a scan that
