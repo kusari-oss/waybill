@@ -7,6 +7,45 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Added: a Nix-built Haskell corpus target (#969)
+
+`haskell-aeson` carries no `flake.lock`, so the nixpkgs-backed Haskell
+resolution path (#947) had **no corpus coverage at all**. All four of that
+milestone's defects were caught by scanning a repository by hand or by CI —
+none by a test. The decisive one, a gate requiring the *author's* flake
+reference to pin an exact revision rather than the *lock*, resolved 0 of 19
+and 0 of 44 on two real repositories, and every fixture written for the
+milestone encoded the same assumption as the code, so the whole suite agreed
+with the bug.
+
+New target `haskell-language-server` @ `2.15.0.0`, whose `flake.lock` has
+`original.ref` set with no `original.rev` and `locked.rev` present — the
+ordinary shape, and exactly what that gate rejected. **It would have failed on
+its first CI run.**
+
+Measured at the pinned revision under the harness invocation: 204 components,
+165 `pkg:hackage/*`, 97 resolved through nixpkgs with a version *and* a native
+SHA-256, 25 versionless and all 25 carrying a reason, document-scope C174
+naming revision `cbb5cf35…`.
+
+Five layer-1 tripwires, each mutation-tested to confirm it can fail rather
+than merely pass: revision resolved, resolution scale (floor 80, measured 97),
+per-component completeness (provenance implies version *and* hash),
+every-versionless-component-has-a-reason, and boot libraries staying
+`compiler-supplied` (floor 15, measured 24).
+
+Size was measured rather than assumed before pinning: 25.9 MB against
+`haskell/aeson`'s 41.5 MB, so this does not raise the corpus's largest clone.
+
+**Harness**: the corpus scan runs `--offline`, so the nixpkgs package set is
+fetched in the existing sanctioned hydration step, into a corpus-owned cache
+(never the developer's `~/.cache/waybill/nixpkgs`, where a stale copy could
+make a red run look green). Hydration re-checks on a cache hit, because the
+repo marker says nothing about the package set and the two can be evicted
+independently. A 404 for a GHC series nixpkgs does not carry at a revision is
+cached as an absence, so the offline run reproduces the online result exactly
+rather than degrading forever.
+
 ### Fixed: `--offline` refused the local nixpkgs cache (#975)
 
 `--offline` short-circuited the nixpkgs-Haskell pass **above** every

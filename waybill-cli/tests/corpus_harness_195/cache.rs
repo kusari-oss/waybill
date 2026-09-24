@@ -12,6 +12,47 @@ use sha2::{Digest, Sha256};
 use super::harness::CorpusInfraError;
 use super::manifest::{CorpusTarget, PinnedRef, SourceKind};
 
+/// GHC series waybill may ask for, mirroring `KNOWN_GHC_SERIES` in
+/// `scan_fs::package_db::nix::haskell_packages`. Hydration fetches all of
+/// them so any candidate subset is a cache hit.
+const KNOWN_GHC_SERIES: &[&str] =
+    &["9.16.x", "9.14.x", "9.12.x", "9.10.x", "9.8.x", "9.6.x", "9.4.x", "9.0.x"];
+
+/// Read the nixpkgs input a `flake.lock` pins, as `(owner, repo, rev)`.
+///
+/// `None` when the file is absent, unparseable, names no nixpkgs-shaped
+/// GitHub input, or pins no exact revision — in which case there is nothing
+/// to hydrate and the target simply exercises other readers.
+fn nixpkgs_pin(lock_path: &Path) -> Option<(String, String, String)> {
+    let text = std::fs::read_to_string(lock_path).ok()?;
+    let doc: serde_json::Value = serde_json::from_str(&text).ok()?;
+    let nodes = doc.get("nodes")?.as_object()?;
+    for (name, node) in nodes {
+        // The `root` node carries only `inputs`, so every lookup below must
+        // skip rather than abort. Using `?` here would return from the whole
+        // function on the first node without a `locked` block, find no
+        // nixpkgs, and silently hydrate nothing -- leaving every downstream
+        // assertion vacuously green.
+        let Some(locked) = node.get("locked") else { continue };
+        if locked.get("type").and_then(|v| v.as_str()) != Some("github") {
+            continue;
+        }
+        let Some(repo) = locked.get("repo").and_then(|v| v.as_str()) else { continue };
+        if name != "nixpkgs" && repo != "nixpkgs" {
+            continue;
+        }
+        let Some(owner) = locked.get("owner").and_then(|v| v.as_str()) else { continue };
+        let Some(rev) = locked.get("rev").and_then(|v| v.as_str()) else { continue };
+        if rev.is_empty() {
+            continue;
+        }
+        return Some((owner.to_string(), repo.to_string(), rev.to_string()));
+    }
+    None
+}
+
+
+
 pub struct CorpusCacheKey {
     pub source_id_short: String,
     pub pin: String,
@@ -68,6 +109,120 @@ impl CorpusCacheDir {
         Ok(Self { root })
     }
 
+    /// Where waybill should keep its nixpkgs package-set cache for corpus
+    /// runs (#969).
+    ///
+    /// Deliberately under the corpus cache root rather than the developer's
+    /// `~/.cache/waybill/nixpkgs`: a corpus run must not read or write the
+    /// machine's own cache, both for isolation and so a stale local copy
+    /// cannot make a red run look green.
+    pub fn nixpkgs_cache_dir(&self) -> PathBuf {
+        self.root.join("corpus-nixpkgs")
+    }
+
+    /// Fetch the nixpkgs artifacts a target's pinned revision needs.
+    ///
+    /// No-op unless the checked-out tree has a `flake.lock` naming a nixpkgs
+    /// input with an exact `rev`. The revision is pinned by the target's own
+    /// committed lockfile, so the bytes are content-fixed and the result is
+    /// deterministic across runs.
+    ///
+    /// Fetches the package set plus **every** known GHC configuration rather
+    /// than only the series the target's `flake.nix` names. waybill derives
+    /// its candidate series from that file, and a superset guarantees any
+    /// subset is a cache hit. It also matters that this over-fetches rather
+    /// than under-fetches: since #975 a cache miss while offline degrades the
+    /// whole pass, so an under-fetch would turn into a loud corpus failure
+    /// rather than a silent misclassification — but a loud failure is still a
+    /// failure, and there is no reason to court one over ~25 KB of configs.
+    fn hydrate_nixpkgs(
+        &self,
+        target: &CorpusTarget,
+        repo_dir: &Path,
+    ) -> Result<(), CorpusInfraError> {
+        let Some((owner, repo, rev)) = nixpkgs_pin(&repo_dir.join("flake.lock")) else {
+            return Ok(());
+        };
+        let dest = self.nixpkgs_cache_dir().join(&rev);
+        std::fs::create_dir_all(&dest).map_err(|e| CorpusInfraError::CacheIo {
+            path: dest.clone(),
+            kind: e.kind(),
+        })?;
+
+        let mut wanted: Vec<(String, String)> = vec![(
+            "pkgs/development/haskell-modules/hackage-packages.nix".to_string(),
+            "hackage-packages.nix".to_string(),
+        )];
+        for series in KNOWN_GHC_SERIES {
+            wanted.push((
+                format!("pkgs/development/haskell-modules/configuration-ghc-{series}.nix"),
+                format!("configuration-ghc-{series}.nix"),
+            ));
+        }
+
+        for (path, key) in wanted {
+            let out = dest.join(&key);
+            if out.exists() {
+                continue;
+            }
+            let url = format!("https://raw.githubusercontent.com/{owner}/{repo}/{rev}/{path}");
+            let res = std::process::Command::new("curl")
+                .args(["-fsSL", "--retry", "3", "-o"])
+                .arg(&out)
+                .arg(&url)
+                .output()
+                .map_err(|e| CorpusInfraError::NixpkgsHydration {
+                    target: target.name,
+                    stderr: format!("curl spawn failed: {e}"),
+                })?;
+            if !res.status.success() {
+                let _ = std::fs::remove_file(&out);
+                // The package set is not optional.
+                if key == "hackage-packages.nix" {
+                    return Err(CorpusInfraError::NixpkgsHydration {
+                        target: target.name,
+                        stderr: format!(
+                            "could not fetch {url}: exit {:?}: {}",
+                            res.status.code(),
+                            String::from_utf8_lossy(&res.stderr)
+                        ),
+                    });
+                }
+                // curl exits 22 for an HTTP error under `-f`. A 404 means
+                // nixpkgs genuinely carries no configuration for that series
+                // at this revision, which waybill tolerates ONLINE -- the
+                // union rule makes a missing series safe.
+                //
+                // Offline it cannot tell "absent upstream" from "absent from
+                // the cache", and since #975 the latter must degrade the
+                // whole pass. Caching the absence as an empty file makes the
+                // offline run reproduce the online result exactly: the file
+                // hits, contributes no nulled names, and the union is
+                // unchanged. Without this, any target whose flake.nix names
+                // no explicit series would degrade forever, because the
+                // candidate list then spans every known series and nixpkgs
+                // does not carry all of them at every revision.
+                if res.status.code() == Some(22) {
+                    std::fs::write(&out, "").map_err(|e| CorpusInfraError::CacheIo {
+                        path: out.clone(),
+                        kind: e.kind(),
+                    })?;
+                } else {
+                    // Anything else is a transport failure, not an absence.
+                    return Err(CorpusInfraError::NixpkgsHydration {
+                        target: target.name,
+                        stderr: format!(
+                            "could not fetch {url}: exit {:?}: {}",
+                            res.status.code(),
+                            String::from_utf8_lossy(&res.stderr)
+                        ),
+                    });
+                }
+            }
+        }
+        Ok(())
+    }
+
     /// Ensures the target's pinned artifact is present on disk:
     /// - `Git` targets: clone into `<cache-dir>/repo`, `git checkout <sha>`,
     ///   touch `.corpus-pin-verified` marker on success.
@@ -83,7 +238,18 @@ impl CorpusCacheDir {
         })?;
         let marker = dir.join(".corpus-pin-verified");
         if marker.exists() {
-            return Ok(work_dir_for(&dir, target));
+            // #969: re-check nixpkgs hydration even on a marker hit. The
+            // marker records that the REPO is at its pin; it says nothing
+            // about the nixpkgs package set, which lives in a different
+            // directory and can be evicted independently. Gating hydration
+            // behind the marker would leave a cleared nixpkgs cache
+            // permanently un-hydrated, and the target would then fail on
+            // every run until the whole corpus cache was deleted.
+            // `hydrate_nixpkgs` checks each file for existence, so this is
+            // free once hydrated.
+            let work = work_dir_for(&dir, target);
+            self.hydrate_nixpkgs(target, &work)?;
+            return Ok(work);
         }
         match &target.source {
             SourceKind::Git { clone_url } => {
@@ -131,6 +297,12 @@ impl CorpusCacheDir {
                         ),
                     });
                 }
+                // #969: a target whose flake.lock pins nixpkgs needs its
+                // Haskell package set on disk before the OFFLINE scan, or
+                // resolution degrades and every version/hash assertion
+                // passes vacuously. Hydration is the sanctioned place for
+                // network activity; the scan itself stays offline.
+                self.hydrate_nixpkgs(target, &repo_dir)?;
                 std::fs::write(&marker, hex).map_err(|e| CorpusInfraError::CacheIo {
                     path: marker.clone(),
                     kind: e.kind(),
@@ -184,5 +356,69 @@ fn work_dir_for(cache_dir: &Path, target: &CorpusTarget) -> PathBuf {
     match &target.source {
         SourceKind::Git { .. } => cache_dir.join("repo"),
         SourceKind::OciImage { .. } => cache_dir.to_path_buf(),
+    }
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod nixpkgs_pin_tests {
+    use super::nixpkgs_pin;
+
+    fn write(text: &str) -> tempfile::TempDir {
+        let d = tempfile::tempdir().unwrap();
+        std::fs::write(d.path().join("flake.lock"), text).unwrap();
+        d
+    }
+
+    /// The real shape of `haskell/haskell-language-server`'s lock, trimmed:
+    /// a `root` node with no `locked` block, then the inputs. An earlier
+    /// draft used `?` on `node.get("locked")`, which returns from the whole
+    /// function at `root` -- hydrating nothing and making every corpus
+    /// assertion pass vacuously.
+    #[test]
+    fn root_node_without_a_locked_block_does_not_abort_the_search() {
+        let d = write(
+            r#"{"nodes":{
+                 "root":{"inputs":{"nixpkgs":"nixpkgs"}},
+                 "flake-utils":{"locked":{"type":"github","owner":"numtide",
+                   "repo":"flake-utils","rev":"1170dc"}},
+                 "nixpkgs":{"locked":{"type":"github","owner":"NixOS",
+                   "repo":"nixpkgs","rev":"cbb5cf35"},
+                   "original":{"owner":"NixOS","repo":"nixpkgs","ref":"nixpkgs-unstable"}}
+               },"root":"root","version":7}"#,
+        );
+        assert_eq!(
+            nixpkgs_pin(&d.path().join("flake.lock")),
+            Some(("NixOS".into(), "nixpkgs".into(), "cbb5cf35".into()))
+        );
+    }
+
+    /// A lock with no nixpkgs input hydrates nothing, rather than erroring.
+    #[test]
+    fn a_lock_without_nixpkgs_yields_nothing() {
+        let d = write(
+            r#"{"nodes":{"root":{"inputs":{}},
+                 "flake-utils":{"locked":{"type":"github","owner":"numtide",
+                   "repo":"flake-utils","rev":"1170dc"}}},"root":"root","version":7}"#,
+        );
+        assert_eq!(nixpkgs_pin(&d.path().join("flake.lock")), None);
+    }
+
+    /// A moving reference pins no revision, so there is nothing to fetch.
+    #[test]
+    fn a_lock_with_no_revision_yields_nothing() {
+        let d = write(
+            r#"{"nodes":{"root":{"inputs":{"nixpkgs":"nixpkgs"}},
+                 "nixpkgs":{"locked":{"type":"github","owner":"NixOS",
+                   "repo":"nixpkgs","rev":""}}},"root":"root","version":7}"#,
+        );
+        assert_eq!(nixpkgs_pin(&d.path().join("flake.lock")), None);
+    }
+
+    /// Absent file: the ordinary case for every non-Nix target.
+    #[test]
+    fn a_missing_lock_yields_nothing() {
+        let d = tempfile::tempdir().unwrap();
+        assert_eq!(nixpkgs_pin(&d.path().join("flake.lock")), None);
     }
 }

@@ -171,6 +171,20 @@ fn corpus_haskell_aeson() {
     run_target("haskell-aeson");
 }
 
+// #969 — the first corpus target that exercises nixpkgs-backed Haskell
+// version resolution. `haskell-aeson` has no `flake.lock`, so the whole #947
+// path was uncovered: all four of its defects were found by hand or by CI,
+// none by a test. This target's `flake.lock` has `original.ref` set with no
+// `original.rev`, and `locked.rev` present — the ordinary shape, and exactly
+// what the #947 gate rejected. It would have failed on its first CI run.
+// See `layer1_assertions::haskell_language_server_layer1` for the five
+// tripwires.
+#[test]
+#[ignore = "public-corpus target: needs WAYBILL_RUN_PUBLIC_CORPUS=1 and a populated corpus cache. Ignored rather than silently early-returning: a gated test that prints `skipping` and reports `ok` is indistinguishable from one that compared goldens, and a green local run then implies corpus coverage it does not have. CI passes --include-ignored. See #918."]
+fn corpus_haskell_language_server() {
+    run_target("haskell-language-server");
+}
+
 // -----------------------------------------------------------------------
 // US4 — byte-identity across two consecutive runs (opt-in-within-opt-in)
 // -----------------------------------------------------------------------
