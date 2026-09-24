@@ -569,6 +569,14 @@ pub fn annotate_document(
         );
     }
 
+    // C173 (#947) — nixpkgs-backed Haskell resolution degraded.
+    if let Some(reason) = artifacts.nixpkgs_haskell_degraded {
+        push(&mut out,
+            "waybill:nixpkgs-haskell-degraded",
+            json!(reason),
+        );
+    }
+
     // Milestone 133 US3 (C93/C94/C95): file-tier walker diagnostic
     // skip counters. Constitution Principle X — operators get
     // transparent visibility into what the orphan/full walker

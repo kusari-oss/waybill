@@ -24,6 +24,15 @@ fn scan_at(root: &Path, offline: bool) -> serde_json::Value {
     let out = std::env::temp_dir().join(format!("nix-fm-{}-{seq}.json", std::process::id()));
     let mut cmd = Command::new(binary_path());
     cmd.args(["sbom", "scan", "--path", root.to_str().unwrap(),
+              // This suite's subject is the `flake.lock` READER, which takes
+              // no network. Milestone 926 added a separate subsystem that
+              // resolves Haskell versions through the pinned nixpkgs and does
+              // retrieve — so an online scan here would drag 16 MB of an
+              // unrelated feature into a test about this one, and make it
+              // depend on a forge being reachable. Disabled explicitly rather
+              // than by `--offline`, which would also change what the online
+              // leg below is testing.
+              "--no-nixpkgs-haskell",
               "--format", "cyclonedx-json", "--output", out.to_str().unwrap()]);
     if offline { cmd.arg("--offline"); }
     let st = cmd.status().unwrap();
@@ -131,6 +140,7 @@ fn the_scan_needs_neither_network_nor_a_nix_installation() {
     let out = std::env::temp_dir().join(format!("nix-nopath-{}.json", std::process::id()));
     let st = Command::new(binary_path())
         .args(["sbom", "scan", "--path", d.path().to_str().unwrap(), "--offline",
+               "--no-nixpkgs-haskell",
                "--format", "cyclonedx-json", "--output", out.to_str().unwrap()])
         .env("PATH", "/nonexistent")
         .status().unwrap();

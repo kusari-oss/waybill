@@ -74,6 +74,13 @@ pub(crate) struct LockedRef {
     pub(crate) repo: Option<String>,
     #[serde(default)]
     pub(crate) url: Option<String>,
+    /// Non-default forge host, as written by `github:owner/repo?host=…`.
+    /// A self-hosted GitHub Enterprise or GitLab mirror pins with the same
+    /// `type` as the public forge and differs only here, so milestone 926's
+    /// FR-016 ("derive the retrieval target from the lock entry, never assume
+    /// upstream") cannot be satisfied without it.
+    #[serde(default)]
+    pub(crate) host: Option<String>,
     #[serde(default)]
     pub(crate) rev: Option<String>,
     #[serde(default, rename = "narHash")]

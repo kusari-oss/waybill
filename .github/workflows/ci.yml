@@ -82,6 +82,25 @@ jobs:
           # CICD-SEC-1 + Kusari Inspector hardening guidance.
           persist-credentials: false
 
+      # Milestone 926 — homoglyph gate.
+      # A Cyrillic `a` (U+0430) renders identically to a Latin `a` in every
+      # editor, diff and review UI, so a substituted character produces a
+      # value that looks correct and is not. Milestone 926 introduced one
+      # into a test fixture; it was caught by an explicit sweep rather than
+      # by review, because there is nothing to see.
+      #
+      # Flags only characters confusable with ASCII letters, plus invisible
+      # and zero-width characters. Mathematical notation the repository uses
+      # on purpose (Δ, Σ, μ) and typography (—, →, ✅) are NOT flagged —
+      # a check that cries wolf gets ignored.
+      #
+      # Slotted beside the walker-audit gate and before the toolchain
+      # install so a failure short-circuits the expensive steps. python3 is
+      # preinstalled on every GitHub Actions runner.
+      - name: Homoglyph check
+        shell: bash
+        run: python3 scripts/check-homoglyphs.py
+
       # Milestone 115 — walker-audit allow-list gate (closes #342).
       # Codifies the milestone-114 `safe_walk` no-hand-rolled-walker
       # invariant as a CI check. The audit grep enumerates every

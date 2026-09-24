@@ -488,6 +488,11 @@ pub fn build_document(
             // SPDX 3 emitters were unaffected, so the catalog's
             // `SymmetricEqual` claim for those rows was false.
             file_inventory_stats: artifacts.file_inventory_stats,
+            // #947: forwarded for the same reason as the line above. The
+            // `view_artifacts` swap is a components-only rewrite; hard-coding
+            // None here is precisely the defect that kept C93/C94/C95 out of
+            // SPDX 2.3 for three milestones (#934).
+            nixpkgs_haskell_degraded: artifacts.nixpkgs_haskell_degraded,
             // Milestone 671 T010 — propagate the outer mode + source-
             // shape restriction so the C156 (source-tree) + m133 US4
             // (`full`) markers reach `annotate_document`. The
@@ -550,6 +555,11 @@ pub fn build_document(
             // SPDX 3 emitters were unaffected, so the catalog's
             // `SymmetricEqual` claim for those rows was false.
             file_inventory_stats: artifacts.file_inventory_stats,
+            // #947: forwarded for the same reason as the line above. The
+            // `view_artifacts` swap is a components-only rewrite; hard-coding
+            // None here is precisely the defect that kept C93/C94/C95 out of
+            // SPDX 2.3 for three milestones (#934).
+            nixpkgs_haskell_degraded: artifacts.nixpkgs_haskell_degraded,
             // Milestone 671 T010 — propagate the outer mode + source-
             // shape restriction so the C156 (source-tree) + m133 US4
             // (`full`) markers reach `annotate_document`. The
@@ -1298,6 +1308,7 @@ mod tests {
             identifiers: &[],
             component_identifiers: &[],
             file_inventory_stats: None,
+            nixpkgs_haskell_degraded: None,
             file_inventory_mode: None,
             file_inventory_source_shapes: None,
             root_override: crate::generate::RootComponentOverride::default(),

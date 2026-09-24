@@ -1,0 +1,19 @@
+cabal-version:      2.4
+name:               waybill-fixture-app
+version:            0.1.0.0
+license:            BSD-3-Clause
+
+-- Every dependency name here is synthetic. The retrieval boundary is
+-- injected in tests, so the "package set" is a fixture too and nothing
+-- requires real Hackage coordinates (project fixture policy).
+--
+--   waybill-fixture-liba/-libb : present in the package set, resolve
+--   waybill-fixture-boot       : nulled by the compiler configuration
+--   waybill-fixture-absent     : in neither -> absent-from-package-set
+library
+    exposed-modules:  Fixture
+    build-depends:    waybill-fixture-liba >=1.0 && <2
+                    , waybill-fixture-libb >=0.3 && <0.5
+                    , waybill-fixture-boot >=4.17 && <5
+                    , waybill-fixture-absent >=0.1
+    default-language: Haskell2010

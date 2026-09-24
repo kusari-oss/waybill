@@ -139,6 +139,7 @@ mod tests {
             owner: owner.map(String::from),
             repo: repo.map(String::from),
             url: None,
+            host: None,
             rev: rev.map(String::from),
             nar_hash: None,
             last_modified: None,

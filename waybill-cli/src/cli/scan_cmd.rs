@@ -1131,6 +1131,36 @@ pub struct ScanArgs {
     #[arg(long)]
     pub no_deps_dev_graph: bool,
 
+    /// Skip resolving Haskell dependency versions through the nixpkgs
+    /// revision pinned in `flake.lock` (milestone 926, #947).
+    ///
+    /// Without this flag, a Nix-built Haskell project that ships no
+    /// `cabal.project.freeze` still gets exact versions and source
+    /// hashes for the dependencies the pinned revision carries.
+    /// Resolution only runs when the repository both pins a
+    /// nixpkgs-shaped input AND declares Haskell dependencies, so a
+    /// repository meeting neither condition does no extra work.
+    ///
+    /// Distinct from `--offline`: this disables THIS feature only and
+    /// leaves every other network enrichment active. `--offline`
+    /// suppresses all of them, this one included.
+    #[arg(long)]
+    pub no_nixpkgs_haskell: bool,
+
+    /// Seconds to wait when retrieving the pinned nixpkgs package set
+    /// before degrading to versionless output (milestone 926, #947).
+    ///
+    /// The default is a BUDGET, not a measurement: a warm fetch of the
+    /// 16.6 MB package set measured ~1.0s during milestone-926
+    /// research, and 30s is 30x that, sized for slow, proxied or
+    /// internal-mirror links whose latency has not been measured.
+    /// Raise it when pointing at a slow internal mirror.
+    ///
+    /// Exceeding the budget is not an error: the scan completes with
+    /// the affected dependencies versionless and a recorded reason.
+    #[arg(long, value_name = "SECS", default_value_t = 30)]
+    pub nixpkgs_timeout_secs: u64,
+
     /// Comma-separated list of enrichment sources to enable. When
     /// provided, ONLY the listed sources run (overrides all
     /// `--no-clearly-defined` / `--no-deps-dev` / `--no-deps-dev-graph`
@@ -4195,6 +4225,41 @@ pub async fn execute(
     // binary / enrichment step so the FR-011 hybrid dedupe sees the
     // full claim set. Default `off` in US1.B — preserves pre-
     // milestone-133 byte-identity. US1.C flips the default to
+    // Milestone 926 (#947) — resolve Haskell dependency versions through the
+    // nixpkgs revision pinned in `flake.lock`.
+    //
+    // Invoked here rather than inside `scan_path` because it needs the
+    // operator's flags, and `scan_path` already takes fourteen positional
+    // parameters (#844). It runs after resolution so it sees final
+    // components, and before emission so the versions it attaches reach
+    // every format.
+    //
+    // The pass gates itself: a repository without both a nixpkgs-shaped
+    // pinned input and at least one Haskell dependency does no work and
+    // produces no annotation (SC-009).
+    let nixpkgs_haskell_summary = {
+        use scan_fs::package_db::nix::haskell_packages as nhp;
+        let source = nhp::fetch::HttpSource::new(args.nixpkgs_timeout_secs);
+        nhp::enrich(
+            &root_path,
+            &mut components,
+            nhp::ResolveOptions {
+                offline,
+                disabled: args.no_nixpkgs_haskell,
+            },
+            &source,
+        )
+    };
+    if let Some(s) = &nixpkgs_haskell_summary {
+        tracing::info!(
+            resolved = s.resolved,
+            unresolved = ?s.unresolved,
+            revision = ?s.revision,
+            degraded = ?s.degraded_reason,
+            "nixpkgs-haskell: version resolution complete"
+        );
+    }
+
     // `orphan`. `full` mode forwards an empty `DedupeIndex` so every
     // surviving content-shape match emits regardless of coverage.
     let file_inventory_mode = scan_fs::file_tier::FileInventoryMode::parse(&args.file_inventory)
@@ -4349,7 +4414,12 @@ pub async fn execute(
     // Build the neutral artifacts bundle once and hand it to every
     // serializer the user requested — the single-pass guarantee of
     // FR-004 / SC-009.
+    // #947: the reason the nixpkgs-Haskell pass degraded, if it did.
+    let nixpkgs_haskell_degraded: Option<&str> = nixpkgs_haskell_summary
+        .as_ref()
+        .and_then(|s| s.degraded_reason.as_deref());
     let artifacts = ScanArtifacts {
+        nixpkgs_haskell_degraded,
         unresolved_declared_dep_count,
         target_name: &target_name,
         components: &components,
@@ -6161,6 +6231,8 @@ mod tests {
     ) -> ScanArgs {
         ScanArgs {
             path: Some(PathBuf::from(".")),
+            no_nixpkgs_haskell: false,
+            nixpkgs_timeout_secs: 30,
             image: None,
             image_src: vec![],
             image_platform: None,

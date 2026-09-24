@@ -585,6 +585,14 @@ fn push_document_fields(
         );
     }
 
+    // C173 (#947) — nixpkgs-backed Haskell resolution degraded.
+    if let Some(reason) = scan.nixpkgs_haskell_degraded {
+        push(out,
+            "waybill:nixpkgs-haskell-degraded",
+            json!(reason),
+        );
+    }
+
     // Milestone 133 US3 (C93/C94/C95): file-tier walker diagnostic
     // skip counters. Constitution Principle X. See CDX +
     // SPDX 2.3 twins.
