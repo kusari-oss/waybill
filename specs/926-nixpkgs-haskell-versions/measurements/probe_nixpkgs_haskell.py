@@ -66,13 +66,50 @@ def parse_hackage(text: str) -> dict:
     return out
 
 
-def parse_nulled_boot_libs(text: str) -> set:
-    """Attribute names bound to `null` in a per-compiler configuration.
+NULL_BIND_RE = re.compile(r"^\s*([A-Za-z][A-Za-z0-9_'-]*)\s*=\s*null\s*;", re.M)
 
-    `null` means 'ships with the compiler, do not build from Hackage', so
-    the package has no hackage-packages.nix version for that package set.
+
+def parse_nulled_boot_libs(text: str) -> set:
+    """Every attribute bound to `null` in a per-compiler configuration.
+
+    `null` means 'ships with the compiler, do not build from Hackage'.
+    Returns raw names; see `classify` for which of them are packages.
     """
-    return set(re.findall(r"^\s*([A-Za-z][A-Za-z0-9_'-]*)\s*=\s*null\s*;", text, re.M))
+    return set(NULL_BIND_RE.findall(text))
+
+
+def classify(declared, nulled, index):
+    """Partition declared names into (resolved, boot, absent).
+
+    A nulled name counts as a boot library only when it is ALSO a package
+    in the package set. That single test is what separates the two cases
+    an earlier version of this probe conflated:
+
+      editedCabalFile             nulled, NOT a package  -> not a boot lib
+      directory-ospath-streaming  nulled, IS a package    -> boot lib
+
+    An attrset-nesting-depth rule was tried first and rejected by
+    measurement: at nixpkgs a799d3e3 it correctly dropped
+    `editedCabalFile` from GHC 9.6.x but ALSO dropped
+    `directory-ospath-streaming` from 9.4.x, which is a real package at
+    v0.3 that the compiler genuinely supplies. Depth does not separate
+    the cases; package-set membership does.
+
+    The asymmetry decides it. Over-including a boot library withholds a
+    version, which is merely lossy. Under-including one lets a package
+    the compiler supplies resolve to a Hackage version the build never
+    uses — an invented version, which Principle IX forbids. The rule must
+    fail toward over-inclusion.
+    """
+    resolved, boot, absent = {}, [], []
+    for name in declared:
+        if name in nulled and name in index:
+            boot.append(name)
+        elif name in index:
+            resolved[name] = index[name]
+        else:
+            absent.append(name)
+    return resolved, boot, absent
 
 
 def main() -> int:
@@ -93,14 +130,7 @@ def main() -> int:
         rev=args.rev, path=GHC_CONFIG_PATH.format(series=args.series)))
     nulled = parse_nulled_boot_libs(cfg_text)
 
-    resolved, boot, missing = {}, [], []
-    for p in pkgs:
-        if p in nulled:
-            boot.append(p)
-        elif p in index:
-            resolved[p] = index[p]
-        else:
-            missing.append(p)
+    resolved, boot, missing = classify(pkgs, nulled, index)
 
     result = {
         "rev": args.rev,

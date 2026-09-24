@@ -67,31 +67,65 @@ work.
 
 ---
 
-## R3 — Extracting the nulled set needs structural scoping, not a line regex
+## R3 — A nulled name is a boot library iff it is also a package
 
-**Decision**: Determine boot libraries by parsing the top-level package-override
-attribute set of `configuration-ghc-<series>.nix`. Do not use a
-line-anchored `name = null;` regex, and do not use indentation as the
-discriminator.
+**Decision**: Treat a name bound to `null` in a per-compiler configuration as
+a boot library **only when that name is also a package in the package set**.
+Do not use attribute-set nesting depth. Do not use indentation.
 
-**Measured hazard**: the obvious regex `^\s*([A-Za-z][\w'-]*)\s*=\s*null\s*;`
-over-matches. At this revision, in `configuration-ghc-9.6.x.nix`:
+**This decision reverses an earlier one in this same document, because
+measurement disproved it.** The history is worth keeping, since the rejected
+rule is the one that looks obviously right.
 
-| name | line | indent | is it a package? |
+*First attempt.* The naive extraction `^\s*name\s*=\s*null\s*;` reports
+`editedCabalFile`, which is an attribute of a derivation override rather than a
+Haskell package. At this revision it sits at a deeper attrset nesting depth
+than the real boot libraries, so scoping by depth — keeping only the
+shallowest null bindings — removes it. That rule was implemented.
+
+*Measurement rejected it.* Run across three GHC series, the depth rule removed:
+
+| series | removed by the depth rule | correct? |
+|---|---|---|
+| 9.6.x | `editedCabalFile` | ✅ not a package |
+| 9.4.x | `directory-ospath-streaming` | ❌ **a real package, v0.3** |
+| 9.10.x | nothing | ✅ |
+
+Real boot libraries also live at deeper nesting, inside conditional attribute
+sets. Depth does not separate the two cases.
+
+*What does separate them*: package-set membership.
+
+| name | nulled | in the package set | boot library? |
 |---|---|---|---|
-| `base` | 21 | 2 | yes — top-level override |
-| `editedCabalFile` | 161 | 4 | **no** — an attribute inside a derivation override |
+| `editedCabalFile` | yes | **no** | no — a derivation attribute |
+| `directory-ospath-streaming` | yes (9.4.x) | yes, v0.3 | yes |
+| `base` | yes | yes, v4.22.0.0 | yes |
 
-`editedCabalFile` is not a Haskell package. It appeared in the naive extraction
-and would have been reported as a boot library.
+**The asymmetry is what makes this the right rule, not merely a working one.**
+Over-including a boot library withholds a version — lossy, and visible as a
+reason code. Under-including one lets a package the compiler supplies resolve
+to a Hackage version the build never uses: an invented version, which
+Principle IX forbids outright. The depth rule failed toward under-inclusion.
+Package-set membership cannot under-include a real package, because a real
+package is by definition in the set.
 
-Indentation happens to separate the two cases at this revision, but
-indentation is not a contract in Nix and cannot be relied on. The
-implementation must track attrset nesting depth.
+The false positive the depth rule was built to remove turns out to be
+**harmless in production** anyway: `editedCabalFile` is not a legal Haskell
+package name, so no project can declare it as a dependency. It only ever
+inflated a count in this document.
 
-**Consequence**: FR-004 ("read the nulled set, do not hardcode") carries a
-correctness obligation beyond fetching the right file. The probe currently has
-this bug and is the reason it was caught; fixing the probe is a task.
+**Measured**, nulled bindings vs. those that are actually packages:
+
+| series | `= null;` bindings | of which are packages |
+|---|---|---|
+| 9.4.x | 40 | 36 |
+| 9.6.x | 40 | 35 |
+| 9.10.x | 41 | 37 |
+
+**Consequence**: FR-004's obligation is satisfied by reading the nulled set and
+intersecting it with the package set. No Nix nesting parser is required, which
+removes the most delicate piece of parsing from the implementation.
 
 ---
 
@@ -124,7 +158,7 @@ sizes at this revision:
 | candidate set | union | intersection | differ |
 |---|---|---|---|
 | all 8 series (no flake signal) | 50 | 32 | **18** |
-| the 3 the target's flake names | 44 | 38 | **6**, of which `editedCabalFile` is the R3 false positive → **5 genuine** |
+| the 3 the target's flake names | 44 | 38 | **6** raw, of which `editedCabalFile` is not a package (R3) → **5 genuine** |
 
 So FR-014a's "resolve only what is non-boot in *every* candidate" costs **5
 packages** when the flake scan succeeds and **18** when it does not. That is

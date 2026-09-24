@@ -63,12 +63,15 @@ series present at the revision.
 | `series` | e.g. `9.6.x` |
 | `boot_libraries` | names bound to `null` in the **top-level** package-override attrset |
 
-**Validation**: membership is determined by attrset nesting depth, not
-indentation and not a line regex (R3). `editedCabalFile` at nesting depth 2 is
-an attribute of a derivation override, not a package, and must not appear here.
+**Validation**: a nulled name belongs here only when it is also a package in
+the `PackageSet` (R3). `editedCabalFile` is nulled but is not a package, so it
+is excluded; `directory-ospath-streaming` is nulled at deeper attrset nesting
+in GHC 9.4.x but IS a package at v0.3, so it belongs. Nesting depth was tried
+as the discriminator and rejected by measurement — it drops the second case.
 
-**Measured shape**: 35–47 entries per series at the pinned revision; 50 in
-union across the eight series, 32 in intersection (R4).
+**Measured shape**: 40/40/41 nulled bindings at GHC 9.4.x/9.6.x/9.10.x, of
+which 36/35/37 are packages (R3); across all eight series, 50 in union and 32
+in intersection (R4).
 
 ---
 

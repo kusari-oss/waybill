@@ -35,10 +35,10 @@ Decision).
 
 **Purpose**: Module skeleton and flag surface so later phases have somewhere to land.
 
-- [ ] T001 Create the module skeleton `waybill-cli/src/scan_fs/package_db/nix/haskell_packages/` with `mod.rs`, `fetch.rs`, `cache.rs`, `package_set.rs`, `nix_base32.rs`, `boot_libraries.rs`, and declare the submodule in `waybill-cli/src/scan_fs/package_db/nix/mod.rs`
-- [ ] T002 [P] Add the FR-015a opt-out flag (disables this feature only, leaving other network enrichment active) to the scan args in `waybill-cli/src/cli/scan_cmd.rs`, with doc text distinguishing it from `--offline`
-- [ ] T003 [P] Create the hermetic fixture tree `waybill-cli/tests/fixtures/nix_haskell/` with a repo that has `flake.lock` + `.cabal` ranges and no freeze file; use synthetic package names (`waybill-fixture-*`) for anything that is not a real Haskell package name required by the scenario
-- [ ] T043 [P] Add the FR-019 retrieval time-bound override to the scan args in `waybill-cli/src/cli/scan_cmd.rs`, default 30 s, documented as a budget at 30× the measured warm fetch rather than a measured figure (research R7) — the plan claims this capability, so it needs a task or the claim needs striking
+- [x] T001 Create the module skeleton `waybill-cli/src/scan_fs/package_db/nix/haskell_packages/` with `mod.rs`, `fetch.rs`, `cache.rs`, `package_set.rs`, `nix_base32.rs`, `boot_libraries.rs`, and declare the submodule in `waybill-cli/src/scan_fs/package_db/nix/mod.rs`
+- [x] T002 [P] Add the FR-015a opt-out flag (disables this feature only, leaving other network enrichment active) to the scan args in `waybill-cli/src/cli/scan_cmd.rs`, with doc text distinguishing it from `--offline`
+- [x] T003 [P] Create the hermetic fixture tree `waybill-cli/tests/fixtures/nix_haskell/` with a repo that has `flake.lock` + `.cabal` ranges and no freeze file; use synthetic package names (`waybill-fixture-*`) for anything that is not a real Haskell package name required by the scenario
+- [x] T043 [P] Add the FR-019 retrieval time-bound override to the scan args in `waybill-cli/src/cli/scan_cmd.rs`, default 30 s, documented as a budget at 30× the measured warm fetch rather than a measured figure (research R7) — the plan claims this capability, so it needs a task or the claim needs striking
 - [ ] T045 Point the per-revision cache at a per-test temporary directory in `waybill-cli/tests/nix_haskell_resolution_m926.rs` so T035/T036 assert against isolated state rather than the developer's real `$HOME`; if the override is an environment variable, route it through `crate::testing::EnvGuard::acquire()` to inherit the serialization that resolved the podman and m205 env-var races
 
 ---
@@ -49,15 +49,15 @@ Decision).
 
 **⚠️ CRITICAL**: T010–T012 must complete before US1, or US1 will resolve boot libraries against the default package set and emit versions the build does not use (FR-014c, Principle IX).
 
-- [ ] T004 Fix the R3 over-match in `specs/926-nixpkgs-haskell-versions/measurements/probe_nixpkgs_haskell.py`: extract nulled names by attrset nesting depth instead of the line-anchored regex, so `editedCabalFile` (depth 2, inside a derivation override) is excluded; re-run and update the counts in `specs/926-nixpkgs-haskell-versions/measurements/README.md`
+- [x] T004 Fix the R3 over-match in `specs/926-nixpkgs-haskell-versions/measurements/probe_nixpkgs_haskell.py`: extract nulled names by attrset nesting depth instead of the line-anchored regex, so `editedCabalFile` (depth 2, inside a derivation override) is excluded; re-run and update the counts in `specs/926-nixpkgs-haskell-versions/measurements/README.md`
 - [ ] T005 Define `ResolutionOutcome` (`Resolved { version, source_hash, revision }` / `Unresolved { reason }`) and the closed reason enum (`compiler-supplied`, `absent-from-package-set`, `source-unreachable`, `no-exact-revision`, `offline`) in `waybill-cli/src/scan_fs/package_db/nix/haskell_packages/mod.rs`, with no representable partial state (data-model C2, Principle IV)
 - [ ] T006 Plumb `PinnedNixpkgs { revision, location, pin_state }` out of the existing m925 lockfile reader in `waybill-cli/src/scan_fs/package_db/nix/lockfile.rs` into `haskell_packages/mod.rs`, reusing `OriginalPinState` rather than re-reading `flake.lock` (research R6)
 - [ ] T007 Implement the C1 trigger in `waybill-cli/src/scan_fs/package_db/nix/haskell_packages/mod.rs`: run only when the lock resolves to `OriginalPinState::Exact` on a nixpkgs-shaped input AND the Haskell reader produced ≥1 declared dependency; honour `--offline` and the T002 flag. Classify the nixpkgs-shaped input from `flake.lock` alone with no network access — root input named `nixpkgs`, or a locked entry whose repository component is `nixpkgs` — never by probing an input to see whether it qualifies, and record which rule matched (FR-015b, SC-009)
 - [ ] T008 Implement the per-revision cache at `~/.cache/waybill/nixpkgs/<rev>/` in `waybill-cli/src/scan_fs/package_db/nix/haskell_packages/cache.rs`, mirroring the m090/m108/m195 pinned-SHA layout with no TTL and no invalidation (research R5)
 - [ ] T009 Implement bounded retrieval in `waybill-cli/src/scan_fs/package_db/nix/haskell_packages/fetch.rs`: build the URL from the lock entry's own location (FR-016, never assume upstream), apply the 30 s default bound (FR-019), and map unreachable / refused / unauthorized / timed-out to one degraded outcome without prompting (FR-017, FR-018)
-- [ ] T010 Implement the attrset-depth-aware nulled-set parser in `waybill-cli/src/scan_fs/package_db/nix/haskell_packages/boot_libraries.rs`, tracking nesting depth rather than indentation or a line regex (research R3)
+- [x] T010 Implement the nulled-set reader in `waybill-cli/src/scan_fs/package_db/nix/haskell_packages/boot_libraries.rs`: collect every `name = null;` binding, then treat a name as a boot library only when it is ALSO a package in the package set (research R3). Do **not** scope by attrset nesting depth — measurement rejected that rule, because real boot libraries also live at deeper nesting (`directory-ospath-streaming`, a real package at v0.3, is nulled at depth in GHC 9.4.x). Over-inclusion withholds a version; under-inclusion invents one, so the rule must fail toward over-inclusion
 - [ ] T011 Implement candidate-compiler determination and the boot union in `waybill-cli/src/scan_fs/package_db/nix/haskell_packages/boot_libraries.rs`: scan the project flake for explicit `haskell.packages.ghc<NN>` paths, fall back to every GHC series present at the revision, and take the **union** of their nulled sets so a package nulled in any candidate is treated as boot (FR-014/FR-014a, Principle III)
-- [ ] T012 [P] Unit-test T010/T011 in `waybill-cli/src/scan_fs/package_db/nix/haskell_packages/boot_libraries.rs`: assert `base` (depth 1) is a boot library, assert `editedCabalFile` (depth 2) is **not**, and assert the union rule marks a package nulled in only one candidate as boot
+- [ ] T012 [P] Unit-test T010/T011 in `waybill-cli/src/scan_fs/package_db/nix/haskell_packages/boot_libraries.rs`: assert a nulled name that IS a package is a boot library, assert a nulled name that is NOT a package (`editedCabalFile`) is excluded, assert a nulled package at deeper attrset nesting is still a boot library (the `directory-ospath-streaming` case that rejected the depth rule), and assert the union rule marks a package nulled in only one candidate as boot
 - [ ] T044 Emit the document-scope degradation record on any FR-017 degraded outcome in `waybill-cli/src/scan_fs/package_db/nix/haskell_packages/mod.rs`, reusing the existing document-scope degradation annotation channel rather than introducing a new one (contract C7). If that channel cannot carry it, add the catalog row and three extractors under T031 instead of emitting an unregistered key — an unregistered `waybill:` key fails `every_catalog_row_has_an_extractor`, and an out-of-enum value can pass a `debug_assert!` in release (the #946 `nix-flake-lock` evidence-kind case)
 
 **Checkpoint**: Retrieval, caching, gating and the boot exclusion are in place.
@@ -224,9 +224,10 @@ with measuring that multiplier.
   violate Principle V. This is the opposite of m925's `narHash` (C165) — same
   ecosystem, opposite outcome, because a NAR hash is over a directory
   serialization and this is over file bytes.
-- **The committed probe has a known bug** (R3) and T004 fixes it. It is listed
-  first in Foundational because it is the executable statement of the
-  boot-library rule.
+- **The probe is the executable statement of the boot-library rule**, which is
+  why T004 is first in Foundational. Fixing it there is what rejected the
+  attrset-depth rule: the depth fix dropped `directory-ospath-streaming`, a
+  real package, and measurement caught it before any Rust was written (R3).
 - **Fixtures must be hermetic.** The retrieval boundary is injected; no test
   touches the network.
 - **Fixture package names** follow the project rule — synthetic

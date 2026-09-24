@@ -1131,6 +1131,36 @@ pub struct ScanArgs {
     #[arg(long)]
     pub no_deps_dev_graph: bool,
 
+    /// Skip resolving Haskell dependency versions through the nixpkgs
+    /// revision pinned in `flake.lock` (milestone 926, #947).
+    ///
+    /// Without this flag, a Nix-built Haskell project that ships no
+    /// `cabal.project.freeze` still gets exact versions and source
+    /// hashes for the dependencies the pinned revision carries.
+    /// Resolution only runs when the repository both pins a
+    /// nixpkgs-shaped input AND declares Haskell dependencies, so a
+    /// repository meeting neither condition does no extra work.
+    ///
+    /// Distinct from `--offline`: this disables THIS feature only and
+    /// leaves every other network enrichment active. `--offline`
+    /// suppresses all of them, this one included.
+    #[arg(long)]
+    pub no_nixpkgs_haskell: bool,
+
+    /// Seconds to wait when retrieving the pinned nixpkgs package set
+    /// before degrading to versionless output (milestone 926, #947).
+    ///
+    /// The default is a BUDGET, not a measurement: a warm fetch of the
+    /// 16.6 MB package set measured ~1.0s during milestone-926
+    /// research, and 30s is 30x that, sized for slow, proxied or
+    /// internal-mirror links whose latency has not been measured.
+    /// Raise it when pointing at a slow internal mirror.
+    ///
+    /// Exceeding the budget is not an error: the scan completes with
+    /// the affected dependencies versionless and a recorded reason.
+    #[arg(long, value_name = "SECS", default_value_t = 30)]
+    pub nixpkgs_timeout_secs: u64,
+
     /// Comma-separated list of enrichment sources to enable. When
     /// provided, ONLY the listed sources run (overrides all
     /// `--no-clearly-defined` / `--no-deps-dev` / `--no-deps-dev-graph`
@@ -6161,6 +6191,8 @@ mod tests {
     ) -> ScanArgs {
         ScanArgs {
             path: Some(PathBuf::from(".")),
+            no_nixpkgs_haskell: false,
+            nixpkgs_timeout_secs: 30,
             image: None,
             image_src: vec![],
             image_platform: None,

@@ -32,26 +32,47 @@ exactly, and the sampled versions match the three the issue quoted. The
 core premise of the issue is confirmed: **design tier → source tier, with
 content hashes, for a repository shipping no lockfile.**
 
-## M2 — The boot-library set is compiler-specific and must be read, not assumed
+## M2 — A nulled name is a boot library only if it is also a package
 
 `configuration-ghc-<series>.nix` binds boot libraries to `null`, meaning
 "ships with the compiler, do not build from Hackage" — so those packages
 have no `hackage-packages.nix` version for that package set.
 
-| GHC series | attributes bound to `null` |
-|---|---|
-| 9.4.x | 40 |
-| 9.6.x | 40 |
-| 9.10.x | **41** |
+| GHC series | `= null;` bindings | of which are packages |
+|---|---|---|
+| 9.4.x | 40 | **36** |
+| 9.6.x | 40 | **35** |
+| 9.10.x | 41 | **37** |
 
-The sets are **not identical**. Symmetric difference, 9.4.x vs 9.10.x:
+Across all eight series present at this revision: 50 names in union, 32 in
+intersection — the sets are **not identical**. Symmetric difference,
+9.4.x vs 9.10.x: only in 9.4.x `directory-ospath-streaming`, `libiserv`;
+only in 9.10.x `os-string`, `semaphore-compat`, `xhtml`.
 
-- only in 9.4.x: `directory-ospath-streaming`, `libiserv`
-- only in 9.10.x: `os-string`, `semaphore-compat`, `xhtml`
-
-**Design consequence**: a hardcoded list of "the seven boot libraries"
+**Design consequence 1**: a hardcoded list of "the seven boot libraries"
 would be wrong. The nulled set must be read from the per-compiler
 configuration at the pinned revision.
+
+**Design consequence 2 — and this one reversed an earlier decision.** The
+naive extraction also reports `editedCabalFile`, an attribute of a
+derivation override rather than a package. Scoping by attribute-set
+nesting depth removes it, and that rule was implemented first. Measurement
+then rejected it: the depth rule *also* removed
+`directory-ospath-streaming` from GHC 9.4.x, which is a real package at
+v0.3 that the compiler genuinely supplies. Real boot libraries live at
+deeper nesting too.
+
+The discriminator that works is package-set membership:
+
+| name | nulled | in the package set | boot library? |
+|---|---|---|---|
+| `editedCabalFile` | yes | no | no |
+| `directory-ospath-streaming` | yes (9.4.x) | yes, v0.3 | yes |
+| `base` | yes | yes, v4.22.0.0 | yes |
+
+The asymmetry decides it. Over-including a boot library withholds a
+version; under-including one invents a version the build never uses. The
+depth rule failed toward the dangerous direction.
 
 ## M3 — The 12-of-19 split could not be reproduced, and the direction is against it
 

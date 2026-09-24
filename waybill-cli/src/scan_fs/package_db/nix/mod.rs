@@ -16,6 +16,7 @@
 //! separate feature (#947); it needs network, a revision-keyed cache, and a
 //! decision about GHC boot libraries whose version belongs to the compiler.
 
+pub(crate) mod haskell_packages;
 pub(crate) mod identity;
 pub(crate) mod lockfile;
 

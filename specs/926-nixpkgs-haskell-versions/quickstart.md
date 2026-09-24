@@ -40,10 +40,12 @@ python3 probe_nixpkgs_haskell.py --json             # machine-readable
 Expected against `a799d3e3886da994fa307f817a6bc705ae538eeb`: 16,634,427 bytes,
 19,058 unique package names, warm fetch ~1 s.
 
-**The probe has a known bug, and fixing it is a task.** Its nulled-set
-extraction uses a line-anchored regex and therefore reports
-`editedCabalFile` — an attribute inside a derivation override, not a package
-(research R3). Any count it prints for boot libraries is high by at least one.
+The probe classifies a nulled name as a boot library only when it is also a
+package in the package set (research R3). An attrset-nesting-depth rule was
+tried first and rejected by measurement: it correctly drops `editedCabalFile`
+but also drops `directory-ospath-streaming`, a real package the compiler
+supplies in GHC 9.4.x. Depth does not separate the cases; package-set
+membership does.
 
 ---
 
@@ -97,7 +99,10 @@ reader suites.
   `"name" =` finds almost nothing.
 - **A name can be defined more than once** — 19,437 blocks, 19,058 unique names.
   Last definition wins, per Nix attrset semantics.
-- **Do not use indentation** to decide whether `x = null;` is a package
-  override. Track attrset depth (R3).
+- **Do not use nesting depth** to decide whether `x = null;` names a package.
+  Intersect with the package set instead (R3). Over-including a boot library
+  withholds a version; under-including one invents a version the build never
+  uses, which Principle IX forbids — so the rule must fail toward
+  over-inclusion.
 - **Do not assume upstream nixpkgs.** The retrieval target comes from the lock
   entry; it may be a fork or an internal mirror (FR-016).

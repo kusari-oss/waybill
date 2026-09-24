@@ -72,7 +72,7 @@ specs/926-nixpkgs-haskell-versions/
 │   └── resolution-contract.md                # Phase 1 — C1–C9 observable surface
 ├── checklists/requirements.md                # spec quality checklist
 ├── measurements/
-│   ├── probe_nixpkgs_haskell.py              # committed probe (has a known R3 bug)
+│   ├── probe_nixpkgs_haskell.py              # committed probe
 │   ├── probe-output-ghc96.txt
 │   └── README.md                             # M1–M3
 └── tasks.md                                  # /speckit.tasks — NOT created here
@@ -92,7 +92,7 @@ waybill-cli/src/scan_fs/package_db/
 │       ├── cache.rs                          # per-revision cache (R5)
 │       ├── package_set.rs                    # parse name -> (version, sha256) (R1)
 │       ├── nix_base32.rs                     # base32 -> 32 bytes -> hex (R2)
-│       └── boot_libraries.rs                 # attrset-depth-aware nulled-set parse (R3)
+│       └── boot_libraries.rs                 # nulled set ∩ package set (R3)
 └── haskell.rs                                # MODIFIED: consume ResolutionOutcome
 
 waybill-cli/src/generate/
@@ -116,9 +116,7 @@ unchanged.
 
 ## Phase Summary
 
-**Phase 0 — complete.** `research.md`, R1–R8. Two findings reshaped the design
-(native hash; ~1 s retrieval) and one is a correctness trap the implementation
-must avoid (R3 attrset-depth parsing). The committed probe reproduces every
+**Phase 0 — complete.** `research.md`, R1–R8. The committed probe reproduces every
 figure and carries the R3 bug as a known defect to fix.
 
 **Phase 1 — complete.** `data-model.md` (entities, closed reason set, emission
