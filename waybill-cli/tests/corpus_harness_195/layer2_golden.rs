@@ -69,6 +69,20 @@ pub fn compare_golden(
     });
 
     if update_goldens_gate() || !golden.exists() {
+        // #978 — say so. Writing and returning Ok is indistinguishable from a
+        // real comparison in the test output, and in CI the workspace is
+        // discarded each run, so a target with no committed golden re-writes
+        // and re-passes every night while comparing nothing. The
+        // `every_target_has_committed_goldens` audit is the actual gate; this
+        // line makes the condition visible to anyone reading a log.
+        if !golden.exists() {
+            eprintln!(
+                "!! {target} / {format:?}: NO COMMITTED GOLDEN at {} -- writing it and \
+                 PASSING WITHOUT COMPARING. This target is not regression-gated \
+                 until the file is committed (#978).",
+                golden.display()
+            );
+        }
         if let Some(parent) = golden.parent() {
             std::fs::create_dir_all(parent).ok();
         }
