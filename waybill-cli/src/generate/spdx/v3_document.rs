@@ -115,9 +115,16 @@ pub fn build_document(
             source_document_binding: scan.source_document_binding,
             identifiers: scan.identifiers,
             component_identifiers: scan.component_identifiers,
-            file_inventory_stats: None,
-            file_inventory_mode: None,
-            file_inventory_source_shapes: None,
+            // #934 / #947: forwarded, not dropped. The `view_scan_storage`
+            // swap is a components-only rewrite, and doc-scope inventory
+            // metadata is not a property of the component list. Hard-coding
+            // None here kept C93/C94/C95 and the C156 mode marker out of
+            // SPDX 3 on the filtered-components path — the same defect #934
+            // fixed at the two SPDX 2.3 view sites and missed here.
+            file_inventory_stats: scan.file_inventory_stats,
+            file_inventory_mode: scan.file_inventory_mode,
+            file_inventory_source_shapes: scan.file_inventory_source_shapes.clone(),
+            nixpkgs_haskell_degraded: scan.nixpkgs_haskell_degraded,
             root_override: scan.root_override.clone(),
             preserve_manifest_main_module: scan.preserve_manifest_main_module,
             user_metadata: scan.user_metadata.clone(),

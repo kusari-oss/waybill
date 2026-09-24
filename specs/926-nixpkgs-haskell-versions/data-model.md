@@ -134,14 +134,15 @@ emitted and the disagreement is recorded — neither is silently dropped.
 
 ## Emission mapping
 
-| datum | carrier | why |
-|---|---|---|
-| resolved version | existing component version field | native |
-| `source_hash` | **native** checksum field in all three formats | R2 — verified flat SHA-256 of the tarball, so Principle V requires the native field |
-| resolution provenance + revision | `waybill:` annotation (new catalog row) | R2's audit found no native carrier for "which external package set resolved this version" |
-| `Unresolved.reason` | `waybill:` annotation (new catalog row) | FR-006; no native field expresses why a version is absent |
-| candidate compilers considered | `waybill:` annotation, only when >1 candidate | FR-014b |
-| degradation at document scope | existing degradation annotation channel | FR-008; reuse rather than add |
+| datum | carrier | catalog row | why |
+|---|---|---|---|
+| resolved version | existing component version field | — | native |
+| `source_hash` | **native** `hashes[]` / `checksums[]` / content identifier | — | R2 — verified flat SHA-256 of the tarball, so Principle V requires the native field and forbids a row. Needed **no new emitter code**: all three formats already map `ResolvedComponent.hashes` generically for every reader |
+| resolution provenance + revision | `waybill:nixpkgs-resolved-via` | **C169** | no native carrier for "which external package set established this version" |
+| `Unresolved.reason` | `waybill:haskell-version-unresolved-reason` | **C170** | FR-006; CDX omits `version` and SPDX 2.3 says `NOASSERTION`, both of which collapse six distinct causes into one |
+| candidate compilers considered | `waybill:nixpkgs-candidate-compilers` | **C171** | FR-014b; emitted only when the count exceeds one |
+| local-vs-nixpkgs disagreement | `waybill:nixpkgs-version-disagreement` | **C172** | FR-013; the local value wins, and the difference is recorded rather than discarded |
+| degradation at document scope | existing degradation annotation channel | — | FR-008; reuse rather than add |
 
 Each new `waybill:` row needs its catalog entry in
 `docs/reference/sbom-format-mapping.md` plus three extractors, or

@@ -174,6 +174,9 @@ pub struct CycloneDxBuilder {
     /// when `--file-inventory=off`; `Some(_)` for orphan/full modes.
     file_inventory_stats:
         Option<crate::scan_fs::file_tier::walker::WalkerStats>,
+    /// Milestone 926 (#947, C173) — reason the nixpkgs-backed Haskell
+    /// resolution degraded, for the document-scope record.
+    nixpkgs_haskell_degraded: Option<String>,
     /// Milestone 133 US4 — `--file-inventory` mode label. Only
     /// `Some("full")` triggers the document-level override marker
     /// (Constitution Strict Boundary §5).
@@ -236,6 +239,7 @@ impl CycloneDxBuilder {
             user_metadata: waybill::binding::user_metadata::UserMetadata::default(),
             sbom_type_override: None,
             file_inventory_stats: None,
+            nixpkgs_haskell_degraded: None,
             file_inventory_mode: None,
             file_inventory_source_shapes: None,
             collisions_summary: None,
@@ -287,6 +291,13 @@ impl CycloneDxBuilder {
         stats: Option<crate::scan_fs::file_tier::walker::WalkerStats>,
     ) -> Self {
         self.file_inventory_stats = stats;
+        self
+    }
+
+    /// Milestone 926 (#947) — record why nixpkgs-backed Haskell version
+    /// resolution degraded, if it did.
+    pub fn with_nixpkgs_haskell_degraded(mut self, reason: Option<String>) -> Self {
+        self.nixpkgs_haskell_degraded = reason;
         self
     }
 
@@ -775,6 +786,7 @@ impl CycloneDxBuilder {
             &self.user_metadata,
             self.sbom_type_override,
             self.file_inventory_stats.as_ref(),
+            self.nixpkgs_haskell_degraded.as_deref(),
             self.file_inventory_mode.as_deref(),
             self.file_inventory_source_shapes.as_deref(),
             self.collisions_summary.as_ref(),

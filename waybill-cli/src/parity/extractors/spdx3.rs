@@ -713,6 +713,11 @@ spdx3_anno!(c164_spdx3, "waybill:pants-resolve-namespace",                      
 spdx3_anno!(c165_spdx3, "waybill:nix-nar-hash",     component);
 spdx3_anno!(c166_spdx3, "waybill:nix-original-ref", component);spdx3_anno!(c161_spdx3, "waybill:resolve-ownership",                     document);
 spdx3_anno!(c167_spdx3, "waybill:nix-original-pin-state", component);
+spdx3_anno!(c169_spdx3, "waybill:nixpkgs-resolved-via", component);
+spdx3_anno!(c170_spdx3, "waybill:haskell-version-unresolved-reason", component);
+spdx3_anno!(c171_spdx3, "waybill:nixpkgs-candidate-compilers", component);
+spdx3_anno!(c172_spdx3, "waybill:nixpkgs-version-disagreement", component);
+spdx3_anno!(c173_spdx3, "waybill:nixpkgs-haskell-degraded", document);
 spdx3_anno!(c163_spdx3, "waybill:document-resolve",                     document);
 spdx3_anno!(c162_spdx3, "waybill:cabal-entries-skipped",                 document);
 

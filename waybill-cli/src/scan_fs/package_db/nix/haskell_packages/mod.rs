@@ -392,6 +392,7 @@ use waybill_common::types::hash::ContentHash;
 pub(crate) const ANN_RESOLVED_VIA: &str = "waybill:nixpkgs-resolved-via";
 pub(crate) const ANN_UNRESOLVED_REASON: &str = "waybill:haskell-version-unresolved-reason";
 pub(crate) const ANN_CANDIDATE_COMPILERS: &str = "waybill:nixpkgs-candidate-compilers";
+pub(crate) const ANN_VERSION_DISAGREEMENT: &str = "waybill:nixpkgs-version-disagreement";
 
 /// Options the operator controls.
 #[derive(Debug, Clone, Copy)]
@@ -417,6 +418,10 @@ pub(crate) struct EnrichmentSummary {
     pub(crate) revision: Option<String>,
     /// Set when the whole pass degraded (FR-008, contract C7).
     pub(crate) degraded_reason: Option<String>,
+    /// Components whose locally-established version differs from the pinned
+    /// revision's (FR-013). The local value is kept; the difference is
+    /// recorded.
+    pub(crate) disagreements: usize,
 }
 
 impl EnrichmentSummary {
@@ -428,14 +433,19 @@ impl EnrichmentSummary {
     }
 }
 
-/// Is this component a Haskell dependency this pass may enrich?
+/// Is this a Haskell component this pass is concerned with at all?
+fn is_haskell(c: &ResolvedComponent) -> bool {
+    c.purl.as_str().starts_with("pkg:hackage/")
+}
+
+/// Is this component one this pass may *assign* a version to?
 ///
 /// Deliberately narrow. Enrichment never introduces a component
-/// (Principle XII constraint 1) and never touches one that already has a
-/// version — a version from a project-local freeze file outranks a
-/// nixpkgs-resolved one (FR-013, contract C6).
+/// (Principle XII constraint 1) and never overwrites a version that came
+/// from a project-local freeze file, which outranks a nixpkgs-resolved one
+/// (FR-013, contract C6).
 fn is_enrichable(c: &ResolvedComponent) -> bool {
-    c.purl.as_str().starts_with("pkg:hackage/") && c.version.is_empty()
+    is_haskell(c) && c.version.is_empty()
 }
 
 /// Enrich Haskell components with versions from the pinned nixpkgs.
@@ -519,6 +529,32 @@ pub(crate) fn enrich(
     let candidate_note = (candidates.len() > 1).then(|| {
         serde_json::Value::String(candidates.join(","))
     });
+
+    // FR-013 / C6: a version already established locally wins, but a
+    // disagreement with the pinned revision is recorded rather than silently
+    // resolved. Without this the local value simply shadows nixpkgs and a
+    // consumer never learns the two sources differ — which is exactly the
+    // question someone comparing a Nix build to a cabal build is asking.
+    for c in components.iter_mut().filter(|c| is_haskell(c) && !c.version.is_empty()) {
+        if boot_libraries::is_boot_library(&c.name, &boot) {
+            continue;
+        }
+        if let Some(entry) = packages.get(&c.name) {
+            if entry.version != c.version {
+                summary.disagreements += 1;
+                c.extra_annotations.insert(
+                    ANN_VERSION_DISAGREEMENT.to_string(),
+                    serde_json::json!({
+                        "emitted": c.version,
+                        "nixpkgs": entry.version,
+                        "revision": pinned.revision,
+                        "note": "the emitted version came from a project-local \
+                                 lockfile or freeze file and takes precedence",
+                    }),
+                );
+            }
+        }
+    }
 
     for c in components.iter_mut().filter(|c| is_enrichable(c)) {
         match classify(&c.name, &packages, &boot, &pinned.revision) {
@@ -985,20 +1021,85 @@ mod enrich_tests {
         std::env::remove_var(cache::CACHE_ENV);
     }
 
-    /// FR-013 / C6: a component that already has a version is untouched — a
-    /// local freeze file outranks nixpkgs.
+    /// FR-013 / C6: a locally-established version wins and is not overwritten.
     #[test]
-    fn m926_an_already_versioned_component_is_left_alone() {
+    fn m926_a_local_version_wins_over_nixpkgs() {
         let _g = EnvGuard::acquire();
         let _c = isolated_cache();
         let root = fixture_root(Some(LOCK), Some("haskell.packages.ghc96"));
         let src = StubSource::new(PACKAGES, CONFIG);
         let mut c = comp("waybill-fixture-liba");
         c.version = "0.0.1-from-freeze".to_string();
-        let mut comps = vec![c];
+        // A second, versionless dependency keeps the gate open so the
+        // comparison path actually runs.
+        let mut comps = vec![c, comp("waybill-fixture-absent")];
 
-        assert!(enrich(root.path(), &mut comps, opts(), &src).is_none());
-        assert_eq!(comps[0].version, "0.0.1-from-freeze");
+        enrich(root.path(), &mut comps, opts(), &src).unwrap();
+
+        assert_eq!(comps[0].version, "0.0.1-from-freeze", "local value must survive");
+        assert!(comps[0].hashes.is_empty(), "and must not gain a nixpkgs hash");
+        std::env::remove_var(cache::CACHE_ENV);
+    }
+
+    /// FR-013: when the two sources disagree, the difference is recorded
+    /// rather than silently resolved. Without this a consumer cannot tell
+    /// that the Nix build and the cabal build would use different versions.
+    #[test]
+    fn m926_a_disagreement_with_nixpkgs_is_recorded() {
+        let _g = EnvGuard::acquire();
+        let _c = isolated_cache();
+        let root = fixture_root(Some(LOCK), Some("haskell.packages.ghc96"));
+        let src = StubSource::new(PACKAGES, CONFIG);
+        let mut c = comp("waybill-fixture-liba");
+        c.version = "0.0.1-from-freeze".to_string();
+        let mut comps = vec![c, comp("waybill-fixture-absent")];
+
+        let s = enrich(root.path(), &mut comps, opts(), &src).unwrap();
+
+        assert_eq!(s.disagreements, 1);
+        let rec = comps[0]
+            .extra_annotations
+            .get(ANN_VERSION_DISAGREEMENT)
+            .expect("the disagreement must be recorded");
+        assert_eq!(rec.get("emitted").and_then(|v| v.as_str()), Some("0.0.1-from-freeze"));
+        assert_eq!(rec.get("nixpkgs").and_then(|v| v.as_str()), Some("1.2.3"));
+        std::env::remove_var(cache::CACHE_ENV);
+    }
+
+    /// Agreement is not a disagreement: no annotation when the two match.
+    #[test]
+    fn m926_agreement_records_nothing() {
+        let _g = EnvGuard::acquire();
+        let _c = isolated_cache();
+        let root = fixture_root(Some(LOCK), Some("haskell.packages.ghc96"));
+        let src = StubSource::new(PACKAGES, CONFIG);
+        let mut c = comp("waybill-fixture-liba");
+        c.version = "1.2.3".to_string(); // same as the package set
+        let mut comps = vec![c, comp("waybill-fixture-absent")];
+
+        let s = enrich(root.path(), &mut comps, opts(), &src).unwrap();
+
+        assert_eq!(s.disagreements, 0);
+        assert!(!comps[0].extra_annotations.contains_key(ANN_VERSION_DISAGREEMENT));
+        std::env::remove_var(cache::CACHE_ENV);
+    }
+
+    /// A boot library carrying a local version is not a disagreement: nixpkgs
+    /// has no version for it to disagree with.
+    #[test]
+    fn m926_a_boot_library_with_a_local_version_is_not_a_disagreement() {
+        let _g = EnvGuard::acquire();
+        let _c = isolated_cache();
+        let root = fixture_root(Some(LOCK), Some("haskell.packages.ghc96"));
+        let src = StubSource::new(PACKAGES, CONFIG);
+        let mut c = comp("waybill-fixture-boot");
+        c.version = "4.17.0.0".to_string();
+        let mut comps = vec![c, comp("waybill-fixture-absent")];
+
+        let s = enrich(root.path(), &mut comps, opts(), &src).unwrap();
+
+        assert_eq!(s.disagreements, 0);
+        assert!(!comps[0].extra_annotations.contains_key(ANN_VERSION_DISAGREEMENT));
         std::env::remove_var(cache::CACHE_ENV);
     }
 }

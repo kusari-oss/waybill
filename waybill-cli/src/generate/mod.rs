@@ -87,6 +87,14 @@ pub struct ScanArtifacts<'a> {
     /// stopped answering, only the enrichment phase can. Constitution
     /// Principles XI and XII.3 both require this signal.
     pub enrichment_degraded: Option<&'a str>,
+    /// Milestone 926 (#947) — document-scope record that nixpkgs-backed
+    /// Haskell version resolution degraded, carrying the reason.
+    ///
+    /// Deliberately NOT folded into `enrichment_degraded`: that field belongs
+    /// to the deps.dev phase, and a single slot cannot say which of two
+    /// independent enrichments degraded. A consumer reading one
+    /// `source-unreachable` would have no way to tell them apart.
+    pub nixpkgs_haskell_degraded: Option<&'a str>,
     /// Document-level scope mode. Resolved from
     /// `--include-declared-deps` (with the `--path`/`--image`
     /// auto-default rule). Surfaced in CDX `metadata.lifecycles[]`
@@ -423,6 +431,7 @@ impl<'a> ScanArtifacts<'a> {
             // the same "SBOM revision N").
             sbom_version: self.sbom_version,
             enrichment_degraded: None,
+            nixpkgs_haskell_degraded: None,
             scope_mode: self.scope_mode,
             go_transitive_coverage: self.go_transitive_coverage,
             go_transitive_fallback_count: self.go_transitive_fallback_count,

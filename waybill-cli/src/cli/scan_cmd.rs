@@ -4414,7 +4414,12 @@ pub async fn execute(
     // Build the neutral artifacts bundle once and hand it to every
     // serializer the user requested — the single-pass guarantee of
     // FR-004 / SC-009.
+    // #947: the reason the nixpkgs-Haskell pass degraded, if it did.
+    let nixpkgs_haskell_degraded: Option<&str> = nixpkgs_haskell_summary
+        .as_ref()
+        .and_then(|s| s.degraded_reason.as_deref());
     let artifacts = ScanArtifacts {
+        nixpkgs_haskell_degraded,
         unresolved_declared_dep_count,
         target_name: &target_name,
         components: &components,
