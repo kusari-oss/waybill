@@ -294,11 +294,13 @@ components carry different, machine-readable resolution provenance.
   nixpkgs-shaped input, performs no retrieval at all.
 
 Deliberately **not** a success criterion: any fixed "N of 19 dependencies
-resolved" figure. #947 reports 12 of 19; the probe measures 10 of 19 against a
-reconstructed dependency list and establishes that the difference (`deepseq`,
-`transformers`) is on the boot-library side. Neither source enumerates the
-target's dependencies, so the split is unverified in both directions and cannot
-be a criterion. See `measurements/README.md` §M3.
+resolved" figure. Not because it is unverifiable — running the implemented
+feature against the measurement target gives exactly #947's 12 resolved and 7
+compiler-supplied — but because that split is a property of one repository,
+and a success criterion should not hard-code one project's dependency count.
+SC-001 is expressed against the boot set as discovered from the pinned
+revision instead. See `measurements/README.md` §M3, including why this
+document previously claimed the opposite.
 
 ## Assumptions
 

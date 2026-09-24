@@ -11,12 +11,16 @@
       },
       "original": {
         "owner": "NixOS",
+        "ref": "nixos-unstable",
         "repo": "nixpkgs",
-        "rev": "a799d3e3886da994fa307f817a6bc705ae538eeb",
         "type": "github"
       }
     },
-    "root": { "inputs": { "nixpkgs": "nixpkgs" } }
+    "root": {
+      "inputs": {
+        "nixpkgs": "nixpkgs"
+      }
+    }
   },
   "root": "root",
   "version": 7

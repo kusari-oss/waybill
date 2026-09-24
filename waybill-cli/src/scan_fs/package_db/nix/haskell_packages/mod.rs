@@ -70,6 +70,11 @@ pub(crate) struct PinnedNixpkgs {
     pub(crate) location: Option<Location>,
     /// Which rule recognised this input (FR-015b).
     pub(crate) matched_by: NixpkgsMatch,
+    /// Whether re-locking would move this revision: `exact`,
+    /// `branch-or-tag`, or `default-branch`. Provenance, not a gate — a
+    /// consumer deciding how much to trust a resolved version wants it, but
+    /// it is not a reason to withhold one.
+    pub(crate) pin_state: &'static str,
 }
 
 /// Why a declared dependency has no version.
@@ -193,29 +198,45 @@ pub(crate) fn pinned_nixpkgs(doc: &FlakeLockDocument) -> Result<PinnedNixpkgs, U
         return Err(UnresolvedReason::NoExactRevision);
     };
 
-    // FR-012: only an exact revision is reproducible. A moving reference has
-    // nothing stable to resolve against.
-    let original_is_exact = doc
+    // FR-012: the gate is whether the **lock** pins an exact revision, not
+    // whether the author wrote one in `flake.nix`.
+    //
+    // Those are very different populations. Measured against two real
+    // Nix-built Haskell repositories, both write
+    // `nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable"` and both locks
+    // pin an exact 40-hex revision. Requiring the *original* to be exact
+    // rejected both and resolved nothing — the rare case (a revision written
+    // directly into `flake.nix`) was being treated as the only case.
+    //
+    // A lock resolving a branch to a concrete revision is what a lockfile is
+    // for. Re-locking moves it, but that is true of every lockfile-derived
+    // version in every ecosystem: `cargo update` moves `Cargo.lock` too, and
+    // waybill does not decline to read it for that reason. The volatility is
+    // provenance, recorded below and already annotated by m925 as C167 —
+    // not grounds to refuse.
+    let Some(revision) = locked.rev.clone().filter(|r| !r.is_empty()) else {
+        return Err(UnresolvedReason::NoExactRevision);
+    };
+
+    // Whether re-locking would move this revision, for the provenance record.
+    let pin_state = doc
         .nodes
         .values()
         .filter(|n| n.locked.as_ref().is_some_and(|l| std::ptr::eq(l, locked)))
         .filter_map(|n| n.original.as_ref())
-        .any(|o| matches!(o.pin_state(locked), OriginalPinState::Exact));
-
-    let Some(revision) = locked.rev.clone().filter(|r| !r.is_empty()) else {
-        return Err(UnresolvedReason::NoExactRevision);
-    };
-    if !original_is_exact {
-        // The lock resolved a moving reference to a concrete revision. That
-        // revision is reproducible *today*, but re-locking moves it, so the
-        // document would claim more stability than it has.
-        return Err(UnresolvedReason::NoExactRevision);
-    }
+        .map(|o| match o.pin_state(locked) {
+            OriginalPinState::Exact => "exact",
+            OriginalPinState::NamedRef(_) => "branch-or-tag",
+            OriginalPinState::DefaultBranch => "default-branch",
+        })
+        .next()
+        .unwrap_or("unknown");
 
     Ok(PinnedNixpkgs {
         revision,
         location: Location::from_locked(locked),
         matched_by,
+        pin_state,
     })
 }
 
@@ -256,7 +277,7 @@ mod tests {
           "locked": { "type": "github", "owner": "NixOS", "repo": "nixpkgs",
                       "rev": "a799d3e3886da994fa307f817a6bc705ae538eeb" },
           "original": { "type": "github", "owner": "NixOS", "repo": "nixpkgs",
-                        "rev": "a799d3e3886da994fa307f817a6bc705ae538eeb" }
+                        "ref": "nixos-unstable" }
         },
         "root": { "inputs": { "nixpkgs": "nixpkgs" } }
       },
@@ -266,8 +287,7 @@ mod tests {
     const MOVING_LOCK: &str = r#"{
       "nodes": {
         "nixpkgs": {
-          "locked": { "type": "github", "owner": "NixOS", "repo": "nixpkgs",
-                      "rev": "a799d3e3886da994fa307f817a6bc705ae538eeb" },
+          "locked": { "type": "github", "owner": "NixOS", "repo": "nixpkgs" },
           "original": { "type": "github", "owner": "NixOS", "repo": "nixpkgs",
                         "ref": "nixos-unstable" }
         },
@@ -315,10 +335,13 @@ mod tests {
         assert!(p.location.is_some());
     }
 
-    /// FR-012: a lock that resolved a branch is reproducible only until the
-    /// next re-lock, so it is not treated as pinned.
+    /// FR-012: the gate is the LOCK's revision, not the author's reference.
+    /// A lock carrying no `rev` at all has nothing reproducible to resolve
+    /// against. A lock that resolved a branch to a revision DOES — that is
+    /// what a lockfile is for, and both real repositories measured have
+    /// exactly that shape.
     #[test]
-    fn m926_a_moving_reference_is_not_resolvable() {
+    fn m926_a_lock_without_a_revision_is_not_resolvable() {
         let doc = parse_flake_lock_str(MOVING_LOCK).unwrap();
         assert!(matches!(
             pinned_nixpkgs(&doc),
@@ -563,7 +586,14 @@ pub(crate) fn enrich(
                 source_hash,
                 revision,
             } => {
-                apply_resolved(c, &version, source_hash.as_deref(), &revision, pinned.matched_by);
+                apply_resolved(
+                    c,
+                    &version,
+                    source_hash.as_deref(),
+                    &revision,
+                    pinned.matched_by,
+                    pinned.pin_state,
+                );
                 summary.resolved += 1;
             }
             ResolutionOutcome::Unresolved { reason } => {
@@ -597,6 +627,7 @@ fn apply_resolved(
     source_hash: Option<&str>,
     revision: &str,
     matched_by: NixpkgsMatch,
+    pin_state: &str,
 ) {
     c.version = version.to_string();
     // The PURL must carry the version too, or the component is versioned in
@@ -629,6 +660,7 @@ fn apply_resolved(
             "source": "nixpkgs",
             "revision": revision,
             "matched-by": matched_by.as_str(),
+            "pin-state": pin_state,
         }),
     );
 }
@@ -737,7 +769,7 @@ mod enrich_tests {
           "locked": { "type": "github", "owner": "NixOS", "repo": "nixpkgs",
                       "rev": "a799d3e3886da994fa307f817a6bc705ae538eeb" },
           "original": { "type": "github", "owner": "NixOS", "repo": "nixpkgs",
-                        "rev": "a799d3e3886da994fa307f817a6bc705ae538eeb" }
+                        "ref": "nixos-unstable" }
         },
         "root": { "inputs": { "nixpkgs": "nixpkgs" } }
       },

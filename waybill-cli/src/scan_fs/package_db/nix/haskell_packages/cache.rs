@@ -87,7 +87,16 @@ pub(crate) fn write(rev: &str, file_key: &str, contents: &str) {
     }
     // Write to a sibling temporary file then rename, so a concurrent reader
     // never observes a half-written package set.
-    let tmp = path.with_extension("partial");
+    //
+    // The temporary name carries the process id and a counter. A fixed name
+    // is not enough: two scans running at once compute the same path, and one
+    // can rename a file the other is still writing, leaving a truncated
+    // package set in the cache that every later scan then reads. Renames on
+    // the same filesystem are atomic, so the last writer simply wins and
+    // both observe a complete file.
+    static SEQ: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+    let nonce = SEQ.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    let tmp = path.with_extension(format!("partial.{}.{nonce}", std::process::id()));
     if let Err(e) = std::fs::write(&tmp, contents) {
         tracing::debug!(error = %e, path = %tmp.display(), "nixpkgs cache: write failed");
         return;
