@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Fail on characters that masquerade as ASCII letters or hide entirely.
 
-A Cyrillic `а` (U+0430) renders identically to a Latin `a` in every editor,
+A Cyrillic U+0430 renders identically to a Latin `a` in every editor,
 diff and code-review UI. Substituted into an identifier, a package name or a
 fixture it produces a value that looks correct and is not — and no amount of
 reading catches it, because there is nothing to see.
 
-This is not hypothetical here: milestone 926 introduced a Cyrillic `а` into a
+This is not hypothetical here: milestone 926 introduced a Cyrillic U+0430 into a
 test fixture's comment. It was found by an explicit non-ASCII sweep, not by
 review. This check exists so the next one fails the build instead.
 
@@ -18,13 +18,13 @@ review. This check exists so the next one fails the build instead.
    identifier or split a word with nothing rendered.
 3. **Non-breaking space** — renders as a space, is not one. In shell or YAML
    it silently changes the parse.
-4. **Fullwidth forms** — `ａ` is not `a`.
+4. **Fullwidth forms** - U+FF41 is not `a`.
 
 ## What is NOT flagged
 
 Mathematical and typographic characters that are used deliberately and are
-not confusable with any ASCII letter: `Δ`, `Σ`, `μ`, `π`, `λ`, `—`, `→`,
-`✅`, box drawing, accented Latin in prose. The repository uses all of these
+not confusable with any ASCII letter: DELTA, SIGMA, MU, PI, LAMBDA, em-dash,
+arrows, check marks, box drawing, accented Latin in prose. The repository uses all of these
 on purpose, and flagging them would train people to ignore this check.
 
 The test is confusability with ASCII, not non-ASCII-ness.
@@ -42,77 +42,88 @@ import subprocess
 import sys
 import unicodedata
 
-# Cyrillic characters that render as ASCII letters. Curated rather than
-# derived, so the set is auditable and cannot quietly widen.
-CYRILLIC_CONFUSABLES = (
-    "а"  # а -> a        А А -> A
-    "А"
-    "вВ"  # в В -> b B (В is exact)
-    "еЕ"  # е Е -> e E
-    "ѕЅ"  # ѕ Ѕ -> s S
-    "іІ"  # і І -> i I
-    "јЈ"  # ј Ј -> j J
-    "кК"  # к К -> k K
-    "мМ"  # м М -> m M
-    "нН"  # н Н -> h H
-    "оО"  # о О -> o O
-    "рР"  # р Р -> p P
-    "сС"  # с С -> c C
-    "тТ"  # т Т -> t T
-    "уУ"  # у У -> y Y
-    "хХ"  # х Х -> x X
-    "һ"  # һ -> h
-    "ӏ"  # ӏ -> l
-    "ԛ"  # ԛ -> q
-    "ԝ"  # ԝ -> w
-)
+# Characters are declared by CODE POINT, never as literals.
+#
+# This file must contain no confusable character of its own, or it would
+# flag itself on every run. The obvious alternative — excluding this file
+# from its own scan — carves out exactly the kind of hole the check exists
+# to close, and would let a real homoglyph hide in the one file nobody
+# re-reads. Escapes cost a little readability and leave no exemption.
+#
+# Each entry is `codepoint: the ASCII character it imitates`.
 
-# Greek characters that render as ASCII letters. Note the deliberate
-# omissions: Δ Σ μ π λ Ω are NOT here, because none is confusable with an
-# ASCII letter and all are used as notation in this repository.
-GREEK_CONFUSABLES = (
-    "οΟ"  # ο Ο -> o O
-    "Α"  # Α -> A
-    "Β"  # Β -> B
-    "Ε"  # Ε -> E
-    "Ζ"  # Ζ -> Z
-    "Η"  # Η -> H
-    "Ι"  # Ι -> I
-    "Κ"  # Κ -> K
-    "Μ"  # Μ -> M
-    "Ν"  # Ν -> N
-    "Ρ"  # Ρ -> P
-    "Τ"  # Τ -> T
-    "Υ"  # Υ -> Y
-    "Χ"  # Χ -> X
-    "α"  # α -> a (in identifier contexts)
-    "γ"  # γ -> y
-    "ι"  # ι -> i
-    "ν"  # ν -> v
-    "ρ"  # ρ -> p
-    "υ"  # υ -> u
-    "χ"  # χ -> x
-)
+# Cyrillic letters whose glyphs render as ASCII letters.
+CYRILLIC_CONFUSABLES = {
+    0x0430: "a", 0x0410: "A",
+    0x0432: "b", 0x0412: "B",
+    0x0435: "e", 0x0415: "E",
+    0x0455: "s", 0x0405: "S",
+    0x0456: "i", 0x0406: "I",
+    0x0458: "j", 0x0408: "J",
+    0x043A: "k", 0x041A: "K",
+    0x043C: "m", 0x041C: "M",
+    0x043D: "h", 0x041D: "H",
+    0x043E: "o", 0x041E: "O",
+    0x0440: "p", 0x0420: "P",
+    0x0441: "c", 0x0421: "C",
+    0x0442: "t", 0x0422: "T",
+    0x0443: "y", 0x0423: "Y",
+    0x0445: "x", 0x0425: "X",
+    0x04BB: "h",
+    0x04CF: "l",
+    0x051B: "q",
+    0x051D: "w",
+}
 
-CONFUSABLE_LETTERS = set(CYRILLIC_CONFUSABLES + GREEK_CONFUSABLES)
+# Greek letters whose glyphs render as ASCII letters.
+#
+# Deliberate omissions: DELTA (0x0394), SIGMA (0x03A3), MU (0x03BC),
+# PI (0x03C0), LAMBDA (0x03BB), OMEGA (0x03A9). None is confusable with an
+# ASCII letter, and all are used as notation in this repository. A check
+# that flags legitimate notation trains people to ignore it.
+GREEK_CONFUSABLES = {
+    0x03BF: "o", 0x039F: "O",
+    0x0391: "A",
+    0x0392: "B",
+    0x0395: "E",
+    0x0396: "Z",
+    0x0397: "H",
+    0x0399: "I",
+    0x039A: "K",
+    0x039C: "M",
+    0x039D: "N",
+    0x03A1: "P",
+    0x03A4: "T",
+    0x03A5: "Y",
+    0x03A7: "X",
+    0x03B1: "a",
+    0x03B3: "y",
+    0x03B9: "i",
+    0x03BD: "v",
+    0x03C1: "p",
+    0x03C5: "u",
+    0x03C7: "x",
+}
 
-# Invisible, zero-width, and deceptive whitespace.
+CONFUSABLE_LETTERS = {**CYRILLIC_CONFUSABLES, **GREEK_CONFUSABLES}
+
+# Invisible, zero-width, and deceptive whitespace, by code point.
 INVISIBLE = {
-    " ": "NO-BREAK SPACE",
-    "​": "ZERO WIDTH SPACE",
-    "‌": "ZERO WIDTH NON-JOINER",
-    "‍": "ZERO WIDTH JOINER",
-    "‎": "LEFT-TO-RIGHT MARK",
-    "‏": "RIGHT-TO-LEFT MARK",
-    " ": "LINE SEPARATOR",
-    " ": "PARAGRAPH SEPARATOR",
-    "‪": "LEFT-TO-RIGHT EMBEDDING",
-    "‫": "RIGHT-TO-LEFT EMBEDDING",
-    "‬": "POP DIRECTIONAL FORMATTING",
-    "‭": "LEFT-TO-RIGHT OVERRIDE",
-    "‮": "RIGHT-TO-LEFT OVERRIDE",
-    "⁠": "WORD JOINER",
-    "﻿": "ZERO WIDTH NO-BREAK SPACE (BOM)",
+    0x00A0: "NO-BREAK SPACE",
+    0x200B: "ZERO WIDTH SPACE",
+    0x200C: "ZERO WIDTH NON-JOINER",
+    0x200D: "ZERO WIDTH JOINER",
+    0x200E: "LEFT-TO-RIGHT MARK",
+    0x200F: "RIGHT-TO-LEFT MARK",
+    0x2028: "LINE SEPARATOR",
+    0x2029: "PARAGRAPH SEPARATOR",
+    0x202A: "LEFT-TO-RIGHT EMBEDDING",
+    0x202B: "RIGHT-TO-LEFT EMBEDDING",
+    0x202C: "POP DIRECTIONAL FORMATTING",
+    0x202D: "LEFT-TO-RIGHT OVERRIDE",
+    0x202E: "RIGHT-TO-LEFT OVERRIDE",
+    0x2060: "WORD JOINER",
+    0xFEFF: "ZERO WIDTH NO-BREAK SPACE (BOM)",
 }
 
 # Binary and generated content: scanning these is noise, and a homoglyph in
@@ -124,18 +135,17 @@ SKIP_SUFFIXES = (
 )
 
 
-def is_fullwidth(ch: str) -> bool:
-    return 0xFF01 <= ord(ch) <= 0xFF5E
-
-
 def classify(ch: str) -> str | None:
-    if ch in INVISIBLE:
-        return f"invisible ({INVISIBLE[ch]})"
-    if ch in CONFUSABLE_LETTERS:
-        script = "Cyrillic" if ch in CYRILLIC_CONFUSABLES else "Greek"
-        return f"{script} letter confusable with ASCII"
-    if is_fullwidth(ch):
-        return "fullwidth form confusable with ASCII"
+    cp = ord(ch)
+    if cp < 0x80:
+        return None  # plain ASCII, the overwhelmingly common case
+    if cp in INVISIBLE:
+        return f"invisible ({INVISIBLE[cp]})"
+    if cp in CONFUSABLE_LETTERS:
+        script = "Cyrillic" if cp in CYRILLIC_CONFUSABLES else "Greek"
+        return f"{script} letter imitating ASCII {CONFUSABLE_LETTERS[cp]!r}"
+    if 0xFF01 <= cp <= 0xFF5E:
+        return f"fullwidth form imitating ASCII {chr(cp - 0xFEE0)!r}"
     return None
 
 
@@ -185,10 +195,10 @@ def main(argv: list[str]) -> int:
         caret = " " * (min(col, 100) + 3) + "^"
         print(caret, file=sys.stderr)
     print(
-        "\nThese characters render as ASCII but are not ASCII. Replace them "
-        "with the ASCII character they imitate.\n"
-        "Mathematical notation (Δ, Σ, μ, π, λ) and typography (—, →, ✅) are "
-        "NOT flagged and need no change.",
+        "\nThese characters render as ASCII but are not ASCII. Replace each "
+        "with the ASCII character it imitates.\n"
+        "Mathematical notation and typography are NOT flagged and need no "
+        "change - if you are seeing this, the character really is wrong.",
         file=sys.stderr,
     )
     return 1

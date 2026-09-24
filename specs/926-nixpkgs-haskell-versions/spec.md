@@ -178,8 +178,12 @@ components carry different, machine-readable resolution provenance.
   boot library. *(Constitution Principle IX.)*
 - **FR-006**: The system MUST record, for every declared dependency it did not
   resolve, a machine-readable reason distinguishing at minimum: supplied by the
-  compiler; absent from the pinned package set; and the pinned revision could
-  not be consulted.
+  compiler; absent from the pinned package set; the pinned source could not be
+  consulted; the pinned source is of a shape this reader cannot retrieve a
+  single file from; the lock pins no exact revision; and offline was requested.
+  *(The source-shape case is separate from "could not be consulted" because
+  the operator action differs — nothing about the network is wrong, and the
+  remedy is a different pin or a mirror rather than connectivity.)*
 - **FR-007**: The system MUST record, for every dependency it did resolve, that
   the version is nixpkgs-resolved and which revision it came from — in a form
   distinguishable from a version taken from a Haskell lockfile.

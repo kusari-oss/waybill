@@ -119,6 +119,7 @@ Unresolved { reason }
 | `compiler-supplied` | the name is nulled by any candidate compiler (FR-014a) |
 | `absent-from-package-set` | reached the revision; the name is not in it |
 | `source-unreachable` | could not reach, refused, unauthorized, or timed out (FR-017) |
+| `source-unsupported` | the lock pins a shape no single file can be retrieved from (bare git URL, tarball) |
 | `no-exact-revision` | the lock pins a moving reference (FR-012) |
 | `offline` | operator requested offline (FR-009) |
 

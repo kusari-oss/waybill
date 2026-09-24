@@ -37,7 +37,12 @@ version but no hash is permitted only when the package set records no hash for
 it; a dependency carrying a hash but no version is a contract violation.
 
 **Closed reason set**: `compiler-supplied`, `absent-from-package-set`,
-`source-unreachable`, `no-exact-revision`, `offline`.
+`source-unreachable`, `source-unsupported`, `no-exact-revision`, `offline`.
+
+`source-unsupported` covers a lock that pins a shape no single file can be
+retrieved from — a bare git URL, a tarball. Kept distinct from
+`source-unreachable` because the two call for different action: one is a
+connectivity or permission problem, the other is not.
 
 ---
 
