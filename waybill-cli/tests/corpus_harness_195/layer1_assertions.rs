@@ -1063,3 +1063,122 @@ pub fn haskell_language_server_layer1(
 
     Ok(())
 }
+
+// -----------------------------------------------------------------------
+// Layer 0 — document integrity, applied to EVERY target (#980)
+// -----------------------------------------------------------------------
+
+/// Invariant I2: every edge endpoint must resolve to a component present in
+/// the document.
+///
+/// I2 is not new. It is named in `generate::graph_completeness` (m860,
+/// FR-001, C-3.3) and asserted there against a hand-built three-element
+/// fixture. It had never been checked against a real emitted document — and
+/// #980 is what that cost: the nixpkgs Haskell pass assigned versions, which
+/// rewrote component PURLs, and the PURL is the identity the dependency
+/// graph keys on. Every component the feature resolved was disconnected.
+/// On one real project that dropped 66% of the SPDX relationships and left
+/// 35 of 47 CycloneDX edges pointing at nothing.
+///
+/// Neither format complains. CycloneDX has no referential-integrity rule for
+/// `bom-ref`, and SPDX simply omits the relationship, so the document stays
+/// schema-valid while being wrong. Schema validation cannot see this class at
+/// all; only an explicit invariant can.
+///
+/// This runs for every target, before the per-target tripwires, because the
+/// defect it catches is not ecosystem-specific — any pass that rewrites a
+/// component identity after edges are built reintroduces it.
+pub fn layer0_document_integrity(
+    target: &str,
+    sboms: &EmittedSboms,
+) -> Result<(), AssertionFailure> {
+    // ---- CycloneDX: dangling `dependsOn` targets ----
+    let mut refs: std::collections::HashSet<&str> = sboms
+        .cdx
+        .get("components")
+        .and_then(|c| c.as_array())
+        .map(|arr| arr.iter().filter_map(|c| c.get("bom-ref")?.as_str()).collect())
+        .unwrap_or_default();
+    if let Some(root) = sboms
+        .cdx
+        .get("metadata")
+        .and_then(|m| m.get("component"))
+        .and_then(|c| c.get("bom-ref"))
+        .and_then(|r| r.as_str())
+    {
+        refs.insert(root);
+    }
+
+    let mut dangling: Vec<String> = Vec::new();
+    if let Some(deps) = sboms.cdx.get("dependencies").and_then(|d| d.as_array()) {
+        for e in deps {
+            let from = e.get("ref").and_then(|r| r.as_str()).unwrap_or("?");
+            for t in e.get("dependsOn").and_then(|d| d.as_array()).into_iter().flatten() {
+                if let Some(t) = t.as_str() {
+                    if !refs.contains(t) {
+                        dangling.push(format!("{from} -> {t}"));
+                    }
+                }
+            }
+        }
+    }
+    if !dangling.is_empty() {
+        let shown: Vec<&String> = dangling.iter().take(5).collect();
+        return Err(AssertionFailure {
+            invariant_name: "i2-no-dangling-edge-endpoint",
+            format: FailureFormat::Cdx,
+            observed: format!(
+                "{} dependsOn target(s) match no component bom-ref, e.g. {:?}",
+                dangling.len(),
+                shown
+            ),
+            expected: "0 — every edge endpoint resolves to a component in the document".to_string(),
+            suggested_action:
+                "invariant I2 (m860 FR-001 / C-3.3). Something rewrote a component's identity after the \
+                 dependency edges were built, so the edges point at the old bom-ref. #980 was exactly \
+                 this: the nixpkgs Haskell pass assigned a version, which changed the PURL, and PURLs \
+                 are what `Relationship::from`/`::to` hold. Whatever changed an identity must rewrite \
+                 the endpoints in the same step",
+        });
+    }
+
+    // ---- SPDX 2.3: relationship endpoints must exist ----
+    let known: std::collections::HashSet<&str> = sboms
+        .spdx_2_3
+        .get("packages")
+        .and_then(|p| p.as_array())
+        .map(|arr| arr.iter().filter_map(|p| p.get("SPDXID")?.as_str()).collect())
+        .unwrap_or_default();
+    let doc_id = sboms.spdx_2_3.get("SPDXID").and_then(|i| i.as_str());
+    let mut unknown = 0usize;
+    if let Some(rels) = sboms.spdx_2_3.get("relationships").and_then(|r| r.as_array()) {
+        for r in rels {
+            for key in ["spdxElementId", "relatedSpdxElement"] {
+                if let Some(v) = r.get(key).and_then(|v| v.as_str()) {
+                    // NONE / NOASSERTION are legitimate SPDX sentinels.
+                    if v == "NONE" || v == "NOASSERTION" || Some(v) == doc_id {
+                        continue;
+                    }
+                    if !known.contains(v) && !v.starts_with("SPDXRef-File") {
+                        unknown += 1;
+                    }
+                }
+            }
+        }
+    }
+    if unknown > 0 {
+        return Err(AssertionFailure {
+            invariant_name: "i2-no-unknown-spdx-relationship-endpoint",
+            format: FailureFormat::Spdx23,
+            observed: format!("{unknown} relationship endpoint(s) name no package in the document"),
+            expected: "0 — every relationship endpoint is a declared SPDXID".to_string(),
+            suggested_action:
+                "invariant I2 in SPDX 2.3. Note the failure mode differs from CycloneDX: SPDX usually \
+                 DROPS such a relationship rather than dangling it, so a clean result here does not by \
+                 itself prove the edges survived — compare root out-edge counts across formats too",
+        });
+    }
+
+    let _ = target;
+    Ok(())
+}

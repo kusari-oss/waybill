@@ -4250,6 +4250,24 @@ pub async fn execute(
             &source,
         )
     };
+    // #980 (invariant I2): the pass assigns versions, which changes component
+    // PURLs, and the dependency graph keys on PURLs. The edges were built
+    // above, so rewrite their endpoints now -- otherwise every component this
+    // pass resolved is orphaned: CycloneDX keeps an edge pointing at the old
+    // PURL, SPDX drops the relationship outright, and neither format errors.
+    if let Some(s) = &nixpkgs_haskell_summary {
+        let rewritten = scan_fs::package_db::nix::haskell_packages::apply_renames(
+            &s.renames,
+            &mut relationships,
+        );
+        if rewritten > 0 {
+            tracing::info!(
+                renamed_components = s.renames.len(),
+                rewritten_endpoints = rewritten,
+                "nixpkgs-haskell: rewrote dependency-edge endpoints after version assignment"
+            );
+        }
+    }
     if let Some(s) = &nixpkgs_haskell_summary {
         tracing::info!(
             resolved = s.resolved,
