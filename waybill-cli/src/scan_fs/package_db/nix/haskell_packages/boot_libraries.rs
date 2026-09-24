@@ -395,16 +395,31 @@ mod alias_tests {
     /// what it was looking for (`= null;`) rather than from what the file
     /// contains. A synthetic fixture would have reproduced that blind spot,
     /// so this asserts against bytes nixpkgs actually ships.
+    ///
+    /// `#[ignore]`d rather than silently skipping when the cache is absent.
+    /// A test that prints "skipping" and reports `ok` is indistinguishable
+    /// from one that ran — the exact criticism #918 makes of the corpus gate,
+    /// and it would be self-defeating in a test whose whole purpose is to
+    /// check the parser against bytes rather than against assumptions.
+    ///
+    /// Run it with a populated cache:
+    ///   cargo test -p waybill --bins m984_real -- --ignored
     #[test]
+    #[ignore = "needs a populated ~/.cache/waybill/nixpkgs; ignored rather than \
+                silently skipping, because a test that reports `ok` without \
+                running is worse than one that visibly does not run (#918)"]
     fn m984_real_configuration_yields_the_known_aliases() {
         let path = std::path::Path::new(&std::env::var("HOME").unwrap_or_default())
             .join(".cache/waybill/nixpkgs")
             .join("a799d3e3886da994fa307f817a6bc705ae538eeb")
             .join("configuration-ghc-9.6.x.nix");
-        let Ok(text) = std::fs::read_to_string(&path) else {
-            eprintln!("skipping: no cached configuration at {}", path.display());
-            return;
-        };
+        let text = std::fs::read_to_string(&path).unwrap_or_else(|e| {
+            panic!(
+                "no cached configuration at {} ({e}). Populate it by scanning a \
+                 Nix-built Haskell project, then re-run with --ignored.",
+                path.display()
+            )
+        });
         let a = alias_names(&text);
         assert_eq!(
             a.get("os-string").map(String::as_str),
