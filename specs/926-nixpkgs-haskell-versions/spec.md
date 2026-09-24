@@ -219,6 +219,10 @@ components carry different, machine-readable resolution provenance.
   condition MUST perform no additional work.
 - **FR-015a**: The system MUST provide an operator flag that disables
   resolution without disabling all network access.
+- **FR-015b**: The system MUST classify an input as nixpkgs-shaped from
+  `flake.lock` alone, without network access, and MUST record which
+  classification rule matched. The system MUST NOT retrieve from an input in
+  order to decide whether that input qualifies.
 - **FR-016**: The system MUST derive the retrieval target from the pinned
   input's own recorded location in `flake.lock` — its type, owner, repository
   or URL — and MUST NOT assume the input is upstream nixpkgs. A pinned input
@@ -235,6 +239,13 @@ components carry different, machine-readable resolution provenance.
 
 ### Key Entities
 
+- **Nixpkgs-shaped input**: A locked flake input identified **without any
+  network access**, by either (a) the root input attribute being named
+  `nixpkgs` — the near-universal flake convention — or (b) the locked entry's
+  repository component being `nixpkgs`. Rule (b) admits forks and internal
+  mirrors, whose owner or host differs but whose repository name does not
+  (FR-016). Inputs are never probed speculatively to classify them: probing
+  would retrieve for repositories that do not qualify, breaking SC-009.
 - **Pinned revision**: The exact nixpkgs commit recorded in the project's
   `flake.lock`. The unit of caching and the provenance recorded on every
   resolved version.
