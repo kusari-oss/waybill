@@ -955,6 +955,7 @@ cdx_anno!(c170_cdx, "waybill:haskell-version-unresolved-reason", component);
 cdx_anno!(c171_cdx, "waybill:nixpkgs-candidate-compilers", component);
 cdx_anno!(c172_cdx, "waybill:nixpkgs-version-disagreement", component);
 cdx_anno!(c173_cdx, "waybill:nixpkgs-haskell-degraded", document);
+cdx_anno!(c174_cdx, "waybill:nixpkgs-haskell-resolution", document);
 cdx_anno!(c161_cdx, "waybill:resolve-ownership",                     document);
 cdx_anno!(c163_cdx, "waybill:document-resolve",                     document);
 cdx_anno!(c162_cdx, "waybill:cabal-entries-skipped",                 document);

@@ -394,6 +394,69 @@ fn m926_degradation_is_recorded_at_document_scope() {
     assert!(mentions(&d.spdx3, "waybill:nixpkgs-haskell-degraded"), "C173 missing from SPDX 3");
 }
 
+/// #973 (C174): a pass that SUCCEEDS must say so at document scope.
+///
+/// Before this, the document named nixpkgs only on failure — a scan that
+/// resolved every dependency emitted no document-scope nixpkgs property at
+/// all, so a regression that disabled the pass outright would have left the
+/// property set byte-identical to a healthy one. That is the hole this
+/// closes, which is why the assertion is on the *successful* path.
+#[test]
+fn m973_a_successful_pass_is_recorded_at_document_scope() {
+    let cache = seed_cache(&["9.6.x"]);
+    let d = scan(&fixture("resolvable"), Some(cache.path()), &[]);
+
+    let props = d.cdx["metadata"]["properties"]
+        .as_array()
+        .expect("document-scope properties");
+    let rec = props
+        .iter()
+        .find(|p| p["name"].as_str() == Some("waybill:nixpkgs-haskell-resolution"))
+        .expect("C174 must be present when the pass ran");
+
+    let v: serde_json::Value =
+        serde_json::from_str(rec["value"].as_str().expect("C174 value is a string"))
+            .expect("C174 value is JSON");
+
+    // The revision is the fact a consumer most needs and the one that was
+    // previously recoverable only by iterating every component.
+    assert!(
+        v["revision"].as_str().is_some_and(|r| !r.is_empty()),
+        "C174 must name the revision it resolved through, got {v}"
+    );
+    assert!(
+        v["resolved"].as_u64().is_some_and(|n| n > 0),
+        "the fixture resolves dependencies, so the count must be positive: {v}"
+    );
+    assert!(v["unresolved"].is_object(), "unresolved is a by-reason map: {v}");
+    assert!(v["disagreements"].is_u64(), "disagreements is a count: {v}");
+
+    // C174 is SymmetricEqual, so it must reach the other two formats.
+    assert!(mentions(&d.spdx2, "waybill:nixpkgs-haskell-resolution"), "C174 missing from SPDX 2.3");
+    assert!(mentions(&d.spdx3, "waybill:nixpkgs-haskell-resolution"), "C174 missing from SPDX 3");
+}
+
+/// #973: a degraded pass still ran, so it is still recorded — C174 and C173
+/// are additive, not alternatives. A consumer must not have to infer "the
+/// pass ran" from the absence of a success marker.
+#[test]
+fn m973_a_degraded_pass_records_both_rows() {
+    let d = scan(&fixture("resolvable"), None, &["--offline"]);
+    assert!(mentions(&d.cdx, "waybill:nixpkgs-haskell-degraded"), "C173 expected");
+    assert!(mentions(&d.cdx, "waybill:nixpkgs-haskell-resolution"), "C174 expected");
+}
+
+/// #973: the pass never ran, so it records nothing. Keeps every non-Haskell
+/// document byte-identical.
+#[test]
+fn m973_a_scan_without_the_pass_records_nothing() {
+    let d = scan(&fixture("no_flake"), None, &[]);
+    assert!(
+        !mentions(&d.cdx, "waybill:nixpkgs-haskell-resolution"),
+        "C174 must be absent when the pass never ran"
+    );
+}
+
 /// A clean pass records no degradation — the row must not appear just because
 /// the feature ran.
 #[test]

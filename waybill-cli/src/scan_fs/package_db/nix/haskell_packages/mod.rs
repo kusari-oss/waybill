@@ -456,6 +456,30 @@ pub(crate) struct EnrichmentSummary {
 }
 
 impl EnrichmentSummary {
+    /// Render this pass as the C174 document-scope value (#973).
+    ///
+    /// The summary has always carried every field a consumer wants, but
+    /// only `degraded_reason` ever reached the document: a scan that
+    /// resolved 97 components said so in a log line and nothing else, so a
+    /// regression that disabled the pass outright left the document's
+    /// property set byte-identical to a healthy one. This renders the whole
+    /// record, so the artifact that outlives the run carries it.
+    ///
+    /// `degraded_reason` is deliberately *not* folded in: C173 already
+    /// carries it and consumers key on it. This is additive.
+    ///
+    /// Keys are emitted through `serde_json::Map`, which is a `BTreeMap`
+    /// here (no `preserve_order` feature), so field order is sorted and
+    /// stable across runs — a golden can pin the string.
+    pub(crate) fn to_document_value(&self) -> serde_json::Value {
+        serde_json::json!({
+            "resolved": self.resolved,
+            "unresolved": self.unresolved,
+            "disagreements": self.disagreements,
+            "revision": self.revision,
+        })
+    }
+
     fn note_unresolved(&mut self, reason: &UnresolvedReason) {
         *self
             .unresolved

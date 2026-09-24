@@ -4418,8 +4418,17 @@ pub async fn execute(
     let nixpkgs_haskell_degraded: Option<&str> = nixpkgs_haskell_summary
         .as_ref()
         .and_then(|s| s.degraded_reason.as_deref());
+    // #973 (C174): the pass's own record. `enrich` returns `Some` exactly
+    // when the pass ran, so this is absent — and the document byte-identical
+    // — for a scan with no Haskell dependencies, no `flake.lock`, or
+    // `--no-nixpkgs-haskell`. Rendered here so the borrow outlives
+    // `artifacts`.
+    let nixpkgs_haskell_resolution_json: Option<String> = nixpkgs_haskell_summary
+        .as_ref()
+        .map(|s| s.to_document_value().to_string());
     let artifacts = ScanArtifacts {
         nixpkgs_haskell_degraded,
+        nixpkgs_haskell_resolution: nixpkgs_haskell_resolution_json.as_deref(),
         unresolved_declared_dep_count,
         target_name: &target_name,
         components: &components,

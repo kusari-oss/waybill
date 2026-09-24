@@ -593,6 +593,17 @@ fn push_document_fields(
         );
     }
 
+    // C174 (#973) — the nixpkgs-backed Haskell resolution pass as a whole.
+    // C173 above names a failure; this names what the pass DID, so a
+    // document that resolved 97 components no longer looks, at document
+    // scope, exactly like one that never ran.
+    if let Some(v) = scan.nixpkgs_haskell_resolution {
+        push(out,
+            "waybill:nixpkgs-haskell-resolution",
+            json!(v),
+        );
+    }
+
     // Milestone 133 US3 (C93/C94/C95): file-tier walker diagnostic
     // skip counters. Constitution Principle X. See CDX +
     // SPDX 2.3 twins.

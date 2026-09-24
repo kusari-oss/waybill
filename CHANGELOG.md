@@ -7,6 +7,44 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Added: a successful nixpkgs Haskell resolution is now recorded in the document (#973)
+
+A scan that resolved Haskell versions through a pinned nixpkgs used to record,
+at document scope, **nothing at all**. A scan that *failed* recorded a reason
+(C173). The successful case — the one that changed the document — was invisible
+to anyone reading it.
+
+`EnrichmentSummary` has always carried the whole record: `revision`,
+`resolved`, `unresolved`-by-reason, `disagreements`, `degraded_reason`. Its own
+doc comment says "for the document-scope record". Only `degraded_reason` was
+ever wired; the other four reached a `tracing::info!` and stopped there. The
+log is ephemeral, the SBOM is the deliverable.
+
+New catalog row **C174 `waybill:nixpkgs-haskell-resolution`**, a document-scope
+JSON object emitted whenever the pass ran, in all three formats
+(`SymmetricEqual`):
+
+```json
+{"disagreements":0,"resolved":97,"revision":"cbb5cf35…","unresolved":{"absent-from-package-set":1,"compiler-supplied":24}}
+```
+
+C173 is unchanged and still emitted on failure — the two are additive, so
+consumers already keyed on the degradation row keep working.
+
+Measured on `haskell/haskell-language-server` @ `2.15.0.0`: resolution takes
+Hackage components with a version from **43 to 140** and with a native SHA-256
+from **0 to 97**. The revision was previously recoverable only by iterating all
+165 components and parsing a JSON-in-string property on each, then asserting
+they agreed.
+
+The practical consequence: a regression that silently disabled nixpkgs
+resolution altogether left the document's property set **byte-identical** to a
+healthy one, so no golden could catch it. Now one can.
+
+Emission is gated on the same condition `enrich` returns `Some` for, so a scan
+with no Haskell dependencies, no `flake.lock`, or `--no-nixpkgs-haskell` stays
+byte-identical.
+
 ### Fixed: nixpkgs resolution reported the wrong version for 371 packages (#970)
 
 nixpkgs exposes alternative versions of a package as **separate attributes

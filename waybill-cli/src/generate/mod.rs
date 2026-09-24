@@ -95,6 +95,17 @@ pub struct ScanArtifacts<'a> {
     /// independent enrichments degraded. A consumer reading one
     /// `source-unreachable` would have no way to tell them apart.
     pub nixpkgs_haskell_degraded: Option<&'a str>,
+    /// Issue #973 (C174) — document-scope record of the nixpkgs-backed
+    /// Haskell resolution pass: revision, resolved count, unresolved counts
+    /// by reason, disagreements. Pre-rendered JSON.
+    ///
+    /// `Some` exactly when the pass ran, which is the same gate `enrich`
+    /// uses, so a scan with no Haskell dependencies, no `flake.lock`, or
+    /// `--no-nixpkgs-haskell` stays byte-identical.
+    ///
+    /// Distinct from `nixpkgs_haskell_degraded` (C173), which names a
+    /// failure and is kept unchanged for consumers already keyed on it.
+    pub nixpkgs_haskell_resolution: Option<&'a str>,
     /// Document-level scope mode. Resolved from
     /// `--include-declared-deps` (with the `--path`/`--image`
     /// auto-default rule). Surfaced in CDX `metadata.lifecycles[]`
@@ -432,6 +443,7 @@ impl<'a> ScanArtifacts<'a> {
             sbom_version: self.sbom_version,
             enrichment_degraded: None,
             nixpkgs_haskell_degraded: None,
+            nixpkgs_haskell_resolution: None,
             scope_mode: self.scope_mode,
             go_transitive_coverage: self.go_transitive_coverage,
             go_transitive_fallback_count: self.go_transitive_fallback_count,
