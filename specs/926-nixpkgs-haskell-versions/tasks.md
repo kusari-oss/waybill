@@ -129,10 +129,10 @@ Decision).
 - [x] T034 Integration tests for the degradation paths in `waybill-cli/tests/nix_haskell_resolution_m926.rs`: unreachable host, refused/unauthorized host, `--offline`, and a lock pinning a moving reference — each produces component and relationship counts identical to a pre-feature scan, a document-scope degradation record, no credential prompt, and completion within the bound (SC-006, SC-008)
 - [x] T035 [P] Integration test in `waybill-cli/tests/nix_haskell_resolution_m926.rs`: two scans of the same repository at the same revision are byte-identical (SC-004), and the second performs no retrieval (SC-005)
 - [x] T036 [P] Integration test in `waybill-cli/tests/nix_haskell_resolution_m926.rs`: a repository with a flake but no Haskell dependencies performs no retrieval at all (SC-009)
-- [ ] T037 [P] Add the CHANGELOG entry under `## [Unreleased]` in `CHANGELOG.md`, stating the measured before/after for the target and naming the native-hash finding
-- [ ] T038 [P] Document the feature and its opt-out flag in the operator docs under `docs/`, including the private/internal-mirror behaviour from FR-016–FR-019
-- [ ] T039 Run the mandatory pre-PR gate — `cargo +stable clippy --workspace --all-targets -- -D warnings` and `cargo +stable test --workspace` — and enumerate the per-target results rather than citing the exit code
-- [ ] T040 Assess corpus golden impact: no existing corpus target is a Nix-built Haskell repository, so the expectation is zero churn; verify that claim and, if any golden moves, regenerate in CI per rule zero and attribute every change before installing
+- [x] T037 [P] Add the CHANGELOG entry under `## [Unreleased]` in `CHANGELOG.md`, stating the measured before/after for the target and naming the native-hash finding
+- [x] T038 [P] Document the feature and its opt-out flag in the operator docs under `docs/`, including the private/internal-mirror behaviour from FR-016–FR-019
+- [x] T039 Run the mandatory pre-PR gate — `cargo +stable clippy --workspace --all-targets -- -D warnings` and `cargo +stable test --workspace` — and enumerate the per-target results rather than citing the exit code
+- [x] T040 **Verified zero corpus churn.** `haskell-aeson` is the only corpus target with Haskell components (61) and it carries zero flake-input components, so it has no `flake.lock` for the m925 reader to find and this feature's gate cannot open on it. Every other target has no Haskell components at all. Checked rather than asserted; no golden regeneration required.
 
 ---
 

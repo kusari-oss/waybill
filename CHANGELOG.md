@@ -7,6 +7,67 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### New: Haskell versions resolved through the nixpkgs a flake pins (#947)
+
+A Nix-built Haskell project declares ranges in `.cabal` and often ships no
+`cabal.project.freeze`, so every dependency landed at design tier with no
+version — invisible to vulnerability matching, which is the main thing
+consumers do with an SBOM. Those versions were never unknown: the nixpkgs
+revision `flake.lock` already pins determines them, and waybill read that
+lockfile (#946) without ever consulting what it points at.
+
+Dependencies the pinned revision carries now resolve to an exact version and
+a SHA-256 of their source tarball. Active by default; it fires only when a
+repository both pins a nixpkgs-shaped input and declares Haskell dependencies,
+so a repository meeting neither condition does no extra work and its output is
+byte-identical.
+
+- **The source hash is a native field, not an annotation.** nixpkgs records it
+  in Nix base32, and after m925's `narHash` the natural assumption was another
+  `waybill:` catalog row. Verified instead: it decodes to 32 bytes and equals
+  the SHA-256 of the Hackage source tarball byte for byte. It is a flat hash of
+  the source bytes, so Principle V requires CycloneDX `hashes[]` and SPDX 2.3
+  `checksums[]` and forbids a row. This is the opposite outcome from `narHash`,
+  which hashes a NAR serialization of a directory tree and had no native
+  carrier.
+- **A compiler-supplied package is never given a version.** GHC boot libraries
+  have no version in the package set — they ship with the compiler. They stay
+  versionless with a recorded reason, even though most of them *are* present in
+  the default package set with a version the build does not use. Emitting that
+  version would look authoritative and be wrong. This is the same set
+  `cabal v2-freeze` declines to pin (#938).
+- **When several compilers are possible, resolution fails closed.** A flake
+  naming three GHC package sets yields three candidates, and a package supplied
+  by *any* of them is treated as compiler-supplied. Measured cost at the pinned
+  revision: 5 packages when the flake names its compilers, 18 when it names
+  none.
+- **An internal mirror is a supported configuration.** The retrieval target is
+  derived from the lock entry — its type, owner, repository and host — never
+  assumed to be upstream nixpkgs. A fork or self-hosted mirror is retrieved
+  from itself. An unreachable, refused or unauthorized source degrades to
+  today's behaviour with a distinct reason, never prompts for credentials, and
+  never blocks the scan.
+- **Five new catalog rows** — C169 through C173 — carry resolution provenance,
+  the unresolved reason, the candidate compilers, a local-vs-nixpkgs version
+  disagreement, and a document-scope degradation record, in all three formats.
+
+Retrieval is roughly one second for a 16.6 MB package set, once per immutable
+revision, then cached.
+
+Deliberately out of scope and filed: the transitive closure (#962) and whether
+GHC boot-library versions are obtainable at all (#966).
+
+### Fixed: SPDX 3 dropped document-scope metadata on the filtered-components path
+
+`v3_document.rs` built a components-only view of the scan artifacts and
+hard-coded `file_inventory_stats`, `file_inventory_mode` and
+`file_inventory_source_shapes` to `None`. With a root override active, SPDX 3
+silently lost C93, C94, C95 and the C156 mode marker. This is the third
+occurrence of one pattern — m671 fixed the mode field at two sibling sites,
+#934 fixed the stats field at those same two, and nobody had looked at this
+one. The pattern itself is filed as #964.
+
+
 ### Fixed: a default scan no longer inventories `target/` (#934)
 
 A default `waybill sbom scan --path .` against this repository emitted a

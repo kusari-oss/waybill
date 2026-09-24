@@ -380,6 +380,12 @@ scan:
   wrapper — requires JDK on `$PATH`) OR by committing a
   `gradle.lockfile` (milestone-106 flat-list). External
   supplementation via `--supplement-cdx` remains available.
+- **haskell** — `cabal freeze` writes `cabal.project.freeze`, or `stack` writes
+  `stack.yaml.lock`. A project that builds through **Nix** needs neither:
+  since milestone 926 (#947) waybill resolves versions through the nixpkgs
+  revision `flake.lock` already pins, automatically and by default. See
+  [nixpkgs-resolved Haskell versions](#nixpkgs-resolved-haskell-versions)
+  below.
 - **yocto** — Recipe scope is inherently design-tier; source-tier is provided
   separately by the yocto opkg installed-DB reader when a built image is
   available.
@@ -402,6 +408,61 @@ specific network-fetching resolvers as opt-in flags. Notable one:
 transitive resolution succeeds even in an offline environment. Not a
 design-tier fix, but a related "how do I get more resolved components?"
 lever.
+
+#### nixpkgs-resolved Haskell versions
+
+A Haskell project that builds through Nix declares ranges in `.cabal` and
+often ships no `cabal.project.freeze`. The versions are not unknown: the
+nixpkgs revision pinned in `flake.lock` determines them. Waybill reads that
+revision's generated Haskell package set and attaches the exact version plus a
+SHA-256 of the source tarball.
+
+**No flag needed.** It runs when the repository both pins a nixpkgs-shaped
+input *and* declares Haskell dependencies. A repository meeting neither
+condition performs no retrieval and its output is unchanged.
+
+```bash
+waybill sbom scan --path . --output sbom.cdx.json      # on by default
+waybill sbom scan --path . --no-nixpkgs-haskell        # this feature off only
+waybill sbom scan --path . --offline                   # all network off
+waybill sbom scan --path . --nixpkgs-timeout-secs 120  # slow internal mirror
+```
+
+**The source hash lands in the native field** — CycloneDX `hashes[]`, SPDX 2.3
+`checksums[]` — not an annotation. nixpkgs records it in Nix base32, and it
+decodes to exactly the SHA-256 of the package's Hackage source tarball.
+
+**Some dependencies stay versionless, and say why.** Every unresolved
+dependency carries `waybill:haskell-version-unresolved-reason`:
+
+| reason | meaning | operator action |
+|---|---|---|
+| `compiler-supplied` | GHC ships it; nixpkgs has no version to give | none — this is correct, see below |
+| `absent-from-package-set` | the revision was read; it has no such package | check the dependency name |
+| `source-unreachable` | could not reach, refused, unauthorized, or timed out | check egress to the pinned host, or raise `--nixpkgs-timeout-secs` |
+| `source-unsupported` | the lock pins a bare git URL or tarball | pin a forge-hosted nixpkgs, or supply versions via `--supplement-cdx` |
+| `no-exact-revision` | the lock pins a branch or tag, not a revision | re-lock so the input pins a revision |
+| `offline` | `--offline` was passed | none |
+
+`compiler-supplied` is not a failure. GHC boot libraries — `base`, `text`,
+`bytestring` and friends — ship with the compiler and have no version in the
+package set. Most of them *are* present in the default package set with a
+version, and waybill deliberately does not use it: that version is not what
+the build uses, and emitting it would look authoritative while being wrong.
+This is the same set `cabal v2-freeze` declines to pin.
+
+**Internal mirrors work.** The retrieval target comes from the lock entry's
+own type, owner, repository and host — a fork or self-hosted mirror is
+retrieved from itself, never from upstream. If the scanning environment cannot
+reach it, or it requires credentials, the scan completes with the dependencies
+versionless and `source-unreachable` recorded. Waybill never prompts for
+credentials and never blocks on a refused source.
+
+**A local lockfile still wins.** If the project has both a freeze file and a
+pinned nixpkgs, the freeze file's version is what waybill emits. When the two
+disagree the difference is recorded in `waybill:nixpkgs-version-disagreement`
+rather than silently resolved — which is exactly the question someone
+comparing a Nix build to a cabal build is asking.
 
 ### 8. Contributor guidance (implementing design-tier in a new reader)
 
