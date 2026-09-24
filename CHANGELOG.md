@@ -7,6 +7,39 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Fixed: nixpkgs resolution reported the wrong version for 371 packages (#970)
+
+nixpkgs exposes alternative versions of a package as **separate attributes
+sharing one `pname`**:
+
+```
+unordered-containers          -> 0.2.20.1   <- what a build uses
+unordered-containers_0_2_21   -> 0.2.21     <- pinned alternative
+```
+
+The parser keyed on `pname` and took the last definition, so it emitted
+0.2.21 for a project whose build uses 0.2.20.1 — a version the build never
+sees, carrying the *other* tarball's SHA-256 and provenance asserting it came
+from the pinned revision. Measured at that revision: 19,429 attributes against
+19,058 distinct `pname` values, so **371 attributes share a name**.
+
+Now keyed on the attribute name, which is unique. A `.cabal` names the
+package, which is the unsuffixed attribute, so an exact lookup selects the
+right one with no suffix heuristic. Verified against `nix eval` on a real
+project: **9 of 9 resolved versions agree, previously 8 of 9.**
+
+Keying on `pname` was deliberate — the attribute name is unquoted unless the
+package name is not a valid Nix identifier, and a parser keyed on `"name" =`
+finds almost nothing. That problem is real; the answer is to parse both
+spellings, which the parser now does.
+
+Found by cross-checking one real project against the nix CLI. 6,111 passing
+tests did not catch it: every fixture used a synthetic package set in which no
+two derivations share a `pname`, because the fixture author did not know the
+situation existed. Fixtures now use the real attribute-bound shape, and the
+regression test asserts declaration order cannot change the answer.
+
+
 ### New: Haskell versions resolved through the nixpkgs a flake pins (#947)
 
 A Nix-built Haskell project declares ranges in `.cabal` and often ships no

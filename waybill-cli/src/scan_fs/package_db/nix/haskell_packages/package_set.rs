@@ -64,66 +64,106 @@ impl PackageSet {
     }
 }
 
-/// `pname = "x"; version = "y"; ... sha256 = "z";` within one derivation.
+/// A top-level attribute binding: `  th-compat = callPackage (` or
+/// `  "3d-graphics-examples" = callPackage (`.
 ///
-/// The bounded gap between `version` and `sha256` keeps the match inside a
-/// single derivation: an unbounded `.*?` would happily pair one package's
-/// `pname` with a later package's `sha256`.
-fn derivation_re() -> &'static Regex {
+/// The attribute name is the key, NOT `pname`. See [`parse`].
+fn attribute_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
-        Regex::new(
-            r#"(?s)pname\s*=\s*"([^"]+)"\s*;\s*version\s*=\s*"([^"]+)"\s*;(.{0,400}?)sha256\s*=\s*"([^"]+)"\s*;"#,
-        )
-        .expect("static derivation regex")
+        Regex::new(r#"(?m)^  (?:"([^"]+)"|([A-Za-z0-9][A-Za-z0-9_.'-]*))\s*=\s*callPackage"#)
+            .expect("static attribute regex")
     })
 }
 
-/// A derivation with a `pname`/`version` but no nearby `sha256`.
-fn versioned_only_re() -> &'static Regex {
+fn version_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
-        Regex::new(r#"pname\s*=\s*"([^"]+)"\s*;\s*version\s*=\s*"([^"]+)"\s*;"#)
-            .expect("static versioned-only regex")
+        Regex::new(r#"version\s*=\s*"([^"]+)"\s*;"#).expect("static version regex")
     })
 }
 
-/// Parse `hackage-packages.nix`.
+fn sha256_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| {
+        Regex::new(r#"sha256\s*=\s*"([^"]+)"\s*;"#).expect("static sha256 regex")
+    })
+}
+
+/// Parse `hackage-packages.nix`, keyed by **attribute name**.
 ///
-/// Last definition wins, matching Nix attribute-set semantics.
+/// # Why the attribute name and not `pname` (#970)
+///
+/// nixpkgs exposes alternative versions of a package as separate attributes
+/// that share one `pname`:
+///
+/// ```text
+///   unordered-containers          -> version 0.2.20.1   <- what a build uses
+///   unordered-containers_0_2_21   -> version 0.2.21     <- pinned alternative
+/// ```
+///
+/// Keying on `pname` collapses the two, and any tie-break between them is a
+/// guess. The original parser took last-wins and therefore emitted 0.2.21 for
+/// a project whose build uses 0.2.20.1 — a version the build never sees,
+/// carrying a native SHA-256 belonging to the *other* tarball, and provenance
+/// asserting it came from the pinned revision. Measured at that revision:
+/// 19,429 attributes against 19,058 distinct `pname` values, so 371
+/// attributes share a name with another.
+///
+/// Attribute names are unique (19,429 of 19,429), and a `.cabal` file names
+/// the package, which is the unsuffixed attribute. So an exact attribute
+/// lookup selects the right one with no suffix heuristic: nothing asks for
+/// `unordered-containers_0_2_21`, and if something did, that is what it would
+/// get.
+///
+/// Keying on `pname` was a deliberate earlier choice, because the attribute
+/// name is unquoted unless the package name is not a valid Nix identifier and
+/// a parser keyed on `"name" =` finds almost nothing. That problem is real;
+/// the answer is to parse both spellings, which this does.
 pub(crate) fn parse(text: &str) -> PackageSet {
     let mut entries: HashMap<String, PackageSetEntry> = HashMap::new();
 
-    // Pass 1: every package that also carries a source hash.
-    for c in derivation_re().captures_iter(text) {
-        let (Some(name), Some(version), Some(sha)) = (c.get(1), c.get(2), c.get(4)) else {
-            continue;
+    let heads: Vec<(usize, String)> = attribute_re()
+        .captures_iter(text)
+        .filter_map(|c| {
+            let m = c.get(0)?;
+            let name = c
+                .get(1)
+                .or_else(|| c.get(2))
+                .map(|g| g.as_str().to_string())?;
+            Some((m.start(), name))
+        })
+        .collect();
+
+    for (i, (start, name)) in heads.iter().enumerate() {
+        // One attribute's body runs to the next attribute's head. Bounding it
+        // this way is what keeps one package's `version` from pairing with a
+        // later package's `sha256`.
+        let end = heads.get(i + 1).map(|(s, _)| *s).unwrap_or(text.len());
+        let body = &text[*start..end];
+
+        let Some(version) = version_re()
+            .captures(body)
+            .and_then(|c| c.get(1))
+            .map(|m| m.as_str().to_string())
+        else {
+            continue; // no version: nothing worth recording
         };
+        let source_hash = sha256_re()
+            .captures(body)
+            .and_then(|c| c.get(1))
+            // A hash that does not decode to 32 bytes yields None rather than
+            // a value that would be emitted in a field labelled SHA-256
+            // (Principle IX).
+            .and_then(|m| nix_base32::sha256_to_hex(m.as_str()));
+
         entries.insert(
-            name.as_str().to_string(),
+            name.clone(),
             PackageSetEntry {
-                version: version.as_str().to_string(),
-                // A hash that does not decode to 32 bytes yields None rather
-                // than a value that would be emitted in a field labelled
-                // SHA-256 (Principle IX).
-                source_hash: nix_base32::sha256_to_hex(sha.as_str()),
+                version,
+                source_hash,
             },
         );
-    }
-
-    // Pass 2: packages with a version but no hash nearby. A version alone is
-    // still worth having — it is the difference between design tier and
-    // source tier — so it is not discarded for want of a hash.
-    for c in versioned_only_re().captures_iter(text) {
-        let (Some(name), Some(version)) = (c.get(1), c.get(2)) else {
-            continue;
-        };
-        entries
-            .entry(name.as_str().to_string())
-            .or_insert_with(|| PackageSetEntry {
-                version: version.as_str().to_string(),
-                source_hash: None,
-            });
     }
 
     PackageSet { entries }
@@ -135,7 +175,7 @@ mod tests {
     use super::*;
 
     /// Shaped exactly like the real file, including the unquoted attribute
-    /// name that a `"name" =` parser would miss.
+    /// name that a `"name" =` parser would miss, and a quoted one.
     const SAMPLE: &str = r#"
   th-compat = callPackage (
     {
@@ -181,21 +221,102 @@ mod tests {
         );
     }
 
-    /// Nix attrset semantics: a later binding shadows an earlier one.
+    /// **#970.** nixpkgs exposes alternative versions as separate attributes
+    /// sharing one `pname`. Verbatim shape from nixpkgs `a799d3e3`, where the
+    /// default attribute is 0.2.20.1 and the pinned alternative is 0.2.21.
+    ///
+    /// A `pname`-keyed parser collapses these and must guess; last-wins picked
+    /// 0.2.21, which is a version the build never uses, carrying the *other*
+    /// tarball's hash. 371 attributes at that revision share a name.
+    const ALTERNATIVES: &str = r#"
+  unordered-containers = callPackage (
+    { mkDerivation }:
+    mkDerivation {
+      pname = "unordered-containers";
+      version = "0.2.20.1";
+      sha256 = "1zym9yia0is8wxfd6d1ldwvvghwxg4ww3y4lrxnyb2nk60ig29ly";
+    }
+  ) { };
+
+  unordered-containers_0_2_21 = callPackage (
+    { mkDerivation }:
+    mkDerivation {
+      pname = "unordered-containers";
+      version = "0.2.21";
+      sha256 = "091h1ifc1srv803rrkzc8mgvhpsnw6cn6r0mqqs44ss1shjaan6r";
+    }
+  ) { };
+"#;
+
     #[test]
-    fn m926_last_definition_wins() {
-        let dup = r#"
-      mkDerivation { pname = "dup"; version = "1.0"; sha256 = "1zym9yia0is8wxfd6d1ldwvvghwxg4ww3y4lrxnyb2nk60ig29ly"; }
-      mkDerivation { pname = "dup"; version = "2.0"; sha256 = "091h1ifc1srv803rrkzc8mgvhpsnw6cn6r0mqqs44ss1shjaan6r"; }
-    "#;
-        assert_eq!(parse(dup).get("dup").unwrap().version, "2.0");
+    fn m970_the_default_attribute_wins_over_a_pinned_alternative() {
+        let ps = parse(ALTERNATIVES);
+        let e = ps.get("unordered-containers").unwrap();
+        assert_eq!(
+            e.version, "0.2.20.1",
+            "a .cabal naming `unordered-containers` must get the default \
+             attribute, not the pinned alternative that shares its pname"
+        );
+        // And the hash must be the default attribute's, not the other's.
+        assert_eq!(
+            e.source_hash.as_deref(),
+            Some("9e26f12230d38ae56dcf94f8c139799dc3b7376f3434d35ce74847a0a24fd5ff")
+        );
+    }
+
+    /// Both attributes survive, keyed separately. Order must not decide which
+    /// one an ordinary lookup returns.
+    #[test]
+    fn m970_both_attributes_are_retained_and_distinct() {
+        let ps = parse(ALTERNATIVES);
+        assert_eq!(ps.len(), 2);
+        assert_eq!(ps.get("unordered-containers_0_2_21").unwrap().version, "0.2.21");
+    }
+
+    /// The same two attributes with the alternative written FIRST must give
+    /// the same answer. Under `pname` keying with last-wins, reordering
+    /// flipped the result — which is what made the bug invisible to a fixture
+    /// author, who had no reason to write them in either order.
+    #[test]
+    fn m970_declaration_order_does_not_change_the_answer() {
+        const REVERSED: &str = r#"
+  unordered-containers_0_2_21 = callPackage (
+    { mkDerivation }:
+    mkDerivation {
+      pname = "unordered-containers";
+      version = "0.2.21";
+      sha256 = "091h1ifc1srv803rrkzc8mgvhpsnw6cn6r0mqqs44ss1shjaan6r";
+    }
+  ) { };
+
+  unordered-containers = callPackage (
+    { mkDerivation }:
+    mkDerivation {
+      pname = "unordered-containers";
+      version = "0.2.20.1";
+      sha256 = "1zym9yia0is8wxfd6d1ldwvvghwxg4ww3y4lrxnyb2nk60ig29ly";
+    }
+  ) { };
+"#;
+        assert_eq!(
+            parse(REVERSED).get("unordered-containers").unwrap().version,
+            "0.2.20.1"
+        );
+        assert_eq!(
+            parse(ALTERNATIVES).get("unordered-containers").unwrap().version,
+            parse(REVERSED).get("unordered-containers").unwrap().version
+        );
     }
 
     /// A version without a hash is still worth having: it is what moves a
     /// component from design tier to source tier.
     #[test]
     fn m926_version_without_hash_is_kept_with_no_hash() {
-        let no_hash = r#"mkDerivation { pname = "hashless"; version = "3.1"; }"#;
+        let no_hash = r#"
+  hashless = callPackage ({ mkDerivation }: mkDerivation {
+      pname = "hashless"; version = "3.1";
+  }) { };
+"#;
         let e = parse(no_hash).get("hashless").cloned().unwrap();
         assert_eq!(e.version, "3.1");
         assert_eq!(e.source_hash, None);
@@ -204,7 +325,11 @@ mod tests {
     /// A malformed hash must yield no hash, never a malformed one.
     #[test]
     fn m926_undecodable_hash_yields_no_hash_not_a_bad_one() {
-        let bad = r#"mkDerivation { pname = "bad"; version = "1.0"; sha256 = "not-valid-base32-eout"; }"#;
+        let bad = r#"
+  bad = callPackage ({ mkDerivation }: mkDerivation {
+      pname = "bad"; version = "1.0"; sha256 = "not-valid-base32-eout";
+  }) { };
+"#;
         let e = parse(bad).get("bad").cloned().unwrap();
         assert_eq!(e.version, "1.0");
         assert_eq!(e.source_hash, None);
