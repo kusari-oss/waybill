@@ -32,6 +32,11 @@ use crate::scan_fs::walk_registry::{
 use super::PackageDbEntry;
 use lockfile::FlakeLockDocument;
 
+/// Internal marker on an input the lockfile's root node declares directly,
+/// consumed by [`attach_inputs_to_projects`] and never emitted (filtered by
+/// `root_selector::is_internal_emission_key`).
+pub const ROOT_INPUT_KEY: &str = "waybill:nix-root-input";
+
 #[derive(Debug, Default)]
 pub(crate) struct NixDiscoveredPaths {
     pub(crate) flake_locks: Vec<PathBuf>,
@@ -87,6 +92,7 @@ fn emit_for_lockfile(path: &Path, doc: &FlakeLockDocument) -> Vec<PackageDbEntry
     // FR-004 — a `follows` alias names an existing pin. Collect the node keys
     // aliases resolve to so no second component is minted for one pin.
     let mut out: Vec<PackageDbEntry> = Vec::new();
+    let root_inputs = doc.root_input_keys();
 
     for (node_key, node, locked) in doc.emittable_nodes() {
         let Some(id) = identity::identify(node_key, locked) else {
@@ -138,6 +144,13 @@ fn emit_for_lockfile(path: &Path, doc: &FlakeLockDocument) -> Vec<PackageDbEntry
 
         if let Some(url) = id.source_url.as_deref() {
             extra.insert("waybill:source-url".to_string(), json!(url));
+        }
+
+        // FR-007 — which inputs the project itself declares is a fact of the
+        // lockfile's root node, so it is recorded here rather than inferred
+        // later from edge shape. Internal only; see `ROOT_INPUT_KEY`.
+        if root_inputs.contains(node_key) {
+            extra.insert(ROOT_INPUT_KEY.to_string(), json!(true));
         }
 
         // FR-008 — an input that declares its own inputs gets an edge to each,
@@ -256,9 +269,12 @@ pub(crate) fn finalize(paths: NixDiscoveredPaths) -> Vec<PackageDbEntry> {
 /// resolved by name with `from` set to the entry's own PURL, and the document
 /// root is chosen by the root selector at emit time.
 ///
-/// Only inputs that **nothing else depends on** are attached. An input declared
-/// by another input already has its edge from that declarer (FR-008), and
-/// re-parenting it to the project would misreport who asked for it.
+/// Exactly the inputs the lockfile's root node declares are attached, as
+/// recorded by the reader in [`ROOT_INPUT_KEY`]. This is read from the
+/// lockfile, not inferred from edge shape: an input the root declares AND
+/// another input reaches through `follows` (nixpkgs, almost always) is still a
+/// direct input of the project. An input only other inputs declare keeps its
+/// edge from that declarer alone (FR-008).
 ///
 /// The edge is emitted as `DependsOn` and rewritten to `BuildDependsOn` by
 /// `apply_lifecycle_scope_to_edges`, because every emitted input carries
@@ -269,23 +285,16 @@ pub(crate) fn attach_inputs_to_projects(
 ) {
     use waybill_common::resolution::{EnrichmentProvenance, Relationship, RelationshipType};
 
-    // Inputs that already have an inbound edge are spoken for.
-    let depended_on: std::collections::HashSet<&str> =
-        relationships.iter().map(|r| r.to.as_str()).collect();
-
     let flake_inputs: Vec<&waybill_common::resolution::ResolvedComponent> = components
         .iter()
         .filter(|c| c.source_type.as_deref() == Some("nix-flake-input"))
-        .filter(|c| !depended_on.contains(c.purl.as_str()))
+        .filter(|c| c.extra_annotations.get(ROOT_INPUT_KEY) == Some(&json!(true)))
         .collect();
     if flake_inputs.is_empty() {
         return;
     }
 
-    // A main module is what becomes the document root. Matching on the
-    // directory the lockfile governs keeps the #938 scoping rule: a flake in
-    // one directory speaks for that directory's project, not the whole tree.
-    let main_modules: Vec<(&str, &waybill_common::resolution::ResolvedComponent)> = components
+    let main_modules: Vec<(&Path, &waybill_common::resolution::ResolvedComponent)> = components
         .iter()
         .filter(|c| {
             c.source_type
@@ -297,7 +306,6 @@ pub(crate) fn attach_inputs_to_projects(
                 .source_file_paths
                 .first()
                 .and_then(|p| Path::new(p).parent())
-                .and_then(|d| d.to_str())
                 .map(|d| (d, c))
         })
         .collect();
@@ -307,45 +315,88 @@ pub(crate) fn attach_inputs_to_projects(
 
     let mut added = 0usize;
     for input in &flake_inputs {
-        let Some(flake_dir) = input
-            .evidence
-            .source_file_paths
-            .first()
-            .and_then(|p| Path::new(p).parent())
-            .and_then(|d| d.to_str())
-        else {
+        let Some(flake_path) = input.evidence.source_file_paths.first() else {
             continue;
         };
-        // Longest matching prefix: the project nearest the flake owns it.
-        let owner = main_modules
-            .iter()
-            .filter(|(dir, _)| dir.starts_with(flake_dir))
-            .max_by_key(|(dir, _)| dir.len());
-        let Some((_, main)) = owner else { continue };
-        if main.purl.as_str() == input.purl.as_str() {
+        let Some(flake_dir) = Path::new(flake_path).parent() else {
+            continue;
+        };
+        let owners = owners_of(flake_dir, &main_modules);
+        if owners.is_empty() {
+            tracing::debug!(
+                lockfile = %flake_path,
+                input = %input.purl.as_str(),
+                "nix: no single project owns this flake's directory; input left unattached"
+            );
             continue;
         }
-        relationships.push(Relationship {
-            from: main.purl.as_str().to_string(),
-            to: input.purl.as_str().to_string(),
-            relationship_type: RelationshipType::DependsOn,
-            provenance: EnrichmentProvenance {
-                source: input
-                    .evidence
-                    .source_file_paths
-                    .first()
-                    .cloned()
-                    .unwrap_or_default(),
-                data_type: "nix-flake-input".to_string(),
-            },
-        });
-        added += 1;
+        for main in owners {
+            if main.purl.as_str() == input.purl.as_str() {
+                continue;
+            }
+            relationships.push(Relationship {
+                from: main.purl.as_str().to_string(),
+                to: input.purl.as_str().to_string(),
+                relationship_type: RelationshipType::DependsOn,
+                provenance: EnrichmentProvenance {
+                    source: flake_path.clone(),
+                    data_type: "nix-flake-input".to_string(),
+                },
+            });
+            added += 1;
+        }
     }
     if added > 0 {
         tracing::info!(
             edges = added,
             "nix: attached flake inputs to the projects they build (FR-007, build-scoped)"
         );
+    }
+}
+
+/// The projects a flake in `flake_dir` belongs to (FR-011).
+///
+/// Every main module whose manifest sits in the flake's own directory — more
+/// than one when several ecosystems share it. Failing that, the nearest main
+/// module below it, but only when that is unambiguous: a root flake over
+/// several sibling packages does not belong to whichever one sorts first, and
+/// guessing would misattribute the input rather than leave it visibly orphaned.
+/// A project ABOVE the flake never owns it.
+///
+/// Components are compared as paths, not strings, so `/r/foo` is not taken to
+/// contain `/r/foobar`.
+fn owners_of<'a>(
+    flake_dir: &Path,
+    main_modules: &[(&Path, &'a waybill_common::resolution::ResolvedComponent)],
+) -> Vec<&'a waybill_common::resolution::ResolvedComponent> {
+    let same_dir: Vec<_> = main_modules
+        .iter()
+        .filter(|(dir, _)| *dir == flake_dir)
+        .map(|(_, c)| *c)
+        .collect();
+    if !same_dir.is_empty() {
+        return same_dir;
+    }
+    let below: Vec<(usize, &waybill_common::resolution::ResolvedComponent)> = main_modules
+        .iter()
+        .filter_map(|(dir, c)| {
+            dir.strip_prefix(flake_dir)
+                .ok()
+                .map(|rel| (rel.components().count(), *c))
+        })
+        .collect();
+    let Some(nearest) = below.iter().map(|(depth, _)| *depth).min() else {
+        return Vec::new();
+    };
+    let at_nearest: Vec<_> = below
+        .iter()
+        .filter(|(depth, _)| *depth == nearest)
+        .map(|(_, c)| *c)
+        .collect();
+    if at_nearest.len() == 1 {
+        at_nearest
+    } else {
+        Vec::new()
     }
 }
 
@@ -577,12 +628,24 @@ mod tests {
         }
     }
 
+    /// A flake input as the reader emits it for a root-declared input.
+    fn root_input(mut c: waybill_common::resolution::ResolvedComponent) -> waybill_common::resolution::ResolvedComponent {
+        c.extra_annotations.insert(ROOT_INPUT_KEY.to_string(), json!(true));
+        c
+    }
+
+    fn edges(rels: &[waybill_common::resolution::Relationship]) -> Vec<(String, String)> {
+        let mut v: Vec<_> = rels.iter().map(|r| (r.from.clone(), r.to.clone())).collect();
+        v.sort();
+        v
+    }
+
     /// FR-007 — a root-declared input attaches to the project that builds it.
     #[test]
     fn a_root_declared_input_attaches_to_the_projects_main_module() {
         let components = vec![
             rc("pkg:hackage/proj@1.0", "hackage-main-module", "/r/proj.cabal"),
-            rc("pkg:github/o/nixpkgs@abc", "nix-flake-input", "/r/flake.lock"),
+            root_input(rc("pkg:github/o/nixpkgs@abc", "nix-flake-input", "/r/flake.lock")),
         ];
         let mut rels = Vec::new();
         attach_inputs_to_projects(&components, &mut rels);
@@ -591,18 +654,38 @@ mod tests {
         assert_eq!(rels[0].to, "pkg:github/o/nixpkgs@abc");
     }
 
-    /// FR-008 — an input another input already declares is NOT re-parented.
+    /// FR-008 — an input only another input declares is NOT re-parented.
     #[test]
     fn a_transitively_declared_input_is_not_attached_to_the_project() {
+        let components = vec![
+            rc("pkg:hackage/proj@1.0", "hackage-main-module", "/r/proj.cabal"),
+            root_input(rc("pkg:github/o/parent@aaa", "nix-flake-input", "/r/flake.lock")),
+            rc("pkg:github/o/child@bbb", "nix-flake-input", "/r/flake.lock"),
+        ];
+        let mut rels = Vec::new();
+        attach_inputs_to_projects(&components, &mut rels);
+        assert_eq!(
+            edges(&rels),
+            vec![("pkg:hackage/proj@1.0".to_string(), "pkg:github/o/parent@aaa".to_string())],
+            "the child is declared by its parent input, not the root (FR-008)"
+        );
+    }
+
+    /// FR-007 — the slack-web shape. The root declares nixpkgs AND another input
+    /// reaches it through `follows`. It is still the project's own input; an
+    /// earlier version attached only inputs nothing else pointed at, and
+    /// dropped this edge on every flake whose inputs follow the root's nixpkgs.
+    #[test]
+    fn a_root_input_that_is_also_followed_still_attaches_to_the_project() {
         use waybill_common::resolution::{EnrichmentProvenance, Relationship, RelationshipType};
         let components = vec![
             rc("pkg:hackage/proj@1.0", "hackage-main-module", "/r/proj.cabal"),
-            rc("pkg:github/o/parent@aaa", "nix-flake-input", "/r/flake.lock"),
-            rc("pkg:github/o/child@bbb", "nix-flake-input", "/r/flake.lock"),
+            root_input(rc("pkg:github/o/hooks@aaa", "nix-flake-input", "/r/flake.lock")),
+            root_input(rc("pkg:github/o/nixpkgs@bbb", "nix-flake-input", "/r/flake.lock")),
         ];
         let mut rels = vec![Relationship {
-            from: "pkg:github/o/parent@aaa".to_string(),
-            to: "pkg:github/o/child@bbb".to_string(),
+            from: "pkg:github/o/hooks@aaa".to_string(),
+            to: "pkg:github/o/nixpkgs@bbb".to_string(),
             relationship_type: RelationshipType::DependsOn,
             provenance: EnrichmentProvenance {
                 source: "/r/flake.lock".to_string(),
@@ -610,13 +693,31 @@ mod tests {
             },
         }];
         attach_inputs_to_projects(&components, &mut rels);
-        let added: Vec<_> = rels.iter().filter(|r| r.from.starts_with("pkg:hackage/")).collect();
-        assert_eq!(
-            added.len(), 1,
-            "only the input nothing else depends on attaches to the project; the \
-             child already has its edge from its declarer (FR-008). got {added:?}"
+        assert!(
+            edges(&rels).contains(&(
+                "pkg:hackage/proj@1.0".to_string(),
+                "pkg:github/o/nixpkgs@bbb".to_string()
+            )),
+            "nixpkgs is root-declared; the follows edge from hooks does not make it \
+             hooks' input instead of the project's. got {rels:?}"
         );
-        assert_eq!(added[0].to, "pkg:github/o/parent@aaa");
+    }
+
+    /// The reader marks exactly the root's inputs, with follows resolved.
+    #[test]
+    fn only_root_declared_inputs_carry_the_marker() {
+        let doc = parse_flake_lock_str(REAL_FOLLOWS_AND_NESTED).unwrap();
+        let marked: Vec<String> = emit_for_lockfile(Path::new("/x/flake.lock"), &doc)
+            .into_iter()
+            .filter(|e| e.extra_annotations.get(ROOT_INPUT_KEY) == Some(&json!(true)))
+            .map(|e| e.name)
+            .collect();
+        assert_eq!(marked, vec!["flake-parts".to_string(), "nixpkgs".to_string()]);
+    }
+
+    #[test]
+    fn the_marker_is_never_emitted() {
+        assert!(crate::generate::root_selector::is_internal_emission_key(ROOT_INPUT_KEY));
     }
 
     /// FR-011 — a flake in one directory does not attach to another directory's
@@ -626,7 +727,7 @@ mod tests {
         let components = vec![
             rc("pkg:hackage/outer@1.0", "hackage-main-module", "/r/outer.cabal"),
             rc("pkg:hackage/inner@2.0", "hackage-main-module", "/r/sub/inner.cabal"),
-            rc("pkg:github/o/dep@abc", "nix-flake-input", "/r/sub/flake.lock"),
+            root_input(rc("pkg:github/o/dep@abc", "nix-flake-input", "/r/sub/flake.lock")),
         ];
         let mut rels = Vec::new();
         attach_inputs_to_projects(&components, &mut rels);
@@ -635,6 +736,74 @@ mod tests {
             rels[0].from, "pkg:hackage/inner@2.0",
             "the flake in /r/sub belongs to the project in /r/sub, not the outer one"
         );
+    }
+
+    /// The moat shape: a root flake beside the root project, with a nested
+    /// example project. The flake is the root project's. An earlier version
+    /// took the longest matching directory and gave it to the example.
+    #[test]
+    fn a_root_flake_belongs_to_the_root_project_not_a_nested_one() {
+        let components = vec![
+            rc("pkg:hackage/moat@0.1", "hackage-main-module", "/r/moat.cabal"),
+            rc("pkg:hackage/readme@0.1", "hackage-main-module", "/r/examples/readme/readme.cabal"),
+            root_input(rc("pkg:github/o/nixpkgs@abc", "nix-flake-input", "/r/flake.lock")),
+        ];
+        let mut rels = Vec::new();
+        attach_inputs_to_projects(&components, &mut rels);
+        assert_eq!(
+            edges(&rels),
+            vec![("pkg:hackage/moat@0.1".to_string(), "pkg:github/o/nixpkgs@abc".to_string())]
+        );
+    }
+
+    /// With no project beside the flake, the single nearest one below it owns
+    /// it; siblings at the same depth are ambiguous and own nothing.
+    #[test]
+    fn with_no_project_beside_the_flake_only_an_unambiguous_nearest_one_owns_it() {
+        let single = vec![
+            rc("pkg:hackage/a@1", "hackage-main-module", "/r/pkgs/a/a.cabal"),
+            rc("pkg:hackage/deep@1", "hackage-main-module", "/r/pkgs/a/x/deep.cabal"),
+            root_input(rc("pkg:github/o/nixpkgs@abc", "nix-flake-input", "/r/flake.lock")),
+        ];
+        let mut rels = Vec::new();
+        attach_inputs_to_projects(&single, &mut rels);
+        assert_eq!(
+            edges(&rels),
+            vec![("pkg:hackage/a@1".to_string(), "pkg:github/o/nixpkgs@abc".to_string())]
+        );
+
+        let siblings = vec![
+            rc("pkg:hackage/a@1", "hackage-main-module", "/r/pkgs/a/a.cabal"),
+            rc("pkg:hackage/b@1", "hackage-main-module", "/r/pkgs/b/b.cabal"),
+            root_input(rc("pkg:github/o/nixpkgs@abc", "nix-flake-input", "/r/flake.lock")),
+        ];
+        let mut rels = Vec::new();
+        attach_inputs_to_projects(&siblings, &mut rels);
+        assert!(rels.is_empty(), "two equally near projects: guessing would misattribute. got {rels:?}");
+    }
+
+    /// Directories compare as paths: `/r/foo` does not contain `/r/foobar`.
+    #[test]
+    fn directory_matching_is_by_path_component_not_string_prefix() {
+        let components = vec![
+            rc("pkg:hackage/other@1", "hackage-main-module", "/r/foobar/other.cabal"),
+            root_input(rc("pkg:github/o/nixpkgs@abc", "nix-flake-input", "/r/foo/flake.lock")),
+        ];
+        let mut rels = Vec::new();
+        attach_inputs_to_projects(&components, &mut rels);
+        assert!(rels.is_empty(), "got {rels:?}");
+    }
+
+    /// A project above the flake never owns it.
+    #[test]
+    fn a_project_above_the_flake_does_not_own_it() {
+        let components = vec![
+            rc("pkg:hackage/outer@1", "hackage-main-module", "/r/outer.cabal"),
+            root_input(rc("pkg:github/o/nixpkgs@abc", "nix-flake-input", "/r/sub/flake.lock")),
+        ];
+        let mut rels = Vec::new();
+        attach_inputs_to_projects(&components, &mut rels);
+        assert!(rels.is_empty(), "got {rels:?}");
     }
 
     /// FR-007a — the edge must be build-scoped once the scope rewrite runs.
