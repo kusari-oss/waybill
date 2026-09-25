@@ -384,9 +384,12 @@ pub fn build_metadata(
     // can detect degraded PURL output without parsing the scanner log.
     // Omitted entirely when the list is empty (clean scan).
     if !os_release_missing_fields.is_empty() {
+        // #992 (C22): JSON-array-in-string, the shape every other
+        // list-valued property uses (see `waybill:workspaces-detected`
+        // below). Was `join(",")`, which no SPDX emitter matched.
         properties.push(json!({
             "name": "waybill:os-release-missing-fields",
-            "value": os_release_missing_fields.join(","),
+            "value": serde_json::to_string(&os_release_missing_fields).unwrap_or_default(),
         }));
     }
 
@@ -447,13 +450,17 @@ pub fn build_metadata(
         "name": "waybill:trace-integrity-events-dropped",
         "value": integrity.events_dropped.to_string(),
     }));
+    // #993 (C23): emit the failed probe NAMES, not a count. The
+    // entries look like `libssl.so:SSL_write`; a count cannot be
+    // un-lost by a consumer. JSON-array-in-string per the shared
+    // convention, so the value is literally equal to the SPDX twins.
     properties.push(json!({
         "name": "waybill:trace-integrity-uprobe-attach-failures",
-        "value": integrity.uprobe_attach_failures.len().to_string(),
+        "value": serde_json::to_string(&integrity.uprobe_attach_failures).unwrap_or_default(),
     }));
     properties.push(json!({
         "name": "waybill:trace-integrity-kprobe-attach-failures",
-        "value": integrity.kprobe_attach_failures.len().to_string(),
+        "value": serde_json::to_string(&integrity.kprobe_attach_failures).unwrap_or_default(),
     }));
 
     // Milestone 210 — document-scope compiler-pipeline transparency
@@ -1612,6 +1619,59 @@ pub fn build_user_annotations(
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
     use super::*;
+
+    /// #993 (C23): the attach-failures subkeys must carry the failed
+    /// probe NAMES as JSON-array-in-string, not a count. A count is
+    /// information a consumer cannot recover. The empty case is
+    /// symmetric across formats and already covered by the parity
+    /// goldens; this locks the NON-EMPTY case, which no fixture
+    /// exercises because the corpus is scan-mode.
+    #[test]
+    fn trace_integrity_attach_failures_carry_names_not_counts() {
+        let integ = TraceIntegrity {
+            uprobe_attach_failures: vec!["libssl.so:SSL_write".to_string()],
+            kprobe_attach_failures: vec!["sys_connect".to_string(), "sys_accept".to_string()],
+            ..TraceIntegrity::default()
+        };
+        let meta = build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &integ, None, None, &[], &RootComponentOverride::default(), &waybill::binding::user_metadata::UserMetadata::default(), None, None, None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(), None, None, None, 0, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None);
+        let prop = |name: &str| -> String {
+            meta["properties"]
+                .as_array()
+                .expect("properties array")
+                .iter()
+                .find(|p| p["name"] == name)
+                .unwrap_or_else(|| panic!("missing property {name}"))["value"]
+                .as_str()
+                .expect("property value is a string")
+                .to_string()
+        };
+        assert_eq!(
+            prop("waybill:trace-integrity-uprobe-attach-failures"),
+            r#"["libssl.so:SSL_write"]"#,
+        );
+        assert_eq!(
+            prop("waybill:trace-integrity-kprobe-attach-failures"),
+            r#"["sys_connect","sys_accept"]"#,
+        );
+    }
+
+    /// #992 (C22): JSON-array-in-string, matching the SPDX twins and
+    /// the shared convention for list-valued properties.
+    #[test]
+    fn os_release_missing_fields_is_json_array_in_string() {
+        let integ = TraceIntegrity::default();
+        let meta = build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &["ID".to_string(), "VERSION_ID".to_string()], &integ, None, None, &[], &RootComponentOverride::default(), &waybill::binding::user_metadata::UserMetadata::default(), None, None, None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(), None, None, None, 0, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None);
+        let value = meta["properties"]
+            .as_array()
+            .expect("properties array")
+            .iter()
+            .find(|p| p["name"] == "waybill:os-release-missing-fields")
+            .expect("C22 property present")["value"]
+            .as_str()
+            .expect("string value")
+            .to_string();
+        assert_eq!(value, r#"["ID","VERSION_ID"]"#);
+    }
 
     #[test]
     fn metadata_has_required_fields() {

@@ -636,16 +636,15 @@ pub fn annotate_document(
         }
     }
 
-    // C22 os-release-missing-fields — CDX emits as
-    // comma-joined-with-trailing-empty shape when empty; our JSON
-    // value keeps the list-of-strings shape, skipped entirely when
+    // C22 os-release-missing-fields — #992: JSON-array-in-string, the
+    // shape every other list-valued annotation uses, so the value is
+    // literally equal to the CDX twin. Was a bare JSON array here
+    // against a comma-joined string in CDX. Skipped entirely when
     // empty (skip_serializing_if-style).
     if !artifacts.os_release_missing_fields.is_empty() {
-        push(
-            &mut out,
-            "waybill:os-release-missing-fields",
-            json!(artifacts.os_release_missing_fields),
-        );
+        let value =
+            serde_json::to_string(&artifacts.os_release_missing_fields).unwrap_or_default();
+        push(&mut out, "waybill:os-release-missing-fields", json!(value));
     }
 
     // Milestone 113 FR-014 / Constitution Principle X: user-supplied
@@ -1094,17 +1093,19 @@ fn push_trace_integrity(
         "waybill:trace-integrity-events-dropped",
         json!(integrity.events_dropped),
     ));
+    // #993 (C23): JSON-array-in-string so the value is literally equal
+    // to the CDX twin, which now also carries the names.
     out.push(build_annotation(
         annotator,
         date,
         "waybill:trace-integrity-uprobe-attach-failures",
-        json!(integrity.uprobe_attach_failures),
+        json!(serde_json::to_string(&integrity.uprobe_attach_failures).unwrap_or_default()),
     ));
     out.push(build_annotation(
         annotator,
         date,
         "waybill:trace-integrity-kprobe-attach-failures",
-        json!(integrity.kprobe_attach_failures),
+        json!(serde_json::to_string(&integrity.kprobe_attach_failures).unwrap_or_default()),
     ));
 }
 
@@ -1112,6 +1113,43 @@ fn push_trace_integrity(
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
     use super::*;
+
+        /// #993 (C23): SPDX 2.3 twin of the CDX test in
+    /// `cyclonedx/metadata.rs`. Both emitters must produce the SAME
+    /// JSON-array-in-string so `holistic_parity` can hold C23
+    /// `SymmetricEqual`. Locks the NON-EMPTY case; the parity goldens
+    /// are scan-mode and only ever carry empty lists.
+    #[test]
+    fn trace_integrity_attach_failures_carry_names_not_counts() {
+        let integ = TraceIntegrity {
+            uprobe_attach_failures: vec!["libssl.so:SSL_write".to_string()],
+            kprobe_attach_failures: vec!["sys_connect".to_string(), "sys_accept".to_string()],
+            ..TraceIntegrity::default()
+        };
+        let mut out = Vec::new();
+        push_trace_integrity(&mut out, "Tool: waybill", "2026-01-01T00:00:00Z", &integ);
+        let value_of = |field: &str| -> String {
+            let anno = out
+                .iter()
+                .find(|a| a.comment.contains(field))
+                .unwrap_or_else(|| panic!("missing annotation {field}"));
+            let parsed: MikebomAnnotationCommentV1 =
+                serde_json::from_str(&anno.comment).expect("envelope parses");
+            parsed
+                .value
+                .as_str()
+                .expect("envelope value is a string")
+                .to_string()
+        };
+        assert_eq!(
+            value_of("waybill:trace-integrity-uprobe-attach-failures"),
+            r#"["libssl.so:SSL_write"]"#,
+        );
+        assert_eq!(
+            value_of("waybill:trace-integrity-kprobe-attach-failures"),
+            r#"["sys_connect","sys_accept"]"#,
+        );
+    }
 
     #[test]
     fn envelope_serializes_schema_field_value_in_that_order() {

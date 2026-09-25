@@ -170,7 +170,7 @@ pub static EXTRACTORS: &[ParityExtractor] = &[
     // `value` (CDX 1.6 properties are stringly-typed). Both carry
     // the same datum; presence-only enforcement reflects the
     // shape gap.
-    ParityExtractor { row_id: "C22", label: "waybill:os-release-missing-fields", cdx: c22_cdx, spdx23: c22_spdx23, spdx3: c22_spdx3, directional: Directionality::PresenceOnly, order_sensitive: false },
+    ParityExtractor { row_id: "C22", label: "waybill:os-release-missing-fields", cdx: c22_cdx, spdx23: c22_spdx23, spdx3: c22_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
     ParityExtractor { row_id: "C23", label: "waybill:trace-integrity-*", cdx: c23_cdx, spdx23: c23_spdx23, spdx3: c23_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
     // Section C continued — milestone 023 ELF identity (CDX/SPDX
     // emitted via the extra_annotations bag in entry.rs::make_file_level_component;
