@@ -972,12 +972,21 @@ fn push_document_fields(
     );
 
     // E1 compositions
-    if !scan.complete_ecosystems.is_empty() {
+    // E1 compositions — #1001. Same condition and payload as the SPDX
+    // 2.3 twin; see `annotations.rs` for why `target_aggregate` cannot
+    // be reconstructed from `complete_ecosystems`.
+    if crate::generate::cyclonedx::compositions::has_complete_record(
+        scan.integrity,
+        scan.components,
+        scan.complete_ecosystems,
+    ) {
         push(
             out,
             "compositions",
             json!({
                 "complete_ecosystems": scan.complete_ecosystems,
+                "target_aggregate":
+                    crate::generate::cyclonedx::compositions::target_aggregate(scan.integrity),
             }),
         );
     }

@@ -369,6 +369,14 @@
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-H3NZVK53XHBW66N7YIBMQX5U/anno-QPI3JTWBOMYQZW7H",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"compositions\",\"value\":{\"complete_ecosystems\":[],\"target_aggregate\":\"incomplete_first_party_only\"}}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-H3NZVK53XHBW66N7YIBMQX5U",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-H3NZVK53XHBW66N7YIBMQX5U/anno-RNCIEZR34RLGQ4NM",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-H3NZVK53XHBW66N7YIBMQX5U/pkg-NDJKRQLKYSDRTD3Q",

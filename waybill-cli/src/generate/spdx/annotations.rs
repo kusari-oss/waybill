@@ -1013,17 +1013,29 @@ pub fn annotate_document(
     // "we didn't record it". Matches CDX's metadata-level shape.
     push_trace_integrity(&mut out, annotator, date, artifacts.integrity);
 
-    // E1 compositions — emit when any complete-ecosystem claim is
-    // present. The annotation's value is the `complete_ecosystems`
-    // list (simpler than duplicating the full CDX `compositions[]`
-    // shape; consumers can reconstruct the aggregate claim from
-    // membership).
-    if !artifacts.complete_ecosystems.is_empty() {
+    // E1 compositions — #1001. Fires on exactly the condition CDX uses
+    // to emit an `aggregate: "complete"` record, which is what row E1
+    // keys on. It used to fire only when `complete_ecosystems` was
+    // non-empty, so bazel and cmake carried compositions in CDX and
+    // nothing here, violating E1's own `PresenceOnly` contract.
+    //
+    // `target_aggregate` is carried too: it is derived from the trace,
+    // not from ecosystem membership, so an SPDX consumer previously had
+    // no way to recover it.
+    if crate::generate::cyclonedx::compositions::has_complete_record(
+        artifacts.integrity,
+        artifacts.components,
+        artifacts.complete_ecosystems,
+    ) {
         push(
             &mut out,
             "compositions",
             json!({
                 "complete_ecosystems": artifacts.complete_ecosystems,
+                "target_aggregate":
+                    crate::generate::cyclonedx::compositions::target_aggregate(
+                        artifacts.integrity,
+                    ),
             }),
         );
     }
