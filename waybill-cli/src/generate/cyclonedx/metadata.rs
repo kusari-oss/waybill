@@ -1313,6 +1313,23 @@ pub fn build_metadata(
                 "value": value_str,
             }));
         }
+        // #995 (C19): the root component's CPE overflow list. The
+        // `components[]` path emits this in builder.rs, but the root is
+        // assembled here and never got it, so a CDX consumer saw only
+        // `metadata.component.cpe` (the primary) while both SPDX
+        // versions carried every candidate for the same package.
+        // Alternate vendor spellings are the whole point of the field,
+        // and the root is the component a matcher cares most about.
+        // Same `> 1` condition and the same pipe-joined shape as
+        // builder.rs, so the root is consistent with `components[]`.
+        // Reconciling that shape with the SPDX array is deferred — see
+        // #995, which records why.
+        if c.cpes.len() > 1 {
+            comp_props.push(json!({
+                "name": "waybill:cpe-candidates",
+                "value": c.cpes.join(" | "),
+            }));
+        }
         metadata["component"]["properties"] = json!(comp_props);
 
         // Propagate the supplier so the parity Section A `cdx_supplier`

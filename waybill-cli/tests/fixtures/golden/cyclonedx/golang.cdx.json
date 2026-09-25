@@ -948,6 +948,10 @@
         {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
+        },
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:example.com\\/simple:example.com\\/simple:v0.0.0-unknown:*:*:*:*:*:*:* | cpe:2.3:a:example.com:example.com\\/simple:v0.0.0-unknown:*:*:*:*:*:*:*"
         }
       ],
       "purl": "pkg:golang/example.com/simple@v0.0.0-unknown",
