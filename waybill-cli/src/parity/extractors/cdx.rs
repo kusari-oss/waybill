@@ -441,32 +441,19 @@ cdx_anno!(c16_cdx, "waybill:confidence", component);
 cdx_anno!(c17_cdx, "waybill:raw-version", component);
 cdx_anno!(c18_cdx, "waybill:source-files", component);
 
-/// C19 cpe-candidates: CDX serializes the candidate list as a
-/// pipe-separated string per property (waybill convention,
-/// matching the CycloneDX `cpe` field's single-value cardinality);
-/// SPDX emits each candidate as its own annotation. Split the CDX
-/// pipe-string into atoms so the directional containment test
-/// (`CDX ⊆ SPDX`) compares apples-to-apples atomic CPEs.
-pub(super) fn c19_cdx(doc: &Value) -> BTreeSet<String> {
-    cdx_property_values(doc, "waybill:cpe-candidates", false)
-        .into_iter()
-        .flat_map(|raw| {
-            // `cdx_property_values` JSON-encodes the string ⇒ the
-            // raw entry is `"cpe1 | cpe2"` (quotes-wrapped). Strip
-            // the outer quotes before splitting on the pipe
-            // delimiter, then re-encode each atom via `to_string`
-            // so the form matches the SPDX side
-            // (`"cpe1"` / `"cpe2"` post-canonicalization).
-            let unquoted = raw.trim_matches('"');
-            unquoted
-                .split(" | ")
-                .map(str::trim)
-                .filter(|s| !s.is_empty())
-                .map(|s| serde_json::to_string(s).unwrap_or_else(|_| s.to_string()))
-                .collect::<Vec<_>>()
-        })
-        .collect()
-}
+// C19 cpe-candidates. Since #995 the CDX side emits the candidate
+// list as JSON-array-in-string, which `canonicalize_atomic_values`
+// already parses and flattens into the same atoms the SPDX arrays
+// produce — so no bespoke handling is needed here.
+//
+// This previously split a `"cpe1 | cpe2"` pipe-string by hand. That
+// stopped being correct the moment the wire shape became an array:
+// `cdx_property_values` returns values ALREADY JSON-encoded, and
+// stripping the outer quotes then re-encoding added a second escaping
+// layer. Invisible for most CPEs, but Go vendor segments carry an
+// escaped slash (`cpe:2.3:a:github.com\\/davecgh`), so every golang
+// atom differed from its SPDX twin by one backslash.
+cdx_anno!(c19_cdx, "waybill:cpe-candidates", component);
 
 cdx_anno!(c20_cdx, "waybill:requirement-ranges", component);
 

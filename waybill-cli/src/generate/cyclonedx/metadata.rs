@@ -1324,10 +1324,13 @@ pub fn build_metadata(
         // builder.rs, so the root is consistent with `components[]`.
         // Reconciling that shape with the SPDX array is deferred — see
         // #995, which records why.
+        // #995 (C19): the root component's CPE overflow list.
+        // JSON-array-in-string, matching `components[]` in builder.rs
+        // and the convention #992 / #993 adopted.
         if c.cpes.len() > 1 {
             comp_props.push(json!({
                 "name": "waybill:cpe-candidates",
-                "value": c.cpes.join(" | "),
+                "value": serde_json::to_string(&c.cpes).unwrap_or_default(),
             }));
         }
         metadata["component"]["properties"] = json!(comp_props);

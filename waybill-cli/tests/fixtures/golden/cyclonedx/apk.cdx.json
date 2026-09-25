@@ -22,7 +22,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:alpinelinux:busybox:1.36.1-r15:*:*:*:*:*:*:* | cpe:2.3:a:busybox:busybox:1.36.1-r15:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:alpinelinux:busybox:1.36.1-r15:*:*:*:*:*:*:*\",\"cpe:2.3:a:busybox:busybox:1.36.1-r15:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -65,7 +65,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:alpinelinux:musl:1.2.4_git20230717-r4:*:*:*:*:*:*:* | cpe:2.3:a:musl:musl:1.2.4_git20230717-r4:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:alpinelinux:musl:1.2.4_git20230717-r4:*:*:*:*:*:*:*\",\"cpe:2.3:a:musl:musl:1.2.4_git20230717-r4:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",

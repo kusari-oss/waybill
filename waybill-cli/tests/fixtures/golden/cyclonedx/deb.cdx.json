@@ -22,7 +22,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:debian:libc6:2.36-9:*:*:*:*:*:*:* | cpe:2.3:a:libc6:libc6:2.36-9:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:debian:libc6:2.36-9:*:*:*:*:*:*:*\",\"cpe:2.3:a:libc6:libc6:2.36-9:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -65,7 +65,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:debian:zlib1g:1.2.13.dfsg-1:*:*:*:*:*:*:* | cpe:2.3:a:zlib1g:zlib1g:1.2.13.dfsg-1:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:debian:zlib1g:1.2.13.dfsg-1:*:*:*:*:*:*:*\",\"cpe:2.3:a:zlib1g:zlib1g:1.2.13.dfsg-1:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",

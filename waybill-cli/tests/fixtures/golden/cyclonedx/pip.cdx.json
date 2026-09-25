@@ -36,7 +36,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:certifi:certifi:2023.7.22:*:*:*:*:*:*:* | cpe:2.3:a:python-certifi:certifi:2023.7.22:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:certifi:certifi:2023.7.22:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-certifi:certifi:2023.7.22:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -93,7 +93,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:charset-normalizer:charset-normalizer:3.3.2:*:*:*:*:*:*:* | cpe:2.3:a:python-charset-normalizer:charset-normalizer:3.3.2:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:charset-normalizer:charset-normalizer:3.3.2:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-charset-normalizer:charset-normalizer:3.3.2:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -150,7 +150,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:flask:flask:3.0.0:*:*:*:*:*:*:* | cpe:2.3:a:python-flask:flask:3.0.0:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:flask:flask:3.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-flask:flask:3.0.0:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -207,7 +207,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:idna:idna:3.6:*:*:*:*:*:*:* | cpe:2.3:a:python-idna:idna:3.6:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:idna:idna:3.6:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-idna:idna:3.6:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -264,7 +264,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:jinja2:jinja2:3.1.2:*:*:*:*:*:*:* | cpe:2.3:a:python-jinja2:jinja2:3.1.2:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:jinja2:jinja2:3.1.2:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-jinja2:jinja2:3.1.2:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -321,7 +321,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:requests:requests:2.31.0:*:*:*:*:*:*:* | cpe:2.3:a:python-requests:requests:2.31.0:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:requests:requests:2.31.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-requests:requests:2.31.0:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -378,7 +378,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:urllib3:urllib3:2.0.7:*:*:*:*:*:*:* | cpe:2.3:a:python-urllib3:urllib3:2.0.7:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:urllib3:urllib3:2.0.7:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-urllib3:urllib3:2.0.7:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",

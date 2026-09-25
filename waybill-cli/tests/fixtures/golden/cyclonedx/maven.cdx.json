@@ -28,7 +28,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:com.google.guava:guava:32.1.3-jre:*:*:*:*:*:*:* | cpe:2.3:a:guava:guava:32.1.3-jre:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:com.google.guava:guava:32.1.3-jre:*:*:*:*:*:*:*\",\"cpe:2.3:a:guava:guava:32.1.3-jre:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -135,7 +135,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:org.apache.commons:commons-lang3:3.14.0:*:*:*:*:*:*:* | cpe:2.3:a:commons:commons-lang3:3.14.0:*:*:*:*:*:*:* | cpe:2.3:a:commons-lang3:commons-lang3:3.14.0:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:org.apache.commons:commons-lang3:3.14.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:commons:commons-lang3:3.14.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:commons-lang3:commons-lang3:3.14.0:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -242,7 +242,7 @@
         },
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:com.example:demo-app:1.0.0:*:*:*:*:*:*:* | cpe:2.3:a:example:demo-app:1.0.0:*:*:*:*:*:*:* | cpe:2.3:a:demo-app:demo-app:1.0.0:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:com.example:demo-app:1.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:example:demo-app:1.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:demo-app:demo-app:1.0.0:*:*:*:*:*:*:*\"]"
         }
       ],
       "purl": "pkg:maven/com.example/demo-app@1.0.0",
