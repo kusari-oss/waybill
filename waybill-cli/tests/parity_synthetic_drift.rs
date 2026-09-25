@@ -148,74 +148,141 @@ fn drift_in_symmetric_equal_row_is_caught() {
     println!("synthesized drift detected — CDX-only: {only_in_cdx:?}, SPDX2.3-only: {only_in_spdx23:?}");
 }
 
+/// Every committed golden triple, as `(ecosystem, cdx, spdx23, spdx3)`.
+///
+/// #965: this used to pin the **cargo** triple alone. Cargo's goldens
+/// carry zero document-scope file-inventory counters, and a
+/// `SymmetricEqual` row absent from all three formats is trivially
+/// symmetric — so an asymmetry in that whole class passed by agreeing
+/// about nothing. C93/C94/C95 reached CycloneDX only for three
+/// milestones and this gate never saw it.
+fn golden_triples() -> Vec<(String, serde_json::Value, serde_json::Value, serde_json::Value)> {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/golden");
+    let read = |p: &std::path::Path| -> serde_json::Value {
+        serde_json::from_str(
+            &std::fs::read_to_string(p).unwrap_or_else(|e| panic!("read {}: {e}", p.display())),
+        )
+        .unwrap_or_else(|e| panic!("parse {}: {e}", p.display()))
+    };
+    let mut names: Vec<String> = std::fs::read_dir(root.join("cyclonedx"))
+        .expect("cyclonedx golden dir")
+        .filter_map(|e| e.ok())
+        .filter_map(|e| e.file_name().into_string().ok())
+        // `*.cdx.actual.json` are gitignored diagnostics written on a
+        // failing run, not goldens.
+        .filter(|n| n.ends_with(".cdx.json") && !n.contains(".actual."))
+        .map(|n| n.trim_end_matches(".cdx.json").to_string())
+        .collect();
+    names.sort();
+    let mut out = Vec::new();
+    for n in names {
+        let cdx = root.join("cyclonedx").join(format!("{n}.cdx.json"));
+        let s23 = root.join("spdx-2.3").join(format!("{n}.spdx.json"));
+        let s3 = root.join("spdx-3").join(format!("{n}.spdx3.json"));
+        if !s23.exists() || !s3.exists() {
+            continue;
+        }
+        out.push((n, read(&cdx), read(&s23), read(&s3)));
+    }
+    assert!(
+        out.len() >= 10,
+        "expected the full golden corpus, found {} triples — a shrinking \
+         corpus silently weakens this gate",
+        out.len()
+    );
+    out
+}
+
 #[test]
 fn no_drift_in_real_fixture_passes_post_071_check() {
     // Sanity inverse: the byte-identity goldens (which are the
     // production output of `waybill sbom scan`) MUST pass the
-    // post-071 invariant for every row. If this test ever fails,
-    // there's a real cross-format parity bug in waybill — the same
-    // assertion the integration test `holistic_parity.rs` makes,
+    // post-071 invariant for every row, in EVERY ecosystem. If this
+    // test fails there is a real cross-format parity bug in waybill —
+    // the same assertion `holistic_parity.rs` makes from live scans,
     // restated against pinned goldens for fast smoke detection.
     let workspace_root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let golden_dir = workspace_root.join("tests/fixtures/golden");
-
-    let cdx_path = golden_dir.join("cyclonedx").join("cargo.cdx.json");
-    let spdx23_path = golden_dir.join("spdx-2.3").join("cargo.spdx.json");
-    let spdx3_path = golden_dir.join("spdx-3").join("cargo.spdx3.json");
-
-    let cdx: serde_json::Value =
-        serde_json::from_str(&std::fs::read_to_string(&cdx_path).expect("read cdx golden"))
-            .expect("parse cdx golden");
-    let spdx23: serde_json::Value =
-        serde_json::from_str(&std::fs::read_to_string(&spdx23_path).expect("read spdx2.3 golden"))
-            .expect("parse spdx2.3 golden");
-    let spdx3: serde_json::Value =
-        serde_json::from_str(&std::fs::read_to_string(&spdx3_path).expect("read spdx3 golden"))
-            .expect("parse spdx3 golden");
-
-    let mut violations: Vec<String> = Vec::new();
     let mapping_doc = workspace_root
         .parent()
         .expect("workspace parent")
         .join("docs/reference/sbom-format-mapping.md");
     let rows = catalog::parse_mapping_doc(&mapping_doc);
-    for row in rows.iter() {
-        let Some(extractor) = extractors::EXTRACTORS
-            .iter()
-            .find(|e| e.row_id == row.id)
-        else {
-            continue;
-        };
-        let cdx_set = (extractor.cdx)(&cdx);
-        let spdx23_set = (extractor.spdx23)(&spdx23);
-        let spdx3_set = (extractor.spdx3)(&spdx3);
-        let any_present =
-            !cdx_set.is_empty() || !spdx23_set.is_empty() || !spdx3_set.is_empty();
-        if !any_present {
-            continue;
-        }
-        let ok = match extractor.directional {
-            extractors::Directionality::SymmetricEqual => {
-                cdx_set == spdx23_set && spdx23_set == spdx3_set
+
+    let mut violations: Vec<(String, String)> = Vec::new();
+    for (eco, cdx, spdx23, spdx3) in golden_triples() {
+        for row in rows.iter() {
+            let Some(extractor) = extractors::EXTRACTORS.iter().find(|e| e.row_id == row.id) else {
+                continue;
+            };
+            let cdx_set = (extractor.cdx)(&cdx);
+            let spdx23_set = (extractor.spdx23)(&spdx23);
+            let spdx3_set = (extractor.spdx3)(&spdx3);
+            if cdx_set.is_empty() && spdx23_set.is_empty() && spdx3_set.is_empty() {
+                continue;
             }
-            extractors::Directionality::CdxSubsetOfSpdx => {
-                cdx_set.is_subset(&spdx23_set) && cdx_set.is_subset(&spdx3_set)
+            let ok = match extractor.directional {
+                extractors::Directionality::SymmetricEqual => {
+                    cdx_set == spdx23_set && spdx23_set == spdx3_set
+                }
+                extractors::Directionality::CdxSubsetOfSpdx => {
+                    cdx_set.is_subset(&spdx23_set) && cdx_set.is_subset(&spdx3_set)
+                }
+                extractors::Directionality::PresenceOnly => {
+                    !cdx_set.is_empty() && !spdx23_set.is_empty() && !spdx3_set.is_empty()
+                }
+                extractors::Directionality::CdxOnly => true,
+            };
+            if !ok {
+                violations.push((
+                    format!("{}:{}", eco, row.id),
+                    format!(
+                        "[{}] {} ({}) [{:?}] cdx={:?} spdx23={:?} spdx3={:?}",
+                        eco, row.id, row.label, extractor.directional, cdx_set, spdx23_set,
+                        spdx3_set,
+                    ),
+                ));
             }
-            extractors::Directionality::PresenceOnly => {
-                !cdx_set.is_empty() && !spdx23_set.is_empty() && !spdx3_set.is_empty()
-            }
-            extractors::Directionality::CdxOnly => true,
-        };
-        if !ok {
-            violations.push(format!(
-                "{} ({}) [{:?}] cdx={:?} spdx23={:?} spdx3={:?}",
-                row.id, row.label, extractor.directional, cdx_set, spdx23_set, spdx3_set,
-            ));
         }
     }
+    // #965: the allowlist must fail BOTH ways — an unlisted violation
+    // is a regression, and a listed entry that no longer violates means
+    // the defect was fixed and its line must go. Without the second
+    // half the file rots into permanent cover for whatever it names.
+    let known = known_gaps();
+    let seen: std::collections::BTreeSet<String> =
+        violations.iter().map(|(k, _)| k.clone()).collect();
+
+    let unlisted: Vec<&str> = violations
+        .iter()
+        .filter(|(k, _)| !known.contains(k))
+        .map(|(_, detail)| detail.as_str())
+        .collect();
+    let stale: Vec<&String> = known.iter().filter(|k| !seen.contains(*k)).collect();
+
     assert!(
-        violations.is_empty(),
-        "post-071 parity-check found violations on cargo golden:\n{}",
-        violations.join("\n"),
+        unlisted.is_empty(),
+        "post-071 parity-check found {} violation(s) across the golden corpus \
+         that are not in tests/parity-golden-known-gaps.txt:\n{}",
+        unlisted.len(),
+        unlisted.join("\n"),
     );
+    assert!(
+        stale.is_empty(),
+        "tests/parity-golden-known-gaps.txt lists {} entr(ies) that no longer \
+         violate — the defect is fixed, so delete the line(s): {:?}",
+        stale.len(),
+        stale,
+    );
+}
+
+/// The committed known-gap list, as `<ecosystem>:<row-id>` keys.
+fn known_gaps() -> std::collections::BTreeSet<String> {
+    let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests/parity-golden-known-gaps.txt");
+    std::fs::read_to_string(&path)
+        .unwrap_or_else(|e| panic!("read {}: {e}", path.display()))
+        .lines()
+        .map(|l| l.split('#').next().unwrap_or("").trim().to_string())
+        .filter(|l| !l.is_empty())
+        .collect()
 }

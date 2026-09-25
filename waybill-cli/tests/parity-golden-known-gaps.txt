@@ -1,0 +1,23 @@
+# Known cross-format parity gaps in the committed golden corpus.
+#
+# Milestone 965 (#965) widened `parity_synthetic_drift` from the single
+# pinned cargo triple to every golden triple. Cargo's goldens carry no
+# document-scope file-inventory counters, and a `SymmetricEqual` row
+# absent from all three formats is trivially symmetric — so an
+# asymmetry in that class passed by agreeing about nothing.
+#
+# Widening it surfaced the entries below. They are REAL defects, each
+# tracked, not shape niceties to be tolerated forever.
+#
+# THIS FILE MUST ONLY SHRINK. The test fails if a violation appears
+# that is not listed here, AND it fails if a listed entry no longer
+# violates — so fixing a defect without removing its line is caught,
+# and the list cannot quietly rot into permanent cover.
+#
+# Format: <ecosystem>:<row-id>   # <issue> <why>
+
+bazel:B1    # 1000 dev-scoped googletest edge emitted as a runtime DEPENDS_ON in SPDX
+bazel:B2    # 1000 same edge; CDX has the dev-scope edge, SPDX has none
+bazel:E1    # 1001 compositions reach CDX but not SPDX
+cmake:E1    # 1001 compositions reach CDX but not SPDX
+npm:A6      # 1002 file-tier package.json SHA-256 reaches SPDX 3 only
