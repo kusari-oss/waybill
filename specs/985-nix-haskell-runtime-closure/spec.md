@@ -152,8 +152,9 @@ scope without inspecting individual components.
   contain mutually recursive dependencies.
 - **A boot library inside the closure.** It carries no version and must not be
   traversed — its dependencies are a property of the compiler, not of the
-  package set. The existing union-across-candidate-compilers rule (FR-014a of
-  milestone 926) continues to decide what counts as boot.
+  package set. The existing union-across-candidate-compilers rule (**m926
+  FR-014a** — milestone 926's requirement, not this spec's) continues to decide
+  what counts as boot.
 - **A project with no `flake.lock`, or one pinning a moving reference.** The
   closure does not run; today's behaviour is unchanged.
 - **A very large closure.** The largest measured is 394 components from 162
@@ -215,8 +216,11 @@ scope without inspecting individual components.
 - **FR-013**: Two scans of one project at one revision MUST produce
   byte-identical documents.
 - **FR-014**: The document MUST record, at document scope, how many components
-  were declared, how many were added transitively, and how many names went
-  unresolved.
+  were declared, how many were added transitively, how many names went
+  unresolved, and how many dependency relations the walk traversed. The last of
+  these distinguishes "the closure found little because the project has few
+  dependencies" from "the closure found little because it stopped early" — two
+  states with identical component counts and different causes.
 - **FR-015**: A scan where the closure does not run — no lockfile, a moving
   reference, the feature disabled, or no Haskell dependencies — MUST produce
   output unchanged from before this feature.
@@ -304,9 +308,9 @@ recorded in issue #962 and reproduced by the probe committed with this feature.
 - Cycles exist in real package sets and must be handled, but are not frequent
   enough to need an optimised representation.
 - Document growth of 1.5–3.8× is acceptable to consumers **by default**
-  (clarified 2026-09-24). This is a substantial change in document size, and it
-  is why FR-016 requires an opt-out that does not also surrender
-  declared-dependency resolution. Consumers who cannot absorb the growth have a
+  (clarified 2026-09-24). On the largest measured project that is 162 Haskell
+  components becoming 394, and it is why FR-016 requires an opt-out that does
+  not also surrender declared-dependency resolution. Consumers who cannot absorb the growth have a
   one-flag route back to exactly the previous output (FR-017).
 - Milestone 926's retrieval, caching, offline behaviour, and boot-library rules
   are reused as-is. This feature extends that resolver rather than standing
