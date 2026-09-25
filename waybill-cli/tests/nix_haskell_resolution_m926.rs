@@ -648,6 +648,60 @@ fn m985_test_only_relations_do_not_enter_the_runtime_closure() {
     );
 }
 
+/// FR-003. The closure resolves offline from a hydrated cache.
+///
+/// Not hypothetical. Milestone 975 found `--offline` refusing a cache it
+/// already had — 0 of 97 resolved with every byte on disk — because the
+/// offline check sat above the cache read rather than inside it. The closure
+/// reads the same package set through the same retrieval path, so it must be
+/// shown to inherit the fix rather than assumed to.
+#[test]
+fn m985_the_closure_resolves_offline_from_a_hydrated_cache() {
+    let cache = seed_cache(&["9.6.x"]);
+    let d = scan(&fixture("resolvable"), Some(cache.path()), &["--offline"]);
+    let names: Vec<&str> = hackage(&d.cdx)
+        .iter()
+        .filter_map(|(c, _)| c["name"].as_str())
+        .collect();
+    assert!(
+        names.contains(&"waybill-fixture-mid"),
+        "a hydrated cache must serve the closure offline; nothing here needs \
+         the network. got {names:?}"
+    );
+    assert!(mentions(&d.cdx, "waybill:nixpkgs-haskell-closure"), "the closure ran");
+}
+
+/// FR-003 / Principle III. A PARTIAL cache must degrade, not half-resolve.
+///
+/// `boot_set` tolerates a missing compiler configuration, because a GHC series
+/// genuinely absent from nixpkgs must not abort the pass. An offline cache
+/// miss is the opposite situation, and tolerating it yields an EMPTY boot set
+/// — under which every boot library takes a version from the package set.
+///
+/// At closure scale that is worse than on the declared path: an empty boot set
+/// also means the walk descends THROUGH boot libraries, pulling in their
+/// nixpkgs dependency lists, which the build does not have. The whole pass
+/// degrades instead.
+#[test]
+fn m985_a_partial_cache_does_not_half_resolve_the_closure() {
+    // Package set present, NO configuration-ghc-*.nix.
+    let cache = seed_cache(&[]);
+    let d = scan(&fixture("resolvable"), Some(cache.path()), &["--offline"]);
+    assert!(
+        !mentions(&d.cdx, "waybill:nixpkgs-resolved-via"),
+        "a partial cache must resolve nothing at all, not a subset"
+    );
+    let names: Vec<&str> = hackage(&d.cdx)
+        .iter()
+        .filter_map(|(c, _)| c["name"].as_str())
+        .collect();
+    assert!(
+        !names.contains(&"waybill-fixture-nevervisited"),
+        "an empty boot set would let the walk descend THROUGH a boot library; \
+         got {names:?}"
+    );
+}
+
 /// US2 / FR-006a. **SC-003-adjacent universal**: every Haskell component,
 /// declared ones included.
 #[test]

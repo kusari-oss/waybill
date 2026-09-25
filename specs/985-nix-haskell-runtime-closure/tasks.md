@@ -64,8 +64,8 @@ restated per task:
 - [X] T014 [P] [US1] Add `m985_every_unresolvable_name_carries_a_reason` (FR-005, FR-005a, C-5, **SC-005**) — asserted over **every** versionless Haskell component, counting violations rather than checking one instance, since SC-005 is a universal.
 - [X] T015 [P] [US1] Add `m985_a_boot_library_in_the_closure_is_not_traversed` — its relations must not appear (FR-011, R5).
 - [X] T016 [P] [US1] Add `m985_each_package_appears_once` for a package reachable by two parents (FR-012, E2.2).
-- [ ] T016a [P] [US1] Add `m985_the_closure_resolves_offline_from_a_hydrated_cache` (FR-003) — seed the per-revision cache, scan with `--offline`, and assert the closure resolves. Mirrors `m975_offline_resolves_from_a_hydrated_cache`. **This gap is not hypothetical**: milestone 975 found `--offline` refusing a cache it already had, resolving 0 of 97 with every byte on disk. The closure inherits that retrieval path and must be shown to inherit the fix too.
-- [ ] T016b [P] [US1] Add `m985_a_partial_cache_does_not_half_resolve_the_closure` (FR-003, Principle III) — with the package set cached but a compiler configuration missing, the pass degrades rather than walking with an empty boot set. Milestone 975's `m975_a_partial_cache_degrades_rather_than_misclassifying_boot_libraries` is the declared-path twin; at closure scale an empty boot set would mis-resolve boot libraries transitively as well as directly.
+- [X] T016a [P] [US1] Add `m985_the_closure_resolves_offline_from_a_hydrated_cache` (FR-003) — seed the per-revision cache, scan with `--offline`, and assert the closure resolves. Mirrors `m975_offline_resolves_from_a_hydrated_cache`. **This gap is not hypothetical**: milestone 975 found `--offline` refusing a cache it already had, resolving 0 of 97 with every byte on disk. The closure inherits that retrieval path and must be shown to inherit the fix too.
+- [X] T016b [P] [US1] Add `m985_a_partial_cache_does_not_half_resolve_the_closure` (FR-003, Principle III) — with the package set cached but a compiler configuration missing, the pass degrades rather than walking with an empty boot set. Milestone 975's `m975_a_partial_cache_degrades_rather_than_misclassifying_boot_libraries` is the declared-path twin; at closure scale an empty boot set would mis-resolve boot libraries transitively as well as directly.
 
 ### Implementation for User Story 1
 
@@ -124,7 +124,7 @@ restated per task:
 - [X] T035 [US3] Implement `ClosureEdge` (E5) in `closure.rs`, one per resolved relation, `from` the actual parent (E5.2).
 - [X] T036 [US3] Convert closure edges into `Relationship` values in `waybill-cli/src/cli/scan_cmd.rs`, appending to the existing relationship set rather than replacing it.
 - [X] T037 [US3] Apply `apply_renames` (added in #981) to closure edges as well as declared ones, so a version assignment that rewrites a PURL rewrites the endpoints in the same step (C-4.3, E5.3).
-- [ ] T038 [US3] Verify against the per-PR integrity suite: `cargo +stable test -p waybill --test document_integrity` must stay green with the closure enabled.
+- [X] T038 [US3] Verify against the per-PR integrity suite: `cargo +stable test -p waybill --test document_integrity` must stay green with the closure enabled.
 
 **Checkpoint**: the graph is complete and connected at closure scale.
 
@@ -151,7 +151,7 @@ restated per task:
 - [X] T044 Add the `--no-nixpkgs-haskell-closure` flag (C-1) in `waybill-cli/src/cli/scan_cmd.rs`, defaulting to absent so the closure runs (FR-016). It MUST NOT disable milestone 926's declared-dependency resolution.
 - [X] T045 Add `m985_the_opt_out_returns_pre_feature_output` — with the flag set, output is byte-identical to the T001 baseline (FR-017, C-7, SC-009). **This task MUST complete before T046**; once the goldens are regenerated the comparison no longer exists.
 - [X] T046 Regenerate the public-corpus goldens through CI per `docs/development/refreshing-corpus-goldens.md`. Read every diff and attribute each category before accepting. Expect the Haskell target to change substantially and every other target not to change at all — a non-Haskell target moving is a finding, not noise.
-- [ ] T047 [P] Verify SC-002 against the oracle, not against waybill's own parse: run `measurements/nix_closure_oracle.sh` on a project with a populated cache and compare totals. Any disagreement must be explained — an unexplained off-by-one is how a wrong number enters a spec.
+- [X] T047 [P] Verify SC-002 against the oracle, not against waybill's own parse: run `measurements/nix_closure_oracle.sh` on a project with a populated cache and compare totals. Any disagreement must be explained — an unexplained off-by-one is how a wrong number enters a spec.
 - [X] T047a [P] Verify SC-001: count `pkg:hackage/*` components with the closure enabled and disabled on the corpus target, and assert the ratio is ≥ 1.5×. This is the feature's headline claim and nothing else checks it — T047 checks agreement with the oracle and T048 checks wall clock, neither of which would notice a closure that resolved only a handful. Record both counts in the PR.
 - [X] T048 [P] Verify SC-008: time the same scan with and without the closure, on the same machine with the package set local; the ratio must be ≤ 1.5×. Record both numbers in the PR.
 - [X] T049 [P] Mutation-test every assertion added in T011–T016, T022–T024, T031–T034, T039–T040 and T045: revert the behaviour each guards and confirm the test fails. Record which mutation was used for each in the PR.
