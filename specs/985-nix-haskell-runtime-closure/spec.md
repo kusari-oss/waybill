@@ -22,6 +22,14 @@ that asymmetry.
 The measurement issue #962 requires was completed before this spec was written;
 its numbers appear throughout and in Success Criteria.
 
+## Clarifications
+
+### Session 2026-09-24
+
+- Q: Does the closure run by default, or only when an operator asks for it? → A: Default ON, with the FR-016 flag to disable. Consistent with every other ecosystem's transitive resolution in waybill (Go, npm, pnpm, cargo) and with Principle VIII; the opt-out covers operators who need the smaller document.
+- Q: Is "declared vs transitively reached" derived from graph position, or recorded explicitly on each component? → A: Recorded explicitly on every Haskell component the resolver touched. Graph position is unreliable: CycloneDX's documented primary-dependency fallback (milestone 894) synthesizes a root edge to every unreferenced component when the root has no declared edges, under which every closure member would read as declared.
+- Q: For a name reached only transitively that cannot be resolved, is a versionless component emitted, or is it counted only in the document-scope summary? → A: Emitted as a versionless component carrying a reason, exactly as an unresolvable declared dependency is. The dependency is known to exist — it was read from the package set's own dependency list — so omitting it would leave the graph silently incomplete, and the edge pointing at it would have to be dropped (violating FR-008/I2) or dangle.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - A consumer sees what the project actually depends on (Priority: P1)
@@ -66,8 +74,9 @@ provenance would replace one incomplete document with a misleading one, and
 Principle X requires a document to say where its facts came from.
 
 **Independent Test**: scan a project and confirm every component the closure
-added is distinguishable from a declared one by a value in the document, without
-consulting the project's source.
+added is distinguishable from a declared one by an explicit value on the
+component itself, without consulting the project's source and without
+traversing the dependency graph.
 
 **Acceptance Scenarios**:
 
@@ -133,11 +142,12 @@ scope without inspecting individual components.
 
 ### Edge Cases
 
-- **A name in a dependency list that resolves to nothing.** Recorded with a
-  reason, never dropped silently and never guessed (Principle IX). This includes
-  names that exist only through a compiler-configuration alias, which issue #984
-  addresses; if that work is not present, such names surface here as unresolved
-  rather than as silent holes.
+- **A name in a dependency list that resolves to nothing.** Emitted as a
+  versionless component with a reason, never dropped silently and never guessed
+  (Principle IX). Measured frequency: 1–3 per project, predominantly names that
+  exist only through a compiler-configuration alias, which issue #984 addresses;
+  if that work is not present, such names surface here as unresolved rather than
+  as silent holes.
 - **A cycle among packages.** The walk must terminate. Hackage package sets
   contain mutually recursive dependencies.
 - **A boot library inside the closure.** It carries no version and must not be
@@ -170,9 +180,26 @@ scope without inspecting individual components.
   and source-hash treatment as a declared component resolved from the same
   revision.
 - **FR-005**: The system MUST NOT assert a version for any package it cannot
-  resolve. An unresolvable name is recorded with a reason.
-- **FR-006**: Every component MUST be distinguishable as declared or
-  transitively reached.
+  resolve. An unresolvable name MUST be emitted as a versionless component
+  carrying a reason — the same treatment an unresolvable **declared** dependency
+  receives, so there is one rule rather than two.
+- **FR-005a**: This applies to names reached transitively as well as declared
+  ones. Such a dependency is known to exist, having been read from the package
+  set's own dependency relations; omitting it would leave the graph silently
+  incomplete and would force the inbound edge to be dropped or left dangling,
+  violating FR-008.
+- **FR-006**: Every Haskell component the resolver touched MUST carry an
+  explicit record of whether it was declared by the project or reached only
+  transitively. The distinction MUST NOT be left to be inferred from the
+  component's position in the dependency graph: CycloneDX's primary-dependency
+  fallback (milestone 894) synthesizes a root edge to every unreferenced
+  component when the root has no declared edges, under which every closure
+  member would read as declared.
+- **FR-006a**: The record MUST be present on declared components as well as
+  transitive ones. Marking only transitive components would make absence
+  ambiguous — indistinguishable from a component the resolver never examined,
+  which is the failure mode the per-component reason requirement exists to
+  prevent.
 - **FR-007**: A component reachable both directly and transitively MUST be
   recorded as declared.
 - **FR-008**: Every component the closure adds MUST be reachable from the
@@ -193,9 +220,13 @@ scope without inspecting individual components.
 - **FR-015**: A scan where the closure does not run — no lockfile, a moving
   reference, the feature disabled, or no Haskell dependencies — MUST produce
   output unchanged from before this feature.
-- **FR-016**: The operator MUST be able to disable the closure independently of
-  the milestone-926 declared-dependency resolution, so the prior behaviour
-  remains reachable.
+- **FR-016**: The closure MUST run by default wherever milestone 926's
+  declared-dependency resolution runs. The operator MUST be able to disable it
+  independently of that resolution, so the prior behaviour remains reachable
+  without also giving up declared-dependency versions.
+- **FR-017**: Disabling the closure MUST produce output byte-identical to the
+  pre-feature output for the same project and revision. The opt-out is a return
+  to the previous behaviour, not a third mode.
 
 ### Key Entities
 
@@ -231,11 +262,17 @@ recorded in issue #962 and reproduced by the probe committed with this feature.
   the other.
 - **SC-004**: 100% of components added by the closure are reachable from the
   document root, and 0 dependency edges name an absent component.
-- **SC-005**: 100% of names that could not be resolved carry a reason.
+- **SC-005**: 100% of names that could not be resolved are emitted as
+  versionless components carrying a reason — none is silently omitted, and none
+  leaves a dangling or dropped edge.
 - **SC-006**: Two consecutive scans of one project at one revision produce
   byte-identical documents.
 - **SC-007**: A project with no Haskell dependencies, no lockfile, or a moving
   reference produces a document byte-identical to the pre-feature output.
+- **SC-009**: With the closure disabled, a Nix-built Haskell project produces a
+  document byte-identical to the pre-feature output — verified against the
+  committed corpus goldens for the existing Haskell target before they are
+  regenerated.
 - **SC-008**: For the largest measured project (162 declared, 394 in closure),
   scanning with the closure enabled takes no more than **1.5×** the wall clock
   of scanning the same project with it disabled, on the same machine with the
@@ -266,9 +303,11 @@ recorded in issue #962 and reproduced by the probe committed with this feature.
   varied, by 1–2 components, which the existing union rule already governs.
 - Cycles exist in real package sets and must be handled, but are not frequent
   enough to need an optimised representation.
-- Document growth of 1.5–3.8× is acceptable to consumers. This is a substantial
-  change in document size and is the main reason the feature is opt-outable
-  (FR-016).
+- Document growth of 1.5–3.8× is acceptable to consumers **by default**
+  (clarified 2026-09-24). This is a substantial change in document size, and it
+  is why FR-016 requires an opt-out that does not also surrender
+  declared-dependency resolution. Consumers who cannot absorb the growth have a
+  one-flag route back to exactly the previous output (FR-017).
 - Milestone 926's retrieval, caching, offline behaviour, and boot-library rules
   are reused as-is. This feature extends that resolver rather than standing
   alone.

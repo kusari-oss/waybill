@@ -70,6 +70,31 @@ normally arise here were settled by measurement before the spec was written
 - *Whether cycles are a real concern* — confirmed present, so termination is
   stated as FR-010 rather than assumed away.
 
+### Clarification session 2026-09-24
+
+Three questions asked and answered; all three changed requirements rather than
+confirming them, which is the test of whether a clarification round earned its
+place.
+
+1. **Default behaviour** → default ON with an opt-out. Turned an Assumption into
+   FR-016, added FR-017 (disabling returns byte-identical prior output) and
+   SC-009 (verified against the existing corpus goldens before they are
+   regenerated).
+
+2. **How declared-vs-transitive is carried** → explicit per-component record,
+   not graph position. Added FR-006a. The reason is concrete rather than
+   stylistic: CycloneDX's primary-dependency fallback (milestone 894)
+   synthesizes a root edge to every unreferenced component when the root has no
+   declared edges, under which every closure member would read as declared.
+   This was discovered empirically while building the per-PR integrity suite in
+   #982, not reasoned from the spec.
+
+3. **Unresolvable transitive names** → emitted as versionless components with a
+   reason, same as declared ones. Added FR-005a, tightened SC-005. Option B
+   (count only) was rejected because the inbound edge would then have to dangle
+   or be dropped, violating FR-008 / invariant I2 — the defect #980 was filed
+   for.
+
 ### Standing risk to carry into planning
 
 The largest measured closure is 394 components from 162 declared. Document
