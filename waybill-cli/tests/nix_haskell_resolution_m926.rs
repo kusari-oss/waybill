@@ -506,6 +506,339 @@ fn m975_offline_with_no_cache_still_degrades() {
     );
 }
 
+// ---------------------------------------------------------------------------
+// Milestone 985 (#962) — the transitive runtime closure
+// ---------------------------------------------------------------------------
+
+/// Every `pkg:hackage/*` component in a document, with its properties.
+fn hackage(d: &serde_json::Value) -> Vec<(&serde_json::Value, std::collections::BTreeMap<String, String>)> {
+    d["components"]
+        .as_array()
+        .map(|a| {
+            a.iter()
+                .filter(|c| c["purl"].as_str().is_some_and(|p| p.starts_with("pkg:hackage/")))
+                .map(|c| {
+                    let props = c["properties"]
+                        .as_array()
+                        .map(|ps| {
+                            ps.iter()
+                                .filter_map(|p| {
+                                    Some((
+                                        p["name"].as_str()?.to_string(),
+                                        p["value"].as_str()?.to_string(),
+                                    ))
+                                })
+                                .collect()
+                        })
+                        .unwrap_or_default();
+                    (c, props)
+                })
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+/// US1 / FR-001. A package the project never declares appears because
+/// something it declares depends on it.
+#[test]
+fn m985_a_transitive_dependency_is_emitted_with_a_version() {
+    let cache = seed_cache(&["9.6.x"]);
+    let d = scan(&fixture("resolvable"), Some(cache.path()), &[]);
+    let hs = hackage(&d.cdx);
+    let mid = hs
+        .iter()
+        .find(|(c, _)| c["name"].as_str() == Some("waybill-fixture-mid"))
+        .expect("a package reached only transitively must be emitted");
+    assert_eq!(mid.0["version"].as_str(), Some("0.5.0"));
+    assert_eq!(
+        mid.1.get("waybill:nixpkgs-component-origin").map(String::as_str),
+        Some("transitive")
+    );
+}
+
+/// US1 / FR-004. Same treatment as a declared dependency: a native hash, not
+/// a `waybill:` annotation.
+#[test]
+fn m985_a_transitive_dependency_carries_a_native_source_hash() {
+    let cache = seed_cache(&["9.6.x"]);
+    let d = scan(&fixture("resolvable"), Some(cache.path()), &[]);
+    let hs = hackage(&d.cdx);
+    let mid = hs
+        .iter()
+        .find(|(c, _)| c["name"].as_str() == Some("waybill-fixture-mid"))
+        .expect("mid");
+    let has_sha = mid.0["hashes"]
+        .as_array()
+        .is_some_and(|a| a.iter().any(|h| h["alg"].as_str() == Some("SHA-256")));
+    assert!(has_sha, "got {:?}", mid.0["hashes"]);
+}
+
+/// US1 / FR-010. The fixture contains a mutually recursive pair. If the walk
+/// did not terminate this test would hang rather than fail, which is why the
+/// assertion is on the result.
+#[test]
+fn m985_the_walk_terminates_on_a_cyclic_package_set() {
+    let cache = seed_cache(&["9.6.x"]);
+    let d = scan(&fixture("resolvable"), Some(cache.path()), &[]);
+    let names: Vec<&str> = hackage(&d.cdx)
+        .iter()
+        .filter_map(|(c, _)| c["name"].as_str())
+        .collect();
+    assert!(names.contains(&"waybill-fixture-cyc-a"));
+    assert!(names.contains(&"waybill-fixture-cyc-b"));
+}
+
+/// US1 / FR-005a. **SC-005 is a universal**, so this counts violations across
+/// the whole document rather than checking one instance.
+#[test]
+fn m985_every_unresolvable_name_carries_a_reason() {
+    let cache = seed_cache(&["9.6.x"]);
+    let d = scan(&fixture("resolvable"), Some(cache.path()), &[]);
+    let offenders: Vec<&str> = hackage(&d.cdx)
+        .iter()
+        .filter(|(c, p)| {
+            c["version"].as_str().unwrap_or("").is_empty()
+                && !p.contains_key("waybill:haskell-version-unresolved-reason")
+        })
+        .filter_map(|(c, _)| c["name"].as_str())
+        .collect();
+    assert!(offenders.is_empty(), "versionless with no reason: {offenders:?}");
+    // ...and the transitively-reached missing name is one of them.
+    let missing = hackage(&d.cdx)
+        .into_iter()
+        .find(|(c, _)| c["name"].as_str() == Some("waybill-fixture-missing"))
+        .expect("a name absent from the package set must still be emitted (FR-005a)");
+    assert_eq!(
+        missing.1.get("waybill:haskell-version-unresolved-reason").map(String::as_str),
+        Some("absent-from-package-set")
+    );
+}
+
+/// US1 / FR-011. A boot library is recorded but never walked THROUGH: its
+/// relations belong to the compiler, not to the nixpkgs entry. The fixture's
+/// `nevervisited` is reachable only that way.
+#[test]
+fn m985_the_closure_does_not_walk_through_a_boot_library() {
+    let cache = seed_cache(&["9.6.x"]);
+    let d = scan(&fixture("resolvable"), Some(cache.path()), &[]);
+    let names: Vec<&str> = hackage(&d.cdx)
+        .iter()
+        .filter_map(|(c, _)| c["name"].as_str())
+        .collect();
+    assert!(names.contains(&"waybill-fixture-boot"), "boot lib is still recorded");
+    assert!(
+        !names.contains(&"waybill-fixture-nevervisited"),
+        "reachable only through a boot library, so must be absent; got {names:?}"
+    );
+}
+
+/// US1 / FR-002. Test relations are out of scope, and the fixture reaches
+/// `testonly` ONLY through `testHaskellDepends`. Deferred to issue #985.
+#[test]
+fn m985_test_only_relations_do_not_enter_the_runtime_closure() {
+    let cache = seed_cache(&["9.6.x"]);
+    let d = scan(&fixture("resolvable"), Some(cache.path()), &[]);
+    let names: Vec<&str> = hackage(&d.cdx)
+        .iter()
+        .filter_map(|(c, _)| c["name"].as_str())
+        .collect();
+    assert!(
+        !names.contains(&"waybill-fixture-testonly"),
+        "a test-only relation must not appear in the RUNTIME closure; got {names:?}"
+    );
+}
+
+/// US2 / FR-006a. **SC-003-adjacent universal**: every Haskell component,
+/// declared ones included.
+#[test]
+fn m985_every_haskell_component_carries_an_origin() {
+    let cache = seed_cache(&["9.6.x"]);
+    let d = scan(&fixture("resolvable"), Some(cache.path()), &[]);
+    let missing: Vec<&str> = hackage(&d.cdx)
+        .iter()
+        .filter(|(_, p)| !p.contains_key("waybill:nixpkgs-component-origin"))
+        .filter_map(|(c, _)| c["name"].as_str())
+        .collect();
+    assert!(missing.is_empty(), "no origin on: {missing:?}");
+}
+
+/// US2 / FR-007. Reachable both ways is declared; the stronger claim wins.
+#[test]
+fn m985_a_declared_package_stays_declared() {
+    let cache = seed_cache(&["9.6.x"]);
+    let d = scan(&fixture("resolvable"), Some(cache.path()), &[]);
+    let liba = hackage(&d.cdx)
+        .into_iter()
+        .find(|(c, _)| c["name"].as_str() == Some("waybill-fixture-liba"))
+        .expect("liba");
+    assert_eq!(
+        liba.1.get("waybill:nixpkgs-component-origin").map(String::as_str),
+        Some("declared")
+    );
+}
+
+/// US2 / C-2. The origin reaches all three formats (`SymmetricEqual`).
+#[test]
+fn m985_origin_reaches_every_format() {
+    let cache = seed_cache(&["9.6.x"]);
+    let d = scan(&fixture("resolvable"), Some(cache.path()), &[]);
+    assert!(mentions(&d.cdx, "waybill:nixpkgs-component-origin"), "CDX");
+    assert!(mentions(&d.spdx2, "waybill:nixpkgs-component-origin"), "SPDX 2.3");
+    assert!(mentions(&d.spdx3, "waybill:nixpkgs-component-origin"), "SPDX 3");
+}
+
+/// US3 / FR-008, **SC-004**. Counts violations across the document.
+///
+/// This is milestone 980 at closure scale: there, version resolution rewrote
+/// component PURLs after the edges were built and disconnected everything it
+/// resolved. The closure multiplies both counts.
+#[test]
+fn m985_no_closure_edge_dangles() {
+    let cache = seed_cache(&["9.6.x"]);
+    let d = scan(&fixture("resolvable"), Some(cache.path()), &[]);
+    let mut refs: std::collections::HashSet<String> = d.cdx["components"]
+        .as_array()
+        .expect("components")
+        .iter()
+        .filter_map(|c| c["bom-ref"].as_str().map(str::to_string))
+        .collect();
+    if let Some(r) = d.cdx["metadata"]["component"]["bom-ref"].as_str() {
+        refs.insert(r.to_string());
+    }
+    let dangling: Vec<String> = d.cdx["dependencies"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .flat_map(|e| {
+            let from = e["ref"].as_str().unwrap_or("?").to_string();
+            e["dependsOn"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter_map(move |t| t.as_str().map(|t| (from.clone(), t.to_string())))
+                .collect::<Vec<_>>()
+        })
+        .filter(|(_, t)| !refs.contains(t))
+        .map(|(f, t)| format!("{f} -> {t}"))
+        .collect();
+    assert!(dangling.is_empty(), "invariant I2 violated: {dangling:?}");
+}
+
+/// US3 / FR-009. The edge names the actual parent, not the root.
+#[test]
+fn m985_an_edge_comes_from_the_actual_parent_not_the_root() {
+    let cache = seed_cache(&["9.6.x"]);
+    let d = scan(&fixture("resolvable"), Some(cache.path()), &[]);
+    let by_ref: std::collections::BTreeMap<&str, &str> = d.cdx["components"]
+        .as_array()
+        .expect("components")
+        .iter()
+        .filter_map(|c| Some((c["bom-ref"].as_str()?, c["name"].as_str()?)))
+        .collect();
+    let mut into_leaf: Vec<&str> = Vec::new();
+    for e in d.cdx["dependencies"].as_array().into_iter().flatten() {
+        let from = e["ref"].as_str().unwrap_or("");
+        for t in e["dependsOn"].as_array().into_iter().flatten() {
+            if by_ref.get(t.as_str().unwrap_or("")) == Some(&"waybill-fixture-leaf") {
+                into_leaf.push(by_ref.get(from).copied().unwrap_or(from));
+            }
+        }
+    }
+    assert_eq!(
+        into_leaf,
+        vec!["waybill-fixture-mid"],
+        "leaf is reached through mid, so the edge must come from mid"
+    );
+}
+
+/// US3 / FR-012, E2.2. Two parents, two edges, one component.
+#[test]
+fn m985_a_package_reached_twice_is_one_component_with_two_edges() {
+    let cache = seed_cache(&["9.6.x"]);
+    let d = scan(&fixture("resolvable"), Some(cache.path()), &[]);
+    let hits: Vec<_> = hackage(&d.cdx)
+        .into_iter()
+        .filter(|(c, _)| c["name"].as_str() == Some("waybill-fixture-twoparents"))
+        .collect();
+    assert_eq!(hits.len(), 1, "must appear exactly once");
+    let target = hits[0].0["bom-ref"].as_str().expect("bom-ref");
+    let parents = d.cdx["dependencies"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter(|e| {
+            e["dependsOn"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .any(|t| t.as_str() == Some(target))
+        })
+        .count();
+    assert_eq!(parents, 2, "reached from liba AND libb");
+}
+
+/// US4 / FR-014. The counts reach the DOCUMENT, not a log line — which is the
+/// defect milestone 973 was filed for.
+#[test]
+fn m985_the_closure_records_its_counts_at_document_scope() {
+    let cache = seed_cache(&["9.6.x"]);
+    let d = scan(&fixture("resolvable"), Some(cache.path()), &[]);
+    let raw = d.cdx["metadata"]["properties"]
+        .as_array()
+        .expect("document properties")
+        .iter()
+        .find(|p| p["name"].as_str() == Some("waybill:nixpkgs-haskell-closure"))
+        .and_then(|p| p["value"].as_str())
+        .expect("C176 must be present when the closure ran");
+    let v: serde_json::Value = serde_json::from_str(raw).expect("C176 is JSON");
+    assert!(v["declared"].as_u64().is_some_and(|n| n > 0), "{v}");
+    assert!(v["transitive"].as_u64().is_some_and(|n| n > 0), "{v}");
+    assert!(v["relations-walked"].as_u64().is_some_and(|n| n > 0), "{v}");
+    assert!(mentions(&d.spdx2, "waybill:nixpkgs-haskell-closure"), "SPDX 2.3");
+    assert!(mentions(&d.spdx3, "waybill:nixpkgs-haskell-closure"), "SPDX 3");
+}
+
+/// US4 / FR-015. A scan where the closure did not run records nothing.
+#[test]
+fn m985_a_scan_without_the_closure_records_nothing() {
+    let cache = seed_cache(&["9.6.x"]);
+    let d = scan(
+        &fixture("resolvable"),
+        Some(cache.path()),
+        &["--no-nixpkgs-haskell-closure"],
+    );
+    assert!(!mentions(&d.cdx, "waybill:nixpkgs-haskell-closure"), "CDX");
+    assert!(!mentions(&d.cdx, "waybill:nixpkgs-component-origin"), "no origins either");
+}
+
+/// FR-016 / FR-017. The opt-out suppresses the closure WITHOUT surrendering
+/// declared-dependency resolution — the two are separately valuable.
+#[test]
+fn m985_the_opt_out_keeps_declared_resolution() {
+    let cache = seed_cache(&["9.6.x"]);
+    let on = scan(&fixture("resolvable"), Some(cache.path()), &[]);
+    let off = scan(
+        &fixture("resolvable"),
+        Some(cache.path()),
+        &["--no-nixpkgs-haskell-closure"],
+    );
+    let names = |d: &serde_json::Value| -> std::collections::BTreeSet<String> {
+        hackage(d).iter().filter_map(|(c, _)| c["name"].as_str().map(str::to_string)).collect()
+    };
+    let (n_on, n_off) = (names(&on.cdx), names(&off.cdx));
+    assert!(n_on.len() > n_off.len(), "the closure must add components");
+    assert!(
+        n_off.is_subset(&n_on),
+        "the opt-out must only REMOVE closure additions, never change what was already there"
+    );
+    // Declared resolution survives the opt-out.
+    let liba = hackage(&off.cdx)
+        .into_iter()
+        .find(|(c, _)| c["name"].as_str() == Some("waybill-fixture-liba"))
+        .expect("liba");
+    assert_eq!(liba.0["version"].as_str(), Some("1.2.3"));
+}
+
 /// #980 / invariant I2: every edge endpoint must resolve to a component
 /// present in the document.
 ///

@@ -4276,6 +4276,23 @@ pub async fn execute(
     // above, so rewrite their endpoints now -- otherwise every component this
     // pass resolved is orphaned: CycloneDX keeps an edge pointing at the old
     // PURL, SPDX drops the relationship outright, and neither format errors.
+    // #980 — normalise identities BEFORE anything reads them. Version
+    // assignment rewrites component PURLs, and the PURL is what
+    // `Relationship::from`/`::to` hold.
+    if let Some(s) = &nixpkgs_haskell_summary {
+        let rewritten = scan_fs::package_db::nix::haskell_packages::apply_renames(
+            &s.renames,
+            &mut relationships,
+        );
+        if rewritten > 0 {
+            tracing::info!(
+                renamed_components = s.renames.len(),
+                rewritten_endpoints = rewritten,
+                "nixpkgs-haskell: rewrote dependency-edge endpoints after version assignment"
+            );
+        }
+    }
+
     // #962 / milestone 985 — convert the closure's edges into relationships.
     //
     // The endpoints arrive as ATTRIBUTE NAMES and are resolved to each
@@ -4293,7 +4310,28 @@ pub async fn execute(
                 .filter(|c| c.purl.as_str().starts_with("pkg:hackage/"))
                 .map(|c| (c.name.as_str(), c.purl.as_str()))
                 .collect();
+            // Dedupe against edges that already exist. The declared-dependency
+            // reader and the closure can both produce the same relation — a
+            // project declares `ghcide -> aeson` in its cabal, and nixpkgs
+            // records the same relation in the package set.
+            //
+            // CycloneDX hides this: `dependsOn` is a set per component, so
+            // duplicates collapse. SPDX does not, and would carry one extra
+            // relationship row per duplicate. Measured on the corpus Haskell
+            // target before this guard: 225 duplicate rows, and a CDX-vs-SPDX
+            // edge-count gap that grew from 1 to 232. Two formats disagreeing
+            // about a project's dependency graph is the asymmetry the parity
+            // discipline exists to catch.
+            let mut present: std::collections::HashSet<(String, String)> = relationships
+                .iter()
+                .filter(|r| {
+                    r.relationship_type
+                        == waybill_common::resolution::RelationshipType::DependsOn
+                })
+                .map(|r| (r.from.clone(), r.to.clone()))
+                .collect();
             let mut added = 0usize;
+            let mut duplicate = 0usize;
             let mut skipped = 0usize;
             for e in &s.closure_edges {
                 // Invariant I2: an edge may only be emitted when BOTH
@@ -4307,6 +4345,10 @@ pub async fn execute(
                     skipped += 1;
                     continue;
                 };
+                if !present.insert(((*from).to_string(), (*to).to_string())) {
+                    duplicate += 1;
+                    continue;
+                }
                 relationships.push(waybill_common::resolution::Relationship {
                     from: (*from).to_string(),
                     to: (*to).to_string(),
@@ -4331,21 +4373,12 @@ pub async fn execute(
             }
             tracing::info!(
                 closure_edges = added,
+                duplicate,
                 "nixpkgs-haskell: closure dependency edges emitted"
             );
         }
-        let rewritten = scan_fs::package_db::nix::haskell_packages::apply_renames(
-            &s.renames,
-            &mut relationships,
-        );
-        if rewritten > 0 {
-            tracing::info!(
-                renamed_components = s.renames.len(),
-                rewritten_endpoints = rewritten,
-                "nixpkgs-haskell: rewrote dependency-edge endpoints after version assignment"
-            );
-        }
     }
+
     if let Some(s) = &nixpkgs_haskell_summary {
         tracing::info!(
             resolved = s.resolved,

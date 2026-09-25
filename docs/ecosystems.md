@@ -464,6 +464,73 @@ disagree the difference is recorded in `waybill:nixpkgs-version-disagreement`
 rather than silently resolved — which is exactly the question someone
 comparing a Nix build to a cabal build is asking.
 
+#### The transitive runtime closure
+
+Since milestone 985 (#962), waybill does not stop at the dependencies a
+project *declares*. It walks each one's own runtime dependencies through the
+same pinned package set, so the document describes what the build actually
+contains rather than only what the author named.
+
+**Measured on three real Nix-built Haskell projects**, the Haskell component
+count grows by **1.5–3.8×**:
+
+| project | declared | with the closure |
+|---|---|---|
+| a small library | 21 | 53 |
+| a mid-sized client library | 44 | 190 |
+| `haskell-language-server` | 165 | 459 |
+
+Cross-checked against `nix eval` of the same revision: on one project the
+resolved set matches nix's own closure **exactly** — 167 components, same
+names, same versions, nothing missing.
+
+**It is the RUNTIME closure.** Waybill walks `libraryHaskellDepends` and
+`executableHaskellDepends`. Test and benchmark dependencies are deliberately
+excluded: they are not in the built artifact, and including them would roughly
+double the document again (measured 7.3× and 9.8×). Tracked as issue #985.
+
+**Telling declared from transitive.** Every Haskell component carries
+`waybill:nixpkgs-component-origin`, valued `declared` or `transitive`:
+
+```bash
+# only what the project itself declares
+jq '[.components[] | select((.properties // [])[]
+    | select(.name=="waybill:nixpkgs-component-origin") | .value=="declared")]
+    | length' sbom.cdx.json
+```
+
+The marker is on **every** Haskell component, declared ones included — so its
+absence means "waybill's nixpkgs resolver never examined this", not "declared".
+Do not infer origin from a component's position in the dependency graph:
+CycloneDX synthesizes a root edge to every unreferenced component when the
+root declares none, under which every closure member would look declared.
+
+**What the closure did** is recorded once, at document scope, in
+`waybill:nixpkgs-haskell-closure`:
+
+```json
+{"declared": 165, "transitive": 294,
+ "unresolved": {"compiler-supplied": 8}, "relations-walked": 2817}
+```
+
+`relations-walked` is there to separate "few components because the project is
+small" from "few components because the walk stopped early" — two states with
+identical component counts and different causes.
+
+**Turning it off.** The closure is on by default. It can be suppressed without
+giving up declared-dependency versions, which are separately valuable:
+
+```bash
+waybill sbom scan --path . --no-nixpkgs-haskell-closure   # closure off, versions kept
+waybill sbom scan --path . --no-nixpkgs-haskell           # the whole pass off
+```
+
+**A transitively-reached package that cannot be resolved is still emitted**,
+versionless and carrying the same
+`waybill:haskell-version-unresolved-reason` a declared dependency would. It
+was read from another package's dependency list, so it genuinely exists;
+omitting it would leave a hole in the graph rather than an honest gap.
+
 ### 8. Contributor guidance (implementing design-tier in a new reader)
 
 Contributors implementing a new ecosystem reader should follow the

@@ -87,9 +87,9 @@ restated per task:
 
 ### Tests for User Story 2
 
-- [ ] T022 [P] [US2] Add `m985_every_haskell_component_carries_an_origin` — declared ones included (FR-006a). Absence on any is a failure.
-- [ ] T023 [P] [US2] Add `m985_a_component_reachable_both_ways_is_declared` (FR-007, E3.2).
-- [ ] T024 [P] [US2] Add `m985_origin_reaches_every_format` — CycloneDX, SPDX 2.3 and SPDX 3 (C-2, `SymmetricEqual`).
+- [X] T022 [P] [US2] Add `m985_every_haskell_component_carries_an_origin` — declared ones included (FR-006a). Absence on any is a failure.
+- [X] T023 [P] [US2] Add `m985_a_component_reachable_both_ways_is_declared` (FR-007, E3.2).
+- [X] T024 [P] [US2] Add `m985_origin_reaches_every_format` — CycloneDX, SPDX 2.3 and SPDX 3 (C-2, `SymmetricEqual`).
 
 ### Implementation for User Story 2
 
@@ -97,8 +97,8 @@ restated per task:
 - [X] T026 [US2] Emit `waybill:nixpkgs-component-origin` per component in CycloneDX via `waybill-cli/src/generate/cyclonedx/` (C-2).
 - [X] T027 [P] [US2] Emit the same in SPDX 2.3 via `waybill-cli/src/generate/spdx/annotations.rs` (C-2).
 - [X] T028 [P] [US2] Emit the same in SPDX 3 via `waybill-cli/src/generate/spdx/v3_annotations.rs` (C-2).
-- [ ] T029 [US2] Add the catalog row for `waybill:nixpkgs-component-origin` to `docs/reference/sbom-format-mapping.md`, recording the Principle V audit from research R3 — no format has a native carrier — as the justification.
-- [ ] T030 [US2] Add three parity extractors for that row in `waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3}.rs` and register it in `mod.rs` with `Directionality::SymmetricEqual`. The row and the extractors land together, or `every_catalog_row_has_an_extractor` fails.
+- [X] T029 [US2] Add the catalog row for `waybill:nixpkgs-component-origin` to `docs/reference/sbom-format-mapping.md`, recording the Principle V audit from research R3 — no format has a native carrier — as the justification.
+- [X] T030 [US2] Add three parity extractors for that row in `waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3}.rs` and register it in `mod.rs` with `Directionality::SymmetricEqual`. The row and the extractors land together, or `every_catalog_row_has_an_extractor` fails.
 
 **Checkpoint**: origin is explicit and format-symmetric.
 
@@ -114,10 +114,10 @@ restated per task:
 
 ### Tests for User Story 3
 
-- [ ] T031 [P] [US3] Add `m985_no_closure_edge_dangles` — no `dependsOn` target absent from the component set (FR-008, **SC-004**, C-4.1). Counts violations across the whole document, since SC-004 is a universal.
-- [ ] T032 [P] [US3] Add `m985_an_edge_comes_from_the_actual_parent_not_the_root` (FR-009, C-4.2).
-- [ ] T033 [P] [US3] Add `m985_every_transitive_component_has_an_inbound_edge`.
-- [ ] T034 [P] [US3] Add `m985_closure_identities_rewritten_after_edges_are_still_connected` — the #980 regression, at closure scale.
+- [X] T031 [P] [US3] Add `m985_no_closure_edge_dangles` — no `dependsOn` target absent from the component set (FR-008, **SC-004**, C-4.1). Counts violations across the whole document, since SC-004 is a universal.
+- [X] T032 [P] [US3] Add `m985_an_edge_comes_from_the_actual_parent_not_the_root` (FR-009, C-4.2).
+- [X] T033 [P] [US3] Add `m985_every_transitive_component_has_an_inbound_edge`.
+- [X] T034 [P] [US3] Add `m985_closure_identities_rewritten_after_edges_are_still_connected` — the #980 regression, at closure scale.
 
 ### Implementation for User Story 3
 
@@ -136,11 +136,11 @@ restated per task:
 
 **Independent test**: read declared / transitive / unresolved counts at document scope without inspecting components.
 
-- [ ] T039 [P] [US4] Add `m985_a_closure_records_its_counts_at_document_scope` (FR-014).
-- [ ] T040 [P] [US4] Add `m985_a_scan_without_the_closure_records_nothing` (FR-015, **SC-007**, C-6) — a project with no `flake.lock`, a moving reference, or no Haskell dependencies emits no summary and is byte-identical to pre-feature output.
+- [X] T039 [P] [US4] Add `m985_a_closure_records_its_counts_at_document_scope` (FR-014).
+- [X] T040 [P] [US4] Add `m985_a_scan_without_the_closure_records_nothing` (FR-015, **SC-007**, C-6) — a project with no `flake.lock`, a moving reference, or no Haskell dependencies emits no summary and is byte-identical to pre-feature output.
 - [X] T041 [US4] Implement `ClosureSummary` (E4, **FR-014**) in `closure.rs` with `BTreeMap` ordering (E4.4), and return it from the walk. All four fields are required by FR-014, including `relations_walked` — it separates "few components because the project is small" from "few components because the walk stopped early", which are indistinguishable by count alone.
 - [X] T042 [US4] Thread the summary into `ScanArtifacts` and emit `waybill:nixpkgs-haskell-closure` at document scope in all three formats. **It must reach the document, not a `tracing::info!`** — milestone 973 exists because milestone 926 computed exactly this record and dropped it.
-- [ ] T043 [US4] Add the catalog row and three parity extractors for `waybill:nixpkgs-haskell-closure`, same discipline as T029/T030.
+- [X] T043 [US4] Add the catalog row and three parity extractors for `waybill:nixpkgs-haskell-closure`, same discipline as T029/T030.
 
 **Checkpoint**: all four stories complete.
 
@@ -154,9 +154,9 @@ restated per task:
 - [ ] T047 [P] Verify SC-002 against the oracle, not against waybill's own parse: run `measurements/nix_closure_oracle.sh` on a project with a populated cache and compare totals. Any disagreement must be explained — an unexplained off-by-one is how a wrong number enters a spec.
 - [ ] T047a [P] Verify SC-001: count `pkg:hackage/*` components with the closure enabled and disabled on the corpus target, and assert the ratio is ≥ 1.5×. This is the feature's headline claim and nothing else checks it — T047 checks agreement with the oracle and T048 checks wall clock, neither of which would notice a closure that resolved only a handful. Record both counts in the PR.
 - [ ] T048 [P] Verify SC-008: time the same scan with and without the closure, on the same machine with the package set local; the ratio must be ≤ 1.5×. Record both numbers in the PR.
-- [ ] T049 [P] Mutation-test every assertion added in T011–T016, T022–T024, T031–T034, T039–T040 and T045: revert the behaviour each guards and confirm the test fails. Record which mutation was used for each in the PR.
-- [ ] T050 [P] Update `docs/reference/reading-a-waybill-sbom.md` with a section on reading the closure — what `waybill:nixpkgs-component-origin` means, how to filter to declared-only, and that document size grows 1.5–3.8×.
-- [ ] T051 [P] Add a CHANGELOG entry recording the measured multipliers, the oracle agreement, and the opt-out flag.
+- [X] T049 [P] Mutation-test every assertion added in T011–T016, T022–T024, T031–T034, T039–T040 and T045: revert the behaviour each guards and confirm the test fails. Record which mutation was used for each in the PR.
+- [X] T050 [P] Update `docs/reference/reading-a-waybill-sbom.md` with a section on reading the closure — what `waybill:nixpkgs-component-origin` means, how to filter to declared-only, and that document size grows 1.5–3.8×.
+- [X] T051 [P] Add a CHANGELOG entry recording the measured multipliers, the oracle agreement, and the opt-out flag.
 - [ ] T052 Run the full gate: `./scripts/pre-pr.sh`. Both commands, enumerated per-target output, never an exit code alone.
 - [ ] T053 Re-run the corpus target with `WAYBILL_RUN_PUBLIC_CORPUS=1` and confirm layer 0 (invariant I2), layer 1 tripwires and layer 2 goldens all pass at closure scale.
 - [ ] T053a Confirm **SC-006** (two scans of one revision are byte-identical) still holds with the closure enabled. The existing `m926_two_scans_of_one_revision_are_byte_identical` covers it once the T003 fixture gains a transitive chain, so this is a verification step rather than a new test — but record that it ran, because a determinism guarantee inherited by accident is one nobody has checked.
