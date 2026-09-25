@@ -412,7 +412,7 @@ pub static EXTRACTORS: &[ParityExtractor] = &[
     // the underlying datum is identical but the per-format
     // serialization shape differs in a way that the canonicalize
     // helper cannot bridge cleanly. Same shape mismatch on C100.
-    ParityExtractor { row_id: "C99",  label: "waybill:duplicate-purl-divergent",  cdx: c99_cdx,  spdx23: c99_spdx23,  spdx3: c99_spdx3,  directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "C99",  label: "waybill:duplicate-purl-divergent",  cdx: c99_cdx,  spdx23: c99_spdx23,  spdx3: c99_spdx3,  directional: Directionality::PresenceOnly, order_sensitive: false },
     ParityExtractor { row_id: "C100", label: "waybill:purl-collisions-detected", cdx: c100_cdx, spdx23: c100_spdx23, spdx3: c100_spdx3, directional: Directionality::PresenceOnly, order_sensitive: false },
     // Milestone 147 (closes Trivy-comparison orphan gap): npm
     // peerDependencies emit as DEPENDS_ON edges; the
