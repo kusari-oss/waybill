@@ -32,95 +32,94 @@ fn cpe_sanitize(raw: &str) -> String {
     out
 }
 
-/// Build the CycloneDX `metadata` section.
+/// Milestone 844 (#844): the inputs `build_metadata` always needs.
 ///
-/// Includes:
-/// - Tool identity (waybill with current version)
-/// - Generation timestamp
-/// - Component reference (the build target)
-/// - Properties indicating generation context
-/// - `lifecycles[]`: aggregated union of tier values observed across
-///   the components, per milestone 002's traceability ladder (R13).
-#[allow(clippy::too_many_arguments)]
-pub fn build_metadata(
-    target_name: &str,
-    target_version: &str,
-    context: GenerationContext,
-    components: &[ResolvedComponent],
-    os_release_missing_fields: &[String],
-    integrity: &TraceIntegrity,
-    scan_target_coord: Option<&crate::scan_fs::package_db::maven::ScanTargetCoord>,
-    source_document_binding: Option<&waybill::binding::SourceDocumentId>,
-    identifiers: &[waybill::binding::identifiers::Identifier],
-    root_override: &RootComponentOverride,
-    user_metadata: &waybill::binding::user_metadata::UserMetadata,
+/// Separate from [`MetadataExtras`] on purpose: these have no
+/// meaningful default, so the type system keeps them required,
+/// while everything defaultable lives in the `Default`-carrying
+/// companion. Two arguments total, which also retires the
+/// `clippy::too_many_arguments` allow this function used to need.
+pub struct MetadataSubject<'a> {
+    pub target_name: &'a str,
+    pub target_version: &'a str,
+    pub context: GenerationContext,
+    pub integrity: &'a TraceIntegrity,
+    pub root_override: &'a RootComponentOverride,
+    pub user_metadata: &'a waybill::binding::user_metadata::UserMetadata,
+    pub graph_completeness: &'a crate::generate::graph_completeness::GraphCompletenessResult,
+}
+
+/// Milestone 844 (#844): the optional tail of [`build_metadata`].
+///
+/// `build_metadata` took 38 positional parameters, 31 of them
+/// defaultable, and its 27 call sites ended in long runs of bare
+/// `None`. Adding one annotation meant editing every call, and a
+/// wrong-position argument between two same-typed neighbours compiled
+/// silently — the compiler checks arity, not order.
+///
+/// Every field here is `Option`, a slice or a counter, so `Default`
+/// covers "not applicable to this scan" and a call site names only
+/// what it actually sets.
+#[derive(Default)]
+pub struct MetadataExtras<'a> {
+    pub components: &'a [ResolvedComponent],
+    pub os_release_missing_fields: &'a [String],
+    pub scan_target_coord: Option<&'a crate::scan_fs::package_db::maven::ScanTargetCoord>,
+    pub source_document_binding: Option<&'a waybill::binding::SourceDocumentId>,
+    pub identifiers: &'a [waybill::binding::identifiers::Identifier],
     // Milestone 081 — when the operator passed `--sbom-type
     // <type>`, this Some(_) value drives the lifecycle aggregation
     // toward a single-element array containing the asserted CDX
     // phase regardless of per-component tier values. None preserves
     // the milestone-047 auto-aggregation.
-    sbom_type_override: Option<crate::generate::lifecycle_phases::SbomType>,
+    pub sbom_type_override: Option<crate::generate::lifecycle_phases::SbomType>,
     // Milestone 133 US3 — file-tier walker diagnostic counters. None
     // when `--file-inventory=off`; Some(_) for orphan/full modes.
-    file_inventory_stats: Option<&crate::scan_fs::file_tier::walker::WalkerStats>,
+    pub file_inventory_stats: Option<&'a crate::scan_fs::file_tier::walker::WalkerStats>,
     // Milestone 926 (#947, C173) — reason the nixpkgs-backed Haskell version
     // resolution degraded. None when it ran cleanly or never ran.
-    nixpkgs_haskell_degraded: Option<&str>,
+    pub nixpkgs_haskell_degraded: Option<&'a str>,
     // Milestone 133 US4 — operator-supplied `--file-inventory` mode
     // label. Only `Some("full")` triggers the document-level
     // override marker per Strict Boundary §5.
-    file_inventory_mode: Option<&str>,
+    pub file_inventory_mode: Option<&'a str>,
     // Milestone 671 (C156) — sorted-lex list of `SourceShape` names
     // from `--file-inventory-source-shapes`. Meaningful only when
     // `file_inventory_mode == Some("source-tree")`; used to populate
     // the `restriction` field of the C156 annotation. `None` on the
     // default path — byte-identity preserved (FR-007).
-    file_inventory_source_shapes: Option<&[String]>,
+    pub file_inventory_source_shapes: Option<&'a [String]>,
     // Milestone 134 (closes #125) — document-scope aggregate of every
     // divergent-PURL collision detected in the scan. `None` ⇒ no
     // collisions ⇒ omit the annotation entirely (FR-009).
-    collisions_summary: Option<&waybill_common::divergence::CollisionsSummary>,
-    // Milestone 158 (US2) — the multi-root BFS reachability pass
-    // result. Drives the two document-scope annotations
-    // `waybill:graph-completeness` + `waybill:graph-completeness-reason`
-    // per FR-003 + FR-004. Threaded from `builder::build()` after the
-    // graph is fully assembled (post workspace-peer linkage).
-    graph_completeness: &crate::generate::graph_completeness::GraphCompletenessResult,
+    pub collisions_summary: Option<&'a waybill_common::divergence::CollisionsSummary>,
     // Milestone 160 (T034/T035) — doc-scope Go-transitive coverage
     // signal. Drives the C110/C111 document-scope annotations per
     // FR-004/FR-005. `None` ⇒ no Go scan happened (annotations absent).
-    go_transitive_coverage: Option<
-        &crate::scan_fs::package_db::golang::graph_resolver::GoTransitiveCoverage,
-    >,
+    pub go_transitive_coverage: Option<&'a crate::scan_fs::package_db::golang::graph_resolver::GoTransitiveCoverage>,
     // Milestone 161 (T042) — doc-scope Go-workspace-mode signal.
     // Drives the C112 document-scope annotation per FR-004. `None`
     // ⇒ no `go.work` at scanned root (annotation absent per SC-003).
-    go_workspace_mode: Option<
-        &crate::scan_fs::package_db::golang::gowork::WorkspaceMode,
-    >,
+    pub go_workspace_mode: Option<&'a crate::scan_fs::package_db::golang::gowork::WorkspaceMode>,
     // Milestone 172 — doc-scope Go step-5 fallback count. Drives the
     // C117 `waybill:go-transitive-fallback-count` annotation per FR-002
     // + Q1 clarification. `None` iff no Go scan happened (annotation
     // absent); `Some(N)` else — including `Some(0)` on healthy scans,
     // where the annotation is emitted with value `"0"` explicitly.
-    go_transitive_fallback_count: Option<usize>,
-    unresolved_declared_dep_count: usize,
+    pub go_transitive_fallback_count: Option<usize>,
+    pub unresolved_declared_dep_count: usize,
     // Milestone 868 (#887) — C161 doc-scope Pants resolve-ownership counts.
     // `None` iff no Pex lockfile was discovered, which keeps every non-Pants
     // document byte-identical (contract A-7). `Some(_)` emits BOTH counts
     // including zero: "nothing needed guessing" and "the field is missing"
     // are different claims (FR-003c).
-    pants_resolve_summary: Option<
-        &crate::scan_fs::package_db::pants::PantsResolveSummary,
-    >,
+    pub pants_resolve_summary: Option<&'a crate::scan_fs::package_db::pants::PantsResolveSummary>,
     // Milestone 895 (#891) — C162 doc-scope count of `.cabal` dependency
     // entries that were not valid package names and were skipped. `None` iff
     // no `.cabal` file was read (byte-identity for non-Haskell scans);
     // `Some(_)` emits the count including zero, so "fully readable" stays
     // distinguishable from "the field is missing".
-    haskell_parse_summary: Option<
-        &crate::scan_fs::package_db::haskell::HaskellParseSummary,
-    >,
+    pub haskell_parse_summary: Option<&'a crate::scan_fs::package_db::haskell::HaskellParseSummary>,
     // Milestone 173 — doc-scope Go cache-warming outcome. Drives the
     // C118 (`waybill:go-cache-warming-mode`) unconditional annotation
     // AND the C119 (`waybill:go-cache-warming-failed`) conditional
@@ -128,82 +127,70 @@ pub fn build_metadata(
     // mode is emitted verbatim; failures (if non-empty) emit C119
     // with a JSON-encoded array value per contracts/annotation-wire-
     // shapes.md.
-    go_cache_warming: Option<
-        &crate::scan_fs::package_db::golang::CacheWarmingResult,
-    >,
+    pub go_cache_warming: Option<&'a crate::scan_fs::package_db::golang::CacheWarmingResult>,
     // Milestone 217 (waybill#631) — doc-scope Go-toolchain-detected
     // signal. Drives the C136 `waybill:go-toolchain-detected` annotation.
     // `None` iff no Go toolchain observed in the scanned rootfs
     // (annotation absent — byte-identity for non-Go and Go-project-only
     // scans). `Some(&[<path>, ...])` iff `module std` / `module cmd`
     // `go.mod` files were skipped by the walker.
-    go_toolchains_detected: Option<&[std::path::PathBuf]>,
+    pub go_toolchains_detected: Option<&'a [std::path::PathBuf]>,
     // Milestone 218 (waybill#633) — cross-ecosystem edges report.
     // Drives the C139 doc-scope
     // `waybill:cross-ecosystem-inference-unresolved` annotation
     // (C137/C138 emit per-edge from dependencies.rs, not from here).
     // `None` iff FR-000 flag OFF (all three annotations absent —
     // byte-identity for pre-m218 output).
-    cross_ecosystem_edges_report: Option<
-        &crate::generate::cross_ecosystem_edges::CrossEcosystemEdgesReport,
-    >,
+    pub cross_ecosystem_edges_report: Option<&'a crate::generate::cross_ecosystem_edges::CrossEcosystemEdgesReport>,
     // Milestone 204 (#554) — doc-scope Helm image-extraction-mode
     // signal. Drives the C123 `waybill:image-extraction-completeness`
     // annotation. `None` iff no helm reader ran (annotation absent
     // per FR-004 / SC-004 byte-identity for non-Helm scans).
     // `Some(Unrendered)` → `"partial"`. `Some(Rendered)` → `"full"`.
-    helm_extraction_mode: Option<
-        &crate::scan_fs::package_db::HelmExtractionMode,
-    >,
+    pub helm_extraction_mode: Option<&'a crate::scan_fs::package_db::HelmExtractionMode>,
     // Milestone 235 US4 — aggregate Gradle-resolution tier signal.
     // Drives the C146 `waybill:gradle-resolution-tier` doc-scope
     // annotation. `None` iff no Gradle project was touched
     // (byte-identity per FR-006 for non-Gradle scans).
-    gradle_scan_summary: Option<
-        &crate::scan_fs::package_db::gradle::ladder::GradleScanSummary,
-    >,
+    pub gradle_scan_summary: Option<&'a crate::scan_fs::package_db::gradle::ladder::GradleScanSummary>,
     // Milestone 665 — operator's `--no-binary-scan=<MODE>` choice.
     // Drives the doc-scope `waybill:binary-scan-suppressed=<mode>`
     // annotation. `None` iff the flag was absent (annotation absent
     // per FR-003 byte-identity default path).
-    no_binary_scan_mode: Option<crate::cli::scan_cmd::BinaryScanMode>,
+    pub no_binary_scan_mode: Option<crate::cli::scan_cmd::BinaryScanMode>,
     // Milestone 206 (#440) — doc-scope image-source signal for the
     // C124 `waybill:image-source` annotation. Conditional emission
     // (podman-only in MVP) preserves FR-005 byte-identity for
     // docker/remote/path scans.
-    image_source: Option<&crate::cli::scan_cmd::ImageSource>,
+    pub image_source: Option<&'a crate::cli::scan_cmd::ImageSource>,
     // Milestone 210 — compiler-pipeline data from the eBPF trace.
     // Drives C132 (`waybill:compiler-pipeline-completeness`, always
     // emitted when `Some(_)`) + C133 (`waybill:secrets-read-filtered`,
     // emitted only when `secrets_read_filtered > 0`). `None` ⇒ neither
     // annotation emitted (byte-identity preserved for scan-mode).
-    compiler_pipeline: Option<
-        &waybill_common::attestation::compiler_pipeline::CompilerPipelineData,
-    >,
+    pub compiler_pipeline: Option<&'a waybill_common::attestation::compiler_pipeline::CompilerPipelineData>,
     // Milestone 220 — doc-scope project-discovery mode. Drives the
     // C140 `waybill:project-discovery-mode` annotation. `None` iff
     // scan ran under default `All` mode (annotation absent — SC-005
     // byte-identity gate). `Some(mode)` for `RootOnly` / `Strict`.
-    project_discovery_mode: Option<
-        crate::generate::project_discovery::ProjectDiscoveryMode,
-    >,
+    pub project_discovery_mode: Option<crate::generate::project_discovery::ProjectDiscoveryMode>,
     // Milestone 221 US4 (feature 221-cisa-2026-elements-audit /
     // FR-013) — operator-supplied SBOM document version from
     // `--sbom-version <N>`. Drives the C142 `waybill:sbom-version`
     // metadata property. `None` (default) preserves FR-009
     // byte-identity — no property emitted, and the sibling
     // `metadata.version` slot stays at the hardcoded `1`.
-    sbom_version: Option<waybill_common::types::SbomVersion>,
+    pub sbom_version: Option<waybill_common::types::SbomVersion>,
     // Milestone 839 (FR-017a) — C158. `None` on a clean scan, which
     // emits no property and preserves byte-identity.
-    enrichment_degraded: Option<&str>,
+    pub enrichment_degraded: Option<&'a str>,
     // Issue #914 (m912) — C163 doc-scope resolve identity: WHICH RESOLVE
     // THIS DOCUMENT IS, as namespace-qualified names. Absent on an unsplit
     // document and on `--split=workspace` / `--split=directory`, where the
     // question has no answer (FR-008); absent rather than empty, so "not a
     // per-resolve document" stays distinguishable from "a resolve with no
     // name" (FR-009). Plural only in the #919 collision case (C-6).
-    resolve_identity: Option<&[String]>,
+    pub resolve_identity: Option<&'a [String]>,
     // Issue #973 (C174) — the nixpkgs-backed Haskell resolution pass as a
     // whole: revision, resolved count, unresolved counts by reason,
     // disagreements. Pre-rendered JSON. `Some` exactly when the pass ran,
@@ -214,14 +201,72 @@ pub fn build_metadata(
     // this list is positional and every neighbour here is `Option<&str>`,
     // so a mid-list insertion could silently re-bind an adjacent argument
     // with no type error. #844 tracks fixing the shape itself.
-    nixpkgs_haskell_resolution: Option<&str>,
+    pub nixpkgs_haskell_resolution: Option<&'a str>,
     // Milestone 985 (#962, C175) — the transitive runtime closure's record.
     // Appended at the end for the same reason C174 was: this list is
     // positional and its neighbours are all `Option<&str>`, so a mid-list
     // insertion could silently re-bind an adjacent argument with no type
     // error. #844 tracks the shape itself.
-    nixpkgs_haskell_closure: Option<&str>,
+    pub nixpkgs_haskell_closure: Option<&'a str>,
+}
+/// Build the CycloneDX `metadata` section.
+///
+/// Includes:
+/// - Tool identity (waybill with current version)
+/// - Generation timestamp
+/// - Component reference (the build target)
+/// - Properties indicating generation context
+/// - `lifecycles[]`: aggregated union of tier values observed across
+///   the components, per milestone 002's traceability ladder (R13).
+pub fn build_metadata(
+    subject: MetadataSubject<'_>,
+    extras: MetadataExtras<'_>,
 ) -> serde_json::Value {
+    // #844: named fields in, same-named locals out — the body
+    // below is untouched, so this refactor cannot change output.
+    let MetadataSubject {
+        target_name,
+        target_version,
+        context,
+        integrity,
+        root_override,
+        user_metadata,
+        graph_completeness,
+    } = subject;
+    let MetadataExtras {
+        components,
+        os_release_missing_fields,
+        scan_target_coord,
+        source_document_binding,
+        identifiers,
+        sbom_type_override,
+        file_inventory_stats,
+        nixpkgs_haskell_degraded,
+        file_inventory_mode,
+        file_inventory_source_shapes,
+        collisions_summary,
+        go_transitive_coverage,
+        go_workspace_mode,
+        go_transitive_fallback_count,
+        unresolved_declared_dep_count,
+        pants_resolve_summary,
+        haskell_parse_summary,
+        go_cache_warming,
+        go_toolchains_detected,
+        cross_ecosystem_edges_report,
+        helm_extraction_mode,
+        gradle_scan_summary,
+        no_binary_scan_mode,
+        image_source,
+        compiler_pipeline,
+        project_discovery_mode,
+        sbom_version,
+        enrichment_degraded,
+        resolve_identity,
+        nixpkgs_haskell_resolution,
+        nixpkgs_haskell_closure,
+    } = extras;
+
     let version = crate::version::VERSION;
     // Determinism: honor `WAYBILL_FIXED_TIMESTAMP` (same env-var
     // contract as `scan_cmd::scan_created_timestamp`) so two
@@ -1653,7 +1698,18 @@ mod tests {
             kprobe_attach_failures: vec!["sys_connect".to_string(), "sys_accept".to_string()],
             ..TraceIntegrity::default()
         };
-        let meta = build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &integ, None, None, &[], &RootComponentOverride::default(), &waybill::binding::user_metadata::UserMetadata::default(), None, None, None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(), None, None, None, 0, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None);
+        let meta = build_metadata(
+            MetadataSubject {
+                target_name: "myapp",
+                target_version: "0.1.0",
+                context: GenerationContext::BuildTimeTrace,
+                integrity: &integ,
+                root_override: &RootComponentOverride::default(),
+                user_metadata: &waybill::binding::user_metadata::UserMetadata::default(),
+                graph_completeness: &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
+            },
+            MetadataExtras::default(),
+        );
         let prop = |name: &str| -> String {
             meta["properties"]
                 .as_array()
@@ -1680,7 +1736,21 @@ mod tests {
     #[test]
     fn os_release_missing_fields_is_json_array_in_string() {
         let integ = TraceIntegrity::default();
-        let meta = build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &["ID".to_string(), "VERSION_ID".to_string()], &integ, None, None, &[], &RootComponentOverride::default(), &waybill::binding::user_metadata::UserMetadata::default(), None, None, None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(), None, None, None, 0, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None);
+        let meta = build_metadata(
+            MetadataSubject {
+                target_name: "myapp",
+                target_version: "0.1.0",
+                context: GenerationContext::BuildTimeTrace,
+                integrity: &integ,
+                root_override: &RootComponentOverride::default(),
+                user_metadata: &waybill::binding::user_metadata::UserMetadata::default(),
+                graph_completeness: &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
+            },
+            MetadataExtras {
+                os_release_missing_fields: &["ID".to_string(), "VERSION_ID".to_string()],
+                ..Default::default()
+            },
+        );
         let value = meta["properties"]
             .as_array()
             .expect("properties array")
@@ -1695,7 +1765,18 @@ mod tests {
 
     #[test]
     fn metadata_has_required_fields() {
-        let meta = build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, &[], &RootComponentOverride::default(), &waybill::binding::user_metadata::UserMetadata::default(), None, None, None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(), None, None, None, 0, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None);
+        let meta = build_metadata(
+            MetadataSubject {
+                target_name: "myapp",
+                target_version: "0.1.0",
+                context: GenerationContext::BuildTimeTrace,
+                integrity: &TraceIntegrity::default(),
+                root_override: &RootComponentOverride::default(),
+                user_metadata: &waybill::binding::user_metadata::UserMetadata::default(),
+                graph_completeness: &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
+            },
+            MetadataExtras::default(),
+        );
 
         assert!(meta["timestamp"].is_string());
         assert_eq!(meta["tools"]["components"][0]["name"], "waybill");
@@ -1716,7 +1797,18 @@ mod tests {
     #[test]
     fn metadata_includes_authors_for_sbom_authors_score() {
         let meta =
-            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, &[], &RootComponentOverride::default(), &waybill::binding::user_metadata::UserMetadata::default(), None, None, None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(), None, None, None, 0, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None);
+            build_metadata(
+            MetadataSubject {
+                target_name: "myapp",
+                target_version: "0.1.0",
+                context: GenerationContext::BuildTimeTrace,
+                integrity: &TraceIntegrity::default(),
+                root_override: &RootComponentOverride::default(),
+                user_metadata: &waybill::binding::user_metadata::UserMetadata::default(),
+                graph_completeness: &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
+            },
+            MetadataExtras::default(),
+        );
         let authors = meta["authors"].as_array().expect("authors must be array");
         assert!(!authors.is_empty(), "authors must be non-empty");
         assert!(authors[0]["name"].is_string());
@@ -1725,7 +1817,18 @@ mod tests {
     #[test]
     fn metadata_includes_supplier_for_sbom_supplier_score() {
         let meta =
-            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, &[], &RootComponentOverride::default(), &waybill::binding::user_metadata::UserMetadata::default(), None, None, None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(), None, None, None, 0, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None);
+            build_metadata(
+            MetadataSubject {
+                target_name: "myapp",
+                target_version: "0.1.0",
+                context: GenerationContext::BuildTimeTrace,
+                integrity: &TraceIntegrity::default(),
+                root_override: &RootComponentOverride::default(),
+                user_metadata: &waybill::binding::user_metadata::UserMetadata::default(),
+                graph_completeness: &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
+            },
+            MetadataExtras::default(),
+        );
         assert!(
             meta["supplier"]["name"].is_string(),
             "supplier.name must be present as a string"
@@ -1737,7 +1840,18 @@ mod tests {
         // sbomqs sbom_data_license scores the SBOM's own license. SPDX
         // convention is CC0-1.0 so SBOM content is free to redistribute.
         let meta =
-            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, &[], &RootComponentOverride::default(), &waybill::binding::user_metadata::UserMetadata::default(), None, None, None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(), None, None, None, 0, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None);
+            build_metadata(
+            MetadataSubject {
+                target_name: "myapp",
+                target_version: "0.1.0",
+                context: GenerationContext::BuildTimeTrace,
+                integrity: &TraceIntegrity::default(),
+                root_override: &RootComponentOverride::default(),
+                user_metadata: &waybill::binding::user_metadata::UserMetadata::default(),
+                graph_completeness: &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
+            },
+            MetadataExtras::default(),
+        );
         let licenses = meta["licenses"].as_array().expect("licenses must be array");
         assert!(!licenses.is_empty());
         assert_eq!(licenses[0]["license"]["id"], "CC0-1.0");
@@ -1748,7 +1862,18 @@ mod tests {
         // sbomqs flags metadata.component as invalid without a purl.
         // Waybill synthesizes pkg:generic/<name>@<version>.
         let meta =
-            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, &[], &RootComponentOverride::default(), &waybill::binding::user_metadata::UserMetadata::default(), None, None, None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(), None, None, None, 0, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None);
+            build_metadata(
+            MetadataSubject {
+                target_name: "myapp",
+                target_version: "0.1.0",
+                context: GenerationContext::BuildTimeTrace,
+                integrity: &TraceIntegrity::default(),
+                root_override: &RootComponentOverride::default(),
+                user_metadata: &waybill::binding::user_metadata::UserMetadata::default(),
+                graph_completeness: &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
+            },
+            MetadataExtras::default(),
+        );
         assert_eq!(meta["component"]["purl"], "pkg:generic/myapp@0.1.0");
     }
 
@@ -1757,7 +1882,18 @@ mod tests {
         // sbomqs flags empty/absent cpe on metadata.component as invalid.
         // Waybill emits cpe:2.3:a:waybill:<name>:<version>:*:*:*:*:*:*:*.
         let meta =
-            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, &[], &RootComponentOverride::default(), &waybill::binding::user_metadata::UserMetadata::default(), None, None, None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(), None, None, None, 0, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None);
+            build_metadata(
+            MetadataSubject {
+                target_name: "myapp",
+                target_version: "0.1.0",
+                context: GenerationContext::BuildTimeTrace,
+                integrity: &TraceIntegrity::default(),
+                root_override: &RootComponentOverride::default(),
+                user_metadata: &waybill::binding::user_metadata::UserMetadata::default(),
+                graph_completeness: &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
+            },
+            MetadataExtras::default(),
+        );
         assert_eq!(
             meta["component"]["cpe"],
             "cpe:2.3:a:waybill:myapp:0.1.0:*:*:*:*:*:*:*"
@@ -1778,42 +1914,16 @@ mod tests {
         // Ensure target names / versions with special chars are
         // percent-encoded via encode_purl_segment.
         let meta = build_metadata(
-            "my app with spaces",
-            "1.0+build-1",
-            GenerationContext::FilesystemScan,
-            &[],
-            &[],
-            &TraceIntegrity::default(),
-        None,
-        None,
-        &[],
-        &RootComponentOverride::default(),
-        &waybill::binding::user_metadata::UserMetadata::default(),
-        None,
-            None,
-        None,
-        None,
-            None,
-            None,
-            &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
-            None,
-            None,
-            None, 0,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-
-            None,
-            None,
-            None,
-            None, None, None,
+            MetadataSubject {
+                target_name: "my app with spaces",
+                target_version: "1.0+build-1",
+                context: GenerationContext::FilesystemScan,
+                integrity: &TraceIntegrity::default(),
+                root_override: &RootComponentOverride::default(),
+                user_metadata: &waybill::binding::user_metadata::UserMetadata::default(),
+                graph_completeness: &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
+            },
+            MetadataExtras::default(),
         );
         let purl = meta["component"]["purl"].as_str().unwrap();
         assert!(
@@ -1829,7 +1939,18 @@ mod tests {
 
     #[test]
     fn metadata_bom_ref_format() {
-        let meta = build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, &[], &RootComponentOverride::default(), &waybill::binding::user_metadata::UserMetadata::default(), None, None, None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(), None, None, None, 0, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None);
+        let meta = build_metadata(
+            MetadataSubject {
+                target_name: "myapp",
+                target_version: "0.1.0",
+                context: GenerationContext::BuildTimeTrace,
+                integrity: &TraceIntegrity::default(),
+                root_override: &RootComponentOverride::default(),
+                user_metadata: &waybill::binding::user_metadata::UserMetadata::default(),
+                graph_completeness: &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
+            },
+            MetadataExtras::default(),
+        );
         assert_eq!(meta["component"]["bom-ref"], "myapp@0.1.0");
     }
 
@@ -1843,33 +1964,19 @@ mod tests {
         use crate::scan_fs::package_db::golang::graph_resolver::GoTransitiveCoverage;
         let coverage = GoTransitiveCoverage::Complete;
         let meta = build_metadata(
-            "myapp", "0.1.0", GenerationContext::FilesystemScan,
-            &[], &[], &TraceIntegrity::default(),
-            None, None, &[],
-            &RootComponentOverride::default(),
-            &waybill::binding::user_metadata::UserMetadata::default(),
-            None, None, None, None,
-            None,
-            None,
-            &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
-            Some(&coverage),
-            None,
-            None, 0,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-
-            None,
-            None,
-            None,
-            None, None, None,
+            MetadataSubject {
+                target_name: "myapp",
+                target_version: "0.1.0",
+                context: GenerationContext::FilesystemScan,
+                integrity: &TraceIntegrity::default(),
+                root_override: &RootComponentOverride::default(),
+                user_metadata: &waybill::binding::user_metadata::UserMetadata::default(),
+                graph_completeness: &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
+            },
+            MetadataExtras {
+                go_transitive_coverage: Some(&coverage),
+                ..Default::default()
+            },
         );
         let props = meta["properties"].as_array().expect("properties array");
         let c110 = props.iter().find(|p| p["name"] == "waybill:go-transitive-coverage");
@@ -1884,33 +1991,16 @@ mod tests {
     fn t037_c110_absent_when_coverage_none() {
         // SC-003 byte-identity guard: no Go scan → no C110/C111.
         let meta = build_metadata(
-            "myapp", "0.1.0", GenerationContext::FilesystemScan,
-            &[], &[], &TraceIntegrity::default(),
-            None, None, &[],
-            &RootComponentOverride::default(),
-            &waybill::binding::user_metadata::UserMetadata::default(),
-            None, None, None, None,
-            None,
-            None,
-            &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
-            None,
-            None,
-            None, 0,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-
-            None,
-            None,
-            None,
-            None, None, None,
+            MetadataSubject {
+                target_name: "myapp",
+                target_version: "0.1.0",
+                context: GenerationContext::FilesystemScan,
+                integrity: &TraceIntegrity::default(),
+                root_override: &RootComponentOverride::default(),
+                user_metadata: &waybill::binding::user_metadata::UserMetadata::default(),
+                graph_completeness: &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
+            },
+            MetadataExtras::default(),
         );
         let props = meta["properties"].as_array().expect("properties array");
         assert!(
@@ -1931,33 +2021,19 @@ mod tests {
             "proxy-fetch-degraded: 45 of 300 modules unresolved".to_string(),
         );
         let meta = build_metadata(
-            "myapp", "0.1.0", GenerationContext::FilesystemScan,
-            &[], &[], &TraceIntegrity::default(),
-            None, None, &[],
-            &RootComponentOverride::default(),
-            &waybill::binding::user_metadata::UserMetadata::default(),
-            None, None, None, None,
-            None,
-            None,
-            &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
-            Some(&coverage),
-            None,
-            None, 0,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-
-            None,
-            None,
-            None,
-            None, None, None,
+            MetadataSubject {
+                target_name: "myapp",
+                target_version: "0.1.0",
+                context: GenerationContext::FilesystemScan,
+                integrity: &TraceIntegrity::default(),
+                root_override: &RootComponentOverride::default(),
+                user_metadata: &waybill::binding::user_metadata::UserMetadata::default(),
+                graph_completeness: &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
+            },
+            MetadataExtras {
+                go_transitive_coverage: Some(&coverage),
+                ..Default::default()
+            },
         );
         let props = meta["properties"].as_array().expect("properties array");
         let c110 = props.iter().find(|p| p["name"] == "waybill:go-transitive-coverage");
@@ -1977,33 +2053,19 @@ mod tests {
             "offline-mode: transitive edges from proxy fetches unavailable".to_string(),
         );
         let meta = build_metadata(
-            "myapp", "0.1.0", GenerationContext::FilesystemScan,
-            &[], &[], &TraceIntegrity::default(),
-            None, None, &[],
-            &RootComponentOverride::default(),
-            &waybill::binding::user_metadata::UserMetadata::default(),
-            None, None, None, None,
-            None,
-            None,
-            &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
-            Some(&coverage),
-            None,
-            None, 0,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-
-            None,
-            None,
-            None,
-            None, None, None,
+            MetadataSubject {
+                target_name: "myapp",
+                target_version: "0.1.0",
+                context: GenerationContext::FilesystemScan,
+                integrity: &TraceIntegrity::default(),
+                root_override: &RootComponentOverride::default(),
+                user_metadata: &waybill::binding::user_metadata::UserMetadata::default(),
+                graph_completeness: &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
+            },
+            MetadataExtras {
+                go_transitive_coverage: Some(&coverage),
+                ..Default::default()
+            },
         );
         let props = meta["properties"].as_array().expect("properties array");
         let c110 = props.iter().find(|p| p["name"] == "waybill:go-transitive-coverage");
@@ -2028,33 +2090,19 @@ mod tests {
         use crate::scan_fs::package_db::golang::gowork::WorkspaceMode;
         let mode = WorkspaceMode::Detected { use_count: 5 };
         let meta = build_metadata(
-            "myapp", "0.1.0", GenerationContext::FilesystemScan,
-            &[], &[], &TraceIntegrity::default(),
-            None, None, &[],
-            &RootComponentOverride::default(),
-            &waybill::binding::user_metadata::UserMetadata::default(),
-            None, None, None, None,
-            None,
-            None,
-            &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
-            None,
-            Some(&mode),
-            None, 0,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-
-            None,
-            None,
-            None,
-            None, None, None,
+            MetadataSubject {
+                target_name: "myapp",
+                target_version: "0.1.0",
+                context: GenerationContext::FilesystemScan,
+                integrity: &TraceIntegrity::default(),
+                root_override: &RootComponentOverride::default(),
+                user_metadata: &waybill::binding::user_metadata::UserMetadata::default(),
+                graph_completeness: &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
+            },
+            MetadataExtras {
+                go_workspace_mode: Some(&mode),
+                ..Default::default()
+            },
         );
         let props = meta["properties"].as_array().expect("properties array");
         let c112 = props.iter().find(|p| p["name"] == "waybill:go-workspace-mode");
@@ -2070,33 +2118,19 @@ mod tests {
         use crate::scan_fs::package_db::golang::gowork::WorkspaceMode;
         let mode = WorkspaceMode::Absent;
         let meta = build_metadata(
-            "myapp", "0.1.0", GenerationContext::FilesystemScan,
-            &[], &[], &TraceIntegrity::default(),
-            None, None, &[],
-            &RootComponentOverride::default(),
-            &waybill::binding::user_metadata::UserMetadata::default(),
-            None, None, None, None,
-            None,
-            None,
-            &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
-            None,
-            Some(&mode),
-            None, 0,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-
-            None,
-            None,
-            None,
-            None, None, None,
+            MetadataSubject {
+                target_name: "myapp",
+                target_version: "0.1.0",
+                context: GenerationContext::FilesystemScan,
+                integrity: &TraceIntegrity::default(),
+                root_override: &RootComponentOverride::default(),
+                user_metadata: &waybill::binding::user_metadata::UserMetadata::default(),
+                graph_completeness: &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
+            },
+            MetadataExtras {
+                go_workspace_mode: Some(&mode),
+                ..Default::default()
+            },
         );
         let props = meta["properties"].as_array().expect("properties array");
         assert!(
@@ -2109,33 +2143,16 @@ mod tests {
     fn t048_c112_absent_when_workspace_mode_none() {
         // Complementary: None workspace mode also emits no C112.
         let meta = build_metadata(
-            "myapp", "0.1.0", GenerationContext::FilesystemScan,
-            &[], &[], &TraceIntegrity::default(),
-            None, None, &[],
-            &RootComponentOverride::default(),
-            &waybill::binding::user_metadata::UserMetadata::default(),
-            None, None, None, None,
-            None,
-            None,
-            &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
-            None,
-            None,
-            None, 0,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-
-            None,
-            None,
-            None,
-            None, None, None,
+            MetadataSubject {
+                target_name: "myapp",
+                target_version: "0.1.0",
+                context: GenerationContext::FilesystemScan,
+                integrity: &TraceIntegrity::default(),
+                root_override: &RootComponentOverride::default(),
+                user_metadata: &waybill::binding::user_metadata::UserMetadata::default(),
+                graph_completeness: &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
+            },
+            MetadataExtras::default(),
         );
         let props = meta["properties"].as_array().expect("properties array");
         assert!(
@@ -2152,33 +2169,19 @@ mod tests {
             reason: "missing-use-close-paren".to_string(),
         };
         let meta = build_metadata(
-            "myapp", "0.1.0", GenerationContext::FilesystemScan,
-            &[], &[], &TraceIntegrity::default(),
-            None, None, &[],
-            &RootComponentOverride::default(),
-            &waybill::binding::user_metadata::UserMetadata::default(),
-            None, None, None, None,
-            None,
-            None,
-            &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
-            None,
-            Some(&mode),
-            None, 0,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-
-            None,
-            None,
-            None,
-            None, None, None,
+            MetadataSubject {
+                target_name: "myapp",
+                target_version: "0.1.0",
+                context: GenerationContext::FilesystemScan,
+                integrity: &TraceIntegrity::default(),
+                root_override: &RootComponentOverride::default(),
+                user_metadata: &waybill::binding::user_metadata::UserMetadata::default(),
+                graph_completeness: &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
+            },
+            MetadataExtras {
+                go_workspace_mode: Some(&mode),
+                ..Default::default()
+            },
         );
         let props = meta["properties"].as_array().expect("properties array");
         let c112 = props.iter().find(|p| p["name"] == "waybill:go-workspace-mode");
@@ -2190,10 +2193,32 @@ mod tests {
 
     #[test]
     fn metadata_context_varies_per_variant() {
-        let fs = build_metadata("myapp", "1.0", GenerationContext::FilesystemScan, &[], &[], &TraceIntegrity::default(), None, None, &[], &RootComponentOverride::default(), &waybill::binding::user_metadata::UserMetadata::default(), None, None, None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(), None, None, None, 0, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None);
+        let fs = build_metadata(
+            MetadataSubject {
+                target_name: "myapp",
+                target_version: "1.0",
+                context: GenerationContext::FilesystemScan,
+                integrity: &TraceIntegrity::default(),
+                root_override: &RootComponentOverride::default(),
+                user_metadata: &waybill::binding::user_metadata::UserMetadata::default(),
+                graph_completeness: &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
+            },
+            MetadataExtras::default(),
+        );
         assert_eq!(fs["properties"][0]["value"], "filesystem-scan");
 
-        let img = build_metadata("myapp", "1.0", GenerationContext::ContainerImageScan, &[], &[], &TraceIntegrity::default(), None, None, &[], &RootComponentOverride::default(), &waybill::binding::user_metadata::UserMetadata::default(), None, None, None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(), None, None, None, 0, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None);
+        let img = build_metadata(
+            MetadataSubject {
+                target_name: "myapp",
+                target_version: "1.0",
+                context: GenerationContext::ContainerImageScan,
+                integrity: &TraceIntegrity::default(),
+                root_override: &RootComponentOverride::default(),
+                user_metadata: &waybill::binding::user_metadata::UserMetadata::default(),
+                graph_completeness: &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
+            },
+            MetadataExtras::default(),
+        );
         assert_eq!(img["properties"][0]["value"], "container-image-scan");
     }
 
@@ -2201,42 +2226,16 @@ mod tests {
     fn metadata_omits_lifecycles_when_no_tiers_present() {
         // A component without a sbom_tier value contributes nothing.
         let meta = build_metadata(
-            "myapp",
-            "0.1.0",
-            GenerationContext::BuildTimeTrace,
-            &[],
-            &[],
-            &TraceIntegrity::default(),
-        None,
-        None,
-        &[],
-        &RootComponentOverride::default(),
-        &waybill::binding::user_metadata::UserMetadata::default(),
-        None,
-            None,
-        None,
-        None,
-            None,
-            None,
-            &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
-            None,
-            None,
-            None, 0,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-
-            None,
-            None,
-            None,
-            None, None, None,
+            MetadataSubject {
+                target_name: "myapp",
+                target_version: "0.1.0",
+                context: GenerationContext::BuildTimeTrace,
+                integrity: &TraceIntegrity::default(),
+                root_override: &RootComponentOverride::default(),
+                user_metadata: &waybill::binding::user_metadata::UserMetadata::default(),
+                graph_completeness: &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
+            },
+            MetadataExtras::default(),
         );
         assert!(meta.get("lifecycles").is_none());
     }
@@ -2298,42 +2297,19 @@ mod tests {
         ];
 
         let meta = build_metadata(
-            "myapp",
-            "0.1.0",
-            GenerationContext::ContainerImageScan,
-            &components,
-            &[],
-            &TraceIntegrity::default(),
-        None,
-        None,
-        &[],
-        &RootComponentOverride::default(),
-        &waybill::binding::user_metadata::UserMetadata::default(),
-        None,
-            None,
-        None,
-        None,
-            None,
-            None,
-            &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
-            None,
-            None,
-            None, 0,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-
-            None,
-            None,
-            None,
-            None, None, None,
+            MetadataSubject {
+                target_name: "myapp",
+                target_version: "0.1.0",
+                context: GenerationContext::ContainerImageScan,
+                integrity: &TraceIntegrity::default(),
+                root_override: &RootComponentOverride::default(),
+                user_metadata: &waybill::binding::user_metadata::UserMetadata::default(),
+                graph_completeness: &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
+            },
+            MetadataExtras {
+                components: &components,
+                ..Default::default()
+            },
         );
 
         let lifecycles = meta["lifecycles"]
@@ -2397,42 +2373,19 @@ mod tests {
         };
 
         let meta = build_metadata(
-            "myapp",
-            "0.1.0",
-            GenerationContext::BuildTimeTrace,
-            std::slice::from_ref(&c),
-            &[],
-            &TraceIntegrity::default(),
-        None,
-        None,
-        &[],
-        &RootComponentOverride::default(),
-        &waybill::binding::user_metadata::UserMetadata::default(),
-        None,
-            None,
-        None,
-        None,
-            None,
-            None,
-            &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
-            None,
-            None,
-            None, 0,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-
-            None,
-            None,
-            None,
-            None, None, None,
+            MetadataSubject {
+                target_name: "myapp",
+                target_version: "0.1.0",
+                context: GenerationContext::BuildTimeTrace,
+                integrity: &TraceIntegrity::default(),
+                root_override: &RootComponentOverride::default(),
+                user_metadata: &waybill::binding::user_metadata::UserMetadata::default(),
+                graph_completeness: &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
+            },
+            MetadataExtras {
+                components: std::slice::from_ref(&c),
+                ..Default::default()
+            },
         );
         assert!(
             meta.get("lifecycles").is_none(),
@@ -2451,42 +2404,19 @@ mod tests {
             id
         };
         let meta = build_metadata(
-            "myapp",
-            "0.1.0",
-            GenerationContext::FilesystemScan,
-            &[],
-            &[],
-            &TraceIntegrity::default(),
-            None,
-            None,
-            std::slice::from_ref(&auto),
-            &RootComponentOverride::default(),
-            &waybill::binding::user_metadata::UserMetadata::default(),
-        None,
-            None,
-        None,
-        None,
-            None,
-            None,
-            &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
-            None,
-            None,
-            None, 0,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-
-            None,
-            None,
-            None,
-            None, None, None,
+            MetadataSubject {
+                target_name: "myapp",
+                target_version: "0.1.0",
+                context: GenerationContext::FilesystemScan,
+                integrity: &TraceIntegrity::default(),
+                root_override: &RootComponentOverride::default(),
+                user_metadata: &waybill::binding::user_metadata::UserMetadata::default(),
+                graph_completeness: &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
+            },
+            MetadataExtras {
+                identifiers: std::slice::from_ref(&auto),
+                ..Default::default()
+            },
         );
         let refs = meta["component"]["externalReferences"]
             .as_array()
@@ -2512,42 +2442,19 @@ mod tests {
         let m2 = Identifier::parse("internal_ticket:PROJ-456").unwrap();
         let ids = vec![m1, m2];
         let meta = build_metadata(
-            "myapp",
-            "0.1.0",
-            GenerationContext::FilesystemScan,
-            &[],
-            &[],
-            &TraceIntegrity::default(),
-            None,
-            None,
-            &ids,
-            &RootComponentOverride::default(),
-            &waybill::binding::user_metadata::UserMetadata::default(),
-        None,
-            None,
-        None,
-        None,
-            None,
-            None,
-            &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
-            None,
-            None,
-            None, 0,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-
-            None,
-            None,
-            None,
-            None, None, None,
+            MetadataSubject {
+                target_name: "myapp",
+                target_version: "0.1.0",
+                context: GenerationContext::FilesystemScan,
+                integrity: &TraceIntegrity::default(),
+                root_override: &RootComponentOverride::default(),
+                user_metadata: &waybill::binding::user_metadata::UserMetadata::default(),
+                graph_completeness: &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
+            },
+            MetadataExtras {
+                identifiers: &ids,
+                ..Default::default()
+            },
         );
         let props = meta["properties"].as_array().expect("properties");
         let entry = props
@@ -2567,42 +2474,16 @@ mod tests {
     #[test]
     fn metadata_omits_user_defined_property_when_set_is_empty() {
         let meta = build_metadata(
-            "myapp",
-            "0.1.0",
-            GenerationContext::FilesystemScan,
-            &[],
-            &[],
-            &TraceIntegrity::default(),
-            None,
-            None,
-            &[],
-            &RootComponentOverride::default(),
-            &waybill::binding::user_metadata::UserMetadata::default(),
-        None,
-            None,
-        None,
-        None,
-            None,
-            None,
-            &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
-            None,
-            None,
-            None, 0,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-
-            None,
-            None,
-            None,
-            None, None, None,
+            MetadataSubject {
+                target_name: "myapp",
+                target_version: "0.1.0",
+                context: GenerationContext::FilesystemScan,
+                integrity: &TraceIntegrity::default(),
+                root_override: &RootComponentOverride::default(),
+                user_metadata: &waybill::binding::user_metadata::UserMetadata::default(),
+                graph_completeness: &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
+            },
+            MetadataExtras::default(),
         );
         let props = meta["properties"].as_array().expect("properties");
         let found = props
