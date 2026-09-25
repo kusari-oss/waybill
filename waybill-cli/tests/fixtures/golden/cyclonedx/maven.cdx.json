@@ -239,6 +239,10 @@
         {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
+        },
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:com.example:demo-app:1.0.0:*:*:*:*:*:*:* | cpe:2.3:a:example:demo-app:1.0.0:*:*:*:*:*:*:* | cpe:2.3:a:demo-app:demo-app:1.0.0:*:*:*:*:*:*:*"
         }
       ],
       "purl": "pkg:maven/com.example/demo-app@1.0.0",
