@@ -161,6 +161,15 @@ pub(crate) struct RelationLookup<'a> {
 /// dependency that genuinely exists, having been read from another package's
 /// relation list — but contributes no relations of its own. The caller
 /// classifies it and emits it versionless with a reason (FR-005a).
+// This function matches the walker-audit grep (`fn walk[_(]` under `scan_fs/`)
+// by name alone. It is NOT a filesystem walker: it touches no path, opens no
+// file and calls no `read_dir`. Its only input is the `RelationLookup` closure
+// pair the caller supplies, over an already-parsed package set. Retrieval
+// happens in `fetch.rs` / `cache.rs` and is audited there.
+//
+// The sigil must be on the line IMMEDIATELY above the signature — the gate
+// reads exactly one line back — so it goes last, not at the top of this block.
+// walker-audit: in-memory graph traversal, not a filesystem walk (issue #378)
 pub(crate) fn walk(declared: &[String], lookup: &RelationLookup<'_>) -> ClosureResult {
     let declared_set: BTreeSet<&str> = declared.iter().map(String::as_str).collect();
 
