@@ -4562,6 +4562,15 @@ pub async fn execute(
         .as_ref()
         .and_then(|s| s.closure.as_ref())
         .map(|c| c.to_document_value().to_string());
+    // TEMPORARY MUTATION (#962 step 10) -- reverted in the next commit.
+    // Renames every component at the single point all three emitters read
+    // from, so CDX components[].name, SPDX 2.3 packages[].name and SPDX 3
+    // @graph[].name all move. None is masked. The version constant the
+    // refresh doc used to recommend IS masked and proves nothing -- see the
+    // corrected step 10 in docs/development/refreshing-corpus-goldens.md.
+    for c in components.iter_mut() {
+        c.name.push_str("-CORPUSGATEPROBE");
+    }
     let artifacts = ScanArtifacts {
         nixpkgs_haskell_degraded,
         nixpkgs_haskell_resolution: nixpkgs_haskell_resolution_json.as_deref(),
