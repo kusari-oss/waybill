@@ -10,6 +10,24 @@ license:            BSD-3-Clause
 --   waybill-fixture-liba/-libb : present in the package set, resolve
 --   waybill-fixture-boot       : nulled by the compiler configuration
 --   waybill-fixture-absent     : in neither -> absent-from-package-set
+--
+-- Reached TRANSITIVELY, never declared here (milestone 985 / #962). Each
+-- exercises a shape the closure walk must survive, not one it expects:
+--
+--   waybill-fixture-mid          depth 1 from liba, heads a depth-2 chain
+--   waybill-fixture-leaf         depth 2; depends on a name absent from the set
+--   waybill-fixture-missing      absent from the set -> emitted versionless
+--                                with a reason (FR-005a), NOT dropped
+--   waybill-fixture-twoparents   reached from BOTH liba and libb -> two edges,
+--                                exactly one component (FR-012)
+--   waybill-fixture-cyc-a/-b     mutually recursive -> the walk must terminate
+--                                (FR-010)
+--   waybill-fixture-testonly     reachable ONLY via testHaskellDepends -> must
+--                                NOT appear; the runtime closure excludes test
+--                                relations (FR-002, deferred to issue #985)
+--   waybill-fixture-nevervisited reachable only THROUGH the boot library ->
+--                                must NOT appear, because a boot library is
+--                                recorded but never traversed (FR-011)
 library
     exposed-modules:  Fixture
     build-depends:    waybill-fixture-liba >=1.0 && <2

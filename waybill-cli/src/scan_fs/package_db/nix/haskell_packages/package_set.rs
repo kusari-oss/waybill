@@ -38,6 +38,12 @@ use super::nix_base32;
 pub(crate) struct PackageSetEntry {
     /// Exact version, e.g. `0.1.7`.
     pub(crate) version: String,
+    /// Runtime dependency relations this attribute declares (milestone 985).
+    ///
+    /// `libraryHaskellDepends` + `executableHaskellDepends`, merged and
+    /// deduplicated. Test and benchmark relations are deliberately absent —
+    /// see `relations_re` and issue #985.
+    pub(crate) runtime_relations: Vec<String>,
     /// SHA-256 of the source tarball, **hex**, converted from Nix base32 at
     /// parse time. `None` when the revision records no hash, or records one
     /// that is not 32 bytes — never a malformed value (Principle IX).
@@ -120,6 +126,47 @@ fn sha256_re() -> &'static Regex {
 /// name is unquoted unless the package name is not a valid Nix identifier and
 /// a parser keyed on `"name" =` finds almost nothing. That problem is real;
 /// the answer is to parse both spellings, which this does.
+/// `libraryHaskellDepends = [ a b c ];` and the executable twin.
+///
+/// # Why only these two fields (#962, FR-002)
+///
+/// These two are the **runtime** closure: parsing them reproduces what
+/// `nix eval` reports for `propagatedBuildInputs`, exactly, at 167 components
+/// on one measured project. That external agreement is what makes the closure
+/// checkable against something outside waybill's own assumptions.
+///
+/// `testHaskellDepends` and `benchmarkHaskellDepends` are **deliberately not
+/// extracted**. They are not a runtime concern, they have no equivalent
+/// oracle, and they are far larger: measured multipliers are 1.5–3.8× for the
+/// runtime closure against 7.3–9.8× including them. Deferred to issue #985 —
+/// this omission is a decision, not an oversight.
+///
+/// The list body is matched non-greedily up to the first `]`, which is safe
+/// because these lists contain only identifiers — no nested brackets.
+fn relations_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| {
+        Regex::new(r"(?s)(?:library|executable)HaskellDepends\s*=\s*\[([^\]]*)\]")
+            .expect("static runtime-relations regex")
+    })
+}
+
+/// Every runtime relation named in one attribute's body, deduplicated and
+/// sorted so the closure walk is deterministic (FR-013).
+fn runtime_relations_of(body: &str) -> Vec<String> {
+    let mut out: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
+    for c in relations_re().captures_iter(body) {
+        let Some(list) = c.get(1) else { continue };
+        for name in list.as_str().split_whitespace() {
+            // Nix identifiers only; anything else is not a package reference.
+            if !name.is_empty() {
+                out.insert(name.to_string());
+            }
+        }
+    }
+    out.into_iter().collect()
+}
+
 pub(crate) fn parse(text: &str) -> PackageSet {
     let mut entries: HashMap<String, PackageSetEntry> = HashMap::new();
 
@@ -162,6 +209,7 @@ pub(crate) fn parse(text: &str) -> PackageSet {
             PackageSetEntry {
                 version,
                 source_hash,
+                runtime_relations: runtime_relations_of(body),
             },
         );
     }
@@ -338,5 +386,111 @@ mod tests {
     #[test]
     fn m926_empty_input_yields_empty_set() {
         assert!(parse("").is_empty());
+    }
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod relation_tests {
+    use super::*;
+
+    const SAMPLE: &str = r#"
+  alpha = callPackage ({ mkDerivation }: mkDerivation {
+      pname = "alpha";
+      version = "1.0.0";
+      libraryHaskellDepends = [ base text ];
+      executableHaskellDepends = [ optparse-applicative ];
+      testHaskellDepends = [ hspec QuickCheck ];
+      benchmarkHaskellDepends = [ criterion ];
+  }) { };
+  beta = callPackage ({ mkDerivation }: mkDerivation {
+      pname = "beta";
+      version = "2.0.0";
+  }) { };
+  gamma = callPackage ({ mkDerivation }: mkDerivation {
+      pname = "gamma";
+      version = "3.0.0";
+      libraryHaskellDepends = [
+        multi
+        line
+        list
+      ];
+  }) { };
+  Delta = callPackage ({ mkDerivation }: mkDerivation {
+      pname = "Delta";
+      version = "4.0.0";
+      libraryHaskellDepends = [ Diff ];
+  }) { };
+"#;
+
+    /// Library and executable relations are both collected, merged, sorted.
+    #[test]
+    fn m985_library_and_executable_relations_are_collected() {
+        let set = parse(SAMPLE);
+        let a = set.get("alpha").unwrap();
+        assert_eq!(a.runtime_relations, vec!["base", "optparse-applicative", "text"]);
+    }
+
+    /// **The scope boundary, enforced by a test rather than by memory.**
+    ///
+    /// `testHaskellDepends` and `benchmarkHaskellDepends` must not leak into
+    /// the runtime closure. On one measured project, test relations alone take
+    /// the closure from 32 components to 153 — a 4.8× difference that would
+    /// misstate what the project ships. Deferred to issue #985.
+    #[test]
+    fn m985_test_and_benchmark_relations_are_not_collected() {
+        let set = parse(SAMPLE);
+        let a = set.get("alpha").unwrap();
+        for leaked in ["hspec", "QuickCheck", "criterion"] {
+            assert!(
+                !a.runtime_relations.iter().any(|r| r == leaked),
+                "{leaked} is a test/benchmark relation and must not be in the \
+                 runtime closure; got {:?}",
+                a.runtime_relations
+            );
+        }
+    }
+
+    /// An attribute with no relations yields an empty list, not an error.
+    #[test]
+    fn m985_an_attribute_with_no_relations_is_empty_not_absent() {
+        let set = parse(SAMPLE);
+        assert!(set.get("beta").unwrap().runtime_relations.is_empty());
+    }
+
+    /// Real lists span lines; a line-oriented reading would take only the first.
+    #[test]
+    fn m985_a_multi_line_relation_list_is_read_whole() {
+        let set = parse(SAMPLE);
+        assert_eq!(
+            set.get("gamma").unwrap().runtime_relations,
+            vec!["line", "list", "multi"]
+        );
+    }
+
+    /// Hackage names are case-sensitive: `Diff` and `diff` are different
+    /// packages, and folding case here would resolve one to the other's
+    /// version (#943).
+    #[test]
+    fn m985_relation_names_are_case_preserving() {
+        let set = parse(SAMPLE);
+        assert_eq!(set.get("Delta").unwrap().runtime_relations, vec!["Diff"]);
+    }
+
+    /// Relations are sorted and deduplicated, because the walk's output order
+    /// reaches the emitted document and two scans must be byte-identical
+    /// (FR-013).
+    #[test]
+    fn m985_relations_are_deterministic() {
+        let dup = r#"
+  x = callPackage ({ mkDerivation }: mkDerivation {
+      pname = "x";
+      version = "1.0";
+      libraryHaskellDepends = [ zeta alpha zeta ];
+      executableHaskellDepends = [ alpha mid ];
+  }) { };
+"#;
+        let set = parse(dup);
+        assert_eq!(set.get("x").unwrap().runtime_relations, vec!["alpha", "mid", "zeta"]);
     }
 }

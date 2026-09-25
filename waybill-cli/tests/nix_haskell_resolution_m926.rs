@@ -41,15 +41,59 @@ const PACKAGES: &str = r#"
       pname = "waybill-fixture-liba";
       version = "1.2.3";
       sha256 = "1zym9yia0is8wxfd6d1ldwvvghwxg4ww3y4lrxnyb2nk60ig29ly";
+      libraryHaskellDepends = [ waybill-fixture-mid waybill-fixture-twoparents ];
+      executableHaskellDepends = [ waybill-fixture-cyc-a ];
+      testHaskellDepends = [ waybill-fixture-testonly ];
   }) { };
   waybill-fixture-libb = callPackage ({ mkDerivation }: mkDerivation {
       pname = "waybill-fixture-libb";
       version = "0.4.1";
       sha256 = "091h1ifc1srv803rrkzc8mgvhpsnw6cn6r0mqqs44ss1shjaan6r";
+      libraryHaskellDepends = [ waybill-fixture-twoparents ];
   }) { };
   waybill-fixture-boot = callPackage ({ mkDerivation }: mkDerivation {
       pname = "waybill-fixture-boot";
       version = "9.9.9";
+      sha256 = "091h1ifc1srv803rrkzc8mgvhpsnw6cn6r0mqqs44ss1shjaan6r";
+      libraryHaskellDepends = [ waybill-fixture-nevervisited ];
+  }) { };
+  waybill-fixture-mid = callPackage ({ mkDerivation }: mkDerivation {
+      pname = "waybill-fixture-mid";
+      version = "0.5.0";
+      sha256 = "091h1ifc1srv803rrkzc8mgvhpsnw6cn6r0mqqs44ss1shjaan6r";
+      libraryHaskellDepends = [ waybill-fixture-leaf waybill-fixture-boot ];
+  }) { };
+  waybill-fixture-leaf = callPackage ({ mkDerivation }: mkDerivation {
+      pname = "waybill-fixture-leaf";
+      version = "0.9.0";
+      sha256 = "091h1ifc1srv803rrkzc8mgvhpsnw6cn6r0mqqs44ss1shjaan6r";
+      libraryHaskellDepends = [ waybill-fixture-missing ];
+  }) { };
+  waybill-fixture-testonly = callPackage ({ mkDerivation }: mkDerivation {
+      pname = "waybill-fixture-testonly";
+      version = "6.6.6";
+      sha256 = "091h1ifc1srv803rrkzc8mgvhpsnw6cn6r0mqqs44ss1shjaan6r";
+  }) { };
+  waybill-fixture-nevervisited = callPackage ({ mkDerivation }: mkDerivation {
+      pname = "waybill-fixture-nevervisited";
+      version = "7.7.7";
+      sha256 = "091h1ifc1srv803rrkzc8mgvhpsnw6cn6r0mqqs44ss1shjaan6r";
+  }) { };
+  waybill-fixture-cyc-a = callPackage ({ mkDerivation }: mkDerivation {
+      pname = "waybill-fixture-cyc-a";
+      version = "1.0.0";
+      sha256 = "091h1ifc1srv803rrkzc8mgvhpsnw6cn6r0mqqs44ss1shjaan6r";
+      libraryHaskellDepends = [ waybill-fixture-cyc-b ];
+  }) { };
+  waybill-fixture-cyc-b = callPackage ({ mkDerivation }: mkDerivation {
+      pname = "waybill-fixture-cyc-b";
+      version = "2.0.0";
+      sha256 = "091h1ifc1srv803rrkzc8mgvhpsnw6cn6r0mqqs44ss1shjaan6r";
+      libraryHaskellDepends = [ waybill-fixture-cyc-a ];
+  }) { };
+  waybill-fixture-twoparents = callPackage ({ mkDerivation }: mkDerivation {
+      pname = "waybill-fixture-twoparents";
+      version = "3.3.3";
       sha256 = "091h1ifc1srv803rrkzc8mgvhpsnw6cn6r0mqqs44ss1shjaan6r";
   }) { };
 "#;

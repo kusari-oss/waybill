@@ -28,10 +28,10 @@ restated per task:
 
 ## Phase 1: Setup (Shared Infrastructure)
 
-- [ ] T001 Capture the pre-feature baseline before any code changes: scan the corpus Haskell target and save all three formats to `/tmp/m985-baseline/`, so contract C-7 / SC-009 can be checked later. Record the command and the commit SHA in the PR description. The committed goldens at `waybill-cli/tests/fixtures/public_corpus/haskell-language-server/` are the other copy of this baseline and MUST NOT be regenerated until T046.
-- [ ] T002 Create the closure module skeleton at `waybill-cli/src/scan_fs/package_db/nix/haskell_packages/closure.rs` with module docs stating the walk's purpose, its termination rule, and a pointer to research R4/R7; register it in `waybill-cli/src/scan_fs/package_db/nix/haskell_packages/mod.rs`.
-- [ ] T003 [P] Extend the synthetic package set in `waybill-cli/tests/nix_haskell_resolution_m926.rs` (`PACKAGES`) with a transitive chain — a declared package whose `libraryHaskellDepends` names a second package, which names a third — plus one cycle and one name absent from the set. The fixture must contain the shapes the walk has to survive, not only the shape it expects.
-- [ ] T004 [P] Extend `waybill-cli/tests/fixtures/nix_haskell/resolvable/waybill-fixture-app.cabal` with a comment block naming each fixture dependency's intended closure role, mirroring the existing per-dependency comments.
+- [X] T001 Capture the pre-feature baseline before any code changes: scan the corpus Haskell target and save all three formats to `/tmp/m985-baseline/`, so contract C-7 / SC-009 can be checked later. Record the command and the commit SHA in the PR description. The committed goldens at `waybill-cli/tests/fixtures/public_corpus/haskell-language-server/` are the other copy of this baseline and MUST NOT be regenerated until T046.
+- [X] T002 Create the closure module skeleton at `waybill-cli/src/scan_fs/package_db/nix/haskell_packages/closure.rs` with module docs stating the walk's purpose, its termination rule, and a pointer to research R4/R7; register it in `waybill-cli/src/scan_fs/package_db/nix/haskell_packages/mod.rs`.
+- [X] T003 [P] Extend the synthetic package set in `waybill-cli/tests/nix_haskell_resolution_m926.rs` (`PACKAGES`) with a transitive chain — a declared package whose `libraryHaskellDepends` names a second package, which names a third — plus one cycle and one name absent from the set. The fixture must contain the shapes the walk has to survive, not only the shape it expects.
+- [X] T004 [P] Extend `waybill-cli/tests/fixtures/nix_haskell/resolvable/waybill-fixture-app.cabal` with a comment block naming each fixture dependency's intended closure role, mirroring the existing per-dependency comments.
 
 ---
 
@@ -39,12 +39,12 @@ restated per task:
 
 **⚠️ Blocks every user story — the walk cannot run without relation data.**
 
-- [ ] T005 Add `DependencyRelations` (data-model E1) to `waybill-cli/src/scan_fs/package_db/nix/haskell_packages/package_set.rs`, holding `library` and `executable` name lists.
-- [ ] T006 Extend the attribute-keyed parser in `package_set.rs` to extract `libraryHaskellDepends` and `executableHaskellDepends` from each attribute body, in the same pass that extracts `version` and `sha256`. Key on the ATTRIBUTE name, never `pname` (E1.1, research R2, #970).
-- [ ] T007 Do NOT extract `testHaskellDepends` or `benchmarkHaskellDepends` (E1.2, FR-002). Add a comment naming issue #985 so the omission reads as a decision rather than an oversight.
-- [ ] T008 [P] Unit-test relation extraction in `package_set.rs`: a multi-line dependency list, an attribute with no relations, an attribute with only executable relations, and case-sensitive names (`Diff` ≠ `diff`, E1.4).
-- [ ] T009 [P] Unit-test that `testHaskellDepends` present in the input is NOT extracted, so the scope boundary is enforced by a test rather than by memory.
-- [ ] T010 Add the `ComponentOrigin` enum (E3) to `closure.rs` as a typed enum with `Declared` and `Transitive` variants — not a bare string (Principle IV).
+- [X] T005 Add `DependencyRelations` (data-model E1) to `waybill-cli/src/scan_fs/package_db/nix/haskell_packages/package_set.rs`, holding `library` and `executable` name lists.
+- [X] T006 Extend the attribute-keyed parser in `package_set.rs` to extract `libraryHaskellDepends` and `executableHaskellDepends` from each attribute body, in the same pass that extracts `version` and `sha256`. Key on the ATTRIBUTE name, never `pname` (E1.1, research R2, #970).
+- [X] T007 Do NOT extract `testHaskellDepends` or `benchmarkHaskellDepends` (E1.2, FR-002). Add a comment naming issue #985 so the omission reads as a decision rather than an oversight.
+- [X] T008 [P] Unit-test relation extraction in `package_set.rs`: a multi-line dependency list, an attribute with no relations, an attribute with only executable relations, and case-sensitive names (`Diff` ≠ `diff`, E1.4).
+- [X] T009 [P] Unit-test that `testHaskellDepends` present in the input is NOT extracted, so the scope boundary is enforced by a test rather than by memory.
+- [X] T010 Add the `ComponentOrigin` enum (E3) to `closure.rs` as a typed enum with `Declared` and `Transitive` variants — not a bare string (Principle IV).
 
 **Checkpoint**: relation data is available and scoped; no behaviour has changed yet.
 

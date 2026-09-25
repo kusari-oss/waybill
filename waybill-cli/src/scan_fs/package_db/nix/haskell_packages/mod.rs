@@ -19,6 +19,7 @@
 //!   (FR-014c).
 
 pub(crate) mod boot_libraries;
+pub(crate) mod closure;
 pub(crate) mod cache;
 pub(crate) mod fetch;
 pub(crate) mod nix_base32;
