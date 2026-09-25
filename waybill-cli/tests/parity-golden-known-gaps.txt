@@ -15,9 +15,9 @@
 # and the list cannot quietly rot into permanent cover.
 #
 # Format: <ecosystem>:<row-id>   # <issue> <why>
+#
+# bazel:E1 / cmake:E1 were here until #1001 fixed the compositions
+# bridge. The test named them as stale and refused to pass until the
+# lines went, which is the list working as intended.
 
-bazel:B1    # 1000 dev-scoped googletest edge emitted as a runtime DEPENDS_ON in SPDX
-bazel:B2    # 1000 same edge; CDX has the dev-scope edge, SPDX has none
-bazel:E1    # 1001 compositions reach CDX but not SPDX
-cmake:E1    # 1001 compositions reach CDX but not SPDX
 npm:A6      # 1002 file-tier package.json SHA-256 reaches SPDX 3 only

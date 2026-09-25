@@ -5,6 +5,46 @@ use serde_json::json;
 use waybill_common::attestation::integrity::TraceIntegrity;
 use waybill_common::resolution::ResolvedComponent;
 
+/// The CycloneDX `compositions[]` aggregate for the scan target itself.
+///
+/// Derived from trace integrity, NOT from ecosystem membership:
+/// probe-attach failure -> `"unknown"`; ring-buffer overflow or drops
+/// -> `"incomplete"`; otherwise `"incomplete_first_party_only"`.
+///
+/// Shared with the SPDX bridges (#1001), which previously carried only
+/// `complete_ecosystems` on the rationale that consumers "can
+/// reconstruct the aggregate claim from membership". They cannot: this
+/// depends on the trace, so an SPDX consumer had no way to recover it.
+pub fn target_aggregate(integrity: &TraceIntegrity) -> &'static str {
+    let has_probe_failures = !integrity.uprobe_attach_failures.is_empty()
+        || !integrity.kprobe_attach_failures.is_empty();
+    let has_data_loss = integrity.ring_buffer_overflows > 0 || integrity.events_dropped > 0;
+    if has_probe_failures {
+        "unknown"
+    } else if has_data_loss {
+        "incomplete"
+    } else {
+        "incomplete_first_party_only"
+    }
+}
+
+/// Whether CycloneDX will emit at least one `aggregate: "complete"`
+/// record — the condition catalog row E1 actually keys on (`e1_cdx`
+/// yields nothing when every record is incomplete, e.g. rpm/bdb-only).
+///
+/// Shared so the SPDX bridges fire on exactly the same condition.
+/// Emitting unconditionally there merely inverted the old asymmetry:
+/// rpm gained an SPDX annotation CDX had no twin for.
+pub fn has_complete_record(
+    integrity: &TraceIntegrity,
+    components: &[ResolvedComponent],
+    complete_ecosystems: &[String],
+) -> bool {
+    !complete_ecosystems.is_empty()
+        || (target_aggregate(integrity) == "incomplete_first_party_only"
+            && !components.is_empty())
+}
+
 /// Build the CycloneDX `compositions[]` section.
 ///
 /// Emits:
@@ -46,19 +86,7 @@ pub fn build_compositions(
     // about, one reason-code removed.
     degraded_ecosystems: &std::collections::HashSet<String>,
 ) -> serde_json::Value {
-    let has_probe_failures = !integrity.uprobe_attach_failures.is_empty()
-        || !integrity.kprobe_attach_failures.is_empty();
-
-    let has_data_loss =
-        integrity.ring_buffer_overflows > 0 || integrity.events_dropped > 0;
-
-    let target_aggregate = if has_probe_failures {
-        "unknown"
-    } else if has_data_loss {
-        "incomplete"
-    } else {
-        "incomplete_first_party_only"
-    };
+    let target_aggregate = target_aggregate(integrity);
 
     let mut out: Vec<serde_json::Value> = Vec::new();
 
@@ -179,7 +207,7 @@ pub fn build_compositions(
     // were observed and at least one outbound dep edge will be
     // synthesized for the primary (build_dependencies handles the
     // synthesis when no real edges exist).
-    if !has_probe_failures && !has_data_loss && !components.is_empty() {
+    if target_aggregate == "incomplete_first_party_only" && !components.is_empty() {
         out.push(json!({
             "aggregate": "complete",
             "dependencies": [target_ref],

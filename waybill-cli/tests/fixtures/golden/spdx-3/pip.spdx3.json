@@ -550,7 +550,7 @@
       "annotationType": "other",
       "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-G7Z4VLNKDJGCP5XTMDSA2MXQ/anno-BK3ZCR66IRL3HCNZ",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"compositions\",\"value\":{\"complete_ecosystems\":[\"pypi\"]}}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"compositions\",\"value\":{\"complete_ecosystems\":[\"pypi\"],\"target_aggregate\":\"incomplete_first_party_only\"}}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-G7Z4VLNKDJGCP5XTMDSA2MXQ",
       "type": "Annotation"
     },

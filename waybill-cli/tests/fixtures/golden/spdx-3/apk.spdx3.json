@@ -292,7 +292,7 @@
       "annotationType": "other",
       "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-4T2KIBJBUAH37FCUWVKB5FEQ/anno-UCFQE4BMIXUKSOHS",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"compositions\",\"value\":{\"complete_ecosystems\":[\"apk\"]}}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"compositions\",\"value\":{\"complete_ecosystems\":[\"apk\"],\"target_aggregate\":\"incomplete_first_party_only\"}}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-4T2KIBJBUAH37FCUWVKB5FEQ",
       "type": "Annotation"
     },

@@ -241,7 +241,7 @@
       "annotationType": "other",
       "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-XMOY434DITCGGIHAQVF7BHPJ/anno-5DFI5NF3Y5YOWXAY",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"compositions\",\"value\":{\"complete_ecosystems\":[\"maven\"]}}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"compositions\",\"value\":{\"complete_ecosystems\":[\"maven\"],\"target_aggregate\":\"incomplete_first_party_only\"}}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-XMOY434DITCGGIHAQVF7BHPJ",
       "type": "Annotation"
     },

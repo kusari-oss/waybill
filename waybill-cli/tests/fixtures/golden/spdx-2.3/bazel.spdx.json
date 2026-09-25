@@ -60,6 +60,12 @@
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-0.10.0-alpha.1",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-kprobe-attach-failures\",\"value\":\"[]\"}"
+    },
+    {
+      "annotationDate": "1970-01-01T00:00:00Z",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-0.10.0-alpha.1",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"compositions\",\"value\":{\"complete_ecosystems\":[],\"target_aggregate\":\"incomplete_first_party_only\"}}"
     }
   ],
   "creationInfo": {
@@ -353,11 +359,6 @@
       "spdxElementId": "SPDXRef-DOCUMENT"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-LM6FBYXSKLDBXQVU",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-O2EMNUFI7T55UF5J"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-NDJKRQLKYSDRTD3Q",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-O2EMNUFI7T55UF5J"
@@ -371,6 +372,11 @@
       "relatedSpdxElement": "SPDXRef-Package-SFZ6ZH3BHKUFYZNC",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-O2EMNUFI7T55UF5J"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-O2EMNUFI7T55UF5J",
+      "relationshipType": "DEV_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-LM6FBYXSKLDBXQVU"
     }
   ],
   "spdxVersion": "SPDX-2.3"

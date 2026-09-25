@@ -1401,7 +1401,7 @@
       "annotationType": "other",
       "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-7L7U57WFBPPOV4CUO5GJRF4F/anno-UJJBDYUGDMS3KM2D",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"compositions\",\"value\":{\"complete_ecosystems\":[\"golang\"]}}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"compositions\",\"value\":{\"complete_ecosystems\":[\"golang\"],\"target_aggregate\":\"incomplete_first_party_only\"}}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-7L7U57WFBPPOV4CUO5GJRF4F",
       "type": "Annotation"
     },
