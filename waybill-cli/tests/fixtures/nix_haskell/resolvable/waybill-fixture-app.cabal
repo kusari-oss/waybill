@@ -10,6 +10,9 @@ license:            BSD-3-Clause
 --   waybill-fixture-liba/-libb : present in the package set, resolve
 --   waybill-fixture-boot       : nulled by the compiler configuration
 --   waybill-fixture-absent     : in neither -> absent-from-package-set
+--   waybill-fixture-aliased    : bare name exists ONLY via the compiler
+--                                configuration's alias onto
+--                                `waybill-fixture-aliased_2_0_10` (#984)
 --
 -- Reached TRANSITIVELY, never declared here (milestone 985 / #962). Each
 -- exercises a shape the closure walk must survive, not one it expects:
@@ -34,4 +37,5 @@ library
                     , waybill-fixture-libb >=0.3 && <0.5
                     , waybill-fixture-boot >=4.17 && <5
                     , waybill-fixture-absent >=0.1
+                    , waybill-fixture-aliased >=2.0
     default-language: Haskell2010

@@ -107,6 +107,97 @@ where
     out
 }
 
+/// `name = <fn> self.<target>;` in a per-compiler configuration (#984).
+///
+/// The configuration file does not only null out boot libraries. It also
+/// **rebinds** attributes, and one shape of rebinding creates a bare name
+/// that exists nowhere else:
+///
+/// ```nix
+/// os-string = doDistribute self.os-string_2_0_10;
+/// ```
+///
+/// `hackage-packages.nix` carries the attribute `os-string_2_0_10`; the bare
+/// `os-string` a project (or another derivation's dependency list) refers to
+/// is created here. Without reading this, such a name resolves to nothing and
+/// is reported `absent-from-package-set` when a version was available.
+///
+/// Only the `self.` form is captured. The `super.` form —
+/// `doJailbreak super.aeson` — modifies an attribute that already exists in
+/// the package set, so it changes nothing about which version a bare name
+/// refers to. Measured at nixpkgs `a799d3e3`, `configuration-ghc-9.6.x.nix`
+/// has 25 rebindings, of which 3 have a bare name absent from the package
+/// set.
+///
+/// The target is captured, not resolved: an alias whose target is itself
+/// missing yields nothing rather than a guess (Principle IX).
+fn alias_binding_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| {
+        Regex::new(
+            // The target must be the LAST term before `;`. Without that,
+            // `addBuildDepend self.libiserv super.iserv-proxy` reads as
+            // `iserv-proxy -> libiserv`, aliasing a package onto one of its
+            // own dependencies and resolving it to that dependency's version.
+            // Caught by `m984_an_addbuilddepend_rebinding_does_not_alias_onto_its_dependency`
+            // before it shipped; the trailing `;` is what separates the two
+            // shapes.
+            r"(?m)(?:^|[\s{;])([A-Za-z][A-Za-z0-9_'-]*)[ \t]*=[ \t]*[A-Za-z][A-Za-z0-9_']*[ \t]+self\.([A-Za-z][A-Za-z0-9_'-]*)[ \t]*;",
+        )
+        .expect("static alias-binding regex")
+    })
+}
+
+/// Bare-name → target-attribute rebindings in one compiler configuration.
+pub(crate) fn alias_names(config_text: &str) -> std::collections::BTreeMap<String, String> {
+    alias_binding_re()
+        .captures_iter(config_text)
+        .filter_map(|c| {
+            let bare = c.get(1)?.as_str().to_string();
+            let target = c.get(2)?.as_str().to_string();
+            // A self-referential alias tells us nothing and would make the
+            // lookup in `classify` recurse for no gain.
+            (bare != target).then_some((bare, target))
+        })
+        .collect()
+}
+
+/// Union the aliases of every candidate compiler configuration.
+///
+/// Where candidates **disagree** about a name's target, the name is dropped
+/// rather than arbitrated. This mirrors `union_nulled`'s fail-closed posture
+/// for the same reason: when several compilers are possible and they point a
+/// name at different versions, waybill cannot know which one built the
+/// project, and picking either would assert a version the build may never
+/// have used (Principle IX).
+pub(crate) fn union_aliases<'a, I>(configs: I) -> std::collections::BTreeMap<String, String>
+where
+    I: IntoIterator<Item = &'a str>,
+{
+    let mut out: std::collections::BTreeMap<String, String> = std::collections::BTreeMap::new();
+    let mut conflicted: BTreeSet<String> = BTreeSet::new();
+    for text in configs {
+        for (bare, target) in alias_names(text) {
+            match out.get(&bare) {
+                Some(prev) if prev != &target => {
+                    conflicted.insert(bare);
+                }
+                _ => {
+                    out.insert(bare, target);
+                }
+            }
+        }
+    }
+    for name in &conflicted {
+        out.remove(name);
+        tracing::debug!(
+            package = %name,
+            "nixpkgs-haskell: candidate compilers disagree on an alias target; not resolving"
+        );
+    }
+    out
+}
+
 /// Is `name` supplied by the compiler rather than built from Hackage?
 ///
 /// Membership in the nulled set is the whole test. See the module docs for
@@ -228,5 +319,120 @@ self: super: {
         let n = nulled_names("self: super: { alpha = null; beta = null; }");
         assert!(is_boot_library("alpha", &n));
         assert!(is_boot_library("beta", &n));
+    }
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod alias_tests {
+    use super::*;
+
+    /// The exact shape from nixpkgs that #984 was filed for.
+    #[test]
+    fn m984_a_dodistribute_alias_is_captured() {
+        let cfg = "self: super: {\n  \
+                   os-string = doDistribute self.os-string_2_0_10;\n}\n";
+        let a = alias_names(cfg);
+        assert_eq!(a.get("os-string").map(String::as_str), Some("os-string_2_0_10"));
+    }
+
+    /// `super.` rebindings modify an attribute that already exists, so they
+    /// say nothing about which version a bare name refers to. Capturing them
+    /// would map a name onto itself and add nothing but noise.
+    #[test]
+    fn m984_a_super_rebinding_is_not_an_alias() {
+        let cfg = "self: super: {\n  \
+                   aeson = dontCheck super.aeson;\n  \
+                   gtk = doJailbreak super.gtk;\n}\n";
+        assert!(alias_names(cfg).is_empty(), "got {:?}", alias_names(cfg));
+    }
+
+    /// `addBuildDepend self.<dep> super.<pkg>` names the DEPENDENCY after
+    /// `self.`, not the package being rebound. Capturing it would alias
+    /// `iserv-proxy` onto `libiserv` — a different package entirely.
+    ///
+    /// This is a known limitation, asserted so it stays deliberate: the
+    /// binding is skipped rather than mis-read. Such a name keeps whatever
+    /// the package set already gives it.
+    #[test]
+    fn m984_an_addbuilddepend_rebinding_does_not_alias_onto_its_dependency() {
+        let cfg = "self: super: {\n  \
+                   iserv-proxy = addBuildDepend self.libiserv super.iserv-proxy;\n}\n";
+        let a = alias_names(cfg);
+        assert_ne!(
+            a.get("iserv-proxy").map(String::as_str),
+            Some("libiserv"),
+            "must not alias a package onto one of its dependencies"
+        );
+    }
+
+    /// Fail closed when candidate compilers disagree (FR-014a's posture).
+    #[test]
+    fn m984_conflicting_alias_targets_resolve_to_nothing() {
+        let a = union_aliases([
+            "self: super: { ghc-lib = doDistribute self.ghc-lib_9_8_5; }",
+            "self: super: { ghc-lib = doDistribute self.ghc-lib_9_6_1; }",
+        ]);
+        assert!(
+            !a.contains_key("ghc-lib"),
+            "candidates disagree, so no version may be asserted; got {a:?}"
+        );
+    }
+
+    /// Agreement across candidates is kept.
+    #[test]
+    fn m984_agreeing_alias_targets_survive_the_union() {
+        let a = union_aliases([
+            "self: super: { os-string = doDistribute self.os-string_2_0_10; }",
+            "self: super: { os-string = doDistribute self.os-string_2_0_10; }",
+        ]);
+        assert_eq!(a.get("os-string").map(String::as_str), Some("os-string_2_0_10"));
+    }
+
+    /// Against the REAL configuration file, not a hand-written snippet.
+    ///
+    /// #984 existed because the parser's model of this file was built from
+    /// what it was looking for (`= null;`) rather than from what the file
+    /// contains. A synthetic fixture would have reproduced that blind spot,
+    /// so this asserts against bytes nixpkgs actually ships.
+    ///
+    /// `#[ignore]`d rather than silently skipping when the cache is absent.
+    /// A test that prints "skipping" and reports `ok` is indistinguishable
+    /// from one that ran — the exact criticism #918 makes of the corpus gate,
+    /// and it would be self-defeating in a test whose whole purpose is to
+    /// check the parser against bytes rather than against assumptions.
+    ///
+    /// Run it with a populated cache:
+    ///   cargo test -p waybill --bins m984_real -- --ignored
+    #[test]
+    #[ignore = "needs a populated ~/.cache/waybill/nixpkgs; ignored rather than \
+                silently skipping, because a test that reports `ok` without \
+                running is worse than one that visibly does not run (#918)"]
+    fn m984_real_configuration_yields_the_known_aliases() {
+        let path = std::path::Path::new(&std::env::var("HOME").unwrap_or_default())
+            .join(".cache/waybill/nixpkgs")
+            .join("a799d3e3886da994fa307f817a6bc705ae538eeb")
+            .join("configuration-ghc-9.6.x.nix");
+        let text = std::fs::read_to_string(&path).unwrap_or_else(|e| {
+            panic!(
+                "no cached configuration at {} ({e}). Populate it by scanning a \
+                 Nix-built Haskell project, then re-run with --ignored.",
+                path.display()
+            )
+        });
+        let a = alias_names(&text);
+        assert_eq!(
+            a.get("os-string").map(String::as_str),
+            Some("os-string_2_0_10"),
+            "the alias that motivated #984 must be captured from the real file"
+        );
+        assert_eq!(
+            a.get("semaphore-compat").map(String::as_str),
+            Some("semaphore-compat_1_0_0")
+        );
+        // `super.` rebindings dominate this file; none may appear.
+        for (bare, target) in &a {
+            assert_ne!(bare, target, "self-alias leaked: {bare}");
+        }
     }
 }

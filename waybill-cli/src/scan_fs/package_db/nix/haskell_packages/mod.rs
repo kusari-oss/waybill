@@ -253,12 +253,23 @@ pub(crate) fn classify(
     name: &str,
     packages: &package_set::PackageSet,
     boot: &BTreeSet<String>,
+    aliases: &std::collections::BTreeMap<String, String>,
     revision: &str,
 ) -> ResolutionOutcome {
     if boot_libraries::is_boot_library(name, boot) {
         return ResolutionOutcome::unresolved(UnresolvedReason::CompilerSupplied);
     }
-    match packages.get(name) {
+    // #984: the compiler configuration can bind a bare name to a versioned
+    // attribute (`os-string = doDistribute self.os-string_2_0_10;`), in which
+    // case the bare name exists nowhere in the package set. Consulted only
+    // AFTER a direct hit, so an alias can never override a name the package
+    // set defines in its own right.
+    let entry = packages.get(name).or_else(|| {
+        aliases
+            .get(name)
+            .and_then(|target| packages.get(target.as_str()))
+    });
+    match entry {
         Some(entry) => ResolutionOutcome::Resolved {
             version: entry.version.clone(),
             source_hash: entry.source_hash.clone(),
@@ -376,11 +387,11 @@ mod tests {
         let boot: BTreeSet<String> = ["base".to_string()].into_iter().collect();
 
         assert_eq!(
-            classify("base", &ps, &boot, "rev"),
+            classify("base", &ps, &boot, &Default::default(), "rev"),
             ResolutionOutcome::unresolved(UnresolvedReason::CompilerSupplied),
             "base is in the package set with a version, and must still not resolve"
         );
-        match classify("aeson", &ps, &boot, "rev") {
+        match classify("aeson", &ps, &boot, &Default::default(), "rev") {
             ResolutionOutcome::Resolved { version, .. } => assert_eq!(version, "2.2.4.1"),
             other => panic!("expected aeson to resolve, got {other:?}"),
         }
@@ -390,7 +401,7 @@ mod tests {
     fn m926_a_name_in_neither_is_absent_from_the_package_set() {
         let ps = pkgs(&[("aeson", "2.2.4.1")]);
         assert_eq!(
-            classify("nowhere", &ps, &BTreeSet::new(), "rev"),
+            classify("nowhere", &ps, &BTreeSet::new(), &Default::default(), "rev"),
             ResolutionOutcome::unresolved(UnresolvedReason::AbsentFromPackageSet)
         );
     }
@@ -649,7 +660,7 @@ pub(crate) fn enrich(
     // #975: a partial cache must not half-resolve. An offline miss on any
     // compiler configuration degrades the whole pass rather than proceeding
     // with an empty boot set.
-    let (boot, candidates) =
+    let BootSet { boot, aliases, candidates } =
         match boot_set(source, &location, &pinned.revision, scan_root, opts.offline) {
             Ok(v) => v,
             Err(e) => {
@@ -698,7 +709,7 @@ pub(crate) fn enrich(
     }
 
     for c in components.iter_mut().filter(|c| is_enrichable(c)) {
-        match classify(&c.name, &packages, &boot, &pinned.revision) {
+        match classify(&c.name, &packages, &boot, &aliases, &pinned.revision) {
             ResolutionOutcome::Resolved {
                 version,
                 source_hash,
@@ -766,7 +777,14 @@ pub(crate) fn enrich(
             // (FR-006a).
             if !existing.contains(&member.name) {
                 let mut c = new_closure_component(&member.name);
-                match classify(&c.name, &packages, &boot, &pinned.revision) {
+                // #984: the closure resolves aliased names too, so a
+                // transitively-reached package whose bare name exists only
+                // via the compiler configuration gets its version rather
+                // than `absent-from-package-set`. This is the call site that
+                // closes the one remaining nix-eval disagreement measured in
+                // #962 -- `os-string`, reached through
+                // `directory-ospath-streaming`.
+                match classify(&c.name, &packages, &boot, &aliases, &pinned.revision) {
                     ResolutionOutcome::Resolved { version, source_hash, revision } => {
                         apply_resolved(
                             &mut c,
@@ -1012,7 +1030,7 @@ fn boot_set(
     rev: &str,
     scan_root: &Path,
     offline: bool,
-) -> Result<(BTreeSet<String>, Vec<String>), FetchError> {
+) -> Result<BootSet, FetchError> {
     let candidates = candidate_series(scan_root);
     let mut texts: Vec<String> = Vec::new();
     for series in &candidates {
@@ -1033,7 +1051,22 @@ fn boot_set(
         }
     }
     let boot = boot_libraries::union_nulled(texts.iter().map(String::as_str));
-    Ok((boot, candidates))
+    // #984: the same files also rebind bare names onto versioned attributes.
+    let aliases = boot_libraries::union_aliases(texts.iter().map(String::as_str));
+    Ok(BootSet { boot, aliases, candidates })
+}
+
+/// What one pass learns from the candidate compiler configurations.
+///
+/// Both halves come from the same files and are always read together, so they
+/// travel together rather than as a widening tuple.
+struct BootSet {
+    /// Names the compiler supplies; never resolved from Hackage.
+    boot: BTreeSet<String>,
+    /// #984 — bare name → the versioned attribute it actually refers to.
+    aliases: std::collections::BTreeMap<String, String>,
+    /// The GHC series considered, for the document-scope record.
+    candidates: Vec<String>,
 }
 
 /// Which compiler package sets the project might build against.
