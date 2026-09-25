@@ -9,7 +9,7 @@ use waybill_common::types::license::SpdxExpression;
 use super::compositions::build_compositions;
 use super::dependencies::build_dependencies;
 use super::evidence::{build_evidence, evidence_to_properties};
-use super::metadata::build_metadata;
+use super::metadata::{build_metadata, MetadataExtras, MetadataSubject};
 use super::vex::build_vulnerabilities;
 
 /// Configuration for CycloneDX BOM generation.
@@ -793,48 +793,51 @@ impl CycloneDxBuilder {
         );
 
         let metadata = build_metadata(
-            target_name,
-            "0.0.0",
-            self.config.generation_context.clone(),
-            effective_components,
-            &self.os_release_missing_fields,
-            integrity,
-            scan_target_coord,
-            self.source_document_binding.as_ref(),
-            &self.identifiers,
-            &self.root_override,
-            &self.user_metadata,
-            self.sbom_type_override,
-            self.file_inventory_stats.as_ref(),
-            self.nixpkgs_haskell_degraded.as_deref(),
-            self.file_inventory_mode.as_deref(),
-            self.file_inventory_source_shapes.as_deref(),
-            self.collisions_summary.as_ref(),
-            &graph_completeness,
-            self.go_transitive_coverage.as_ref(),
-            self.go_workspace_mode.as_ref(),
-            self.go_transitive_fallback_count,
-            self.unresolved_declared_dep_count,
-            self.pants_resolve_summary.as_ref(),
-            self.haskell_parse_summary.as_ref(),
-            self.go_cache_warming.as_ref(),
-            self.go_toolchains_detected.as_deref(),
-            self.cross_ecosystem_edges_report.as_ref(),
-            self.helm_extraction_mode.as_ref(),
-            self.gradle_scan_summary.as_ref(),
-            self.no_binary_scan_mode,
-            self.image_source.as_ref(),
-            self.compiler_pipeline.as_ref(),
-            self.project_discovery_mode,
-            // Milestone 221 US4 — thread operator-supplied SBOM
+            MetadataSubject {
+                target_name,
+                target_version: "0.0.0",
+                context: self.config.generation_context.clone(),
+                integrity,
+                root_override: &self.root_override,
+                user_metadata: &self.user_metadata,
+                graph_completeness: &graph_completeness,
+            },
+            MetadataExtras {
+                components: effective_components,
+                os_release_missing_fields: &self.os_release_missing_fields,
+                scan_target_coord,
+                source_document_binding: self.source_document_binding.as_ref(),
+                identifiers: &self.identifiers,
+                sbom_type_override: self.sbom_type_override,
+                file_inventory_stats: self.file_inventory_stats.as_ref(),
+                nixpkgs_haskell_degraded: self.nixpkgs_haskell_degraded.as_deref(),
+                file_inventory_mode: self.file_inventory_mode.as_deref(),
+                file_inventory_source_shapes: self.file_inventory_source_shapes.as_deref(),
+                collisions_summary: self.collisions_summary.as_ref(),
+                go_transitive_coverage: self.go_transitive_coverage.as_ref(),
+                go_workspace_mode: self.go_workspace_mode.as_ref(),
+                go_transitive_fallback_count: self.go_transitive_fallback_count,
+                unresolved_declared_dep_count: self.unresolved_declared_dep_count,
+                pants_resolve_summary: self.pants_resolve_summary.as_ref(),
+                haskell_parse_summary: self.haskell_parse_summary.as_ref(),
+                go_cache_warming: self.go_cache_warming.as_ref(),
+                go_toolchains_detected: self.go_toolchains_detected.as_deref(),
+                cross_ecosystem_edges_report: self.cross_ecosystem_edges_report.as_ref(),
+                helm_extraction_mode: self.helm_extraction_mode.as_ref(),
+                gradle_scan_summary: self.gradle_scan_summary.as_ref(),
+                no_binary_scan_mode: self.no_binary_scan_mode,
+                image_source: self.image_source.as_ref(),
+                compiler_pipeline: self.compiler_pipeline.as_ref(),
+                project_discovery_mode: self.project_discovery_mode,
+                sbom_version: // Milestone 221 US4 — thread operator-supplied SBOM
             // document version into the metadata block for the
             // C142 `waybill:sbom-version` property.
             self.config.sbom_version,
-            self.config.enrichment_degraded.as_deref(),
-        
-            self.resolve_identity.as_deref(),
-            self.nixpkgs_haskell_resolution.as_deref(),
-            self.nixpkgs_haskell_closure.as_deref(),
+                enrichment_degraded: self.config.enrichment_degraded.as_deref(),
+                resolve_identity: self.resolve_identity.as_deref(),
+                nixpkgs_haskell_resolution: self.nixpkgs_haskell_resolution.as_deref(),
+                nixpkgs_haskell_closure: self.nixpkgs_haskell_closure.as_deref(),
+            },
         );
         // Milestone 076 — track per-component identifier matches so
         // we can emit a warn for any selector that matched zero
