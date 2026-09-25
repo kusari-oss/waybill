@@ -157,9 +157,9 @@ restated per task:
 - [X] T049 [P] Mutation-test every assertion added in T011–T016, T022–T024, T031–T034, T039–T040 and T045: revert the behaviour each guards and confirm the test fails. Record which mutation was used for each in the PR.
 - [X] T050 [P] Update `docs/reference/reading-a-waybill-sbom.md` with a section on reading the closure — what `waybill:nixpkgs-component-origin` means, how to filter to declared-only, and that document size grows 1.5–3.8×.
 - [X] T051 [P] Add a CHANGELOG entry recording the measured multipliers, the oracle agreement, and the opt-out flag.
-- [ ] T052 Run the full gate: `./scripts/pre-pr.sh`. Both commands, enumerated per-target output, never an exit code alone.
-- [ ] T053 Re-run the corpus target with `WAYBILL_RUN_PUBLIC_CORPUS=1` and confirm layer 0 (invariant I2), layer 1 tripwires and layer 2 goldens all pass at closure scale.
-- [ ] T053a Confirm **SC-006** (two scans of one revision are byte-identical) still holds with the closure enabled. The existing `m926_two_scans_of_one_revision_are_byte_identical` covers it once the T003 fixture gains a transitive chain, so this is a verification step rather than a new test — but record that it ran, because a determinism guarantee inherited by accident is one nobody has checked.
+- [X] T052 Run the full gate: `./scripts/pre-pr.sh`. Both commands, enumerated per-target output, never an exit code alone.
+- [X] T053 Re-run the corpus target with `WAYBILL_RUN_PUBLIC_CORPUS=1` and confirm layer 0 (invariant I2), layer 1 tripwires and layer 2 goldens all pass at closure scale.
+- [X] T053a Confirm **SC-006** (two scans of one revision are byte-identical) still holds with the closure enabled. The existing `m926_two_scans_of_one_revision_are_byte_identical` covers it once the T003 fixture gains a transitive chain, so this is a verification step rather than a new test — but record that it ran, because a determinism guarantee inherited by accident is one nobody has checked.
 
 ---
 
