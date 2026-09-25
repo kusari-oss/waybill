@@ -64,6 +64,8 @@ restated per task:
 - [ ] T014 [P] [US1] Add `m985_an_unresolvable_transitive_name_is_emitted_versionless_with_a_reason` (FR-005a, C-5).
 - [ ] T015 [P] [US1] Add `m985_a_boot_library_in_the_closure_is_not_traversed` — its relations must not appear (FR-011, R5).
 - [ ] T016 [P] [US1] Add `m985_each_package_appears_once` for a package reachable by two parents (FR-012, E2.2).
+- [ ] T016a [P] [US1] Add `m985_the_closure_resolves_offline_from_a_hydrated_cache` (FR-003) — seed the per-revision cache, scan with `--offline`, and assert the closure resolves. Mirrors `m975_offline_resolves_from_a_hydrated_cache`. **This gap is not hypothetical**: milestone 975 found `--offline` refusing a cache it already had, resolving 0 of 97 with every byte on disk. The closure inherits that retrieval path and must be shown to inherit the fix too.
+- [ ] T016b [P] [US1] Add `m985_a_partial_cache_does_not_half_resolve_the_closure` (FR-003, Principle III) — with the package set cached but a compiler configuration missing, the pass degrades rather than walking with an empty boot set. Milestone 975's `m975_a_partial_cache_degrades_rather_than_misclassifying_boot_libraries` is the declared-path twin; at closure scale an empty boot set would mis-resolve boot libraries transitively as well as directly.
 
 ### Implementation for User Story 1
 
@@ -150,6 +152,7 @@ restated per task:
 - [ ] T045 Add `m985_the_opt_out_returns_pre_feature_output` — with the flag set, output is byte-identical to the T001 baseline (FR-017, C-7, SC-009). **This task MUST complete before T046**; once the goldens are regenerated the comparison no longer exists.
 - [ ] T046 Regenerate the public-corpus goldens through CI per `docs/development/refreshing-corpus-goldens.md`. Read every diff and attribute each category before accepting. Expect the Haskell target to change substantially and every other target not to change at all — a non-Haskell target moving is a finding, not noise.
 - [ ] T047 [P] Verify SC-002 against the oracle, not against waybill's own parse: run `measurements/nix_closure_oracle.sh` on a project with a populated cache and compare totals. Any disagreement must be explained — an unexplained off-by-one is how a wrong number enters a spec.
+- [ ] T047a [P] Verify SC-001: count `pkg:hackage/*` components with the closure enabled and disabled on the corpus target, and assert the ratio is ≥ 1.5×. This is the feature's headline claim and nothing else checks it — T047 checks agreement with the oracle and T048 checks wall clock, neither of which would notice a closure that resolved only a handful. Record both counts in the PR.
 - [ ] T048 [P] Verify SC-008: time the same scan with and without the closure, on the same machine with the package set local; the ratio must be ≤ 1.5×. Record both numbers in the PR.
 - [ ] T049 [P] Mutation-test every assertion added in T011–T016, T022–T024, T031–T034, T039–T040 and T045: revert the behaviour each guards and confirm the test fails. Record which mutation was used for each in the PR.
 - [ ] T050 [P] Update `docs/reference/reading-a-waybill-sbom.md` with a section on reading the closure — what `waybill:nixpkgs-component-origin` means, how to filter to declared-only, and that document size grows 1.5–3.8×.
@@ -190,20 +193,22 @@ Setup (T001–T004)
 
 - Setup: T003, T004
 - Foundational: T008, T009
-- US1 tests: T011–T016 all together
+- US1 tests: T011–T016b all together
 - US2: T027, T028 after T026; tests T022–T024 together
 - US3: tests T031–T034 together
-- Polish: T047, T048, T049, T050, T051
+- Polish: T047, T047a, T048, T049, T050, T051
 
 ### Parallel Example: User Story 1
 
 ```
 T011 ┐
-T012 ├─ all six tests written together, all failing
+T012 ├─ all eight tests written together, all failing
 T013 ├─ (no implementation exists yet)
 T014 │
 T015 │
-T016 ┘
+T016 │
+T016a├─ the two offline cases; see milestone 975
+T016b┘
   └─► T017 → T018 → T019 → T020 → T021  (sequential; same file, shared state)
 ```
 
@@ -224,5 +229,10 @@ no closure — it adds components a consumer cannot reason about.
 **Increment 3 = US4 + Polish.** The summary and the opt-out. T045 must land
 before T046 regardless of how the rest is sequenced.
 
-**Total: 53 tasks** — 4 setup, 6 foundational, 11 (US1), 9 (US2), 8 (US3),
-5 (US4), 10 polish.
+**Total: 56 tasks** — 4 setup, 6 foundational, 13 (US1), 9 (US2), 8 (US3),
+5 (US4), 11 polish.
+
+Three were added after `/speckit.analyze` found them missing: T016a and T016b
+close FR-003, which had **zero** tasks (no verification that the closure needs
+no extra retrieval, or that a project resolving offline also closes offline),
+and T047a closes SC-001, the multiplier claim, which nothing else checked.
