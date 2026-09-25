@@ -527,6 +527,56 @@ mod tests {
             .expect("SpdxDocument element")
     }
 
+    /// #993 (C23): SPDX 3 twin of the CDX and SPDX 2.3 tests. All
+    /// three emitters must produce the SAME JSON-array-in-string for
+    /// the attach-failures subkeys so `holistic_parity` can hold C23
+    /// `SymmetricEqual`. Locks the NON-EMPTY case — the parity
+    /// goldens are scan-mode and only ever carry empty lists, so
+    /// without this the information-losing shape could return on the
+    /// SPDX 3 path unnoticed.
+    #[test]
+    fn spdx3_trace_integrity_attach_failures_carry_names_not_counts() {
+        let integ = TraceIntegrity {
+            uprobe_attach_failures: vec!["libssl.so:SSL_write".to_string()],
+            kprobe_attach_failures: vec!["sys_connect".to_string(), "sys_accept".to_string()],
+            ..TraceIntegrity::default()
+        };
+        let comps = [mk_component("pkg:cargo/a@1", vec![])];
+        let arts = mk_artifacts(&comps, &integ);
+        let artifacts = Spdx3JsonSerializer.serialize(&arts, &mk_cfg()).unwrap();
+        let spdx3 = parse_spdx3(&artifacts[0].bytes);
+        let value_of = |field: &str| -> String {
+            let graph = spdx3
+                .get("@graph")
+                .and_then(|g| g.as_array())
+                .expect("@graph array");
+            for el in graph {
+                let Some(stmt) = el.get("statement").and_then(|v| v.as_str()) else {
+                    continue;
+                };
+                let Ok(parsed) = serde_json::from_str::<serde_json::Value>(stmt) else {
+                    continue;
+                };
+                if parsed.get("field").and_then(|f| f.as_str()) == Some(field) {
+                    return parsed
+                        .get("value")
+                        .and_then(|v| v.as_str())
+                        .expect("envelope value is a string")
+                        .to_string();
+                }
+            }
+            panic!("missing SPDX 3 annotation {field}");
+        };
+        assert_eq!(
+            value_of("waybill:trace-integrity-uprobe-attach-failures"),
+            r#"["libssl.so:SSL_write"]"#,
+        );
+        assert_eq!(
+            value_of("waybill:trace-integrity-kprobe-attach-failures"),
+            r#"["sys_connect","sys_accept"]"#,
+        );
+    }
+
     #[test]
     fn spdx3_no_vex_emits_no_external_ref_on_document() {
         let integ = empty_integrity();

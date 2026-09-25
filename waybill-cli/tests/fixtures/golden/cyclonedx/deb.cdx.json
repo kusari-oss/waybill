@@ -175,11 +175,11 @@
       },
       {
         "name": "waybill:trace-integrity-uprobe-attach-failures",
-        "value": "0"
+        "value": "[]"
       },
       {
         "name": "waybill:trace-integrity-kprobe-attach-failures",
-        "value": "0"
+        "value": "[]"
       },
       {
         "name": "waybill:graph-completeness",

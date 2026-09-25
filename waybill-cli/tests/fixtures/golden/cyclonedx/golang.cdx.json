@@ -980,7 +980,7 @@
       },
       {
         "name": "waybill:os-release-missing-fields",
-        "value": "ID,VERSION_ID"
+        "value": "[\"ID\",\"VERSION_ID\"]"
       },
       {
         "name": "waybill:trace-integrity-ring-buffer-overflows",
@@ -992,11 +992,11 @@
       },
       {
         "name": "waybill:trace-integrity-uprobe-attach-failures",
-        "value": "0"
+        "value": "[]"
       },
       {
         "name": "waybill:trace-integrity-kprobe-attach-failures",
-        "value": "0"
+        "value": "[]"
       },
       {
         "name": "waybill:graph-completeness",

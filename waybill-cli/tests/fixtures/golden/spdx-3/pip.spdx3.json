@@ -486,7 +486,7 @@
       "annotationType": "other",
       "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-G7Z4VLNKDJGCP5XTMDSA2MXQ/anno-6EOEXQ2CDRTRE35U",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:os-release-missing-fields\",\"value\":[\"ID\",\"VERSION_ID\"]}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:os-release-missing-fields\",\"value\":\"[\\\"ID\\\",\\\"VERSION_ID\\\"]\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-G7Z4VLNKDJGCP5XTMDSA2MXQ",
       "type": "Annotation"
     },
@@ -526,7 +526,7 @@
       "annotationType": "other",
       "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-G7Z4VLNKDJGCP5XTMDSA2MXQ/anno-7IHZJYLUOSUD5RNV",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-kprobe-attach-failures\",\"value\":[]}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-kprobe-attach-failures\",\"value\":\"[]\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-G7Z4VLNKDJGCP5XTMDSA2MXQ",
       "type": "Annotation"
     },
@@ -718,7 +718,7 @@
       "annotationType": "other",
       "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-G7Z4VLNKDJGCP5XTMDSA2MXQ/anno-LRRDIAV75IZ5X4K6",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-uprobe-attach-failures\",\"value\":[]}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-uprobe-attach-failures\",\"value\":\"[]\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-G7Z4VLNKDJGCP5XTMDSA2MXQ",
       "type": "Annotation"
     },

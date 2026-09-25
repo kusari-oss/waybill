@@ -377,7 +377,16 @@ spdx23_anno!(c20_spdx23, "waybill:requirement-ranges", component);
 spdx23_anno!(c21_spdx23, "waybill:generation-context", document);
 spdx23_anno!(c22_spdx23, "waybill:os-release-missing-fields", document);
 // C23 actually expands into 4 sub-fields; canary is ring-buffer-overflows.
-spdx23_anno!(c23_spdx23, "waybill:trace-integrity-ring-buffer-overflows", document);
+/// #993 (C23): all four subkeys — see `cdx::TRACE_INTEGRITY_SUBKEYS`.
+pub(super) fn c23_spdx23(doc: &Value) -> BTreeSet<String> {
+    let mut out = BTreeSet::new();
+    for key in super::cdx::TRACE_INTEGRITY_SUBKEYS {
+        for value in extract_mikebom_annotation_values(doc, key, true) {
+            out.insert(format!("{key}={value}"));
+        }
+    }
+    out
+}
 
 // C24-C26 (milestone 023 — ELF identity, surfaced via the
 // extra_annotations bag in entry.rs::make_file_level_component).

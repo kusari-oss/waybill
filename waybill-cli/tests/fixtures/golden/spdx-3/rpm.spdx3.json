@@ -98,7 +98,7 @@
       "annotationType": "other",
       "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-B5UO2PZZTOVPBY2JKF5QE7LW/anno-IQPUXWLU3E5QIQGY",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-kprobe-attach-failures\",\"value\":[]}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-kprobe-attach-failures\",\"value\":\"[]\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-B5UO2PZZTOVPBY2JKF5QE7LW",
       "type": "Annotation"
     },
@@ -114,7 +114,7 @@
       "annotationType": "other",
       "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-B5UO2PZZTOVPBY2JKF5QE7LW/anno-VMG37IBSJA2BJMXN",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:os-release-missing-fields\",\"value\":[\"ID\",\"VERSION_ID\"]}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:os-release-missing-fields\",\"value\":\"[\\\"ID\\\",\\\"VERSION_ID\\\"]\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-B5UO2PZZTOVPBY2JKF5QE7LW",
       "type": "Annotation"
     },
@@ -122,7 +122,7 @@
       "annotationType": "other",
       "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-B5UO2PZZTOVPBY2JKF5QE7LW/anno-YNOWJBZ4M5FVQIAJ",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-uprobe-attach-failures\",\"value\":[]}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-uprobe-attach-failures\",\"value\":\"[]\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-B5UO2PZZTOVPBY2JKF5QE7LW",
       "type": "Annotation"
     },

@@ -478,7 +478,32 @@ cdx_anno!(c22_cdx, "waybill:os-release-missing-fields", document);
 // the parity test treats it as one row per the catalog. Use the
 // ring-buffer-overflows scalar as the canary; the other three
 // share the same emit path.
-cdx_anno!(c23_cdx, "waybill:trace-integrity-ring-buffer-overflows", document);
+/// #993 (C23): every `waybill:trace-integrity-*` subkey, not just
+/// `ring-buffer-overflows`. The row's label claims the wildcard; before
+/// this the extractor read one of four subkeys, and the one it read
+/// happened to be the one that already agreed across formats — so the
+/// count-vs-list divergence on the two attach-failure subkeys was
+/// structurally invisible to `holistic_parity`.
+///
+/// Values are prefixed with their subkey so a divergence is
+/// attributable, and so equal values under different subkeys do not
+/// collapse into one set entry.
+pub(super) const TRACE_INTEGRITY_SUBKEYS: [&str; 4] = [
+    "waybill:trace-integrity-ring-buffer-overflows",
+    "waybill:trace-integrity-events-dropped",
+    "waybill:trace-integrity-uprobe-attach-failures",
+    "waybill:trace-integrity-kprobe-attach-failures",
+];
+
+pub(super) fn c23_cdx(doc: &Value) -> BTreeSet<String> {
+    let mut out = BTreeSet::new();
+    for key in TRACE_INTEGRITY_SUBKEYS {
+        for value in cdx_property_values(doc, key, true) {
+            out.insert(format!("{key}={value}"));
+        }
+    }
+    out
+}
 
 // C24-C26 (milestone 023 — ELF identity, surfaced via the
 // extra_annotations bag in entry.rs::make_file_level_component).

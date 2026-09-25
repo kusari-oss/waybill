@@ -650,13 +650,11 @@ fn push_document_fields(
         }
     }
 
-    // C22 os-release-missing-fields
+    // C22 os-release-missing-fields — #992: JSON-array-in-string,
+    // literally equal to the CDX and SPDX 2.3 twins.
     if !scan.os_release_missing_fields.is_empty() {
-        push(
-            out,
-            "waybill:os-release-missing-fields",
-            json!(scan.os_release_missing_fields),
-        );
+        let value = serde_json::to_string(&scan.os_release_missing_fields).unwrap_or_default();
+        push(out, "waybill:os-release-missing-fields", json!(value));
     }
 
     // Milestone 113 FR-014 / Constitution Principle X: user-supplied
@@ -960,15 +958,17 @@ fn push_document_fields(
         "waybill:trace-integrity-events-dropped",
         json!(scan.integrity.events_dropped),
     );
+    // #993 (C23): JSON-array-in-string so the value is literally equal
+    // to the CDX and SPDX 2.3 twins.
     push(
         out,
         "waybill:trace-integrity-uprobe-attach-failures",
-        json!(scan.integrity.uprobe_attach_failures),
+        json!(serde_json::to_string(&scan.integrity.uprobe_attach_failures).unwrap_or_default()),
     );
     push(
         out,
         "waybill:trace-integrity-kprobe-attach-failures",
-        json!(scan.integrity.kprobe_attach_failures),
+        json!(serde_json::to_string(&scan.integrity.kprobe_attach_failures).unwrap_or_default()),
     );
 
     // E1 compositions
