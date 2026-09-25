@@ -34,7 +34,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:github.com\\/davecgh\\/go-spew:github.com\\/davecgh\\/go-spew:v1.1.1:*:*:*:*:*:*:* | cpe:2.3:a:github.com\\/davecgh:github.com\\/davecgh\\/go-spew:v1.1.1:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:github.com\\\\/davecgh\\\\/go-spew:github.com\\\\/davecgh\\\\/go-spew:v1.1.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:github.com\\\\/davecgh:github.com\\\\/davecgh\\\\/go-spew:v1.1.1:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -105,7 +105,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:github.com\\/inconshreveable\\/mousetrap:github.com\\/inconshreveable\\/mousetrap:v1.1.0:*:*:*:*:*:*:* | cpe:2.3:a:github.com\\/inconshreveable:github.com\\/inconshreveable\\/mousetrap:v1.1.0:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:github.com\\\\/inconshreveable\\\\/mousetrap:github.com\\\\/inconshreveable\\\\/mousetrap:v1.1.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:github.com\\\\/inconshreveable:github.com\\\\/inconshreveable\\\\/mousetrap:v1.1.0:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -176,7 +176,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:github.com\\/mattn\\/go-isatty:github.com\\/mattn\\/go-isatty:v0.0.21:*:*:*:*:*:*:* | cpe:2.3:a:github.com\\/mattn:github.com\\/mattn\\/go-isatty:v0.0.21:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:github.com\\\\/mattn\\\\/go-isatty:github.com\\\\/mattn\\\\/go-isatty:v0.0.21:*:*:*:*:*:*:*\",\"cpe:2.3:a:github.com\\\\/mattn:github.com\\\\/mattn\\\\/go-isatty:v0.0.21:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -243,7 +243,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:github.com\\/pmezard\\/go-difflib:github.com\\/pmezard\\/go-difflib:v1.0.0:*:*:*:*:*:*:* | cpe:2.3:a:github.com\\/pmezard:github.com\\/pmezard\\/go-difflib:v1.0.0:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:github.com\\\\/pmezard\\\\/go-difflib:github.com\\\\/pmezard\\\\/go-difflib:v1.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:github.com\\\\/pmezard:github.com\\\\/pmezard\\\\/go-difflib:v1.0.0:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -314,7 +314,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:github.com\\/sirupsen\\/logrus:github.com\\/sirupsen\\/logrus:v1.9.4:*:*:*:*:*:*:* | cpe:2.3:a:github.com\\/sirupsen:github.com\\/sirupsen\\/logrus:v1.9.4:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:github.com\\\\/sirupsen\\\\/logrus:github.com\\\\/sirupsen\\\\/logrus:v1.9.4:*:*:*:*:*:*:*\",\"cpe:2.3:a:github.com\\\\/sirupsen:github.com\\\\/sirupsen\\\\/logrus:v1.9.4:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -381,7 +381,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:github.com\\/spf13\\/cobra:github.com\\/spf13\\/cobra:v1.10.2:*:*:*:*:*:*:* | cpe:2.3:a:github.com\\/spf13:github.com\\/spf13\\/cobra:v1.10.2:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:github.com\\\\/spf13\\\\/cobra:github.com\\\\/spf13\\\\/cobra:v1.10.2:*:*:*:*:*:*:*\",\"cpe:2.3:a:github.com\\\\/spf13:github.com\\\\/spf13\\\\/cobra:v1.10.2:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -448,7 +448,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:github.com\\/spf13\\/pflag:github.com\\/spf13\\/pflag:v1.0.9:*:*:*:*:*:*:* | cpe:2.3:a:github.com\\/spf13:github.com\\/spf13\\/pflag:v1.0.9:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:github.com\\\\/spf13\\\\/pflag:github.com\\\\/spf13\\\\/pflag:v1.0.9:*:*:*:*:*:*:*\",\"cpe:2.3:a:github.com\\\\/spf13:github.com\\\\/spf13\\\\/pflag:v1.0.9:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -519,7 +519,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:github.com\\/stretchr\\/testify:github.com\\/stretchr\\/testify:v1.11.1:*:*:*:*:*:*:* | cpe:2.3:a:github.com\\/stretchr:github.com\\/stretchr\\/testify:v1.11.1:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:github.com\\\\/stretchr\\\\/testify:github.com\\\\/stretchr\\\\/testify:v1.11.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:github.com\\\\/stretchr:github.com\\\\/stretchr\\\\/testify:v1.11.1:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -580,7 +580,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:golang.org\\/x\\/sys:golang.org\\/x\\/sys:v0.28.0:*:*:*:*:*:*:* | cpe:2.3:a:golang.org\\/x:golang.org\\/x\\/sys:v0.28.0:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:golang.org\\\\/x\\\\/sys:golang.org\\\\/x\\\\/sys:v0.28.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:golang.org\\\\/x:golang.org\\\\/x\\\\/sys:v0.28.0:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -645,7 +645,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:gopkg.in\\/check.v1:gopkg.in\\/check.v1:v0.0.0-20161208181325-20d25e280405:*:*:*:*:*:*:* | cpe:2.3:a:gopkg.in:gopkg.in\\/check.v1:v0.0.0-20161208181325-20d25e280405:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:gopkg.in\\\\/check.v1:gopkg.in\\\\/check.v1:v0.0.0-20161208181325-20d25e280405:*:*:*:*:*:*:*\",\"cpe:2.3:a:gopkg.in:gopkg.in\\\\/check.v1:v0.0.0-20161208181325-20d25e280405:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -710,7 +710,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:gopkg.in\\/yaml.v3:gopkg.in\\/yaml.v3:v3.0.1:*:*:*:*:*:*:* | cpe:2.3:a:gopkg.in:gopkg.in\\/yaml.v3:v3.0.1:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:gopkg.in\\\\/yaml.v3:gopkg.in\\\\/yaml.v3:v3.0.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:gopkg.in:gopkg.in\\\\/yaml.v3:v3.0.1:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -951,7 +951,7 @@
         },
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:example.com\\/simple:example.com\\/simple:v0.0.0-unknown:*:*:*:*:*:*:* | cpe:2.3:a:example.com:example.com\\/simple:v0.0.0-unknown:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:example.com\\\\/simple:example.com\\\\/simple:v0.0.0-unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:example.com:example.com\\\\/simple:v0.0.0-unknown:*:*:*:*:*:*:*\"]"
         }
       ],
       "purl": "pkg:golang/example.com/simple@v0.0.0-unknown",

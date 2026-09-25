@@ -1341,7 +1341,7 @@ impl CycloneDxBuilder {
                 if component.cpes.len() > 1 {
                     properties.push(json!({
                         "name": "waybill:cpe-candidates",
-                        "value": component.cpes.join(" | ")
+                        "value": serde_json::to_string(&component.cpes).unwrap_or_default()
                     }));
                 }
             }
