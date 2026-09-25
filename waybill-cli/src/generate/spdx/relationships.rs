@@ -66,6 +66,61 @@ pub enum SpdxRelationshipType {
     BuiltFrom,
 }
 
+/// The SPDX edge a synthesized root→component link should carry, given
+/// the target's `lifecycle_scope` (#1000).
+///
+/// Returns `(source, target, kind)` already in emission order, because
+/// the `*_DEPENDENCY_OF` verbs are reversed-direction per the m228
+/// convention: internal `root DependsOn dep` with a dev-scoped dep
+/// becomes SPDX `dep DEV_DEPENDENCY_OF root`.
+///
+/// Exists because the issue-#236 root fallback in `document.rs`
+/// synthesizes its edges AFTER `apply_lifecycle_scope_to_edges` has
+/// run, so it never saw the typed rewrite and hardcoded `DependsOn`.
+/// CycloneDX's twin fallback keeps the distinction for free — CDX
+/// carries scope on the component as native `scope: "excluded"`, while
+/// SPDX can only express it on the relationship. Sharing this mapping
+/// keeps the fallback and the main path from drifting again.
+pub(super) fn synthesized_root_edge(
+    compat: crate::generate::Spdx2RelationshipCompat,
+    root: &SpdxId,
+    target: &SpdxId,
+    scope: Option<waybill_common::resolution::LifecycleScope>,
+) -> (SpdxId, SpdxId, SpdxRelationshipType) {
+    use waybill_common::resolution::LifecycleScope;
+    // Basic mode collapses every scope to natural-direction
+    // DEPENDS_ON per the m228 escape hatch; scope stays recoverable
+    // from the target's `waybill:lifecycle-scope` annotation.
+    if matches!(compat, crate::generate::Spdx2RelationshipCompat::Basic) {
+        return (root.clone(), target.clone(), SpdxRelationshipType::DependsOn);
+    }
+    match scope {
+        Some(LifecycleScope::Development) => (
+            target.clone(),
+            root.clone(),
+            SpdxRelationshipType::DevDependencyOf,
+        ),
+        Some(LifecycleScope::Build) => (
+            target.clone(),
+            root.clone(),
+            SpdxRelationshipType::BuildDependencyOf,
+        ),
+        Some(LifecycleScope::Test) => (
+            target.clone(),
+            root.clone(),
+            SpdxRelationshipType::TestDependencyOf,
+        ),
+        Some(LifecycleScope::Optional) => (
+            target.clone(),
+            root.clone(),
+            SpdxRelationshipType::OptionalDependencyOf,
+        ),
+        Some(LifecycleScope::Runtime) | None => {
+            (root.clone(), target.clone(), SpdxRelationshipType::DependsOn)
+        }
+    }
+}
+
 impl SpdxRelationshipType {
     /// The SPDX 2.3 `relationshipType` string, matching the serde rename.
     ///

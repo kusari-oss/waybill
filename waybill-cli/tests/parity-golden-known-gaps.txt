@@ -20,6 +20,4 @@
 # bridge. The test named them as stale and refused to pass until the
 # lines went, which is the list working as intended.
 
-bazel:B1    # 1000 dev-scoped googletest edge emitted as a runtime DEPENDS_ON in SPDX
-bazel:B2    # 1000 same edge; CDX has the dev-scope edge, SPDX has none
 npm:A6      # 1002 file-tier package.json SHA-256 reaches SPDX 3 only

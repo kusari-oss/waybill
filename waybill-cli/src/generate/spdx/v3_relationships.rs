@@ -120,6 +120,36 @@ pub fn build_dependency_relationships(
     out
 }
 
+/// Apply SPDX 3.0.1's native `LifecycleScopeType` to a relationship
+/// element, given a target component's `lifecycle_scope` (#1000).
+///
+/// SPDX 3 has no `DEV_DEPENDENCY_OF` verb — every dependency edge is
+/// `dependsOn`, and the dev/build/test signal rides the `scope` field
+/// on a `LifecycleScopedRelationship`. This mirrors the mapping in
+/// [`build_dependency_relationships`] so the issue-#236 root fallback
+/// in `v3_document.rs`, which synthesizes edges after the typed
+/// rewrite has already run, classifies them the same way.
+///
+/// `Optional` maps to `None` per m179 FR-017: SPDX 3.0.1's enum has no
+/// `optional` value, and the signal rides the
+/// `waybill:optional-derivation` annotation instead.
+pub fn apply_lifecycle_scope(
+    element: &mut Value,
+    scope: Option<waybill_common::resolution::LifecycleScope>,
+) {
+    use waybill_common::resolution::LifecycleScope;
+    let Some(name) = (match scope {
+        Some(LifecycleScope::Development) => Some("development"),
+        Some(LifecycleScope::Build) => Some("build"),
+        Some(LifecycleScope::Test) => Some("test"),
+        Some(LifecycleScope::Runtime) | Some(LifecycleScope::Optional) | None => None,
+    }) else {
+        return;
+    };
+    element["type"] = json!("LifecycleScopedRelationship");
+    element["scope"] = json!(name);
+}
+
 /// Build containment-edge `Relationship` elements (`contains`)
 /// from CDX-style nested component data. SPDX 3 (like SPDX 2.3)
 /// has no native nesting; containment is expressed by edges

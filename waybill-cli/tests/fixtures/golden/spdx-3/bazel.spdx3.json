@@ -158,11 +158,12 @@
       "creationInfo": "_:creation-info",
       "from": "https://waybill.kusari.dev/spdx3/doc-H3NZVK53XHBW66N7YIBMQX5U/pkg-root-JRDK72P47VQ5ATJ4",
       "relationshipType": "dependsOn",
+      "scope": "development",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-H3NZVK53XHBW66N7YIBMQX5U/rel-HMBFMMQDPWLSSN6H",
       "to": [
         "https://waybill.kusari.dev/spdx3/doc-H3NZVK53XHBW66N7YIBMQX5U/pkg-LM6FBYXSKLDBXQVU"
       ],
-      "type": "Relationship"
+      "type": "LifecycleScopedRelationship"
     },
     {
       "creationInfo": "_:creation-info",

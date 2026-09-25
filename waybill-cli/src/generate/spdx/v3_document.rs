@@ -773,24 +773,36 @@ pub fn build_document(
                     .iter()
                     .map(|r| r.to.as_str())
                     .collect();
-                let mut graph_root_iris: Vec<&str> = scan
-                    .components
-                    .iter()
-                    .filter(|c| {
-                        c.parent_purl.is_none() && !depended_on.contains(c.purl.as_str())
-                    })
-                    .filter_map(|c| package_iri_by_purl.get(c.purl.as_str()).map(String::as_str))
-                    .collect();
+                // #1000: keep the component alongside its IRI so the
+                // synthesized edge can carry the target's lifecycle
+                // scope. This used to collect IRIs alone and emit a
+                // bare `dependsOn`, so a dev/build/test-scoped
+                // component reachable only via this fallback surfaced
+                // as a runtime dependency.
+                let mut graph_roots: Vec<(&str, Option<waybill_common::resolution::LifecycleScope>)> =
+                    scan.components
+                        .iter()
+                        .filter(|c| {
+                            c.parent_purl.is_none() && !depended_on.contains(c.purl.as_str())
+                        })
+                        .filter_map(|c| {
+                            package_iri_by_purl
+                                .get(c.purl.as_str())
+                                .map(|iri| (iri.as_str(), c.lifecycle_scope))
+                        })
+                        .collect();
                 // Deterministic emission order: lex by IRI.
-                graph_root_iris.sort();
-                for to_iri in graph_root_iris {
-                    all_relationships.push(super::v3_relationships::build_relationship(
+                graph_roots.sort_by(|a, b| a.0.cmp(b.0));
+                for (to_iri, scope) in graph_roots {
+                    let mut element = super::v3_relationships::build_relationship(
                         synth_iri.as_str(),
                         "dependsOn",
                         to_iri,
                         &doc_iri,
                         CREATION_INFO_ID,
-                    ));
+                    );
+                    super::v3_relationships::apply_lifecycle_scope(&mut element, scope);
+                    all_relationships.push(element);
                 }
             }
         }

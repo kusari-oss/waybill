@@ -872,10 +872,24 @@ pub fn build_document(
                 // Deterministic emission order: lex by PURL.
                 graph_roots.sort_by(|a, b| a.purl.as_str().cmp(b.purl.as_str()));
                 for c in graph_roots {
+                    // #1000: carry the target's lifecycle scope. This
+                    // hardcoded `DependsOn`, so a dev/build/test-scoped
+                    // component reachable only via this fallback (bazel,
+                    // whose reader emits no `depends`) surfaced as a
+                    // runtime dependency in SPDX while CDX showed it
+                    // excluded. An SPDX consumer filtering to runtime
+                    // deps got a test-only library.
+                    let (source, target, kind) =
+                        super::relationships::synthesized_root_edge(
+                            artifacts.spdx2_relationship_compat,
+                            synth_id,
+                            &SpdxId::for_purl(&c.purl),
+                            c.lifecycle_scope,
+                        );
                     relationships.push(super::relationships::SpdxRelationship {
-                        source: synth_id.clone(),
-                        target: SpdxId::for_purl(&c.purl),
-                        kind: super::relationships::SpdxRelationshipType::DependsOn,
+                        source,
+                        target,
+                        kind,
                         comment: None,
                     });
                 }
