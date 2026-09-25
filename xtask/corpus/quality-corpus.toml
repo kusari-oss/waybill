@@ -123,8 +123,18 @@ timeout_secs = 900  # ~100s observed; headroom for a cold runner
 # The 640 emitted here are all backed by a declared requirement; verified
 # with specs/866-go-graph-completeness/measurements/probe_edge_truth.py,
 # which reports 0 unbacked.
+#
+# Re-measured 2026-09-25 on CI (run 36105123834), waybill @ 3479bd94:
+#   files=300
+# `files` drops 330 -> 300 under m934 (#960), the same default-descent
+# skip set that moved cpp-mongo and python-pytorch. This target never
+# violated -- 300 sits 3 above a floor of 297 -- but the recorded
+# observation was stale and the surviving band had become lopsided: a 1%
+# decrease would trip it while a 20% increase would not. Re-centred on
+# the new observation at the file's usual +/-10%, which TIGHTENS the
+# ceiling (363 -> 330) rather than widening anything.
 pkgs      = { min = 410, max = 502 }
-files     = { min = 297, max = 363 }
+files     = { min = 270, max = 330 }
 edges     = { min = 576, max = 704 }
 max_depth = { min = 1, max = 6 }
 sbomqs    = { min = 6.54, max = 7.54 }
@@ -309,9 +319,16 @@ ecosystem = "pip"
 # The band is absolute rather than proportional because the count is small
 # and deterministic (committed manifests, no cache and no network), matching
 # how go-cobra is bounded. A collapse back toward 2 still trips `min`.
+#
+# Re-measured 2026-09-25 on CI (run 36105123834), waybill @ 3479bd94:
+#   files=360
+# `files` drops 375 -> 360 under m934 (#960). In band and not at risk
+# (23 above the floor), re-centred only so the recorded observation stays
+# true -- this file's premise is that every target records what waybill
+# actually produced at that pin.
 [targets.expect]
 pkgs      = { min = 8, max = 14 }
-files     = { min = 337, max = 413 }
+files     = { min = 324, max = 396 }
 edges     = { min = 5, max = 11 }
 max_depth = { min = 1, max = 5 }
 sbomqs    = { min = 5.37, max = 6.37 }
@@ -344,9 +361,25 @@ ecosystem = "pip"
 # This is the OPPOSITE signature to the #870 Class B targets, where the
 # extra edges were a root-to-everything fallback star over members with zero
 # outgoing edges. Only the bounds that actually violated are moved.
+#
+# Re-measured 2026-09-25 on CI (run 36105123834), waybill @ 3479bd94:
+#   wall=2545ms sbomqs=5.71 pkgs=116 files=64 edges=8 depth=2 flat=false
+#   waybill self-report: partial
+#
+# `files` drops 181 -> 64 because m934 (#960) made the file-tier walker
+# honor the shared default-descent skip set. Every one of the 117 lost
+# paths sits under a DOT-DIRECTORY -- .ci (97), .github (16),
+# .devcontainer (3), .claude (1) -- and 114 of them are `.sh` scripts,
+# the rest two shebang scripts and one devcontainer requirements.txt.
+# Nothing under build/, vendor/ or target/ moved, and `pkgs` is unchanged.
+#
+# These are CI and devcontainer shell scripts, which is what m934 set out
+# to stop inventorying, so the range was describing pre-m934 behaviour
+# rather than a defect. Unlike cpp-mongo, no vendored upstream source is
+# involved: third_party/ here is empty by design (research R6).
 [targets.expect]
 pkgs      = { min = 100, max = 124 }
-files     = { min = 162, max = 200 }
+files     = { min = 57, max = 71 }
 edges     = { min = 5, max = 11 }
 max_depth = { min = 1, max = 5 }
 sbomqs    = { min = 5.41, max = 6.41 }
@@ -530,9 +563,33 @@ ecosystem = "bazel/polyglot"
 #   waybill self-report: partial
 # Largest checkout (839 MB). Its 397 packages are mostly Python/npm tooling
 # plus 19 bazel -- the Bazel migration is real. Second-slowest scan.
+#
+# Re-measured 2026-09-25 on CI (run 36105123834), waybill @ 3479bd94:
+#   wall=5618ms sbomqs=6.17 pkgs=407 files=308 edges=434 depth=7 flat=false
+#   waybill self-report: partial
+#
+# `files` drops 420 -> 308 because m934 (#960) made the file-tier walker
+# honor the shared default-descent skip set. `pkgs` does not move: package
+# readers have honored that set since the m664 shared walker, so nothing
+# about package discovery changed here.
+#
+# THIS BOUND PINS A KNOWN-DEGRADED SHAPE, like the go-* targets do for
+# #857. Of the 122 file-tier paths lost, 119 are vendored UPSTREAM SOURCE
+# under `src/third_party/` -- 114 behind a `dist` segment and 5 behind a
+# `build` one. mongo vendors its C/C++ dependencies as
+# `src/third_party/<lib>/dist/`, which holds the upstream distribution
+# verbatim (configure.ac, AUTHORS, LICENSE.md), and zstd's own
+# `build/single_file_libs/` is upstream source too. Both names are in a
+# skip set whose stated rationale is "build outputs ... won't contain
+# upstream-project metadata worth re-reading", which is exactly inverted
+# in a vendored tree. That is #989, NOT a defect m934 introduced.
+#
+# 308 is therefore the post-m934 floor, re-authored so a FURTHER collapse
+# still fails. When #989 lands this bound rises and must be re-authored
+# again; do not read the eventual increase as a regression.
 [targets.expect]
 pkgs      = { min = 357, max = 437 }
-files     = { min = 378, max = 462 }
+files     = { min = 277, max = 339 }
 edges     = { min = 381, max = 467 }
 max_depth = { min = 5, max = 10 }
 sbomqs    = { min = 5.89, max = 6.89 }
