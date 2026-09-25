@@ -168,6 +168,9 @@ impl SbomSerializer for CycloneDxJsonSerializer {
             .with_nixpkgs_haskell_resolution(
                 scan.nixpkgs_haskell_resolution.map(str::to_string),
             )
+            .with_nixpkgs_haskell_closure(
+                scan.nixpkgs_haskell_closure.map(str::to_string),
+            )
             // Milestone 133 US4 — propagate `--file-inventory` mode
             // label so `metadata.properties[]` carries the
             // `waybill:file-inventory-mode = "full"` override marker

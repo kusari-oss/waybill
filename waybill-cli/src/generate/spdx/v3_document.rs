@@ -126,6 +126,7 @@ pub fn build_document(
             file_inventory_source_shapes: scan.file_inventory_source_shapes.clone(),
             nixpkgs_haskell_degraded: scan.nixpkgs_haskell_degraded,
             nixpkgs_haskell_resolution: scan.nixpkgs_haskell_resolution,
+            nixpkgs_haskell_closure: scan.nixpkgs_haskell_closure,
             root_override: scan.root_override.clone(),
             preserve_manifest_main_module: scan.preserve_manifest_main_module,
             user_metadata: scan.user_metadata.clone(),

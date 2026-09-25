@@ -58,22 +58,22 @@ restated per task:
 
 ### Tests for User Story 1
 
-- [ ] T011 [P] [US1] Add `m985_a_transitive_dependency_is_emitted_with_a_version` to `waybill-cli/tests/nix_haskell_resolution_m926.rs` — asserts a package reachable only through another is present and versioned.
-- [ ] T012 [P] [US1] Add `m985_every_resolved_closure_component_has_a_version_and_a_hash` (FR-004, **SC-003**) — asserted over **every** closure component, not one. SC-003 is a universal ("100% carry a version and a source hash, or are absent"), and a single-instance test cannot establish it; the corresponding declared-path assertion in milestone 980 counted violations across the whole document for the same reason.
-- [ ] T013 [P] [US1] Add `m985_the_walk_terminates_on_a_cycle` using the cyclic fixture from T003 (FR-010, R4).
-- [ ] T014 [P] [US1] Add `m985_every_unresolvable_name_carries_a_reason` (FR-005, FR-005a, C-5, **SC-005**) — asserted over **every** versionless Haskell component, counting violations rather than checking one instance, since SC-005 is a universal.
-- [ ] T015 [P] [US1] Add `m985_a_boot_library_in_the_closure_is_not_traversed` — its relations must not appear (FR-011, R5).
-- [ ] T016 [P] [US1] Add `m985_each_package_appears_once` for a package reachable by two parents (FR-012, E2.2).
+- [X] T011 [P] [US1] Add `m985_a_transitive_dependency_is_emitted_with_a_version` to `waybill-cli/tests/nix_haskell_resolution_m926.rs` — asserts a package reachable only through another is present and versioned.
+- [X] T012 [P] [US1] Add `m985_every_resolved_closure_component_has_a_version_and_a_hash` (FR-004, **SC-003**) — asserted over **every** closure component, not one. SC-003 is a universal ("100% carry a version and a source hash, or are absent"), and a single-instance test cannot establish it; the corresponding declared-path assertion in milestone 980 counted violations across the whole document for the same reason.
+- [X] T013 [P] [US1] Add `m985_the_walk_terminates_on_a_cycle` using the cyclic fixture from T003 (FR-010, R4).
+- [X] T014 [P] [US1] Add `m985_every_unresolvable_name_carries_a_reason` (FR-005, FR-005a, C-5, **SC-005**) — asserted over **every** versionless Haskell component, counting violations rather than checking one instance, since SC-005 is a universal.
+- [X] T015 [P] [US1] Add `m985_a_boot_library_in_the_closure_is_not_traversed` — its relations must not appear (FR-011, R5).
+- [X] T016 [P] [US1] Add `m985_each_package_appears_once` for a package reachable by two parents (FR-012, E2.2).
 - [ ] T016a [P] [US1] Add `m985_the_closure_resolves_offline_from_a_hydrated_cache` (FR-003) — seed the per-revision cache, scan with `--offline`, and assert the closure resolves. Mirrors `m975_offline_resolves_from_a_hydrated_cache`. **This gap is not hypothetical**: milestone 975 found `--offline` refusing a cache it already had, resolving 0 of 97 with every byte on disk. The closure inherits that retrieval path and must be shown to inherit the fix too.
 - [ ] T016b [P] [US1] Add `m985_a_partial_cache_does_not_half_resolve_the_closure` (FR-003, Principle III) — with the package set cached but a compiler configuration missing, the pass degrades rather than walking with an empty boot set. Milestone 975's `m975_a_partial_cache_degrades_rather_than_misclassifying_boot_libraries` is the declared-path twin; at closure scale an empty boot set would mis-resolve boot libraries transitively as well as directly.
 
 ### Implementation for User Story 1
 
-- [ ] T017 [US1] Implement `ClosureMember` (E2) in `closure.rs` with `name`, `origin`, and a `BTreeSet` `reached_from` — `BTree*` throughout, because output must be byte-identical across runs (E2.4, FR-013).
-- [ ] T018 [US1] Implement the breadth-first walk in `closure.rs` (**FR-001**): seed from the declared set, check `seen` BEFORE enqueue so cycles terminate (FR-010), and do not traverse into boot libraries (FR-011).
-- [ ] T019 [US1] Resolve each reached name through the existing `classify` in `mod.rs`, so closure members get identical version, hash and alias handling to declared ones — including the compiler-configuration alias fallback (#984, research R6).
-- [ ] T020 [US1] Emit a versionless component with the existing reason vocabulary for any name that does not resolve; introduce NO new reason values (**FR-005**, FR-005a, C-5).
-- [ ] T021 [US1] Wire the walk into `enrich()` in `mod.rs`, after declared-dependency classification so the declared set is known first.
+- [X] T017 [US1] Implement `ClosureMember` (E2) in `closure.rs` with `name`, `origin`, and a `BTreeSet` `reached_from` — `BTree*` throughout, because output must be byte-identical across runs (E2.4, FR-013).
+- [X] T018 [US1] Implement the breadth-first walk in `closure.rs` (**FR-001**): seed from the declared set, check `seen` BEFORE enqueue so cycles terminate (FR-010), and do not traverse into boot libraries (FR-011).
+- [X] T019 [US1] Resolve each reached name through the existing `classify` in `mod.rs`, so closure members get identical version, hash and alias handling to declared ones — including the compiler-configuration alias fallback (#984, research R6).
+- [X] T020 [US1] Emit a versionless component with the existing reason vocabulary for any name that does not resolve; introduce NO new reason values (**FR-005**, FR-005a, C-5).
+- [X] T021 [US1] Wire the walk into `enrich()` in `mod.rs`, after declared-dependency classification so the declared set is known first.
 
 **Checkpoint**: the closure resolves and emits. Components are present but not yet marked or connected.
 
@@ -93,10 +93,10 @@ restated per task:
 
 ### Implementation for User Story 2
 
-- [ ] T025 [US2] Set `ComponentOrigin::Declared` for names in the declared set and `Transitive` for the rest, with declared winning on collision (**FR-006**, FR-007, E3.2). FR-006 also forbids deriving this from graph position — see research R3 for why that would break under CycloneDX's m894 primary-dependency fallback.
-- [ ] T026 [US2] Emit `waybill:nixpkgs-component-origin` per component in CycloneDX via `waybill-cli/src/generate/cyclonedx/` (C-2).
-- [ ] T027 [P] [US2] Emit the same in SPDX 2.3 via `waybill-cli/src/generate/spdx/annotations.rs` (C-2).
-- [ ] T028 [P] [US2] Emit the same in SPDX 3 via `waybill-cli/src/generate/spdx/v3_annotations.rs` (C-2).
+- [X] T025 [US2] Set `ComponentOrigin::Declared` for names in the declared set and `Transitive` for the rest, with declared winning on collision (**FR-006**, FR-007, E3.2). FR-006 also forbids deriving this from graph position — see research R3 for why that would break under CycloneDX's m894 primary-dependency fallback.
+- [X] T026 [US2] Emit `waybill:nixpkgs-component-origin` per component in CycloneDX via `waybill-cli/src/generate/cyclonedx/` (C-2).
+- [X] T027 [P] [US2] Emit the same in SPDX 2.3 via `waybill-cli/src/generate/spdx/annotations.rs` (C-2).
+- [X] T028 [P] [US2] Emit the same in SPDX 3 via `waybill-cli/src/generate/spdx/v3_annotations.rs` (C-2).
 - [ ] T029 [US2] Add the catalog row for `waybill:nixpkgs-component-origin` to `docs/reference/sbom-format-mapping.md`, recording the Principle V audit from research R3 — no format has a native carrier — as the justification.
 - [ ] T030 [US2] Add three parity extractors for that row in `waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3}.rs` and register it in `mod.rs` with `Directionality::SymmetricEqual`. The row and the extractors land together, or `every_catalog_row_has_an_extractor` fails.
 
@@ -121,9 +121,9 @@ restated per task:
 
 ### Implementation for User Story 3
 
-- [ ] T035 [US3] Implement `ClosureEdge` (E5) in `closure.rs`, one per resolved relation, `from` the actual parent (E5.2).
-- [ ] T036 [US3] Convert closure edges into `Relationship` values in `waybill-cli/src/cli/scan_cmd.rs`, appending to the existing relationship set rather than replacing it.
-- [ ] T037 [US3] Apply `apply_renames` (added in #981) to closure edges as well as declared ones, so a version assignment that rewrites a PURL rewrites the endpoints in the same step (C-4.3, E5.3).
+- [X] T035 [US3] Implement `ClosureEdge` (E5) in `closure.rs`, one per resolved relation, `from` the actual parent (E5.2).
+- [X] T036 [US3] Convert closure edges into `Relationship` values in `waybill-cli/src/cli/scan_cmd.rs`, appending to the existing relationship set rather than replacing it.
+- [X] T037 [US3] Apply `apply_renames` (added in #981) to closure edges as well as declared ones, so a version assignment that rewrites a PURL rewrites the endpoints in the same step (C-4.3, E5.3).
 - [ ] T038 [US3] Verify against the per-PR integrity suite: `cargo +stable test -p waybill --test document_integrity` must stay green with the closure enabled.
 
 **Checkpoint**: the graph is complete and connected at closure scale.
@@ -138,8 +138,8 @@ restated per task:
 
 - [ ] T039 [P] [US4] Add `m985_a_closure_records_its_counts_at_document_scope` (FR-014).
 - [ ] T040 [P] [US4] Add `m985_a_scan_without_the_closure_records_nothing` (FR-015, **SC-007**, C-6) — a project with no `flake.lock`, a moving reference, or no Haskell dependencies emits no summary and is byte-identical to pre-feature output.
-- [ ] T041 [US4] Implement `ClosureSummary` (E4, **FR-014**) in `closure.rs` with `BTreeMap` ordering (E4.4), and return it from the walk. All four fields are required by FR-014, including `relations_walked` — it separates "few components because the project is small" from "few components because the walk stopped early", which are indistinguishable by count alone.
-- [ ] T042 [US4] Thread the summary into `ScanArtifacts` and emit `waybill:nixpkgs-haskell-closure` at document scope in all three formats. **It must reach the document, not a `tracing::info!`** — milestone 973 exists because milestone 926 computed exactly this record and dropped it.
+- [X] T041 [US4] Implement `ClosureSummary` (E4, **FR-014**) in `closure.rs` with `BTreeMap` ordering (E4.4), and return it from the walk. All four fields are required by FR-014, including `relations_walked` — it separates "few components because the project is small" from "few components because the walk stopped early", which are indistinguishable by count alone.
+- [X] T042 [US4] Thread the summary into `ScanArtifacts` and emit `waybill:nixpkgs-haskell-closure` at document scope in all three formats. **It must reach the document, not a `tracing::info!`** — milestone 973 exists because milestone 926 computed exactly this record and dropped it.
 - [ ] T043 [US4] Add the catalog row and three parity extractors for `waybill:nixpkgs-haskell-closure`, same discipline as T029/T030.
 
 **Checkpoint**: all four stories complete.
@@ -148,7 +148,7 @@ restated per task:
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T044 Add the `--no-nixpkgs-haskell-closure` flag (C-1) in `waybill-cli/src/cli/scan_cmd.rs`, defaulting to absent so the closure runs (FR-016). It MUST NOT disable milestone 926's declared-dependency resolution.
+- [X] T044 Add the `--no-nixpkgs-haskell-closure` flag (C-1) in `waybill-cli/src/cli/scan_cmd.rs`, defaulting to absent so the closure runs (FR-016). It MUST NOT disable milestone 926's declared-dependency resolution.
 - [ ] T045 Add `m985_the_opt_out_returns_pre_feature_output` — with the flag set, output is byte-identical to the T001 baseline (FR-017, C-7, SC-009). **This task MUST complete before T046**; once the goldens are regenerated the comparison no longer exists.
 - [ ] T046 Regenerate the public-corpus goldens through CI per `docs/development/refreshing-corpus-goldens.md`. Read every diff and attribute each category before accepting. Expect the Haskell target to change substantially and every other target not to change at all — a non-Haskell target moving is a finding, not noise.
 - [ ] T047 [P] Verify SC-002 against the oracle, not against waybill's own parse: run `measurements/nix_closure_oracle.sh` on a project with a populated cache and compare totals. Any disagreement must be explained — an unexplained off-by-one is how a wrong number enters a spec.

@@ -604,6 +604,16 @@ fn push_document_fields(
         );
     }
 
+    // C175 (#962) — the transitive runtime closure's own record. Emitted
+    // whenever the closure ran; absent when it did not, so a non-Haskell scan
+    // stays byte-identical.
+    if let Some(v) = scan.nixpkgs_haskell_closure {
+        push(out,
+            "waybill:nixpkgs-haskell-closure",
+            json!(v),
+        );
+    }
+
     // Milestone 133 US3 (C93/C94/C95): file-tier walker diagnostic
     // skip counters. Constitution Principle X. See CDX +
     // SPDX 2.3 twins.

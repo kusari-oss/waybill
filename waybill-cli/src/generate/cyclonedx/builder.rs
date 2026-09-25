@@ -180,6 +180,8 @@ pub struct CycloneDxBuilder {
     /// Issue #973 (C174) — the nixpkgs-backed Haskell resolution pass as
     /// a whole, pre-rendered as JSON. `Some` exactly when the pass ran.
     nixpkgs_haskell_resolution: Option<String>,
+    /// Milestone 985 (#962, C175) — the closure's record, pre-rendered JSON.
+    nixpkgs_haskell_closure: Option<String>,
     /// Milestone 133 US4 — `--file-inventory` mode label. Only
     /// `Some("full")` triggers the document-level override marker
     /// (Constitution Strict Boundary §5).
@@ -244,6 +246,7 @@ impl CycloneDxBuilder {
             file_inventory_stats: None,
             nixpkgs_haskell_degraded: None,
             nixpkgs_haskell_resolution: None,
+            nixpkgs_haskell_closure: None,
             file_inventory_mode: None,
             file_inventory_source_shapes: None,
             collisions_summary: None,
@@ -309,6 +312,12 @@ impl CycloneDxBuilder {
     /// resolution pass did, not only whether it failed.
     pub fn with_nixpkgs_haskell_resolution(mut self, value: Option<String>) -> Self {
         self.nixpkgs_haskell_resolution = value;
+        self
+    }
+
+    /// Milestone 985 (#962) — record what the transitive runtime closure did.
+    pub fn with_nixpkgs_haskell_closure(mut self, value: Option<String>) -> Self {
+        self.nixpkgs_haskell_closure = value;
         self
     }
 
@@ -825,6 +834,7 @@ impl CycloneDxBuilder {
         
             self.resolve_identity.as_deref(),
             self.nixpkgs_haskell_resolution.as_deref(),
+            self.nixpkgs_haskell_closure.as_deref(),
         );
         // Milestone 076 — track per-component identifier matches so
         // we can emit a warn for any selector that matched zero
