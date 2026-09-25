@@ -1147,6 +1147,26 @@ pub struct ScanArgs {
     #[arg(long)]
     pub no_nixpkgs_haskell: bool,
 
+    /// Skip the transitive runtime closure over the pinned nixpkgs, while
+    /// still resolving the versions of DECLARED Haskell dependencies.
+    ///
+    /// Milestone 985 (#962). By default waybill also walks each declared
+    /// dependency's own runtime dependencies through the pinned package set,
+    /// which on measured projects multiplies the Haskell component count by
+    /// 1.5–3.8× — on the largest, 162 components become 394. Every added
+    /// component carries a version, a source hash, and a
+    /// `waybill:nixpkgs-component-origin` of `transitive`.
+    ///
+    /// Set this when that growth is unwanted. Output then matches the
+    /// pre-closure behaviour exactly.
+    ///
+    /// Narrower than `--no-nixpkgs-haskell`, which disables the whole pass
+    /// including declared-dependency versions. The two are separately
+    /// valuable: wanting versions without the closure is a reasonable
+    /// position, and this flag is how to express it.
+    #[arg(long)]
+    pub no_nixpkgs_haskell_closure: bool,
+
     /// Seconds to wait when retrieving the pinned nixpkgs package set
     /// before degrading to versionless output (milestone 926, #947).
     ///
@@ -4246,6 +4266,7 @@ pub async fn execute(
             nhp::ResolveOptions {
                 offline,
                 disabled: args.no_nixpkgs_haskell,
+                closure_disabled: args.no_nixpkgs_haskell_closure,
             },
             &source,
         )
@@ -4255,6 +4276,9 @@ pub async fn execute(
     // above, so rewrite their endpoints now -- otherwise every component this
     // pass resolved is orphaned: CycloneDX keeps an edge pointing at the old
     // PURL, SPDX drops the relationship outright, and neither format errors.
+    // #980 — normalise identities BEFORE anything reads them. Version
+    // assignment rewrites component PURLs, and the PURL is what
+    // `Relationship::from`/`::to` hold.
     if let Some(s) = &nixpkgs_haskell_summary {
         let rewritten = scan_fs::package_db::nix::haskell_packages::apply_renames(
             &s.renames,
@@ -4268,6 +4292,93 @@ pub async fn execute(
             );
         }
     }
+
+    // #962 / milestone 985 — convert the closure's edges into relationships.
+    //
+    // The endpoints arrive as ATTRIBUTE NAMES and are resolved to each
+    // component's FINAL PURL here, after `enrich` has assigned versions. That
+    // ordering is deliberate and is what makes the #980 failure mode
+    // structurally impossible for these edges: milestone 980 happened because
+    // edges were built from identities that were rewritten afterwards, so
+    // building them from the final identities instead means there is nothing
+    // left to rewrite. `apply_renames` below still covers the edges that
+    // existed BEFORE enrichment, which is the case it was written for.
+    if let Some(s) = &nixpkgs_haskell_summary {
+        if !s.closure_edges.is_empty() {
+            let purl_of: std::collections::HashMap<&str, &str> = components
+                .iter()
+                .filter(|c| c.purl.as_str().starts_with("pkg:hackage/"))
+                .map(|c| (c.name.as_str(), c.purl.as_str()))
+                .collect();
+            // Dedupe against edges that already exist. The declared-dependency
+            // reader and the closure can both produce the same relation — a
+            // project declares `ghcide -> aeson` in its cabal, and nixpkgs
+            // records the same relation in the package set.
+            //
+            // CycloneDX hides this: `dependsOn` is a set per component, so
+            // duplicates collapse. SPDX does not, and would carry one extra
+            // relationship row per duplicate. Measured on the corpus Haskell
+            // target before this guard: 225 duplicate rows, and a CDX-vs-SPDX
+            // edge-count gap that grew from 1 to 232. Two formats disagreeing
+            // about a project's dependency graph is the asymmetry the parity
+            // discipline exists to catch.
+            let mut present: std::collections::HashSet<(String, String)> = relationships
+                .iter()
+                .filter(|r| {
+                    r.relationship_type
+                        == waybill_common::resolution::RelationshipType::DependsOn
+                })
+                .map(|r| (r.from.clone(), r.to.clone()))
+                .collect();
+            let mut added = 0usize;
+            let mut duplicate = 0usize;
+            let mut skipped = 0usize;
+            for e in &s.closure_edges {
+                // Invariant I2: an edge may only be emitted when BOTH
+                // endpoints name a component present in the document. A name
+                // with no component is skipped rather than dangled — but the
+                // closure emits a component for every name it reached, so
+                // this should never fire; the counter exists to say so.
+                let (Some(from), Some(to)) =
+                    (purl_of.get(e.from.as_str()), purl_of.get(e.to.as_str()))
+                else {
+                    skipped += 1;
+                    continue;
+                };
+                if !present.insert(((*from).to_string(), (*to).to_string())) {
+                    duplicate += 1;
+                    continue;
+                }
+                relationships.push(waybill_common::resolution::Relationship {
+                    from: (*from).to_string(),
+                    to: (*to).to_string(),
+                    relationship_type:
+                        waybill_common::resolution::RelationshipType::DependsOn,
+                    // Principle X — the edge says where it came from. A
+                    // consumer can tell a relation read from the pinned
+                    // nixpkgs apart from one the project declared itself.
+                    provenance: waybill_common::resolution::EnrichmentProvenance {
+                        source: "nixpkgs".to_string(),
+                        data_type: "haskell-runtime-closure".to_string(),
+                    },
+                });
+                added += 1;
+            }
+            if skipped > 0 {
+                tracing::warn!(
+                    skipped,
+                    "nixpkgs-haskell: closure edges skipped because an endpoint \
+                     had no component; this should be unreachable (invariant I2)"
+                );
+            }
+            tracing::info!(
+                closure_edges = added,
+                duplicate,
+                "nixpkgs-haskell: closure dependency edges emitted"
+            );
+        }
+    }
+
     if let Some(s) = &nixpkgs_haskell_summary {
         tracing::info!(
             resolved = s.resolved,
@@ -4444,9 +4555,17 @@ pub async fn execute(
     let nixpkgs_haskell_resolution_json: Option<String> = nixpkgs_haskell_summary
         .as_ref()
         .map(|s| s.to_document_value().to_string());
+    // #962 — `Some` exactly when the closure ran, so a scan without it is
+    // byte-identical to the pre-feature output. Rendered here so the borrow
+    // outlives `artifacts`.
+    let nixpkgs_haskell_closure_json: Option<String> = nixpkgs_haskell_summary
+        .as_ref()
+        .and_then(|s| s.closure.as_ref())
+        .map(|c| c.to_document_value().to_string());
     let artifacts = ScanArtifacts {
         nixpkgs_haskell_degraded,
         nixpkgs_haskell_resolution: nixpkgs_haskell_resolution_json.as_deref(),
+        nixpkgs_haskell_closure: nixpkgs_haskell_closure_json.as_deref(),
         unresolved_declared_dep_count,
         target_name: &target_name,
         components: &components,
@@ -6259,6 +6378,7 @@ mod tests {
         ScanArgs {
             path: Some(PathBuf::from(".")),
             no_nixpkgs_haskell: false,
+            no_nixpkgs_haskell_closure: false,
             nixpkgs_timeout_secs: 30,
             image: None,
             image_src: vec![],

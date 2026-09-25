@@ -106,6 +106,14 @@ pub struct ScanArtifacts<'a> {
     /// Distinct from `nixpkgs_haskell_degraded` (C173), which names a
     /// failure and is kept unchanged for consumers already keyed on it.
     pub nixpkgs_haskell_resolution: Option<&'a str>,
+    /// Milestone 985 (#962) — document-scope record of the transitive runtime
+    /// closure: declared count, transitive count, unresolved by reason, and
+    /// relations walked. Pre-rendered JSON.
+    ///
+    /// `Some` exactly when the closure ran, so a scan with no Haskell
+    /// dependencies, no `flake.lock`, or `--no-nixpkgs-haskell-closure` stays
+    /// byte-identical to the pre-feature output (FR-015, FR-017).
+    pub nixpkgs_haskell_closure: Option<&'a str>,
     /// Document-level scope mode. Resolved from
     /// `--include-declared-deps` (with the `--path`/`--image`
     /// auto-default rule). Surfaced in CDX `metadata.lifecycles[]`
@@ -444,6 +452,7 @@ impl<'a> ScanArtifacts<'a> {
             enrichment_degraded: None,
             nixpkgs_haskell_degraded: None,
             nixpkgs_haskell_resolution: None,
+            nixpkgs_haskell_closure: None,
             scope_mode: self.scope_mode,
             go_transitive_coverage: self.go_transitive_coverage,
             go_transitive_fallback_count: self.go_transitive_fallback_count,

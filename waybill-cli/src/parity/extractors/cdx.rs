@@ -956,6 +956,8 @@ cdx_anno!(c171_cdx, "waybill:nixpkgs-candidate-compilers", component);
 cdx_anno!(c172_cdx, "waybill:nixpkgs-version-disagreement", component);
 cdx_anno!(c173_cdx, "waybill:nixpkgs-haskell-degraded", document);
 cdx_anno!(c174_cdx, "waybill:nixpkgs-haskell-resolution", document);
+cdx_anno!(c175_cdx, "waybill:nixpkgs-component-origin", component);
+cdx_anno!(c176_cdx, "waybill:nixpkgs-haskell-closure", document);
 cdx_anno!(c161_cdx, "waybill:resolve-ownership",                     document);
 cdx_anno!(c163_cdx, "waybill:document-resolve",                     document);
 cdx_anno!(c162_cdx, "waybill:cabal-entries-skipped",                 document);

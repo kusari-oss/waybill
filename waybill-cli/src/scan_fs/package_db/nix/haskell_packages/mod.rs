@@ -19,6 +19,7 @@
 //!   (FR-014c).
 
 pub(crate) mod boot_libraries;
+pub(crate) mod closure;
 pub(crate) mod cache;
 pub(crate) mod fetch;
 pub(crate) mod nix_base32;
@@ -423,6 +424,13 @@ use waybill_common::types::hash::ContentHash;
 
 /// Annotation keys. Registered as catalog rows by T031.
 pub(crate) const ANN_RESOLVED_VIA: &str = "waybill:nixpkgs-resolved-via";
+/// Milestone 985 (#962) — declared vs transitively reached, per component.
+///
+/// Recorded explicitly rather than inferred from graph position: CycloneDX's
+/// primary-dependency fallback (milestone 894) synthesizes a root edge to
+/// every unreferenced component when the root has no declared edges, under
+/// which every closure member would read as declared (FR-006).
+pub(crate) const ANN_COMPONENT_ORIGIN: &str = "waybill:nixpkgs-component-origin";
 pub(crate) const ANN_UNRESOLVED_REASON: &str = "waybill:haskell-version-unresolved-reason";
 pub(crate) const ANN_CANDIDATE_COMPILERS: &str = "waybill:nixpkgs-candidate-compilers";
 pub(crate) const ANN_VERSION_DISAGREEMENT: &str = "waybill:nixpkgs-version-disagreement";
@@ -434,6 +442,13 @@ pub(crate) struct ResolveOptions {
     pub(crate) offline: bool,
     /// The feature's own opt-out (FR-015a).
     pub(crate) disabled: bool,
+    /// Milestone 985 (#962) — `--no-nixpkgs-haskell-closure`.
+    ///
+    /// Narrower than `disabled`: suppresses the transitive closure while
+    /// leaving milestone 926's declared-dependency resolution active, because
+    /// an operator who wants versions on declared dependencies but not a 3.8×
+    /// document should not have to give up both (FR-016).
+    pub(crate) closure_disabled: bool,
 }
 
 // The FR-019 budget is not carried here: it belongs to the retrieval
@@ -455,6 +470,13 @@ pub(crate) struct EnrichmentSummary {
     /// revision's (FR-013). The local value is kept; the difference is
     /// recorded.
     pub(crate) disagreements: usize,
+    /// Milestone 985 (#962) — what the transitive runtime closure did, and
+    /// the edges it produced. `None` when the closure did not run.
+    pub(crate) closure: Option<closure::ClosureSummary>,
+    /// Edges the closure produced, endpoints as ATTRIBUTE names. The caller
+    /// converts them to relationships and MUST apply `renames` to them in the
+    /// same step identities are rewritten (#980).
+    pub(crate) closure_edges: Vec<closure::ClosureEdge>,
     /// PURL rewrites this pass performed, as `(before, after)` (#980).
     ///
     /// Assigning a version changes the component's PURL, and the PURL is the
@@ -555,7 +577,7 @@ fn is_enrichable(c: &ResolvedComponent) -> bool {
 /// no work and produces no annotation (SC-009).
 pub(crate) fn enrich(
     scan_root: &Path,
-    components: &mut [ResolvedComponent],
+    components: &mut Vec<ResolvedComponent>,
     opts: ResolveOptions,
     source: &dyn fetch::RevisionSource,
 ) -> Option<EnrichmentSummary> {
@@ -709,7 +731,159 @@ pub(crate) fn enrich(
             }
         }
     }
+    // ------------------------------------------------------------------
+    // Milestone 985 (#962) — the transitive runtime closure.
+    //
+    // Runs AFTER declared classification so the declared set is known: a
+    // package reachable both ways must be recorded as declared, and that
+    // decision needs the declared set complete (FR-007).
+    // ------------------------------------------------------------------
+    if !opts.closure_disabled {
+        // `is_haskell`, NOT `is_enrichable`. The declared loop above has
+        // already assigned versions, and `is_enrichable` means "Haskell AND
+        // still versionless" — so filtering on it here would seed the walk
+        // with only the dependencies that FAILED to resolve. Measured while
+        // building this: the closure reported declared=2 on a fixture
+        // declaring four, and walked zero relations.
+        let declared: Vec<String> = components
+            .iter()
+            .filter(|c| is_haskell(c))
+            .map(|c| c.name.clone())
+            .collect();
+
+        let relations_of = |n: &str| packages.get(n).map(|e| e.runtime_relations.clone());
+        let is_boot = |n: &str| boot_libraries::is_boot_library(n, &boot);
+        let lookup = closure::RelationLookup { relations_of: &relations_of, is_boot: &is_boot };
+        let mut result = closure::walk(&declared, &lookup);
+
+        let existing: std::collections::BTreeSet<String> =
+            components.iter().map(|c| c.name.clone()).collect();
+
+        for member in &result.members {
+            // Origin is recorded on EVERY member, declared ones included:
+            // marking only transitive components makes absence ambiguous,
+            // indistinguishable from a component the resolver never examined
+            // (FR-006a).
+            if !existing.contains(&member.name) {
+                let mut c = new_closure_component(&member.name);
+                match classify(&c.name, &packages, &boot, &pinned.revision) {
+                    ResolutionOutcome::Resolved { version, source_hash, revision } => {
+                        apply_resolved(
+                            &mut c,
+                            &version,
+                            source_hash.as_deref(),
+                            &revision,
+                            pinned.matched_by,
+                            pinned.pin_state,
+                            &mut summary.renames,
+                        );
+                    }
+                    ResolutionOutcome::Unresolved { reason } => {
+                        // FR-005a — emitted versionless with a reason, never
+                        // dropped. The dependency is known to exist; it was
+                        // read from another package's relation list.
+                        *result
+                            .summary
+                            .unresolved
+                            .entry(reason.as_str().to_string())
+                            .or_insert(0) += 1;
+                        c.extra_annotations.insert(
+                            ANN_UNRESOLVED_REASON.to_string(),
+                            serde_json::Value::String(reason.as_str().to_string()),
+                        );
+                    }
+                }
+                components.push(c);
+            }
+        }
+
+        // Second pass so declared components added before the walk also get
+        // their origin.
+        let origin_of: std::collections::BTreeMap<&str, closure::ComponentOrigin> = result
+            .members
+            .iter()
+            .map(|m| (m.name.as_str(), m.origin))
+            .collect();
+        // Also `is_haskell` — every Haskell component the resolver touched
+        // carries an origin, resolved ones included (FR-006a).
+        for c in components.iter_mut().filter(|c| is_haskell(c)) {
+            if let Some(origin) = origin_of.get(c.name.as_str()) {
+                c.extra_annotations.insert(
+                    ANN_COMPONENT_ORIGIN.to_string(),
+                    serde_json::Value::String(origin.as_str().to_string()),
+                );
+            }
+        }
+
+        tracing::info!(
+            declared = result.summary.declared,
+            transitive = result.summary.transitive,
+            relations_walked = result.summary.relations_walked,
+            unresolved = ?result.summary.unresolved,
+            "nixpkgs-haskell: runtime closure resolved"
+        );
+        summary.closure_edges = std::mem::take(&mut result.edges);
+        summary.closure = Some(result.summary);
+    }
+
     Some(summary)
+}
+
+/// A component for a package the closure reached that nothing else emitted.
+///
+/// Mirrors what the design-tier readers produce: no version yet (the caller
+/// classifies), design tier, and a PURL without a version so
+/// `apply_resolved` rewrites it — and records the rewrite, so the edges
+/// pointing at it are rewritten too (#980).
+fn new_closure_component(name: &str) -> ResolvedComponent {
+    use waybill_common::resolution::{ResolutionEvidence, ResolutionTechnique};
+    let purl = waybill_common::types::purl::Purl::new(&format!("pkg:hackage/{name}"))
+        .unwrap_or_else(|_| {
+            // Unreachable for a Hackage name, but Principle IV forbids
+            // `.unwrap()` in production; fall back to a name-only PURL.
+            waybill_common::types::purl::Purl::new("pkg:hackage/unknown")
+                .expect("static fallback purl is valid")
+        });
+    ResolvedComponent {
+        build_inclusion: None,
+        name: name.to_string(),
+        version: String::new(),
+        purl,
+        evidence: ResolutionEvidence {
+            technique: ResolutionTechnique::UrlPattern,
+            confidence: 0.95,
+            source_connection_ids: vec![],
+            source_file_paths: vec![],
+            deps_dev_match: None,
+        },
+        licenses: vec![],
+        concluded_licenses: vec![],
+        hashes: vec![],
+        supplier: None,
+        cpes: vec![],
+        advisories: vec![],
+        occurrences: vec![],
+        lifecycle_scope: None,
+        requirement_ranges: Vec::new(),
+        source_type: None,
+        sbom_tier: Some("design".to_string()),
+        buildinfo_status: None,
+        evidence_kind: None,
+        binary_class: None,
+        binary_stripped: None,
+        linkage_kind: None,
+        detected_go: None,
+        confidence: None,
+        binary_packed: None,
+        npm_role: None,
+        raw_version: None,
+        parent_purl: None,
+        co_owned_by: None,
+        shade_relocation: None,
+        external_references: vec![],
+        extra_annotations: Default::default(),
+        binary_role: None,
+    }
 }
 
 /// Attach a resolved version, its hash and its provenance.
@@ -1034,7 +1208,7 @@ mod enrich_tests {
     const CONFIG: &str = r#"self: super: { waybill-fixture-boot = null; }"#;
 
     fn opts() -> ResolveOptions {
-        ResolveOptions { offline: false, disabled: false }
+        ResolveOptions { offline: false, disabled: false, closure_disabled: false }
     }
 
     fn isolated_cache() -> tempfile::TempDir {

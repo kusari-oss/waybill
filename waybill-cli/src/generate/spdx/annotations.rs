@@ -588,6 +588,16 @@ pub fn annotate_document(
         );
     }
 
+    // C175 (#962) — the transitive runtime closure's own record. Emitted
+    // whenever the closure ran; absent when it did not, so a non-Haskell scan
+    // stays byte-identical.
+    if let Some(v) = artifacts.nixpkgs_haskell_closure {
+        push(&mut out,
+            "waybill:nixpkgs-haskell-closure",
+            json!(v),
+        );
+    }
+
     // Milestone 133 US3 (C93/C94/C95): file-tier walker diagnostic
     // skip counters. Constitution Principle X — operators get
     // transparent visibility into what the orphan/full walker

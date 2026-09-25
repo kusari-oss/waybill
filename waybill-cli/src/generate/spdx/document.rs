@@ -494,6 +494,7 @@ pub fn build_document(
             // SPDX 2.3 for three milestones (#934).
             nixpkgs_haskell_degraded: artifacts.nixpkgs_haskell_degraded,
             nixpkgs_haskell_resolution: artifacts.nixpkgs_haskell_resolution,
+            nixpkgs_haskell_closure: artifacts.nixpkgs_haskell_closure,
             // Milestone 671 T010 — propagate the outer mode + source-
             // shape restriction so the C156 (source-tree) + m133 US4
             // (`full`) markers reach `annotate_document`. The
@@ -562,6 +563,7 @@ pub fn build_document(
             // SPDX 2.3 for three milestones (#934).
             nixpkgs_haskell_degraded: artifacts.nixpkgs_haskell_degraded,
             nixpkgs_haskell_resolution: artifacts.nixpkgs_haskell_resolution,
+            nixpkgs_haskell_closure: artifacts.nixpkgs_haskell_closure,
             // Milestone 671 T010 — propagate the outer mode + source-
             // shape restriction so the C156 (source-tree) + m133 US4
             // (`full`) markers reach `annotate_document`. The
@@ -1312,6 +1314,7 @@ mod tests {
             file_inventory_stats: None,
             nixpkgs_haskell_degraded: None,
             nixpkgs_haskell_resolution: None,
+            nixpkgs_haskell_closure: None,
             file_inventory_mode: None,
             file_inventory_source_shapes: None,
             root_override: crate::generate::RootComponentOverride::default(),

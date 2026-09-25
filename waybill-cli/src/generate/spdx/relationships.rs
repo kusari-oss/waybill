@@ -521,6 +521,7 @@ mod tests {
             file_inventory_stats: None,
             nixpkgs_haskell_degraded: None,
             nixpkgs_haskell_resolution: None,
+            nixpkgs_haskell_closure: None,
             file_inventory_mode: None,
             file_inventory_source_shapes: None,
             root_override: crate::generate::RootComponentOverride::default(),

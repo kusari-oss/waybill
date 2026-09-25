@@ -7,6 +7,57 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Added: the transitive runtime closure for Nix-built Haskell projects (#962)
+
+Milestone 926 resolved a Nix-built project's **declared** Haskell dependencies
+against the nixpkgs revision its `flake.lock` pins. The artifact it substitutes
+for — a `cabal.project.freeze` — carries the transitive closure, so the
+substitution was partial: a project with a freeze file got its full resolved
+set, a Nix-built project got only its direct dependencies.
+
+Waybill now walks each declared dependency's own runtime dependencies through
+the same package set. No additional retrieval — the data is in a file already
+on disk.
+
+| project | declared | with the closure |
+|---|---|---|
+| a small library | 21 | 53 |
+| a mid-sized client library | 44 | 190 |
+| `haskell-language-server` | 165 | 459 |
+
+**Cross-validated against `nix eval`.** On one project waybill's resolved set
+matches nix's own closure exactly — 167 components, same names, same versions,
+zero disagreements, nothing missing. That external agreement is why the runtime
+closure was scoped in and test/benchmark relations were scoped out: the runtime
+set can be checked against something outside waybill's own assumptions, and a
+test closure cannot. Including tests would have roughly doubled the document
+again (measured 7.3× and 9.8×). Tracked as issue #985.
+
+**Every Haskell component now carries `waybill:nixpkgs-component-origin`** —
+`declared` or `transitive` — on declared components too, so absence means "not
+examined" rather than "declared". It is recorded explicitly rather than
+inferred from graph position, because CycloneDX's primary-dependency fallback
+synthesizes a root edge to every unreferenced component when the root declares
+none, under which every closure member would read as declared.
+
+**Document scope** gains `waybill:nixpkgs-haskell-closure` with the declared,
+transitive, unresolved-by-reason and relations-walked counts.
+
+**The graph stays connected.** Edges come from the actual parent package, not
+synthesized from the root, and are built from each component's final identity
+after version assignment — which makes milestone 980's failure mode
+structurally impossible for them rather than merely avoided. Verified zero
+dangling endpoints on every project measured.
+
+Closure edges are deduplicated against edges the declared reader already
+emitted. Without that, CycloneDX hid the duplication in its `dependsOn` set
+while SPDX carried a row per edge: measured 225 duplicate SPDX relationships on
+the corpus target, and a CycloneDX-versus-SPDX edge-count gap that grew from 1
+to 232.
+
+**Opt out with `--no-nixpkgs-haskell-closure`**, which suppresses the closure
+while keeping declared-dependency versions — the two are separately valuable.
+
 ### Added: a Nix-built Haskell corpus target (#969)
 
 `haskell-aeson` carries no `flake.lock`, so the nixpkgs-backed Haskell
