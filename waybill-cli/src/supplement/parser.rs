@@ -61,6 +61,21 @@ pub(crate) struct Supplement {
     pub(crate) components: Vec<SupplementComponent>,
     pub(crate) services: Vec<SupplementService>,
     pub(crate) dependencies: Vec<SupplementDependency>,
+    /// #1006 — the supplement's `metadata.component` identifiers, for
+    /// REF RESOLUTION ONLY.
+    ///
+    /// m119 FR-014 ignores the supplement's `metadata.component` as a
+    /// component, and that stays true: it is never imported, and cannot
+    /// redefine the scan subject. But a `dependencies[]` entry whose
+    /// `ref` is the document subject is the standard CycloneDX way to
+    /// say "the thing this SBOM describes depends on these", and
+    /// rejecting it made a project's own published SBOM unusable —
+    /// mongo's `/sbom.json` roots 48 edges that way.
+    ///
+    /// Holds the subject's `bom-ref` and `purl` when present, so
+    /// `resolve_ref` can recognise them. Empty when the supplement
+    /// declares no subject.
+    pub(crate) subject_refs: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -143,6 +158,20 @@ pub(crate) fn load(path: &Path) -> Result<Supplement, SupplementError> {
             ),
         });
     }
+    // #1006: collect the subject's identifiers. NOT parsed as a
+    // component — see `Supplement::subject_refs`.
+    let subject_refs: Vec<String> = obj
+        .get("metadata")
+        .and_then(|m| m.get("component"))
+        .map(|c| {
+            ["bom-ref", "purl"]
+                .iter()
+                .filter_map(|k| c.get(*k).and_then(|v| v.as_str()))
+                .map(str::to_string)
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default();
+
     let components = parse_components(path, obj.get("components"))?;
     let services = parse_services(path, obj.get("services"))?;
     let dependencies = parse_dependencies(path, obj.get("dependencies"))?;
@@ -164,6 +193,7 @@ pub(crate) fn load(path: &Path) -> Result<Supplement, SupplementError> {
         components,
         services,
         dependencies,
+        subject_refs,
     })
 }
 

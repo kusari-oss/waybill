@@ -4086,6 +4086,7 @@ pub async fn execute(
         Some(crate::supplement::install(
             outcome.supplement_provenance,
             outcome.services,
+            outcome.root_anchors,
         ))
     } else {
         None

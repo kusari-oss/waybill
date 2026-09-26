@@ -922,3 +922,151 @@ fn duplicate_purl_in_supplement_exits_nonzero() {
         "expected non-zero exit on duplicate PURL"
     );
 }
+
+// ---------------------------------------------------------------
+// #1009 — a supplement whose dependency graph is rooted at its own
+// `metadata.component`.
+//
+// #1006 made that document ingestable; its components still arrived
+// unconnected, because the subject is not a component (m119 FR-014) and
+// each format picks its own root later. Measured on mongo's published
+// SBOM: 43 of 44 orphaned.
+//
+// This guards the fix in ALL THREE emitters. #1000 is why: the same
+// class of fix there looked complete after SPDX 2.3 was done while SPDX
+// 3 was still wrong, because each format has its own root handling. A
+// CDX-only assertion would pass with two thirds of this broken.
+// ---------------------------------------------------------------
+
+#[test]
+fn m1009_subject_rooted_supplement_components_are_anchored_in_all_three_formats() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    write_cargo_project(root, "waybill-fixture-app", "1.0.0");
+
+    // The root MUST already have an outgoing edge, or this test passes
+    // for the wrong reason: CycloneDX's primary-dependency fallback
+    // attaches every unreferenced component to a root that has no edges,
+    // so a dependency-free fixture would satisfy the CDX assertion even
+    // with the #1009 anchoring disabled. Caught by mutating each emitter
+    // independently. A declared dependency plus lockfile gives the root a
+    // real edge and makes the anchoring load-bearing.
+    std::fs::write(
+        root.join("Cargo.toml"),
+        "[package]\nname = \"waybill-fixture-app\"\nversion = \"1.0.0\"\n\
+         edition = \"2021\"\n\n[dependencies]\nwaybill-fixture-dep = \"0.1.0\"\n",
+    )
+    .unwrap();
+    std::fs::write(
+        root.join("Cargo.lock"),
+        "version = 3\n\n[[package]]\nname = \"waybill-fixture-app\"\n\
+         version = \"1.0.0\"\ndependencies = [\"waybill-fixture-dep\"]\n\n\
+         [[package]]\nname = \"waybill-fixture-dep\"\nversion = \"0.1.0\"\n",
+    )
+    .unwrap();
+
+    // Subject-rooted graph: the supplement's own metadata.component
+    // declares the vendored library as a direct dependency. This is the
+    // shape a project-published SBOM has.
+    let supp = write_supplement(
+        root,
+        r#"{
+          "bomFormat": "CycloneDX",
+          "specVersion": "1.6",
+          "metadata": {
+            "component": {
+              "type": "application",
+              "name": "waybill-fixture-app",
+              "purl": "pkg:github/waybill-fixture/app@v1",
+              "bom-ref": "pkg:github/waybill-fixture/app@v1"
+            }
+          },
+          "components": [
+            {
+              "type": "library",
+              "name": "vendored-lib",
+              "version": "2.3.4",
+              "purl": "pkg:github/waybill-fixture/vendored-lib@v2.3.4",
+              "bom-ref": "pkg:github/waybill-fixture/vendored-lib@v2.3.4"
+            }
+          ],
+          "dependencies": [
+            {
+              "ref": "pkg:github/waybill-fixture/app@v1",
+              "dependsOn": ["pkg:github/waybill-fixture/vendored-lib@v2.3.4"]
+            }
+          ]
+        }"#,
+    );
+
+    let (cdx, s23, s3, out) = run_scan_all_formats(root, Some(&supp));
+    assert_success(&out);
+    let cdx = cdx.expect("CDX emitted");
+    let s23 = s23.expect("SPDX 2.3 emitted");
+    let s3 = s3.expect("SPDX 3 emitted");
+    let target = "pkg:github/waybill-fixture/vendored-lib@v2.3.4";
+
+    // --- CycloneDX ---
+    let referenced: std::collections::BTreeSet<&str> = cdx["dependencies"]
+        .as_array()
+        .expect("dependencies[]")
+        .iter()
+        .flat_map(|d| d["dependsOn"].as_array().into_iter().flatten())
+        .filter_map(|v| v.as_str())
+        .collect();
+    assert!(
+        referenced.contains(target),
+        "CDX: supplement component must have an incoming edge; got {referenced:?}"
+    );
+
+    // --- SPDX 2.3 ---
+    let spdxid = s23["packages"]
+        .as_array()
+        .expect("packages[]")
+        .iter()
+        .find(|p| {
+            p["externalRefs"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .any(|r| r["referenceLocator"].as_str() == Some(target))
+        })
+        .and_then(|p| p["SPDXID"].as_str())
+        .expect("SPDX 2.3: supplement component must be emitted as a Package");
+    assert!(
+        s23["relationships"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .any(|r| r["relatedSpdxElement"].as_str() == Some(spdxid)),
+        "SPDX 2.3: supplement component must have an incoming relationship"
+    );
+
+    // --- SPDX 3 ---
+    let graph = s3["@graph"].as_array().expect("@graph");
+    let iri = graph
+        .iter()
+        .find(|e| {
+            e["type"].as_str() == Some("software_Package")
+                && e["externalIdentifier"]
+                    .as_array()
+                    .into_iter()
+                    .flatten()
+                    .any(|x| x["identifier"].as_str() == Some(target))
+        })
+        .and_then(|e| e["spdxId"].as_str())
+        .expect("SPDX 3: supplement component must be emitted as a software_Package");
+    assert!(
+        graph.iter().any(|e| {
+            e["type"]
+                .as_str()
+                .is_some_and(|t| t.contains("Relationship"))
+                && e["to"]
+                    .as_array()
+                    .into_iter()
+                    .flatten()
+                    .any(|t| t.as_str() == Some(iri))
+        }),
+        "SPDX 3: supplement component must be the target of a Relationship"
+    );
+}

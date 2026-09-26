@@ -98,6 +98,28 @@ pub fn build_dependencies(
         })
         .map(|c| c.purl.as_str())
         .collect();
+    // #1009: anchor supplement-contributed components whose only
+    // declared parent was the supplement's own subject. Those edges could
+    // not be emitted at merge time — the subject is not a component and
+    // the root is chosen here, per format — so the targets ride the
+    // supplement channel and are attached to the root now.
+    //
+    // Unconditional, NOT gated on `target_has_no_edges`: the whole defect
+    // was that the fallback below never fires when the root already has
+    // edges, which is the normal case (mongo's root has 10, so 43 of 44
+    // supplement components arrived orphaned).
+    //
+    // Empty when no supplement is active, so the default path is
+    // byte-identical.
+    for anchor_purl in crate::supplement::current_root_anchors() {
+        if components.iter().any(|c| c.purl.as_str() == anchor_purl) {
+            dep_map
+                .entry(target_ref.to_string())
+                .or_default()
+                .insert(anchor_purl);
+        }
+    }
+
     let target_has_no_edges = dep_map
         .get(target_ref)
         .map(|set| {
