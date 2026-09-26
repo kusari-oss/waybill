@@ -1,0 +1,322 @@
+# Feature Specification: The scanned project's declared license reaches its SBOM
+
+**Feature Branch**: `1010-manifest-declared-license`
+**Created**: 2026-09-26
+**Status**: Draft
+**Input**: Extend the Haskell pattern from #957 so the declared license of the scanned project reaches its SBOM across the remaining main-module readers, reading the license from the manifest each reader already parses and canonicalising it before emission.
+
+## Context
+
+A project's declared license is the one fact it definitely knows about itself, and
+it is stated plainly in the manifest every reader already parses. Today it does not
+reach the emitted SBOM for eleven of the twelve ecosystems that produce a
+main-module component.
+
+This matters more for the scanned project than for its dependencies. A dependency's
+license can be recovered later by any consumer holding its PURL, because the
+dependency is a published package with a registry record. The scanned project
+usually is not published — `hackage.haskell.org/package/moat` returns 404 — so
+enrichment has no record to draw on. If the license is not read from the manifest
+at scan time it is absent from the document permanently.
+
+It also means an **offline scan carries no license data at all**, for any
+component, because enrichment is currently the sole supplier.
+
+### Measured baseline (committed corpus goldens, `main` @ `5453c6f2`)
+
+| Target | Components carrying any license |
+|---|---:|
+| rust-ripgrep | 0 / 68 |
+| python-flask | 0 / 108 |
+| maven-guice | 0 / 61 |
+| npm-express | 0 / 45 |
+| haskell-aeson | 2 (after #957) |
+
+Across all thirteen corpus targets, **zero** carry a license on the document's
+root component.
+
+### What #957 already established
+
+The Haskell reader was fixed first and proves the approach end to end. `aeson`
+emits:
+
+```json
+{ "name": "aeson", "purl": "pkg:hackage/aeson@2.3.2.0",
+  "licenses": [ { "license": { "acknowledgement": "declared",
+                               "id": "BSD-3-Clause" } } ] }
+```
+
+Three things follow from that and are treated as settled rather than reopened:
+
+1. **No precedence rule is required.** Declared and concluded licenses occupy
+   different wire slots. A manifest declaration is the project's own assertion and
+   populates the declared slot; third-party enrichment continues to populate the
+   concluded slot. They cannot overwrite one another.
+2. **Invalid expressions are dropped, not emitted.** A manifest may carry a string
+   that is not a valid license expression — a legacy spelling, a bare filename, a
+   proprietary marker. Such a value is logged at debug level and omitted. Emitting
+   an unverified string as though it were a license identifier is worse than
+   emitting nothing.
+3. **The information is already in hand.** Each reader parses the manifest that
+   carries the field. In the cargo reader the parsed table sits three lines above
+   the point where the empty license list is constructed.
+
+### Two distinct components, only one of which this feature addresses
+
+A scan emits both a **main-module component** (the project as its ecosystem names
+it — `aeson`, `ripgrep`) and a **synthetic scan-root** used as the document's
+primary component (`pkg:generic/haskell-aeson@682162c`). They are different things:
+the main-module derives from a manifest, the scan-root derives from the directory
+name and revision and has no manifest behind it.
+
+#957 fixed the main-module. The scan-root still carries no license and cannot read
+one directly, because nothing declares a license for a directory. It therefore
+**inherits** one, but only when that inheritance is unambiguous: when the scan
+contains exactly one main-module component. A scan containing none, or several
+that may disagree, leaves the scan-root without a license rather than asserting a
+value no manifest declares.
+
+## User Scenarios & Testing *(mandatory)*
+
+### User Story 1 - An auditor asks what the scanned project is licensed under (Priority: P1)
+
+Someone receives an SBOM for a project and needs to answer the first question any
+SBOM is asked: under what terms is this thing licensed. They read the component
+representing the project itself and expect to find the license its manifest
+declares.
+
+**Why this priority**: This is the unrecoverable case. Every other component's
+license can be looked up later from a registry; this one cannot, because the
+project may never be published. It is also the question asked most often.
+
+**Independent Test**: Scan a project whose manifest declares a license, in any one
+of the affected ecosystems, and confirm the main-module component carries that
+license marked as declared. Delivers value with a single ecosystem implemented.
+
+**Acceptance Scenarios**:
+
+1. **Given** a project whose manifest declares a recognised license expression,
+   **When** it is scanned, **Then** the main-module component carries that
+   expression, attributed as declared by the project rather than concluded by a
+   third party.
+2. **Given** the same project, **When** it is scanned with no network access,
+   **Then** the license is still present, because it came from the manifest rather
+   than from enrichment.
+3. **Given** a project whose manifest declares no license, **When** it is scanned,
+   **Then** the main-module component carries no license and the scan succeeds
+   without warning — absence of a declaration is not an error.
+
+---
+
+### User Story 2 - A manifest declares something that is not a valid license expression (Priority: P2)
+
+A project declares a license string its ecosystem permits but that is not a valid
+SPDX expression — a pre-SPDX spelling, a filename, or a proprietary marker. The
+SBOM must not present that string as though it were a verified license identifier.
+
+**Why this priority**: Correctness of what is emitted matters more than coverage.
+A wrong license identifier is more damaging than a missing one, because downstream
+compliance tooling will act on it. Ranked below P1 because it is the exception path.
+
+**Independent Test**: Scan a project whose manifest declares an uncanonicalisable
+string and confirm no license is emitted for it, with a diagnostic available at
+debug level naming the offending value.
+
+**Acceptance Scenarios**:
+
+1. **Given** a manifest declaring a string that cannot be canonicalised,
+   **When** it is scanned, **Then** no license is emitted for that component and
+   the scan succeeds.
+2. **Given** the same project, **When** the operator raises log verbosity,
+   **Then** a diagnostic names the manifest, the rejected value, and the reason.
+3. **Given** a manifest declaring a license in a form that differs from its
+   canonical spelling but is recognisable, **When** it is scanned, **Then** the
+   canonical form is emitted.
+
+---
+
+### User Story 3 - Coverage is consistent across ecosystems (Priority: P3)
+
+An operator scanning a polyglot estate gets the same treatment of declared
+licenses regardless of which ecosystem a project is written in, rather than one
+ecosystem behaving differently from its neighbours.
+
+**Why this priority**: Consistency is the reason this is one feature rather than
+eleven. It delivers no new capability beyond P1 repeated, so it ranks last — but
+uneven coverage is itself a defect, and currently the same field is read from every
+dependency's manifest in one ecosystem while being ignored in the project's own.
+
+**Independent Test**: Scan one project per affected ecosystem and confirm each
+main-module component is treated identically with respect to its declared license.
+
+**Acceptance Scenarios**:
+
+1. **Given** one project per affected ecosystem, each declaring a license,
+   **When** each is scanned, **Then** every main-module component carries its
+   declared license.
+2. **Given** an ecosystem whose manifest format carries no license field at all,
+   **When** a project in it is scanned, **Then** no license is emitted and this is
+   documented as expected rather than appearing as an inconsistency.
+
+---
+
+### Edge Cases
+
+- A manifest declares **multiple** licenses (an array, or several entries) —
+  whether all are emitted or they are combined into one expression.
+- A manifest declares a license **by file reference** rather than by identifier
+  (`license-file`, `PackageLicenseFile`). Resolving it requires reading file
+  content, which is out of scope; the reference alone is not a license identifier.
+- A manifest declares a license and enrichment later concludes a **different** one.
+  Both are retained in their respective slots; the disagreement is visible rather
+  than resolved silently.
+- A **workspace** declares a license at the root and its members inherit it without
+  restating it.
+- A project declares a license the ecosystem treats as valid but that is
+  proprietary or non-identifying (for example a marker meaning "all rights
+  reserved").
+- The same project is discovered through **two** readers (a Pants repository is
+  both a Pants target and a native-ecosystem project) and the two disagree.
+- A manifest is **malformed or partially parseable** — license extraction must not
+  turn a recoverable parse into a failed scan.
+
+## Requirements *(mandatory)*
+
+### Functional Requirements
+
+- **FR-001**: The system MUST read the declared license from the manifest that
+  already identifies the main-module component, for every affected ecosystem, and
+  attach it to that component.
+- **FR-002**: An emitted license MUST be attributed as **declared by the project**,
+  distinct from a license **concluded by a third party**, in every output format
+  that distinguishes the two.
+- **FR-003**: Licenses supplied by external enrichment MUST continue to populate the
+  concluded attribution unchanged. This feature MUST NOT alter enrichment behaviour.
+- **FR-004**: A declared value that cannot be canonicalised into a valid license
+  expression MUST NOT be emitted, and MUST produce a debug-level diagnostic naming
+  the manifest, the rejected value, and the reason.
+- **FR-005**: A declared value that is valid but non-canonically spelled MUST be
+  emitted in canonical form.
+- **FR-006**: Absence of a license declaration MUST be treated as ordinary, not as
+  an error or a warning.
+- **FR-007**: License extraction MUST NOT cause a scan to fail. A manifest that
+  parses for identity but not for its license field MUST still yield its component.
+- **FR-008**: The affected ecosystems are those whose main-module manifest carries a
+  license field: **cargo, npm, pip, gem, maven, composer, elixir, erlang, scala,
+  cocoapods, nuget**. Haskell is already complete via #957 and MUST remain so.
+- **FR-009**: Ecosystems whose manifest format carries **no** license field
+  (Go modules, Swift packages, Dart pubspec) MUST be left unchanged, and the reason
+  MUST be documented so the gap is not read as an oversight.
+- **FR-010**: Where a manifest declares **more than one** license, all declared
+  licenses MUST be represented; none may be silently discarded.
+- **FR-011**: A license declared only by **file reference** MUST NOT be emitted as
+  an identifier, since resolving it requires reading file content.
+- **FR-012**: Behaviour MUST be identical with and without network access — a
+  declared license MUST be present in a fully offline scan.
+- **FR-013**: Stale source comments deferring license detection to the closed issue
+  #103 MUST be corrected. Five occurrences exist: `cargo.rs:634`,
+  `pip/mod.rs:614`, `npm/walk.rs:506`, `golang/legacy.rs:965`, and
+  `golang/legacy.rs:4185`.
+- **FR-014**: The cargo test asserting that the main-module emits **no** license
+  MUST be replaced by one asserting the declared license is present, so the
+  regression guard points the right way.
+- **FR-015**: Output MUST remain deterministic: repeated scans of identical input
+  MUST produce identical licenses in identical order.
+- **FR-016**: The synthetic scan-root component MUST inherit the declared license
+  when the scan yields **exactly one** main-module component carrying one. When the
+  scan yields none, or more than one main-module component, the scan-root MUST carry
+  no license — inheritance must never combine or arbitrarily choose between
+  declarations made by different projects.
+- **FR-017**: An inherited scan-root license MUST carry the same declared
+  attribution as the main-module it came from, since its origin is still a project's
+  own manifest.
+
+### Key Entities
+
+- **Declared license**: a license expression stated by the project in its own
+  manifest. Attributed to the project. Sourced at scan time; available offline.
+- **Concluded license**: a license expression attributed to a third party that
+  examined the artifact. Sourced from enrichment; requires network access.
+- **Main-module component**: the component representing the scanned project as its
+  own ecosystem names it, derived from a manifest.
+- **Scan-root component**: the synthetic component used as the document's primary
+  component, derived from directory name and revision, with no manifest behind it.
+
+## Success Criteria *(mandatory)*
+
+### Measurable Outcomes
+
+- **SC-001**: For every corpus target whose manifest declares a license, the
+  main-module component carries it. Baseline is **0 of 13** targets carrying a
+  license on any project-representing component today.
+- **SC-001a**: For every corpus target that resolves to exactly one main-module
+  component with a declared license, the document's primary component carries that
+  license. Baseline is **0 of 13**.
+- **SC-002**: An offline scan of a project declaring a license yields that license.
+  Baseline: an offline scan currently yields **no** license for any component,
+  because enrichment is the only supplier.
+- **SC-003**: Every affected ecosystem behaves identically for the same input shape:
+  a declared valid license appears, a declared invalid one does not, and an absent
+  one produces no diagnostic.
+- **SC-004**: No manifest value that fails canonicalisation reaches the output in
+  any format.
+- **SC-005**: No component loses a license it carried before this change, in any
+  format — coverage only increases.
+- **SC-006**: Licenses attributed as concluded are unchanged in count and value
+  against a pre-change scan of the same input.
+- **SC-007**: Repeated scans of identical input produce byte-identical license data.
+- **SC-008**: Zero source comments remain that defer license detection to the
+  closed issue #103.
+
+## Assumptions
+
+- The declared-versus-concluded distinction already modelled is the correct home for
+  this data, so no new field or annotation is required to carry it.
+- The canonicalisation and drop-on-failure behaviour established by #957 is the
+  precedent to follow, rather than a decision to re-take per ecosystem.
+- Every affected reader already parses the manifest carrying the license field, so
+  no new file reads or parsers are needed. Verified for cargo; to be confirmed per
+  reader during planning.
+- Corpus goldens will need regenerating, since this changes emitted output for every
+  affected ecosystem. The corpus lane is presently red for unrelated accumulated
+  drift (#1008), which is expected to be resolved first so that this change's diff
+  is readable in isolation.
+- Dependency components are out of scope except where they share a construction path
+  with the main-module, in which case improved coverage is an accepted side effect
+  rather than a goal.
+- No new third-party dependencies are required.
+
+## Out of Scope
+
+- **Detecting a license from LICENSE file content.** Ecosystems whose manifests
+  carry no license field can only be served by matching license text, which is a
+  materially different mechanism with its own accuracy and dependency questions.
+  This is why Go, Swift and Dart are excluded.
+- **Resolving licenses declared by file reference** — same reason.
+- **Changing enrichment**, including which sources it consults and which slot it
+  writes to.
+- **Reconciling a declared license against a concluded one.** Both are retained;
+  neither is suppressed.
+- **Declared licenses for dependency components.** A dependency's license is
+  recoverable from a registry by any consumer holding its PURL; the scanned
+  project's is not. Where a reader shares one construction path between its
+  main-module and its dependencies, incidental coverage is accepted rather than
+  suppressed, but it is not a goal and no reader is to be restructured to achieve it.
+- **Recording which manifest supplied a license.** The declared attribution already
+  states that the value came from the project rather than from a third party. A
+  finer-grained source annotation would add a cross-format field with
+  parity-catalog obligations for no additional decision-making power.
+
+## Clarifications
+
+### Session 2026-09-26
+
+- Q: Should the synthetic scan-root component carry a license? → A: Inherit it when
+  the scan yields exactly one main-module component carrying one; leave it absent
+  when there are none or several. Captured as FR-016 / FR-017 and SC-001a.
+- Q: Should dependency components get declared licenses too? → A: Main-module only.
+  Incidental coverage from a shared construction path is accepted but is not a goal.
+  Captured under Out of Scope.
+- Q: Should the emitted license record which manifest supplied it? → A: No. The
+  declared attribution already carries the necessary provenance. Captured under Out
+  of Scope.
