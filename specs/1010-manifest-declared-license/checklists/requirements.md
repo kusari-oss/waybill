@@ -107,3 +107,49 @@ design:
 
 Spec grew from 305 to 404 lines; 25 functional requirements, 12 success criteria,
 6 recorded clarifications. All checklist items remain passing.
+
+**Iteration 4 — 2026-09-26 (`/speckit.analyze` remediation)**
+
+Analysis found 11 issues, 0 CRITICAL. All remediated. Two were faults in this
+checklist's own earlier passes, which is worth recording rather than quietly
+fixing.
+
+**Corrections to earlier ticks in this file:**
+
+- *"Requirements are testable and unambiguous"* was ticked in iteration 1 and
+  should not have survived iteration 3. FR-010c, added during planning, read
+  "Research has established that most ecosystems do not define these semantics" —
+  a finding about the world, not an obligation on waybill, and not testable as a
+  MUST. It is now an Assumption. The tick was wrong because the checklist was not
+  re-run against requirements added after it was last reviewed.
+- *"No implementation details"* remains ticked, and the reasoning in iteration 1
+  still holds, but note FR-002a now carries the Principle V audit into the spec.
+  That is required by the constitution, which says the audit MUST be cited in the
+  spec's Functional Requirements — it had been in plan.md only.
+
+**Remediated:**
+
+| ID | Severity | Fix |
+|---|---|---|
+| E1 | HIGH | FR-007 had zero coverage. New task: malformed-license-field fixture asserting the component is still emitted and exit is zero |
+| E2 | HIGH | FR-011b had zero coverage. New task: workspace fixture whose root declares no license, asserting the member carries none and the scan succeeds |
+| F1 | HIGH | 13 `[P]` markers spanned only 2 files, and one task created the file two others edited. Test files split per story (`declared_license.rs`, `_preservation.rs`, `_consistency.rs`); `[P]` removed from every same-file task. `[P]` count 37 → 24, and no two `[P]` tasks now share a file |
+| D1 | HIGH | Principle V audit moved into the spec's Functional Requirements as FR-002a, per the constitution's explicit wording |
+| U1 | MEDIUM | FR-010c removed from requirements; the finding recorded under Assumptions |
+| E3 | MEDIUM | SC-004b had unit coverage only. New task: two-license fixture per list-valued ecosystem asserting the operator end to end |
+| E4 | MEDIUM | Two edge cases resolved in place — the malformed manifest now points at FR-007 and its task; two readers disagreeing is declared out of scope, since merging two discoveries of one project belongs to the reconciliation pass |
+| F2 | MEDIUM | "13 sites" vs 14 enumerated rows reconciled: 14 sites, 13 requiring work, 12 ecosystems (11 requiring work; gem and npm have two sites each) |
+| A1 | LOW | Resolved by U1 |
+| F3 | LOW | "five unverified rows" vs six Phase 1 tasks reconciled; the operator table genuinely needs five, cargo's row is verified separately |
+| E5 | LOW | Left as-is: SC-001 and SC-004c remain indirectly covered, which is proportionate |
+
+**Post-remediation state**: 26 FRs, 12 SCs, 58 tasks, T001–T058 contiguous, zero
+phantom references, zero `[P]` conflicts, zero uncovered requirements. Three
+requirements (FR-001, FR-002, FR-008) and three criteria (SC-001, SC-002, SC-004c)
+are covered by task description rather than explicit citation, which is acceptable.
+
+**Process note for next time**: the `[P]` defect and the FR-010c tick were both
+introduced *after* the checklist was last run, and neither would have been caught
+by re-reading the artifacts. Both were found by extracting IDs and file paths
+mechanically and looking for contradictions. Re-run that extraction whenever an
+artifact changes, rather than re-reading it.

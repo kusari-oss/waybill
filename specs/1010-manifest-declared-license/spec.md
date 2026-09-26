@@ -189,9 +189,12 @@ main-module component is treated identically with respect to its declared licens
   reserved"). Preserved as a custom reference per FR-004, not discarded — such a
   marker is often the single most legally significant thing the manifest says.
 - The same project is discovered through **two** readers (a Pants repository is
-  both a Pants target and a native-ecosystem project) and the two disagree.
+  both a Pants target and a native-ecosystem project) and the two disagree. Out of
+  scope: two discoveries of one project are already merged by the existing
+  reconciliation pass, and deciding which declaration wins is that pass's concern,
+  not an extraction concern. Recorded so the omission is deliberate.
 - A manifest is **malformed or partially parseable** — license extraction must not
-  turn a recoverable parse into a failed scan.
+  turn a recoverable parse into a failed scan (FR-007, covered by a dedicated task).
 
 ## Requirements *(mandatory)*
 
@@ -203,6 +206,16 @@ main-module component is treated identically with respect to its declared licens
 - **FR-002**: An emitted license MUST be attributed as **declared by the project**,
   distinct from a license **concluded by a third party**, in every output format
   that distinguishes the two.
+- **FR-002a**: (Principle V native-construct audit) each target format was audited
+  for an existing construct before any `waybill:*` property was considered, and one
+  exists for every signal, so **none is introduced**. "Declared by the project" is
+  `licenses[].license.acknowledgement: "declared"` in CycloneDX 1.6, `licenseDeclared`
+  in SPDX 2.3, and the declared-attribution expression element in SPDX 3. "Concluded
+  by a third party" is `acknowledgement: "concluded"` / `licenseConcluded`. "Not on
+  the standard list" is `LicenseRef-<id>` plus its extracted-text record. This audit
+  also discharges Principle XII.2, which requires externally-sourced data to carry
+  provenance: the declared-versus-concluded distinction **is** that provenance,
+  expressed natively, which is why a `waybill:license-source` annotation was declined.
 - **FR-003**: Licenses supplied by external enrichment MUST continue to populate the
   concluded attribution unchanged. This feature MUST NOT alter enrichment behaviour.
 - **FR-004**: A declared value that cannot be canonicalised into a valid license
@@ -252,11 +265,6 @@ main-module component is treated identically with respect to its declared licens
   downstream default to combine them. The reader is the only layer that knows its
   ecosystem's semantics; combination decided anywhere else cannot be correct except
   by coincidence.
-- **FR-010c**: Research has established that most ecosystems do not define these
-  semantics. Verified: **composer** documents disjunction for its array form;
-  **gem** states explicitly that its array does not express how licenses combine;
-  **maven** states nothing. **npm**, **pip**, **cargo**, **nuget** and **cocoapods**
-  take a single expression, so no operator is chosen for them at all.
 - **FR-011**: A license declared only by **file reference** MUST NOT be emitted as
   an identifier, since resolving it requires reading file content.
 - **FR-011a**: A license a component **inherits** from a workspace root or parent
@@ -345,6 +353,13 @@ main-module component is treated identically with respect to its declared licens
 - The custom-reference construct is already emitted in every output format and is
   already fed by the OS-package readers, so preserving a raw declaration is expected
   to require no change to emission. To be confirmed during planning.
+- Most ecosystems do not define multi-license list semantics, so the conjunctive
+  fallback of FR-010a is the common path rather than the exception. Verified in Phase
+  0: **composer** documents disjunction for its array form; **gem** states explicitly
+  that its array does not express how licenses combine; **maven** states nothing.
+  **npm**, **pip**, **cargo**, **nuget** and **cocoapods** take a single expression,
+  so no operator is chosen for them at all. Recorded as an assumption rather than a
+  requirement because it describes the world, not an obligation on waybill.
 - Every affected reader already parses the manifest carrying the license field, so
   no new file reads or parsers are needed. Verified for cargo; to be confirmed per
   reader during planning.
@@ -414,5 +429,7 @@ main-module component is treated identically with respect to its declared licens
 - Q: What operator applies where an ecosystem documents no multi-license semantics?
   → A: Conjunction, recorded per ecosystem in the reader documentation, with no
   annotation. It over-states the obligation rather than under-stating it, and agrees
-  with the single combining rule already in the emitter. Captured as FR-010a and
-  FR-010c. (Phase 0 research found this case is the majority, not the exception.)
+  with the single combining rule already in the emitter. Captured as FR-010a; the
+  supporting finding that this case is the majority rather than the exception is
+  recorded under Assumptions, since it describes the ecosystems and not an obligation
+  on waybill.

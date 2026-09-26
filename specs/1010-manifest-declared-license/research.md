@@ -17,8 +17,10 @@ and each finding carries its source.
 the `main-module` role, then located the `licenses:` construction inside each and
 classified it production vs. test by the nearest preceding `#[cfg(test)]`.
 
-**Decision**: there are **13 production main-module sites across 11 ecosystems**.
-Two ecosystems have two sites each.
+**Decision**: there are **14 production main-module sites across 12 ecosystems**, of
+which **13 require work** — haskell is already populated by #957, though its failure
+branch still changes (FR-008a). Two ecosystems have two sites each (gem, npm), which
+is why 14 sites span 12 ecosystems. The table below enumerates all 14.
 
 | Ecosystem | Function | `licenses:` line | State |
 |---|---|---:|---|

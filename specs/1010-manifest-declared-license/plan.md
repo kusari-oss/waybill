@@ -5,9 +5,11 @@
 
 ## Summary
 
-Thirteen production main-module construction sites across eleven ecosystems emit
+Thirteen of the fourteen production main-module construction sites emit
 `licenses: Vec::new()` while holding, a few lines above, the parsed manifest table
-that declares the license. This reads it.
+that declares the license. This reads it. The fourteenth is haskell, already
+populated by #957, whose failure branch this feature nonetheless changes. The
+thirteen span eleven ecosystems; gem and npm each have two sites.
 
 The technical approach is a per-reader extraction function feeding a shared
 two-step resolution ladder: attempt strict canonicalisation, and on failure
@@ -32,7 +34,7 @@ by the OS-package readers. The work is therefore concentrated entirely in
 **Project Type**: CLI / library (three-crate Cargo workspace).
 **Performance Goals**: No measurable change. Extraction reads a field from a table the reader has already parsed; it adds no file reads, no subprocess calls and no network access. Inheritance resolution reuses a lookup the cargo reader already performs for `version.workspace`.
 **Constraints**: Offline-capable by construction (FR-012) — the whole point is that this data does not require network access. Deterministic output (FR-015).
-**Scale/Scope**: 13 production sites, 11 ecosystems, 1 shared helper, 1 correction to #957. No new crates, no new CLI flags, no new annotations.
+**Scale/Scope**: 14 production main-module sites in total, 13 requiring work, across 11 ecosystems (gem and npm have two sites each); 1 shared helper; 1 correction to #957. No new crates, no new CLI flags, no new annotations.
 
 ## Constitution Check
 
