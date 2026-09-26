@@ -288,13 +288,18 @@ fn build_supplement_edges(
         .collect();
     let _ = purl_index; // shape preserved for future fast-path use
 
+    let subject_refs: std::collections::HashSet<&str> =
+        supplement.subject_refs.iter().map(String::as_str).collect();
+
     let mut edges: Vec<Relationship> = Vec::new();
+    let mut subject_sourced = 0usize;
     for dep in &supplement.dependencies {
         let from = resolve_ref(
             &dep.ref_str,
             &bom_ref_to_purl,
             &supplement_service_bom_refs,
             &merged_purl_strings,
+            &subject_refs,
         )?;
         for raw in &dep.depends_on {
             let to = resolve_ref(
@@ -302,10 +307,28 @@ fn build_supplement_edges(
                 &bom_ref_to_purl,
                 &supplement_service_bom_refs,
                 &merged_purl_strings,
+                &subject_refs,
             )?;
+            // #1006: an edge touching the supplement's subject carries no
+            // usable endpoint — the subject is not a component here (m119
+            // FR-014), and the scan's own root is chosen later, per
+            // format. The edge is dropped so the document stays valid.
+            //
+            // The target is then unreferenced. MEASURED on mongo's
+            // /sbom.json: 43 of 44 supplement components arrive orphaned,
+            // because the primary-dependency fallback only fires when the
+            // root has no outgoing edges and this root has 10. Connecting
+            // them needs explicit re-anchoring through the #229
+            // `purl_aliases` channel in each of the three emitters, which
+            // is tracked separately — do not assume the fallback covers
+            // it, as an earlier draft of this comment did.
+            let (ResolvedRef::Entry(from), ResolvedRef::Entry(to)) = (&from, &to) else {
+                subject_sourced += 1;
+                continue;
+            };
             edges.push(Relationship {
                 from: from.clone(),
-                to,
+                to: to.clone(),
                 relationship_type: RelationshipType::DependsOn,
                 provenance: EnrichmentProvenance {
                     source: "supplement-cdx".to_string(),
@@ -314,7 +337,27 @@ fn build_supplement_edges(
             });
         }
     }
+    if subject_sourced > 0 {
+        tracing::info!(
+            edges = subject_sourced,
+            "supplement dependency edges touching the document subject were \
+             dropped; their targets are emitted as components but arrive \
+             unconnected (see #1006 follow-up on re-anchoring)"
+        );
+    }
     Ok(edges)
+}
+
+/// #1006: what a supplement ref resolved to.
+enum ResolvedRef {
+    /// A canonical PURL or service bom-ref naming a real entry.
+    Entry(String),
+    /// The supplement's own `metadata.component`. Recognised so a
+    /// subject-rooted `dependencies[]` graph — the standard CycloneDX
+    /// shape for a project's published SBOM — is not rejected as
+    /// dangling, but NOT importable as a component: m119 FR-014 keeps
+    /// the supplement from redefining the scan subject.
+    Subject,
 }
 
 fn resolve_ref(
@@ -322,15 +365,19 @@ fn resolve_ref(
     bom_ref_to_purl: &HashMap<&str, String>,
     supplement_service_bom_refs: &std::collections::HashSet<&str>,
     merged_purl_strings: &std::collections::HashSet<String>,
-) -> Result<String, SupplementError> {
+    subject_refs: &std::collections::HashSet<&str>,
+) -> Result<ResolvedRef, SupplementError> {
     if let Some(canonical) = bom_ref_to_purl.get(raw) {
-        return Ok(canonical.clone());
+        return Ok(ResolvedRef::Entry(canonical.clone()));
     }
     if supplement_service_bom_refs.contains(raw) {
-        return Ok(raw.to_string());
+        return Ok(ResolvedRef::Entry(raw.to_string()));
     }
     if merged_purl_strings.contains(raw) {
-        return Ok(raw.to_string());
+        return Ok(ResolvedRef::Entry(raw.to_string()));
+    }
+    if subject_refs.contains(raw) {
+        return Ok(ResolvedRef::Subject);
     }
     Err(SupplementError::DanglingDependsOn(raw.to_string()))
 }
@@ -407,6 +454,7 @@ mod tests {
             components: Vec::new(),
             services: Vec::new(),
             dependencies: Vec::new(),
+            subject_refs: Vec::new(),
         }
     }
 
@@ -482,6 +530,44 @@ mod tests {
             .components
             .iter()
             .any(|c| c.purl.as_str() == "pkg:cargo/b@1.0.0"));
+    }
+
+    /// #1006: a `dependencies[]` graph rooted at the supplement's own
+    /// `metadata.component` is the standard CycloneDX shape for a
+    /// project-published SBOM. It used to be rejected as dangling, which
+    /// made the whole supplement unusable — mongo's `/sbom.json` roots 48
+    /// edges that way and the scan failed closed.
+    #[test]
+    fn subject_rooted_dependency_graph_is_accepted() {
+        let scanner = vec![scanner_component("pkg:cargo/dep@1.0.0")];
+        let mut supp = empty_supplement();
+        supp.subject_refs = vec!["pkg:github/acme/product@v1".to_string()];
+        supp.dependencies.push(SupplementDependency {
+            ref_str: "pkg:github/acme/product@v1".to_string(),
+            depends_on: vec!["pkg:cargo/dep@1.0.0".to_string()],
+        });
+        let out = merge(scanner, Vec::new(), supp).expect("subject-rooted graph must merge");
+        // The subject is NOT imported as a component (m119 FR-014).
+        assert!(
+            !out.components
+                .iter()
+                .any(|c| c.purl.as_str().contains("acme/product")),
+            "supplement metadata.component must not become a component"
+        );
+    }
+
+    /// #1006: resolving the subject must not weaken the dangling check —
+    /// a ref that is neither an entry nor the subject still fails.
+    #[test]
+    fn subject_resolution_does_not_admit_other_dangling_refs() {
+        let mut supp = empty_supplement();
+        supp.subject_refs = vec!["pkg:github/acme/product@v1".to_string()];
+        supp.dependencies.push(SupplementDependency {
+            ref_str: "pkg:github/acme/product@v1".to_string(),
+            depends_on: vec!["ghost".to_string()],
+        });
+        let err = merge(Vec::new(), Vec::new(), supp).unwrap_err();
+        assert!(matches!(err, SupplementError::DanglingDependsOn(_)));
     }
 
     #[test]
