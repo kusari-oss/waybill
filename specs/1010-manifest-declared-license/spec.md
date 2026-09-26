@@ -242,12 +242,21 @@ main-module component is treated identically with respect to its declared licens
   licenses, conjunction where it defines a list as cumulative obligations. All
   declared licenses MUST be represented; none may be silently discarded.
 - **FR-010a**: The operator chosen for each ecosystem MUST be traceable to that
-  ecosystem's own documentation, and where an ecosystem documents no semantics for a
-  multi-license list, the assumption made MUST be recorded rather than left implicit.
+  ecosystem's own documentation. Where an ecosystem documents no semantics for a
+  multi-license list, the reader MUST join with **conjunction**, and this assumption
+  MUST be recorded per ecosystem in the reader documentation rather than left
+  implicit. Conjunction is chosen because it over-states the obligation rather than
+  under-stating it: a consumer complying with more licenses than required cannot
+  breach one, whereas a consumer told any single license suffices can.
 - **FR-010b**: A reader MUST NOT push several separate license values and rely on a
   downstream default to combine them. The reader is the only layer that knows its
   ecosystem's semantics; combination decided anywhere else cannot be correct except
   by coincidence.
+- **FR-010c**: Research has established that most ecosystems do not define these
+  semantics. Verified: **composer** documents disjunction for its array form;
+  **gem** states explicitly that its array does not express how licenses combine;
+  **maven** states nothing. **npm**, **pip**, **cargo**, **nuget** and **cocoapods**
+  take a single expression, so no operator is chosen for them at all.
 - **FR-011**: A license declared only by **file reference** MUST NOT be emitted as
   an identifier, since resolving it requires reading file content.
 - **FR-011a**: A license a component **inherits** from a workspace root or parent
@@ -402,3 +411,8 @@ main-module component is treated identically with respect to its declared licens
   combine them. Captured as FR-010/FR-010a/FR-010b and SC-004b. The shared emitter's
   unconditional conjunction is left unchanged and recorded under Out of Scope as an
   observed issue affecting the OS-package readers.
+- Q: What operator applies where an ecosystem documents no multi-license semantics?
+  → A: Conjunction, recorded per ecosystem in the reader documentation, with no
+  annotation. It over-states the obligation rather than under-stating it, and agrees
+  with the single combining rule already in the emitter. Captured as FR-010a and
+  FR-010c. (Phase 0 research found this case is the majority, not the exception.)
