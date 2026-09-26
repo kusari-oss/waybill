@@ -57,6 +57,12 @@ pub fn build_packages(
     agent_attachments: &BTreeMap<String, PackageAgentAttachments>,
     component_identifiers: &[waybill::binding::identifiers::component_id::ComponentIdentifierFlag],
     match_counts: &mut BTreeMap<usize, usize>,
+    // #1002: honour `--no-hashes`. CycloneDX gates its `hashes[]` on
+    // this and SPDX 2.3 gates its `checksums[]`; SPDX 3 did not receive
+    // the flag at all and emitted `verifiedUsing[]` unconditionally, so
+    // a scan run with hashes suppressed still leaked them on this one
+    // path.
+    include_hashes: bool,
 ) -> (Vec<Value>, BTreeMap<String, String>) {
     let mut package_iri_by_purl: BTreeMap<String, String> = BTreeMap::new();
     let mut packages: Vec<Value> = Vec::with_capacity(components.len());
@@ -133,7 +139,7 @@ pub fn build_packages(
         // checksum waybill computed. SPDX 3's algorithm enum uses
         // lowercase-with-no-hyphen form (`sha256`, `sha1`, `md5`).
         // See `prop_Hash_algorithm` in the bundled schema.
-        if !c.hashes.is_empty() {
+        if include_hashes && !c.hashes.is_empty() {
             let mut hashes: Vec<Value> = c
                 .hashes
                 .iter()

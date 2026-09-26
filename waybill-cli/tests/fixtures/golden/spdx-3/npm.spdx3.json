@@ -103,14 +103,7 @@
       "creationInfo": "_:creation-info",
       "name": "package.json",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-CR6XWZ75YEF57E67737XSOHD/pkg-RI7DYUP7YVSLGONA",
-      "type": "software_File",
-      "verifiedUsing": [
-        {
-          "algorithm": "sha256",
-          "hashValue": "47aff9f98bd6d42e10e5265ca6977827a36b831b73ffca82daccc613ee764203",
-          "type": "Hash"
-        }
-      ]
+      "type": "software_File"
     },
     {
       "creationInfo": "_:creation-info",

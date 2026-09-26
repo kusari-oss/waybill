@@ -60,9 +60,13 @@
 //!   still guarded by `spdx_cdx_parity.rs` (in-memory, same host).
 //! - **SPDX 2.3**: `packages[].checksums[]` — same reason as CDX
 //!   hash strip; the per-host cache state varies the checksum set.
-//! - **SPDX 3**: `verifiedUsing[]` on every `@graph[]` element with
-//!   `type == "Package"` (or `"software_Package"` for SPDX 3.0.1
-//!   typed-prefix shape) — same per-host hash variability reason.
+//! - **SPDX 3**: `verifiedUsing[]` on every `@graph[]` element typed
+//!   `Package`, `software_Package` or `software_File` — same per-host
+//!   hash variability reason. `software_File` was omitted until #1002;
+//!   because file-tier components emit under that type, their hashes
+//!   survived normalization while CDX and SPDX 2.3 stripped theirs,
+//!   and the golden-reading parity gate reported the difference as a
+//!   real cross-format defect.
 //!
 //! ## Fake-HOME isolation envvars
 //!
@@ -329,7 +333,15 @@ pub fn normalize_spdx3_for_golden(raw: &str, workspace: &Path) -> String {
                         serde_json::Value::String(TIMESTAMP_PLACEHOLDER.to_string()),
                     );
                 }
-                Some("Package" | "software_Package") => {
+                // #1002: `software_File` too. A file-tier component emits
+                // as `software_File`, so its hash survived normalization
+                // here while CycloneDX and SPDX 2.3 strip hashes
+                // unconditionally — making the goldens show an asymmetry
+                // that waybill's actual output does not have. The
+                // widened parity gate from #965 reads goldens, so it
+                // reported that phantom as a real defect (npm:A6). Live
+                // scans emit the hash in all three formats.
+                Some("Package" | "software_Package" | "software_File") => {
                     obj.remove("verifiedUsing");
                 }
                 _ => {}

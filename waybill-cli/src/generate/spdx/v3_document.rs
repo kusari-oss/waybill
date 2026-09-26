@@ -306,6 +306,7 @@ pub fn build_document(
         &agent_build.attachments,
         scan.component_identifiers,
         &mut match_counts,
+        scan.include_hashes,
     );
     for (idx, count) in &match_counts {
         if *count == 0 {
