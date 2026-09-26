@@ -703,6 +703,32 @@ pub fn build_document(
     let mut relationships =
         super::relationships::build_relationships(artifacts, &root_ids, &purl_aliases);
 
+    // #1009: anchor supplement-contributed components whose only
+    // declared parent was the supplement's own subject. Mirrors the CDX
+    // side in `cyclonedx/dependencies.rs`. Unconditional — the issue-#236
+    // fallback below only fires when the root has no outgoing edges,
+    // which is why 43 of 44 arrived orphaned on mongo. Empty when no
+    // supplement is active, so byte-identity holds on the default path.
+    if let Some(root_id) = root_ids.first() {
+        for anchor_purl in crate::supplement::current_root_anchors() {
+            if artifacts
+                .components
+                .iter()
+                .any(|c| c.purl.as_str() == anchor_purl)
+            {
+                relationships.push(super::relationships::SpdxRelationship {
+                    source: root_id.clone(),
+                    target: SpdxId::for_purl(
+                        &waybill_common::types::purl::Purl::new(&anchor_purl)
+                            .expect("anchor PURL came from a parsed component"),
+                    ),
+                    kind: super::relationships::SpdxRelationshipType::DependsOn,
+                    comment: None,
+                });
+            }
+        }
+    }
+
     // Milestone 860 (#863) FR-008 — anchor the emitted root to every
     // retained main module, mirroring the CDX side so both formats
     // describe the same graph.

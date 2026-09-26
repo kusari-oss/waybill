@@ -808,6 +808,33 @@ pub fn build_document(
         }
     }
 
+    // #1009: anchor supplement-contributed components whose only declared
+    // parent was the supplement's own subject. Mirrors the CDX and SPDX
+    // 2.3 twins. Unconditional — the issue-#236 fallback above only fires
+    // when the synthetic root has no outgoing edges, so on mongo 43 of 44
+    // supplement components arrived orphaned. Empty when no supplement is
+    // active, preserving byte-identity on the default path.
+    {
+        let anchors = crate::supplement::current_root_anchors();
+        if !anchors.is_empty() {
+            if let Some(root_iri) = root_iris.first() {
+                for anchor_purl in anchors {
+                    if let Some(to_iri) = package_iri_by_purl.get(anchor_purl.as_str()) {
+                        all_relationships.push(
+                            super::v3_relationships::build_relationship(
+                                root_iri.as_str(),
+                                "dependsOn",
+                                to_iri,
+                                &doc_iri,
+                                CREATION_INFO_ID,
+                            ),
+                        );
+                    }
+                }
+            }
+        }
+    }
+
     all_relationships.extend(license_relationships);
     if !synthetic_root_added {
         let describes_rels = super::v3_relationships::build_describes_relationships(

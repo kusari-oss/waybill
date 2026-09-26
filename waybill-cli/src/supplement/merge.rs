@@ -44,6 +44,18 @@ pub(crate) struct MergeOutcome {
     /// v0.1). Flow through to the CDX builder's new `build_services()`
     /// and to the SPDX 2.3 / SPDX 3 projection (Decision 4).
     pub(crate) services: Vec<SupplementService>,
+    /// #1009 — PURLs the supplement's `metadata.component` declared as
+    /// its direct dependencies.
+    ///
+    /// Those edges cannot be emitted as-is: the subject is not a
+    /// component (m119 FR-014) and each format picks its own root later,
+    /// so `merge()` has no endpoint to source them from. Their targets
+    /// are carried here instead, and every emitter anchors them to the
+    /// root it selects — which is what the supplement was asserting.
+    ///
+    /// Empty for a supplement with no subject-rooted edges, so the
+    /// no-supplement path is unchanged.
+    pub(crate) root_anchors: Vec<String>,
     /// Augmented dependency edges: scanner-side + supplement-side
     /// (with `bom-ref` references re-anchored to canonical PURLs
     /// where matches exist per contracts/supplement-format.md
@@ -138,7 +150,7 @@ pub(crate) fn merge(
     // Build edges from the supplement's dependencies[], re-anchoring
     // bom-refs to canonical PURLs where matches exist. Dangling refs
     // are an operator error (spec edge case 6 / FR-005).
-    let supplement_edges =
+    let (supplement_edges, root_anchors) =
         build_supplement_edges(&supplement, &components, &purl_index)?;
 
     let mut dependencies = scanner_dependencies;
@@ -147,6 +159,7 @@ pub(crate) fn merge(
     Ok(MergeOutcome {
         components,
         services: supplement.services,
+        root_anchors,
         dependencies,
         supplement_provenance: SupplementProvenance {
             source_path: supplement.source_path,
@@ -264,7 +277,7 @@ fn build_supplement_edges(
     supplement: &Supplement,
     merged_components: &[ResolvedComponent],
     purl_index: &HashMap<Purl, usize>,
-) -> Result<Vec<Relationship>, SupplementError> {
+) -> Result<(Vec<Relationship>, Vec<String>), SupplementError> {
     // Supplement-side bom-ref → canonical PURL string lookups for
     // components AND services. Services have no canonical PURL in
     // CDX 1.6 so we keep their bom-ref verbatim.
@@ -292,6 +305,7 @@ fn build_supplement_edges(
         supplement.subject_refs.iter().map(String::as_str).collect();
 
     let mut edges: Vec<Relationship> = Vec::new();
+    let mut root_anchors: Vec<String> = Vec::new();
     let mut subject_sourced = 0usize;
     for dep in &supplement.dependencies {
         let from = resolve_ref(
@@ -323,6 +337,14 @@ fn build_supplement_edges(
             // is tracked separately — do not assume the fallback covers
             // it, as an earlier draft of this comment did.
             let (ResolvedRef::Entry(from), ResolvedRef::Entry(to)) = (&from, &to) else {
+                // #1009: the subject has no emittable endpoint here, but
+                // what it depends on is exactly what the scan root should
+                // point at. Carry the target; the emitters anchor it.
+                if matches!(from, ResolvedRef::Subject) {
+                    if let ResolvedRef::Entry(target) = &to {
+                        root_anchors.push(target.clone());
+                    }
+                }
                 subject_sourced += 1;
                 continue;
             };
@@ -337,15 +359,18 @@ fn build_supplement_edges(
             });
         }
     }
+    // Deterministic emission order, and one anchor per target.
+    root_anchors.sort();
+    root_anchors.dedup();
     if subject_sourced > 0 {
         tracing::info!(
             edges = subject_sourced,
+            anchors = root_anchors.len(),
             "supplement dependency edges touching the document subject were \
-             dropped; their targets are emitted as components but arrive \
-             unconnected (see #1006 follow-up on re-anchoring)"
+             re-anchored onto the scan root (#1009)"
         );
     }
-    Ok(edges)
+    Ok((edges, root_anchors))
 }
 
 /// #1006: what a supplement ref resolved to.

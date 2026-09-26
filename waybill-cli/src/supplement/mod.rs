@@ -71,6 +71,10 @@ thread_local! {
         const { std::cell::RefCell::new(None) };
     static ACTIVE_SERVICES: std::cell::RefCell<Option<Vec<SupplementService>>> =
         const { std::cell::RefCell::new(None) };
+    /// #1009 — PURLs the supplement's subject declared as direct
+    /// dependencies. Each emitter anchors them to the root it selects.
+    static ACTIVE_ROOT_ANCHORS: std::cell::RefCell<Option<Vec<String>>> =
+        const { std::cell::RefCell::new(None) };
 }
 
 pub(crate) struct InstalledSupplementGuard;
@@ -83,12 +87,16 @@ impl Drop for InstalledSupplementGuard {
         ACTIVE_SERVICES.with(|cell| {
             *cell.borrow_mut() = None;
         });
+        ACTIVE_ROOT_ANCHORS.with(|cell| {
+            *cell.borrow_mut() = None;
+        });
     }
 }
 
 pub(crate) fn install(
     provenance: SupplementProvenance,
     services: Vec<SupplementService>,
+    root_anchors: Vec<String>,
 ) -> InstalledSupplementGuard {
     ACTIVE_PROVENANCE.with(|cell| {
         *cell.borrow_mut() = Some(provenance);
@@ -96,11 +104,22 @@ pub(crate) fn install(
     ACTIVE_SERVICES.with(|cell| {
         *cell.borrow_mut() = Some(services);
     });
+    ACTIVE_ROOT_ANCHORS.with(|cell| {
+        *cell.borrow_mut() = Some(root_anchors);
+    });
     InstalledSupplementGuard
 }
 
 pub(crate) fn current_provenance() -> Option<SupplementProvenance> {
     ACTIVE_PROVENANCE.with(|cell| cell.borrow().clone())
+}
+
+/// #1009 — PURLs the scan root must depend on, contributed by a
+/// supplement whose dependency graph is rooted at its own subject.
+/// Empty/None when no supplement is active, so the default path is
+/// byte-identical.
+pub(crate) fn current_root_anchors() -> Vec<String> {
+    ACTIVE_ROOT_ANCHORS.with(|cell| cell.borrow().clone()).unwrap_or_default()
 }
 
 pub(crate) fn current_services() -> Option<Vec<SupplementService>> {
