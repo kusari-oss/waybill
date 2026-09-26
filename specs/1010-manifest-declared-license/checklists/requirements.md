@@ -76,3 +76,34 @@ Three items warrant comment rather than a bare tick.
 **Baseline evidence**: measurements in the Context section were taken from the
 committed corpus goldens at `main` @ `5453c6f2`, not estimated. The #957 Haskell
 output quoted there is copied from `haskell-aeson/cdx.json`.
+
+**Iteration 3 — 2026-09-26 (`/speckit.clarify`)**
+
+Three further questions asked and integrated. All were edge cases the spec *listed*
+but did not *resolve*, which the first pass had ticked as "edge cases identified"
+without noticing that identifying is not deciding.
+
+1. **Uncanonicalisable declarations** are now preserved as custom non-listed license
+   references rather than dropped (FR-004 → FR-004c). This **supersedes** #957 and
+   adds FR-008a to bring it into line — otherwise the one finished ecosystem would
+   be the only one that loses a declaration.
+2. **Multi-license declarations** are combined by the reader using its own
+   ecosystem's documented operator (FR-010 → FR-010b). Investigation found the
+   shared emitter joins with an unconditional `AND`, which would assert conjunction
+   for ecosystems whose arrays document choice. Avoided rather than fixed; recorded
+   under Out of Scope as an observed issue affecting the OS-package readers.
+3. **Inherited licenses** are resolved per ecosystem rules (FR-011a, FR-011b).
+   Evidence: both of waybill's own member crates use `license.workspace = true`, so
+   without this the feature returns nothing for the repository it is built in.
+
+Two claims were checked against the code rather than assumed, and both changed the
+design:
+
+- `SpdxExpression` has a lenient constructor alongside the strict one, and the
+  emitters already mint a `LicenseRef-<hash>` with document-level extracted text
+  when canonicalisation fails. Preservation is therefore expected to need **no**
+  emitter change — the opposite of the assumption that it would widen scope.
+- The emitter's `AND` join was found by reading `reduce_license_vec`, not predicted.
+
+Spec grew from 305 to 404 lines; 25 functional requirements, 12 success criteria,
+6 recorded clarifications. All checklist items remain passing.
