@@ -139,7 +139,15 @@ fn scan(root: &Path) -> LicenseView {
             .collect(),
         cdx_acknowledgement: cdx_licenses
             .iter()
-            .filter_map(|l| l["license"]["acknowledgement"].as_str())
+            // The two CDX array shapes put `acknowledgement` in different places:
+            // nested under `license` for the id/name form, at the entry's top
+            // level for the `expression` form. Reading only the nested position
+            // silently returned an empty vec for every compound expression.
+            .filter_map(|l| {
+                l["license"]["acknowledgement"]
+                    .as_str()
+                    .or_else(|| l["acknowledgement"].as_str())
+            })
             .map(str::to_string)
             .collect(),
         spdx23,
@@ -580,11 +588,23 @@ end
 "#,
     );
     let got = scan(tmp.path());
+    // Both entries must survive — that is the anti-truncation property, and it
+    // holds regardless of how each format shapes them.
+    //
+    // The shapes differ by design: CycloneDX splits an AND into one `license.id`
+    // per operand, which keeps each listed id matchable, while SPDX 2.3 keeps the
+    // whole expression in `licenseDeclared`. So the OPERATOR is asserted against
+    // SPDX, where it is unambiguously visible in either case.
+    assert!(
+        got.cdx.iter().any(|l| l == "MIT") && got.cdx.iter().any(|l| l == "Apache-2.0"),
+        "both array entries must survive in CycloneDX; got {:?}",
+        got.cdx
+    );
     assert_eq!(
-        got.cdx,
+        got.spdx23,
         vec!["MIT AND Apache-2.0".to_string()],
-        "both array entries must survive; RubyGems states no relationship, so \
-         conjunction is the recorded fallback"
+        "RubyGems states no relationship between array entries, so conjunction is \
+         the recorded fallback, and SPDX 2.3 is where that operator is visible"
     );
 }
 

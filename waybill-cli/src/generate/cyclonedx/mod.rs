@@ -8,6 +8,7 @@
 //! to it alongside SPDX and future formats, without changing the
 //! output bytes (FR-022 / SC-006).
 
+mod licenses;
 pub mod builder;
 pub mod compositions;
 pub mod dependencies;
