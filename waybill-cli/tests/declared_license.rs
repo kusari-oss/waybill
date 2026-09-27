@@ -641,6 +641,84 @@ licenses := Seq(("Apache 2", url("http://www.apache.org/licenses/LICENSE-2.0.txt
     );
 }
 
+#[test]
+fn m954_npm_nameless_nested_manifest_still_declares_a_license() {
+    // A nested `package.json` with no `name` still declares its own license.
+    // Only `name` is missing, and only `name` is synthesized from the directory
+    // basename; every other field in the file is the project's own.
+    //
+    // The synthesiser requires a `package-lock.json` IN THE NESTED DIRECTORY.
+    // That is easy to miss — the first fixture written for this test omitted it
+    // and produced no synthesized component at all, so the assertion would have
+    // been vacuous rather than failing.
+    let tmp = tempfile::tempdir().expect("tempdir");
+    write(
+        &tmp.path().join("package.json"),
+        r#"{ "name": "waybill-fixture-root", "version": "1.0.0", "workspaces": ["apps/*"] }
+"#,
+    );
+    write(
+        &tmp.path().join("apps/svc/package.json"),
+        r#"{ "version": "1.0.0", "license": "MPL-2.0" }
+"#,
+    );
+    write(
+        &tmp.path().join("apps/svc/package-lock.json"),
+        r#"{ "version": "1.0.0", "lockfileVersion": 3, "requires": true, "packages": { "": { "version": "1.0.0" } } }
+"#,
+    );
+
+    let tmpdir = tempfile::tempdir().expect("out tempdir");
+    let fake_home = tempfile::tempdir().expect("fake home");
+    let cdx = tmpdir.path().join("o.cdx.json");
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_waybill"));
+    apply_fake_home_env(&mut cmd, fake_home.path());
+    let out = cmd
+        .arg("--offline")
+        .arg("sbom")
+        .arg("scan")
+        .arg("--path")
+        .arg(tmp.path())
+        .arg("--no-deep-hash")
+        .arg("--format")
+        .arg("cyclonedx-json")
+        .arg("--output")
+        .arg(format!("cyclonedx-json={}", cdx.display()))
+        .output()
+        .expect("waybill should run");
+    assert!(out.status.success(), "scan failed: {}", String::from_utf8_lossy(&out.stderr));
+    let doc: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(&cdx).expect("read")).expect("json");
+
+    let synthesized: Vec<&serde_json::Value> = doc["components"]
+        .as_array()
+        .map(|a| {
+            a.iter()
+                .filter(|c| {
+                    c["properties"].as_array().is_some_and(|ps| {
+                        ps.iter().any(|p| p["name"] == "waybill:synthesized-from")
+                    })
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+    assert_eq!(
+        synthesized.len(),
+        1,
+        "control: exactly one nameless-nested component must be synthesized, else \
+         the license assertion below proves nothing"
+    );
+    let names: Vec<&str> = synthesized[0]["licenses"]
+        .as_array()
+        .map(|a| {
+            a.iter()
+                .filter_map(|l| l["license"]["id"].as_str().or_else(|| l["license"]["name"].as_str()))
+                .collect()
+        })
+        .unwrap_or_default();
+    assert_eq!(names, vec!["MPL-2.0"]);
+}
+
 // ---------------------------------------------------------------------------
 // FR-016 / SC-001a — the document's primary component
 // ---------------------------------------------------------------------------

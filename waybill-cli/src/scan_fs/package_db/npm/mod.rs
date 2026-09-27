@@ -713,7 +713,15 @@ fn synthesize_nameless_nested_mainmods(
             source_path: format!("path+file://{}", project_root.display()),
             depends,
             maintainer: None,
-            licenses: Vec::new(),
+            // Issue #954 — a nameless nested `package.json` can still declare a
+            // license. `name` is what is missing, and only `name` is synthesized
+            // from the directory basename; every other declaration in the file is
+            // the project's own and is read normally.
+            licenses: crate::scan_fs::package_db::declared_license::resolve(
+                parsed.get("license").and_then(|v| v.as_str()).unwrap_or(""),
+                &manifest_path,
+            )
+            .into_licenses(),
             lifecycle_scope: None,
             requirement_ranges: Vec::new(),
             source_type: None,

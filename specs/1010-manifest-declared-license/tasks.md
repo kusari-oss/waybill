@@ -89,7 +89,7 @@ attribution. Deliverable with a single ecosystem done.
 - [X] T022 [US1] Add a case to `waybill-cli/tests/declared_license.rs` using a workspace fixture whose member declares `license.workspace = true` while the root declares no license, asserting the member carries no license and the scan succeeds (FR-011b)
 - [X] T023 [US1] Replace the assertion at `waybill-cli/src/scan_fs/package_db/cargo.rs:3004` (`assert!(entry.licenses.is_empty())`) with one asserting the declared license is present, so the regression guard points the right way (FR-014)
 - [X] T024 [P] [US1] Extract `license` in `waybill-cli/src/scan_fs/package_db/npm/walk.rs::build_npm_main_module_entry` (licenses@670)
-- [ ] T025 [P] [US1] Extract `license` in `waybill-cli/src/scan_fs/package_db/npm/mod.rs::synthesize_nameless_nested_mainmods` (licenses@716)
+- [X] T025 [P] [US1] Extract `license` in `waybill-cli/src/scan_fs/package_db/npm/mod.rs::synthesize_nameless_nested_mainmods` (licenses@716)
 - [X] T026 [P] [US1] Extract `[project].license` in `waybill-cli/src/scan_fs/package_db/pip/mod.rs::build_pip_main_module_entry` (licenses@1022), treating the deprecated `license.file` table form as `Absent` per FR-011
 - [X] T027 [P] [US1] Extract `licenses` / `license` in `waybill-cli/src/scan_fs/package_db/gem.rs::build_gem_main_module_entry` (licenses@1505), joining with the conjunctive fallback
 - [X] T028 [P] [US1] ~~Extract the same~~ — **out of scope, reclassified**: a `Gemfile` declares gems to install, not the application's own license. The gemspec-based sibling site is implemented. See contracts/ in `waybill-cli/src/scan_fs/package_db/gem.rs::build_gem_application_main_module_entry` (licenses@1786)
