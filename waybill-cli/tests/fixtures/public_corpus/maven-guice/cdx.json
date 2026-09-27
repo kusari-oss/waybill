@@ -189,7 +189,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:biz.aqute:bnd:0.0.384:*:*:*:*:*:*:* | cpe:2.3:a:aqute:bnd:0.0.384:*:*:*:*:*:*:* | cpe:2.3:a:bnd:bnd:0.0.384:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:biz.aqute:bnd:0.0.384:*:*:*:*:*:*:*\",\"cpe:2.3:a:aqute:bnd:0.0.384:*:*:*:*:*:*:*\",\"cpe:2.3:a:bnd:bnd:0.0.384:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -241,7 +241,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:com.example:guice-demo:1.0-SNAPSHOT:*:*:*:*:*:*:* | cpe:2.3:a:example:guice-demo:1.0-SNAPSHOT:*:*:*:*:*:*:* | cpe:2.3:a:guice-demo:guice-demo:1.0-SNAPSHOT:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:com.example:guice-demo:1.0-SNAPSHOT:*:*:*:*:*:*:*\",\"cpe:2.3:a:example:guice-demo:1.0-SNAPSHOT:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-demo:guice-demo:1.0-SNAPSHOT:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -294,7 +294,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:com.google.auto.value:auto-value-annotations:1.6.3:*:*:*:*:*:*:* | cpe:2.3:a:value:auto-value-annotations:1.6.3:*:*:*:*:*:*:* | cpe:2.3:a:auto-value-annotations:auto-value-annotations:1.6.3:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:com.google.auto.value:auto-value-annotations:1.6.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:value:auto-value-annotations:1.6.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:auto-value-annotations:auto-value-annotations:1.6.3:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -352,7 +352,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:com.google.auto.value:auto-value:1.6.3:*:*:*:*:*:*:* | cpe:2.3:a:value:auto-value:1.6.3:*:*:*:*:*:*:* | cpe:2.3:a:auto-value:auto-value:1.6.3:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:com.google.auto.value:auto-value:1.6.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:value:auto-value:1.6.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:auto-value:auto-value:1.6.3:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -410,7 +410,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:com.google.code.findbugs:jsr305:3.0.1:*:*:*:*:*:*:* | cpe:2.3:a:findbugs:jsr305:3.0.1:*:*:*:*:*:*:* | cpe:2.3:a:jsr305:jsr305:3.0.1:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:com.google.code.findbugs:jsr305:3.0.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:findbugs:jsr305:3.0.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:jsr305:jsr305:3.0.1:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -463,7 +463,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:com.google.dagger:dagger-producers:2.22.1:*:*:*:*:*:*:* | cpe:2.3:a:dagger:dagger-producers:2.22.1:*:*:*:*:*:*:* | cpe:2.3:a:dagger-producers:dagger-producers:2.22.1:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:com.google.dagger:dagger-producers:2.22.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:dagger:dagger-producers:2.22.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:dagger-producers:dagger-producers:2.22.1:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -521,7 +521,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:com.google.dagger:dagger:2.22.1:*:*:*:*:*:*:* | cpe:2.3:a:dagger:dagger:2.22.1:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:com.google.dagger:dagger:2.22.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:dagger:dagger:2.22.1:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -583,7 +583,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:com.google.errorprone:error_prone_annotations:2.18.0:*:*:*:*:*:*:* | cpe:2.3:a:errorprone:error_prone_annotations:2.18.0:*:*:*:*:*:*:* | cpe:2.3:a:error_prone_annotations:error_prone_annotations:2.18.0:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:com.google.errorprone:error_prone_annotations:2.18.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:errorprone:error_prone_annotations:2.18.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:error_prone_annotations:error_prone_annotations:2.18.0:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -645,7 +645,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:com.google.guava:guava-testlib:31.0.1-jre:*:*:*:*:*:*:* | cpe:2.3:a:guava:guava-testlib:31.0.1-jre:*:*:*:*:*:*:* | cpe:2.3:a:guava-testlib:guava-testlib:31.0.1-jre:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:com.google.guava:guava-testlib:31.0.1-jre:*:*:*:*:*:*:*\",\"cpe:2.3:a:guava:guava-testlib:31.0.1-jre:*:*:*:*:*:*:*\",\"cpe:2.3:a:guava-testlib:guava-testlib:31.0.1-jre:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -703,7 +703,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:com.google.guava:guava:31.0.1-jre:*:*:*:*:*:*:* | cpe:2.3:a:guava:guava:31.0.1-jre:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:com.google.guava:guava:31.0.1-jre:*:*:*:*:*:*:*\",\"cpe:2.3:a:guava:guava:31.0.1-jre:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -746,11 +746,19 @@
           }
         ]
       },
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "name": "The Apache Software License, Version 2.0"
+          }
+        }
+      ],
       "name": "extensions-parent",
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:com.google.inject.extensions:extensions-parent:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:extensions:extensions-parent:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:extensions-parent:extensions-parent:7.0.0:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:com.google.inject.extensions:extensions-parent:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:extensions-parent:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions-parent:extensions-parent:7.0.0:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -803,7 +811,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:com.google.inject.extensions:guice-assistedinject:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:extensions:guice-assistedinject:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:guice-assistedinject:guice-assistedinject:7.0.0:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:com.google.inject.extensions:guice-assistedinject:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:guice-assistedinject:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-assistedinject:guice-assistedinject:7.0.0:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -854,7 +862,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:com.google.inject.extensions:guice-dagger-adapter:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:extensions:guice-dagger-adapter:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:guice-dagger-adapter:guice-dagger-adapter:7.0.0:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:com.google.inject.extensions:guice-dagger-adapter:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:guice-dagger-adapter:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-dagger-adapter:guice-dagger-adapter:7.0.0:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -901,7 +909,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:com.google.inject.extensions:guice-grapher:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:extensions:guice-grapher:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:guice-grapher:guice-grapher:7.0.0:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:com.google.inject.extensions:guice-grapher:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:guice-grapher:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-grapher:guice-grapher:7.0.0:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -948,7 +956,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:com.google.inject.extensions:guice-jmx:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:extensions:guice-jmx:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:guice-jmx:guice-jmx:7.0.0:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:com.google.inject.extensions:guice-jmx:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:guice-jmx:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-jmx:guice-jmx:7.0.0:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -995,7 +1003,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:com.google.inject.extensions:guice-jndi:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:extensions:guice-jndi:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:guice-jndi:guice-jndi:7.0.0:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:com.google.inject.extensions:guice-jndi:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:guice-jndi:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-jndi:guice-jndi:7.0.0:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -1042,7 +1050,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:com.google.inject.extensions:guice-persist:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:extensions:guice-persist:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:guice-persist:guice-persist:7.0.0:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:com.google.inject.extensions:guice-persist:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:guice-persist:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-persist:guice-persist:7.0.0:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -1089,7 +1097,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:com.google.inject.extensions:guice-servlet:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:extensions:guice-servlet:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:guice-servlet:guice-servlet:7.0.0:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:com.google.inject.extensions:guice-servlet:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:guice-servlet:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-servlet:guice-servlet:7.0.0:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -1142,7 +1150,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:com.google.inject.extensions:guice-servlet:7.0.1-SNAPSHOT:*:*:*:*:*:*:* | cpe:2.3:a:extensions:guice-servlet:7.0.1-SNAPSHOT:*:*:*:*:*:*:* | cpe:2.3:a:guice-servlet:guice-servlet:7.0.1-SNAPSHOT:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:com.google.inject.extensions:guice-servlet:7.0.1-SNAPSHOT:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:guice-servlet:7.0.1-SNAPSHOT:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-servlet:guice-servlet:7.0.1-SNAPSHOT:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -1189,7 +1197,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:com.google.inject.extensions:guice-spring:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:extensions:guice-spring:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:guice-spring:guice-spring:7.0.0:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:com.google.inject.extensions:guice-spring:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:guice-spring:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-spring:guice-spring:7.0.0:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -1236,7 +1244,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:com.google.inject.extensions:guice-struts2:7.0.1-SNAPSHOT:*:*:*:*:*:*:* | cpe:2.3:a:extensions:guice-struts2:7.0.1-SNAPSHOT:*:*:*:*:*:*:* | cpe:2.3:a:guice-struts2:guice-struts2:7.0.1-SNAPSHOT:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:com.google.inject.extensions:guice-struts2:7.0.1-SNAPSHOT:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:guice-struts2:7.0.1-SNAPSHOT:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-struts2:guice-struts2:7.0.1-SNAPSHOT:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -1289,7 +1297,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:com.google.inject.extensions:guice-testlib:5.1.0:*:*:*:*:*:*:* | cpe:2.3:a:extensions:guice-testlib:5.1.0:*:*:*:*:*:*:* | cpe:2.3:a:guice-testlib:guice-testlib:5.1.0:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:com.google.inject.extensions:guice-testlib:5.1.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:guice-testlib:5.1.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-testlib:guice-testlib:5.1.0:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -1341,7 +1349,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:com.google.inject.extensions:guice-testlib:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:extensions:guice-testlib:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:guice-testlib:guice-testlib:7.0.0:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:com.google.inject.extensions:guice-testlib:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:guice-testlib:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-testlib:guice-testlib:7.0.0:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -1394,7 +1402,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:com.google.inject.extensions:guice-throwingproviders:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:extensions:guice-throwingproviders:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:guice-throwingproviders:guice-throwingproviders:7.0.0:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:com.google.inject.extensions:guice-throwingproviders:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:guice-throwingproviders:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-throwingproviders:guice-throwingproviders:7.0.0:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -1441,11 +1449,19 @@
           }
         ]
       },
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "name": "The Apache Software License, Version 2.0"
+          }
+        }
+      ],
       "name": "guice-bom",
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:com.google.inject:guice-bom:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:inject:guice-bom:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:guice-bom:guice-bom:7.0.0:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:com.google.inject:guice-bom:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:inject:guice-bom:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-bom:guice-bom:7.0.0:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -1488,11 +1504,19 @@
           }
         ]
       },
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "name": "The Apache Software License, Version 2.0"
+          }
+        }
+      ],
       "name": "guice-parent",
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:com.google.inject:guice-parent:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:inject:guice-parent:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:guice-parent:guice-parent:7.0.0:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:com.google.inject:guice-parent:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:inject:guice-parent:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-parent:guice-parent:7.0.0:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -1545,7 +1569,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:com.google.inject:guice:5.1.0:*:*:*:*:*:*:* | cpe:2.3:a:inject:guice:5.1.0:*:*:*:*:*:*:* | cpe:2.3:a:guice:guice:5.1.0:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:com.google.inject:guice:5.1.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:inject:guice:5.1.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice:guice:5.1.0:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -1598,7 +1622,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:com.google.inject:guice:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:inject:guice:7.0.0:*:*:*:*:*:*:* | cpe:2.3:a:guice:guice:7.0.0:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:com.google.inject:guice:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:inject:guice:7.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice:guice:7.0.0:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -1655,7 +1679,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:com.google.truth.extensions:truth-java8-extension:1.1.3:*:*:*:*:*:*:* | cpe:2.3:a:extensions:truth-java8-extension:1.1.3:*:*:*:*:*:*:* | cpe:2.3:a:truth-java8-extension:truth-java8-extension:1.1.3:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:com.google.truth.extensions:truth-java8-extension:1.1.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:truth-java8-extension:1.1.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:truth-java8-extension:truth-java8-extension:1.1.3:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -1713,7 +1737,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:com.google.truth:truth:1.1.3:*:*:*:*:*:*:* | cpe:2.3:a:truth:truth:1.1.3:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:com.google.truth:truth:1.1.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:truth:truth:1.1.3:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -1771,7 +1795,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:jakarta.inject:jakarta.inject-api:2.0.1:*:*:*:*:*:*:* | cpe:2.3:a:inject:jakarta.inject-api:2.0.1:*:*:*:*:*:*:* | cpe:2.3:a:jakarta.inject-api:jakarta.inject-api:2.0.1:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:jakarta.inject:jakarta.inject-api:2.0.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:inject:jakarta.inject-api:2.0.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:jakarta.inject-api:jakarta.inject-api:2.0.1:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -1824,7 +1848,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:jakarta.inject:jakarta.inject-tck:2.0.1:*:*:*:*:*:*:* | cpe:2.3:a:inject:jakarta.inject-tck:2.0.1:*:*:*:*:*:*:* | cpe:2.3:a:jakarta.inject-tck:jakarta.inject-tck:2.0.1:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:jakarta.inject:jakarta.inject-tck:2.0.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:inject:jakarta.inject-tck:2.0.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:jakarta.inject-tck:jakarta.inject-tck:2.0.1:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -1882,7 +1906,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:jakarta.persistence:jakarta.persistence-api:3.0.0:*:*:*:*:*:*:* | cpe:2.3:a:persistence:jakarta.persistence-api:3.0.0:*:*:*:*:*:*:* | cpe:2.3:a:jakarta.persistence-api:jakarta.persistence-api:3.0.0:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:jakarta.persistence:jakarta.persistence-api:3.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:persistence:jakarta.persistence-api:3.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:jakarta.persistence-api:jakarta.persistence-api:3.0.0:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -1940,7 +1964,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:jakarta.servlet:jakarta.servlet-api:5.0.0:*:*:*:*:*:*:* | cpe:2.3:a:servlet:jakarta.servlet-api:5.0.0:*:*:*:*:*:*:* | cpe:2.3:a:jakarta.servlet-api:jakarta.servlet-api:5.0.0:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:jakarta.servlet:jakarta.servlet-api:5.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:servlet:jakarta.servlet-api:5.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:jakarta.servlet-api:jakarta.servlet-api:5.0.0:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -2052,7 +2076,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:org.apache.felix:org.apache.felix.framework:3.0.5:*:*:*:*:*:*:* | cpe:2.3:a:felix:org.apache.felix.framework:3.0.5:*:*:*:*:*:*:* | cpe:2.3:a:org.apache.felix.framework:org.apache.felix.framework:3.0.5:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:org.apache.felix:org.apache.felix.framework:3.0.5:*:*:*:*:*:*:*\",\"cpe:2.3:a:felix:org.apache.felix.framework:3.0.5:*:*:*:*:*:*:*\",\"cpe:2.3:a:org.apache.felix.framework:org.apache.felix.framework:3.0.5:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -2110,7 +2134,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:org.apache.struts:struts2-core:2.5.30:*:*:*:*:*:*:* | cpe:2.3:a:struts:struts2-core:2.5.30:*:*:*:*:*:*:* | cpe:2.3:a:struts2-core:struts2-core:2.5.30:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:org.apache.struts:struts2-core:2.5.30:*:*:*:*:*:*:*\",\"cpe:2.3:a:struts:struts2-core:2.5.30:*:*:*:*:*:*:*\",\"cpe:2.3:a:struts2-core:struts2-core:2.5.30:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -2168,7 +2192,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:org.hamcrest:hamcrest-core:1.3:*:*:*:*:*:*:* | cpe:2.3:a:hamcrest:hamcrest-core:1.3:*:*:*:*:*:*:* | cpe:2.3:a:hamcrest-core:hamcrest-core:1.3:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:org.hamcrest:hamcrest-core:1.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:hamcrest:hamcrest-core:1.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:hamcrest-core:hamcrest-core:1.3:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -2226,7 +2250,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:org.hamcrest:hamcrest-library:1.3:*:*:*:*:*:*:* | cpe:2.3:a:hamcrest:hamcrest-library:1.3:*:*:*:*:*:*:* | cpe:2.3:a:hamcrest-library:hamcrest-library:1.3:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:org.hamcrest:hamcrest-library:1.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:hamcrest:hamcrest-library:1.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:hamcrest-library:hamcrest-library:1.3:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -2284,7 +2308,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:org.hibernate:hibernate-core-jakarta:5.6.15.Final:*:*:*:*:*:*:* | cpe:2.3:a:hibernate:hibernate-core-jakarta:5.6.15.Final:*:*:*:*:*:*:* | cpe:2.3:a:hibernate-core-jakarta:hibernate-core-jakarta:5.6.15.Final:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:org.hibernate:hibernate-core-jakarta:5.6.15.Final:*:*:*:*:*:*:*\",\"cpe:2.3:a:hibernate:hibernate-core-jakarta:5.6.15.Final:*:*:*:*:*:*:*\",\"cpe:2.3:a:hibernate-core-jakarta:hibernate-core-jakarta:5.6.15.Final:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -2342,7 +2366,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:org.hsqldb:hsqldb-j5:2.0.0:*:*:*:*:*:*:* | cpe:2.3:a:hsqldb:hsqldb-j5:2.0.0:*:*:*:*:*:*:* | cpe:2.3:a:hsqldb-j5:hsqldb-j5:2.0.0:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:org.hsqldb:hsqldb-j5:2.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:hsqldb:hsqldb-j5:2.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:hsqldb-j5:hsqldb-j5:2.0.0:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -2400,7 +2424,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:org.mockito:mockito-core:4.2.0:*:*:*:*:*:*:* | cpe:2.3:a:mockito:mockito-core:4.2.0:*:*:*:*:*:*:* | cpe:2.3:a:mockito-core:mockito-core:4.2.0:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:org.mockito:mockito-core:4.2.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:mockito:mockito-core:4.2.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:mockito-core:mockito-core:4.2.0:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -2458,7 +2482,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:org.ow2.asm:asm:9.5:*:*:*:*:*:*:* | cpe:2.3:a:asm:asm:9.5:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:org.ow2.asm:asm:9.5:*:*:*:*:*:*:*\",\"cpe:2.3:a:asm:asm:9.5:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -2520,7 +2544,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:org.slf4j:slf4j-simple:1.6.1:*:*:*:*:*:*:* | cpe:2.3:a:slf4j:slf4j-simple:1.6.1:*:*:*:*:*:*:* | cpe:2.3:a:slf4j-simple:slf4j-simple:1.6.1:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:org.slf4j:slf4j-simple:1.6.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:slf4j:slf4j-simple:1.6.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:slf4j-simple:slf4j-simple:1.6.1:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -2578,7 +2602,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:org.springframework:spring-beans:5.3.18:*:*:*:*:*:*:* | cpe:2.3:a:springframework:spring-beans:5.3.18:*:*:*:*:*:*:* | cpe:2.3:a:spring-beans:spring-beans:5.3.18:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:org.springframework:spring-beans:5.3.18:*:*:*:*:*:*:*\",\"cpe:2.3:a:springframework:spring-beans:5.3.18:*:*:*:*:*:*:*\",\"cpe:2.3:a:spring-beans:spring-beans:5.3.18:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -3620,7 +3644,7 @@
       },
       {
         "name": "waybill:os-release-missing-fields",
-        "value": "ID,VERSION_ID"
+        "value": "[\"ID\",\"VERSION_ID\"]"
       },
       {
         "name": "waybill:trace-integrity-ring-buffer-overflows",
@@ -3632,11 +3656,11 @@
       },
       {
         "name": "waybill:trace-integrity-uprobe-attach-failures",
-        "value": "0"
+        "value": "[]"
       },
       {
         "name": "waybill:trace-integrity-kprobe-attach-failures",
-        "value": "0"
+        "value": "[]"
       },
       {
         "name": "waybill:graph-completeness",

@@ -145,7 +145,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:ansicolors:ansicolors:1.1.8:*:*:*:*:*:*:* | cpe:2.3:a:python-ansicolors:ansicolors:1.1.8:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:ansicolors:ansicolors:1.1.8:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-ansicolors:ansicolors:1.1.8:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -212,7 +212,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:asgiref:asgiref:3.10.0:*:*:*:*:*:*:* | cpe:2.3:a:python-asgiref:asgiref:3.10.0:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:asgiref:asgiref:3.10.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-asgiref:asgiref:3.10.0:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -287,7 +287,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:certifi:certifi:2025.10.5:*:*:*:*:*:*:* | cpe:2.3:a:python-certifi:certifi:2025.10.5:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:certifi:certifi:2025.10.5:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-certifi:certifi:2025.10.5:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -394,7 +394,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:charset-normalizer:charset-normalizer:3.4.3:*:*:*:*:*:*:* | cpe:2.3:a:python-charset-normalizer:charset-normalizer:3.4.3:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:charset-normalizer:charset-normalizer:3.4.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-charset-normalizer:charset-normalizer:3.4.3:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -465,7 +465,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:click:click:8.3.0:*:*:*:*:*:*:* | cpe:2.3:a:python-click:click:8.3.0:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:click:click:8.3.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-click:click:8.3.0:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -642,7 +642,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:django-debug-toolbar:django-debug-toolbar:3.8.1:*:*:*:*:*:*:* | cpe:2.3:a:python-django-debug-toolbar:django-debug-toolbar:3.8.1:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:django-debug-toolbar:django-debug-toolbar:3.8.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-django-debug-toolbar:django-debug-toolbar:3.8.1:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -764,7 +764,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:django-stubs-ext:django-stubs-ext:5.2.5:*:*:*:*:*:*:* | cpe:2.3:a:python-django-stubs-ext:django-stubs-ext:5.2.5:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:django-stubs-ext:django-stubs-ext:5.2.5:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-django-stubs-ext:django-stubs-ext:5.2.5:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -835,7 +835,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:django-stubs:django-stubs:4.2.7:*:*:*:*:*:*:* | cpe:2.3:a:python-django-stubs:django-stubs:4.2.7:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:django-stubs:django-stubs:4.2.7:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-django-stubs:django-stubs:4.2.7:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -910,7 +910,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:django:django:3.2.25:*:*:*:*:*:*:* | cpe:2.3:a:python-django:django:3.2.25:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:django:django:3.2.25:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-django:django:3.2.25:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -1036,7 +1036,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:gunicorn:gunicorn:23.0.0:*:*:*:*:*:*:* | cpe:2.3:a:python-gunicorn:gunicorn:23.0.0:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:gunicorn:gunicorn:23.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-gunicorn:gunicorn:23.0.0:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -1111,7 +1111,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:idna:idna:3.10:*:*:*:*:*:*:* | cpe:2.3:a:python-idna:idna:3.10:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:idna:idna:3.10:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-idna:idna:3.10:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -1186,7 +1186,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:iniconfig:iniconfig:2.1.0:*:*:*:*:*:*:* | cpe:2.3:a:python-iniconfig:iniconfig:2.1.0:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:iniconfig:iniconfig:2.1.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-iniconfig:iniconfig:2.1.0:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -1257,7 +1257,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:libretranslatepy:libretranslatepy:2.1.1:*:*:*:*:*:*:* | cpe:2.3:a:python-libretranslatepy:libretranslatepy:2.1.1:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:libretranslatepy:libretranslatepy:2.1.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-libretranslatepy:libretranslatepy:2.1.1:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -1380,7 +1380,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:lxml:lxml:6.0.2:*:*:*:*:*:*:* | cpe:2.3:a:python-lxml:lxml:6.0.2:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:lxml:lxml:6.0.2:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-lxml:lxml:6.0.2:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -1455,7 +1455,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:mypy-extensions:mypy-extensions:1.1.0:*:*:*:*:*:*:* | cpe:2.3:a:python-mypy-extensions:mypy-extensions:1.1.0:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:mypy-extensions:mypy-extensions:1.1.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-mypy-extensions:mypy-extensions:1.1.0:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -1546,7 +1546,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:mypy:mypy:1.18.1:*:*:*:*:*:*:* | cpe:2.3:a:python-mypy:mypy:1.18.1:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:mypy:mypy:1.18.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-mypy:mypy:1.18.1:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -1625,7 +1625,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:packaging:packaging:25.0:*:*:*:*:*:*:* | cpe:2.3:a:python-packaging:packaging:25.0:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:packaging:packaging:25.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-packaging:packaging:25.0:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -1696,7 +1696,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:pathspec:pathspec:0.12.1:*:*:*:*:*:*:* | cpe:2.3:a:python-pathspec:pathspec:0.12.1:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:pathspec:pathspec:0.12.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-pathspec:pathspec:0.12.1:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -1767,7 +1767,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:pluggy:pluggy:1.6.0:*:*:*:*:*:*:* | cpe:2.3:a:python-pluggy:pluggy:1.6.0:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:pluggy:pluggy:1.6.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-pluggy:pluggy:1.6.0:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -1905,7 +1905,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:protobuf:protobuf:6.32.1:*:*:*:*:*:*:* | cpe:2.3:a:python-protobuf:protobuf:6.32.1:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:protobuf:protobuf:6.32.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-protobuf:protobuf:6.32.1:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -1976,7 +1976,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:pygments:pygments:2.19.2:*:*:*:*:*:*:* | cpe:2.3:a:python-pygments:pygments:2.19.2:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:pygments:pygments:2.19.2:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-pygments:pygments:2.19.2:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -2153,7 +2153,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:pytest-django:pytest-django:4.11.1:*:*:*:*:*:*:* | cpe:2.3:a:python-pytest-django:pytest-django:4.11.1:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:pytest-django:pytest-django:4.11.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-pytest-django:pytest-django:4.11.1:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -2228,7 +2228,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:pytest:pytest:8.4.2:*:*:*:*:*:*:* | cpe:2.3:a:python-pytest:pytest:8.4.2:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:pytest:pytest:8.4.2:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-pytest:pytest:8.4.2:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -2303,7 +2303,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:pytz:pytz:2025.2:*:*:*:*:*:*:* | cpe:2.3:a:python-pytz:pytz:2025.2:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:pytz:pytz:2025.2:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-pytz:pytz:2025.2:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -2421,7 +2421,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:requests:requests:2.32.5:*:*:*:*:*:*:* | cpe:2.3:a:python-requests:requests:2.32.5:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:requests:requests:2.32.5:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-requests:requests:2.32.5:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -2547,7 +2547,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:setuptools:setuptools:80.9.0:*:*:*:*:*:*:* | cpe:2.3:a:python-setuptools:setuptools:80.9.0:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:setuptools:setuptools:80.9.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-setuptools:setuptools:80.9.0:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -2622,7 +2622,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:sqlparse:sqlparse:0.5.3:*:*:*:*:*:*:* | cpe:2.3:a:python-sqlparse:sqlparse:0.5.3:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:sqlparse:sqlparse:0.5.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-sqlparse:sqlparse:0.5.3:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -2748,7 +2748,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:translate:translate:3.6.1:*:*:*:*:*:*:* | cpe:2.3:a:python-translate:translate:3.6.1:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:translate:translate:3.6.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-translate:translate:3.6.1:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -2815,7 +2815,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:types-pytz:types-pytz:2025.2.0.20250809:*:*:*:*:*:*:* | cpe:2.3:a:python-types-pytz:types-pytz:2025.2.0.20250809:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:types-pytz:types-pytz:2025.2.0.20250809:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-types-pytz:types-pytz:2025.2.0.20250809:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -2886,7 +2886,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:types-pyyaml:types-pyyaml:6.0.12.20250915:*:*:*:*:*:*:* | cpe:2.3:a:python-types-pyyaml:types-pyyaml:6.0.12.20250915:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:types-pyyaml:types-pyyaml:6.0.12.20250915:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-types-pyyaml:types-pyyaml:6.0.12.20250915:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -3008,7 +3008,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:types-requests:types-requests:2.32.4.20250913:*:*:*:*:*:*:* | cpe:2.3:a:python-types-requests:types-requests:2.32.4.20250913:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:types-requests:types-requests:2.32.4.20250913:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-types-requests:types-requests:2.32.4.20250913:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -3079,7 +3079,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:typing-extensions:typing-extensions:4.15.0:*:*:*:*:*:*:* | cpe:2.3:a:python-typing-extensions:typing-extensions:4.15.0:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:typing-extensions:typing-extensions:4.15.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-typing-extensions:typing-extensions:4.15.0:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -3150,7 +3150,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:urllib3:urllib3:2.5.0:*:*:*:*:*:*:* | cpe:2.3:a:python-urllib3:urllib3:2.5.0:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:urllib3:urllib3:2.5.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-urllib3:urllib3:2.5.0:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -3675,7 +3675,7 @@
       },
       {
         "name": "waybill:os-release-missing-fields",
-        "value": "ID,VERSION_ID"
+        "value": "[\"ID\",\"VERSION_ID\"]"
       },
       {
         "name": "waybill:trace-integrity-ring-buffer-overflows",
@@ -3687,11 +3687,11 @@
       },
       {
         "name": "waybill:trace-integrity-uprobe-attach-failures",
-        "value": "0"
+        "value": "[]"
       },
       {
         "name": "waybill:trace-integrity-kprobe-attach-failures",
-        "value": "0"
+        "value": "[]"
       },
       {
         "name": "waybill:graph-completeness",

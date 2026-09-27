@@ -35,7 +35,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:os-release-missing-fields\",\"value\":[\"ID\",\"VERSION_ID\"]}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:os-release-missing-fields\",\"value\":\"[\\\"ID\\\",\\\"VERSION_ID\\\"]\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -83,13 +83,19 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-uprobe-attach-failures\",\"value\":[]}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-uprobe-attach-failures\",\"value\":\"[]\"}"
     },
     {
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-kprobe-attach-failures\",\"value\":[]}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-kprobe-attach-failures\",\"value\":\"[]\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-<masked>",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"compositions\",\"value\":{\"complete_ecosystems\":[],\"target_aggregate\":\"incomplete_first_party_only\"}}"
     }
   ],
   "creationInfo": "<masked>",
@@ -98,6 +104,18 @@
     "SPDXRef-DocumentRoot-<masked>"
   ],
   "documentNamespace": "<masked>",
+  "hasExtractedLicensingInfos": [
+    {
+      "extractedText": "BSD3",
+      "licenseId": "LicenseRef-QBTGOZKDQBJBELHB",
+      "name": "waybill-extracted-license"
+    },
+    {
+      "extractedText": "NONE",
+      "licenseId": "LicenseRef-YYT4BHAU4WHEJPCR",
+      "name": "waybill-extracted-license"
+    }
+  ],
   "name": "haskell-language-server 1b4b3c6",
   "packages": [
     {
@@ -2452,7 +2470,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "LicenseRef-YYT4BHAU4WHEJPCR",
       "name": "cabal-add-bench",
       "versionInfo": "0.1.0.0"
     },
@@ -2596,7 +2614,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "LicenseRef-YYT4BHAU4WHEJPCR",
       "name": "cabal-add-lib",
       "versionInfo": "0.1.0.0"
     },
@@ -2740,7 +2758,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "LicenseRef-YYT4BHAU4WHEJPCR",
       "name": "cabal-add-packageYaml",
       "versionInfo": "0.1.0.0"
     },
@@ -2812,7 +2830,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "LicenseRef-YYT4BHAU4WHEJPCR",
       "name": "cabal-add-tests",
       "versionInfo": "0.1.0.0"
     },
@@ -7654,7 +7672,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "LicenseRef-QBTGOZKDQBJBELHB",
       "name": "info-util",
       "versionInfo": "0.1.0.0"
     },

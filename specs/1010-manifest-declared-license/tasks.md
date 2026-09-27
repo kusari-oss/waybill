@@ -161,11 +161,11 @@ outcomes, passing uniformly.
 
 - [X] T052 [P] Correct the five stale `#103` comments deferring license detection, at `waybill-cli/src/scan_fs/package_db/cargo.rs:634`, `pip/mod.rs:614`, `npm/walk.rs:506`, `golang/legacy.rs:965` and `golang/legacy.rs:4185` (FR-013, SC-008)
 - [X] T053 [P] Correct the `PackageDbEntry.licenses` doc comment at `waybill-cli/src/scan_fs/package_db/mod.rs:137` where it describes sources as unpopulated
-- [ ] T054 Confirm `#1008` is closed and the public-corpus lane is green **before** regenerating any golden, so this change's diff is readable in isolation — procedure in `docs/development/refreshing-corpus-goldens.md`
-- [ ] T055 Regenerate the public-corpus goldens in CI — never locally — and read every diff before accepting, per `docs/development/refreshing-corpus-goldens.md`
+- [X] T054 Confirm `#1008` is closed and the public-corpus lane is green **before** regenerating any golden, so this change's diff is readable in isolation — procedure in `docs/development/refreshing-corpus-goldens.md`
+- [X] T055 Regenerate the public-corpus goldens in CI — never locally — and read every diff before accepting, per `docs/development/refreshing-corpus-goldens.md`
 - [ ] T056 Regenerate goldens for all six golden-writing test files that respond to `WAYBILL_UPDATE_*` env vars, not only the three `*_regression` ones: `waybill-cli/tests/cdx_regression.rs`, `spdx_regression.rs`, `spdx3_regression.rs`, `oci_pull_backward_compat.rs`, `optional_dep_classification.rs`, `pkg_alias_binding_us1.rs`
 - [ ] T057 Run the quickstart validation in `specs/1010-manifest-declared-license/quickstart.md` end to end, including the negative scan-root case
-- [ ] T058 Run `./scripts/pre-pr.sh` and enumerate every per-target result line; both clippy `--all-targets` and the full workspace test run must be clean before a PR is opened
+- [X] T058 Run `./scripts/pre-pr.sh` and enumerate every per-target result line; both clippy `--all-targets` and the full workspace test run must be clean before a PR is opened
 
 ---
 
