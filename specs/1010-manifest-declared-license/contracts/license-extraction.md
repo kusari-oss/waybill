@@ -45,11 +45,30 @@ the field name:
 | maven | `pom.xml` | `<licenses><license><name>` | **Yes** | **AND** (fallback — POM reference specifies nothing) | inherited from parent POM | **verified** (Maven POM reference) |
 | composer | `composer.json` | `license` (string or array) | **Yes** | **OR** — array is documented as disjunctive | none defined | **verified** (Composer schema) |
 | elixir | `mix.exs` | package metadata `licenses` | **Yes** — "a list of licenses the project is licensed under. This attribute is required" | **AND** (fallback — Hex does not state the relationship) | none defined | **verified** ([Hex publish](https://hex.pm/docs/publish)). Hex explicitly supports `LicenseRef-<idstring>` for custom licenses, which matches FR-004 |
-| erlang | `.app.src` / `rebar.config` | `licenses` | **Yes** | **AND** (fallback) | none defined | **partial** — erlang publishes to Hex, so the Hex contract above applies (required list, `LicenseRef-` supported, relationship unstated). The rebar3 configuration reference documents no `licenses` key, so the exact key location must be confirmed when the reader is written |
+| erlang **(deferred)** | `.app.src` / `rebar.config` | `licenses` | **Yes** | **AND** (fallback) | none defined | **unverified — not implemented** — erlang publishes to Hex, so the Hex contract above applies (required list, `LicenseRef-` supported, relationship unstated). The rebar3 configuration reference documents no `licenses` key, so the exact key location must be confirmed when the reader is written |
 | scala | `build.sbt` | `licenses` | **Yes** — a `Seq` of `(name, URL)` tuples | **AND** (fallback — sbt states nothing) | none defined | **verified** ([sbt](https://www.scala-sbt.org/1.x/docs/Using-Sonatype.html)). **Names are free-form, not SPDX**: the documented example is `"Apache 2"`, not `Apache-2.0`, so scala will hit the FR-004 preservation path frequently |
-| cocoapods | `.podspec` | `license` | No — single, and required | n/a | none defined | **verified** ([podspec](https://guides.cocoapods.org/syntax/podspec.html)). Three forms: a String (`'MIT'`), or a Hash with `:type` plus `:file` or `:text`. Read `:type` from the hash; `:file` and `:text` are out of scope per FR-011 |
+| ~~cocoapods~~ | — | **no license source at this site** | — | n/a | none defined | **verified** ([podspec](https://guides.cocoapods.org/syntax/podspec.html)). Three forms: a String (`'MIT'`), or a Hash with `:type` plus `:file` or `:text`. Read `:type` from the hash; `:file` and `:text` are out of scope per FR-011 |
 | nuget | `.csproj` | `PackageLicenseExpression` | No — "an SPDX license identifier or expression". **"Only one of `PackageLicenseExpression`, `PackageLicenseFile`, and `PackageLicenseUrl` can be specified at a time"** | n/a | via ordinary MSBuild property inheritance (`Directory.Build.props`), not a license-specific rule | **verified** ([MSBuild pack targets](https://learn.microsoft.com/en-us/nuget/reference/msbuild-targets)). `PackageLicenseFile` is out of scope per FR-011; `PackageLicenseUrl` is deprecated |
 | haskell | `.cabal` | `license:` | No | n/a | none defined | **implemented** (#957) — correct to preserve rather than drop |
+
+### Reclassified during implementation: the reader parses a file with no license
+
+Three main-module sites emit no license, and none of them is an oversight. In each
+case the ecosystem *does* define a license field — but not in the file this reader
+reads. Recording them here because a bare gap in the table invites someone to
+"fix" it by bolting on a parser for a different file, which is new reader
+capability rather than license extraction.
+
+| Site | Reads | Why there is nothing to read |
+|---|---|---|
+| `cocoapods.rs::emit_main_module` | Podfile target, else directory name | A Podfile declares *pods to consume*. `license` lives in a `.podspec`, which describes a pod being *authored*, and this reader never parses one. |
+| `gem.rs::build_gem_application_main_module_entry` | `Gemfile` | A Gemfile declares *gems to install*, not the application's own license. The gemspec-based sibling site does carry `licenses` and is implemented. |
+| `npm/mod.rs::synthesize_nameless_nested_mainmods` | a nested `package.json` with no `name` | Synthesises identity for an unnamed nested manifest; deferred rather than excluded, since such a file may still carry `license`. |
+
+This is a different category from Go, Swift and Dart, where the ecosystem's
+manifest format has no license field at all. Both end in "no license emitted", and
+conflating them would lose the distinction that matters: these three could be
+served by parsing an additional file, those three could not.
 
 ### PackageLicenseFile / license-file / license.file
 

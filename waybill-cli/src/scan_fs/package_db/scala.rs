@@ -288,6 +288,15 @@ struct SbtMainModule {
     name_setting: Option<String>,
     version_setting: Option<String>,
     scala_version: Option<String>,
+    /// Issue #954 — the `licenses` setting.
+    ///
+    /// sbt names are **free-form, not SPDX**: the documented example is
+    /// `"Apache 2"`, not `Apache-2.0`. So most scala projects reach the
+    /// preservation path (FR-004) rather than canonicalising, which is precisely
+    /// why this feature preserves an unrecognised declaration instead of
+    /// dropping it — under drop-on-failure, scala would emit nothing for the
+    /// common case.
+    licenses: Vec<String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -777,6 +786,28 @@ fn dependencies_val_re() -> &'static Regex {
     })
 }
 
+/// Extract license names from an sbt `licenses :=` setting (issue #954).
+///
+/// The setting is a `Seq` of `(name, url)` tuples, so the quoted terms alternate
+/// between names and URLs. URLs are filtered out rather than positionally
+/// skipped, because the shape varies — `Seq("MIT")`, `Seq("MIT" -> url(...))`,
+/// and `List(("MIT", url(...)))` all occur — and a URL is not a license
+/// identifier, the same reasoning that excludes file paths under FR-011.
+fn parse_sbt_licenses(text: &str) -> Vec<String> {
+    static LICENSES_RE: std::sync::OnceLock<Regex> = std::sync::OnceLock::new();
+    let re = LICENSES_RE.get_or_init(|| {
+        Regex::new(r"(?m)^\s*(?:ThisBuild\s*/\s*)?licenses\s*(?:\+)?:=\s*(.*)$")
+            .expect("static sbt licenses regex")
+    });
+    re.captures_iter(text)
+        .filter_map(|c| c.get(1))
+        .flat_map(|m| {
+            crate::scan_fs::package_db::declared_license::extract_quoted_terms(m.as_str())
+        })
+        .filter(|t| !t.starts_with("http://") && !t.starts_with("https://"))
+        .collect()
+}
+
 fn parse_build_sbt(path: &Path) -> anyhow::Result<(SbtMainModule, Vec<DeclaredSbtDep>)> {
     let text = std::fs::read_to_string(path)
         .map_err(|e| anyhow::anyhow!("read failed: {e}"))?;
@@ -794,6 +825,7 @@ fn parse_build_sbt(path: &Path) -> anyhow::Result<(SbtMainModule, Vec<DeclaredSb
         scala_version: scala_version_re()
             .captures(&text)
             .and_then(|c| c.get(1).map(|m| m.as_str().to_string())),
+        licenses: parse_sbt_licenses(&text),
     };
 
     let mut deps: Vec<DeclaredSbtDep> = Vec::new();
@@ -1319,7 +1351,12 @@ fn build_main_module_component(
             .unwrap_or_else(|| subproj.project_dir.to_string_lossy().into_owned()),
         depends: Vec::new(),
         maintainer: None,
-        licenses: Vec::new(),
+        licenses: crate::scan_fs::package_db::declared_license::resolve_many(
+            &main.licenses,
+            crate::scan_fs::package_db::declared_license::LicenseJoin::Conjunction,
+            subproj.build_sbt_path.as_deref().unwrap_or(&subproj.project_dir),
+        )
+        .into_licenses(),
         lifecycle_scope: None,
         requirement_ranges: Vec::new(),
         source_type: Some("scala-main-module".to_string()),

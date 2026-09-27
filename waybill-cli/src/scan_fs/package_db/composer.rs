@@ -52,6 +52,7 @@ use waybill_common::types::purl::Purl;
 
 use super::exclude_path::ExclusionSet;
 use super::PackageDbEntry;
+use super::declared_license::{self, LicenseJoin};
 
 // Milestone 664 US2 T049: shared-walker migration types.
 use crate::scan_fs::walk_registry::{
@@ -93,6 +94,11 @@ struct ComposerJson {
     require: BTreeMap<String, String>,
     #[serde(default, rename = "require-dev")]
     require_dev: BTreeMap<String, String>,
+    /// Issue #954 — the project's own declared license. Composer permits a
+    /// string or an array, so this stays a `Value` and is discriminated at use;
+    /// a typed enum would need a custom deserializer for no extra safety.
+    #[serde(default)]
+    license: Option<serde_json::Value>,
 }
 
 #[derive(Debug, Clone, serde::Deserialize)]
@@ -502,6 +508,29 @@ fn emit_main_module(
     manifest: &ComposerJson,
     parsed_lockfile: Option<&ComposerLock>,
 ) -> Option<PackageDbEntry> {
+    // Issue #954 — the project's own declared license.
+    //
+    // Composer is the one verified ecosystem that documents the relationship
+    // between several licenses: "when there is a choice between licenses
+    // (\"disjunctive license\"), multiple can be specified as an array", with
+    // conjunction expressed instead by a parenthesised `and` string. So an
+    // array joins with OR, and a string passes through untouched — already
+    // carrying whatever operator the author wrote.
+    let declared_license = match manifest.license.as_ref() {
+        Some(v) if v.is_string() => v
+            .as_str()
+            .map(|raw| declared_license::resolve(raw, composer_json_path))
+            .unwrap_or(declared_license::DeclaredLicense::Absent),
+        Some(serde_json::Value::Array(items)) => {
+            let terms: Vec<&str> = items.iter().filter_map(|i| i.as_str()).collect();
+            declared_license::resolve_many(
+                &terms,
+                LicenseJoin::Disjunction,
+                composer_json_path,
+            )
+        }
+        _ => declared_license::DeclaredLicense::Absent,
+    };
     let name = manifest.name.as_deref()?;
     if name.is_empty() || !name.contains('/') {
         tracing::warn!(
@@ -557,7 +586,7 @@ fn emit_main_module(
         source_path: composer_json_path.to_string_lossy().into_owned(),
         depends,
         maintainer: None,
-        licenses: Vec::new(),
+        licenses: declared_license.into_licenses(),
         lifecycle_scope: None,
         requirement_ranges: Vec::new(),
         source_type: Some("composer-main-module".to_string()),

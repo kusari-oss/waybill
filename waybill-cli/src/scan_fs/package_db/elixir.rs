@@ -111,6 +111,11 @@ struct MixExsInfo {
     version: Option<String>,
     is_umbrella: bool,
     deps: Vec<DeclaredDep>,
+    /// Issue #954 — `package: [licenses: [...]]`. Hex requires the field and
+    /// documents it as "a list of licenses the project is licensed under", but
+    /// states no relationship between several, so conjunction applies as the
+    /// recorded fallback (FR-010a).
+    licenses: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -774,6 +779,18 @@ fn parse_mix_exs(path: &Path) -> anyhow::Result<MixExsInfo> {
 
     let text = std::fs::read_to_string(path)
         .map_err(|e| anyhow::anyhow!("read failed: {e}"))?;
+    // Issue #954 — `licenses: ["MIT", ...]` inside the `package` keyword list.
+    // Matched by key rather than by locating the `package` function, because a
+    // `licenses:` key in a mix.exs means the package's licenses wherever it sits.
+    static LICENSES_RE: OnceLock<Regex> = OnceLock::new();
+    let licenses_re = LICENSES_RE.get_or_init(|| {
+        Regex::new(r"licenses:\s*\[([^\]]*)\]").expect("static licenses regex")
+    });
+    let licenses: Vec<String> = licenses_re
+        .captures(&text)
+        .and_then(|c| c.get(1))
+        .map(|m| crate::scan_fs::package_db::declared_license::extract_quoted_terms(m.as_str()))
+        .unwrap_or_default();
     let mut info = MixExsInfo {
         app_name: app_re
             .captures(&text)
@@ -783,6 +800,7 @@ fn parse_mix_exs(path: &Path) -> anyhow::Result<MixExsInfo> {
             .and_then(|c| c.get(1).map(|m| m.as_str().to_string())),
         is_umbrella: apps_path_re.is_match(&text),
         deps: Vec::new(),
+        licenses,
     };
 
     // Per-line tracking + dep extraction.
@@ -1071,7 +1089,12 @@ fn emit_main_module(
         source_path,
         depends: declared_dep_names_for_depends.to_vec(),
         maintainer: None,
-        licenses: Vec::new(),
+        licenses: crate::scan_fs::package_db::declared_license::resolve_many(
+            info.map(|i| i.licenses.as_slice()).unwrap_or(&[]),
+            crate::scan_fs::package_db::declared_license::LicenseJoin::Conjunction,
+            mix_exs_path.unwrap_or(project_dir),
+        )
+        .into_licenses(),
         lifecycle_scope: None,
         requirement_ranges: Vec::new(),
         source_type: Some("hex-main-module".to_string()),
