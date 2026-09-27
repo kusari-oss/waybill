@@ -504,7 +504,9 @@ pub(crate) struct DroppedDuplicate {
 /// - `sbom_tier: Some("source")` (FR-006).
 /// - `extra_annotations` carries `waybill:component-role: main-module`
 ///   (C40, FR-004).
-/// - `licenses: vec![]` (FR-005; license detection is #103 follow-up).
+/// - `licenses` from `package.json::license`, a single SPDX expression,
+///   resolved through the shared declared-license ladder (#954); empty when
+///   the manifest declares none
 /// - `depends` populated from `dependencies`/`devDependencies`/
 ///   `peerDependencies`/`optionalDependencies` keys (FR-007).
 pub(crate) fn build_npm_main_module_entry(

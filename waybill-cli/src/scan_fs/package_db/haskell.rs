@@ -1257,29 +1257,29 @@ fn parse_cabal_manifest(path: &Path) -> anyhow::Result<CabalManifest> {
 
     // #954 — the project's own declared license.
     //
-    // Canonicalised through `SpdxExpression::try_canonical`, following the m152
-    // RPM precedent: a `.cabal` may carry a string that is not a valid SPDX
-    // expression (legacy `AllRightsReserved`, a bare `LICENSE` filename, or a
-    // pre-SPDX spelling), and emitting an unverified string as though it were a
-    // license identifier is worse than emitting nothing. A value that will not
-    // canonicalise is logged and dropped rather than passed through.
+    // Routed through the shared ladder (FR-008a). #957 implemented Haskell alone
+    // and chose to DISCARD a value that would not canonicalise; that is now
+    // superseded. The raw declaration is preserved instead, so emission mints a
+    // non-listed license reference for it.
+    //
+    // The invariant #957 got right is kept: an unrecognised string is never
+    // emitted *as though* it were a listed identifier. What changed is that it is
+    // no longer thrown away — a `.cabal` carrying `AllRightsReserved` is stating
+    // the most legally significant thing in the file, and dropping it leaves a
+    // consumer unable to tell "no license declared" from "a license we could not
+    // parse". Sibling ecosystems make the same case louder: sbt names are
+    // free-form, so under drop-on-failure scala would emit nothing for its common
+    // shape.
     let license = cabal_license_re()
         .captures(&text)
         .and_then(|c| c.get(1))
         .map(|m| m.as_str().trim())
         .filter(|raw| !raw.is_empty())
-        .and_then(|raw| match SpdxExpression::try_canonical(raw) {
-            Ok(expr) => Some(expr),
-            Err(err) => {
-                tracing::debug!(
-                    path = %path.display(),
-                    raw = raw,
-                    error = %err,
-                    "haskell: `license:` is not a valid SPDX expression; omitted \
-                     rather than emitted unverified (#954)"
-                );
-                None
-            }
+        .and_then(|raw| {
+            super::declared_license::resolve(raw, path)
+                .into_licenses()
+                .into_iter()
+                .next()
         });
 
     Ok(CabalManifest {

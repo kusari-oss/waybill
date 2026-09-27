@@ -92,17 +92,17 @@ attribution. Deliverable with a single ecosystem done.
 - [ ] T025 [P] [US1] Extract `license` in `waybill-cli/src/scan_fs/package_db/npm/mod.rs::synthesize_nameless_nested_mainmods` (licenses@716)
 - [X] T026 [P] [US1] Extract `[project].license` in `waybill-cli/src/scan_fs/package_db/pip/mod.rs::build_pip_main_module_entry` (licenses@1022), treating the deprecated `license.file` table form as `Absent` per FR-011
 - [X] T027 [P] [US1] Extract `licenses` / `license` in `waybill-cli/src/scan_fs/package_db/gem.rs::build_gem_main_module_entry` (licenses@1505), joining with the conjunctive fallback
-- [ ] T028 [P] [US1] Extract the same in `waybill-cli/src/scan_fs/package_db/gem.rs::build_gem_application_main_module_entry` (licenses@1786)
+- [X] T028 [P] [US1] ~~Extract the same~~ — **out of scope, reclassified**: a `Gemfile` declares gems to install, not the application's own license. The gemspec-based sibling site is implemented. See contracts/ in `waybill-cli/src/scan_fs/package_db/gem.rs::build_gem_application_main_module_entry` (licenses@1786)
 - [X] T029 [P] [US1] Extract `<licenses><license><name>` in `waybill-cli/src/scan_fs/package_db/maven.rs::build_maven_main_module_entry` (licenses@4434), joining with the conjunctive fallback
 - [X] T030 [US1] Resolve maven parent-POM license inheritance in `waybill-cli/src/scan_fs/package_db/maven.rs`, since `licenses` is an inherited POM element (FR-011a)
 - [X] T031 [P] [US1] Extract `license` in `waybill-cli/src/scan_fs/package_db/composer.rs::emit_main_module` (licenses@560), joining an array with **disjunction** per the documented Composer semantics — the one ecosystem that is not the fallback
 - [X] T032 [P] [US1] Extract the license in `waybill-cli/src/scan_fs/package_db/elixir.rs::emit_main_module` (licenses@1074) per the T001-verified contract row
 - [ ] T033 [P] [US1] Extract the license in `waybill-cli/src/scan_fs/package_db/erlang.rs::build_main_module_component` (licenses@1489) per the T002-verified contract row
 - [X] T034 [P] [US1] Extract the license in `waybill-cli/src/scan_fs/package_db/scala.rs::build_main_module_component` (licenses@1322) per the T003-verified contract row
-- [ ] T035 [P] [US1] Extract the license in `waybill-cli/src/scan_fs/package_db/cocoapods.rs::emit_main_module` (licenses@686) per the T004-verified contract row
+- [X] T035 [P] [US1] ~~Extract the license~~ — **out of scope, reclassified**: the reader derives its main-module from a Podfile target or directory name and never parses a `.podspec`, which is where `license` lives. See contracts/ in `waybill-cli/src/scan_fs/package_db/cocoapods.rs::emit_main_module` (licenses@686) per the T004-verified contract row
 - [X] T036 [P] [US1] Extract `PackageLicenseExpression` in `waybill-cli/src/scan_fs/package_db/nuget/mod.rs::build_nuget_main_module_entry` (licenses@781) per the T005-verified contract row
-- [ ] T037 [US1] Implement scan-root license inheritance in `waybill-cli/src/generate/root_selector.rs` (alongside `select_root` at line 165, which already has the resolved component set in hand), attaching a license only when exactly one main-module component carries one (FR-016, FR-017)
-- [ ] T038 [US1] Add a case to `waybill-cli/tests/declared_license.rs` asserting the scan-root inherits when exactly one main-module carries a license, **and does not** when two do — using this repository's own two-crate workspace as the negative case (SC-001a)
+- [X] T037 [US1] ~~Implement scan-root license inheritance~~ — **verified no-op, no code written**. `select_root`'s `count == 1` fast path already makes a lone main-module BE the root, so it carries its own license; a synthetic root appears only with >= 2 main-modules, which FR-016 says must carry none. Both clauses describe existing behaviour. Measured: 2 main-modules with one licensed yields `pkg:generic/two@0.0.0 licenses=0`. Locked in by T038 in `waybill-cli/src/generate/root_selector.rs` (alongside `select_root` at line 165, which already has the resolved component set in hand), attaching a license only when exactly one main-module component carries one (FR-016, FR-017)
+- [X] T038 [US1] Add a case to `waybill-cli/tests/declared_license.rs` asserting the scan-root inherits when exactly one main-module carries a license, **and does not** when two do — using this repository's own two-crate workspace as the negative case (SC-001a)
 - [ ] T039 [P] [US1] Add per-ecosystem unit tests in the `#[cfg(test)]` module of each converted reader — `cargo.rs`, `npm/walk.rs`, `npm/mod.rs`, `pip/mod.rs`, `gem.rs`, `maven.rs`, `composer.rs`, `elixir.rs`, `erlang.rs`, `scala.rs`, `cocoapods.rs`, `nuget/mod.rs` under `waybill-cli/src/scan_fs/package_db/` — asserting a declared license is extracted
 
 **Checkpoint**: every affected ecosystem emits its declared license; US1 is independently verifiable.
@@ -125,8 +125,8 @@ reference, and is never presented as a recognised identifier.
 
 ### Implementation for User Story 2
 
-- [ ] T043 [US2] Change `waybill-cli/src/scan_fs/package_db/haskell.rs` (license extraction around lines 1258–1283) to call the shared ladder instead of dropping on canonicalisation failure, bringing #957 into line (FR-008a)
-- [ ] T044 [US2] Update the superseded comment at `waybill-cli/src/scan_fs/package_db/haskell.rs:1279` which states the value is "omitted rather than emitted unverified", since it is now preserved rather than omitted
+- [X] T043 [US2] Change `waybill-cli/src/scan_fs/package_db/haskell.rs` (license extraction around lines 1258–1283) to call the shared ladder instead of dropping on canonicalisation failure, bringing #957 into line (FR-008a)
+- [X] T044 [US2] Update the superseded comment at `waybill-cli/src/scan_fs/package_db/haskell.rs:1279` which states the value is "omitted rather than emitted unverified", since it is now preserved rather than omitted
 - [ ] T045 [P] [US2] Create the fixture used by the US2 tests under `waybill-cli/tests/fixtures/`, using `waybill-fixture-*` package names — real coordinates trip the repository's advisory scanning
 
 **Checkpoint**: no declared license is lost in any ecosystem, including Haskell.
@@ -151,7 +151,7 @@ outcomes, passing uniformly.
 ### Implementation for User Story 3
 
 - [ ] T050 [P] [US3] Document the per-ecosystem license key, multi-license operator and inheritance rule in `docs/reference/`, stating explicitly where the conjunctive operator is waybill's inference rather than the ecosystem's declaration (FR-010a)
-- [ ] T051 [P] [US3] Document in `docs/reference/` why Go, Swift and Dart carry no declared license — their manifests have no license field, and file-content detection is a different mechanism (FR-009)
+- [ ] T051 [P] [US3] Document in `docs/reference/` the three ways an ecosystem can emit no declared license, keeping them distinct: (a) **Swift, Dart** — no license field and no other path (FR-009); (b) **cocoapods, gem-application, npm nameless-nested** — the reader parses a file that has none, though the ecosystem declares one elsewhere; (c) **Go** — NOT in either group, already covered since milestone 057 via `SPDX-License-Identifier:` header extraction from LICENSE files (FR-009a)
 
 **Checkpoint**: coverage is uniform and the gaps are explained rather than apparent.
 
@@ -159,8 +159,8 @@ outcomes, passing uniformly.
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T052 [P] Correct the five stale `#103` comments deferring license detection, at `waybill-cli/src/scan_fs/package_db/cargo.rs:634`, `pip/mod.rs:614`, `npm/walk.rs:506`, `golang/legacy.rs:965` and `golang/legacy.rs:4185` (FR-013, SC-008)
-- [ ] T053 [P] Correct the `PackageDbEntry.licenses` doc comment at `waybill-cli/src/scan_fs/package_db/mod.rs:137` where it describes sources as unpopulated
+- [X] T052 [P] Correct the five stale `#103` comments deferring license detection, at `waybill-cli/src/scan_fs/package_db/cargo.rs:634`, `pip/mod.rs:614`, `npm/walk.rs:506`, `golang/legacy.rs:965` and `golang/legacy.rs:4185` (FR-013, SC-008)
+- [X] T053 [P] Correct the `PackageDbEntry.licenses` doc comment at `waybill-cli/src/scan_fs/package_db/mod.rs:137` where it describes sources as unpopulated
 - [ ] T054 Confirm `#1008` is closed and the public-corpus lane is green **before** regenerating any golden, so this change's diff is readable in isolation — procedure in `docs/development/refreshing-corpus-goldens.md`
 - [ ] T055 Regenerate the public-corpus goldens in CI — never locally — and read every diff before accepting, per `docs/development/refreshing-corpus-goldens.md`
 - [ ] T056 Regenerate goldens for all six golden-writing test files that respond to `WAYBILL_UPDATE_*` env vars, not only the three `*_regression` ones: `waybill-cli/tests/cdx_regression.rs`, `spdx_regression.rs`, `spdx3_regression.rs`, `oci_pull_backward_compat.rs`, `optional_dep_classification.rs`, `pkg_alias_binding_us1.rs`
