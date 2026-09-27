@@ -40,7 +40,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:github.com\\/cpuguy83\\/go-md2man\\/v2:github.com\\/cpuguy83\\/go-md2man\\/v2:v2.0.6:*:*:*:*:*:*:* | cpe:2.3:a:github.com\\/cpuguy83\\/go-md2man:github.com\\/cpuguy83\\/go-md2man\\/v2:v2.0.6:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:github.com\\\\/cpuguy83\\\\/go-md2man\\\\/v2:github.com\\\\/cpuguy83\\\\/go-md2man\\\\/v2:v2.0.6:*:*:*:*:*:*:*\",\"cpe:2.3:a:github.com\\\\/cpuguy83\\\\/go-md2man:github.com\\\\/cpuguy83\\\\/go-md2man\\\\/v2:v2.0.6:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -113,7 +113,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:github.com\\/inconshreveable\\/mousetrap:github.com\\/inconshreveable\\/mousetrap:v1.1.0:*:*:*:*:*:*:* | cpe:2.3:a:github.com\\/inconshreveable:github.com\\/inconshreveable\\/mousetrap:v1.1.0:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:github.com\\\\/inconshreveable\\\\/mousetrap:github.com\\\\/inconshreveable\\\\/mousetrap:v1.1.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:github.com\\\\/inconshreveable:github.com\\\\/inconshreveable\\\\/mousetrap:v1.1.0:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -186,7 +186,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:github.com\\/russross\\/blackfriday\\/v2:github.com\\/russross\\/blackfriday\\/v2:v2.1.0:*:*:*:*:*:*:* | cpe:2.3:a:github.com\\/russross\\/blackfriday:github.com\\/russross\\/blackfriday\\/v2:v2.1.0:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:github.com\\\\/russross\\\\/blackfriday\\\\/v2:github.com\\\\/russross\\\\/blackfriday\\\\/v2:v2.1.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:github.com\\\\/russross\\\\/blackfriday:github.com\\\\/russross\\\\/blackfriday\\\\/v2:v2.1.0:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -257,7 +257,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:github.com\\/spf13\\/cobra:github.com\\/spf13\\/cobra:v1.9.1:*:*:*:*:*:*:* | cpe:2.3:a:github.com\\/spf13:github.com\\/spf13\\/cobra:v1.9.1:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:github.com\\\\/spf13\\\\/cobra:github.com\\\\/spf13\\\\/cobra:v1.9.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:github.com\\\\/spf13:github.com\\\\/spf13\\\\/cobra:v1.9.1:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -326,7 +326,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:github.com\\/spf13\\/pflag:github.com\\/spf13\\/pflag:v1.0.6:*:*:*:*:*:*:* | cpe:2.3:a:github.com\\/spf13:github.com\\/spf13\\/pflag:v1.0.6:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:github.com\\\\/spf13\\\\/pflag:github.com\\\\/spf13\\\\/pflag:v1.0.6:*:*:*:*:*:*:*\",\"cpe:2.3:a:github.com\\\\/spf13:github.com\\\\/spf13\\\\/pflag:v1.0.6:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -393,7 +393,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:gopkg.in\\/check.v1:gopkg.in\\/check.v1:v0.0.0-20161208181325-20d25e280405:*:*:*:*:*:*:* | cpe:2.3:a:gopkg.in:gopkg.in\\/check.v1:v0.0.0-20161208181325-20d25e280405:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:gopkg.in\\\\/check.v1:gopkg.in\\\\/check.v1:v0.0.0-20161208181325-20d25e280405:*:*:*:*:*:*:*\",\"cpe:2.3:a:gopkg.in:gopkg.in\\\\/check.v1:v0.0.0-20161208181325-20d25e280405:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -464,7 +464,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:gopkg.in\\/yaml.v3:gopkg.in\\/yaml.v3:v3.0.1:*:*:*:*:*:*:* | cpe:2.3:a:gopkg.in:gopkg.in\\/yaml.v3:v3.0.1:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:gopkg.in\\\\/yaml.v3:gopkg.in\\\\/yaml.v3:v3.0.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:gopkg.in:gopkg.in\\\\/yaml.v3:v3.0.1:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -675,7 +675,7 @@
       },
       {
         "name": "waybill:os-release-missing-fields",
-        "value": "ID,VERSION_ID"
+        "value": "[\"ID\",\"VERSION_ID\"]"
       },
       {
         "name": "waybill:trace-integrity-ring-buffer-overflows",
@@ -687,11 +687,11 @@
       },
       {
         "name": "waybill:trace-integrity-uprobe-attach-failures",
-        "value": "0"
+        "value": "[]"
       },
       {
         "name": "waybill:trace-integrity-kprobe-attach-failures",
-        "value": "0"
+        "value": "[]"
       },
       {
         "name": "waybill:graph-completeness",

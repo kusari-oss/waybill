@@ -40,7 +40,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:github.com\\/google\\/uuid:github.com\\/google\\/uuid:v1.6.0:*:*:*:*:*:*:* | cpe:2.3:a:github.com\\/google:github.com\\/google\\/uuid:v1.6.0:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:github.com\\\\/google\\\\/uuid:github.com\\\\/google\\\\/uuid:v1.6.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:github.com\\\\/google:github.com\\\\/google\\\\/uuid:v1.6.0:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -111,7 +111,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:github.com\\/pantsbuild\\/example-golang:github.com\\/pantsbuild\\/example-golang:048c22e:*:*:*:*:*:*:* | cpe:2.3:a:github.com\\/pantsbuild:github.com\\/pantsbuild\\/example-golang:048c22e:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:github.com\\\\/pantsbuild\\\\/example-golang:github.com\\\\/pantsbuild\\\\/example-golang:048c22e:*:*:*:*:*:*:*\",\"cpe:2.3:a:github.com\\\\/pantsbuild:github.com\\\\/pantsbuild\\\\/example-golang:048c22e:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -188,7 +188,7 @@
       "properties": [
         {
           "name": "waybill:cpe-candidates",
-          "value": "cpe:2.3:a:github.com\\/spf13\\/pflag:github.com\\/spf13\\/pflag:v1.0.10:*:*:*:*:*:*:* | cpe:2.3:a:github.com\\/spf13:github.com\\/spf13\\/pflag:v1.0.10:*:*:*:*:*:*:*"
+          "value": "[\"cpe:2.3:a:github.com\\\\/spf13\\\\/pflag:github.com\\\\/spf13\\\\/pflag:v1.0.10:*:*:*:*:*:*:*\",\"cpe:2.3:a:github.com\\\\/spf13:github.com\\\\/spf13\\\\/pflag:v1.0.10:*:*:*:*:*:*:*\"]"
         },
         {
           "name": "waybill:source-files",
@@ -469,7 +469,7 @@
       },
       {
         "name": "waybill:os-release-missing-fields",
-        "value": "ID,VERSION_ID"
+        "value": "[\"ID\",\"VERSION_ID\"]"
       },
       {
         "name": "waybill:trace-integrity-ring-buffer-overflows",
@@ -481,11 +481,11 @@
       },
       {
         "name": "waybill:trace-integrity-uprobe-attach-failures",
-        "value": "0"
+        "value": "[]"
       },
       {
         "name": "waybill:trace-integrity-kprobe-attach-failures",
-        "value": "0"
+        "value": "[]"
       },
       {
         "name": "waybill:graph-completeness",

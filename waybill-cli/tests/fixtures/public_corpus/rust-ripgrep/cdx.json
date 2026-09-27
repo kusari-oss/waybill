@@ -762,6 +762,12 @@
           "url": "https://crates.io/crates/globset/0.4.15"
         }
       ],
+      "licenses": [
+        {
+          "acknowledgement": "declared",
+          "expression": "Unlicense OR MIT"
+        }
+      ],
       "name": "globset",
       "properties": [
         {
@@ -819,6 +825,12 @@
         {
           "type": "website",
           "url": "https://crates.io/crates/grep-cli/0.1.11"
+        }
+      ],
+      "licenses": [
+        {
+          "acknowledgement": "declared",
+          "expression": "Unlicense OR MIT"
         }
       ],
       "name": "grep-cli",
@@ -880,6 +892,12 @@
           "url": "https://crates.io/crates/grep-matcher/0.1.7"
         }
       ],
+      "licenses": [
+        {
+          "acknowledgement": "declared",
+          "expression": "Unlicense OR MIT"
+        }
+      ],
       "name": "grep-matcher",
       "properties": [
         {
@@ -937,6 +955,12 @@
         {
           "type": "website",
           "url": "https://crates.io/crates/grep-pcre2/0.1.8"
+        }
+      ],
+      "licenses": [
+        {
+          "acknowledgement": "declared",
+          "expression": "Unlicense OR MIT"
         }
       ],
       "name": "grep-pcre2",
@@ -998,6 +1022,12 @@
           "url": "https://crates.io/crates/grep-printer/0.2.2"
         }
       ],
+      "licenses": [
+        {
+          "acknowledgement": "declared",
+          "expression": "Unlicense OR MIT"
+        }
+      ],
       "name": "grep-printer",
       "properties": [
         {
@@ -1055,6 +1085,12 @@
         {
           "type": "website",
           "url": "https://crates.io/crates/grep-regex/0.1.13"
+        }
+      ],
+      "licenses": [
+        {
+          "acknowledgement": "declared",
+          "expression": "Unlicense OR MIT"
         }
       ],
       "name": "grep-regex",
@@ -1116,6 +1152,12 @@
           "url": "https://crates.io/crates/grep-searcher/0.1.14"
         }
       ],
+      "licenses": [
+        {
+          "acknowledgement": "declared",
+          "expression": "Unlicense OR MIT"
+        }
+      ],
       "name": "grep-searcher",
       "properties": [
         {
@@ -1175,6 +1217,12 @@
           "url": "https://crates.io/crates/grep/0.3.2"
         }
       ],
+      "licenses": [
+        {
+          "acknowledgement": "declared",
+          "expression": "Unlicense OR MIT"
+        }
+      ],
       "name": "grep",
       "properties": [
         {
@@ -1232,6 +1280,12 @@
         {
           "type": "website",
           "url": "https://crates.io/crates/ignore/0.4.23"
+        }
+      ],
+      "licenses": [
+        {
+          "acknowledgement": "declared",
+          "expression": "Unlicense OR MIT"
         }
       ],
       "name": "ignore",
@@ -2337,6 +2391,12 @@
         {
           "type": "website",
           "url": "https://crates.io/crates/ripgrep/14.1.1"
+        }
+      ],
+      "licenses": [
+        {
+          "acknowledgement": "declared",
+          "expression": "Unlicense OR MIT"
         }
       ],
       "name": "ripgrep",
@@ -4663,7 +4723,7 @@
       },
       {
         "name": "waybill:os-release-missing-fields",
-        "value": "ID,VERSION_ID"
+        "value": "[\"ID\",\"VERSION_ID\"]"
       },
       {
         "name": "waybill:trace-integrity-ring-buffer-overflows",
@@ -4675,11 +4735,11 @@
       },
       {
         "name": "waybill:trace-integrity-uprobe-attach-failures",
-        "value": "0"
+        "value": "[]"
       },
       {
         "name": "waybill:trace-integrity-kprobe-attach-failures",
-        "value": "0"
+        "value": "[]"
       },
       {
         "name": "waybill:graph-completeness",

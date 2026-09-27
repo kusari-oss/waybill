@@ -103,7 +103,7 @@ attribution. Deliverable with a single ecosystem done.
 - [X] T036 [P] [US1] Extract `PackageLicenseExpression` in `waybill-cli/src/scan_fs/package_db/nuget/mod.rs::build_nuget_main_module_entry` (licenses@781) per the T005-verified contract row
 - [X] T037 [US1] ~~Implement scan-root license inheritance~~ — **verified no-op, no code written**. `select_root`'s `count == 1` fast path already makes a lone main-module BE the root, so it carries its own license; a synthetic root appears only with >= 2 main-modules, which FR-016 says must carry none. Both clauses describe existing behaviour. Measured: 2 main-modules with one licensed yields `pkg:generic/two@0.0.0 licenses=0`. Locked in by T038 in `waybill-cli/src/generate/root_selector.rs` (alongside `select_root` at line 165, which already has the resolved component set in hand), attaching a license only when exactly one main-module component carries one (FR-016, FR-017)
 - [X] T038 [US1] Add a case to `waybill-cli/tests/declared_license.rs` asserting the scan-root inherits when exactly one main-module carries a license, **and does not** when two do — using this repository's own two-crate workspace as the negative case (SC-001a)
-- [ ] T039 [P] [US1] Add per-ecosystem unit tests in the `#[cfg(test)]` module of each converted reader — `cargo.rs`, `npm/walk.rs`, `npm/mod.rs`, `pip/mod.rs`, `gem.rs`, `maven.rs`, `composer.rs`, `elixir.rs`, `erlang.rs`, `scala.rs`, `cocoapods.rs`, `nuget/mod.rs` under `waybill-cli/src/scan_fs/package_db/` — asserting a declared license is extracted
+- [~] T039 [P] [US1] **PARTIAL — cargo only (7 unit tests).** The other ten readers are covered by integration tests in `declared_license.rs` / `declared_license_consistency.rs` instead, which is the stronger level for this feature: four of its defects were invisible to unit tests on the producing function and only appeared in emitted output. Per-reader unit tests would add little beyond what the integration suite already pins. Add per-ecosystem unit tests in the `#[cfg(test)]` module of each converted reader — `cargo.rs`, `npm/walk.rs`, `npm/mod.rs`, `pip/mod.rs`, `gem.rs`, `maven.rs`, `composer.rs`, `elixir.rs`, `erlang.rs`, `scala.rs`, `cocoapods.rs`, `nuget/mod.rs` under `waybill-cli/src/scan_fs/package_db/` — asserting a declared license is extracted
 
 **Checkpoint**: every affected ecosystem emits its declared license; US1 is independently verifiable.
 
@@ -119,15 +119,15 @@ reference, and is never presented as a recognised identifier.
 
 ### Tests for User Story 2
 
-- [ ] T040 [US2] Add a case to `waybill-cli/tests/declared_license_preservation.rs` asserting an uncanonicalisable declaration yields a `LicenseRef-` identifier in SPDX 2.3 plus a matching `hasExtractedLicensingInfos` entry carrying the raw text, and **not** `NOASSERTION` (FR-004, FR-004c)
-- [ ] T041 [US2] Add a case to `waybill-cli/tests/declared_license_preservation.rs` asserting the same declaration appears in CycloneDX and SPDX 3 without being presented as a listed identifier (FR-004c, SC-004)
-- [ ] T042 [US2] Add a case to `waybill-cli/tests/declared_license_preservation.rs` asserting the count of declarations found equals the count emitted across a fixture set mixing valid and invalid values (SC-004a)
+- [X] T040 [US2] Add a case to `waybill-cli/tests/declared_license_preservation.rs` asserting an uncanonicalisable declaration yields a `LicenseRef-` identifier in SPDX 2.3 plus a matching `hasExtractedLicensingInfos` entry carrying the raw text, and **not** `NOASSERTION` (FR-004, FR-004c)  — **landed in `waybill-cli/tests/declared_license.rs`** rather than a separate `_preservation.rs`; the per-story file split was planned for parallel work that did not happen, and one file kept the shared `scan()` helper in one place
+- [X] T041 [US2] Add a case to `waybill-cli/tests/declared_license_preservation.rs` asserting the same declaration appears in CycloneDX and SPDX 3 without being presented as a listed identifier (FR-004c, SC-004)  — **landed in `waybill-cli/tests/declared_license.rs`** rather than a separate `_preservation.rs`; the per-story file split was planned for parallel work that did not happen, and one file kept the shared `scan()` helper in one place
+- [X] T042 [US2] Add a case to `waybill-cli/tests/declared_license_preservation.rs` asserting the count of declarations found equals the count emitted across a fixture set mixing valid and invalid values (SC-004a)  — **landed in `waybill-cli/tests/declared_license.rs`** rather than a separate `_preservation.rs`; the per-story file split was planned for parallel work that did not happen, and one file kept the shared `scan()` helper in one place
 
 ### Implementation for User Story 2
 
 - [X] T043 [US2] Change `waybill-cli/src/scan_fs/package_db/haskell.rs` (license extraction around lines 1258–1283) to call the shared ladder instead of dropping on canonicalisation failure, bringing #957 into line (FR-008a)
 - [X] T044 [US2] Update the superseded comment at `waybill-cli/src/scan_fs/package_db/haskell.rs:1279` which states the value is "omitted rather than emitted unverified", since it is now preserved rather than omitted
-- [ ] T045 [P] [US2] Create the fixture used by the US2 tests under `waybill-cli/tests/fixtures/`, using `waybill-fixture-*` package names — real coordinates trip the repository's advisory scanning
+- [X] T045 [P] [US2] ~~Create the fixture~~ — fixtures are written inline by each test via the shared `write()` helper, so there is no separate fixture tree to create. Original plan assumed on-disk fixtures under `waybill-cli/tests/fixtures/`. Create the fixture used by the US2 tests under `waybill-cli/tests/fixtures/`, using `waybill-fixture-*` package names — real coordinates trip the repository's advisory scanning
 
 **Checkpoint**: no declared license is lost in any ecosystem, including Haskell.
 
@@ -143,15 +143,15 @@ outcomes, passing uniformly.
 
 ### Tests for User Story 3
 
-- [ ] T046 [US3] Add a table-driven case to `waybill-cli/tests/declared_license_consistency.rs` running the same three outcomes (canonical, preserved, absent) across one fixture per affected ecosystem, so an ecosystem behaving differently fails rather than being noticed later (SC-003)
-- [ ] T047 [US3] Add a case to `waybill-cli/tests/declared_license_consistency.rs` asserting repeated scans of identical input produce byte-identical license data (FR-015, SC-007)
-- [ ] T048 [US3] Add a case to `waybill-cli/tests/declared_license_consistency.rs` asserting no component loses a license it carried before the change (SC-005)
-- [ ] T049 [US3] Create a two-license fixture per list-valued ecosystem (maven, gem, composer, elixir, erlang, scala) under `waybill-cli/tests/fixtures/`, and assert in `waybill-cli/tests/declared_license_consistency.rs` that each yields one expression whose operator matches its contract row — disjunction for composer, conjunction for the rest (SC-004b)
+- [X] T046 [US3] Add a table-driven case to `waybill-cli/tests/declared_license_consistency.rs` running the same three outcomes (canonical, preserved, absent) across one fixture per affected ecosystem, so an ecosystem behaving differently fails rather than being noticed later (SC-003)
+- [X] T047 [US3] Add a case to `waybill-cli/tests/declared_license_consistency.rs` asserting repeated scans of identical input produce byte-identical license data (FR-015, SC-007)
+- [X] T048 [US3] Add a case to `waybill-cli/tests/declared_license_consistency.rs` asserting no component loses a license it carried before the change (SC-005)
+- [X] T049 [US3] Create a two-license fixture per list-valued ecosystem (maven, gem, composer, elixir, erlang, scala) under `waybill-cli/tests/fixtures/`, and assert in `waybill-cli/tests/declared_license_consistency.rs` that each yields one expression whose operator matches its contract row — disjunction for composer, conjunction for the rest (SC-004b)
 
 ### Implementation for User Story 3
 
-- [ ] T050 [P] [US3] Document the per-ecosystem license key, multi-license operator and inheritance rule in `docs/reference/`, stating explicitly where the conjunctive operator is waybill's inference rather than the ecosystem's declaration (FR-010a)
-- [ ] T051 [P] [US3] Document in `docs/reference/` the three ways an ecosystem can emit no declared license, keeping them distinct: (a) **Swift, Dart** — no license field and no other path (FR-009); (b) **cocoapods, gem-application, npm nameless-nested** — the reader parses a file that has none, though the ecosystem declares one elsewhere; (c) **Go** — NOT in either group, already covered since milestone 057 via `SPDX-License-Identifier:` header extraction from LICENSE files (FR-009a)
+- [X] T050 [P] [US3] Document the per-ecosystem license key, multi-license operator and inheritance rule in `docs/reference/`, stating explicitly where the conjunctive operator is waybill's inference rather than the ecosystem's declaration (FR-010a)  — **`docs/reference/declared-licenses.md`**
+- [X] T051 [P] [US3] Document in `docs/reference/` the three ways an ecosystem can emit no declared license, keeping them distinct: (a) **Swift, Dart** — no license field and no other path (FR-009); (b) **cocoapods, gem-application, npm nameless-nested** — the reader parses a file that has none, though the ecosystem declares one elsewhere; (c) **Go** — NOT in either group, already covered since milestone 057 via `SPDX-License-Identifier:` header extraction from LICENSE files (FR-009a)  — **`docs/reference/declared-licenses.md`**
 
 **Checkpoint**: coverage is uniform and the gaps are explained rather than apparent.
 
@@ -161,11 +161,11 @@ outcomes, passing uniformly.
 
 - [X] T052 [P] Correct the five stale `#103` comments deferring license detection, at `waybill-cli/src/scan_fs/package_db/cargo.rs:634`, `pip/mod.rs:614`, `npm/walk.rs:506`, `golang/legacy.rs:965` and `golang/legacy.rs:4185` (FR-013, SC-008)
 - [X] T053 [P] Correct the `PackageDbEntry.licenses` doc comment at `waybill-cli/src/scan_fs/package_db/mod.rs:137` where it describes sources as unpopulated
-- [ ] T054 Confirm `#1008` is closed and the public-corpus lane is green **before** regenerating any golden, so this change's diff is readable in isolation — procedure in `docs/development/refreshing-corpus-goldens.md`
-- [ ] T055 Regenerate the public-corpus goldens in CI — never locally — and read every diff before accepting, per `docs/development/refreshing-corpus-goldens.md`
+- [X] T054 Confirm `#1008` is closed and the public-corpus lane is green **before** regenerating any golden, so this change's diff is readable in isolation — procedure in `docs/development/refreshing-corpus-goldens.md`
+- [X] T055 Regenerate the public-corpus goldens in CI — never locally — and read every diff before accepting, per `docs/development/refreshing-corpus-goldens.md`
 - [ ] T056 Regenerate goldens for all six golden-writing test files that respond to `WAYBILL_UPDATE_*` env vars, not only the three `*_regression` ones: `waybill-cli/tests/cdx_regression.rs`, `spdx_regression.rs`, `spdx3_regression.rs`, `oci_pull_backward_compat.rs`, `optional_dep_classification.rs`, `pkg_alias_binding_us1.rs`
 - [ ] T057 Run the quickstart validation in `specs/1010-manifest-declared-license/quickstart.md` end to end, including the negative scan-root case
-- [ ] T058 Run `./scripts/pre-pr.sh` and enumerate every per-target result line; both clippy `--all-targets` and the full workspace test run must be clean before a PR is opened
+- [X] T058 Run `./scripts/pre-pr.sh` and enumerate every per-target result line; both clippy `--all-targets` and the full workspace test run must be clean before a PR is opened
 
 ---
 

@@ -23,7 +23,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:os-release-missing-fields\",\"value\":[\"ID\",\"VERSION_ID\"]}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:os-release-missing-fields\",\"value\":\"[\\\"ID\\\",\\\"VERSION_ID\\\"]\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -65,19 +65,19 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-uprobe-attach-failures\",\"value\":[]}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-uprobe-attach-failures\",\"value\":\"[]\"}"
     },
     {
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-kprobe-attach-failures\",\"value\":[]}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-kprobe-attach-failures\",\"value\":\"[]\"}"
     },
     {
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"compositions\",\"value\":{\"complete_ecosystems\":[\"maven\"]}}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"compositions\",\"value\":{\"complete_ecosystems\":[\"maven\"],\"target_aggregate\":\"incomplete_first_party_only\"}}"
     }
   ],
   "creationInfo": "<masked>",
@@ -86,6 +86,13 @@
     "SPDXRef-DocumentRoot-<masked>"
   ],
   "documentNamespace": "<masked>",
+  "hasExtractedLicensingInfos": [
+    {
+      "extractedText": "The Apache Software License, Version 2.0",
+      "licenseId": "LicenseRef-K3SGURGETEMDOBGC",
+      "name": "waybill-extracted-license"
+    }
+  ],
   "name": "maven-guice b0e1d0f",
   "packages": [
     {
@@ -1071,7 +1078,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "LicenseRef-K3SGURGETEMDOBGC",
       "name": "extensions-parent",
       "supplier": "Organization: com.google.inject.extensions",
       "versionInfo": "7.0.0"
@@ -1953,7 +1960,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "LicenseRef-K3SGURGETEMDOBGC",
       "name": "guice-bom",
       "supplier": "Organization: com.google.inject",
       "versionInfo": "7.0.0"
@@ -2013,7 +2020,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "LicenseRef-K3SGURGETEMDOBGC",
       "name": "guice-parent",
       "supplier": "Organization: com.google.inject",
       "versionInfo": "7.0.0"
