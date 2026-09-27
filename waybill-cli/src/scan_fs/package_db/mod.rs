@@ -20,6 +20,7 @@ pub mod cocoapods;
 pub mod composer;
 pub mod conan;
 pub mod dart;
+pub mod declared_license;
 pub mod nix;
 mod control_file;
 pub mod copyright;
