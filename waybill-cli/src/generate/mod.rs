@@ -53,6 +53,7 @@ use waybill_common::resolution::{Relationship, ResolvedComponent};
 /// so the CDX refactor behind [`SbomSerializer`] does not need to
 /// change its output bytes — the load-bearing protection for
 /// FR-022 / SC-006.
+#[derive(Clone)]
 pub struct ScanArtifacts<'a> {
     pub target_name: &'a str,
     pub components: &'a [ResolvedComponent],
@@ -419,10 +420,40 @@ pub struct ScanArtifacts<'a> {
 }
 
 impl<'a> ScanArtifacts<'a> {
+    /// This same view, with `components` swapped for a filtered slice.
+    ///
+    /// Issue #964. Three emitters need a components-only view, and all three used
+    /// to hand-copy every field. That copy still compiles when a field is added to
+    /// the struct — it just silently drops it — so the same defect was found three
+    /// times, years apart, each time by someone touching an unrelated field:
+    ///
+    /// | Field dropped | Fixed by | How it surfaced |
+    /// |---|---|---|
+    /// | `file_inventory_mode` | m671 T010 | adding the C156 mode marker |
+    /// | `file_inventory_stats` | #934 | C168 emission went missing from SPDX 2.3 |
+    /// | all three inventory fields (SPDX 3) | #947 | threading an unrelated new field |
+    ///
+    /// The m671 fix even left a comment at the copy sites stating the principle —
+    /// *"the view swap is a components-only rewrite; doc-scope inventory metadata
+    /// should NOT be dropped"* — directly above a line that dropped it.
+    ///
+    /// `..self.clone()` makes the omission impossible rather than discouraged: a
+    /// new field is carried by construction, with nothing to remember. The struct
+    /// has 45 fields, so "remember to update three call sites" was never a
+    /// realistic invariant.
+    pub fn with_components(&self, components: &'a [ResolvedComponent]) -> Self {
+        self.narrow(components, self.relationships)
+    }
     /// Milestone 215 — return a new `ScanArtifacts` whose `components`
     /// and `relationships` are the caller-supplied narrowed slices;
     /// every other field is preserved verbatim (borrowed fields share
     /// the same lifetime; owned fields are cloned).
+    ///
+    /// Issue #964: that sentence used to be a promise the code could not keep.
+    /// This was a 45-field hand-copy, so a field added to the struct compiled
+    /// fine here and was silently dropped — the same shape of defect that was
+    /// found three times in the SPDX emitters' view swaps. `..self.clone()` makes
+    /// the claim true by construction.
     ///
     /// Used by the `--split` emit-dispatch fan-out to build one
     /// per-subproject artifacts bundle without re-plumbing every field
@@ -432,66 +463,14 @@ impl<'a> ScanArtifacts<'a> {
         components: &'a [ResolvedComponent],
         relationships: &'a [Relationship],
     ) -> ScanArtifacts<'a> {
-        ScanArtifacts {
-            target_name: self.target_name,
+        Self {
             components,
             relationships,
-            integrity: self.integrity,
-            complete_ecosystems: self.complete_ecosystems,
-            os_release_missing_fields: self.os_release_missing_fields,
-            scan_target_coord: self.scan_target_coord,
-            generation_context: self.generation_context.clone(),
-            include_dev: self.include_dev,
-            include_hashes: self.include_hashes,
-            include_source_files: self.include_source_files,
-            // Milestone 221 US4 — propagate the operator-supplied SBOM
-            // version into split sub-artifacts. Same value across every
-            // sub-SBOM in a split-mode fan-out (all fragments describe
-            // the same "SBOM revision N").
-            sbom_version: self.sbom_version,
-            enrichment_degraded: None,
-            nixpkgs_haskell_degraded: None,
-            nixpkgs_haskell_resolution: None,
-            nixpkgs_haskell_closure: None,
-            scope_mode: self.scope_mode,
-            go_transitive_coverage: self.go_transitive_coverage,
-            go_transitive_fallback_count: self.go_transitive_fallback_count,
-            unresolved_declared_dep_count: self.unresolved_declared_dep_count,
-            go_cache_warming: self.go_cache_warming,
-            go_workspace_mode: self.go_workspace_mode,
-            go_toolchains_detected: self.go_toolchains_detected,
-            cross_ecosystem_edges_report: self.cross_ecosystem_edges_report,
-            helm_extraction_mode: self.helm_extraction_mode,
-            pants_resolve_summary: self.pants_resolve_summary.clone(),
-            // Deliberately NOT copied from the parent. Every other doc-scope
-            // field here is repository-wide and is copied verbatim, which is
-            // the behaviour #914 is about; this one describes the document,
-            // so the split sets it per projection and a narrow that is not a
-            // resolve projection correctly has none.
-            resolve_identity: None,
-            haskell_parse_summary: self.haskell_parse_summary,
-            gradle_scan_summary: self.gradle_scan_summary,
-            no_binary_scan_mode: self.no_binary_scan_mode,
-            image_source: self.image_source,
-            source_document_binding: self.source_document_binding,
-            identifiers: self.identifiers,
-            component_identifiers: self.component_identifiers,
-            file_inventory_stats: self.file_inventory_stats,
-            file_inventory_mode: self.file_inventory_mode,
-            file_inventory_source_shapes: self
-                .file_inventory_source_shapes
-                .clone(),
-            root_override: self.root_override.clone(),
-            preserve_manifest_main_module: self.preserve_manifest_main_module,
-            user_metadata: self.user_metadata.clone(),
-            sbom_type_override: self.sbom_type_override,
-            spdx2_relationship_compat: self.spdx2_relationship_compat,
-            collisions_summary: self.collisions_summary,
-            compiler_pipeline: self.compiler_pipeline,
-            project_discovery_mode: self.project_discovery_mode,
+            ..self.clone()
         }
     }
 }
+
 
 /// Milestone 077 — operator-supplied overrides for the root component
 /// identity. See `ScanArtifacts::root_override`.
