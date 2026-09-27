@@ -65,10 +65,31 @@ capability rather than license extraction.
 | `gem.rs::build_gem_application_main_module_entry` | `Gemfile` | A Gemfile declares *gems to install*, not the application's own license. The gemspec-based sibling site does carry `licenses` and is implemented. |
 | `npm/mod.rs::synthesize_nameless_nested_mainmods` | a nested `package.json` with no `name` | Synthesises identity for an unnamed nested manifest; deferred rather than excluded, since such a file may still carry `license`. |
 
-This is a different category from Go, Swift and Dart, where the ecosystem's
-manifest format has no license field at all. Both end in "no license emitted", and
-conflating them would lose the distinction that matters: these three could be
-served by parsing an additional file, those three could not.
+This is a different category from **Swift and Dart**, whose manifest formats have
+no license field and which have no other path either. Both end in "no license
+emitted", and conflating them would lose the distinction that matters: the three
+sites above could be served by parsing an additional file; Swift and Dart could
+not.
+
+Go belongs to neither group — see "Go: already covered by a different mechanism"
+below.
+
+### Go: already covered by a different mechanism
+
+`go.mod` has no license field, so Go is absent from the table above — but it is
+**not** an ecosystem that emits no declared license. `detect_main_module_license`
+(`golang/legacy.rs:856`, milestone 057) reads the workspace root's
+`LICENSE`/`LICENCE`/`COPYING` and extracts an `SPDX-License-Identifier:` header,
+emitting it with declared attribution.
+
+Verified while implementing #954:
+
+| LICENSE file contents | Emitted |
+|---|---|
+| `SPDX-License-Identifier: MIT` + prose | `MIT`, `acknowledgement: "declared"` |
+| MIT prose with no header | nothing — correctly, this is header extraction, not text matching |
+
+Swift and Dart have no equivalent and emit nothing.
 
 ### PackageLicenseFile / license-file / license.file
 

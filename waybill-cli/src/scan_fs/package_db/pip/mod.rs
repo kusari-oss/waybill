@@ -621,7 +621,9 @@ pub(crate) struct DroppedDuplicate {
 ///   (FR-011, in `read()`).
 /// - `extra_annotations` carries `waybill:component-role: "main-module"`
 ///   (C40, FR-004).
-/// - `licenses: vec![]` (FR-005; license detection is #103 follow-up).
+/// - `licenses` from `[project].license` (PEP 639 single string, plus the
+///   deprecated `{ text = ... }` table), resolved through the shared
+///   declared-license ladder (#954); empty when the manifest declares none
 /// - `depends`: direct-dep package names extracted from
 ///   `[project.dependencies]` and each `[project.optional-dependencies].*`
 ///   array. PEP 508 requirement strings are split on whitespace and

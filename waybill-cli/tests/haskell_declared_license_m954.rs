@@ -49,6 +49,32 @@ fn root_licenses(v: &serde_json::Value) -> Vec<String> {
     }).unwrap_or_default()
 }
 
+/// The `license.id` values only — the slot CycloneDX reserves for *listed* SPDX
+/// identifiers. A value that is not on the SPDX list must never appear here.
+fn root_license_ids(v: &serde_json::Value) -> Vec<String> {
+    v["metadata"]["component"]["licenses"]
+        .as_array()
+        .map(|a| {
+            a.iter()
+                .filter_map(|l| l["license"]["id"].as_str().map(str::to_string))
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+/// The `license.name` values only — the slot for a license that is NOT a listed
+/// SPDX identifier.
+fn root_license_names(v: &serde_json::Value) -> Vec<String> {
+    v["metadata"]["component"]["licenses"]
+        .as_array()
+        .map(|a| {
+            a.iter()
+                .filter_map(|l| l["license"]["name"].as_str().map(str::to_string))
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
 /// The reported case: a declared license reaches the root component.
 #[test]
 fn the_root_component_carries_the_declared_license_m954() {
@@ -94,17 +120,36 @@ fn a_multi_operand_expression_is_not_truncated_m954() {
     );
 }
 
-/// A string that is not a valid SPDX expression is dropped, not emitted
-/// unverified. `.cabal` files carry legacy values like `AllRightsReserved`, and
-/// presenting one as a license identifier is worse than saying nothing —
-/// the m152 RPM precedent.
+/// A string that is not a valid SPDX expression is **preserved**, in the slot for
+/// non-listed licenses — never in the identifier slot.
+///
+/// This test previously asserted the value was *dropped*. That was milestone 957's
+/// policy, superseded by #954 FR-004/FR-008a: discarding it left a consumer unable
+/// to distinguish "no license declared" from "a license we could not parse", and
+/// `AllRightsReserved` is often the most legally significant line in the file.
+/// Sibling ecosystems make the case louder — sbt names are free-form (`"Apache 2"`),
+/// so under drop-on-failure scala would emit nothing for its common shape.
+///
+/// The invariant milestone 957 got right is kept and is now asserted *precisely*:
+/// an unrecognised string must not be presented as a **listed** identifier.
+/// CycloneDX distinguishes the slots — `license.id` is the SPDX-listed enum,
+/// `license.name` is for everything else — so preservation and that invariant are
+/// not in tension, which the original framing assumed they were.
 #[test]
-fn a_non_spdx_license_string_is_omitted_rather_than_emitted_m954() {
+fn a_non_spdx_license_string_is_preserved_but_never_as_an_identifier_m954() {
     let d = tree(Some("AllRightsReserved"));
-    let got = root_licenses(&scan(d.path(), "cyclonedx-json", "json"));
+    let doc = scan(d.path(), "cyclonedx-json", "json");
+
     assert!(
-        got.iter().all(|g| g != "AllRightsReserved"),
-        "an unverified string must not be presented as a license identifier: {got:?}"
+        root_license_ids(&doc).iter().all(|g| g != "AllRightsReserved"),
+        "an unverified string must never occupy the SPDX-listed `license.id` slot: {:?}",
+        root_license_ids(&doc)
+    );
+    assert_eq!(
+        root_license_names(&doc),
+        vec!["AllRightsReserved".to_string()],
+        "...but it must survive in the non-listed `license.name` slot rather than \
+         being discarded (FR-004)"
     );
 }
 

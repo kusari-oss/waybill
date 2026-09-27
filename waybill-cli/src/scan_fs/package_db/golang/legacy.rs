@@ -4250,7 +4250,11 @@ func TestX(t *testing.T) { _ = lib.X() }"#,
         assert!(entry.parent_purl.is_none());
         // FR-006: source-tier (go.mod is the authoritative source).
         assert_eq!(entry.sbom_tier.as_deref(), Some("source"));
-        // FR-005: empty licenses (LICENSE detection deferred to #103).
+        // Empty licenses — because this fixture's tempdir contains no LICENSE
+        // file, not as policy. Go DOES detect a main-module license:
+        // `detect_main_module_license` (milestone 057) scans the workspace root
+        // for LICENSE/COPYING files. `go.mod` itself has no license field, so
+        // that file-based path is the only source, and it predates #954.
         assert!(entry.licenses.is_empty());
         // FR-004: supplementary C40 annotation present with value
         // "main-module".

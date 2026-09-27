@@ -246,9 +246,20 @@ main-module component is treated identically with respect to its declared licens
   FR-004's preservation behaviour. #957 discards an uncanonicalisable value; leaving
   it that way would make the one completed ecosystem the only one that loses a
   declaration, which is precisely the unevenness User Story 3 exists to prevent.
-- **FR-009**: Ecosystems whose manifest format carries **no** license field
-  (Go modules, Swift packages, Dart pubspec) MUST be left unchanged, and the reason
-  MUST be documented so the gap is not read as an oversight.
+- **FR-009**: Ecosystems whose manifest format carries **no** license field MUST be
+  left unchanged, and the reason MUST be documented so the gap is not read as an
+  oversight. **Swift** and **Dart** are in this category: no license field, and no
+  other path, so they emit nothing.
+- **FR-009a**: **Go is NOT in that category**, contrary to how this spec originally
+  described it. `go.mod` indeed has no license field, but Go already emits a
+  declared license by a different route: `detect_main_module_license`
+  (`golang/legacy.rs:856`, milestone 057, which closed #103) scans the workspace
+  root for `LICENSE`/`LICENCE`/`COPYING` and extracts an
+  `SPDX-License-Identifier:` **header**. Verified: a Go module whose LICENSE file
+  carries that header emits `MIT` with declared attribution; one carrying only
+  prose emits nothing, correctly, because the mechanism is header extraction and
+  not license-text matching. Go therefore MUST be left unchanged because it is
+  **already covered**, not because it is unservable.
 - **FR-010**: Where a manifest declares **more than one** license, the reader MUST
   combine them into a **single** expression using the operator its own ecosystem
   documents — disjunction where the ecosystem defines a list as a choice among
@@ -374,10 +385,15 @@ main-module component is treated identically with respect to its declared licens
 
 ## Out of Scope
 
-- **Detecting a license from LICENSE file content.** Ecosystems whose manifests
-  carry no license field can only be served by matching license text, which is a
-  materially different mechanism with its own accuracy and dependency questions.
-  This is why Go, Swift and Dart are excluded.
+- **Detecting a license by matching LICENSE file *text*.** Identifying a license
+  from its prose needs a text-matching corpus, with its own accuracy and dependency
+  questions.
+
+  This is narrower than it first appears, and the spec originally overstated it.
+  Extracting an `SPDX-License-Identifier:` **header** from a LICENSE file is not
+  text matching — it is reading a declaration — and Go has done exactly that since
+  milestone 057 (FR-009a). What remains out of scope is inferring a license from
+  the body of a license text that declares no identifier.
 - **Resolving licenses declared by file reference** — same reason.
 - **Changing enrichment**, including which sources it consults and which slot it
   writes to.

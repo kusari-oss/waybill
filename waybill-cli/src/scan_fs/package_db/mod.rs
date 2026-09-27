@@ -133,13 +133,28 @@ pub struct PackageDbEntry {
     /// for normal registry-sourced components. Drives the
     /// `waybill:source-type` property at serialization.
     pub source_type: Option<String>,
-    /// Licenses the source embedded directly on the entry (e.g. pypi's
-    /// `dist-info/METADATA::License-Expression:`, npm's
-    /// `package.json::license:`). Empty for sources where licenses are
-    /// resolved out-of-band (dpkg reads `/usr/share/doc/<pkg>/copyright`
-    /// separately in `scan_fs::mod.rs`; apk doesn't carry licenses
-    /// inline in the scan yet). When populated, `scan_fs::scan_path`
-    /// uses these values instead of calling an out-of-band resolver.
+    /// Licenses the source embedded directly on the entry.
+    ///
+    /// Two populations reach this field:
+    ///
+    /// - **OS package metadata** — apk, alpm, rpm, opkg, yocto and dpkg read a
+    ///   license from the package database or control file. dpkg is the
+    ///   exception that resolves out-of-band, from
+    ///   `/usr/share/doc/<pkg>/copyright` in `scan_fs::mod.rs`.
+    /// - **A project's own declared license** (#954) — read from the manifest a
+    ///   main-module reader already parses, via
+    ///   [`declared_license::resolve`](declared_license::resolve). At most one
+    ///   element for that path: a reader combines several declarations into one
+    ///   expression itself, because only the reader knows whether its
+    ///   ecosystem's list means "and" or "or".
+    ///
+    /// Empty is ordinary, not a gap — most manifests in some ecosystems declare
+    /// nothing, and some formats (`go.mod`, `Package.swift`, `pubspec.yaml`)
+    /// have no license field at all.
+    ///
+    /// A value that would not canonicalise is stored verbatim rather than
+    /// dropped; emission mints a non-listed license reference for it. So a
+    /// non-empty entry here is not necessarily a valid SPDX expression.
     pub licenses: Vec<SpdxExpression>,
     /// Go-binary BuildInfo extraction status for diagnostic file-level
     /// entries (FR-015, milestone 003 US1). `Some("missing")` means the

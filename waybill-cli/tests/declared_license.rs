@@ -642,6 +642,95 @@ licenses := Seq(("Apache 2", url("http://www.apache.org/licenses/LICENSE-2.0.txt
 }
 
 // ---------------------------------------------------------------------------
+// FR-016 / SC-001a — the document's primary component
+// ---------------------------------------------------------------------------
+
+#[test]
+fn m954_fr016_primary_component_carries_the_license_when_one_main_module() {
+    // With a single main-module, root selection's count==1 fast path makes that
+    // component the primary one, so it carries its own license. No inheritance
+    // step exists or is needed.
+    let tmp = tempfile::tempdir().expect("tempdir");
+    literal_license_project(tmp.path(), "Apache-2.0");
+    let got = scan(tmp.path());
+    assert_eq!(got.cdx, vec!["Apache-2.0".to_string()]);
+}
+
+#[test]
+fn m954_fr016_synthetic_root_carries_no_license_with_several_main_modules() {
+    // Two main-modules, only one licensed. Root selection falls past the
+    // count==1 fast path to a synthetic root, which must NOT adopt either
+    // project's license — asserting one project's terms for a directory that
+    // contains two is a claim no manifest makes.
+    //
+    // Together with the test above this pins FR-016 in both directions, which is
+    // why FR-016 needed no implementation: the two clauses describe behaviour
+    // root selection already had.
+    let tmp = tempfile::tempdir().expect("tempdir");
+    write(
+        &tmp.path().join("a/Cargo.toml"),
+        "[package]\nname = \"waybill-fixture-licensed-a\"\nversion = \"1.0.0\"\n\
+         edition = \"2021\"\nlicense = \"Apache-2.0\"\n",
+    );
+    write(&tmp.path().join("a/src/main.rs"), "fn main() {}\n");
+    write(
+        &tmp.path().join("b/Cargo.toml"),
+        "[package]\nname = \"waybill-fixture-unlicensed-b\"\nversion = \"1.0.0\"\n\
+         edition = \"2021\"\n",
+    );
+    write(&tmp.path().join("b/src/main.rs"), "fn main() {}\n");
+
+    let got = scan(tmp.path());
+    assert!(
+        got.cdx.is_empty(),
+        "a synthetic scan-root must not adopt one project's license, got {:?}",
+        got.cdx
+    );
+}
+
+// ---------------------------------------------------------------------------
+// FR-008a — Haskell is on the shared ladder, superseding #957
+// ---------------------------------------------------------------------------
+
+#[test]
+fn m954_fr008a_haskell_preserves_an_uncanonicalisable_license() {
+    // #957 implemented Haskell alone and DISCARDED a value that would not
+    // canonicalise. That left the one finished ecosystem as the only one losing
+    // a declaration. It now routes through the shared ladder.
+    let tmp = tempfile::tempdir().expect("tempdir");
+    write(
+        &tmp.path().join("waybill-fixture-hslic.cabal"),
+        "cabal-version:   2.4\nname:            waybill-fixture-hslic\n\
+         version:         1.0.0\nlicense:         AllRightsReserved\n\n\
+         library\n  build-depends: base\n",
+    );
+    let got = scan(tmp.path());
+    assert!(
+        !got.cdx.is_empty(),
+        "an uncanonicalisable .cabal license must be preserved, not dropped"
+    );
+    assert!(
+        got.spdx23.iter().all(|v| v.starts_with("LicenseRef-")),
+        "and never presented as a listed identifier, got {:?}",
+        got.spdx23
+    );
+}
+
+#[test]
+fn m954_fr008a_haskell_still_canonicalises_a_valid_license() {
+    // Control: the preserve path must not swallow values that DO canonicalise.
+    let tmp = tempfile::tempdir().expect("tempdir");
+    write(
+        &tmp.path().join("waybill-fixture-hsok.cabal"),
+        "cabal-version:   2.4\nname:            waybill-fixture-hsok\n\
+         version:         1.0.0\nlicense:         BSD-3-Clause\n\n\
+         library\n  build-depends: base\n",
+    );
+    let got = scan(tmp.path());
+    assert_eq!(got.cdx, vec!["BSD-3-Clause".to_string()]);
+}
+
+// ---------------------------------------------------------------------------
 // T019 / US2 — FR-004: an unrecognised declaration is preserved
 // ---------------------------------------------------------------------------
 
