@@ -1408,31 +1408,90 @@ struct M774SummaryRecord {
     parallel_workers_used: usize,
     production_imports_count: usize,
     test_imports_count: usize,
+    /// Issue #849 — whether the thread pool was actually spawned, i.e. which
+    /// arm of the R9 short-circuit ran.
+    ///
+    /// `parallel_workers_used` cannot answer this: `worker_count()` is evaluated
+    /// before the branch and logged either way, so it reports what a pool *would*
+    /// have used. The deflaked single-workspace test needs the branch itself.
+    pool_spawned: bool,
 }
 
+/// Installed summary sinks, one per concurrently-running test (issue #849).
+///
+/// This was a single `Option` slot whose comment claimed fixture-path scoping
+/// kept parallel tests from cross-contaminating. The scoping worked for
+/// *recording*, but the slot did not: two tests installing at once clobbered
+/// each other, so whichever lost the race found its sink replaced or cleared and
+/// aborted on `expect`. That stayed hidden while only one test installed a sink;
+/// deflaking the single-workspace test added a second, and the suite aborted with
+/// SIGABRT under parallel execution.
+///
+/// A list makes the claim true: each installer owns its own entry, and a record
+/// is pushed to every entry whose marker is a prefix of the scanned root.
 #[cfg(test)]
-static M774_SUMMARY_SINK: std::sync::Mutex<Option<(std::path::PathBuf, Vec<M774SummaryRecord>)>> =
-    std::sync::Mutex::new(None);
+static M774_SUMMARY_SINKS: std::sync::Mutex<
+    Vec<(std::path::PathBuf, Vec<M774SummaryRecord>)>,
+> = std::sync::Mutex::new(Vec::new());
 
+/// Install a sink for `marker`, returning a guard that removes it on drop.
 #[cfg(test)]
-fn m774_summary_sink_should_record(rootfs: &std::path::Path) -> bool {
-    let guard = M774_SUMMARY_SINK
+fn m774_summary_sink_install(marker: &std::path::Path) -> M774SinkGuard {
+    M774_SUMMARY_SINKS
         .lock()
-        .expect("m774 summary sink mutex poisoned");
-    match guard.as_ref() {
-        Some((marker, _)) => rootfs.starts_with(marker),
-        None => false,
+        .expect("m774 summary sink mutex poisoned")
+        .push((marker.to_path_buf(), Vec::new()));
+    M774SinkGuard {
+        marker: marker.to_path_buf(),
     }
 }
 
 #[cfg(test)]
-fn m774_summary_sink_push(rootfs: &std::path::Path, record: M774SummaryRecord) {
-    let mut guard = M774_SUMMARY_SINK
+struct M774SinkGuard {
+    marker: std::path::PathBuf,
+}
+
+#[cfg(test)]
+impl M774SinkGuard {
+    /// The records captured for this sink so far.
+    fn records(&self) -> Vec<M774SummaryRecord> {
+        M774_SUMMARY_SINKS
+            .lock()
+            .expect("m774 summary sink mutex poisoned")
+            .iter()
+            .find(|(m, _)| *m == self.marker)
+            .map(|(_, r)| r.clone())
+            .unwrap_or_default()
+    }
+}
+
+#[cfg(test)]
+impl Drop for M774SinkGuard {
+    fn drop(&mut self) {
+        // `lock()` rather than `expect`: a panicking test poisons the mutex, and
+        // panicking again while unwinding aborts the process — which is how the
+        // original design turned one test failure into SIGABRT.
+        if let Ok(mut guard) = M774_SUMMARY_SINKS.lock() {
+            guard.retain(|(m, _)| *m != self.marker);
+        }
+    }
+}
+
+#[cfg(test)]
+fn m774_summary_sink_should_record(rootfs: &std::path::Path) -> bool {
+    M774_SUMMARY_SINKS
         .lock()
-        .expect("m774 summary sink mutex poisoned");
-    if let Some((marker, records)) = guard.as_mut() {
-        if rootfs.starts_with(&*marker) {
-            records.push(record);
+        .map(|g| g.iter().any(|(marker, _)| rootfs.starts_with(marker)))
+        .unwrap_or(false)
+}
+
+#[cfg(test)]
+fn m774_summary_sink_push(rootfs: &std::path::Path, record: M774SummaryRecord) {
+    if let Ok(mut guard) = M774_SUMMARY_SINKS.lock() {
+        for (marker, records) in guard.iter_mut() {
+            if rootfs.starts_with(&*marker) {
+                records.push(record.clone());
+            }
         }
     }
 }
@@ -2258,6 +2317,10 @@ pub fn read(
     // for the 11 verifiable contracts.
     let m774_phase_start = std::time::Instant::now();
     let m774_workers = crate::scan_fs::package_db::golang::mod_why::worker_count(parsed_roots.len());
+    // Issue #849 — records which arm ran, so the degenerate short-circuit can be
+    // asserted directly instead of inferred from wall-clock time.
+    #[cfg(test)]
+    let mut m774_pool_spawned = false;
 
     if parsed_roots.len() <= 1 {
         // R9 degenerate short-circuit: single-workspace scans skip the
@@ -2277,6 +2340,10 @@ pub fn read(
             collect_test_imports(project_root, 0, &known_modules, &mut test_imports);
         }
     } else {
+        #[cfg(test)]
+        {
+            m774_pool_spawned = true;
+        }
         let jobs: Vec<WorkspaceImportJob<'_>> = parsed_roots
             .iter()
             .enumerate()
@@ -2377,6 +2444,7 @@ pub fn read(
                 parallel_workers_used: m774_workers,
                 production_imports_count: signals.production_imports.len(),
                 test_imports_count: test_imports.len(),
+                pool_spawned: m774_pool_spawned,
             },
         );
     }
@@ -4831,47 +4899,34 @@ func TestX(t *testing.T) { _ = testonly.X() }
     /// accidentally spawns threads for N=1). SC-005.
     #[test]
     fn m774_single_workspace_no_thread_spawn() {
+        // Issue #849 — was a wall-clock assertion (`elapsed < 3s`) and flaked
+        // under full-suite parallelism. Its own comment already said the bound
+        // was not the tight signal, and its bound history (2s, raised to 8s,
+        // measured back to 3s) shows re-tuning does not converge.
+        //
+        // The property is that the R9 degenerate arm fires and no thread pool is
+        // spawned for a single workspace. That is now observed directly from the
+        // summary record, so the test cannot be affected by scheduling at all.
+        //
+        // `parallel_workers_used` is deliberately NOT the signal: `worker_count()`
+        // runs before the branch and is logged either way, so it reports what a
+        // pool would have used rather than whether one existed.
         let dir = make_n_workspace_fixture(1);
         let exclude = ExclusionSet::new_empty();
-        let start = std::time::Instant::now();
+
+        let sink = m774_summary_sink_install(dir.path());
+
         let (_out, _signals) = read(dir.path(), true, &exclude, None);
-        let elapsed = start.elapsed();
-        // Generous bound — 2s accommodates test-suite parallelism +
-        // debug-build overhead + all the non-collect-imports work in
-        // read() (resolver, entries, main-module, orphan backfill).
-        // The real value of this assert is catching a hypothetical
-        // regression where the degenerate arm stops firing and every
-        // N=1 scan spawns a full thread pool. That failure mode would
-        // add ~50-100ms of thread-spawn overhead PER SCAN, not per
-        // workspace, so the absolute bound isn't the tight signal —
-        // but a runaway (e.g., spawn-per-workspace-count) would blow
-        // it. Watch for the summary log's parallel_workers_used field
-        // instead if this bound needs tightening.
-        // Bound history: 2s originally; raised to 8s during m776 after
-        // one gate failure; measured and set to 3s.
-        //
-        // Measurement (18-core macOS, debug build, wall time of the
-        // isolated test binary, which is an over-estimate since it
-        // includes process startup that `elapsed` excludes):
-        //   unloaded:              1.77s cold, then 0.36-0.74s warm
-        //   2x CPU oversubscribe:  0.44-1.34s, 5/5 pass
-        //   CPU + I/O load (load
-        //   average 95):          0.40-0.67s, 6/6 pass
-        // The 8s raise was an over-correction: contention does not push
-        // this test anywhere near 2s. The one gate failure that
-        // prompted it is better explained by a bloated target/ tree on
-        // the host (131 GB at the time) stalling test-binary startup
-        // than by the bound being wrong.
-        //
-        // 3s keeps margin over the cold-cache case while still catching
-        // the failure mode this assert exists for: the degenerate arm
-        // stopping and a thread pool being spawned per scan, which costs
-        // ~10s on the root workspace — orders of magnitude, not
-        // milliseconds. Watch the summary log's parallel_workers_used
-        // field for a tighter signal.
+
+        let records = sink.records();
+        let record = records
+            .first()
+            .expect("read() must emit one m774 summary record");
+        assert_eq!(record.workspaces_scanned, 1);
         assert!(
-            elapsed < std::time::Duration::from_millis(3000),
-            "single-workspace scan took {elapsed:?}, degenerate short-circuit may not be firing",
+            !record.pool_spawned,
+            "single-workspace scan spawned a thread pool; the R9 degenerate \
+             short-circuit is not firing",
         );
     }
 
@@ -4888,20 +4943,11 @@ func TestX(t *testing.T) { _ = testonly.X() }
         let dir = make_n_workspace_fixture(3);
         let exclude = ExclusionSet::new_empty();
 
-        struct SummarySinkGuard;
-        impl Drop for SummarySinkGuard {
-            fn drop(&mut self) {
-                *M774_SUMMARY_SINK.lock().unwrap() = None;
-            }
-        }
-        let _guard = SummarySinkGuard;
-
-        *M774_SUMMARY_SINK.lock().unwrap() = Some((dir.path().to_path_buf(), Vec::new()));
+        let sink = m774_summary_sink_install(dir.path());
 
         let (_out, _signals) = read(dir.path(), true, &exclude, None);
 
-        let sink = M774_SUMMARY_SINK.lock().unwrap();
-        let (_, records) = sink.as_ref().expect("sink was installed");
+        let records = sink.records();
         assert_eq!(
             records.len(),
             1,
@@ -4912,6 +4958,14 @@ func TestX(t *testing.T) { _ = testonly.X() }
         let record = &records[0];
         assert_eq!(record.workspaces_scanned, 3);
         assert!(record.parallel_workers_used >= 1);
+        // Issue #849 control: with 3 workspaces the pool MUST spawn. Without
+        // this, `!pool_spawned` in the single-workspace test could pass because
+        // the flag is never set to true anywhere.
+        assert!(
+            record.pool_spawned,
+            "multi-workspace scan did not spawn a pool; the deflaked \
+             single-workspace assertion would then be vacuous",
+        );
         assert!(record.production_imports_count >= 2, "prod imports should include lib-a + lib-b");
         assert!(record.test_imports_count >= 1, "test imports should include testonly-x");
     }

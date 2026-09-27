@@ -1222,61 +1222,64 @@ mod tests {
 
     #[test]
     fn m771_budget_tracker_shared_across_arc_clones() {
-        // FR-004: `Arc<BudgetTracker>` clones share the same wall-clock
-        // origin. Two threads observing `.remaining()` MUST see
-        // monotonically-decreasing values and MUST both agree once the
-        // budget is exhausted.
+        // FR-004: `Arc<BudgetTracker>` clones share one wall-clock origin.
+        //
+        // Issue #849 rewrite. The original proved this by timing: budget 200ms,
+        // both threads sleep 50ms and assert `Some`, then sleep 200ms and assert
+        // `None`. Under CI load a thread can be starved longer than the entire
+        // budget -- observed on macOS with `t1=None t2=Some(17.456041ms)` at the
+        // 50ms checkpoint, i.e. ~180ms of scheduling delay against a 200ms
+        // budget. Almost no margin existed by construction.
+        //
+        // Re-tuning the bound was rejected: m774's went 2s -> 8s -> 3s and still
+        // flaked. Instead every assertion here is *monotonically safe*, so extra
+        // delay can only strengthen it, never break it.
+        //
+        // The original also did not actually discriminate the property it names:
+        // at the 50ms checkpoint a shared origin and a per-clone origin both
+        // report `Some`. Sleeping past the budget in the MAIN thread before
+        // spawning does discriminate -- a per-clone origin would still hold its
+        // full budget and report `Some`.
         let key = "WAYBILL_GO_MOD_WHY_BUDGET_MS";
-        // Use a small budget for test speed; guard the env var via
-        // set_var/remove_var (per project convention — no EnvGuard for
-        // this one-off since we don't intersect other tests via the
-        // same key at the same time).
-        let prior = std::env::var(key).ok();
-        std::env::set_var(key, "200");
+
+        // (1) Shared origin + agreed exhaustion.
+        let mut env = crate::testing::EnvGuard::setup(&[(key, Some("50"))]);
         let tracker = std::sync::Arc::new(BudgetTracker::from_env());
+        // Elapse the budget before either thread exists. Any additional delay
+        // makes `remaining()` more certainly `None`, not less.
+        std::thread::sleep(Duration::from_millis(250));
         let t1 = tracker.clone();
         let t2 = tracker.clone();
-        let h1 = std::thread::spawn(move || {
-            std::thread::sleep(Duration::from_millis(50));
-            let r1 = t1.remaining();
-            std::thread::sleep(Duration::from_millis(200));
-            let r2 = t1.remaining();
-            (r1, r2)
-        });
-        let h2 = std::thread::spawn(move || {
-            std::thread::sleep(Duration::from_millis(50));
-            let r1 = t2.remaining();
-            std::thread::sleep(Duration::from_millis(200));
-            let r2 = t2.remaining();
-            (r1, r2)
-        });
-        let (t1_r1, t1_r2) = h1.join().expect("thread 1");
-        let (t2_r1, t2_r2) = h2.join().expect("thread 2");
-        // Both threads observe non-None at 50ms (budget = 200ms).
+        let r1 = std::thread::spawn(move || t1.remaining())
+            .join()
+            .expect("thread 1");
+        let r2 = std::thread::spawn(move || t2.remaining())
+            .join()
+            .expect("thread 2");
         assert!(
-            t1_r1.is_some() && t2_r1.is_some(),
-            "both threads should see remaining>0 at 50ms; t1={:?} t2={:?}",
-            t1_r1,
-            t2_r1,
+            r1.is_none() && r2.is_none(),
+            "clones must share the origin and agree the budget is spent; \
+             t1={r1:?} t2={r2:?}",
         );
-        // Both threads observe None at 250ms (budget exhausted).
+
+        // (2) Both clones see a live budget. 10 minutes cannot be exhausted by
+        // scheduling delay, so this direction is equally insensitive to load.
+        env.set(key, "600000");
+        let tracker = std::sync::Arc::new(BudgetTracker::from_env());
+        let t3 = tracker.clone();
+        let t4 = tracker.clone();
+        let r3 = std::thread::spawn(move || t3.remaining())
+            .join()
+            .expect("thread 3");
+        let r4 = std::thread::spawn(move || t4.remaining())
+            .join()
+            .expect("thread 4");
         assert!(
-            t1_r2.is_none() && t2_r2.is_none(),
-            "both threads should see remaining=None at 250ms; t1={:?} t2={:?}",
-            t1_r2,
-            t2_r2,
+            r3.is_some() && r4.is_some(),
+            "clones must both see remaining budget; t3={r3:?} t4={r4:?}",
         );
-        // Restore env.
-        match prior {
-            Some(v) => std::env::set_var(key, v),
-            None => std::env::remove_var(key),
-        }
     }
 
-    /// FR-002 argv-guard bisection: 500 paths at 300 chars each project
-    /// to ~150 KB argv (500 × 301 + 24 fixed = 150,524 bytes), well
-    /// above the 96 KiB (98,304 bytes) cap. Guard MUST bisect until
-    /// every sub-batch's projected argv fits.
     #[test]
     fn m771_argv_guard_bisects_when_projected_length_exceeds_limit() {
         let long_path = "example.com/waybill-fixture/".to_string()
