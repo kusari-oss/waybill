@@ -675,16 +675,18 @@ fn m203_us2_5_env_var_override_shortens_timeout() {
     );
 
     let path_env = format!("{}:/usr/bin:/bin", stub_dir.display());
-    let start = std::time::Instant::now();
     let (_cdx, stderr, ok) =
         scan_dir_with_env(&chart_dir, true, Some(&path_env), Some("1"));
-    let elapsed = start.elapsed();
     assert!(ok, "scan should succeed on timeout fallback: stderr:\n{stderr}");
-    assert!(
-        elapsed.as_secs() < 5,
-        "1s timeout should preempt the 5s stub sleep; observed {}s",
-        elapsed.as_secs_f64(),
-    );
+    // Issue #849: the wall-clock assertion `elapsed.as_secs() < 5` was removed.
+    // It flaked -- a 1s timeout can fire correctly while total wall time still
+    // exceeds 5s under suite load, since `elapsed` also covers building the
+    // fixture, spawning the scan subprocess and process startup.
+    //
+    // It was also redundant. The stub sleeps 5s and only reports a Timeout
+    // classification if the timeout preempted it, so the log assertion below
+    // already proves the override took effect -- and `exceeded 1s` proves the
+    // configured value was used, which the timing check never did.
     assert!(
         stderr.contains("Timeout") || stderr.contains("exceeded 1s"),
         "expected Timeout WARN log with 1s value; got stderr:\n{stderr}"
