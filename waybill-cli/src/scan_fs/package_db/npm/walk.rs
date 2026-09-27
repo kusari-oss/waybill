@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
 
 
 use super::super::PackageDbEntry;
+use crate::scan_fs::package_db::declared_license;
 use super::build_npm_purl;
 use super::enrich::extract_author_string;
 
@@ -531,6 +532,20 @@ pub(crate) fn build_npm_main_module_entry(
     // placeholder) instead of cargo's three-step.
     let version = version_field.unwrap_or("0.0.0-unknown");
     let purl = build_npm_purl(name, version)?;
+    // Issue #954 — the project's own declared license.
+    //
+    // `license` is a single SPDX expression string per the npm docs, including
+    // the parenthesised compound form `"(ISC OR GPL-3.0)"`, so no operator is
+    // chosen here. The old `licenses` array form is documented as deprecated
+    // and unsupported ("Those styles are now deprecated. Instead, use SPDX
+    // expressions"), and npm states no combining semantics for it, so it is
+    // not read: inferring an operator for a form its own ecosystem has
+    // withdrawn would be guessing at legal meaning.
+    let declared_license = parsed
+        .get("license")
+        .and_then(|v| v.as_str())
+        .map(|raw| declared_license::resolve(raw, &manifest_path))
+        .unwrap_or(declared_license::DeclaredLicense::Absent);
     let mut extra_annotations: std::collections::BTreeMap<String, serde_json::Value> =
         Default::default();
     extra_annotations.insert(
@@ -667,7 +682,7 @@ pub(crate) fn build_npm_main_module_entry(
         source_path,
         depends,
         maintainer: None,
-        licenses: Vec::new(),
+        licenses: declared_license.into_licenses(),
         lifecycle_scope: None,
         requirement_ranges: Vec::new(),
         source_type: None,

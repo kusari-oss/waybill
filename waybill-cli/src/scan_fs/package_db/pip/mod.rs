@@ -52,6 +52,7 @@ use waybill_common::types::purl::encode_purl_segment;
 
 use super::name_validation::{validate_pep508_name, NameValidationError};
 use super::PackageDbEntry;
+use crate::scan_fs::package_db::declared_license;
 
 // Milestone 664 US2 T036: shared-walker migration types.
 use crate::scan_fs::walk_registry::{
@@ -435,6 +436,15 @@ pub(crate) fn finalize(
             // "source" when existing is None.
             if existing.sbom_tier.is_none() {
                 existing.sbom_tier = synthesized.sbom_tier.clone();
+            }
+            // Issue #954 — carry the manifest-declared license across. This
+            // branch copies only the fields it names from the synthesized
+            // manifest entry, so anything unnamed is silently lost; the license
+            // was, and a project with a lockfile emitted none while the same
+            // project without one emitted it correctly. Guarded so a license
+            // another reader already supplied is not overwritten.
+            if existing.licenses.is_empty() {
+                existing.licenses = synthesized.licenses.clone();
             }
             main_modules_emitted += 1;
         } else {
@@ -874,6 +884,24 @@ pub(crate) fn build_pip_main_module_entry(
         (None, None) => return (None, false),
     };
     let project = source_table;
+    // Issue #954 — the project's own declared license.
+    //
+    // PEP 639 defines `[project].license` as "a single top-level string" holding
+    // an SPDX expression, e.g. `"MIT AND (Apache-2.0 OR BSD-2-Clause)"`, so no
+    // operator is chosen here. Two legacy shapes still occur and are handled:
+    // the deprecated table form `{ text = "..." }`, whose free text goes through
+    // the ladder and is preserved if it will not canonicalise; and
+    // `{ file = "..." }`, which is a path rather than an identifier and is
+    // therefore absent (FR-011). Poetry's `[tool.poetry].license` is the same
+    // string shape and is covered because `project` is whichever table supplied
+    // the identity.
+    let declared_license = match project
+        .get("license")
+        .and_then(|v| v.as_str().or_else(|| v.get("text").and_then(|t| t.as_str())))
+    {
+        Some(raw) => declared_license::resolve(raw, &manifest_path),
+        None => declared_license::DeclaredLicense::Absent,
+    };
     let Some(name) = project.get("name").and_then(|v| v.as_str()) else {
         return (None, has_poetry_table);
     };
@@ -1019,7 +1047,7 @@ pub(crate) fn build_pip_main_module_entry(
         source_path,
         depends,
         maintainer: None,
-        licenses: Vec::new(),
+        licenses: declared_license.into_licenses(),
         lifecycle_scope: None,
         requirement_ranges: Vec::new(),
         source_type: None,

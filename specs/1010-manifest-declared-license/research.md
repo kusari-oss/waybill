@@ -213,6 +213,27 @@ lock), `nuget` (packages.lock.json). The integration test
 `m954_fr011a_lockfile_and_lockfile_free_scans_agree` encodes the property in
 general form and should be extended per ecosystem rather than re-derived.
 
+**Confirmed in a second reader, and bounded by mutation testing.** pip has the
+identical defect: with `uv.lock` present the declared license was dropped and
+`waybill:source-files` showed `["uv.lock"]`, exactly the cargo signature. Found by
+the with-and-without-lockfile pairing rather than by review.
+
+Grepping `iter_mut().find(|e| e.purl` shows **five** such sites — `cargo.rs` (two),
+`maven.rs`, `gem.rs`, `pip/mod.rs`, `npm/mod.rs`; the latter three sit in each
+reader's shared-walker `finalize` hook. The obvious move is to patch all five. That
+was done and then **partly reverted**, because a mutation test showed the npm fix
+was unreachable: disabling npm's carry-over left
+`m954_npm_declared_license_survives_package_lock` passing, since npm's lockfile
+reader does not emit a root-package entry and therefore never collides. maven has
+no lockfile at all, and gem has no extraction yet, so neither could be exercised
+either.
+
+Only **cargo** and **pip** carry the fix, because only those two are demonstrated
+to need it. The remaining sites are recorded here rather than pre-patched: when
+each reader's extraction lands, run the pairing, and if it fails, add the
+carry-over and prove it with the same mutation. A fix that cannot be shown to
+change an outcome is indistinguishable from a comment.
+
 **A wrong turn worth recording.** `resolve::deduplicator::deduplicate` also fails
 to merge licenses when it collapses a group, and a comment beside it documents the
 identical defect class for `requirement_ranges` (#936). That made it a convincing

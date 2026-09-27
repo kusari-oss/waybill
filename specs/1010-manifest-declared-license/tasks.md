@@ -88,13 +88,13 @@ attribution. Deliverable with a single ecosystem done.
 - [X] T021 [US1] Resolve `license.workspace = true` against `[workspace.package]` in `waybill-cli/src/scan_fs/package_db/cargo.rs`, reusing the traversal already used by `resolve_cargo_main_module_version` (FR-011a)
 - [X] T022 [US1] Add a case to `waybill-cli/tests/declared_license.rs` using a workspace fixture whose member declares `license.workspace = true` while the root declares no license, asserting the member carries no license and the scan succeeds (FR-011b)
 - [X] T023 [US1] Replace the assertion at `waybill-cli/src/scan_fs/package_db/cargo.rs:3004` (`assert!(entry.licenses.is_empty())`) with one asserting the declared license is present, so the regression guard points the right way (FR-014)
-- [ ] T024 [P] [US1] Extract `license` in `waybill-cli/src/scan_fs/package_db/npm/walk.rs::build_npm_main_module_entry` (licenses@670)
+- [X] T024 [P] [US1] Extract `license` in `waybill-cli/src/scan_fs/package_db/npm/walk.rs::build_npm_main_module_entry` (licenses@670)
 - [ ] T025 [P] [US1] Extract `license` in `waybill-cli/src/scan_fs/package_db/npm/mod.rs::synthesize_nameless_nested_mainmods` (licenses@716)
-- [ ] T026 [P] [US1] Extract `[project].license` in `waybill-cli/src/scan_fs/package_db/pip/mod.rs::build_pip_main_module_entry` (licenses@1022), treating the deprecated `license.file` table form as `Absent` per FR-011
+- [X] T026 [P] [US1] Extract `[project].license` in `waybill-cli/src/scan_fs/package_db/pip/mod.rs::build_pip_main_module_entry` (licenses@1022), treating the deprecated `license.file` table form as `Absent` per FR-011
 - [ ] T027 [P] [US1] Extract `licenses` / `license` in `waybill-cli/src/scan_fs/package_db/gem.rs::build_gem_main_module_entry` (licenses@1505), joining with the conjunctive fallback
 - [ ] T028 [P] [US1] Extract the same in `waybill-cli/src/scan_fs/package_db/gem.rs::build_gem_application_main_module_entry` (licenses@1786)
-- [ ] T029 [P] [US1] Extract `<licenses><license><name>` in `waybill-cli/src/scan_fs/package_db/maven.rs::build_maven_main_module_entry` (licenses@4434), joining with the conjunctive fallback
-- [ ] T030 [US1] Resolve maven parent-POM license inheritance in `waybill-cli/src/scan_fs/package_db/maven.rs`, since `licenses` is an inherited POM element (FR-011a)
+- [X] T029 [P] [US1] Extract `<licenses><license><name>` in `waybill-cli/src/scan_fs/package_db/maven.rs::build_maven_main_module_entry` (licenses@4434), joining with the conjunctive fallback
+- [X] T030 [US1] Resolve maven parent-POM license inheritance in `waybill-cli/src/scan_fs/package_db/maven.rs`, since `licenses` is an inherited POM element (FR-011a)
 - [ ] T031 [P] [US1] Extract `license` in `waybill-cli/src/scan_fs/package_db/composer.rs::emit_main_module` (licenses@560), joining an array with **disjunction** per the documented Composer semantics — the one ecosystem that is not the fallback
 - [ ] T032 [P] [US1] Extract the license in `waybill-cli/src/scan_fs/package_db/elixir.rs::emit_main_module` (licenses@1074) per the T001-verified contract row
 - [ ] T033 [P] [US1] Extract the license in `waybill-cli/src/scan_fs/package_db/erlang.rs::build_main_module_component` (licenses@1489) per the T002-verified contract row

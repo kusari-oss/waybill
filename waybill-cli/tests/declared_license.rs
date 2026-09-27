@@ -370,6 +370,160 @@ fn m954_fr011b_unresolvable_inheritance_emits_nothing_and_succeeds() {
 }
 
 // ---------------------------------------------------------------------------
+// Per-ecosystem coverage, each asserted twice: without its lockfile and with it.
+//
+// The second half is not redundant. Readers merge manifest facts onto a
+// lockfile-derived entry by copying an explicit list of fields, and a field
+// absent from that list is silently dropped. That is how the cargo defect hid
+// behind passing unit tests, and pip had the identical defect — found by this
+// pair of assertions, not by review.
+// ---------------------------------------------------------------------------
+
+/// Scan `root` twice, once as given and once after `add_lockfile` runs, and
+/// assert both yield `expected` on the primary component.
+fn assert_license_with_and_without_lockfile(
+    ecosystem: &str,
+    build: impl Fn(&Path),
+    add_lockfile: impl Fn(&Path),
+    expected: &str,
+) {
+    let plain = tempfile::tempdir().expect("tempdir");
+    build(plain.path());
+    let without = scan(plain.path());
+    assert_eq!(
+        without.cdx,
+        vec![expected.to_string()],
+        "{ecosystem}: declared license missing without a lockfile"
+    );
+    assert_eq!(
+        without.cdx_acknowledgement,
+        vec!["declared".to_string()],
+        "{ecosystem}: must be attributed as declared"
+    );
+
+    let locked = tempfile::tempdir().expect("tempdir");
+    build(locked.path());
+    add_lockfile(locked.path());
+    let with = scan(locked.path());
+    assert_eq!(
+        with.cdx,
+        vec![expected.to_string()],
+        "{ecosystem}: declared license lost once a lockfile is present — the \
+         augment-in-place merge dropped it"
+    );
+    assert_eq!(
+        without.cdx, with.cdx,
+        "{ecosystem}: a lockfile must not change the declared license"
+    );
+}
+
+#[test]
+fn m954_npm_declared_license_survives_package_lock() {
+    assert_license_with_and_without_lockfile(
+        "npm",
+        |root| {
+            // A compound SPDX expression, the form npm documents. It must stay
+            // one expression rather than being split and re-joined downstream.
+            write(
+                &root.join("package.json"),
+                r#"{ "name": "waybill-fixture-npmlic", "version": "1.0.0", "license": "(ISC OR GPL-3.0)" }
+"#,
+            );
+        },
+        |root| {
+            write(
+                &root.join("package-lock.json"),
+                r#"{
+  "name": "waybill-fixture-npmlic",
+  "version": "1.0.0",
+  "lockfileVersion": 3,
+  "requires": true,
+  "packages": {
+    "": { "name": "waybill-fixture-npmlic", "version": "1.0.0" }
+  }
+}
+"#,
+            );
+        },
+        "(ISC OR GPL-3.0)",
+    );
+}
+
+#[test]
+fn m954_pip_declared_license_survives_uv_lock() {
+    // This pairing found a real defect: with `uv.lock` present the license was
+    // dropped, exactly as in cargo.
+    assert_license_with_and_without_lockfile(
+        "pip",
+        |root| {
+            write(
+                &root.join("pyproject.toml"),
+                "[project]\nname = \"waybill-fixture-piplic\"\nversion = \"1.0.0\"\n\
+                 license = \"MIT AND (Apache-2.0 OR BSD-2-Clause)\"\n",
+            );
+        },
+        |root| {
+            write(
+                &root.join("uv.lock"),
+                "version = 1\nrequires-python = \">=3.10\"\n\n[[package]]\n\
+                 name = \"waybill-fixture-piplic\"\nversion = \"1.0.0\"\n\
+                 source = { editable = \".\" }\n",
+            );
+        },
+        "MIT AND (Apache-2.0 OR BSD-2-Clause)",
+    );
+}
+
+#[test]
+fn m954_maven_declared_license_from_pom() {
+    let tmp = tempfile::tempdir().expect("tempdir");
+    write(
+        &tmp.path().join("pom.xml"),
+        "<project xmlns=\"http://maven.apache.org/POM/4.0.0\">\n\
+         <modelVersion>4.0.0</modelVersion>\n\
+         <groupId>dev.waybill.fixture</groupId>\n\
+         <artifactId>waybill-fixture-mvnlic</artifactId>\n\
+         <version>1.0.0</version>\n\
+         <licenses><license><name>Apache-2.0</name></license></licenses>\n\
+         </project>\n",
+    );
+    let got = scan(tmp.path());
+    assert_eq!(got.cdx, vec!["Apache-2.0".to_string()]);
+    assert_eq!(got.cdx_acknowledgement, vec!["declared".to_string()]);
+}
+
+#[test]
+fn m954_pip_license_file_reference_is_not_an_identifier() {
+    // FR-011 — the deprecated `{ file = ... }` table form is a path.
+    let tmp = tempfile::tempdir().expect("tempdir");
+    write(
+        &tmp.path().join("pyproject.toml"),
+        "[project]\nname = \"waybill-fixture-pipfile\"\nversion = \"1.0.0\"\n\
+         license = { file = \"LICENSE.txt\" }\n",
+    );
+    let got = scan(tmp.path());
+    assert!(
+        got.cdx.is_empty(),
+        "a license file path must not be emitted as an identifier, got {:?}",
+        got.cdx
+    );
+}
+
+#[test]
+fn m954_pip_license_text_table_is_read() {
+    // The sibling `{ text = ... }` form carries a value, so it is read; free
+    // text that will not canonicalise is preserved by the ladder.
+    let tmp = tempfile::tempdir().expect("tempdir");
+    write(
+        &tmp.path().join("pyproject.toml"),
+        "[project]\nname = \"waybill-fixture-piptext\"\nversion = \"1.0.0\"\n\
+         license = { text = \"MIT\" }\n",
+    );
+    let got = scan(tmp.path());
+    assert_eq!(got.cdx, vec!["MIT".to_string()]);
+}
+
+// ---------------------------------------------------------------------------
 // T019 / US2 — FR-004: an unrecognised declaration is preserved
 // ---------------------------------------------------------------------------
 
