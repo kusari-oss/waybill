@@ -48,6 +48,7 @@ use std::path::{Path, PathBuf};
 use waybill_common::types::purl::{encode_purl_segment, Purl};
 
 use super::PackageDbEntry;
+use super::declared_license::{self, LicenseJoin};
 
 // Milestone 664 US2 T038: shared-walker migration types.
 use crate::scan_fs::walk_registry::{
@@ -1445,8 +1446,21 @@ fn build_gem_main_module_entry(gemspec_path: &Path) -> Option<PackageDbEntry> {
     // gem.rs:947 but version is optional (placeholder fallback).
     let mut name: Option<String> = None;
     let mut version_literal: Option<String> = None;
+    // Issue #954 — the project's own declared license. RubyGems exposes both
+    // `license` (singular) and `licenses` (array); its reference states the
+    // array "does not state how the licenses combine" and that the singular
+    // form does not support compound expressions, so the ecosystem defines no
+    // relationship and conjunction applies as the recorded fallback (FR-010a).
+    let mut license_terms: Vec<String> = Vec::new();
     for raw_line in text.lines() {
         let line = raw_line.trim();
+        if let Some(v) = strip_assignment(line, "licenses") {
+            license_terms.extend(declared_license::extract_quoted_terms(v));
+        } else if let Some(v) = strip_assignment(line, "license") {
+            if let Some(literal) = extract_string_literal(v) {
+                license_terms.push(literal);
+            }
+        }
         if let Some(v) = strip_assignment(line, "name") {
             if let Some(literal) = extract_string_literal(v) {
                 if !literal.is_empty() {
@@ -1502,7 +1516,12 @@ fn build_gem_main_module_entry(gemspec_path: &Path) -> Option<PackageDbEntry> {
         source_path,
         depends,
         maintainer: None,
-        licenses: Vec::new(),
+        licenses: declared_license::resolve_many(
+            &license_terms,
+            LicenseJoin::Conjunction,
+            gemspec_path,
+        )
+        .into_licenses(),
         lifecycle_scope: None,
         requirement_ranges: Vec::new(),
         source_type: None,

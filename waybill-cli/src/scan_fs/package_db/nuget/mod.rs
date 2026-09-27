@@ -42,6 +42,7 @@ use std::path::{Path, PathBuf};
 use waybill_common::types::purl::{encode_purl_segment, Purl};
 
 use super::PackageDbEntry;
+use crate::scan_fs::package_db::declared_license;
 
 // Milestone 664 US2 T044: shared-walker migration types.
 use crate::scan_fs::walk_registry::{
@@ -729,6 +730,24 @@ fn build_nuget_main_module_entry(
         return None;
     }
     let version = resolve_main_module_version(property_map);
+    // Issue #954 — the project's own declared license.
+    //
+    // `PackageLicenseExpression` is "an SPDX license identifier or expression"
+    // per the MSBuild pack reference, so a single value and no operator choice.
+    // The docs also state that only one of `PackageLicenseExpression`,
+    // `PackageLicenseFile` and `PackageLicenseUrl` may be set at a time, so
+    // there is no precedence to resolve between them. `PackageLicenseFile` is a
+    // path and stays absent (FR-011); `PackageLicenseUrl` is deprecated and a
+    // URL is not an identifier. Inherited values from `Directory.Build.props`
+    // arrive here already merged, since the property map is the evaluated
+    // MSBuild view rather than one file's literal text.
+    let declared_license = property_map
+        // Keys are lowercased by `lowercase_local_name`, matching the
+        // `version` / `assemblyname` lookups above. MSBuild property names are
+        // case-insensitive, so the map normalises them on insert.
+        .get("packagelicenseexpression")
+        .map(|raw| declared_license::resolve(raw, project_path))
+        .unwrap_or(declared_license::DeclaredLicense::Absent);
     // Milestone 230 FR-003: pkg:nuget/<AssemblyName>@<version> when a
     // version resolves; pkg:generic/<project-stem>@0.0.0 fallback when
     // nothing does. The fallback matches the reporter's proposed shape
@@ -778,7 +797,7 @@ fn build_nuget_main_module_entry(
         source_path,
         depends,
         maintainer: None,
-        licenses: Vec::new(),
+        licenses: declared_license.into_licenses(),
         lifecycle_scope: None,
         requirement_ranges: Vec::new(),
         source_type: None,

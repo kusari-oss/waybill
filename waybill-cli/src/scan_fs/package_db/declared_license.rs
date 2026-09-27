@@ -194,6 +194,42 @@ pub(crate) fn resolve_many<S: AsRef<str>>(
     }
 }
 
+/// Pull every quoted string literal out of a DSL fragment, in order.
+///
+/// Three readers declare licenses inside a host language rather than in a data
+/// format — a Ruby gemspec (`spec.licenses = ["MIT", "Apache-2.0"]`), an Elixir
+/// keyword list (`licenses: ["MIT"]`), and an sbt setting
+/// (`licenses := Seq(("Apache 2", url(...))))`). All three need the same thing:
+/// the quoted terms, ignoring the surrounding syntax.
+///
+/// Both quote styles are accepted because Ruby uses either. Nothing is
+/// interpreted — no escape handling, no nesting — because the goal is to recover
+/// license *terms*, and a term containing an escaped quote is not a license
+/// identifier. In the sbt case this also picks up the URL half of each tuple;
+/// callers that expect tuples keep only the first of each pair.
+pub(crate) fn extract_quoted_terms(fragment: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut chars = fragment.char_indices().peekable();
+    while let Some((_, c)) = chars.next() {
+        if c != '"' && c != '\'' {
+            continue;
+        }
+        let quote = c;
+        let mut term = String::new();
+        for (_, c2) in chars.by_ref() {
+            if c2 == quote {
+                break;
+            }
+            term.push(c2);
+        }
+        let trimmed = term.trim();
+        if !trimmed.is_empty() {
+            out.push(trimmed.to_string());
+        }
+    }
+    out
+}
+
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
@@ -335,6 +371,36 @@ mod tests {
             }
             other => panic!("expected Preserved, got {other:?}"),
         }
+    }
+
+    // ---- extract_quoted_terms ----
+
+    #[test]
+    fn quoted_terms_reads_a_ruby_array() {
+        assert_eq!(
+            extract_quoted_terms(r#"= ["MIT", "Apache-2.0"]"#),
+            vec!["MIT".to_string(), "Apache-2.0".to_string()]
+        );
+    }
+
+    #[test]
+    fn quoted_terms_accepts_single_quotes() {
+        assert_eq!(extract_quoted_terms("= 'MIT'"), vec!["MIT".to_string()]);
+    }
+
+    #[test]
+    fn quoted_terms_reads_an_sbt_tuple_list() {
+        // The URL half comes back too; sbt callers keep the first of each pair.
+        assert_eq!(
+            extract_quoted_terms(r#":= Seq(("Apache 2", url("http://example.invalid")))"#),
+            vec!["Apache 2".to_string(), "http://example.invalid".to_string()]
+        );
+    }
+
+    #[test]
+    fn quoted_terms_ignores_unquoted_syntax_and_blanks() {
+        assert_eq!(extract_quoted_terms("licenses: [] # none"), Vec::<String>::new());
+        assert_eq!(extract_quoted_terms(r#"["", "  ", "MIT"]"#), vec!["MIT".to_string()]);
     }
 
     // ---- T015: absence is ordinary ----

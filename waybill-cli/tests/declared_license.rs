@@ -523,6 +523,124 @@ fn m954_pip_license_text_table_is_read() {
     assert_eq!(got.cdx, vec!["MIT".to_string()]);
 }
 
+#[test]
+fn m954_composer_array_joins_with_or() {
+    // Composer is the ONE verified ecosystem that documents the relationship:
+    // an array is a choice between licenses. Anything else here would assert
+    // that a consumer must satisfy both, which the project did not say.
+    let tmp = tempfile::tempdir().expect("tempdir");
+    write(
+        &tmp.path().join("composer.json"),
+        r#"{ "name": "waybill-fixture/composerlic", "license": ["LGPL-2.1-only", "GPL-3.0-or-later"] }
+"#,
+    );
+    let got = scan(tmp.path());
+    assert_eq!(
+        got.cdx,
+        vec!["LGPL-2.1-only OR GPL-3.0-or-later".to_string()],
+        "composer arrays are disjunctive per its schema docs"
+    );
+    assert_eq!(got.cdx_acknowledgement, vec!["declared".to_string()]);
+}
+
+#[test]
+fn m954_nuget_reads_package_license_expression() {
+    // Regression guard for a real bug: PropertyMap lowercases its keys on
+    // insert (MSBuild property names are case-insensitive), so a lookup using
+    // the documented casing silently returned None. A unit test building the
+    // map by hand would have used the same wrong casing and passed.
+    let tmp = tempfile::tempdir().expect("tempdir");
+    write(
+        &tmp.path().join("App.csproj"),
+        r#"<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>waybill-fixture-nugetlic</AssemblyName>
+    <Version>1.0.0</Version>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+  </PropertyGroup>
+</Project>
+"#,
+    );
+    let got = scan(tmp.path());
+    assert_eq!(got.cdx, vec!["Apache-2.0".to_string()]);
+}
+
+#[test]
+fn m954_gem_licenses_array_is_not_truncated() {
+    // `license` is a prefix of `licenses`, so a naive assignment match reads
+    // only the first array element and a dual-licensed gem loses one.
+    let tmp = tempfile::tempdir().expect("tempdir");
+    write(
+        &tmp.path().join("waybill-fixture-gemlic.gemspec"),
+        r#"Gem::Specification.new do |spec|
+  spec.name    = "waybill-fixture-gemlic"
+  spec.version = "1.0.0"
+  spec.licenses = ["MIT", "Apache-2.0"]
+end
+"#,
+    );
+    let got = scan(tmp.path());
+    assert_eq!(
+        got.cdx,
+        vec!["MIT AND Apache-2.0".to_string()],
+        "both array entries must survive; RubyGems states no relationship, so \
+         conjunction is the recorded fallback"
+    );
+}
+
+#[test]
+fn m954_elixir_reads_package_licenses() {
+    let tmp = tempfile::tempdir().expect("tempdir");
+    write(
+        &tmp.path().join("mix.exs"),
+        r#"defmodule WaybillFixture.MixProject do
+  use Mix.Project
+  def project do
+    [app: :waybill_fixture_elixirlic, version: "1.0.0", package: package()]
+  end
+  defp package do
+    [licenses: ["Apache-2.0"], links: %{}]
+  end
+end
+"#,
+    );
+    let got = scan(tmp.path());
+    assert_eq!(got.cdx, vec!["Apache-2.0".to_string()]);
+}
+
+#[test]
+fn m954_scala_free_form_name_is_preserved_as_a_license_ref() {
+    // sbt names are free-form: its own documented example is "Apache 2", not
+    // Apache-2.0. This is the case that justifies FR-004 — under the
+    // drop-on-failure behaviour #957 shipped, scala would emit nothing for the
+    // common shape. It must also never be presented as a listed identifier.
+    let tmp = tempfile::tempdir().expect("tempdir");
+    write(
+        &tmp.path().join("build.sbt"),
+        r#"name := "waybill-fixture-scalalic"
+version := "1.0.0"
+organization := "dev.waybill.fixture"
+licenses := Seq(("Apache 2", url("http://www.apache.org/licenses/LICENSE-2.0.txt")))
+"#,
+    );
+    let got = scan(tmp.path());
+    assert!(
+        !got.cdx.is_empty(),
+        "a free-form sbt license name must be preserved, not dropped"
+    );
+    assert!(
+        got.spdx23.iter().all(|v| v.starts_with("LicenseRef-")),
+        "it must be a non-listed reference, never a listed identifier, got {:?}",
+        got.spdx23
+    );
+    // The URL half of the tuple must not leak in as a license.
+    assert!(
+        !got.cdx.iter().any(|v| v.contains("http")),
+        "a URL is not a license identifier, got {:?}",
+        got.cdx
+    );
+}
+
 // ---------------------------------------------------------------------------
 // T019 / US2 — FR-004: an unrecognised declaration is preserved
 // ---------------------------------------------------------------------------
