@@ -30,6 +30,7 @@ use waybill_common::types::hash::ContentHash;
 use waybill_common::types::purl::{encode_purl_segment, Purl};
 
 use super::PackageDbEntry;
+use super::declared_license::{self, DeclaredLicense};
 
 // Milestone 664 US2 T037: shared-walker migration types.
 use crate::scan_fs::walk_registry::{
@@ -548,6 +549,11 @@ fn parse_authors_from_cargo_toml(text: &str) -> Option<String> {
 #[derive(Debug, Default)]
 pub(crate) struct WorkspaceContext {
     versions: HashMap<PathBuf, String>,
+    /// Issue #954 — `[workspace.package].license`, for members declaring
+    /// `license.workspace = true`. Keyed identically to `versions`, because
+    /// license inheritance resolves against the same workspace root by the
+    /// same walk-up; only the key differs.
+    licenses: HashMap<PathBuf, String>,
 }
 
 impl WorkspaceContext {
@@ -559,6 +565,7 @@ impl WorkspaceContext {
     /// walk-up by path-prefix to find the enclosing workspace.
     pub(crate) fn build_from_manifests(manifests: &[PathBuf]) -> Self {
         let mut versions = HashMap::new();
+        let mut licenses = HashMap::new();
         for manifest_path in manifests {
             let Ok(text) = std::fs::read_to_string(manifest_path) else {
                 continue;
@@ -566,20 +573,27 @@ impl WorkspaceContext {
             let Ok(parsed) = toml::from_str::<toml::Value>(&text) else {
                 continue;
             };
-            let Some(version) = parsed
-                .get("workspace")
-                .and_then(|w| w.get("package"))
+            let Some(parent_dir) = manifest_path.parent() else {
+                continue;
+            };
+            let workspace_package = parsed.get("workspace").and_then(|w| w.get("package"));
+            // Issue #954 — collected independently of the version, because a
+            // workspace may declare either without the other.
+            if let Some(license) = workspace_package
+                .and_then(|p| p.get("license"))
+                .and_then(|v| v.as_str())
+            {
+                licenses.insert(parent_dir.to_path_buf(), license.to_string());
+            }
+            let Some(version) = workspace_package
                 .and_then(|p| p.get("version"))
                 .and_then(|v| v.as_str())
             else {
                 continue;
             };
-            let Some(parent_dir) = manifest_path.parent() else {
-                continue;
-            };
             versions.insert(parent_dir.to_path_buf(), version.to_string());
         }
-        Self { versions }
+        Self { versions, licenses }
     }
 
     /// Look up the workspace-inherited `[workspace.package].version`
@@ -595,6 +609,75 @@ impl WorkspaceContext {
             cursor = dir.parent();
         }
         None
+    }
+
+    /// Issue #954 (FR-011a) — the workspace-inherited
+    /// `[workspace.package].license` for a member manifest, found by the same
+    /// walk-up as [`Self::lookup_for_member`].
+    ///
+    /// `None` means the enclosing workspace declares no license, which per
+    /// FR-011b is a missing declaration rather than an error.
+    fn lookup_license_for_member(&self, member_manifest_dir: &Path) -> Option<&str> {
+        let mut cursor = Some(member_manifest_dir);
+        while let Some(dir) = cursor {
+            if let Some(license) = self.licenses.get(dir) {
+                return Some(license.as_str());
+            }
+            cursor = dir.parent();
+        }
+        None
+    }
+}
+
+/// Resolve the cargo main-module's declared license (issue #954, FR-001).
+///
+/// `[package].license` is a single SPDX 2.3 expression — verified against the
+/// Cargo manifest reference, which states that crates.io "interprets the
+/// `license` field as an SPDX 2.3 license expression". It is never a list, so no
+/// operator is chosen for cargo and [`declared_license::resolve`] is called
+/// directly rather than `resolve_many`.
+///
+/// Two shapes are accepted:
+/// - a literal string, `license = "Apache-2.0"`;
+/// - inheritance, `license.workspace = true`, resolved against
+///   `[workspace.package].license` (FR-011a). `license` is explicitly among the
+///   inheritable keys in the workspace reference.
+///
+/// `license-file` is deliberately not read: a path is not a license identifier,
+/// and resolving it requires reading file content (FR-011, out of scope).
+fn resolve_cargo_declared_license(
+    manifest_path: &Path,
+    manifest_dir: &Path,
+    package_table: &toml::Value,
+    workspace: &WorkspaceContext,
+) -> DeclaredLicense {
+    let Some(license) = package_table.get("license") else {
+        return DeclaredLicense::Absent;
+    };
+
+    if let Some(literal) = license.as_str() {
+        return declared_license::resolve(literal, manifest_path);
+    }
+
+    let inherits = license
+        .get("workspace")
+        .and_then(|w| w.as_bool())
+        .unwrap_or(false);
+    if !inherits {
+        return DeclaredLicense::Absent;
+    }
+
+    match workspace.lookup_license_for_member(manifest_dir) {
+        Some(inherited) => declared_license::resolve(inherited, manifest_path),
+        None => {
+            // FR-011b — an inheritance nothing satisfies is a missing
+            // declaration, not a failure.
+            tracing::debug!(
+                manifest = %manifest_path.display(),
+                "cargo: `license.workspace = true` but no enclosing                  [workspace.package].license; no license emitted (#954)"
+            );
+            DeclaredLicense::Absent
+        }
     }
 }
 
@@ -631,7 +714,8 @@ fn resolve_cargo_main_module_version(
 /// - `waybill:component-role: "main-module"` (C40, supplementary)
 /// - `sbom_tier = Some("source")` (FR-006)
 /// - `parent_purl = None` (top-level — FR-001a)
-/// - `licenses = vec![]` (FR-005; license detection is #103 follow-up)
+/// - `licenses` from `[package].license`, resolved through the shared
+///   declared-license ladder (#954); empty when the manifest declares none
 /// - empty `depends` for now; FR-007 wiring populates direct-dep edges
 ///   by post-processing each manifest's `[dependencies]` /
 ///   `[dev-dependencies]` / `[build-dependencies]` tables (currently
@@ -648,6 +732,10 @@ fn build_cargo_main_module_entry(
     let manifest_dir = manifest_path.parent()?;
     let version = resolve_cargo_main_module_version(manifest_dir, package, workspace);
     let purl = build_cargo_purl(name, &version)?;
+    // Issue #954 — the project's own declared license. This component is the
+    // local project, which is usually not a published crate, so enrichment has
+    // no registry record to draw on: read here or absent forever.
+    let declared = resolve_cargo_declared_license(manifest_path, manifest_dir, package, workspace);
     let mut extra_annotations: std::collections::BTreeMap<String, serde_json::Value> =
         Default::default();
     extra_annotations.insert(
@@ -700,7 +788,7 @@ fn build_cargo_main_module_entry(
         source_path,
         depends: Vec::new(),
         maintainer: None,
-        licenses: Vec::new(),
+        licenses: declared.into_licenses(),
         lifecycle_scope: None,
         requirement_ranges: Vec::new(),
         source_type: Some("workspace".to_string()),
@@ -1794,6 +1882,20 @@ pub(crate) fn finalize(
             // Mark as top-level (main-modules are linker roots, never
             // children of another component).
             existing.parent_purl = None;
+            // Issue #954 — carry the manifest-declared license across.
+            //
+            // This branch augments a lockfile-derived entry with the facts only
+            // the manifest knows, and it copies exactly the fields it names.
+            // The license was not among them, so a workspace WITH a Cargo.lock
+            // emitted no license while the same crate WITHOUT one emitted it:
+            // branch (b) below pushes the synthesized entry whole, this branch
+            // keeps `existing` and drops the rest. A lockfile does not record a
+            // license, so `existing.licenses` is empty here in practice; the
+            // guard is for the case where some other reader already supplied
+            // one, which should not be overwritten by a second view.
+            if existing.licenses.is_empty() {
+                existing.licenses = std::mem::take(&mut synthesized.licenses);
+            }
             main_modules_emitted += 1;
         } else if seen_purls.insert(purl_key) {
             // (b) net-new main-module (no lockfile entry collided)
@@ -2983,6 +3085,183 @@ version = { workspace = true }
     }
 
     #[test]
+    fn m954_literal_license_reaches_the_entry() {
+        let tmp = tempfile::tempdir().unwrap();
+        let manifest = write_manifest(
+            tmp.path(),
+            r#"
+[package]
+name = "waybill-fixture-licensed"
+version = "1.0.0"
+license = "Apache-2.0"
+"#,
+        );
+        let ctx = WorkspaceContext::default();
+        let entry = build_cargo_main_module_entry(&manifest, &ctx).unwrap();
+        assert_eq!(entry.licenses.len(), 1, "expected exactly one license");
+        assert_eq!(entry.licenses[0].as_str(), "Apache-2.0");
+    }
+
+    #[test]
+    fn m954_compound_expression_is_not_split() {
+        // The common dual-licensed cargo shape. One expression, not two
+        // entries -- splitting would hand the operator choice downstream.
+        let tmp = tempfile::tempdir().unwrap();
+        let manifest = write_manifest(
+            tmp.path(),
+            r#"
+[package]
+name = "waybill-fixture-dual"
+version = "1.0.0"
+license = "MIT OR Apache-2.0"
+"#,
+        );
+        let ctx = WorkspaceContext::default();
+        let entry = build_cargo_main_module_entry(&manifest, &ctx).unwrap();
+        assert_eq!(entry.licenses.len(), 1);
+        assert_eq!(entry.licenses[0].as_str(), "MIT OR Apache-2.0");
+    }
+
+    #[test]
+    fn m954_uncanonicalisable_license_is_preserved_not_dropped() {
+        // FR-004. Supersedes the drop-on-failure behaviour of #957.
+        let tmp = tempfile::tempdir().unwrap();
+        let manifest = write_manifest(
+            tmp.path(),
+            r#"
+[package]
+name = "waybill-fixture-odd"
+version = "1.0.0"
+license = "AllRightsReserved"
+"#,
+        );
+        let ctx = WorkspaceContext::default();
+        let entry = build_cargo_main_module_entry(&manifest, &ctx).unwrap();
+        assert_eq!(
+            entry.licenses.len(),
+            1,
+            "an unrecognised declaration must be preserved, not discarded"
+        );
+        assert_eq!(entry.licenses[0].as_str(), "AllRightsReserved");
+    }
+
+    #[test]
+    fn m954_workspace_inherited_license_resolves() {
+        // FR-011a. This is the shape both of waybill's own member crates use,
+        // so without it the feature returns nothing for this repository.
+        let tmp = tempfile::tempdir().unwrap();
+        let root_manifest = write_manifest(
+            tmp.path(),
+            r#"
+[workspace]
+members = ["member"]
+
+[workspace.package]
+version = "9.9.9"
+license = "Apache-2.0"
+"#,
+        );
+        let member_dir = tmp.path().join("member");
+        std::fs::create_dir_all(&member_dir).unwrap();
+        let member_manifest = write_manifest(
+            &member_dir,
+            r#"
+[package]
+name = "waybill-fixture-member"
+version.workspace = true
+license.workspace = true
+"#,
+        );
+        let ctx = WorkspaceContext::build_from_manifests(&[root_manifest, member_manifest.clone()]);
+        let entry = build_cargo_main_module_entry(&member_manifest, &ctx).unwrap();
+        assert_eq!(entry.version, "9.9.9", "control: version inheritance works");
+        assert_eq!(
+            entry.licenses.len(),
+            1,
+            "license.workspace = true must resolve against [workspace.package]"
+        );
+        assert_eq!(entry.licenses[0].as_str(), "Apache-2.0");
+    }
+
+    #[test]
+    fn m954_unresolvable_inheritance_yields_no_license_and_no_failure() {
+        // FR-011b -- the workspace declares a version but no license, so the
+        // member inherits nothing. Must be absent, and must not fail.
+        let tmp = tempfile::tempdir().unwrap();
+        let root_manifest = write_manifest(
+            tmp.path(),
+            r#"
+[workspace]
+members = ["member"]
+
+[workspace.package]
+version = "9.9.9"
+"#,
+        );
+        let member_dir = tmp.path().join("member");
+        std::fs::create_dir_all(&member_dir).unwrap();
+        let member_manifest = write_manifest(
+            &member_dir,
+            r#"
+[package]
+name = "waybill-fixture-orphan"
+version.workspace = true
+license.workspace = true
+"#,
+        );
+        let ctx = WorkspaceContext::build_from_manifests(&[root_manifest, member_manifest.clone()]);
+        let entry = build_cargo_main_module_entry(&member_manifest, &ctx)
+            .expect("an unresolvable license inheritance must not drop the component");
+        assert_eq!(entry.version, "9.9.9", "control: version still inherits");
+        assert!(
+            entry.licenses.is_empty(),
+            "an inheritance nothing satisfies is a missing declaration"
+        );
+    }
+
+    #[test]
+    fn m954_license_file_alone_is_not_treated_as_an_identifier() {
+        // FR-011 -- a path is not a license identifier.
+        let tmp = tempfile::tempdir().unwrap();
+        let manifest = write_manifest(
+            tmp.path(),
+            r#"
+[package]
+name = "waybill-fixture-filelicense"
+version = "1.0.0"
+license-file = "LICENSE.txt"
+"#,
+        );
+        let ctx = WorkspaceContext::default();
+        let entry = build_cargo_main_module_entry(&manifest, &ctx).unwrap();
+        assert!(
+            entry.licenses.is_empty(),
+            "license-file is a path, not an expression"
+        );
+    }
+
+    #[test]
+    fn m954_malformed_license_value_does_not_drop_the_component() {
+        // FR-007 -- the manifest parses for identity; the license field is the
+        // wrong TOML type. The component must still be emitted.
+        let tmp = tempfile::tempdir().unwrap();
+        let manifest = write_manifest(
+            tmp.path(),
+            r#"
+[package]
+name = "waybill-fixture-badtype"
+version = "1.0.0"
+license = 42
+"#,
+        );
+        let ctx = WorkspaceContext::default();
+        let entry = build_cargo_main_module_entry(&manifest, &ctx)
+            .expect("a malformed license must not cost the component");
+        assert_eq!(entry.name, "waybill-fixture-badtype");
+        assert!(entry.licenses.is_empty());
+    }
+
+    #[test]
     fn build_cargo_main_module_entry_basic_package() {
         let tmp = tempfile::tempdir().unwrap();
         let manifest = write_manifest(
@@ -3001,6 +3280,11 @@ edition = "2021"
         assert_eq!(entry.version, "1.2.3");
         assert_eq!(entry.parent_purl, None);
         assert_eq!(entry.sbom_tier.as_deref(), Some("source"));
+        // Issue #954 (FR-006): this manifest declares no license, so empty is
+        // the correct outcome and absence is not an error. The positive cases
+        // live in the m954_* tests below — before #954 there was no positive
+        // case at all, so this assertion was the only license coverage cargo
+        // had and it pointed the wrong way.
         assert!(entry.licenses.is_empty());
         assert_eq!(
             entry

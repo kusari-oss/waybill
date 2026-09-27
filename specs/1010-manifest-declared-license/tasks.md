@@ -33,13 +33,13 @@ unit tests inline in `#[cfg(test)]` modules beside the code.
 them. Phase 0 found two of its own assumptions wrong by checking; these rows are
 unchecked, so implementing from them would be building on the same kind of guess.
 
-- [ ] T001 [P] Verify the elixir license key and multi-license semantics against the Hex package-metadata documentation, and update the elixir row in `specs/1010-manifest-declared-license/contracts/license-extraction.md` with the source URL
-- [ ] T002 [P] Verify the erlang license key (`.app.src` vs `rebar.config`) and multi-license semantics against the rebar3 documentation, and update the erlang row in `specs/1010-manifest-declared-license/contracts/license-extraction.md`
-- [ ] T003 [P] Verify the scala `licenses` setting shape and semantics against the sbt reference, and update the scala row in `specs/1010-manifest-declared-license/contracts/license-extraction.md`
-- [ ] T004 [P] Verify the cocoapods `license` attribute (string vs hash with `:type`) against the podspec reference, and update the cocoapods row in `specs/1010-manifest-declared-license/contracts/license-extraction.md`
-- [ ] T005 [P] Verify the nuget `PackageLicenseExpression` field and whether `Directory.Build.props` supplies it, against the MSBuild pack documentation, and update the nuget row in `specs/1010-manifest-declared-license/contracts/license-extraction.md`
-- [ ] T006 [P] Verify cargo's `[package].license` and `license-file` against the Cargo manifest reference and update the cargo row in `specs/1010-manifest-declared-license/contracts/license-extraction.md`
-- [ ] T007 Capture the pre-change baseline by running the procedure in `specs/1010-manifest-declared-license/quickstart.md` against this repository, and record the observed count in `specs/1010-manifest-declared-license/research.md` under R1
+- [X] T001 [P] Verify the elixir license key and multi-license semantics against the Hex package-metadata documentation, and update the elixir row in `specs/1010-manifest-declared-license/contracts/license-extraction.md` with the source URL
+- [X] T002 [P] Verify the erlang license key (`.app.src` vs `rebar.config`) and multi-license semantics against the rebar3 documentation, and update the erlang row in `specs/1010-manifest-declared-license/contracts/license-extraction.md`
+- [X] T003 [P] Verify the scala `licenses` setting shape and semantics against the sbt reference, and update the scala row in `specs/1010-manifest-declared-license/contracts/license-extraction.md`
+- [X] T004 [P] Verify the cocoapods `license` attribute (string vs hash with `:type`) against the podspec reference, and update the cocoapods row in `specs/1010-manifest-declared-license/contracts/license-extraction.md`
+- [X] T005 [P] Verify the nuget `PackageLicenseExpression` field and whether `Directory.Build.props` supplies it, against the MSBuild pack documentation, and update the nuget row in `specs/1010-manifest-declared-license/contracts/license-extraction.md`
+- [X] T006 [P] Verify cargo's `[package].license` and `license-file` against the Cargo manifest reference and update the cargo row in `specs/1010-manifest-declared-license/contracts/license-extraction.md`
+- [X] T007 Capture the pre-change baseline by running the procedure in `specs/1010-manifest-declared-license/quickstart.md` against this repository, and record the observed count in `specs/1010-manifest-declared-license/research.md` under R1
 
 **Checkpoint**: every contract row carries evidence. No row still reads *to verify*.
 
@@ -52,14 +52,14 @@ across thirteen sites is what let #957 diverge in the first place.
 
 **⚠️ CRITICAL**: no user story work begins until T013 passes.
 
-- [ ] T008 Create `waybill-cli/src/scan_fs/package_db/declared_license.rs` defining the `DeclaredLicense` enum with its three states (`Canonical`, `Preserved`, `Absent`) per `data-model.md`
-- [ ] T009 Implement the two-step resolution ladder `resolve(raw: &str) -> DeclaredLicense` in `waybill-cli/src/scan_fs/package_db/declared_license.rs`: `SpdxExpression::try_canonical` first, falling back to `SpdxExpression::new` on error (FR-004a)
-- [ ] T010 Implement the per-ecosystem join helper in `waybill-cli/src/scan_fs/package_db/declared_license.rs` taking an operator (conjunction or disjunction) and several raw declarations, returning one combined string before resolution (FR-010, FR-010b)
-- [ ] T011 Add the debug-level diagnostic emitted when `resolve` falls back to `Preserved`, naming manifest path, raw value and canonicalisation error, in `waybill-cli/src/scan_fs/package_db/declared_license.rs` (FR-004b)
-- [ ] T012 Register the `declared_license` module in `waybill-cli/src/scan_fs/package_db/mod.rs`
-- [ ] T013 Add unit tests in `waybill-cli/src/scan_fs/package_db/declared_license.rs` covering all three ladder outcomes: a canonical value, a non-canonically-spelled value that canonicalises (FR-005), and an uncanonicalisable value that is preserved verbatim (FR-004)
-- [ ] T014 Add unit tests in `waybill-cli/src/scan_fs/package_db/declared_license.rs` asserting the join helper produces `A OR B` for a disjunctive ecosystem and `A AND B` for the conjunctive fallback (FR-010a)
-- [ ] T015 Add a unit test in `waybill-cli/src/scan_fs/package_db/declared_license.rs` asserting an empty or whitespace-only declaration yields `Absent` with no diagnostic (FR-006)
+- [X] T008 Create `waybill-cli/src/scan_fs/package_db/declared_license.rs` defining the `DeclaredLicense` enum with its three states (`Canonical`, `Preserved`, `Absent`) per `data-model.md`
+- [X] T009 Implement the two-step resolution ladder `resolve(raw: &str) -> DeclaredLicense` in `waybill-cli/src/scan_fs/package_db/declared_license.rs`: `SpdxExpression::try_canonical` first, falling back to `SpdxExpression::new` on error (FR-004a)
+- [X] T010 Implement the per-ecosystem join helper in `waybill-cli/src/scan_fs/package_db/declared_license.rs` taking an operator (conjunction or disjunction) and several raw declarations, returning one combined string before resolution (FR-010, FR-010b)
+- [X] T011 Add the debug-level diagnostic emitted when `resolve` falls back to `Preserved`, naming manifest path, raw value and canonicalisation error, in `waybill-cli/src/scan_fs/package_db/declared_license.rs` (FR-004b)
+- [X] T012 Register the `declared_license` module in `waybill-cli/src/scan_fs/package_db/mod.rs`
+- [X] T013 Add unit tests in `waybill-cli/src/scan_fs/package_db/declared_license.rs` covering all three ladder outcomes: a canonical value, a non-canonically-spelled value that canonicalises (FR-005), and an uncanonicalisable value that is preserved verbatim (FR-004)
+- [X] T014 Add unit tests in `waybill-cli/src/scan_fs/package_db/declared_license.rs` asserting the join helper produces `A OR B` for a disjunctive ecosystem and `A AND B` for the conjunctive fallback (FR-010a)
+- [X] T015 Add a unit test in `waybill-cli/src/scan_fs/package_db/declared_license.rs` asserting an empty or whitespace-only declaration yields `Absent` with no diagnostic (FR-006)
 
 **Checkpoint**: the ladder is proven in isolation; readers can now be converted independently.
 
@@ -77,17 +77,17 @@ attribution. Deliverable with a single ecosystem done.
 
 ### Tests for User Story 1
 
-- [ ] T016 [US1] Create `waybill-cli/tests/declared_license.rs` asserting that scanning a cargo fixture with `license = "MIT"` yields that license with declared attribution in CycloneDX, SPDX 2.3 and SPDX 3, with a **control assertion** that the fixture emits no license before the change so the test cannot pass vacuously
-- [ ] T017 [US1] Add a case to `waybill-cli/tests/declared_license.rs` asserting an `--offline` scan yields the declared license, proving independence from enrichment (FR-012)
-- [ ] T018 [US1] Add a case to `waybill-cli/tests/declared_license.rs` asserting concluded-attribution licenses are unchanged in count and value against a pre-change scan of the same input (FR-003, SC-006)
-- [ ] T019 [US1] Add a case to `waybill-cli/tests/declared_license.rs` using a fixture whose manifest parses for identity but whose license field is malformed, asserting the component is still emitted and the scan exits zero (FR-007)
+- [X] T016 [US1] Create `waybill-cli/tests/declared_license.rs` asserting that scanning a cargo fixture with `license = "MIT"` yields that license with declared attribution in CycloneDX, SPDX 2.3 and SPDX 3, with a **control assertion** that the fixture emits no license before the change so the test cannot pass vacuously
+- [X] T017 [US1] Add a case to `waybill-cli/tests/declared_license.rs` asserting an `--offline` scan yields the declared license, proving independence from enrichment (FR-012)
+- [X] T018 [US1] Add a case to `waybill-cli/tests/declared_license.rs` asserting concluded-attribution licenses are unchanged in count and value against a pre-change scan of the same input (FR-003, SC-006)
+- [X] T019 [US1] Add a case to `waybill-cli/tests/declared_license.rs` using a fixture whose manifest parses for identity but whose license field is malformed, asserting the component is still emitted and the scan exits zero (FR-007)
 
 ### Implementation for User Story 1
 
-- [ ] T020 [US1] Extract `[package].license` in `waybill-cli/src/scan_fs/package_db/cargo.rs::build_cargo_main_module_entry` (licenses@703), calling the shared ladder
-- [ ] T021 [US1] Resolve `license.workspace = true` against `[workspace.package]` in `waybill-cli/src/scan_fs/package_db/cargo.rs`, reusing the traversal already used by `resolve_cargo_main_module_version` (FR-011a)
-- [ ] T022 [US1] Add a case to `waybill-cli/tests/declared_license.rs` using a workspace fixture whose member declares `license.workspace = true` while the root declares no license, asserting the member carries no license and the scan succeeds (FR-011b)
-- [ ] T023 [US1] Replace the assertion at `waybill-cli/src/scan_fs/package_db/cargo.rs:3004` (`assert!(entry.licenses.is_empty())`) with one asserting the declared license is present, so the regression guard points the right way (FR-014)
+- [X] T020 [US1] Extract `[package].license` in `waybill-cli/src/scan_fs/package_db/cargo.rs::build_cargo_main_module_entry` (licenses@703), calling the shared ladder
+- [X] T021 [US1] Resolve `license.workspace = true` against `[workspace.package]` in `waybill-cli/src/scan_fs/package_db/cargo.rs`, reusing the traversal already used by `resolve_cargo_main_module_version` (FR-011a)
+- [X] T022 [US1] Add a case to `waybill-cli/tests/declared_license.rs` using a workspace fixture whose member declares `license.workspace = true` while the root declares no license, asserting the member carries no license and the scan succeeds (FR-011b)
+- [X] T023 [US1] Replace the assertion at `waybill-cli/src/scan_fs/package_db/cargo.rs:3004` (`assert!(entry.licenses.is_empty())`) with one asserting the declared license is present, so the regression guard points the right way (FR-014)
 - [ ] T024 [P] [US1] Extract `license` in `waybill-cli/src/scan_fs/package_db/npm/walk.rs::build_npm_main_module_entry` (licenses@670)
 - [ ] T025 [P] [US1] Extract `license` in `waybill-cli/src/scan_fs/package_db/npm/mod.rs::synthesize_nameless_nested_mainmods` (licenses@716)
 - [ ] T026 [P] [US1] Extract `[project].license` in `waybill-cli/src/scan_fs/package_db/pip/mod.rs::build_pip_main_module_entry` (licenses@1022), treating the deprecated `license.file` table form as `Absent` per FR-011

@@ -47,6 +47,20 @@ synthesiser, not the npm root; the npm root is in `walk.rs`. `scala.rs:1208` is
 (`cargo.rs:3173`, `pip/mod.rs:2170`, `gem.rs:2869`, all named
 `make_main_module_entry`) are test helpers.
 
+**Measured baseline (T007, `main` @ `f9a292e2`, this repository, `--offline`)**:
+
+```
+total components                    : 5514
+components carrying any license     :   23   (all from OS-package readers)
+scan-root                           : pkg:cargo/app@0.1.0   licenses=0
+waybill-common@0.10.0-alpha.1        : licenses=0   <- declares license.workspace = true
+pkg:cargo/* components               : 1465
+```
+
+Zero of the 1465 cargo components carry a license, including the two member
+crates that inherit `Apache-2.0` from `[workspace.package]`. That is the gap this
+feature closes, reproducible without any fixture.
+
 **Alternatives considered**: grepping `licenses: Vec::new()` directly. Rejected —
 122 such sites exist across the tree and only 13 are production main-module
 sites, so the grep alone cannot distinguish the target set from dependency and
@@ -158,6 +172,55 @@ it would duplicate identifier derivation that already exists at emission and
 would risk two readers minting different identifiers for the same text.
 
 ---
+
+## R7 — Reader output can be discarded after the reader returns it
+
+**Found during implementation, not planning.** The site map in R1 is necessary but
+not sufficient: setting `licenses` at a main-module construction site does not mean
+the license reaches the document.
+
+**What happened.** The cargo reader extracted the license correctly and seven unit
+tests proved it. The emitted SBOM contained no license. The cause is in
+`cargo.rs`, in the branch that runs when a lockfile-derived entry already exists
+for the same PURL:
+
+```rust
+if let Some(existing) = out.iter_mut().find(|e| e.purl.as_str() == purl_key) {
+    // augment in place: annotations, sbom_tier, depends, parent_purl
+```
+
+That branch keeps `existing` — the lockfile entry — and copies only the fields it
+names from the synthesized manifest entry. The license was not among them. With no
+lockfile the other branch pushes the synthesized entry whole and the license
+appears; with a lockfile it is dropped. A unit test on the reader function cannot
+distinguish the two, because both call the same function and it returns the same
+value.
+
+**Evidence.** Same manifests, lockfile toggled:
+
+| | `waybill:source-files` | licenses |
+|---|---|---|
+| no `Cargo.lock` | `["path+file:///…/member"]` | 1 |
+| with `Cargo.lock` | `["Cargo.lock"]` | 0 |
+
+**Consequence for the remaining ten ecosystems.** Every reader with both a
+manifest path and a lockfile path may have the same shape. Before closing each
+reader's task, scan a fixture **with** its lockfile present, not only without:
+`npm` (package-lock.json), `pip` (uv.lock / poetry.lock), `gem` (Gemfile.lock),
+`maven` (no lockfile, but the nested-JAR path collides similarly), `composer`
+(composer.lock), `elixir` (mix.lock), `erlang` (rebar.lock), `scala` (build.sbt
+lock), `nuget` (packages.lock.json). The integration test
+`m954_fr011a_lockfile_and_lockfile_free_scans_agree` encodes the property in
+general form and should be extended per ecosystem rather than re-derived.
+
+**A wrong turn worth recording.** `resolve::deduplicator::deduplicate` also fails
+to merge licenses when it collapses a group, and a comment beside it documents the
+identical defect class for `requirement_ranges` (#936). That made it a convincing
+culprit and it was patched first — wrongly. The disconfirming evidence was already
+in the output above: `deduplicate` unions `source_file_paths`, so had the two
+entries met there the result would have listed both paths, not `["Cargo.lock"]`
+alone. The patch was reverted. The latent gap is real but unexercised, so it is
+recorded here rather than fixed speculatively.
 
 ## R5 — Constitution audit (Principle V native-construct clause)
 

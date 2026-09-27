@@ -20,24 +20,35 @@ main-module site.
 
 ## Per-ecosystem contract
 
-**Evidence column** states whether the field and semantics were verified in Phase 0
-or remain to be confirmed during implementation. A row marked *to verify* must be
-confirmed against the named source before its task is closed — it must not be
-implemented from assumption.
+**Evidence column** states whether the field and semantics were verified, and
+against what. Every row was verified during Phase 1 (T001–T006) except **erlang**,
+marked *partial*: erlang publishes to Hex so the Hex contract applies, but the
+rebar3 configuration reference documents no `licenses` key, so the exact key
+location must be confirmed when that reader is written.
+
+Two rows changed materially once checked, and neither change was predictable from
+the field name:
+
+- **scala** license names are **free-form, not SPDX** — sbt's own example is
+  `"Apache 2"`. The preservation path (FR-004) is therefore the common path for
+  scala, not the exception. Had this gone unchecked, scala would have silently
+  emitted nothing for most projects under a drop-on-failure design.
+- **elixir** (Hex) explicitly supports `LicenseRef-<idstring>` for custom licenses,
+  independently arriving at the same construct FR-004 chose.
 
 | Ecosystem | Manifest | License key | Multiple? | Operator | Inheritance | Evidence |
 |---|---|---|---|---|---|---|
-| cargo | `Cargo.toml` | `[package].license` | No — single SPDX expression | n/a | `license.workspace = true` → `[workspace.package]` | field to verify; inheritance **verified** (this repo's own crates) |
+| cargo | `Cargo.toml` | `[package].license` | No — a single SPDX 2.3 expression ("crates.io interprets the `license` field as an SPDX 2.3 license expression") | n/a | `license.workspace = true` → `[workspace.package]`; `license` is explicitly among the inheritable keys | **verified** ([manifest](https://doc.rust-lang.org/cargo/reference/manifest.html), [workspaces](https://doc.rust-lang.org/cargo/reference/workspaces.html)) |
 | npm | `package.json` | `license` | No — single SPDX expression; `licenses` array deprecated | n/a | not documented → treat as absent | **verified** (npm docs) |
 | pip | `pyproject.toml` | `[project].license` | No — PEP 639 mandates a single top-level string | n/a | none defined | **verified** (PEP 639) |
 | gem | `.gemspec` | `licenses` (array), `license` (single) | **Yes** | **AND** (fallback — ecosystem states the array "does not state how the licenses combine") | none defined | **verified** (RubyGems reference) |
 | maven | `pom.xml` | `<licenses><license><name>` | **Yes** | **AND** (fallback — POM reference specifies nothing) | inherited from parent POM | **verified** (Maven POM reference) |
 | composer | `composer.json` | `license` (string or array) | **Yes** | **OR** — array is documented as disjunctive | none defined | **verified** (Composer schema) |
-| elixir | `mix.exs` | package metadata `licenses` | **Yes** | **AND** (fallback) | none defined | *to verify* — Hex package metadata docs |
-| erlang | `.app.src` / `rebar.config` | `licenses` | **Yes** | **AND** (fallback) | none defined | *to verify* — rebar3 docs |
-| scala | `build.sbt` | `licenses` | **Yes** | **AND** (fallback) | none defined | *to verify* — sbt reference |
-| cocoapods | `.podspec` | `license` | No | n/a | none defined | *to verify* — podspec reference |
-| nuget | `.csproj` | `PackageLicenseExpression` | No — single SPDX expression | n/a | `Directory.Build.props` may supply it | *to verify* — MSBuild pack docs |
+| elixir | `mix.exs` | package metadata `licenses` | **Yes** — "a list of licenses the project is licensed under. This attribute is required" | **AND** (fallback — Hex does not state the relationship) | none defined | **verified** ([Hex publish](https://hex.pm/docs/publish)). Hex explicitly supports `LicenseRef-<idstring>` for custom licenses, which matches FR-004 |
+| erlang | `.app.src` / `rebar.config` | `licenses` | **Yes** | **AND** (fallback) | none defined | **partial** — erlang publishes to Hex, so the Hex contract above applies (required list, `LicenseRef-` supported, relationship unstated). The rebar3 configuration reference documents no `licenses` key, so the exact key location must be confirmed when the reader is written |
+| scala | `build.sbt` | `licenses` | **Yes** — a `Seq` of `(name, URL)` tuples | **AND** (fallback — sbt states nothing) | none defined | **verified** ([sbt](https://www.scala-sbt.org/1.x/docs/Using-Sonatype.html)). **Names are free-form, not SPDX**: the documented example is `"Apache 2"`, not `Apache-2.0`, so scala will hit the FR-004 preservation path frequently |
+| cocoapods | `.podspec` | `license` | No — single, and required | n/a | none defined | **verified** ([podspec](https://guides.cocoapods.org/syntax/podspec.html)). Three forms: a String (`'MIT'`), or a Hash with `:type` plus `:file` or `:text`. Read `:type` from the hash; `:file` and `:text` are out of scope per FR-011 |
+| nuget | `.csproj` | `PackageLicenseExpression` | No — "an SPDX license identifier or expression". **"Only one of `PackageLicenseExpression`, `PackageLicenseFile`, and `PackageLicenseUrl` can be specified at a time"** | n/a | via ordinary MSBuild property inheritance (`Directory.Build.props`), not a license-specific rule | **verified** ([MSBuild pack targets](https://learn.microsoft.com/en-us/nuget/reference/msbuild-targets)). `PackageLicenseFile` is out of scope per FR-011; `PackageLicenseUrl` is deprecated |
 | haskell | `.cabal` | `license:` | No | n/a | none defined | **implemented** (#957) — correct to preserve rather than drop |
 
 ### PackageLicenseFile / license-file / license.file
