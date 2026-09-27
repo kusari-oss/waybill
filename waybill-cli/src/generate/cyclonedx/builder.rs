@@ -4,7 +4,6 @@ use uuid::Uuid;
 use waybill_common::attestation::integrity::TraceIntegrity;
 use waybill_common::attestation::metadata::GenerationContext;
 use waybill_common::resolution::{BinaryRole, Relationship, ResolvedComponent};
-use waybill_common::types::license::SpdxExpression;
 
 use super::compositions::build_compositions;
 use super::dependencies::build_dependencies;
@@ -1266,50 +1265,10 @@ impl CycloneDxBuilder {
             // individual ids when possible, and fall back to a single
             // expression entry (concluded > declared) only when a
             // genuine compound remains.
-            let mut all_licenses: Vec<serde_json::Value> = Vec::new();
-            let mut pending_expression: Option<(&str, &str)> = None;
-            let sources: [(&[SpdxExpression], &str); 2] = [
-                (&component.licenses, "declared"),
-                (&component.concluded_licenses, "concluded"),
-            ];
-            for (exprs, ack) in sources {
-                for l in exprs {
-                    if let Some(id) = l.as_spdx_id() {
-                        all_licenses.push(json!({
-                            "license": { "id": id, "acknowledgement": ack }
-                        }));
-                    } else if l.as_str().starts_with("LicenseRef-")
-                        || l.as_str().starts_with("DocumentRef-")
-                    {
-                        // Bare LicenseRef-* / DocumentRef-* aren't valid
-                        // in CDX `license.id` (id is restricted to the
-                        // SPDX list). Emit via `license.name` — schema-
-                        // legal and counted by sbomqs.
-                        all_licenses.push(json!({
-                            "license": { "name": l.as_str(), "acknowledgement": ack }
-                        }));
-                    } else if let Some(tokens) = try_split_or_compound(l.as_str()) {
-                        for tok in tokens {
-                            // Milestone 202: license_entry_for_token may
-                            // return `Value::Null` for tokens whose
-                            // sanitizer returns None (all-invalid-chars).
-                            // Drop those rather than emitting a null in
-                            // the licenses[] array.
-                            let entry = license_entry_for_token(&tok, ack);
-                            if !entry.is_null() {
-                                all_licenses.push(entry);
-                            }
-                        }
-                    } else {
-                        pending_expression = Some((l.as_str(), ack));
-                    }
-                }
-            }
-            let final_licenses = if let Some((expr, ack)) = pending_expression {
-                vec![json!({ "expression": expr, "acknowledgement": ack })]
-            } else {
-                all_licenses
-            };
+            let final_licenses = super::licenses::render_licenses(
+                &component.licenses,
+                &component.concluded_licenses,
+            );
             if !final_licenses.is_empty() {
                 entry["licenses"] = json!(final_licenses);
             }
@@ -1854,209 +1813,12 @@ pub(super) fn binary_role_to_cdx_type(role: Option<BinaryRole>) -> &'static str 
     }
 }
 
-fn try_split_or_compound(expr: &str) -> Option<Vec<String>> {
-    let trimmed = expr.trim();
-    if trimmed.is_empty() {
-        return None;
-    }
-    if trimmed.contains('(') || trimmed.contains(')') {
-        return None;
-    }
-    let tokens: Vec<&str> = trimmed.split_whitespace().collect();
-    if tokens.contains(&"WITH") {
-        return None;
-    }
-    // Pick a single top-level operator. Mixed operators (e.g.
-    // `A AND B OR C`) require parens for unambiguous parsing, so
-    // bail — let the single-expression fallback handle them.
-    let has_or = tokens.contains(&"OR");
-    let has_and = tokens.contains(&"AND");
-    let separator = match (has_or, has_and) {
-        (true, false) => " OR ",
-        (false, true) => " AND ",
-        _ => return None,
-    };
-    let parts: Vec<&str> = trimmed.split(separator).map(str::trim).collect();
-    if parts.len() < 2 {
-        return None;
-    }
-    let mut tokens_out = Vec::with_capacity(parts.len());
-    for p in parts {
-        // Every operand must be a single token (SPDX id or
-        // LicenseRef-*); whitespace inside an operand means the
-        // expression has nested operators we can't flatten.
-        if p.is_empty() || p.contains(char::is_whitespace) {
-            return None;
-        }
-        tokens_out.push(p.to_string());
-    }
-    Some(tokens_out)
-}
-
-/// Map one split-expression token to the right CDX `license` shape.
-///
-/// Three-branch classifier post-milestone 202 (closes #579):
-///
-/// 1. **Pre-formed reference** (`LicenseRef-*` / `DocumentRef-*`): route to
-///    `license.name` verbatim (schema-legal free-text label; sbomqs counts
-///    it via `comp_with_licenses`).
-/// 2. **SPDX-list-canonical identifier** (member of the SPDX License List
-///    per `spdx::license_id`, or an SPDX exception per `spdx::exception_id`):
-///    route to `license.id` — the canonical CDX 1.6 §5.4.4.1 slot. Value
-///    preserved verbatim (no `try_canonical` normalization — that would
-///    silently rewrite legacy long-form names like `GPL-2.0` → `GPL-2.0-only`
-///    and drift emitted goldens).
-/// 3. **Non-canonical operand** (compound-expression operand that isn't on
-///    the SPDX List, e.g. `bzip2-1.0.4` from a Yocto recipe License field):
-///    route to `license.name = "LicenseRef-<sanitized>"` per CDX 1.6
-///    §5.4.4.2 escape-hatch convention. Uses the shared
-///    `waybill_common::types::license::sanitize_license_operand_to_ref`
-///    helper — same function the SPDX 2.3 emitter uses (m152) — so both
-///    formats produce byte-identical `LicenseRef-*` identifiers for the
-///    same input token (FR-002 CDX/SPDX 2.3 parity).
-///
-/// Defensive fallback: if the sanitizer returns `None` (all-invalid-chars
-/// input after filtering), emit `serde_json::Value::Null` so the caller's
-/// filter drops the entry rather than producing schema-invalid output.
-fn license_entry_for_token(token: &str, acknowledgement: &str) -> serde_json::Value {
-    if token.starts_with("LicenseRef-") || token.starts_with("DocumentRef-") {
-        return json!({
-            "license": {
-                "name": token,
-                "acknowledgement": acknowledgement,
-            }
-        });
-    }
-    let is_spdx_list_id =
-        spdx::license_id(token).is_some() || spdx::exception_id(token).is_some();
-    if is_spdx_list_id {
-        return json!({
-            "license": {
-                "id": token,
-                "acknowledgement": acknowledgement,
-            }
-        });
-    }
-    match waybill_common::types::license::sanitize_license_operand_to_ref(token) {
-        Some(sanitized) => json!({
-            "license": {
-                "name": format!("LicenseRef-{sanitized}"),
-                "acknowledgement": acknowledgement,
-            }
-        }),
-        None => serde_json::Value::Null,
-    }
-}
-
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
     use super::*;
     use waybill_common::resolution::{ResolutionEvidence, ResolutionTechnique};
     use waybill_common::types::purl::Purl;
-
-    // ---- Milestone 202 (issue #579) — license_entry_for_token ----
-
-    /// FR-001 Branch 2: SPDX-list-canonical identifier routes to `license.id`.
-    #[test]
-    fn license_entry_for_token_routes_canonical_to_id_slot_m202() {
-        let entry = license_entry_for_token("MIT", "declared");
-        assert_eq!(
-            entry,
-            json!({"license": {"id": "MIT", "acknowledgement": "declared"}})
-        );
-        // Cross-check with additional canonical identifiers.
-        for canonical in &["Apache-2.0", "GPL-3.0-only", "BSD-2-Clause", "MPL-2.0"] {
-            let e = license_entry_for_token(canonical, "declared");
-            assert_eq!(
-                e["license"]["id"].as_str(),
-                Some(*canonical),
-                "canonical id `{canonical}` MUST route to license.id; got {e:?}"
-            );
-            assert!(
-                e["license"]["name"].is_null(),
-                "canonical id `{canonical}` MUST NOT populate license.name; got {e:?}"
-            );
-        }
-    }
-
-    /// FR-001 Branch 3: non-canonical operand routes to `license.name` with
-    /// the `LicenseRef-<sanitized>` prefix per CDX 1.6 §5.4.4.2.
-    #[test]
-    fn license_entry_for_token_routes_non_canonical_to_licenseref_name_slot_m202() {
-        let entry = license_entry_for_token("bzip2-1.0.4", "declared");
-        assert_eq!(
-            entry,
-            json!({"license": {"name": "LicenseRef-bzip2-1.0.4", "acknowledgement": "declared"}})
-        );
-        // Cross-check additional non-canonical operands.
-        for (operand, expected_ref) in &[
-            ("custom-license", "LicenseRef-custom-license"),
-            ("made-up-name-2.0", "LicenseRef-made-up-name-2.0"),
-        ] {
-            let e = license_entry_for_token(operand, "declared");
-            assert_eq!(
-                e["license"]["name"].as_str(),
-                Some(*expected_ref),
-                "non-canonical `{operand}` MUST route to LicenseRef-* via license.name; got {e:?}"
-            );
-            assert!(
-                e["license"]["id"].is_null(),
-                "non-canonical `{operand}` MUST NOT populate license.id; got {e:?}"
-            );
-        }
-    }
-
-    /// FR-003: pre-formed `LicenseRef-*` / `DocumentRef-*` tokens pass
-    /// through verbatim — no double-prefixing.
-    #[test]
-    fn license_entry_for_token_preserves_pre_formed_licenseref_verbatim_m202() {
-        for pre_formed in &[
-            "LicenseRef-user-supplied",
-            "LicenseRef-bzip2-1.0.4",
-            "DocumentRef-doc:LicenseRef-external",
-        ] {
-            let entry = license_entry_for_token(pre_formed, "declared");
-            assert_eq!(
-                entry["license"]["name"].as_str(),
-                Some(*pre_formed),
-                "pre-formed `{pre_formed}` MUST pass through unchanged (no double-prefixing); got {entry:?}"
-            );
-        }
-    }
-
-    /// FR-002 sanitizer parity: the CDX splitter's sanitizer output MUST
-    /// match the SPDX 2.3 side by using the SAME shared sanitizer function.
-    /// Verifies the structural single-source-of-truth guarantee.
-    #[test]
-    fn license_entry_for_token_uses_shared_sanitizer_m202() {
-        // Compute the expected LicenseRef- output by calling the shared
-        // sanitizer directly.
-        let expected_sanitized =
-            waybill_common::types::license::sanitize_license_operand_to_ref("bzip2 with spaces!")
-                .expect("sanitizer produces non-empty output for this input");
-        let expected_ref = format!("LicenseRef-{expected_sanitized}");
-
-        // Compute the CDX splitter output for the same input.
-        let entry = license_entry_for_token("bzip2 with spaces!", "declared");
-        let cdx_name = entry["license"]["name"]
-            .as_str()
-            .expect("license.name populated for non-canonical operand");
-
-        assert_eq!(
-            cdx_name, expected_ref,
-            "CDX splitter MUST call the shared sanitizer — structural parity per FR-002"
-        );
-    }
-
-    /// Defensive fallback: all-invalid-chars input → sanitizer returns None
-    /// → splitter emits Value::Null → caller filter drops the entry (no
-    /// schema-invalid empty licenses[] element in output).
-    #[test]
-    fn license_entry_for_token_returns_null_for_all_invalid_chars_m202() {
-        let entry = license_entry_for_token("!@#$", "declared");
-        assert!(entry.is_null(), "all-invalid-chars input MUST return Value::Null");
-    }
 
     fn clean_integrity() -> TraceIntegrity {
         TraceIntegrity {
@@ -2113,6 +1875,41 @@ mod tests {
             extra_annotations: Default::default(),
             binary_role: None,
         }
+    }
+
+    // ---- Milestone 202 (issue #579) contracts, ported ----
+    //
+    // `license_entry_for_token` and `try_split_or_compound` are gone: they
+    // existed to split `A OR B` into one array entry per operand, which drops
+    // the operator (see `licenses.rs`). Their per-operand routing tests went
+    // with them, but two contracts they encoded still hold for whole values and
+    // are asserted here against the shared renderer.
+
+    #[test]
+    fn m202_non_listed_single_value_uses_the_name_slot_not_expression() {
+        // Was routed to a minted `LicenseRef-<sanitized>`; before that, a single
+        // non-listed value fell through to `{expression: ...}`, which claims the
+        // value is a valid SPDX expression when it is not.
+        let got = super::super::licenses::render_licenses(
+            &[waybill_common::types::license::SpdxExpression::new("bzip2-1.0.4").expect("ctor")],
+            &[],
+        );
+        assert!(
+            got[0]["license"]["name"].is_string(),
+            "a non-listed value belongs in `name`: {got:?}"
+        );
+        assert_eq!(got[0]["license"]["name"], "bzip2-1.0.4");
+        assert!(got[0].get("expression").is_none());
+    }
+
+    #[test]
+    fn m202_pre_formed_license_ref_is_preserved_verbatim() {
+        let got = super::super::licenses::render_licenses(
+            &[waybill_common::types::license::SpdxExpression::new("LicenseRef-Acme-1.0")
+                .expect("ctor")],
+            &[],
+        );
+        assert_eq!(got[0]["license"]["name"], "LicenseRef-Acme-1.0");
     }
 
     #[test]
@@ -2581,18 +2378,20 @@ mod tests {
     }
 
     #[test]
-    fn compound_or_license_splits_into_individual_ids() {
-        // CDX 1.6 allows only ONE `{expression}` entry in a
-        // `licenses[]` array and sbomqs scores `license.id`/`name`
-        // only. `A OR B` becomes two separate `{license: {id}}`
-        // entries — the disjunction is preserved structurally.
+    fn compound_or_license_uses_one_expression_entry() {
+        // Was `compound_or_license_splits_into_individual_ids`, whose comment
+        // claimed splitting meant "the disjunction is preserved structurally".
+        // It is not: CDX 1.6 does not define whether multiple `licenses[]`
+        // entries are conjunctive or disjunctive, so an operator has nowhere to
+        // live in the array form and `A OR B` became indistinguishable from
+        // "both apply". The spec's remedy is the expression form, for exactly
+        // the case where "the relationship between multiple licenses requires
+        // specific logical operators".
         let builder = CycloneDxBuilder::new(CycloneDxConfig::default());
         let mut component = make_component("anyhow", "1.0.80");
         component.licenses = vec![
-            waybill_common::types::license::SpdxExpression::new(
-                "Apache-2.0 OR MIT",
-            )
-            .unwrap(),
+            waybill_common::types::license::SpdxExpression::new("Apache-2.0 OR MIT")
+                .unwrap(),
         ];
         let integrity = clean_integrity();
         let bom = builder
@@ -2600,27 +2399,31 @@ mod tests {
             .expect("build bom");
         let comp = &bom["components"].as_array().expect("components")[0];
         let licenses = comp["licenses"].as_array().unwrap();
-        assert_eq!(licenses.len(), 2);
-        assert_eq!(licenses[0]["license"]["id"], "Apache-2.0");
-        assert_eq!(licenses[0]["license"]["acknowledgement"], "declared");
-        assert_eq!(licenses[1]["license"]["id"], "MIT");
-        assert_eq!(licenses[1]["license"]["acknowledgement"], "declared");
+        assert_eq!(licenses.len(), 1, "must not split: {licenses:?}");
+        assert_eq!(licenses[0]["expression"], "Apache-2.0 OR MIT");
+        assert_eq!(licenses[0]["acknowledgement"], "declared");
     }
 
     #[test]
-    fn compound_and_license_splits_into_individual_ids() {
-        // AND splits cleanly: "both licenses apply" maps to listing
-        // both as `{license: {id}}` entries (multiple listed licenses
-        // = all apply, per CDX 1.6 `licenses` array semantics). This
-        // is strictly more semantically faithful than an expression
-        // for the AND case.
+    fn compound_and_license_splits_into_matchable_ids() {
+        // AND and OR are NOT symmetric, which took three attempts to settle.
+        //
+        // Splitting `A OR B` erases a choice — nothing in the array form says
+        // "either", so it becomes indistinguishable from "both apply". That is
+        // the defect this change set fixes, and OR now uses `expression`.
+        //
+        // AND is different. Multiple entries read as conjunctive, so splitting
+        // states the same thing, and it keeps each listed operand in
+        // `license.id` where a compliance tool can match it. Collapsing AND into
+        // an expression (an earlier version of this change) hid `GPL-2.0-only`
+        // from every id-matching consumer — caught by
+        // `tests/ipk_license_splitter_m202.rs`, which is why milestone 202's
+        // split survives for AND.
         let builder = CycloneDxBuilder::new(CycloneDxConfig::default());
-        let mut component = make_component("flask", "3.0.3");
-        component.concluded_licenses = vec![
-            waybill_common::types::license::SpdxExpression::new(
-                "BSD-2-Clause AND BSD-3-Clause",
-            )
-            .unwrap(),
+        let mut component = make_component("anyhow", "1.0.80");
+        component.licenses = vec![
+            waybill_common::types::license::SpdxExpression::new("Apache-2.0 AND MIT")
+                .unwrap(),
         ];
         let integrity = clean_integrity();
         let bom = builder
@@ -2628,10 +2431,13 @@ mod tests {
             .expect("build bom");
         let comp = &bom["components"].as_array().expect("components")[0];
         let licenses = comp["licenses"].as_array().unwrap();
-        assert_eq!(licenses.len(), 2);
-        assert_eq!(licenses[0]["license"]["id"], "BSD-2-Clause");
-        assert_eq!(licenses[0]["license"]["acknowledgement"], "concluded");
-        assert_eq!(licenses[1]["license"]["id"], "BSD-3-Clause");
+        assert_eq!(licenses.len(), 2, "AND splits: {licenses:?}");
+        assert_eq!(licenses[0]["license"]["id"], "Apache-2.0");
+        assert_eq!(licenses[1]["license"]["id"], "MIT");
+        assert!(
+            licenses.iter().all(|l| l.get("expression").is_none()),
+            "AND must not use the expression slot: {licenses:?}"
+        );
     }
 
     #[test]
@@ -2662,19 +2468,22 @@ mod tests {
     }
 
     #[test]
-    fn compound_and_with_license_ref_splits_using_name_field() {
-        // ClearlyDefined returns shapes like
-        // `BSD-3-Clause AND LicenseRef-scancode-google-patent-license-golang`
-        // for `golang.org/x/sys`. CDX 1.6's `license.id` is SPDX-list
-        // only, so the LicenseRef operand routes to `license.name`
-        // instead. Both entries are schema-legal and sbomqs-countable.
+    fn compound_and_with_a_license_ref_operand_splits() {
+        // `MIT AND LicenseRef-Acme` is an AND of single tokens, so it splits:
+        // `MIT` stays matchable in `license.id`, and the reference goes to
+        // `license.name`, which is where CDX puts a non-listed license.
+        //
+        // This test has been wrong twice in this change set, which is worth
+        // recording. First it asserted `license.name` for the whole string, from
+        // my assumption that a LicenseRef operand made the expression
+        // unparseable — the parser probe in `licenses.rs` disproved that. Then it
+        // asserted the `expression` slot, which was the over-correction that
+        // collapsed AND. Both times the code was closer to right than the test.
         let builder = CycloneDxBuilder::new(CycloneDxConfig::default());
-        let mut component = make_component("x-sys", "0.5.0");
-        component.concluded_licenses = vec![
-            waybill_common::types::license::SpdxExpression::new(
-                "BSD-3-Clause AND LicenseRef-scancode-google-patent-license-golang",
-            )
-            .unwrap(),
+        let mut component = make_component("anyhow", "1.0.80");
+        component.licenses = vec![
+            waybill_common::types::license::SpdxExpression::new("MIT AND LicenseRef-Acme")
+                .unwrap(),
         ];
         let integrity = clean_integrity();
         let bom = builder
@@ -2682,13 +2491,9 @@ mod tests {
             .expect("build bom");
         let comp = &bom["components"].as_array().expect("components")[0];
         let licenses = comp["licenses"].as_array().unwrap();
-        assert_eq!(licenses.len(), 2);
-        assert_eq!(licenses[0]["license"]["id"], "BSD-3-Clause");
-        assert_eq!(
-            licenses[1]["license"]["name"],
-            "LicenseRef-scancode-google-patent-license-golang",
-        );
-        assert!(licenses[1]["license"].get("id").is_none());
+        assert_eq!(licenses.len(), 2, "AND splits: {licenses:?}");
+        assert_eq!(licenses[0]["license"]["id"], "MIT");
+        assert_eq!(licenses[1]["license"]["name"], "LicenseRef-Acme");
     }
 
     #[test]
@@ -2735,14 +2540,17 @@ mod tests {
     }
 
     #[test]
-    fn component_license_unknown_identifier_falls_back_to_expression() {
+    fn component_license_unknown_identifier_uses_the_name_slot() {
+        // Was `..._falls_back_to_expression`, which asserted the defect: CDX
+        // defines `expression` as a valid SPDX expression, and
+        // `Custom-In-House-License` is not one. Putting it there tells a
+        // consumer to parse it as an expression, and it will not parse.
+        // `license.name` is the slot for a named, non-listed license.
         let builder = CycloneDxBuilder::new(CycloneDxConfig::default());
         let mut component = make_component("myapp", "0.1.0");
         component.licenses = vec![
-            waybill_common::types::license::SpdxExpression::new(
-                "Custom-In-House-License",
-            )
-            .unwrap(),
+            waybill_common::types::license::SpdxExpression::new("Custom-In-House-License")
+                .unwrap(),
         ];
         let integrity = clean_integrity();
 
@@ -2752,8 +2560,12 @@ mod tests {
 
         let comp = &bom["components"].as_array().expect("components")[0];
         let licenses = comp["licenses"].as_array().unwrap();
-        assert_eq!(licenses[0]["expression"], "Custom-In-House-License");
-        assert_eq!(licenses[0]["acknowledgement"], "declared");
+        assert_eq!(licenses[0]["license"]["name"], "Custom-In-House-License");
+        assert_eq!(licenses[0]["license"]["acknowledgement"], "declared");
+        assert!(
+            licenses[0].get("expression").is_none(),
+            "a non-SPDX value must not claim the expression slot: {licenses:?}"
+        );
     }
 
     #[test]

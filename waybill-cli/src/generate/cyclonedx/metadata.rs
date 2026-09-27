@@ -3,7 +3,6 @@ use chrono::Utc;
 use waybill_common::attestation::integrity::TraceIntegrity;
 use waybill_common::attestation::metadata::GenerationContext;
 use waybill_common::resolution::ResolvedComponent;
-use waybill_common::types::license::SpdxExpression;
 use waybill_common::types::purl::encode_purl_segment;
 use serde_json::json;
 
@@ -1557,56 +1556,16 @@ pub fn build_metadata(
     metadata
 }
 
-/// Milestone 080 — build CDX 1.6 `bom.annotations[]` entries for the
-/// user-supplied `--metadata-comment`, `--annotator` /
-/// `--annotation-comment` pairs, and any subsequent `Organization:`
-/// creators that don't fit in `metadata.manufacturer`. Returns an
-/// empty vec when `user_metadata.is_active()` would not produce any
-/// bom-level annotation entries.
+/// Render the BOM subject's licenses.
 ///
-/// Milestone 119 follow-up — render the main-module's typed
-/// `licenses[]` + `concluded_licenses[]` into the CDX 1.6 license
-/// array shape (`oneOf` `{license:{id,...}}` / `{license:{name,...}}`
-/// / `{expression,...}`). Mirrors the lighter end of `build_components`'s
-/// per-component license rendering at `builder.rs:678-715` — single-
-/// component scope so no `try_split_or_compound` short-circuit is
-/// needed for the MVP propagation.
+/// Delegates to the shared renderer (issue #954 follow-up). This used to be a
+/// separate, lighter implementation, and it drifted: a compound expression came
+/// out as `license.name` here and as split-per-operand entries in
+/// `build_components`, so the same declared value had two shapes in one document.
 fn build_metadata_component_licenses(
     c: &ResolvedComponent,
 ) -> Vec<serde_json::Value> {
-    let mut out: Vec<serde_json::Value> = Vec::new();
-    let sources: [(&[SpdxExpression], &str); 2] = [
-        (&c.licenses, "declared"),
-        (&c.concluded_licenses, "concluded"),
-    ];
-    for (exprs, ack) in sources {
-        for l in exprs {
-            if let Some(id) = l.as_spdx_id() {
-                out.push(json!({
-                    "license": { "id": id, "acknowledgement": ack }
-                }));
-            } else if l.as_str().starts_with("LicenseRef-")
-                || l.as_str().starts_with("DocumentRef-")
-            {
-                out.push(json!({
-                    "license": { "name": l.as_str(), "acknowledgement": ack }
-                }));
-            } else {
-                // Compound or otherwise non-id expression — emit as a
-                // license.name so single-string operator-declared
-                // values (e.g. "Acme Custom License") surface
-                // intelligibly. The full builder.rs path also handles
-                // `OR`/`AND` splitting + expression fallback; we keep
-                // this helper minimal because the BOM subject's
-                // licenses are operator-declared (already canonical)
-                // far more often than the per-component case.
-                out.push(json!({
-                    "license": { "name": l.as_str(), "acknowledgement": ack }
-                }));
-            }
-        }
-    }
-    out
+    super::licenses::render_licenses(&c.licenses, &c.concluded_licenses)
 }
 
 /// Per research §1, CDX 1.6 `bom.annotations[]` is the
