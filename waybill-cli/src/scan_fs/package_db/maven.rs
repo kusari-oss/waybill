@@ -28,6 +28,7 @@ use waybill_common::types::license::SpdxExpression;
 use waybill_common::types::purl::{encode_purl_segment, Purl};
 
 use super::PackageDbEntry;
+use super::declared_license::{self, LicenseJoin};
 
 // Milestone 664 US2 T039: shared-walker migration types.
 use crate::scan_fs::walk_registry::{
@@ -4330,6 +4331,24 @@ fn build_maven_main_module_entry(
     ctx: &MavenInheritanceContext,
 ) -> Option<PackageDbEntry> {
     let parent_doc = ctx.parent_doc(doc);
+    // Issue #954 — the project's own declared license, from
+    // `<project>/<licenses>/<license>/<name>` (already parsed by m131).
+    //
+    // Falls back to the parent POM when the child declares none: the POM
+    // reference names `licenses` among the elements inherited from a parent,
+    // so an unstated child license is inherited rather than absent (FR-011a).
+    //
+    // Joined with conjunction. The POM reference documents nothing about how
+    // several `<license>` entries combine, so this is waybill's inference and
+    // is recorded as such (FR-010a) — conjunction over-states the obligation
+    // rather than under-stating it.
+    let declared_terms: &[String] = if !doc.licenses.is_empty() {
+        doc.licenses.as_slice()
+    } else {
+        parent_doc.map(|p| p.licenses.as_slice()).unwrap_or(&[])
+    };
+    let declared_license =
+        declared_license::resolve_many(declared_terms, LicenseJoin::Conjunction, pom_path);
     // Resolve groupId: self → parent block.
     let raw_group = doc
         .self_coord
@@ -4431,7 +4450,7 @@ fn build_maven_main_module_entry(
         source_path,
         depends,
         maintainer: None,
-        licenses: Vec::new(),
+        licenses: declared_license.into_licenses(),
         lifecycle_scope: None,
         requirement_ranges: Vec::new(),
         source_type: None,
