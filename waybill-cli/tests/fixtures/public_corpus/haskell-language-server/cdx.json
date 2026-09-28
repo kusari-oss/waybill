@@ -16832,7 +16832,7 @@
       "type": "library"
     },
     {
-      "bom-ref": "pkg:hackage/ghc-tcplugins-extra@0.4.6",
+      "bom-ref": "pkg:hackage/ghc-tcplugins-extra@0.5",
       "evidence": {
         "identity": [
           {
@@ -16850,7 +16850,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "5bfc069f551b82ed9f4d2892377c14272763eec0a8c5a779a554dbb93e721fa9"
+          "content": "c7fbfe75b400a4a55fc9542b9009875da3effa6c2f9df778391ca4a9c8f0ecea"
         }
       ],
       "name": "ghc-tcplugins-extra",
@@ -16868,12 +16868,12 @@
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
         }
       ],
-      "purl": "pkg:hackage/ghc-tcplugins-extra@0.4.6",
+      "purl": "pkg:hackage/ghc-tcplugins-extra@0.5",
       "type": "library",
-      "version": "0.4.6"
+      "version": "0.5"
     },
     {
-      "bom-ref": "pkg:hackage/ghc-typelits-natnormalise@0.7.10",
+      "bom-ref": "pkg:hackage/ghc-typelits-natnormalise@0.7.12",
       "evidence": {
         "identity": [
           {
@@ -16891,7 +16891,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "7b134742ce0f1042f27e735626a115e1a0095b788190e59056c0e7471b3e0413"
+          "content": "8a765dbe018a4d2cf8b58d27d633972cf64b529722f82ebc32cbda9d6d82d90f"
         }
       ],
       "name": "ghc-typelits-natnormalise",
@@ -16909,9 +16909,9 @@
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
         }
       ],
-      "purl": "pkg:hackage/ghc-typelits-natnormalise@0.7.10",
+      "purl": "pkg:hackage/ghc-typelits-natnormalise@0.7.12",
       "type": "library",
-      "version": "0.7.10"
+      "version": "0.7.12"
     },
     {
       "bom-ref": "pkg:hackage/ghcid@0.8.9",
@@ -26878,7 +26878,7 @@
         "pkg:hackage/base",
         "pkg:hackage/ghc"
       ],
-      "ref": "pkg:hackage/ghc-tcplugins-extra@0.4.6"
+      "ref": "pkg:hackage/ghc-tcplugins-extra@0.5"
     },
     {
       "dependsOn": [
@@ -26893,8 +26893,8 @@
         "pkg:hackage/base",
         "pkg:hackage/ghc",
         "pkg:hackage/ghc-prim",
-        "pkg:hackage/ghc-tcplugins-extra@0.4.6",
-        "pkg:hackage/ghc-typelits-natnormalise@0.7.10",
+        "pkg:hackage/ghc-tcplugins-extra@0.5",
+        "pkg:hackage/ghc-typelits-natnormalise@0.7.12",
         "pkg:hackage/template-haskell",
         "pkg:hackage/transformers"
       ],
@@ -26906,11 +26906,11 @@
         "pkg:hackage/containers",
         "pkg:hackage/ghc",
         "pkg:hackage/ghc-bignum",
-        "pkg:hackage/ghc-tcplugins-extra@0.4.6",
+        "pkg:hackage/ghc-tcplugins-extra@0.5",
         "pkg:hackage/template-haskell",
         "pkg:hackage/transformers"
       ],
-      "ref": "pkg:hackage/ghc-typelits-natnormalise@0.7.10"
+      "ref": "pkg:hackage/ghc-typelits-natnormalise@0.7.12"
     },
     {
       "dependsOn": [

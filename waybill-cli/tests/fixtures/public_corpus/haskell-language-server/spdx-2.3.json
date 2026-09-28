@@ -20863,7 +20863,7 @@
       "versionInfo": "NOASSERTION"
     },
     {
-      "SPDXID": "SPDXRef-Package-DYIVAEB2XFERMGWG",
+      "SPDXID": "SPDXRef-Package-X6ITOZHKFH6575ZL",
       "annotations": [
         {
           "annotationDate": "<masked>",
@@ -20893,14 +20893,14 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "5bfc069f551b82ed9f4d2892377c14272763eec0a8c5a779a554dbb93e721fa9"
+          "checksumValue": "c7fbfe75b400a4a55fc9542b9009875da3effa6c2f9df778391ca4a9c8f0ecea"
         }
       ],
       "downloadLocation": "NOASSERTION",
       "externalRefs": [
         {
           "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:hackage/ghc-tcplugins-extra@0.4.6",
+          "referenceLocator": "pkg:hackage/ghc-tcplugins-extra@0.5",
           "referenceType": "purl"
         }
       ],
@@ -20908,10 +20908,10 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "ghc-tcplugins-extra",
-      "versionInfo": "0.4.6"
+      "versionInfo": "0.5"
     },
     {
-      "SPDXID": "SPDXRef-Package-A5NROLHO5FSX3CFX",
+      "SPDXID": "SPDXRef-Package-SVHV6RXYS5FEIPVQ",
       "annotations": [
         {
           "annotationDate": "<masked>",
@@ -20941,14 +20941,14 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "7b134742ce0f1042f27e735626a115e1a0095b788190e59056c0e7471b3e0413"
+          "checksumValue": "8a765dbe018a4d2cf8b58d27d633972cf64b529722f82ebc32cbda9d6d82d90f"
         }
       ],
       "downloadLocation": "NOASSERTION",
       "externalRefs": [
         {
           "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:hackage/ghc-typelits-natnormalise@0.7.10",
+          "referenceLocator": "pkg:hackage/ghc-typelits-natnormalise@0.7.12",
           "referenceType": "purl"
         }
       ],
@@ -20956,7 +20956,7 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "ghc-typelits-natnormalise",
-      "versionInfo": "0.7.10"
+      "versionInfo": "0.7.12"
     },
     {
       "SPDXID": "SPDXRef-Package-E5HDZM2RFAWRUACG",
@@ -32630,41 +32630,6 @@
       "spdxElementId": "SPDXRef-Package-A3JDF2XE7HNGP4XW"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-6QWPEZAAEUBBUPY4",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-A5NROLHO5FSX3CFX"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-DYIVAEB2XFERMGWG",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-A5NROLHO5FSX3CFX"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-QYKWFW5VISLP5PMJ",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-A5NROLHO5FSX3CFX"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-RC27FFMYD6GEPBBK",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-A5NROLHO5FSX3CFX"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-SKZ7EN7ALZJSMRAA",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-A5NROLHO5FSX3CFX"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-SNFSSWGYUZTK2KW3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-A5NROLHO5FSX3CFX"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-UYVEY7DDE5244QDF",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-A5NROLHO5FSX3CFX"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-6UHHA44VGVVLXE6J",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-ACO3LAW6XY2CTODU"
@@ -34948,16 +34913,6 @@
       "relatedSpdxElement": "SPDXRef-Package-SNFSSWGYUZTK2KW3",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-DW244S5IM3LMFMCL"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-RC27FFMYD6GEPBBK",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-DYIVAEB2XFERMGWG"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-SNFSSWGYUZTK2KW3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-DYIVAEB2XFERMGWG"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-6QLBIN4OMQGCVQVJ",
@@ -40900,16 +40855,6 @@
       "spdxElementId": "SPDXRef-Package-R7KUJHZVRXEAALLR"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-A5NROLHO5FSX3CFX",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-R7KUJHZVRXEAALLR"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-DYIVAEB2XFERMGWG",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-R7KUJHZVRXEAALLR"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-FUCWNA5MGLNAG2NW",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-R7KUJHZVRXEAALLR"
@@ -40926,6 +40871,16 @@
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-SNFSSWGYUZTK2KW3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-R7KUJHZVRXEAALLR"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-SVHV6RXYS5FEIPVQ",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-R7KUJHZVRXEAALLR"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-X6ITOZHKFH6575ZL",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-R7KUJHZVRXEAALLR"
     },
@@ -41733,6 +41688,41 @@
       "relatedSpdxElement": "SPDXRef-Package-SNFSSWGYUZTK2KW3",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-SURGV3VUEETWRYTZ"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-6QWPEZAAEUBBUPY4",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-SVHV6RXYS5FEIPVQ"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-QYKWFW5VISLP5PMJ",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-SVHV6RXYS5FEIPVQ"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-RC27FFMYD6GEPBBK",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-SVHV6RXYS5FEIPVQ"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-SKZ7EN7ALZJSMRAA",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-SVHV6RXYS5FEIPVQ"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-SNFSSWGYUZTK2KW3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-SVHV6RXYS5FEIPVQ"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-UYVEY7DDE5244QDF",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-SVHV6RXYS5FEIPVQ"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-X6ITOZHKFH6575ZL",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-SVHV6RXYS5FEIPVQ"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-5TQBM62ZJVNBEKVK",
@@ -43988,6 +43978,16 @@
       "relatedSpdxElement": "SPDXRef-Package-SNFSSWGYUZTK2KW3",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-X3MI2R6WTJW4G6WF"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-RC27FFMYD6GEPBBK",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-X6ITOZHKFH6575ZL"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-SNFSSWGYUZTK2KW3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-X6ITOZHKFH6575ZL"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-ACO3LAW6XY2CTODU",
