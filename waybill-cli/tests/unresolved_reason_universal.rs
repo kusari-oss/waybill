@@ -84,9 +84,20 @@ fn locked_reason_strings() -> Vec<(&'static str, &'static str)> {
             "waybill-cli/src/scan_fs/package_db/erlang.rs",
             "no matching entry in rebar.lock",
         ),
+        // Haskell ships three (#956): one string could not tell a cabal-only
+        // project and a Stack project apart, so it told the cabal project to
+        // produce a stack.yaml.lock it had no use for.
         (
             "waybill-cli/src/scan_fs/package_db/haskell.rs",
             "declared in stack.yaml / .cabal; no stack.yaml.lock fallback",
+        ),
+        (
+            "waybill-cli/src/scan_fs/package_db/haskell.rs",
+            "declared in .cabal / package.yaml; no cabal.project.freeze fallback",
+        ),
+        (
+            "waybill-cli/src/scan_fs/package_db/haskell.rs",
+            "declared in cabal.project.freeze as a version range, not a pin",
         ),
         (
             "waybill-cli/src/scan_fs/package_db/pants_shell/component_emit.rs",
@@ -197,7 +208,13 @@ fn fr002_reason_strings_are_ascii_bounded_length() {
 /// NuGet regression guard (1) + 3 US1 + 5 US2 + 8 US3 = 17.
 #[test]
 fn m236_scope_matches_q2_clarification() {
-    let entries = locked_reason_strings();
+    // Counts DISTINCT source files, not rows. The two were the same number
+    // until #956, when haskell gained a second and third string for the
+    // situations its single string had been describing wrongly. The invariant
+    // this test states is about reader coverage, so a reader shipping more
+    // than one string must not read as extra coverage.
+    let entries: std::collections::BTreeSet<&str> =
+        locked_reason_strings().into_iter().map(|(p, _)| p).collect();
     assert_eq!(
         entries.len(),
         17,
