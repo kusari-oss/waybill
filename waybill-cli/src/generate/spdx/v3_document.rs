@@ -82,60 +82,7 @@ pub fn build_document(
         };
     let view_scan_storage: ScanArtifacts<'_>;
     let scan: &ScanArtifacts<'_> = if let Some(ref filtered) = filtered_components_owned {
-        view_scan_storage = ScanArtifacts {
-            unresolved_declared_dep_count: scan.unresolved_declared_dep_count,
-            target_name: scan.target_name,
-            components: filtered.as_slice(),
-            relationships: scan.relationships,
-            integrity: scan.integrity,
-            complete_ecosystems: scan.complete_ecosystems,
-            os_release_missing_fields: scan.os_release_missing_fields,
-            scan_target_coord: scan.scan_target_coord,
-            generation_context: scan.generation_context.clone(),
-            include_dev: scan.include_dev,
-            include_hashes: scan.include_hashes,
-            include_source_files: scan.include_source_files,
-            // Milestone 221 US4 — propagate --sbom-version.
-            sbom_version: scan.sbom_version,
-            enrichment_degraded: None,
-            scope_mode: scan.scope_mode,
-            go_transitive_coverage: scan.go_transitive_coverage,
-            go_transitive_fallback_count: scan.go_transitive_fallback_count,
-            go_cache_warming: scan.go_cache_warming,
-            go_workspace_mode: scan.go_workspace_mode,
-            go_toolchains_detected: scan.go_toolchains_detected,
-            cross_ecosystem_edges_report: scan.cross_ecosystem_edges_report,
-            helm_extraction_mode: scan.helm_extraction_mode,
-            pants_resolve_summary: scan.pants_resolve_summary.clone(),
-            resolve_identity: scan.resolve_identity.clone(),
-            haskell_parse_summary: scan.haskell_parse_summary,
-            gradle_scan_summary: scan.gradle_scan_summary,
-            no_binary_scan_mode: scan.no_binary_scan_mode,
-            image_source: scan.image_source,
-            source_document_binding: scan.source_document_binding,
-            identifiers: scan.identifiers,
-            component_identifiers: scan.component_identifiers,
-            // #934 / #947: forwarded, not dropped. The `view_scan_storage`
-            // swap is a components-only rewrite, and doc-scope inventory
-            // metadata is not a property of the component list. Hard-coding
-            // None here kept C93/C94/C95 and the C156 mode marker out of
-            // SPDX 3 on the filtered-components path — the same defect #934
-            // fixed at the two SPDX 2.3 view sites and missed here.
-            file_inventory_stats: scan.file_inventory_stats,
-            file_inventory_mode: scan.file_inventory_mode,
-            file_inventory_source_shapes: scan.file_inventory_source_shapes.clone(),
-            nixpkgs_haskell_degraded: scan.nixpkgs_haskell_degraded,
-            nixpkgs_haskell_resolution: scan.nixpkgs_haskell_resolution,
-            nixpkgs_haskell_closure: scan.nixpkgs_haskell_closure,
-            root_override: scan.root_override.clone(),
-            preserve_manifest_main_module: scan.preserve_manifest_main_module,
-            user_metadata: scan.user_metadata.clone(),
-            sbom_type_override: scan.sbom_type_override,
-            spdx2_relationship_compat: scan.spdx2_relationship_compat,
-            collisions_summary: scan.collisions_summary,
-            compiler_pipeline: scan.compiler_pipeline,
-            project_discovery_mode: scan.project_discovery_mode,
-        };
+        view_scan_storage = scan.with_components(filtered.as_slice());
         &view_scan_storage
     } else {
         scan

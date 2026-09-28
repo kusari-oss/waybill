@@ -445,143 +445,9 @@ pub fn build_document(
     // at the filtered components when override is active. We construct
     // a local view that mirrors the input but with components swapped.
     let view_artifacts: ScanArtifacts<'_> = if let Some(ref filtered) = filtered_components_owned {
-        ScanArtifacts {
-            unresolved_declared_dep_count: artifacts.unresolved_declared_dep_count,
-            target_name: artifacts.target_name,
-            components: filtered.as_slice(),
-            relationships: artifacts.relationships,
-            integrity: artifacts.integrity,
-            complete_ecosystems: artifacts.complete_ecosystems,
-            os_release_missing_fields: artifacts.os_release_missing_fields,
-            scan_target_coord: artifacts.scan_target_coord,
-            generation_context: artifacts.generation_context.clone(),
-            include_dev: artifacts.include_dev,
-            include_hashes: artifacts.include_hashes,
-            include_source_files: artifacts.include_source_files,
-            // Milestone 221 US4 — propagate --sbom-version through
-            // the filtered-components view so SPDX emitters see the
-            // same value the top-level ScanArtifacts had.
-            sbom_version: artifacts.sbom_version,
-            enrichment_degraded: artifacts.enrichment_degraded,
-            scope_mode: artifacts.scope_mode,
-            go_transitive_coverage: artifacts.go_transitive_coverage,
-            go_transitive_fallback_count: artifacts.go_transitive_fallback_count,
-            go_cache_warming: artifacts.go_cache_warming,
-            go_workspace_mode: artifacts.go_workspace_mode,
-            go_toolchains_detected: artifacts.go_toolchains_detected,
-            cross_ecosystem_edges_report: artifacts.cross_ecosystem_edges_report,
-            helm_extraction_mode: artifacts.helm_extraction_mode,
-            pants_resolve_summary: artifacts.pants_resolve_summary.clone(),
-            resolve_identity: artifacts.resolve_identity.clone(),
-            haskell_parse_summary: artifacts.haskell_parse_summary,
-            gradle_scan_summary: artifacts.gradle_scan_summary,
-            no_binary_scan_mode: artifacts.no_binary_scan_mode,
-            image_source: artifacts.image_source,
-            source_document_binding: artifacts.source_document_binding,
-            identifiers: artifacts.identifiers,
-            component_identifiers: artifacts.component_identifiers,
-            // #934: forwarded, not dropped — for the same reason the
-            // m671 note below gives for the mode marker. Hard-coding
-            // `None` here meant C93/C94/C95 (and C168) never reached
-            // SPDX 2.3 on the production path: `annotate_document`
-            // reads this view, not the caller's artifacts. The CDX and
-            // SPDX 3 emitters were unaffected, so the catalog's
-            // `SymmetricEqual` claim for those rows was false.
-            file_inventory_stats: artifacts.file_inventory_stats,
-            // #947: forwarded for the same reason as the line above. The
-            // `view_artifacts` swap is a components-only rewrite; hard-coding
-            // None here is precisely the defect that kept C93/C94/C95 out of
-            // SPDX 2.3 for three milestones (#934).
-            nixpkgs_haskell_degraded: artifacts.nixpkgs_haskell_degraded,
-            nixpkgs_haskell_resolution: artifacts.nixpkgs_haskell_resolution,
-            nixpkgs_haskell_closure: artifacts.nixpkgs_haskell_closure,
-            // Milestone 671 T010 — propagate the outer mode + source-
-            // shape restriction so the C156 (source-tree) + m133 US4
-            // (`full`) markers reach `annotate_document`. The
-            // `view_artifacts` swap is a components-only rewrite;
-            // doc-scope inventory metadata should NOT be dropped.
-            file_inventory_mode: artifacts.file_inventory_mode,
-            file_inventory_source_shapes: artifacts
-                .file_inventory_source_shapes
-                .clone(),
-            root_override: artifacts.root_override.clone(),
-            preserve_manifest_main_module: artifacts.preserve_manifest_main_module,
-            user_metadata: artifacts.user_metadata.clone(),
-            sbom_type_override: artifacts.sbom_type_override,
-            spdx2_relationship_compat: artifacts.spdx2_relationship_compat,
-            collisions_summary: artifacts.collisions_summary,
-            compiler_pipeline: artifacts.compiler_pipeline,
-            project_discovery_mode: artifacts.project_discovery_mode,
-        }
+        artifacts.with_components(filtered.as_slice())
     } else {
-        ScanArtifacts {
-            unresolved_declared_dep_count: artifacts.unresolved_declared_dep_count,
-            target_name: artifacts.target_name,
-            components: artifacts.components,
-            relationships: artifacts.relationships,
-            integrity: artifacts.integrity,
-            complete_ecosystems: artifacts.complete_ecosystems,
-            os_release_missing_fields: artifacts.os_release_missing_fields,
-            scan_target_coord: artifacts.scan_target_coord,
-            generation_context: artifacts.generation_context.clone(),
-            include_dev: artifacts.include_dev,
-            include_hashes: artifacts.include_hashes,
-            include_source_files: artifacts.include_source_files,
-            // Milestone 221 US4 — propagate --sbom-version through
-            // the filtered-components view so SPDX emitters see the
-            // same value the top-level ScanArtifacts had.
-            sbom_version: artifacts.sbom_version,
-            enrichment_degraded: artifacts.enrichment_degraded,
-            scope_mode: artifacts.scope_mode,
-            go_transitive_coverage: artifacts.go_transitive_coverage,
-            go_transitive_fallback_count: artifacts.go_transitive_fallback_count,
-            go_cache_warming: artifacts.go_cache_warming,
-            go_workspace_mode: artifacts.go_workspace_mode,
-            go_toolchains_detected: artifacts.go_toolchains_detected,
-            cross_ecosystem_edges_report: artifacts.cross_ecosystem_edges_report,
-            helm_extraction_mode: artifacts.helm_extraction_mode,
-            pants_resolve_summary: artifacts.pants_resolve_summary.clone(),
-            resolve_identity: artifacts.resolve_identity.clone(),
-            haskell_parse_summary: artifacts.haskell_parse_summary,
-            gradle_scan_summary: artifacts.gradle_scan_summary,
-            no_binary_scan_mode: artifacts.no_binary_scan_mode,
-            image_source: artifacts.image_source,
-            source_document_binding: artifacts.source_document_binding,
-            identifiers: artifacts.identifiers,
-            component_identifiers: artifacts.component_identifiers,
-            // #934: forwarded, not dropped — for the same reason the
-            // m671 note below gives for the mode marker. Hard-coding
-            // `None` here meant C93/C94/C95 (and C168) never reached
-            // SPDX 2.3 on the production path: `annotate_document`
-            // reads this view, not the caller's artifacts. The CDX and
-            // SPDX 3 emitters were unaffected, so the catalog's
-            // `SymmetricEqual` claim for those rows was false.
-            file_inventory_stats: artifacts.file_inventory_stats,
-            // #947: forwarded for the same reason as the line above. The
-            // `view_artifacts` swap is a components-only rewrite; hard-coding
-            // None here is precisely the defect that kept C93/C94/C95 out of
-            // SPDX 2.3 for three milestones (#934).
-            nixpkgs_haskell_degraded: artifacts.nixpkgs_haskell_degraded,
-            nixpkgs_haskell_resolution: artifacts.nixpkgs_haskell_resolution,
-            nixpkgs_haskell_closure: artifacts.nixpkgs_haskell_closure,
-            // Milestone 671 T010 — propagate the outer mode + source-
-            // shape restriction so the C156 (source-tree) + m133 US4
-            // (`full`) markers reach `annotate_document`. The
-            // `view_artifacts` swap is a components-only rewrite;
-            // doc-scope inventory metadata should NOT be dropped.
-            file_inventory_mode: artifacts.file_inventory_mode,
-            file_inventory_source_shapes: artifacts
-                .file_inventory_source_shapes
-                .clone(),
-            root_override: artifacts.root_override.clone(),
-            preserve_manifest_main_module: artifacts.preserve_manifest_main_module,
-            user_metadata: artifacts.user_metadata.clone(),
-            sbom_type_override: artifacts.sbom_type_override,
-            spdx2_relationship_compat: artifacts.spdx2_relationship_compat,
-            collisions_summary: artifacts.collisions_summary,
-            compiler_pipeline: artifacts.compiler_pipeline,
-            project_discovery_mode: artifacts.project_discovery_mode,
-        }
+        artifacts.clone()
     };
     let artifacts: &ScanArtifacts<'_> = &view_artifacts;
 
@@ -1311,6 +1177,57 @@ mod tests {
             extra_annotations: Default::default(),
             binary_role: None,
         }
+    }
+
+    /// Issue #964 regression guard.
+    ///
+    /// The two view swaps in this file, and `narrow` in `generate/mod.rs`,
+    /// hand-copied all 45 `ScanArtifacts` fields. A field added to the struct
+    /// compiled fine and was silently dropped, so the same defect was found three
+    /// times years apart: `file_inventory_mode` (m671 T010), `file_inventory_stats`
+    /// (#934), and all three inventory fields on the SPDX 3 path (#947). The m671
+    /// fix even left a comment stating the principle directly above a line that
+    /// violated it.
+    ///
+    /// They now use `..self.clone()`, which carries a new field by construction.
+    /// This test cannot prove the *next* field is carried — no test can assert a
+    /// property of code not yet written. What it catches is a regression to
+    /// hand-copying, by pinning the fields history actually lost.
+    #[test]
+    fn m964_view_swap_preserves_document_scope_inventory_metadata() {
+        let components: Vec<ResolvedComponent> = Vec::new();
+        let relationships: Vec<waybill_common::resolution::Relationship> = Vec::new();
+        let integrity = TraceIntegrity::default();
+        // `file_inventory_stats` is a borrowed `&WalkerStats`, so it needs an
+        // owned value outliving the view. Distinctive counts so a dropped field
+        // cannot coincidentally match a default.
+        let stats = crate::scan_fs::file_tier::walker::WalkerStats {
+            oversize_skipped: 7,
+            special_skipped: 11,
+            ..Default::default()
+        };
+        let mut full = mk_artifacts("fixture", &components, &relationships, &integrity);
+        full.file_inventory_mode = Some("source-tree");
+        full.file_inventory_stats = Some(&stats);
+
+        let narrowed = full.with_components(&components);
+
+        assert_eq!(
+            narrowed.file_inventory_mode,
+            Some("source-tree"),
+            "dropped by the view swap until m671 T010"
+        );
+        let narrowed_stats = narrowed
+            .file_inventory_stats
+            .expect("file_inventory_stats was dropped by the view swap (#934's defect)");
+        assert_eq!(narrowed_stats.oversize_skipped, 7);
+        assert_eq!(narrowed_stats.special_skipped, 11);
+        assert_eq!(narrowed.target_name, "fixture", "ordinary fields must survive too");
+        assert_eq!(
+            narrowed.components.len(),
+            components.len(),
+            "components is the one field the swap is allowed to change"
+        );
     }
 
     fn mk_artifacts<'a>(
