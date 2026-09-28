@@ -149,10 +149,23 @@ impl CorpusCacheDir {
             kind: e.kind(),
         })?;
 
-        let mut wanted: Vec<(String, String)> = vec![(
-            "pkgs/development/haskell-modules/hackage-packages.nix".to_string(),
-            "hackage-packages.nix".to_string(),
-        )];
+        let mut wanted: Vec<(String, String)> = vec![
+            (
+                "pkgs/development/haskell-modules/hackage-packages.nix".to_string(),
+                "hackage-packages.nix".to_string(),
+            ),
+            // Issue #1033 — the overrides that supersede versions in the
+            // generated set. Without it here the corpus scan runs `--offline`
+            // against a cache that lacks the file, waybill's best-effort
+            // retrieval degrades to the generated versions, and the lane
+            // reports goldens that look exactly as they did before the fix.
+            // The first regeneration after the fix did precisely that, which
+            // is how this line came to be written.
+            (
+                "pkgs/development/haskell-modules/configuration-common.nix".to_string(),
+                "configuration-common.nix".to_string(),
+            ),
+        ];
         for series in KNOWN_GHC_SERIES {
             wanted.push((
                 format!("pkgs/development/haskell-modules/configuration-ghc-{series}.nix"),
