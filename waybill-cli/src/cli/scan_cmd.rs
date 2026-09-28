@@ -4378,6 +4378,21 @@ pub async fn execute(
                 "nixpkgs-haskell: closure dependency edges emitted"
             );
         }
+
+        // Issue #955 + the cabal2nix pipeline. See
+        // `haskell_packages::reconcile_optional_with_closure` for why the
+        // closure's answer is the one that stands.
+        let restored = scan_fs::package_db::nix::haskell_packages::reconcile_optional_with_closure(
+            &s.closure_edges,
+            &mut components,
+        );
+        if restored > 0 {
+            tracing::info!(
+                restored,
+                "nixpkgs-haskell: components marked optional from .cabal flag defaults are in \
+                 the pinned nixpkgs runtime closure, so the closure's answer stands"
+            );
+        }
     }
 
     if let Some(s) = &nixpkgs_haskell_summary {
