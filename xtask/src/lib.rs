@@ -7,4 +7,5 @@ pub mod bench;
 pub mod compare;
 pub mod corpus_diff;
 pub mod linkage;
+pub mod nix_oracle;
 pub mod quality;
