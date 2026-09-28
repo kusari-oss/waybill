@@ -504,6 +504,30 @@ If you open a PR without running these two commands clean, CI will
 reject it. Do not cite a passing per-crate `cargo test` as evidence
 of CI-readiness — they are not equivalent.
 
+**Check the gate's own exit status, not a pipeline's.** A shell
+pipeline reports the status of its *last* command, so
+`./scripts/pre-pr.sh | grep ... | awk ...` reports awk's — a
+successful filter over the output of a script that died at clippy.
+Run it to a file and read `$?`:
+
+```sh
+./scripts/pre-pr.sh > /tmp/prepr.log 2>&1; echo "EXIT=$?"
+```
+
+Then assert on a **positive** signal in the log: the
+`>>> all pre-PR checks passed.` line, and the per-target
+`test result: ok. N passed; 0 failed` lines. The absence of the word
+FAILED is not evidence — a build that never compiled also contains no
+failures, and its summary (`targets= passed= failed=`) reads like a
+formatting quirk rather than the alarm it is.
+
+The general form: **a check that did not run looks identical to a
+check that passed.** Verify what is claimed, not a proxy for it —
+counts and content, not exit codes and "it compiled". Checking the
+status of a script that compares content is exactly right; that is
+what a gate is. Checking a status when nothing compared content is
+not a check at all.
+
 ## Measure external behaviour before designing around it
 
 When a design depends on how an external service actually behaves —
