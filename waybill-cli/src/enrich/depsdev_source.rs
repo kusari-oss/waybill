@@ -53,6 +53,8 @@ pub struct DepsDevSource {
     /// degraded scan is invisible today. This counter keeps the
     /// distinction the return type discards.
     transport_errors: AtomicUsize,
+    /// Subset of `transport_errors` that were HTTP 429 (#845).
+    throttle_errors: AtomicUsize,
     /// Milestone 839 (FR-002) — opt in to the bulk path. Off by
     /// default: `GetVersionBatch` is on deps.dev's `v3alpha` surface,
     /// documented as liable to change incompatibly.
@@ -107,6 +109,7 @@ impl DepsDevSource {
             offline,
             cache: Mutex::new(HashMap::new()),
             transport_errors: AtomicUsize::new(0),
+            throttle_errors: AtomicUsize::new(0),
             batch: false,
             batch_fallbacks: AtomicUsize::new(0),
             // Default OFF. A constructor that reaches $HOME makes
@@ -439,6 +442,9 @@ impl DepsDevSource {
                         Ok((info, max_age)) => (Some(info), max_age),
                         Err(e) => {
                             self.transport_errors.fetch_add(1, Ordering::Relaxed);
+                            if super::deps_dev_client::is_throttled(&e) {
+                                self.throttle_errors.fetch_add(1, Ordering::Relaxed);
+                            }
                             debug!(
                                 system = %k.system,
                                 name = %k.name,
@@ -749,6 +755,13 @@ pub async fn enrich_components(
     let mut degradation = DegradationRecord::new();
     if source.batch_fallbacks.load(Ordering::Relaxed) > 0 {
         degradation.record(DegradationMode::BatchUnavailable);
+    }
+    // #845: a literal 429 anywhere in the phase. Recorded alongside the other
+    // modes rather than instead of them — FR-017c requires every mode that
+    // occurred, and a run that was throttled AND lost the batch endpoint is
+    // not described by either alone.
+    if source.throttle_errors.load(Ordering::Relaxed) > 0 {
+        degradation.record(DegradationMode::Throttled);
     }
     if attempted > 0 && transport_errors >= attempted {
         degradation.record(DegradationMode::WhollyUnavailable);
@@ -1768,5 +1781,98 @@ mod idempotency_tests {
             },
         );
         assert_eq!(c.external_references.len(), before);
+    }
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod throttle_tests {
+    //! Issue #845 — `throttled` gets a producer.
+    //!
+    //! The mode has been in catalog row C158's closed vocabulary since
+    //! milestone 839 with nothing able to set it, because the client turned
+    //! every non-success response into one error string. These tests pin the
+    //! distinction that unblocked it: a literal 429 records `throttled`, and
+    //! nothing else does.
+
+    use super::*;
+    use wiremock::matchers::{method, path_regex};
+    use wiremock::{Mock, MockServer, ResponseTemplate};
+
+    /// Returns the server alongside the source: the caller must hold it for
+    /// the duration of the fetch, because dropping a `MockServer` closes its
+    /// port and the request would fail as a connection error rather than as
+    /// the status under test.
+    async fn source_against(status: u16) -> (MockServer, DepsDevSource) {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path_regex(r".*"))
+            .respond_with(ResponseTemplate::new(status))
+            .mount(&server)
+            .await;
+        let client = DepsDevClient::new(std::time::Duration::from_secs(5))
+            .with_base_url(format!("{}/v3", server.uri()));
+        let source = DepsDevSource::new(client, false).with_disk_cache(false, None);
+        (server, source)
+    }
+
+    async fn fetch_one(source: &DepsDevSource) {
+        let key = EnrichmentKey::from_purl_parts("cargo", None, "anything", "1.0.0").unwrap();
+        let keys = vec![key];
+        let mut p = ProgressReporter::new(keys.len());
+        let _ = source.fetch_many(&keys, &mut p).await;
+    }
+
+    #[tokio::test]
+    async fn http_429_is_counted_as_a_throttle() {
+        let (_server, source) = source_against(429).await;
+        fetch_one(&source).await;
+        // Control: the request actually failed. Without this, a zero
+        // throttle count could mean "no 429 seen" or "nothing was tried".
+        assert_eq!(
+            source.transport_errors.load(Ordering::Relaxed),
+            1,
+            "the fetch should have failed against a 429",
+        );
+        assert_eq!(
+            source.throttle_errors.load(Ordering::Relaxed),
+            1,
+            "a literal 429 must be recognised as throttling",
+        );
+    }
+
+    /// The guard that makes the mode trustworthy: a server error is a
+    /// transport failure and NOT a throttle. A consumer seeing `throttled`
+    /// will back off, and doing that on evidence that said "the service was
+    /// down" is the failure this mode was withheld to avoid.
+    #[tokio::test]
+    async fn http_500_is_a_transport_error_but_not_a_throttle() {
+        let (_server, source) = source_against(500).await;
+        fetch_one(&source).await;
+        assert_eq!(
+            source.transport_errors.load(Ordering::Relaxed),
+            1,
+            "a 500 is still a transport error",
+        );
+        assert_eq!(
+            source.throttle_errors.load(Ordering::Relaxed),
+            0,
+            "only a 429 may set the throttle counter",
+        );
+    }
+
+    #[test]
+    fn throttled_mode_carries_its_wire_string_and_sorts_with_the_others() {
+        use crate::enrich::degradation::{DegradationMode, DegradationRecord};
+        assert_eq!(DegradationMode::Throttled.as_str(), "throttled");
+        // FR-017c: every mode that occurred, in deterministic order.
+        let mut r = DegradationRecord::new();
+        r.record(DegradationMode::WhollyUnavailable);
+        r.record(DegradationMode::Throttled);
+        r.record(DegradationMode::BatchUnavailable);
+        assert_eq!(
+            r.annotation_value().unwrap(),
+            "batch-unavailable,throttled,wholly-unavailable;unenriched=0",
+        );
     }
 }

@@ -28,10 +28,17 @@ pub enum DegradationMode {
     /// incompatibly, and an operator whose scan got slower deserves to
     /// know the fast path stopped working rather than guessing.
     BatchUnavailable,
-    // `Throttled` belongs to this closed vocabulary (catalog row C158)
-    // but has no producer yet: the client surfaces transport errors
-    // without distinguishing HTTP 429, so nothing can honestly set it.
-    // Added when that distinction exists, not before.
+    /// Upstream rate-limited the scan: at least one request came back
+    /// HTTP 429.
+    ///
+    /// Issue #845 — this variant waited for the distinction to be real.
+    /// Until `deps_dev_client::Throttled` existed, the client collapsed
+    /// every non-success response into one error string, so nothing could
+    /// tell a 429 from an unreachable host. The mode fires on a literal
+    /// 429 and on nothing else: a consumer seeing `throttled` will
+    /// reasonably back off, and doing that on evidence that actually said
+    /// "the service was down" is worse than never reporting it.
+    Throttled,
     /// Enrichment could not run at all — the service was unreachable
     /// for the whole phase.
     WhollyUnavailable,
@@ -43,6 +50,7 @@ impl DegradationMode {
     pub fn as_str(self) -> &'static str {
         match self {
             Self::BatchUnavailable => "batch-unavailable",
+            Self::Throttled => "throttled",
             Self::WhollyUnavailable => "wholly-unavailable",
         }
     }
