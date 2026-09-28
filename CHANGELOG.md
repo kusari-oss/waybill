@@ -7,6 +7,92 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+## [0.10.0-alpha.2] - 2026-09-27
+
+### Added: a project's own declared license now reaches its SBOM (#954)
+
+waybill read dependencies' licenses but not the scanned project's own. A
+main-module component whose manifest carried a license field emitted
+`licenses: []`, and because the root is usually a local project that was never
+published, enrichment had no registry record to recover it from — so an offline
+scan of a project that plainly states its license produced a document that did
+not.
+
+Ten readers now read the license from the manifest they already parse:
+**cargo, npm, pip, gem, maven, composer, nuget, elixir, scala** and **haskell**.
+Go already had a path — it reads `SPDX-License-Identifier:` headers (milestone
+057) — and is unchanged. Erlang/rebar3 is not covered: rebar3 does not document
+where in the manifest a license belongs, and three attempts to source that from
+upstream documentation failed, so it was left rather than guessed at.
+
+Each value goes through `SpdxExpression::try_canonical`. A value that canonicalises
+becomes a declared license; one that does not is preserved verbatim rather than
+discarded, so `BSD3` or a bespoke in-house identifier still reaches the reader of
+the document instead of vanishing. Manifest declarations populate `licenses[]`
+(CycloneDX `acknowledgement: "declared"` / SPDX `licenseDeclared`); enrichment
+continues to own `concluded_licenses[]` — no new precedence rule.
+
+Per-ecosystem behaviour, including the three distinct reasons a component can
+still carry no license, is documented at `docs/reference/declared-licenses.md`.
+
+### Fixed: a compound license no longer loses its operator or its identifiers (#954)
+
+Two defects in CycloneDX license emission, found in the emitted documents after
+nine readers passed every synthetic fixture:
+
+- An `OR` compound was split across separate array entries, which CycloneDX reads
+  as a conjunction. `Unlicense OR MIT` was emitted as a document saying the
+  component was under **both**. It now stays a single `expression` entry, so the
+  choice survives.
+- Free-form prose was being written into the `expression` slot, which the
+  specification reserves for a valid SPDX expression. Prose now goes to
+  `license.name`, and a bare `LicenseRef-` with it.
+
+An `AND` compound is still split per operand, deliberately: that keeps each
+operand in the `license.id` slot where identifier-matching consumers look for it.
+
+Both arms were previously served by two divergent renderers; they are now one.
+
+### Fixed: SPDX 3 honours `--no-hashes` (#1002)
+
+The flag suppressed hashes in CycloneDX and SPDX 2.3 and was ignored by SPDX 3,
+so an operator who asked for a hash-free document got one in two formats out of
+three.
+
+### Fixed: synthesized root edges carry the target's lifecycle scope (#1000)
+
+When waybill synthesizes a root dependency edge, the edge previously defaulted to
+runtime scope regardless of what it pointed at, so a development-only dependency
+attached to the root read as a runtime dependency.
+
+### Fixed: supplement components anchor to the scan root (#1009)
+
+Components contributed by a `--supplement-cdx` file whose only declared parent was
+the supplement's own subject arrived orphaned — on one image, 43 of 44 of them.
+They now attach to the root.
+
+### Fixed: the root component carries its CPE candidate list (#995)
+
+Every other component emitted `waybill:cpe-candidates`; the root did not, so the
+one component a consumer is most likely to match against advisories was the one
+without candidates.
+
+### Fixed: a field-derived property is no longer emitted twice (#940)
+
+### Fixed: Nix resolution keeps dependency edges when it rewrites a PURL (#980)
+
+Assigning a version changes a component's PURL, and PURLs are what relationship
+endpoints hold — so the edges kept pointing at the pre-resolution identity and
+were dropped. Whatever changes an identity now rewrites the endpoints in the same
+step. This is invariant I2, now enforced per-PR across nine ecosystems.
+
+### Fixed: Nix resolves bare names that the compiler configuration aliases (#984)
+
+### Fixed: flake inputs attach to the project that owns the lockfile (#961)
+
+In a repository with more than one flake, inputs were attached to the wrong
+project.
+
 ### Added: the transitive runtime closure for Nix-built Haskell projects (#962)
 
 Milestone 926 resolved a Nix-built project's **declared** Haskell dependencies
@@ -6052,7 +6138,9 @@ per-release breakdown.
 
 ---
 
-[Unreleased]: https://github.com/kusari-oss/waybill/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/kusari-oss/waybill/compare/v0.10.0-alpha.2...HEAD
+[0.10.0-alpha.2]: https://github.com/kusari-oss/waybill/releases/tag/v0.10.0-alpha.2
+[0.10.0-alpha.1]: https://github.com/kusari-oss/waybill/releases/tag/v0.10.0-alpha.1
 [0.9.0]: https://github.com/kusari-oss/waybill/releases/tag/v0.9.0
 [0.8.0]: https://github.com/kusari-oss/waybill/releases/tag/v0.8.0
 [0.7.0]: https://github.com/kusari-oss/waybill/releases/tag/v0.7.0
