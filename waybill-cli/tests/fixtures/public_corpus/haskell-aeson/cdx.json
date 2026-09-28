@@ -51,7 +51,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -108,7 +108,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -164,7 +164,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -395,7 +395,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -577,7 +577,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -633,7 +633,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -686,7 +686,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -746,7 +746,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -799,7 +799,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -851,7 +851,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -903,7 +903,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -963,7 +963,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -1019,7 +1019,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -1079,7 +1079,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -1131,7 +1131,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -1187,7 +1187,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -1247,7 +1247,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -1307,7 +1307,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -1364,7 +1364,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -1420,7 +1420,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -1476,7 +1476,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -1536,7 +1536,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -1593,7 +1593,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -1649,7 +1649,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -1705,7 +1705,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -1761,7 +1761,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -1817,7 +1817,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -1873,7 +1873,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -1929,7 +1929,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -1981,7 +1981,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -2033,7 +2033,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -2089,7 +2089,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -2149,7 +2149,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -2206,7 +2206,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -2266,7 +2266,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -2323,7 +2323,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -2379,7 +2379,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -2435,7 +2435,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -2491,7 +2491,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -2551,7 +2551,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -2608,7 +2608,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -2664,7 +2664,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -2725,7 +2725,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -2786,7 +2786,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -2847,7 +2847,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -2907,7 +2907,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -3024,7 +3024,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -3080,7 +3080,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -3136,7 +3136,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -3196,7 +3196,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -3252,7 +3252,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -3308,7 +3308,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -3364,7 +3364,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -3420,7 +3420,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -3476,7 +3476,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",

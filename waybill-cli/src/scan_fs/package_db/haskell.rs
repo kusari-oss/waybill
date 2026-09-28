@@ -935,7 +935,12 @@ pub(crate) fn finalize(
         }
         {
             for component in
-                build_design_tier_components(manifest, cabal_path, &local_package_names)
+                build_design_tier_components(
+                    manifest,
+                    cabal_path,
+                    &local_package_names,
+                    &stack_yaml_paths,
+                )
             {
                 // A dependency keeps its design-tier entry unless the
                 // governing lockfile actually pins it (#938). With no
@@ -1560,12 +1565,13 @@ fn build_freeze_component(entry: &CabalFreezeEntry) -> PackageDbEntry {
             let purl = Purl::new(&purl_str).unwrap_or_else(|_| fallback_purl());
             let mut extra_annotations = base_annotations("hackage-freeze");
             apply_ghc_stdlib_annotation(&mut extra_annotations, name);
-            // Milestone 236 (C151): haskell cabal-freeze range design-tier reason.
+            // Milestone 236 (C151), corrected by #956. This entry came OUT of a
+            // freeze file, so telling the operator there is no lockfile to fall
+            // back to described the opposite of the situation. The freeze exists
+            // and named this package; it gave a range instead of a pin.
             extra_annotations.insert(
                 "waybill:unresolved-reason".to_string(),
-                serde_json::Value::String(
-                    "declared in stack.yaml / .cabal; no stack.yaml.lock fallback".to_string(),
-                ),
+                serde_json::Value::String(REASON_FREEZE_RANGE_NOT_PIN.to_string()),
             );
             PackageDbEntry {
                 depends_ecosystem: None,
@@ -1802,11 +1808,53 @@ fn build_main_module(
     })
 }
 
+/// Issue #956 — the C151 reason a Haskell design-tier component carries.
+///
+/// Milestone 236 gave this reader one string, `declared in stack.yaml /
+/// .cabal; no stack.yaml.lock fallback`, and used it for every situation. The
+/// annotation exists to tell an operator why a component has no resolved
+/// version so they know what to do about it, and one string cannot do that for
+/// two toolchains: a cabal-only project was told to look for a
+/// `stack.yaml.lock` in a repository that has no `stack.yaml`, has never had
+/// one, and would not gain versions by acquiring one. Its actual remedy is
+/// `cabal freeze`, which the message did not mention.
+const REASON_STACK_NO_LOCK: &str = "declared in stack.yaml / .cabal; no stack.yaml.lock fallback";
+const REASON_CABAL_NO_FREEZE: &str =
+    "declared in .cabal / package.yaml; no cabal.project.freeze fallback";
+/// A freeze file exists and named this package, but with a range rather than a
+/// pin. Neither string above fits: the project HAS the lockfile both of them
+/// tell the operator to go and produce.
+const REASON_FREEZE_RANGE_NOT_PIN: &str =
+    "declared in cabal.project.freeze as a version range, not a pin";
+
+/// Whether a `stack.yaml` governs this `.cabal`, i.e. sits in its directory or
+/// any ancestor of it — the standard Stack layout, where one `stack.yaml` at
+/// the project root governs the packages beneath it.
+///
+/// Path-shape only. A `stack.yaml` elsewhere in the scan (a sibling project in
+/// a monorepo) does not make this package a Stack package, which is the case
+/// that produced the wrong message.
+fn stack_governs(cabal_path: &Path, stack_yaml_paths: &[PathBuf]) -> bool {
+    let Some(cabal_dir) = cabal_path.parent() else {
+        return false;
+    };
+    stack_yaml_paths.iter().any(|sy| {
+        sy.parent()
+            .is_some_and(|stack_dir| cabal_dir.starts_with(stack_dir))
+    })
+}
+
 fn build_design_tier_components(
     manifest: &CabalManifest,
     cabal_path: &Path,
     local_package_names: &HashSet<String>,
+    stack_yaml_paths: &[PathBuf],
 ) -> Vec<PackageDbEntry> {
+    let reason = if stack_governs(cabal_path, stack_yaml_paths) {
+        REASON_STACK_NO_LOCK
+    } else {
+        REASON_CABAL_NO_FREEZE
+    };
     let mut out = Vec::new();
     // Filter out self-ref: the main-module's own package name doesn't emit
     // as a separate dep component (would collide via PURL dedup anyway).
@@ -1880,12 +1928,11 @@ fn build_design_tier_components(
             );
         }
         apply_ghc_stdlib_annotation(&mut extra_annotations, &dep.name);
-        // Milestone 236 (C151): haskell cabal design-tier reason.
+        // Milestone 236 (C151), corrected by #956: the reason names the
+        // toolchain this package actually uses.
         extra_annotations.insert(
             "waybill:unresolved-reason".to_string(),
-            serde_json::Value::String(
-                "declared in stack.yaml / .cabal; no stack.yaml.lock fallback".to_string(),
-            ),
+            serde_json::Value::String(reason.to_string()),
         );
         out.push(PackageDbEntry {
             depends_ecosystem: None,
@@ -2340,5 +2387,127 @@ version: 0.1.0
         };
         let c = build_snapshot_placeholder(&snap);
         assert_eq!(c.purl.as_str(), "pkg:generic/ghc-9.6.4@unspecified");
+    }
+
+    // ------------------------------------------------------------------
+    // Issue #956 — the reason names the toolchain the project actually uses
+    // ------------------------------------------------------------------
+
+
+    /// A manifest that actually declares dependencies. The first version of
+    /// these tests used `CabalManifest { name, ..Default::default() }`, which
+    /// declares none — so `build_design_tier_components` returned an empty vec
+    /// and the per-component assertions below iterated over nothing. The
+    /// control assertion in each test is what caught that.
+    fn manifest_with_deps(name: &str) -> CabalManifest {
+        CabalManifest {
+            name: Some(name.to_string()),
+            version: Some("0.1.0".to_string()),
+            license: None,
+            stanzas: vec![CabalStanza {
+                kind: StanzaKind::Library,
+                label: None,
+                build_depends: vec![
+                    DeclaredDep { name: "aeson".to_string(), range: None, executable: None, all_ranges: Vec::new() },
+                    DeclaredDep { name: "text".to_string(), range: None, executable: None, all_ranges: Vec::new() },
+                ],
+                build_tool_depends: vec![],
+            }],
+            hpack_generated: false,
+            skipped_entries: 0,
+        }
+    }
+
+    #[test]
+    fn stack_governs_only_an_ancestor_stack_yaml() {
+        let root = Path::new("/repo");
+        let cabal = Path::new("/repo/pkgs/thing/thing.cabal");
+        // Same directory, and an ancestor: both govern.
+        assert!(stack_governs(
+            cabal,
+            &[PathBuf::from("/repo/pkgs/thing/stack.yaml")]
+        ));
+        assert!(stack_governs(cabal, &[root.join("stack.yaml")]));
+        // A sibling project's stack.yaml does NOT. This is the case that
+        // produced the wrong message: one Stack project anywhere in a scan
+        // must not make every other package a Stack package.
+        assert!(!stack_governs(
+            cabal,
+            &[PathBuf::from("/repo/other/stack.yaml")]
+        ));
+        assert!(!stack_governs(cabal, &[]));
+    }
+
+    /// The defect: a cabal-only project told to produce a `stack.yaml.lock`.
+    #[test]
+    fn cabal_only_project_is_told_about_cabal_freeze_not_stack() {
+        let manifest = manifest_with_deps("moat");
+        let cabal = Path::new("/repo/moat.cabal");
+        let comps = build_design_tier_components(
+            &manifest,
+            cabal,
+            &HashSet::new(),
+            /* no stack.yaml anywhere */ &[],
+        );
+        // Control: if the manifest declares nothing, the assertions below
+        // would pass by examining nothing at all.
+        assert!(
+            !comps.is_empty(),
+            "fixture declares no dependencies, so this test proves nothing"
+        );
+        for c in &comps {
+            let got = c.extra_annotations["waybill:unresolved-reason"]
+                .as_str()
+                .unwrap();
+            assert_eq!(got, REASON_CABAL_NO_FREEZE, "component {}", c.name);
+            assert!(
+                !got.contains("stack"),
+                "a cabal-only project must not be told about Stack: {got}"
+            );
+        }
+    }
+
+    /// The other half: a Stack project keeps the original string, so the fix
+    /// is a split rather than a replacement.
+    #[test]
+    fn stack_project_keeps_the_stack_reason() {
+        let manifest = manifest_with_deps("thing");
+        let cabal = Path::new("/repo/thing.cabal");
+        let comps = build_design_tier_components(
+            &manifest,
+            cabal,
+            &HashSet::new(),
+            &[PathBuf::from("/repo/stack.yaml")],
+        );
+        assert!(!comps.is_empty(), "fixture declares no dependencies");
+        for c in &comps {
+            assert_eq!(
+                c.extra_annotations["waybill:unresolved-reason"]
+                    .as_str()
+                    .unwrap(),
+                REASON_STACK_NO_LOCK,
+                "component {}",
+                c.name
+            );
+        }
+    }
+
+    /// A component that came out of a freeze file was being told there was no
+    /// lockfile to fall back to — the opposite of its situation.
+    #[test]
+    fn freeze_range_entry_says_the_freeze_gave_a_range() {
+        let entry = CabalFreezeEntry::RangeConstraint {
+            name: "base".to_string(),
+            range: ">=4.11 && <4.22".to_string(),
+        };
+        let c = build_freeze_component(&entry);
+        let got = c.extra_annotations["waybill:unresolved-reason"]
+            .as_str()
+            .unwrap();
+        assert_eq!(got, REASON_FREEZE_RANGE_NOT_PIN);
+        assert!(
+            !got.contains("no stack.yaml.lock fallback"),
+            "the project has a freeze file; it is not missing a lockfile: {got}"
+        );
     }
 }
