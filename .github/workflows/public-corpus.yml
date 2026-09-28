@@ -63,6 +63,12 @@ jobs:
       - name: Build waybill (release)
         run: cargo build --release -p waybill --bin waybill
 
+      # Issue #971 part B — install nix so the oracle step below can evaluate
+      # the pinned nixpkgs revision. ~20s; the evaluation itself is under a
+      # second once the revision is in the git cache.
+      - name: Install nix (for the resolution oracle)
+        uses: DeterminateSystems/nix-installer-action@21a544727d0c62386e78b4befe52d19ad12692e3 # v13
+
       - name: Run public corpus
         env:
           WAYBILL_RUN_PUBLIC_CORPUS: '1'
@@ -79,6 +85,38 @@ jobs:
           # tests that silently skipped (#918). CI opts back in.
           cargo test --test public_corpus --release -- --nocapture --include-ignored --test-threads=3 \
             2>&1 | tee corpus-artifacts/corpus-run.log
+
+      # Issue #971 part B — differential check of the nixpkgs Haskell
+      # resolution against `nix eval`.
+      #
+      # waybill parses nixpkgs files; `nix eval` evaluates them. Same data,
+      # independent mechanism, so a disagreement is a parser defect by
+      # construction. Issue #1033 was found exactly this way and nothing else
+      # found it — 6,000+ tests passed over it, because every fixture was
+      # written by someone who did not know the situation existed.
+      #
+      # Runs on the emitted CycloneDX for the one corpus target that resolves
+      # through nixpkgs. `haskell-aeson` carries no nixpkgs annotations at all,
+      # so this gate protects a single project until a second Nix-built Haskell
+      # target exists — recorded here rather than implied by its presence.
+      #
+      # `if: always()` so a layer-2 golden drift does not hide a resolution
+      # defect; they are independent failures and both should be visible.
+      - name: Resolution oracle (nix eval)
+        if: always()
+        run: |
+          set -o pipefail
+          sbom=$(find ~/.cache/waybill/corpus -path '*emitted*' \
+                   -name 'haskell-language-server.cdx.json' | head -1)
+          if [ -z "$sbom" ]; then
+            echo "::error::no emitted haskell-language-server CycloneDX found; the corpus step \
+          did not produce the document this gate reads, so it verified nothing"
+            exit 1
+          fi
+          echo "oracle input: $sbom"
+          cargo run --release -p xtask -- nix-oracle \
+            --sbom "$sbom" --system x86_64-linux \
+            --json corpus-artifacts/nix-oracle.json
 
       # #918 — refuse to report success having compared nothing.
       #

@@ -5,6 +5,7 @@ use xtask::bench;
 use xtask::compare;
 use xtask::corpus_diff;
 use xtask::linkage;
+use xtask::nix_oracle;
 use xtask::quality;
 
 #[derive(Parser)]
@@ -26,6 +27,9 @@ enum Cli {
     /// Normalise a public-corpus golden diff for human review
     /// (feature 840; issue #763). Review tool, never a gate.
     CorpusDiff(corpus_diff::CorpusDiffArgs),
+    /// Issue #971 part B — check waybill's nixpkgs Haskell resolution against
+    /// `nix eval`, an oracle independent of waybill's own assumptions.
+    NixOracle(nix_oracle::NixOracleArgs),
 }
 
 fn main() {
@@ -41,6 +45,7 @@ fn main() {
         Cli::Quality(args) => quality::run(args),
         Cli::CheckLinkage(args) => linkage::run(args),
         Cli::CorpusDiff(args) => corpus_diff::run(args),
+        Cli::NixOracle(args) => nix_oracle::run(args),
     };
     if let Err(err) = result {
         eprintln!("xtask error: {err}");
