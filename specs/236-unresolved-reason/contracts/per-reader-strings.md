@@ -35,7 +35,9 @@ Locked reason strings per reader. Byte-stable within a waybill build. Display-on
 | **dart** | `no matching entry in pubspec.lock` |
 | **elixir** | `no matching entry in mix.lock` |
 | **erlang** | `no matching entry in rebar.lock` |
-| **haskell** | `declared in stack.yaml / .cabal; no stack.yaml.lock fallback` |
+| **haskell** (Stack-governed) | `declared in stack.yaml / .cabal; no stack.yaml.lock fallback` |
+| **haskell** (cabal-only) | `declared in .cabal / package.yaml; no cabal.project.freeze fallback` |
+| **haskell** (freeze gave a range) | `declared in cabal.project.freeze as a version range, not a pin` |
 | **pants_shell** | `pants shell tool pin without version specifier` |
 | **pants_go** | `pants_go expected_version declared; no matching go corpus component` |
 
@@ -74,3 +76,21 @@ Notes:
 - **Per-reader unit test**: for each row above, a test in the reader's `mod tests` section asserts the exact string on a deterministic fixture (FR-009).
 - **Cross-reader integration test**: `waybill-cli/tests/unresolved_reason_universal.rs` scans a directory containing all 18 fixtures (17 new + NuGet regression-guard) + asserts every design-tier component in every fixture's emitted SBOM carries the annotation with a non-empty string (SC-001).
 - **Blacklist scan**: CI substring blacklist over the emission call-sites + emitted SBOM values (FR-010).
+
+## Amendment — 2026-09-27 (issue #956)
+
+Haskell shipped one string for three situations, and it named Stack in all of
+them. A cabal-only project — no `stack.yaml`, none in its history, no versions
+to be gained by adding one — was told its components were unresolved because
+there was no `stack.yaml.lock` to fall back on. The remedy it actually needed,
+`cabal freeze`, went unmentioned. A component emitted FROM a `cabal.project.freeze`
+got the same string, which described the opposite of its situation: the lockfile
+the message says is missing is the file the entry came out of.
+
+The reason exists to tell an operator what to do. One string covering two
+toolchains is wrong for one of them every time.
+
+Which string a component gets is decided by path shape: a `stack.yaml` in the
+`.cabal`'s own directory or an ancestor of it governs that package. A
+`stack.yaml` elsewhere in the scan — a sibling project in a monorepo — does not,
+which is the case that produced the wrong message.
