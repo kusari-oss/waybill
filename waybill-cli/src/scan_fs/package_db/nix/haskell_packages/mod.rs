@@ -37,6 +37,16 @@ pub(crate) const HACKAGE_PACKAGES_PATH: &str =
 /// Cache key for that file.
 pub(crate) const HACKAGE_PACKAGES_KEY: &str = "hackage-packages.nix";
 
+/// Issue #1033 — the shared override file. `hackage-packages.nix` is
+/// generated from Hackage; this is where nixpkgs rebinds some of those names
+/// to a pinned alternative, and reading only the generated file emits the
+/// superseded version.
+pub(crate) const CONFIGURATION_COMMON_PATH: &str =
+    "pkgs/development/haskell-modules/configuration-common.nix";
+
+/// Cache key for that file.
+pub(crate) const CONFIGURATION_COMMON_KEY: &str = "configuration-common.nix";
+
 /// How an input came to be recognised as nixpkgs-shaped (FR-015b).
 ///
 /// Recorded so an operator can see why resolution did or did not engage,
@@ -694,7 +704,41 @@ pub(crate) fn enrich(
             return Some(degrade_all(components, reason));
         }
     };
-    let packages = package_set::parse(&text);
+    let mut packages = package_set::parse(&text);
+    // Issue #1033 — apply the shared override file's version rebinds.
+    //
+    // Best-effort by design: this file supplements the generated set, so if it
+    // cannot be retrieved the resolution proceeds on the generated versions
+    // exactly as it did before. Degrading the whole scan because a supplement
+    // is unavailable would trade a small, bounded inaccuracy for none at all.
+    match cached_or_fetch(
+        source,
+        &location,
+        &pinned.revision,
+        CONFIGURATION_COMMON_PATH,
+        CONFIGURATION_COMMON_KEY,
+        opts.offline,
+    ) {
+        Ok(common) => {
+            let rebinds = package_set::parse_top_level_version_rebinds(&common);
+            let changed = packages.apply_version_rebinds(&rebinds);
+            tracing::debug!(
+                revision = %pinned.revision,
+                rebinds = rebinds.len(),
+                changed,
+                "nixpkgs-haskell: applied configuration-common.nix version rebinds"
+            );
+        }
+        Err(e) => {
+            tracing::info!(
+                revision = %pinned.revision,
+                error = ?e,
+                "nixpkgs-haskell: configuration-common.nix unavailable; \
+                 resolving on the generated package set alone (#1033)"
+            );
+        }
+    }
+    let packages = packages;
     tracing::debug!(
         revision = %pinned.revision,
         packages = packages.len(),
