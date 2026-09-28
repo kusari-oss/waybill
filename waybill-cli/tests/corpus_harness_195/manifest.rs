@@ -440,8 +440,25 @@ fn no_credentials_required() {
 /// whoever adds the target, rather than nightly and unread.
 ///
 /// It is three `Path::exists` per target: no network, no scan, no fixtures.
+///
+/// Skipped in regen mode, and only there. A new target's goldens are produced
+/// by a `regen_goldens=true` dispatch, and this test shares a binary with the
+/// corpus targets — so firing during that run aborts it before it can write
+/// the very files it is demanding, and the target can never be added at all.
+/// The guard's whole point is to notice a bootstrap that never FINISHED, so
+/// the one run that performs the bootstrap is the one run it must not block.
+/// Every verify run — the PR lane and nightly, which is where an unfinished
+/// bootstrap would otherwise hide — still fires.
 #[test]
 fn every_target_has_committed_goldens() {
+    if std::env::var("WAYBILL_UPDATE_PUBLIC_CORPUS_GOLDENS").as_deref() == Ok("1") {
+        eprintln!(
+            "#978 guard skipped: regen mode writes the goldens this test requires. \
+             It fires on every verify run, which is where a bootstrap that never \
+             finished would otherwise go unnoticed."
+        );
+        return;
+    }
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("tests/fixtures/public_corpus");
     let mut missing: Vec<String> = Vec::new();
