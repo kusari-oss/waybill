@@ -19871,6 +19871,12 @@
   "dependencies": [
     {
       "dependsOn": [
+        "pkg:npm/demo@0.0.1"
+      ],
+      "ref": "pants-example-javascript@da76d5d"
+    },
+    {
+      "dependsOn": [
         "pkg:npm/%40jridgewell/gen-mapping@0.3.5",
         "pkg:npm/%40jridgewell/trace-mapping@0.3.25"
       ],
