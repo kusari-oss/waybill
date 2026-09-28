@@ -6,6 +6,8 @@
 //! milestone / module the maintainer should investigate.
 
 use super::harness::{AssertionFailure, EmittedSboms, FailureFormat};
+#[cfg(test)]
+use super::harness::EmittedPaths;
 
 // -----------------------------------------------------------------------
 // Small helpers (JSON-Value walkers)
@@ -1179,6 +1181,246 @@ pub fn layer0_document_integrity(
         });
     }
 
+    // ---- I3: the root's out-edge count agrees across all three formats ----
+    //
+    // The cheapest cross-format defect detector there is: a root that
+    // depends on N things in CycloneDX must depend on N things in SPDX 2.3
+    // and SPDX 3 as well. It found two real defects during milestone 866,
+    // and the note the SPDX 2.3 check above ends on — "compare root
+    // out-edge counts across formats too" — is this check, written down as
+    // a follow-up and then not built.
+    //
+    // Issue #881 is why it exists now. That issue reported CycloneDX
+    // emitting 0 root edges against SPDX 2.3's 1 on
+    // `pants-example-javascript`, read off the committed goldens. All three
+    // formats in fact emit 1: the 0 came from the JS golden filter, which
+    // dropped the root's `dependencies[]` entry for not having an npm PURL
+    // while the SPDX 2.3 filter kept its equivalent. The comparison was
+    // being made on documents the filter had already made incomparable.
+    // Running it here, on the emitted SBOMs before any filter touches
+    // them, is what makes it mean anything.
+    let (a, b, c) = (
+        cdx_root_out_edges(&sboms.cdx),
+        spdx23_root_out_edges(&sboms.spdx_2_3),
+        spdx3_root_out_edges(&sboms.spdx_3),
+    );
+    // Targets whose SPDX 3 root-edge count is known to disagree, tracked in
+    // the issue named below. Listed rather than tolerated silently: the
+    // entry IS the acceptance test for the fix, and deleting it is how the
+    // fix proves itself.
+    //
+    // Both are Pants Python repos, and the shape is the same in each: the
+    // edges CycloneDX and SPDX 2.3 attach to the root, SPDX 3 attaches to
+    // the `pkg:generic/python-default` resolve anchor instead. Measured on
+    // the goldens at the time of writing — django 14/14/1 with 73/74/61
+    // total edges, python 2/2/1 with 15/15/14.
+    const KNOWN_SPDX3_ROOT_EDGE_DIVERGENCE: &[&str] =
+        &["pants-example-django", "pants-example-python"];
+    let expect_spdx3 = !KNOWN_SPDX3_ROOT_EDGE_DIVERGENCE.contains(&target);
+    let disagrees = a != b || (expect_spdx3 && a != c);
+    if disagrees {
+        return Err(AssertionFailure {
+            invariant_name: "i3-root-out-edge-count-agrees-across-formats",
+            format: FailureFormat::Cdx,
+            observed: format!("root out-edges: CycloneDX={a}, SPDX 2.3={b}, SPDX 3={c}"),
+            expected: "all three equal — one scan, one dependency graph".to_string(),
+            suggested_action:
+                "invariant I3. A consumer diffing waybill's CycloneDX against its SPDX 2.3 for the                  same scan must not see a dependency appear or disappear depending on which file                  they opened. Two directions are possible and they want opposite fixes: a format                  is dropping an edge it should carry, or a format is asserting an edge nothing                  declares (the class milestone 866 exists to remove). Establish which before                  changing an emitter — and check the count against an emitted document, never a                  JS-filtered golden, per issue #881",
+        });
+    }
+
     let _ = target;
     Ok(())
+}
+
+/// Out-edges of the CycloneDX primary component (`metadata.component`).
+fn cdx_root_out_edges(cdx: &serde_json::Value) -> usize {
+    let Some(root) = cdx
+        .get("metadata")
+        .and_then(|m| m.get("component"))
+        .and_then(|c| c.get("bom-ref"))
+        .and_then(|r| r.as_str())
+    else {
+        return 0;
+    };
+    cdx.get("dependencies")
+        .and_then(|d| d.as_array())
+        .map(|arr| {
+            arr.iter()
+                .filter(|e| e.get("ref").and_then(|r| r.as_str()) == Some(root))
+                .map(|e| {
+                    e.get("dependsOn")
+                        .and_then(|d| d.as_array())
+                        .map_or(0, |t| t.len())
+                })
+                .sum()
+        })
+        .unwrap_or(0)
+}
+
+/// Out-edges of the SPDX 2.3 `documentDescribes` root.
+///
+/// Counts both directions, because SPDX 2.3 says "the root depends on X"
+/// two ways: `root DEPENDS_ON X`, and the reverse-direction scoped
+/// spellings `X <SCOPE>_DEPENDENCY_OF root` that carry lifecycle scope.
+fn spdx23_root_out_edges(spdx: &serde_json::Value) -> usize {
+    let roots: std::collections::HashSet<&str> = spdx
+        .get("documentDescribes")
+        .and_then(|d| d.as_array())
+        .map(|arr| arr.iter().filter_map(|v| v.as_str()).collect())
+        .unwrap_or_default();
+    const REVERSE: &[&str] = &[
+        "DEV_DEPENDENCY_OF",
+        "TEST_DEPENDENCY_OF",
+        "BUILD_DEPENDENCY_OF",
+        "OPTIONAL_DEPENDENCY_OF",
+        "PROVIDED_DEPENDENCY_OF",
+        "RUNTIME_DEPENDENCY_OF",
+    ];
+    spdx.get("relationships")
+        .and_then(|r| r.as_array())
+        .map(|arr| {
+            arr.iter()
+                .filter(|r| {
+                    let ty = r.get("relationshipType").and_then(|t| t.as_str());
+                    let from = r.get("spdxElementId").and_then(|s| s.as_str());
+                    let to = r.get("relatedSpdxElement").and_then(|s| s.as_str());
+                    match ty {
+                        Some("DEPENDS_ON") => from.is_some_and(|f| roots.contains(f)),
+                        Some(t) if REVERSE.contains(&t) => to.is_some_and(|t| roots.contains(t)),
+                        _ => false,
+                    }
+                })
+                .count()
+        })
+        .unwrap_or(0)
+}
+
+/// Out-edges of the SPDX 3 document's `rootElement`.
+///
+/// `LifecycleScopedRelationship` counts: it is how waybill spells a scoped
+/// dependency edge, and it is the overwhelming majority of them. The
+/// `relationshipType` comparison is case-sensitive and must stay exactly
+/// `dependsOn` — a lowercased `contains` check silently matches nothing.
+fn spdx3_root_out_edges(spdx3: &serde_json::Value) -> usize {
+    let Some(graph) = spdx3.get("@graph").and_then(|g| g.as_array()) else {
+        return 0;
+    };
+    let mut roots: std::collections::HashSet<&str> = std::collections::HashSet::new();
+    for node in graph {
+        if node.get("type").and_then(|t| t.as_str()) == Some("SpdxDocument") {
+            for key in ["rootElement", "software_rootElement"] {
+                for id in node.get(key).and_then(|r| r.as_array()).into_iter().flatten() {
+                    if let Some(id) = id.as_str() {
+                        roots.insert(id);
+                    }
+                }
+            }
+        }
+    }
+    graph
+        .iter()
+        .filter(|n| {
+            matches!(
+                n.get("type").and_then(|t| t.as_str()),
+                Some("Relationship") | Some("LifecycleScopedRelationship")
+            ) && n.get("relationshipType").and_then(|t| t.as_str()) == Some("dependsOn")
+                && n.get("from")
+                    .and_then(|f| f.as_str())
+                    .is_some_and(|f| roots.contains(f))
+        })
+        .map(|n| match n.get("to") {
+            Some(serde_json::Value::Array(a)) => a.len(),
+            Some(serde_json::Value::String(_)) => 1,
+            _ => 0,
+        })
+        .sum()
+}
+
+// ------------------------------------------------------------------
+// Invariant I3 counters — validated against committed goldens, which are
+// real emitted documents (masked, but masking does not change edge
+// counts). Synthetic fixtures are deliberately NOT the primary evidence
+// here: issue #881's whole cause was a filter validated only against
+// hand-built JSON that shared the filter's own wrong assumption.
+// ------------------------------------------------------------------
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod i3_tests {
+    use super::*;
+
+    fn golden(target: &str, file: &str) -> serde_json::Value {
+        let p = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("tests/fixtures/public_corpus")
+            .join(target)
+            .join(file);
+        serde_json::from_str(&std::fs::read_to_string(&p).unwrap_or_else(|e| {
+            panic!("read {}: {e}", p.display())
+        }))
+        .unwrap()
+    }
+
+    fn counts(target: &str) -> (usize, usize, usize) {
+        (
+            cdx_root_out_edges(&golden(target, "cdx.json")),
+            spdx23_root_out_edges(&golden(target, "spdx-2.3.json")),
+            spdx3_root_out_edges(&golden(target, "spdx-3.json")),
+        )
+    }
+
+    /// A target where all three formats agree. Guards the counters
+    /// themselves: each must find the root and its edges in a real
+    /// document, in three different encodings.
+    #[test]
+    fn counters_agree_on_rust_ripgrep() {
+        assert_eq!(counts("rust-ripgrep"), (10, 10, 10));
+    }
+
+    /// Two more agreeing targets in different ecosystems, so a counter
+    /// that only works for one encoding can't pass by luck.
+    #[test]
+    fn counters_agree_on_maven_and_haskell() {
+        assert_eq!(counts("maven-guice"), (16, 16, 16));
+        assert_eq!(counts("haskell-aeson"), (6, 6, 6));
+    }
+
+    /// Pins the divergence the I3 allowlist tolerates. When the SPDX 3
+    /// root-edge defect is fixed, this test fails — which is the prompt
+    /// to delete the allowlist entry. Debt that cannot rot quietly.
+    #[test]
+    fn known_spdx3_divergence_is_still_present() {
+        assert_eq!(counts("pants-example-django"), (14, 14, 1));
+        assert_eq!(counts("pants-example-python"), (2, 2, 1));
+    }
+
+    #[test]
+    fn i3_fires_when_cdx_and_spdx23_disagree() {
+        let sboms = EmittedSboms {
+            cdx: serde_json::json!({
+                "metadata": {"component": {"bom-ref": "root@1"}},
+                "components": [{"bom-ref": "pkg:npm/a@1"}],
+                "dependencies": [{"ref": "root@1", "dependsOn": []}]
+            }),
+            spdx_2_3: serde_json::json!({
+                "SPDXID": "SPDXRef-DOCUMENT",
+                "documentDescribes": ["SPDXRef-Root"],
+                "packages": [{"SPDXID": "SPDXRef-Root"}, {"SPDXID": "SPDXRef-A"}],
+                "relationships": [
+                    {"spdxElementId": "SPDXRef-Root", "relatedSpdxElement": "SPDXRef-A",
+                     "relationshipType": "DEPENDS_ON"}
+                ]
+            }),
+            spdx_3: serde_json::json!({"@graph": []}),
+            paths: EmittedPaths {
+                cdx: std::path::PathBuf::new(),
+                spdx_2_3: std::path::PathBuf::new(),
+                spdx_3: std::path::PathBuf::new(),
+            },
+        };
+        let err = layer0_document_integrity("synthetic", &sboms)
+            .expect_err("I3 did not fire on a 0-vs-1 root-edge disagreement");
+        assert_eq!(err.invariant_name, "i3-root-out-edge-count-agrees-across-formats");
+        assert!(err.observed.contains("CycloneDX=0"), "{}", err.observed);
+        assert!(err.observed.contains("SPDX 2.3=1"), "{}", err.observed);
+    }
 }
