@@ -1205,7 +1205,7 @@ pub fn layer0_document_integrity(
         spdx3_root_out_edges(&sboms.spdx_3),
     );
     // Targets whose SPDX 3 root-edge count is known to disagree, tracked in
-    // the issue named below. Listed rather than tolerated silently: the
+    // issue #1022. Listed rather than tolerated silently: the
     // entry IS the acceptance test for the fix, and deleting it is how the
     // fix proves itself.
     //
@@ -1215,7 +1215,7 @@ pub fn layer0_document_integrity(
     // the goldens at the time of writing — django 14/14/1 with 73/74/61
     // total edges, python 2/2/1 with 15/15/14.
     const KNOWN_SPDX3_ROOT_EDGE_DIVERGENCE: &[&str] =
-        &["pants-example-django", "pants-example-python"];
+        &["pants-example-django", "pants-example-python"]; // issue #1022
     let expect_spdx3 = !KNOWN_SPDX3_ROOT_EDGE_DIVERGENCE.contains(&target);
     let disagrees = a != b || (expect_spdx3 && a != c);
     if disagrees {
