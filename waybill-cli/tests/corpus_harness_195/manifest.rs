@@ -235,6 +235,45 @@ pub const TARGETS: &[CorpusTarget] = &[
         exercises: "m143 .cabal design-tier emission + #936 cross-manifest constraint union + #938 per-dependency lockfile scoping + #943 case-preserving Hackage identifiers",
         layer1: super::layer1_assertions::haskell_aeson_layer1,
     },
+    // The SECOND corpus target that resolves through nixpkgs, and the reason
+    // it exists: until it did, `haskell-language-server` was the only one, so
+    // every statement about nixpkgs Haskell resolution — including "100%
+    // agreement with `nix eval`" after #1032 and #1033 — was a statement about
+    // one project rather than about waybill.
+    //
+    // It was chosen for three properties, each verified before it was added:
+    //
+    //   * a DIFFERENT pinned nixpkgs revision (567a49d1…, against HLS's
+    //     cbb5cf35…), so a defect specific to one revision's package set
+    //     cannot hide behind agreement on the other;
+    //
+    //   * a DIFFERENT `cabal.project` shape. HLS lists directories
+    //     explicitly; this declares `packages: code/*/*.cabal`, a two-wildcard
+    //     glob. Issue #1032's filter has to handle both, and the glob arm was
+    //     otherwise unexercised by any corpus target;
+    //
+    //   * a large TRANSITIVE population — 59 declared against 189 transitive,
+    //     1,469 closure edges. #1033's defect lived on the transitive path
+    //     and waybill's version-disagreement detector still does not cover it,
+    //     so that is where an undisclosed wrong answer would appear.
+    //
+    // Measured against `nix eval` before adding: 217 agree, 4 disclosed,
+    // 0 absent, 0 disagreeing.
+    CorpusTarget {
+        name: "haskell-security-advisories",
+        source: SourceKind::Git {
+            clone_url: "https://github.com/haskell/security-advisories",
+        },
+        pinned: PinnedRef::Sha {
+            // HEAD of `main` as of 2026-09-28.
+            hex: "4dc0b9b921bd71688388b1cd8486c26fde568b76",
+        },
+        ecosystem: Ecosystem::Haskell,
+        exercises: "nixpkgs-backed Haskell resolution at a second revision (#971 oracle \
+                    generality), the #1032 cabal.project glob arm (`code/*/*.cabal`), and \
+                    the transitive closure path where #1033's defect lived",
+        layer1: super::layer1_assertions::haskell_security_advisories_layer1,
+    },
     // #969 — the FIRST corpus target that exercises nixpkgs-backed Haskell
     // version resolution. `haskell-aeson` has no `flake.lock` at all, so the
     // whole #947 code path was uncovered by any corpus target; every one of

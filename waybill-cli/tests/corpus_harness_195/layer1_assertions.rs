@@ -857,6 +857,109 @@ pub fn haskell_aeson_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure
     Ok(())
 }
 
+/// The second nixpkgs-resolving Haskell target. The manifest entry records why
+/// a second one exists.
+///
+/// Every tripwire below guards something that fails SILENTLY: a wrong version,
+/// a missing package, a fabricated coordinate. None of them would show up in a
+/// component count, which is what makes them worth asserting.
+pub fn haskell_security_advisories_layer1(
+    sboms: &EmittedSboms,
+) -> Result<(), AssertionFailure> {
+    let components = sboms.cdx["components"].as_array().map(Vec::as_slice).unwrap_or(&[]);
+    let prop = |c: &serde_json::Value, k: &str| -> Option<String> {
+        c["properties"].as_array()?.iter().find_map(|x| {
+            (x["name"].as_str()? == k).then(|| x["value"].as_str().unwrap_or("").to_string())
+        })
+    };
+
+    // Tripwire 1 — nixpkgs resolution engaged at all. `haskell-aeson` has no
+    // `flake.lock`, so before this target a total failure of the #947 path on
+    // a second repository would have shown up nowhere.
+    let resolved = components
+        .iter()
+        .filter(|c| prop(c, "waybill:nixpkgs-component-origin").is_some())
+        .count();
+    if resolved < 150 {
+        return Err(AssertionFailure {
+            invariant_name: "nixpkgs-resolution-engaged",
+            format: FailureFormat::Cdx,
+            observed: format!("{resolved} components carry waybill:nixpkgs-component-origin"),
+            expected: "at least 150 (measured 248: 59 declared + 189 transitive)".to_string(),
+            suggested_action:
+                "the nixpkgs Haskell path degraded on this target. Check the flake.lock shape \
+                 (#947), the package-set fetch, and whether the harness hydrated \
+                 hackage-packages.nix AND configuration-common.nix (#1033)",
+        });
+    }
+
+    // Tripwire 2 — the transitive closure is walked. #1033's defect lived on
+    // this path and waybill's version-disagreement detector still does not
+    // cover it, so a regression here is undisclosed by construction.
+    let transitive = components
+        .iter()
+        .filter(|c| prop(c, "waybill:nixpkgs-component-origin").as_deref() == Some("transitive"))
+        .count();
+    if transitive < 100 {
+        return Err(AssertionFailure {
+            invariant_name: "nixpkgs-transitive-closure-walked",
+            format: FailureFormat::Cdx,
+            observed: format!("{transitive} transitive components"),
+            expected: "at least 100 (measured 189)".to_string(),
+            suggested_action:
+                "the m985 runtime-closure walk stopped early or did not run. A declared-only \
+                 result still looks plausible, which is why this is asserted rather than eyeballed",
+        });
+    }
+
+    // Tripwire 3 (#1032) — the `packages: code/*/*.cabal` glob resolves to the
+    // six real packages and nothing else. A filter that matched too broadly
+    // would re-admit fixtures; one that matched too narrowly would drop real
+    // packages, and BOTH leave a document that still looks reasonable.
+    for pkg in ["hsec-core", "hsec-tools", "cvss", "osv", "purl"] {
+        let want = format!("pkg:hackage/{pkg}");
+        if !cdx_has_component_purl(&sboms.cdx, |p| p == want || p.starts_with(&format!("{want}@"))) {
+            return Err(AssertionFailure {
+                invariant_name: "cabal-project-glob-packages-present",
+                format: FailureFormat::Cdx,
+                observed: format!("{want} absent"),
+                expected: "the six packages `cabal.project` declares via `code/*/*.cabal`"
+                    .to_string(),
+                suggested_action:
+                    "issue #1032's cabal.project filter dropped a declared package. The glob arm \
+                     (`code/*/*.cabal`) is exercised only by this target",
+            });
+        }
+    }
+
+    // Tripwire 4 — no fabricated Hackage coordinate. Every `pkg:hackage/*`
+    // must carry a name the package set knows; #1032's symptom was
+    // coordinates like `pkg:hackage/a@1.0.0` that resolve to nothing and
+    // match no advisory, which no count would reveal.
+    let versionless_declared = components
+        .iter()
+        .filter(|c| {
+            c["purl"].as_str().is_some_and(|p| p.starts_with("pkg:hackage/"))
+                && prop(c, "waybill:nixpkgs-component-origin").is_none()
+        })
+        .count();
+    if versionless_declared > 10 {
+        return Err(AssertionFailure {
+            invariant_name: "no-unresolved-hackage-residue",
+            format: FailureFormat::Cdx,
+            observed: format!("{versionless_declared} pkg:hackage/* components nixpkgs never saw"),
+            expected: "at most 10 — every real dependency resolves through the pinned package set"
+                .to_string(),
+            suggested_action:
+                "components the package set does not know are either fabricated (#1032) or a \
+                 resolution regression. Run `xtask nix-oracle` against the emitted CycloneDX \
+                 for the exact list",
+        });
+    }
+
+    Ok(())
+}
+
 // -----------------------------------------------------------------------
 // haskell-language-server (#969)
 // -----------------------------------------------------------------------

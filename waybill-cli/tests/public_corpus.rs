@@ -198,6 +198,22 @@ fn corpus_haskell_language_server() {
     run_target("haskell-language-server");
 }
 
+// The SECOND nixpkgs-resolving Haskell target. Until it existed,
+// `haskell-language-server` was the only one, so every claim about nixpkgs
+// Haskell resolution — including "agrees with `nix eval` on every component"
+// after #1032 and #1033 — described one project rather than waybill.
+//
+// Chosen for a different pinned nixpkgs revision, a different `cabal.project`
+// shape (`packages: code/*/*.cabal`, the glob arm of #1032 that no other
+// target exercises), and a large transitive population, which is where
+// #1033's defect lived and where waybill's disagreement detector still does
+// not reach. See `layer1_assertions::haskell_security_advisories_layer1`.
+#[test]
+#[ignore = "public-corpus target: needs WAYBILL_RUN_PUBLIC_CORPUS=1 and a populated corpus cache. Ignored rather than silently early-returning: a gated test that prints `skipping` and reports `ok` is indistinguishable from one that compared goldens, and a green local run then implies corpus coverage it does not have. CI passes --include-ignored. See #918."]
+fn corpus_haskell_security_advisories() {
+    run_target("haskell-security-advisories");
+}
+
 // -----------------------------------------------------------------------
 // US4 — byte-identity across two consecutive runs (opt-in-within-opt-in)
 // -----------------------------------------------------------------------
