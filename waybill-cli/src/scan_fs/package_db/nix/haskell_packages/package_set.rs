@@ -494,3 +494,237 @@ mod relation_tests {
         assert_eq!(set.get("x").unwrap().runtime_relations, vec!["alpha", "mid", "zeta"]);
     }
 }
+
+/// Issue #1033 — the top-level version rebinds in `configuration-common.nix`.
+///
+/// `hackage-packages.nix` is generated from Hackage and carries, under the
+/// plain attribute name, whatever version the generator chose. nixpkgs then
+/// **rebinds** some of those names to a pinned alternative:
+///
+/// ```nix
+/// ghc-typelits-natnormalise = doDistribute self.ghc-typelits-natnormalise_0_7_12;
+/// ```
+///
+/// The composed package set therefore has `0.7.12` where the generated file
+/// still says `0.7.10` under that name. waybill read only the generated file,
+/// so it emitted the superseded version and said nothing — measured on
+/// `haskell-language-server`, where both of the revision's top-level rebinds
+/// appeared in the dependency set and both were wrong.
+///
+/// # Why only the top level
+///
+/// The same `<name> = self.<name>_<version>;` shape appears **20 more times**
+/// in that file at deeper indentation, inside `overrideScope` blocks and
+/// per-package overlays. Those are one package's private view, not a rebind of
+/// the shared set. Applying them globally would introduce twenty new wrong
+/// versions — strictly worse than the bug this fixes.
+///
+/// So the rule is: after the file's top-level `in`, at an indentation of
+/// exactly two spaces. Measured at revision `cbb5cf35…`: 22 matches of the
+/// shape, of which exactly 2 satisfy this and they are precisely the two that
+/// were wrong.
+///
+/// # This is a heuristic, and its failure direction is deliberate
+///
+/// Indentation is a proxy for "direct member of the override set" and a
+/// reformatting of nixpkgs would break it. It breaks toward matching
+/// **nothing**, which is exactly today's behaviour, rather than toward
+/// applying an override that does not apply. A parser that tracked brace depth
+/// would be sturdier; the rest of this module is regex over Nix source, and a
+/// rule whose failure mode is "no change" is the one to prefer while that
+/// stays true.
+///
+/// Returns plain-name → alias-attribute-name.
+pub(crate) fn parse_top_level_version_rebinds(text: &str) -> HashMap<String, String> {
+    let mut out = HashMap::new();
+    let mut seen_in = false;
+    for line in text.lines() {
+        // The `let ... in` that opens the override set. Bindings before it are
+        // `let` bindings and are not members of the set.
+        if !seen_in {
+            if line == "in" || line.starts_with("in ") {
+                seen_in = true;
+            }
+            continue;
+        }
+        // Exactly two spaces of indent, and not three.
+        let Some(rest) = line.strip_prefix("  ") else {
+            continue;
+        };
+        if rest.starts_with(' ') {
+            continue;
+        }
+        let Some((lhs, rhs)) = rest.split_once(" = ") else {
+            continue;
+        };
+        let name = lhs.trim().trim_matches('"');
+        if name.is_empty() || !name.chars().all(|c| c.is_ascii_alphanumeric() || "-_.'".contains(c))
+        {
+            continue;
+        }
+        // `self.<alias>;` optionally wrapped in `doDistribute`.
+        let rhs = rhs.trim().trim_end_matches(';').trim();
+        let rhs = rhs.strip_prefix("doDistribute ").unwrap_or(rhs).trim();
+        let Some(alias) = rhs.strip_prefix("self.") else {
+            continue;
+        };
+        // Only a versioned alias OF THE SAME PACKAGE. `foo = self.bar_1_2` is
+        // an aliasing decision, not a version pin, and is left alone.
+        let Some(suffix) = alias.strip_prefix(name) else {
+            continue;
+        };
+        if !suffix.starts_with('_') || !suffix[1..].chars().all(|c| c.is_ascii_digit() || c == '_') {
+            continue;
+        }
+        out.insert(name.to_string(), alias.to_string());
+    }
+    out
+}
+
+impl PackageSet {
+    /// Apply issue #1033's rebinds: a rebound name takes the alias's version.
+    ///
+    /// A rebind naming an alias this revision does not carry is ignored rather
+    /// than guessed at — the generated file is the authority on what exists.
+    /// Returns the number of entries whose version changed.
+    pub(crate) fn apply_version_rebinds(&mut self, rebinds: &HashMap<String, String>) -> usize {
+        let mut changed = 0usize;
+        for (name, alias) in rebinds {
+            let Some(alias_entry) = self.entries.get(alias).cloned() else {
+                continue;
+            };
+            if let Some(target) = self.entries.get_mut(name) {
+                if target.version != alias_entry.version {
+                    target.version = alias_entry.version;
+                    // The alias's own relations and hash describe the alias's
+                    // source, which is what the rebound name now resolves to.
+                    target.runtime_relations = alias_entry.runtime_relations;
+                    target.source_hash = alias_entry.source_hash;
+                    changed += 1;
+                }
+            }
+        }
+        changed
+    }
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod rebind_tests {
+    //! Issue #1033. The fixture is the real shape of
+    //! `configuration-common.nix` at nixpkgs `cbb5cf35…`, including the
+    //! nested bindings that must NOT be applied — those are the trap: the
+    //! same syntax appears 20 more times inside `overrideScope` blocks, and
+    //! applying them globally would be worse than the bug.
+
+    use super::*;
+
+    const REAL_SHAPE: &str = r#"# COMMON OVERRIDES FOR THE HASKELL PACKAGE SET IN NIXPKGS
+{ pkgs, haskellLib }:
+
+self: super:
+
+let
+  inherit (pkgs) fetchpatch lib;
+  # A `let` binding of the same shape, before the `in`. Not a member of the
+  # override set, and must not be read as one.
+  trap-let-binding = self.trap-let-binding_9_9_9;
+in
+{
+  ghc-tcplugins-extra = doDistribute self.ghc-tcplugins-extra_0_5;
+  ghc-typelits-natnormalise = doDistribute self.ghc-typelits-natnormalise_0_7_12;
+
+  cabal-install = super.cabal-install.overrideScope (self: super: {
+    Cabal = self.Cabal_3_16_1_0;
+    Cabal-syntax = self.Cabal-syntax_3_16_1_0;
+  });
+
+  some-package = super.some-package.override {
+    hnix-store-core = self.hnix-store-core_0_8_0_0;
+  };
+
+  # An alias to a DIFFERENT package: a naming decision, not a version pin.
+  foo = self.bar_1_2_3;
+
+  # Not a version alias at all.
+  plain-override = doJailbreak super.plain-override;
+}
+"#;
+
+    #[test]
+    fn only_top_level_same_package_version_rebinds_are_read() {
+        let got = parse_top_level_version_rebinds(REAL_SHAPE);
+        let mut keys: Vec<&str> = got.keys().map(String::as_str).collect();
+        keys.sort();
+        assert_eq!(
+            keys,
+            vec!["ghc-tcplugins-extra", "ghc-typelits-natnormalise"],
+            "got {got:?}",
+        );
+        assert_eq!(got["ghc-tcplugins-extra"], "ghc-tcplugins-extra_0_5");
+        assert_eq!(
+            got["ghc-typelits-natnormalise"],
+            "ghc-typelits-natnormalise_0_7_12"
+        );
+    }
+
+    #[test]
+    fn a_nested_rebind_is_not_applied() {
+        let got = parse_top_level_version_rebinds(REAL_SHAPE);
+        for n in ["Cabal", "Cabal-syntax", "hnix-store-core"] {
+            assert!(
+                !got.contains_key(n),
+                "{n} is scoped to one package's override and must not rebind the shared set",
+            );
+        }
+    }
+
+    #[test]
+    fn a_let_binding_before_the_in_is_not_a_member() {
+        let got = parse_top_level_version_rebinds(REAL_SHAPE);
+        assert!(!got.contains_key("trap-let-binding"));
+    }
+
+    #[test]
+    fn an_alias_to_another_package_is_left_alone() {
+        let got = parse_top_level_version_rebinds(REAL_SHAPE);
+        assert!(!got.contains_key("foo"), "foo = self.bar_1_2_3 is not a version pin");
+        assert!(!got.contains_key("plain-override"));
+    }
+
+    fn entry(v: &str) -> PackageSetEntry {
+        PackageSetEntry {
+            version: v.to_string(),
+            runtime_relations: vec![],
+            source_hash: None,
+        }
+    }
+
+    #[test]
+    fn applying_a_rebind_takes_the_alias_version() {
+        let mut ps = PackageSet::default();
+        ps.entries.insert("ghc-typelits-natnormalise".into(), entry("0.7.10"));
+        ps.entries.insert("ghc-typelits-natnormalise_0_7_12".into(), entry("0.7.12"));
+        let rebinds = parse_top_level_version_rebinds(REAL_SHAPE);
+        let changed = ps.apply_version_rebinds(&rebinds);
+        assert_eq!(changed, 1);
+        assert_eq!(ps.get("ghc-typelits-natnormalise").unwrap().version, "0.7.12");
+        // The alias itself is untouched and still addressable.
+        assert_eq!(ps.get("ghc-typelits-natnormalise_0_7_12").unwrap().version, "0.7.12");
+    }
+
+    #[test]
+    fn a_rebind_naming_an_absent_alias_changes_nothing() {
+        let mut ps = PackageSet::default();
+        ps.entries.insert("ghc-tcplugins-extra".into(), entry("0.4.6"));
+        let rebinds = parse_top_level_version_rebinds(REAL_SHAPE);
+        assert_eq!(ps.apply_version_rebinds(&rebinds), 0);
+        assert_eq!(ps.get("ghc-tcplugins-extra").unwrap().version, "0.4.6");
+    }
+
+    #[test]
+    fn a_file_with_no_rebinds_is_a_no_op() {
+        assert!(parse_top_level_version_rebinds("self: super: {\n}\n").is_empty());
+        assert!(parse_top_level_version_rebinds("").is_empty());
+    }
+}
