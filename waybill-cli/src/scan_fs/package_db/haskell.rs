@@ -342,6 +342,13 @@ struct CabalStanza {
     label: Option<String>,
     build_depends: Vec<DeclaredDep>,
     build_tool_depends: Vec<DeclaredDep>,
+    /// Issue #955 — is this stanza built under the manifest's DEFAULT flag
+    /// assignment?
+    ///
+    /// `false` ONLY when a `buildable: False` applies under the declared flag
+    /// defaults. Every other case, including any condition this parser cannot
+    /// evaluate, leaves it `true`: see [`stanza_default_buildable`].
+    default_buildable: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1253,7 +1260,8 @@ fn parse_cabal_manifest(path: &Path) -> anyhow::Result<CabalManifest> {
         .captures(&text)
         .and_then(|c| c.get(1).map(|m| m.as_str().to_string()));
     let hpack_generated = hpack_header_re().is_match(&text);
-    let (stanzas, skipped_entries) = extract_stanzas_counting(&text);
+    let flag_defaults = parse_flag_defaults(&text);
+    let (stanzas, skipped_entries) = extract_stanzas_counting(&text, &flag_defaults);
 
     // #954 — the project's own declared license.
     //
@@ -1292,11 +1300,178 @@ fn parse_cabal_manifest(path: &Path) -> anyhow::Result<CabalManifest> {
     })
 }
 
+/// Issue #955 — flag defaults declared by `flag <name>` blocks.
+///
+/// Keys are lowercased: Cabal flag names are case-insensitive. A flag block
+/// that omits `default:` defaults to **True**, per the Cabal specification —
+/// so an absent entry and a `default: True` entry mean the same thing and this
+/// map only needs to record what it saw.
+fn parse_flag_defaults(text: &str) -> HashMap<String, bool> {
+    let mut out = HashMap::new();
+    let mut current: Option<(String, usize)> = None;
+    for line in text.lines() {
+        let indent = line.len() - line.trim_start().len();
+        let t = line.trim();
+        if t.is_empty() || t.starts_with("--") {
+            continue;
+        }
+        // A line at or left of the `flag` keyword's indent closes the block.
+        if let Some((_, flag_indent)) = &current {
+            if indent <= *flag_indent {
+                current = None;
+            }
+        }
+        let lower = t.to_lowercase();
+        if let Some(rest) = lower.strip_prefix("flag ") {
+            let name = rest.trim();
+            if !name.is_empty() {
+                // Absent `default:` means True; recorded now and overwritten
+                // below if the block states otherwise.
+                out.insert(name.to_string(), true);
+                current = Some((name.to_string(), indent));
+            }
+            continue;
+        }
+        if let Some((name, _)) = &current {
+            if let Some(v) = lower.strip_prefix("default:") {
+                match v.trim() {
+                    "false" => {
+                        out.insert(name.clone(), false);
+                    }
+                    "true" => {
+                        out.insert(name.clone(), true);
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
+    out
+}
+
+/// Evaluate a Cabal conditional under default flags.
+///
+/// `Some(bool)` only for conditions made purely of `flag(...)` terms, which are
+/// the ones the declared defaults settle. `None` for everything else —
+/// `os(...)`, `arch(...)`, `impl(...)`, and any combination containing them —
+/// because those depend on the build environment and evaluating them would be
+/// solving, not parsing.
+fn eval_cabal_condition(cond: &str, flags: &HashMap<String, bool>) -> Option<bool> {
+    let c = cond.trim().trim_end_matches(':').trim();
+    // Lowest precedence first, so `a && b || c` groups as `(a && b) || c`.
+    if let Some((l, r)) = split_top_level(c, "||") {
+        return Some(eval_cabal_condition(&l, flags)? || eval_cabal_condition(&r, flags)?);
+    }
+    if let Some((l, r)) = split_top_level(c, "&&") {
+        return Some(eval_cabal_condition(&l, flags)? && eval_cabal_condition(&r, flags)?);
+    }
+    let c = c.trim();
+    // A fully parenthesised term.
+    if let Some(inner) = c.strip_prefix('(').and_then(|r| r.strip_suffix(')')) {
+        if split_top_level(inner, "||").is_none() || inner.contains("flag(") {
+            return eval_cabal_condition(inner, flags);
+        }
+    }
+    let (negated, body) = match c.strip_prefix('!') {
+        Some(rest) => (true, rest.trim()),
+        None => (false, c),
+    };
+    let lower = body.to_lowercase();
+    let inner = lower.strip_prefix("flag(")?.strip_suffix(')')?;
+    if inner.contains("&&") || inner.contains("||") || inner.contains('(') {
+        return None;
+    }
+    // Cabal's default for an undeclared flag is True.
+    let value = *flags.get(inner.trim()).unwrap_or(&true);
+    Some(if negated { !value } else { value })
+}
+
+/// Split on the first top-level (unparenthesised) occurrence of `op`.
+fn split_top_level(s: &str, op: &str) -> Option<(String, String)> {
+    let bytes = s.as_bytes();
+    let mut depth = 0i32;
+    let mut i = 0usize;
+    while i < bytes.len() {
+        match bytes[i] {
+            b'(' => depth += 1,
+            b')' => depth -= 1,
+            _ => {
+                if depth == 0 && s[i..].starts_with(op) {
+                    return Some((s[..i].to_string(), s[i + op.len()..].to_string()));
+                }
+            }
+        }
+        i += 1;
+    }
+    None
+}
+
+/// Issue #955 — is this stanza built under the manifest's DEFAULT flags?
+///
+/// Returns `false` ONLY when a `buildable: False` is reached under conditions
+/// this parser can evaluate. It is deliberately one-directional: waybill does
+/// not evaluate Cabal conditionals in general and should not start — that is a
+/// solver, not a parser — so anything it cannot settle leaves the stanza
+/// buildable.
+///
+/// Being wrong in that direction costs an extra component in the document.
+/// Being wrong in the other direction marks a dependency the project really
+/// does build as conditional, which is the failure mode #937 and #938 both
+/// had: a reader quietly saying less than the project declared.
+fn stanza_default_buildable(block: &str, flags: &HashMap<String, bool>) -> bool {
+    // (indent, branch-is-taken) for each open conditional.
+    let mut stack: Vec<(usize, Option<bool>)> = Vec::new();
+    // The most recent `if` seen at a given indent, so `else` can negate it.
+    let mut last_if: HashMap<usize, Option<bool>> = HashMap::new();
+    let mut buildable = true;
+
+    for line in block.lines() {
+        let indent = line.len() - line.trim_start().len();
+        let t = line.trim();
+        if t.is_empty() || t.starts_with("--") {
+            continue;
+        }
+        while stack.last().is_some_and(|(ci, _)| indent <= *ci) {
+            stack.pop();
+        }
+        let lower = t.to_lowercase();
+        if let Some(cond) = lower.strip_prefix("if ") {
+            let taken = eval_cabal_condition(cond, flags);
+            last_if.insert(indent, taken);
+            stack.push((indent, taken));
+            continue;
+        }
+        if lower == "else" {
+            let taken = last_if.get(&indent).copied().flatten().map(|b| !b);
+            stack.push((indent, taken));
+            continue;
+        }
+        if let Some(v) = lower.strip_prefix("buildable:") {
+            // An unevaluable condition anywhere above this line means we
+            // cannot say whether it applies. Decline rather than guess.
+            if stack.iter().any(|(_, c)| c.is_none()) {
+                return true;
+            }
+            if stack.iter().all(|(_, c)| *c == Some(true)) {
+                match v.trim() {
+                    "false" => buildable = false,
+                    "true" => buildable = true,
+                    _ => {}
+                }
+            }
+        }
+    }
+    buildable
+}
+
 /// Extract per-stanza `build-depends:` + `build-tool-depends:` blocks
 /// from a *.cabal body. Per research §R4.
 /// Stanzas, plus the number of dependency entries that could not be read
 /// across all of them (FR-012a).
-fn extract_stanzas_counting(text: &str) -> (Vec<CabalStanza>, usize) {
+fn extract_stanzas_counting(
+    text: &str,
+    flag_defaults: &HashMap<String, bool>,
+) -> (Vec<CabalStanza>, usize) {
     let mut out: Vec<CabalStanza> = Vec::new();
     let mut skipped_entries: usize = 0;
     // Collect all stanza openers + their character offsets.
@@ -1337,6 +1512,7 @@ fn extract_stanzas_counting(text: &str) -> (Vec<CabalStanza>, usize) {
             label: label.clone(),
             build_depends,
             build_tool_depends,
+            default_buildable: stanza_default_buildable(block, flag_defaults),
         });
     }
     (out, skipped_entries)
@@ -1802,6 +1978,28 @@ fn build_main_module(
     })
 }
 
+/// Issue #955 — dependency names declared by at least one stanza that IS built
+/// under the manifest's default flags.
+///
+/// `None` when every stanza is default-buildable, which is the overwhelmingly
+/// common case and the byte-identity guarantee: with nothing proven
+/// unbuildable there is nothing to classify, and the caller skips the pass
+/// entirely rather than computing a set it would compare everything against.
+fn names_in_default_build(manifest: &CabalManifest) -> Option<HashSet<String>> {
+    if manifest.stanzas.iter().all(|s| s.default_buildable) {
+        return None;
+    }
+    Some(
+        manifest
+            .stanzas
+            .iter()
+            .filter(|s| s.default_buildable)
+            .flat_map(|s| s.build_depends.iter().chain(s.build_tool_depends.iter()))
+            .map(|d| d.name.to_lowercase())
+            .collect(),
+    )
+}
+
 fn build_design_tier_components(
     manifest: &CabalManifest,
     cabal_path: &Path,
@@ -1820,7 +2018,23 @@ fn build_design_tier_components(
     // `waybill:graph-completeness` to `partial` for a reason that is an
     // artifact of the scan rather than a property of the project.
     let main_name = manifest.name.clone().unwrap_or_default();
-    for (dep, scope) in collect_design_tier_deps(manifest) {
+    // Issue #955 — names that survive into the default build. `None` means
+    // every stanza is built, so nothing is reclassified.
+    let default_build_names = names_in_default_build(manifest);
+    for (dep, mut scope) in collect_design_tier_deps(manifest) {
+        // A dependency declared ONLY by stanzas that are not built under the
+        // declared flag defaults. It stays in the document — dropping a
+        // declared dependency because one configuration excludes it is its own
+        // wrong answer, and a reader that silently omits what the project
+        // declared is the failure #937 and #938 both had. It is marked instead,
+        // so a consumer filtering to a default build can exclude it and one
+        // auditing what the project can build still sees it.
+        let conditional = default_build_names
+            .as_ref()
+            .is_some_and(|built| !built.contains(&dep.name.to_lowercase()));
+        if conditional {
+            scope = LifecycleScope::Optional;
+        }
         // Compared case-insensitively (#943): identity now preserves the
         // declared spelling, and two manifests in one repository may spell the
         // same local package differently.
@@ -1854,6 +2068,17 @@ fn build_design_tier_components(
             Err(_) => continue,
         };
         let mut extra_annotations = base_annotations("hackage-cabal-design");
+        if conditional {
+            // C122's open enum of mechanisms that produced `LifecycleScope::
+            // Optional`. No new catalog row: the row exists to say WHICH
+            // construct made a dependency optional, and "declared only by a
+            // stanza that `buildable: False` excludes from the default build"
+            // is one of those constructs.
+            extra_annotations.insert(
+                "waybill:optional-derivation".to_string(),
+                serde_json::Value::String("cabal-flag-disabled-stanza".to_string()),
+            );
+        }
         // `waybill:requirement-ranges` is NOT written into the annotation bag.
         //
         // It used to be written here AND into the typed `requirement_ranges`
@@ -2253,6 +2478,7 @@ version: 0.1.0
                         DeclaredDep { name: "text".to_string(), range: None, executable: None, all_ranges: Vec::new() },
                     ],
                     build_tool_depends: vec![],
+                    default_buildable: true,
                 },
                 CabalStanza {
                     kind: StanzaKind::TestSuite,
@@ -2262,6 +2488,7 @@ version: 0.1.0
                         DeclaredDep { name: "hspec".to_string(), range: None, executable: None, all_ranges: Vec::new() },
                     ],
                     build_tool_depends: vec![],
+                    default_buildable: true,
                 },
             ],
             hpack_generated: false,
@@ -2340,5 +2567,192 @@ version: 0.1.0
         };
         let c = build_snapshot_placeholder(&snap);
         assert_eq!(c.purl.as_str(), "pkg:generic/ghc-9.6.4@unspecified");
+    }
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod buildable_tests {
+    //! Issue #955 — a stanza excluded from the default build by `buildable:`
+    //! has its exclusive dependencies marked, not dropped.
+
+    use super::*;
+
+    /// The shape from the issue: an executable gated behind a flag that
+    /// defaults off, declaring two dependencies nothing else declares.
+    const SLACK_SHAPE: &str = r#"
+name: slack-web
+version: 2.0.0
+
+flag cli
+  description: Build a CLI client for testing.
+  default:     False
+  manual:      True
+
+library
+  build-depends:
+      base, text, servant-client-core
+
+executable slack-web-cli
+  if flag(cli)
+    buildable: True
+  else
+    buildable: False
+  build-depends:
+      base, butcher, monad-loops, text
+"#;
+
+    fn manifest_from(text: &str) -> CabalManifest {
+        let flags = parse_flag_defaults(text);
+        let (stanzas, skipped) = extract_stanzas_counting(text, &flags);
+        CabalManifest {
+            name: Some("slack-web".to_string()),
+            version: Some("2.0.0".to_string()),
+            license: None,
+            stanzas,
+            hpack_generated: false,
+            skipped_entries: skipped,
+        }
+    }
+
+    fn components(text: &str) -> Vec<PackageDbEntry> {
+        let m = manifest_from(text);
+        build_design_tier_components(&m, Path::new("/repo/slack-web.cabal"), &HashSet::new())
+    }
+
+    #[test]
+    fn flag_defaults_are_read_including_the_absent_case() {
+        let f = parse_flag_defaults(SLACK_SHAPE);
+        assert_eq!(f.get("cli"), Some(&false));
+        // Cabal's default for a flag block with no `default:` is True.
+        let f2 = parse_flag_defaults("flag extras\n  description: x\n");
+        assert_eq!(f2.get("extras"), Some(&true));
+    }
+
+    #[test]
+    fn a_flag_gated_stanza_is_not_built_under_defaults() {
+        let m = manifest_from(SLACK_SHAPE);
+        let exe = m
+            .stanzas
+            .iter()
+            .find(|s| s.kind == StanzaKind::Executable)
+            .expect("executable stanza parsed");
+        let lib = m
+            .stanzas
+            .iter()
+            .find(|s| s.kind == StanzaKind::Library)
+            .expect("library stanza parsed");
+        assert!(!exe.default_buildable, "flag(cli) defaults False -> else -> buildable: False");
+        assert!(lib.default_buildable, "the library has no buildable: and is built");
+    }
+
+    #[test]
+    fn exclusive_dependencies_of_a_disabled_stanza_are_marked_not_dropped() {
+        let comps = components(SLACK_SHAPE);
+        let by: std::collections::HashMap<&str, &PackageDbEntry> =
+            comps.iter().map(|c| (c.name.as_str(), c)).collect();
+
+        // Still present. Dropping a declared dependency is the failure this
+        // policy exists to avoid.
+        for n in ["butcher", "monad-loops"] {
+            let c = by.get(n).unwrap_or_else(|| panic!("{n} must still be emitted"));
+            assert_eq!(c.lifecycle_scope, Some(LifecycleScope::Optional), "{n}");
+            assert_eq!(
+                c.extra_annotations["waybill:optional-derivation"].as_str(),
+                Some("cabal-flag-disabled-stanza"),
+                "{n}",
+            );
+        }
+
+        // Declared by the library too, so it is in the default build and must
+        // NOT be reclassified — this is what makes the rule "exclusive to a
+        // disabled stanza" rather than "mentioned by one".
+        for n in ["base", "text"] {
+            let c = by.get(n).unwrap_or_else(|| panic!("{n} must be emitted"));
+            assert_ne!(
+                c.lifecycle_scope,
+                Some(LifecycleScope::Optional),
+                "{n} is declared by the library and is built",
+            );
+            assert!(!c.extra_annotations.contains_key("waybill:optional-derivation"), "{n}");
+        }
+    }
+
+    /// The byte-identity guarantee: a manifest with nothing proven unbuildable
+    /// is untouched.
+    #[test]
+    fn an_ordinary_manifest_is_not_reclassified() {
+        let text = "name: ordinary\nversion: 1.0\n\nlibrary\n  build-depends:\n      base, text\n";
+        let comps = components(text);
+        assert!(!comps.is_empty(), "fixture declares no dependencies");
+        for c in &comps {
+            assert_ne!(c.lifecycle_scope, Some(LifecycleScope::Optional), "{}", c.name);
+            assert!(!c.extra_annotations.contains_key("waybill:optional-derivation"));
+        }
+    }
+
+    /// The conservative direction. waybill does not evaluate os/arch/impl
+    /// conditions and must not guess: an unevaluable condition leaves the
+    /// stanza buildable, costing an extra component rather than silently
+    /// downgrading one the project does build.
+    #[test]
+    fn an_unevaluable_condition_leaves_the_stanza_buildable() {
+        let flags = HashMap::new();
+        assert!(stanza_default_buildable("  if os(windows)\n    buildable: False\n", &flags));
+        assert!(stanza_default_buildable("  if impl(ghc < 9.4)\n    buildable: False\n", &flags));
+        assert!(stanza_default_buildable(
+            "  if flag(a) && os(linux)\n    buildable: False\n",
+            &flags
+        ));
+        assert_eq!(eval_cabal_condition("os(windows)", &flags), None);
+    }
+
+    /// The simple case the issue calls out as also unhandled.
+    #[test]
+    fn an_unconditional_buildable_false_is_honoured() {
+        let flags = HashMap::new();
+        assert!(!stanza_default_buildable("  buildable: False\n", &flags));
+        assert!(stanza_default_buildable("  buildable: True\n", &flags));
+    }
+
+    /// Boolean combinations of flag terms, taken verbatim from
+    /// `haskell-language-server.cabal` — the most common real shape. Without
+    /// this the parser declines on every HLS plugin stanza and reaches the
+    /// right answer only because declining also means "buildable".
+    #[test]
+    fn flag_only_boolean_conditions_are_evaluated() {
+        let mut flags = HashMap::new();
+        flags.insert("cabal".to_string(), true);
+        flags.insert("cabalfmt".to_string(), true);
+        flags.insert("off".to_string(), false);
+
+        // HLS: plugins are on by default, so the disabling branch is not taken.
+        assert_eq!(eval_cabal_condition("!flag(cabalfmt) || !flag(cabal)", &flags), Some(false));
+        assert_eq!(eval_cabal_condition("!flag(cabal)", &flags), Some(true).map(|_| false));
+        assert!(stanza_default_buildable(
+            "  if !flag(cabalfmt) || !flag(cabal)\n    buildable: False\n",
+            &flags
+        ));
+
+        // The same shape with a flag that defaults off DOES disable it.
+        assert_eq!(eval_cabal_condition("!flag(off) || !flag(cabal)", &flags), Some(true));
+        assert!(!stanza_default_buildable(
+            "  if !flag(off) || !flag(cabal)\n    buildable: False\n",
+            &flags
+        ));
+
+        assert_eq!(eval_cabal_condition("flag(cabal) && flag(cabalfmt)", &flags), Some(true));
+        assert_eq!(eval_cabal_condition("flag(cabal) && flag(off)", &flags), Some(false));
+
+        // Short-circuiting is sound and deliberately kept: a disjunction with
+        // a true term is true whatever the rest says, so an unevaluable
+        // `os(...)` beside it does not make the answer unknown. Same for a
+        // conjunction with a false term.
+        assert_eq!(eval_cabal_condition("!flag(off) || os(windows)", &flags), Some(true));
+        assert_eq!(eval_cabal_condition("flag(off) && os(windows)", &flags), Some(false));
+
+        // Where the unevaluable term actually decides the answer, it declines.
+        assert_eq!(eval_cabal_condition("flag(off) || os(windows)", &flags), None);
+        assert_eq!(eval_cabal_condition("flag(cabal) && os(windows)", &flags), None);
     }
 }
