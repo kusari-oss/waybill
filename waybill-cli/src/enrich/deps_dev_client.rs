@@ -14,6 +14,29 @@ use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
 
+/// Issue #845 — a marker that survives `anyhow`'s erasure so a caller can tell
+/// HTTP 429 from every other transport failure.
+///
+/// The `throttled` degradation mode has been in catalog row C158's closed
+/// vocabulary since milestone 839 with no producer, because this client
+/// collapsed every non-success response into one error string. That was the
+/// right call at the time: a mode that fires on the wrong condition is worse
+/// than one that never fires, since a consumer seeing `throttled` would
+/// reasonably back off on evidence that actually said "the host was
+/// unreachable".
+///
+/// This makes the distinction real rather than approximated. It is attached
+/// ONLY on a literal 429, so the mode still cannot fire on a guess.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
+#[error("deps.dev returned HTTP 429 (rate limited)")]
+pub struct Throttled;
+
+/// True when `err` (or anything it wraps) is a [`Throttled`] marker.
+pub fn is_throttled(err: &anyhow::Error) -> bool {
+    err.chain().any(|c| c.is::<Throttled>())
+}
+
+
 /// Version information from deps.dev GetVersion API.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct VersionInfo {
@@ -152,6 +175,11 @@ impl DepsDevClient {
         if !response.status().is_success() {
             let status = response.status();
             let text = response.text().await.unwrap_or_default();
+            if status == reqwest::StatusCode::TOO_MANY_REQUESTS {
+                return Err(anyhow::Error::new(Throttled).context(format!(
+                    "deps.dev GetVersionBatch failed: HTTP {status}"
+                )));
+            }
             anyhow::bail!("deps.dev GetVersionBatch failed: HTTP {status} — {text}");
         }
         let max_age = max_age_of(&response);
@@ -207,6 +235,11 @@ impl DepsDevClient {
         if !response.status().is_success() {
             let status = response.status();
             let body = response.text().await.unwrap_or_default();
+            if status == reqwest::StatusCode::TOO_MANY_REQUESTS {
+                return Err(anyhow::Error::new(Throttled).context(format!(
+                    "deps.dev GetDependencies failed: HTTP {status}"
+                )));
+            }
             anyhow::bail!(
                 "deps.dev GetDependencies failed: HTTP {status} — {body}"
             );
@@ -231,6 +264,11 @@ impl DepsDevClient {
         if !response.status().is_success() {
             let status = response.status();
             let body = response.text().await.unwrap_or_default();
+            if status == reqwest::StatusCode::TOO_MANY_REQUESTS {
+                return Err(anyhow::Error::new(Throttled).context(format!(
+                    "deps.dev GetVersion failed: HTTP {status}"
+                )));
+            }
             anyhow::bail!(
                 "deps.dev GetVersion failed: HTTP {status} — {body}"
             );
