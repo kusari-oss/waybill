@@ -2029,9 +2029,20 @@ fn build_design_tier_components(
         // declared is the failure #937 and #938 both had. It is marked instead,
         // so a consumer filtering to a default build can exclude it and one
         // auditing what the project can build still sees it.
+        //
+        // Narrowed to deps that would otherwise be RUNTIME. `LifecycleScope`
+        // is a flat enum, so `Optional` replaces rather than refines: a dep
+        // exclusive to a disabled test-suite would go `Development ->
+        // Optional`, losing the more specific scope in order to say something
+        // the Development scope already implied, since both are non-runtime
+        // and both emit CDX `scope: "excluded"`. The classification is only
+        // worth making where it changes the answer — a library or executable
+        // stanza whose dep would otherwise read as a runtime dependency of the
+        // project, which is the case the issue reported.
         let conditional = default_build_names
             .as_ref()
-            .is_some_and(|built| !built.contains(&dep.name.to_lowercase()));
+            .is_some_and(|built| !built.contains(&dep.name.to_lowercase()))
+            && scope == LifecycleScope::Runtime;
         if conditional {
             scope = LifecycleScope::Optional;
         }
@@ -2754,5 +2765,50 @@ executable slack-web-cli
         // Where the unevaluable term actually decides the answer, it declines.
         assert_eq!(eval_cabal_condition("flag(off) || os(windows)", &flags), None);
         assert_eq!(eval_cabal_condition("flag(cabal) && os(windows)", &flags), None);
+    }
+
+    /// A dep exclusive to a DISABLED TEST-SUITE keeps `Development`.
+    ///
+    /// `LifecycleScope` is flat, so marking it `Optional` would replace the
+    /// more specific scope rather than refine it — and say nothing new, since
+    /// Development is already non-runtime and already emits CDX
+    /// `scope: "excluded"`. The reclassification is only made where it changes
+    /// the answer.
+    #[test]
+    fn a_disabled_test_suites_exclusive_dep_stays_development() {
+        let text = r#"
+name: thing
+version: 1.0
+
+flag slowtests
+  default: False
+
+library
+  build-depends:
+      base
+
+test-suite thing-slow
+  if !flag(slowtests)
+    buildable: False
+  build-depends:
+      base, tasty-bench
+"#;
+        let comps = components(text);
+        let by: std::collections::HashMap<&str, &PackageDbEntry> =
+            comps.iter().map(|c| (c.name.as_str(), c)).collect();
+        let bench = by
+            .get("tasty-bench")
+            .expect("a disabled stanza's dep is still emitted");
+        assert_eq!(
+            bench.lifecycle_scope,
+            Some(LifecycleScope::Development),
+            "a test-suite dep must keep its Development scope, not be flattened to Optional",
+        );
+        assert!(
+            !bench
+                .extra_annotations
+                .contains_key("waybill:optional-derivation"),
+            "no optional-derivation annotation when the scope was not changed",
+        );
     }
 }
