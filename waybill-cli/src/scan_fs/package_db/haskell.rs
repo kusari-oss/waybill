@@ -21,9 +21,17 @@
 //!   SHA available).
 //!
 //! - `cabal.project` (cabal-DSL) — multi-package detection signal per
-//!   FR-001. Filesystem walk catches all `*.cabal`s regardless of the
-//!   `cabal.project`'s `packages:` field content, so the reader does NOT
-//!   parse this file's body (presence-only signal per research §R7).
+//!   FR-001, AND the authority on which `*.cabal` files belong to the
+//!   project (issue #1032).
+//!
+//!   This reverses research §R7, which took the file as a presence-only
+//!   signal and let the filesystem walk claim every `*.cabal` it found.
+//!   `haskell-language-server` carries 75 of them: 6 that `cabal.project`
+//!   declares, a CI helper, and 68 test fixtures. Emitting all of them put
+//!   33 coordinates in the document that exist on no registry, and 4 that
+//!   collide with real package names while carrying a fixture's version.
+//!   The `packages:` field is the project's own statement of what it
+//!   builds, so it is now read and honoured.
 //!
 //! - `*.cabal` (per-package Cabal-DSL descriptor) — main-module
 //!   emission source per FR-013 + design-tier fallback per FR-007.
@@ -719,6 +727,59 @@ pub(crate) fn finalize(
     stack_lock_paths.sort();
     stack_yaml_paths.sort();
     package_yaml_paths.sort();
+
+    // Issue #1032 — drop `.cabal` files the governing `cabal.project` does not
+    // declare.
+    //
+    // Scoped to the tree each `cabal.project` sits in, and applied only where
+    // the file actually declares a `packages:` list. A `.cabal` outside any
+    // such tree, or in a repository with no `cabal.project` at all, is
+    // untouched — a single-package project has nothing to filter against and
+    // must keep behaving exactly as it did.
+    //
+    // Measured on `haskell-language-server`: 75 `.cabal` files in the tree, 6
+    // declared. The other 69 are test fixtures and a CI helper, and emitting
+    // them produced 33 coordinates that exist on no registry plus 4 that
+    // collide with real package names while carrying a fixture's version.
+    {
+        let before = cabal_paths.len();
+        let mut dropped_total = 0usize;
+        for project in &cabal_project_paths {
+            let Some(project_dir) = project.parent() else {
+                continue;
+            };
+            let Ok(text) = std::fs::read_to_string(project) else {
+                continue;
+            };
+            let Some(entries) = parse_cabal_project_packages(&text) else {
+                // Declares no `packages:` — governs nothing rather than
+                // governing the empty set.
+                continue;
+            };
+            let declared = cabal_files_declared_by(project_dir, &entries, &cabal_paths);
+            if declared.is_empty() {
+                // Every entry failed to match. More likely a shape this parser
+                // does not understand than a project that declares nothing, so
+                // keep the tree rather than empty it.
+                tracing::debug!(
+                    project = %project.display(),
+                    "haskell: cabal.project declared packages but none matched; leaving the tree alone"
+                );
+                continue;
+            }
+            let before_this = cabal_paths.len();
+            cabal_paths.retain(|c| !c.starts_with(project_dir) || declared.contains(c));
+            dropped_total += before_this - cabal_paths.len();
+        }
+        if dropped_total > 0 {
+            tracing::info!(
+                dropped = dropped_total,
+                kept = cabal_paths.len(),
+                found = before,
+                "haskell: .cabal files not declared by a governing cabal.project were skipped (#1032)"
+            );
+        }
+    }
 
     // FR-008 / SC-004: no-op when no Haskell artifacts present.
     if cabal_paths.is_empty()
@@ -1467,6 +1528,136 @@ fn stanza_default_buildable(block: &str, flags: &HashMap<String, bool>) -> bool 
         }
     }
     buildable
+}
+
+
+/// Issue #1032 — the `.cabal` files a `cabal.project` declares as part of the
+/// project.
+///
+/// A repository may carry `.cabal` files that are not packages it ships.
+/// `haskell-language-server` has **75**: six that `cabal.project` declares, one
+/// CI helper, and **68 test fixtures** under `ghcide-test/data/` and
+/// `plugins/*/test/testdata/`. Emitting all of them produced coordinates like
+/// `pkg:hackage/a@1.0.0` and `pkg:hackage/FieldSuggestions@0.1.0` — names that
+/// exist on no registry, resolve to nothing, and match no advisory. Worse, a
+/// fixture whose name collides with a real package (`simple-cabal`, `reload`)
+/// yielded a *real* coordinate carrying a fixture's version, which looks
+/// legitimate and is wrong.
+///
+/// This reverses a documented decision. The module header said the walk
+/// "catches all `*.cabal`s regardless of the `cabal.project`'s `packages:`
+/// field content" and that the body is a presence-only signal (research §R7).
+/// The evidence is that the field is exactly the authority needed: it is the
+/// project's own statement of which descriptors belong to it.
+///
+/// Returns `None` when the file declares no `packages:` at all, which means
+/// "govern nothing" rather than "govern the empty set" — a `cabal.project` that
+/// only sets `index-state` or constraints must not remove every package in the
+/// tree.
+fn parse_cabal_project_packages(text: &str) -> Option<Vec<String>> {
+    let mut entries: Vec<String> = Vec::new();
+    let mut seen_field = false;
+    // `packages:` and `optional-packages:` both declare membership; an
+    // optional package that is present on disk is still part of the project.
+    let mut in_field = false;
+    for raw in text.lines() {
+        let line = raw.split(&['#'][..]).next().unwrap_or("");
+        if line.trim().is_empty() {
+            continue;
+        }
+        let indented = line.starts_with(' ') || line.starts_with('\t');
+        let lower = line.trim().to_lowercase();
+        let field = ["packages:", "optional-packages:"]
+            .iter()
+            .find(|f| lower.starts_with(*f))
+            .copied();
+        if let Some(f) = field {
+            if !indented || !in_field {
+                seen_field = true;
+                in_field = true;
+                let rest = line.trim()[f.len()..].trim();
+                entries.extend(rest.split_whitespace().map(str::to_string));
+                continue;
+            }
+        }
+        if in_field && indented {
+            // A continuation line of the field's list.
+            entries.extend(line.split_whitespace().map(str::to_string));
+            continue;
+        }
+        // Any other unindented field ends the list.
+        if !indented {
+            in_field = false;
+        }
+    }
+    if !seen_field {
+        return None;
+    }
+    Some(entries)
+}
+
+/// Which of `candidates` the entries of a `cabal.project` at `project_dir`
+/// declare.
+///
+/// Entries name directories (`./`, `./hls-graph`), globs (`./plugins/*`), or
+/// `.cabal` files outright. A directory entry claims the `.cabal` files
+/// directly inside it — not recursively, which is what keeps a fixture nested
+/// under a declared package's `test/testdata/` out.
+fn cabal_files_declared_by(
+    project_dir: &Path,
+    entries: &[String],
+    candidates: &[PathBuf],
+) -> HashSet<PathBuf> {
+    use globset::{GlobBuilder, GlobSetBuilder};
+
+    let mut builder = GlobSetBuilder::new();
+    let mut any = false;
+    for e in entries {
+        let e = e.trim().trim_end_matches('/');
+        if e.is_empty() {
+            continue;
+        }
+        // Normalise `./foo` to `foo`, and `.` / `./` to the root itself.
+        let rel = e.strip_prefix("./").unwrap_or(e);
+        let pattern = if rel.is_empty() || rel == "." {
+            "*.cabal".to_string()
+        } else if rel.ends_with(".cabal") {
+            rel.to_string()
+        } else {
+            // A directory (possibly containing globs): its own `.cabal`s.
+            format!("{rel}/*.cabal")
+        };
+        // `literal_separator(true)` is load-bearing. globset's default lets
+        // `*` span `/`, so the pattern `*.cabal` — what `packages: ./`
+        // becomes — matched every `.cabal` anywhere in the tree, including
+        // `ghcide-test/data/multi/b/b.cabal`. The filter then retained
+        // everything and silently did nothing, which is indistinguishable
+        // from working until you count what came out.
+        let built = GlobBuilder::new(&pattern)
+            .literal_separator(true)
+            .build();
+        if let Ok(g) = built {
+            builder.add(g.compile_matcher().glob().clone());
+            any = true;
+        } else {
+            tracing::debug!(entry = %e, "haskell: unparseable cabal.project packages entry; ignored");
+        }
+    }
+    if !any {
+        return HashSet::new();
+    }
+    let Ok(set) = builder.build() else {
+        return HashSet::new();
+    };
+    candidates
+        .iter()
+        .filter(|c| {
+            c.strip_prefix(project_dir)
+                .map(|rel| set.is_match(rel))
+                .unwrap_or(false)
+        })
+        .cloned()
+        .collect()
 }
 
 /// Extract per-stanza `build-depends:` + `build-tool-depends:` blocks
@@ -2980,5 +3171,126 @@ test-suite thing-slow
                 .contains_key("waybill:optional-derivation"),
             "no optional-derivation annotation when the scope was not changed",
         );
+    }
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod cabal_project_packages_tests {
+    //! Issue #1032 — `cabal.project`'s `packages:` decides which `.cabal`
+    //! files belong to the project.
+
+    use super::*;
+
+    /// The real shape from `haskell-language-server`.
+    const HLS: &str = r#"packages:
+         ./
+         ./shake-bench
+         ./hls-graph
+         ./ghcide
+         ./hls-plugin-api
+         ./hls-test-utils
+
+index-state: 2026-08-26T00:00:00Z
+
+tests: True
+"#;
+
+    #[test]
+    fn a_multi_line_packages_block_is_read_and_ends_at_the_next_field() {
+        let e = parse_cabal_project_packages(HLS).expect("declares packages");
+        assert_eq!(
+            e,
+            vec!["./", "./shake-bench", "./hls-graph", "./ghcide", "./hls-plugin-api", "./hls-test-utils"],
+        );
+    }
+
+    #[test]
+    fn same_line_and_optional_packages_are_both_membership() {
+        let e = parse_cabal_project_packages("packages: ./ ./extra\noptional-packages: ./maybe\n")
+            .unwrap();
+        assert_eq!(e, vec!["./", "./extra", "./maybe"]);
+    }
+
+    #[test]
+    fn comments_are_stripped() {
+        let e = parse_cabal_project_packages("packages:\n  ./a  # the a package\n").unwrap();
+        assert_eq!(e, vec!["./a"]);
+    }
+
+    /// A `cabal.project` that sets only `index-state` or constraints governs
+    /// NOTHING. Returning an empty list instead would remove every package in
+    /// the tree.
+    #[test]
+    fn a_project_file_with_no_packages_field_governs_nothing() {
+        assert!(parse_cabal_project_packages("index-state: 2026-01-01T00:00:00Z\n").is_none());
+        assert!(parse_cabal_project_packages("").is_none());
+    }
+
+    fn paths(root: &Path, rels: &[&str]) -> Vec<PathBuf> {
+        rels.iter().map(|r| root.join(r)).collect()
+    }
+
+    /// The trap. globset lets `*` span `/` by default, so `packages: ./`
+    /// becomes `*.cabal` and matched EVERY `.cabal` in the tree — the filter
+    /// retained all 74 files on HLS and silently did nothing. Indistinguishable
+    /// from working until you count what came out.
+    #[test]
+    fn a_directory_entry_claims_only_its_own_cabal_files() {
+        let root = Path::new("/repo");
+        let all = paths(
+            root,
+            &[
+                "haskell-language-server.cabal",
+                "hls-graph/hls-graph.cabal",
+                "ghcide-test/data/multi/b/b.cabal",
+                "plugins/hls-cabal-plugin/test/testdata/x/FieldSuggestions.cabal",
+            ],
+        );
+        let entries = parse_cabal_project_packages(HLS).unwrap();
+        let got = cabal_files_declared_by(root, &entries, &all);
+        assert!(got.contains(&root.join("haskell-language-server.cabal")));
+        assert!(got.contains(&root.join("hls-graph/hls-graph.cabal")));
+        assert!(
+            !got.contains(&root.join("ghcide-test/data/multi/b/b.cabal")),
+            "`packages: ./` must not claim a .cabal nested deeper in the tree",
+        );
+        assert!(!got.contains(&root.join("plugins/hls-cabal-plugin/test/testdata/x/FieldSuggestions.cabal")));
+        assert_eq!(got.len(), 2);
+    }
+
+    #[test]
+    fn an_explicit_cabal_file_entry_matches_it() {
+        let root = Path::new("/repo");
+        let all = paths(root, &["ignore-fatal.cabal", "other/other.cabal"]);
+        let got = cabal_files_declared_by(root, &["ignore-fatal.cabal".to_string()], &all);
+        assert_eq!(got, [root.join("ignore-fatal.cabal")].into_iter().collect());
+    }
+
+    #[test]
+    fn a_glob_entry_claims_each_matching_directory() {
+        let root = Path::new("/repo");
+        let all = paths(
+            root,
+            &["plugins/one/one.cabal", "plugins/two/two.cabal", "plugins/two/test/data/f.cabal", "elsewhere/e.cabal"],
+        );
+        let got = cabal_files_declared_by(root, &["./plugins/*".to_string()], &all);
+        assert!(got.contains(&root.join("plugins/one/one.cabal")));
+        assert!(got.contains(&root.join("plugins/two/two.cabal")));
+        assert!(
+            !got.contains(&root.join("plugins/two/test/data/f.cabal")),
+            "a glob over directories must not reach a fixture nested inside one",
+        );
+        assert!(!got.contains(&root.join("elsewhere/e.cabal")));
+    }
+
+    #[test]
+    fn a_cabal_file_outside_the_project_dir_is_never_claimed() {
+        let got = cabal_files_declared_by(
+            Path::new("/repo/sub"),
+            &["./".to_string()],
+            &[PathBuf::from("/repo/top.cabal")],
+        );
+        assert!(got.is_empty());
     }
 }
