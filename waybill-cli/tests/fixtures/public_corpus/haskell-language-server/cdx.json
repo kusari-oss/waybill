@@ -543,63 +543,6 @@
       "version": "1.0.2"
     },
     {
-      "bom-ref": "pkg:hackage/FieldSuggestions@0.1.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "plugins/hls-cabal-plugin/test/testdata/code-actions/FieldSuggestions.cabal"
-          }
-        ]
-      },
-      "name": "FieldSuggestions",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"plugins/hls-cabal-plugin/test/testdata/code-actions/FieldSuggestions.cabal\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:demoted-from-main-module",
-          "value": "true"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "declared"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"plugins/hls-cabal-plugin/test/testdata/code-actions\"]"
-        }
-      ],
-      "purl": "pkg:hackage/FieldSuggestions@0.1.0",
-      "type": "library",
-      "version": "0.1.0"
-    },
-    {
       "bom-ref": "pkg:hackage/Glob@0.10.2",
       "evidence": {
         "identity": [
@@ -698,7 +641,11 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"haskell-language-server.cabal\",\"plugins/hls-eval-plugin/test/testdata/test.cabal\"]"
+          "value": "[\"haskell-language-server.cabal\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
         },
         {
           "name": "waybill:source-type",
@@ -726,10 +673,11 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\".\",\"plugins/hls-eval-plugin/test/testdata\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:hackage/QuickCheck@2.15.0.1",
+      "scope": "excluded",
       "type": "library",
       "version": "2.15.0.1"
     },
@@ -800,120 +748,6 @@
       ],
       "purl": "pkg:hackage/Win32",
       "type": "library"
-    },
-    {
-      "bom-ref": "pkg:hackage/a@0.1.0.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "ghcide-test/data/cabal-exe/a/a.cabal"
-          }
-        ]
-      },
-      "name": "a",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"ghcide-test/data/cabal-exe/a/a.cabal\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:demoted-from-main-module",
-          "value": "true"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "declared"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"ghcide-test/data/cabal-exe/a\"]"
-        }
-      ],
-      "purl": "pkg:hackage/a@0.1.0.0",
-      "type": "library",
-      "version": "0.1.0.0"
-    },
-    {
-      "bom-ref": "pkg:hackage/a@1.0.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "ghcide-test/data/cross-cradle/a/a.cabal"
-          }
-        ]
-      },
-      "name": "a",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"ghcide-test/data/cross-cradle/a/a.cabal\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:demoted-from-main-module",
-          "value": "true"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "declared"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"ghcide-test/data/cross-cradle/a\"]"
-        }
-      ],
-      "purl": "pkg:hackage/a@1.0.0",
-      "type": "library",
-      "version": "1.0.0"
     },
     {
       "bom-ref": "pkg:hackage/aeson@2.2.4.1",
@@ -1216,11 +1050,11 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"ghcide-test/data/multi/a/a.cabal\",\"ghcide/ghcide.cabal\",\"haskell-language-server.cabal\",\"hls-graph/hls-graph.cabal\",\"hls-test-utils/hls-test-utils.cabal\"]"
+          "value": "[\"ghcide/ghcide.cabal\",\"haskell-language-server.cabal\",\"hls-graph/hls-graph.cabal\",\"hls-test-utils/hls-test-utils.cabal\"]"
         },
         {
           "name": "waybill:requirement-ranges",
-          "value": "[\">= 2.0\",\">=2.0\"]"
+          "value": "[\">=2.0\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1248,126 +1082,12 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\".\",\"ghcide\",\"ghcide-test/data/multi/a\",\"hls-graph\",\"hls-test-utils\"]"
+          "value": "[\".\",\"ghcide\",\"hls-graph\",\"hls-test-utils\"]"
         }
       ],
       "purl": "pkg:hackage/async@2.2.6",
       "type": "library",
       "version": "2.2.6"
-    },
-    {
-      "bom-ref": "pkg:hackage/autogen-completion@0.1.0.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "plugins/hls-cabal-plugin/test/testdata/completion/autogen-completion.cabal"
-          }
-        ]
-      },
-      "name": "autogen-completion",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"plugins/hls-cabal-plugin/test/testdata/completion/autogen-completion.cabal\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:demoted-from-main-module",
-          "value": "true"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "declared"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"plugins/hls-cabal-plugin/test/testdata/completion\"]"
-        }
-      ],
-      "purl": "pkg:hackage/autogen-completion@0.1.0.0",
-      "type": "library",
-      "version": "0.1.0.0"
-    },
-    {
-      "bom-ref": "pkg:hackage/b@1.0.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "ghcide-test/data/multi/b/b.cabal"
-          }
-        ]
-      },
-      "name": "b",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"ghcide-test/data/multi/b/b.cabal\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:demoted-from-main-module",
-          "value": "true"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "declared"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"ghcide-test/data/multi/b\"]"
-        }
-      ],
-      "purl": "pkg:hackage/b@1.0.0",
-      "type": "library",
-      "version": "1.0.0"
     },
     {
       "bom-ref": "pkg:hackage/base",
@@ -1395,11 +1115,11 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"ghcide-test/data/cabal-exe/a/a.cabal\",\"ghcide-test/data/cross-cradle/a/a.cabal\",\"ghcide-test/data/ignore-fatal/ignore-fatal.cabal\",\"ghcide-test/data/multi/a/a.cabal\",\"ghcide-test/data/multi/b/b.cabal\",\"ghcide-test/data/multi/c/c.cabal\",\"ghcide-test/data/plugin-knownnat/plugin.cabal\",\"ghcide-test/data/plugin-parser/plugin/plugin.cabal\",\"ghcide-test/data/plugin-parser/usage/usage.cabal\",\"ghcide-test/data/rootUri/dirA/foo.cabal\",\"ghcide-test/data/rootUri/dirB/foo.cabal\",\"ghcide-test/data/watched-files/reload/reload.cabal\",\"ghcide-test/data/working-dir/a/a.cabal\",\"ghcide/ghcide.cabal\",\"haskell-language-server.cabal\",\"hls-graph/hls-graph.cabal\",\"hls-plugin-api/hls-plugin-api.cabal\",\"hls-test-utils/hls-test-utils.cabal\",\"plugins/hls-cabal-fmt-plugin/test/testdata/commented_testdata.cabal\",\"plugins/hls-cabal-gild-plugin/test/testdata/commented_testdata.cabal\",\"plugins/hls-cabal-plugin/test/testdata/cabal-add-module/library/test.cabal\",\"plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/bench/bench.cabal\",\"plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/exe/exe.cabal\",\"plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/lib/lib.cabal\",\"plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/multitarget/multitarget.cabal\",\"plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/packageYaml/packageYaml.cabal\",\"plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/tests/tests.cabal\",\"plugins/hls-cabal-plugin/test/testdata/goto-definition/modules/module-examples.cabal\",\"plugins/hls-cabal-plugin/test/testdata/hover/hover-deps.cabal\",\"plugins/hls-cabal-plugin/test/testdata/simple-cabal/simple-cabal.cabal\",\"plugins/hls-cabal-plugin/test/testdata/simple-reload/simple-reload.cabal\",\"plugins/hls-eval-plugin/test/testdata/info-util/info-util.cabal\",\"plugins/hls-eval-plugin/test/testdata/test.cabal\",\"plugins/hls-rename-plugin/test/testdata/mod_name/canonicalize/canonicalize.cabal\",\"shake-bench/shake-bench.cabal\",\"test/testdata/hieBiosMainIs/hieBiosMainIs.cabal\",\"test/testdata/missingModuleTest/missingModule/missingModule.cabal\",\"test/testdata/missingModuleTest/noPrefixMatch/noPrefixMatch.cabal\",\"test/wrapper/testdata/cabal-cur-ver/cabal-cur-ver.cabal\",\"test/wrapper/testdata/stack-specific-ghc/foo.cabal\"]"
+          "value": "[\"ghcide/ghcide.cabal\",\"haskell-language-server.cabal\",\"hls-graph/hls-graph.cabal\",\"hls-plugin-api/hls-plugin-api.cabal\",\"hls-test-utils/hls-test-utils.cabal\",\"shake-bench/shake-bench.cabal\"]"
         },
         {
           "name": "waybill:requirement-ranges",
-          "value": "[\"== 4.*\",\">= 4 && < 5\",\">= 4.7 && < 5\",\">=4 && <5\",\">=4.12    && <5\",\">=4.12 && <5\",\">=4.16     && <5\",\">=4.16 && <5\",\"^>=4.14.1.0\",\"^>=4.14.3.0\"]"
+          "value": "[\"== 4.*\",\">=4 && <5\",\">=4.12    && <5\",\">=4.12 && <5\",\">=4.16     && <5\",\">=4.16 && <5\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1435,7 +1155,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\".\",\"ghcide\",\"ghcide-test/data/cabal-exe/a\",\"ghcide-test/data/cross-cradle/a\",\"ghcide-test/data/ignore-fatal\",\"ghcide-test/data/multi/a\",\"ghcide-test/data/multi/b\",\"ghcide-test/data/multi/c\",\"ghcide-test/data/plugin-knownnat\",\"ghcide-test/data/plugin-parser/plugin\",\"ghcide-test/data/plugin-parser/usage\",\"ghcide-test/data/rootUri/dirA\",\"ghcide-test/data/rootUri/dirB\",\"ghcide-test/data/watched-files/reload\",\"ghcide-test/data/working-dir/a\",\"hls-graph\",\"hls-plugin-api\",\"hls-test-utils\",\"plugins/hls-cabal-fmt-plugin/test/testdata\",\"plugins/hls-cabal-gild-plugin/test/testdata\",\"plugins/hls-cabal-plugin/test/testdata/cabal-add-module/library\",\"plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/bench\",\"plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/exe\",\"plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/lib\",\"plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/multitarget\",\"plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/packageYaml\",\"plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/tests\",\"plugins/hls-cabal-plugin/test/testdata/goto-definition/modules\",\"plugins/hls-cabal-plugin/test/testdata/hover\",\"plugins/hls-cabal-plugin/test/testdata/simple-cabal\",\"plugins/hls-cabal-plugin/test/testdata/simple-reload\",\"plugins/hls-eval-plugin/test/testdata\",\"plugins/hls-eval-plugin/test/testdata/info-util\",\"plugins/hls-rename-plugin/test/testdata/mod_name/canonicalize\",\"shake-bench\",\"test/testdata/hieBiosMainIs\",\"test/testdata/missingModuleTest/missingModule\",\"test/testdata/missingModuleTest/noPrefixMatch\",\"test/wrapper/testdata/cabal-cur-ver\",\"test/wrapper/testdata/stack-specific-ghc\"]"
+          "value": "[\".\",\"ghcide\",\"hls-graph\",\"hls-plugin-api\",\"hls-test-utils\",\"shake-bench\"]"
         }
       ],
       "purl": "pkg:hackage/base",
@@ -1645,63 +1365,6 @@
       "type": "library"
     },
     {
-      "bom-ref": "pkg:hackage/c@1.0.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "ghcide-test/data/multi/c/c.cabal"
-          }
-        ]
-      },
-      "name": "c",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"ghcide-test/data/multi/c/c.cabal\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:demoted-from-main-module",
-          "value": "true"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "declared"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"ghcide-test/data/multi/c\"]"
-        }
-      ],
-      "purl": "pkg:hackage/c@1.0.0",
-      "type": "library",
-      "version": "1.0.0"
-    },
-    {
       "bom-ref": "pkg:hackage/cabal-add@0.2",
       "evidence": {
         "identity": [
@@ -1771,494 +1434,6 @@
       "purl": "pkg:hackage/cabal-add@0.2",
       "type": "library",
       "version": "0.2"
-    },
-    {
-      "bom-ref": "pkg:hackage/cabal-add-bench@0.1.0.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/bench/bench.cabal"
-          }
-        ]
-      },
-      "licenses": [
-        {
-          "license": {
-            "acknowledgement": "declared",
-            "name": "NONE"
-          }
-        }
-      ],
-      "name": "cabal-add-bench",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/bench/bench.cabal\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:demoted-from-main-module",
-          "value": "true"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "declared"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/bench\"]"
-        }
-      ],
-      "purl": "pkg:hackage/cabal-add-bench@0.1.0.0",
-      "type": "library",
-      "version": "0.1.0.0"
-    },
-    {
-      "bom-ref": "pkg:hackage/cabal-add-exe@0.1.0.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/exe/exe.cabal"
-          }
-        ]
-      },
-      "name": "cabal-add-exe",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/exe/exe.cabal\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:demoted-from-main-module",
-          "value": "true"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "declared"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/exe\"]"
-        }
-      ],
-      "purl": "pkg:hackage/cabal-add-exe@0.1.0.0",
-      "type": "library",
-      "version": "0.1.0.0"
-    },
-    {
-      "bom-ref": "pkg:hackage/cabal-add-lib@0.1.0.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/lib/lib.cabal"
-          }
-        ]
-      },
-      "licenses": [
-        {
-          "license": {
-            "acknowledgement": "declared",
-            "name": "NONE"
-          }
-        }
-      ],
-      "name": "cabal-add-lib",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/lib/lib.cabal\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:demoted-from-main-module",
-          "value": "true"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "declared"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/lib\"]"
-        }
-      ],
-      "purl": "pkg:hackage/cabal-add-lib@0.1.0.0",
-      "type": "library",
-      "version": "0.1.0.0"
-    },
-    {
-      "bom-ref": "pkg:hackage/cabal-add-multitarget@0.1.0.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/multitarget/multitarget.cabal"
-          }
-        ]
-      },
-      "name": "cabal-add-multitarget",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/multitarget/multitarget.cabal\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:demoted-from-main-module",
-          "value": "true"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "declared"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/multitarget\"]"
-        }
-      ],
-      "purl": "pkg:hackage/cabal-add-multitarget@0.1.0.0",
-      "type": "library",
-      "version": "0.1.0.0"
-    },
-    {
-      "bom-ref": "pkg:hackage/cabal-add-packageYaml@0.1.0.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/packageYaml/packageYaml.cabal"
-          }
-        ]
-      },
-      "licenses": [
-        {
-          "license": {
-            "acknowledgement": "declared",
-            "name": "NONE"
-          }
-        }
-      ],
-      "name": "cabal-add-packageYaml",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/packageYaml/packageYaml.cabal\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:demoted-from-main-module",
-          "value": "true"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "declared"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/packageYaml\"]"
-        }
-      ],
-      "purl": "pkg:hackage/cabal-add-packageYaml@0.1.0.0",
-      "type": "library",
-      "version": "0.1.0.0"
-    },
-    {
-      "bom-ref": "pkg:hackage/cabal-add-tests@0.1.0.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/tests/tests.cabal"
-          }
-        ]
-      },
-      "licenses": [
-        {
-          "license": {
-            "acknowledgement": "declared",
-            "name": "NONE"
-          }
-        }
-      ],
-      "name": "cabal-add-tests",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/tests/tests.cabal\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:demoted-from-main-module",
-          "value": "true"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "declared"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/tests\"]"
-        }
-      ],
-      "purl": "pkg:hackage/cabal-add-tests@0.1.0.0",
-      "type": "library",
-      "version": "0.1.0.0"
-    },
-    {
-      "bom-ref": "pkg:hackage/cabal-cur-ver@0.1.0.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "test/wrapper/testdata/cabal-cur-ver/cabal-cur-ver.cabal"
-          }
-        ]
-      },
-      "name": "cabal-cur-ver",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"test/wrapper/testdata/cabal-cur-ver/cabal-cur-ver.cabal\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:demoted-from-main-module",
-          "value": "true"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "declared"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"test/wrapper/testdata/cabal-cur-ver\"]"
-        }
-      ],
-      "purl": "pkg:hackage/cabal-cur-ver@0.1.0.0",
-      "type": "library",
-      "version": "0.1.0.0"
-    },
-    {
-      "bom-ref": "pkg:hackage/cabal-file-test@0.0.0.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "plugins/hls-stan-plugin/test/testdata/extensions-cabal-file/cabal-file-test.cabal"
-          }
-        ]
-      },
-      "name": "cabal-file-test",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"plugins/hls-stan-plugin/test/testdata/extensions-cabal-file/cabal-file-test.cabal\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:demoted-from-main-module",
-          "value": "true"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "declared"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"plugins/hls-stan-plugin/test/testdata/extensions-cabal-file\"]"
-        }
-      ],
-      "purl": "pkg:hackage/cabal-file-test@0.0.0.0",
-      "type": "library",
-      "version": "0.0.0.0"
     },
     {
       "bom-ref": "pkg:hackage/cabal-fmt@0.1.12",
@@ -2419,63 +1594,6 @@
       "scope": "excluded",
       "type": "library",
       "version": "1.6.0.4"
-    },
-    {
-      "bom-ref": "pkg:hackage/canonicalize@0.1.0.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "plugins/hls-rename-plugin/test/testdata/mod_name/canonicalize/canonicalize.cabal"
-          }
-        ]
-      },
-      "name": "canonicalize",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"plugins/hls-rename-plugin/test/testdata/mod_name/canonicalize/canonicalize.cabal\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:demoted-from-main-module",
-          "value": "true"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "declared"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"plugins/hls-rename-plugin/test/testdata/mod_name/canonicalize\"]"
-        }
-      ],
-      "purl": "pkg:hackage/canonicalize@0.1.0.0",
-      "type": "library",
-      "version": "0.1.0.0"
     },
     {
       "bom-ref": "pkg:hackage/case-insensitive@1.2.1.0",
@@ -3844,128 +2962,6 @@
       "version": "1.4.18"
     },
     {
-      "bom-ref": "pkg:hackage/foo@0.1.0.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "test/wrapper/testdata/stack-specific-ghc/foo.cabal"
-          }
-        ]
-      },
-      "name": "foo",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"test/wrapper/testdata/stack-specific-ghc/foo.cabal\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:demoted-from-main-module",
-          "value": "true"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "declared"
-        },
-        {
-          "name": "waybill:nixpkgs-version-disagreement",
-          "value": "{\"emitted\":\"0.1.0.0\",\"nixpkgs\":\"1.0\",\"note\":\"the emitted version came from a project-local lockfile or freeze file and takes precedence\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\"}"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"test/wrapper/testdata/stack-specific-ghc\"]"
-        }
-      ],
-      "purl": "pkg:hackage/foo@0.1.0.0",
-      "type": "library",
-      "version": "0.1.0.0"
-    },
-    {
-      "bom-ref": "pkg:hackage/foo@1.0.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "ghcide-test/data/rootUri/dirA/foo.cabal"
-          }
-        ]
-      },
-      "name": "foo",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"ghcide-test/data/rootUri/dirA/foo.cabal\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:demoted-from-main-module",
-          "value": "true"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "declared"
-        },
-        {
-          "name": "waybill:nixpkgs-version-disagreement",
-          "value": "{\"emitted\":\"1.0.0\",\"nixpkgs\":\"1.0\",\"note\":\"the emitted version came from a project-local lockfile or freeze file and takes precedence\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\"}"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"ghcide-test/data/rootUri/dirA\"]"
-        }
-      ],
-      "purl": "pkg:hackage/foo@1.0.0",
-      "type": "library",
-      "version": "1.0.0"
-    },
-    {
       "bom-ref": "pkg:hackage/fourmolu@0.19.0.1",
       "evidence": {
         "identity": [
@@ -4133,7 +3129,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"ghcide-test/data/plugin-parser/plugin/plugin.cabal\",\"ghcide/ghcide.cabal\",\"haskell-language-server.cabal\",\"hls-plugin-api/hls-plugin-api.cabal\"]"
+          "value": "[\"ghcide/ghcide.cabal\",\"haskell-language-server.cabal\",\"hls-plugin-api/hls-plugin-api.cabal\"]"
         },
         {
           "name": "waybill:requirement-ranges",
@@ -4169,7 +3165,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\".\",\"ghcide\",\"ghcide-test/data/plugin-parser/plugin\",\"hls-plugin-api\"]"
+          "value": "[\".\",\"ghcide\",\"hls-plugin-api\"]"
         }
       ],
       "purl": "pkg:hackage/ghc",
@@ -4593,7 +3589,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "ghcide-test/data/plugin-knownnat/plugin.cabal"
+            "location": "haskell-language-server.cabal"
           }
         ]
       },
@@ -4607,7 +3603,11 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"ghcide-test/data/plugin-knownnat/plugin.cabal\",\"haskell-language-server.cabal\"]"
+          "value": "[\"haskell-language-server.cabal\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
         },
         {
           "name": "waybill:source-type",
@@ -4635,10 +3635,11 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\".\",\"ghcide-test/data/plugin-knownnat\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:hackage/ghc-typelits-knownnat@0.7.13",
+      "scope": "excluded",
       "type": "library",
       "version": "0.7.13"
     },
@@ -5125,63 +4126,6 @@
       "version": "0.17.0"
     },
     {
-      "bom-ref": "pkg:hackage/hieBiosMainIs@0.1.0.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "test/testdata/hieBiosMainIs/hieBiosMainIs.cabal"
-          }
-        ]
-      },
-      "name": "hieBiosMainIs",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"test/testdata/hieBiosMainIs/hieBiosMainIs.cabal\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:demoted-from-main-module",
-          "value": "true"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "declared"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"test/testdata/hieBiosMainIs\"]"
-        }
-      ],
-      "purl": "pkg:hackage/hieBiosMainIs@0.1.0.0",
-      "type": "library",
-      "version": "0.1.0.0"
-    },
-    {
       "bom-ref": "pkg:hackage/hiedb@0.7.0.0",
       "evidence": {
         "identity": [
@@ -5531,63 +4475,6 @@
       "version": "2.15.0.0"
     },
     {
-      "bom-ref": "pkg:hackage/hover-deps@0.1.0.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "plugins/hls-cabal-plugin/test/testdata/hover/hover-deps.cabal"
-          }
-        ]
-      },
-      "name": "hover-deps",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"plugins/hls-cabal-plugin/test/testdata/hover/hover-deps.cabal\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:demoted-from-main-module",
-          "value": "true"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "declared"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"plugins/hls-cabal-plugin/test/testdata/hover\"]"
-        }
-      ],
-      "purl": "pkg:hackage/hover-deps@0.1.0.0",
-      "type": "library",
-      "version": "0.1.0.0"
-    },
-    {
       "bom-ref": "pkg:hackage/hspec@2.11.17",
       "evidence": {
         "identity": [
@@ -5803,63 +4690,6 @@
       "version": "0.1.2.1"
     },
     {
-      "bom-ref": "pkg:hackage/ignore-fatal@1.0.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "ghcide-test/data/ignore-fatal/ignore-fatal.cabal"
-          }
-        ]
-      },
-      "name": "ignore-fatal",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"ghcide-test/data/ignore-fatal/ignore-fatal.cabal\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:demoted-from-main-module",
-          "value": "true"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "declared"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"ghcide-test/data/ignore-fatal\"]"
-        }
-      ],
-      "purl": "pkg:hackage/ignore-fatal@1.0.0",
-      "type": "library",
-      "version": "1.0.0"
-    },
-    {
       "bom-ref": "pkg:hackage/implicit-hie@0.1.4.0",
       "evidence": {
         "identity": [
@@ -5933,71 +4763,6 @@
       "purl": "pkg:hackage/implicit-hie@0.1.4.0",
       "type": "library",
       "version": "0.1.4.0"
-    },
-    {
-      "bom-ref": "pkg:hackage/info-util@0.1.0.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "plugins/hls-eval-plugin/test/testdata/info-util/info-util.cabal"
-          }
-        ]
-      },
-      "licenses": [
-        {
-          "license": {
-            "acknowledgement": "declared",
-            "name": "BSD3"
-          }
-        }
-      ],
-      "name": "info-util",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"plugins/hls-eval-plugin/test/testdata/info-util/info-util.cabal\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:demoted-from-main-module",
-          "value": "true"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "declared"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"plugins/hls-eval-plugin/test/testdata/info-util\"]"
-        }
-      ],
-      "purl": "pkg:hackage/info-util@0.1.0.0",
-      "type": "library",
-      "version": "0.1.0.0"
     },
     {
       "bom-ref": "pkg:hackage/js-dgtable@0.5.2",
@@ -6201,63 +4966,6 @@
       "version": "3.7.1"
     },
     {
-      "bom-ref": "pkg:hackage/language-pragma-test@0.0.0.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "plugins/hls-stan-plugin/test/testdata/extensions-language-pragma/language-pragma-test.cabal"
-          }
-        ]
-      },
-      "name": "language-pragma-test",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"plugins/hls-stan-plugin/test/testdata/extensions-language-pragma/language-pragma-test.cabal\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:demoted-from-main-module",
-          "value": "true"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "declared"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"plugins/hls-stan-plugin/test/testdata/extensions-language-pragma\"]"
-        }
-      ],
-      "purl": "pkg:hackage/language-pragma-test@0.0.0.0",
-      "type": "library",
-      "version": "0.0.0.0"
-    },
-    {
       "bom-ref": "pkg:hackage/lens@5.3.6",
       "evidence": {
         "identity": [
@@ -6289,7 +4997,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"ghcide/ghcide.cabal\",\"haskell-language-server.cabal\",\"hls-plugin-api/hls-plugin-api.cabal\",\"hls-test-utils/hls-test-utils.cabal\",\"plugins/hls-cabal-plugin/test/testdata/hover/hover-deps.cabal\",\"shake-bench/shake-bench.cabal\"]"
+          "value": "[\"ghcide/ghcide.cabal\",\"haskell-language-server.cabal\",\"hls-plugin-api/hls-plugin-api.cabal\",\"hls-test-utils/hls-test-utils.cabal\",\"shake-bench/shake-bench.cabal\"]"
         },
         {
           "name": "waybill:source-type",
@@ -6317,7 +5025,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\".\",\"ghcide\",\"hls-plugin-api\",\"hls-test-utils\",\"plugins/hls-cabal-plugin/test/testdata/hover\",\"shake-bench\"]"
+          "value": "[\".\",\"ghcide\",\"hls-plugin-api\",\"hls-test-utils\",\"shake-bench\"]"
         }
       ],
       "purl": "pkg:hackage/lens@5.3.6",
@@ -6814,63 +5522,6 @@
       "version": "9.7.0"
     },
     {
-      "bom-ref": "pkg:hackage/missingModule@0.1.0.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "test/testdata/missingModuleTest/missingModule/missingModule.cabal"
-          }
-        ]
-      },
-      "name": "missingModule",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"test/testdata/missingModuleTest/missingModule/missingModule.cabal\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:demoted-from-main-module",
-          "value": "true"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "declared"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"test/testdata/missingModuleTest/missingModule\"]"
-        }
-      ],
-      "purl": "pkg:hackage/missingModule@0.1.0.0",
-      "type": "library",
-      "version": "0.1.0.0"
-    },
-    {
       "bom-ref": "pkg:hackage/mod@0.2.1.0",
       "evidence": {
         "identity": [
@@ -6936,63 +5587,6 @@
       "purl": "pkg:hackage/mod@0.2.1.0",
       "type": "library",
       "version": "0.2.1.0"
-    },
-    {
-      "bom-ref": "pkg:hackage/module-examples@0.1.0.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "plugins/hls-cabal-plugin/test/testdata/goto-definition/modules/module-examples.cabal"
-          }
-        ]
-      },
-      "name": "module-examples",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"plugins/hls-cabal-plugin/test/testdata/goto-definition/modules/module-examples.cabal\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:demoted-from-main-module",
-          "value": "true"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "declared"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"plugins/hls-cabal-plugin/test/testdata/goto-definition/modules\"]"
-        }
-      ],
-      "purl": "pkg:hackage/module-examples@0.1.0.0",
-      "type": "library",
-      "version": "0.1.0.0"
     },
     {
       "bom-ref": "pkg:hackage/mtl",
@@ -7137,63 +5731,6 @@
       "scope": "excluded",
       "type": "library",
       "version": "2.6.4.2"
-    },
-    {
-      "bom-ref": "pkg:hackage/noPrefixMatch@0.1.0.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "test/testdata/missingModuleTest/noPrefixMatch/noPrefixMatch.cabal"
-          }
-        ]
-      },
-      "name": "noPrefixMatch",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"test/testdata/missingModuleTest/noPrefixMatch/noPrefixMatch.cabal\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:demoted-from-main-module",
-          "value": "true"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "declared"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"test/testdata/missingModuleTest/noPrefixMatch\"]"
-        }
-      ],
-      "purl": "pkg:hackage/noPrefixMatch@0.1.0.0",
-      "type": "library",
-      "version": "0.1.0.0"
     },
     {
       "bom-ref": "pkg:hackage/opentelemetry@0.8.0",
@@ -7476,63 +6013,6 @@
       "version": "0.8.0.2"
     },
     {
-      "bom-ref": "pkg:hackage/outline-cabal",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "plugins/hls-cabal-plugin/test/testdata/outline-cabal/field.cabal"
-          }
-        ]
-      },
-      "name": "outline-cabal",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"plugins/hls-cabal-plugin/test/testdata/outline-cabal/field.cabal\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:demoted-from-main-module",
-          "value": "true"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "declared"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"plugins/hls-cabal-plugin/test/testdata/outline-cabal\"]"
-        }
-      ],
-      "purl": "pkg:hackage/outline-cabal",
-      "type": "library",
-      "version": "0.0.0-unknown"
-    },
-    {
       "bom-ref": "pkg:hackage/parallel@3.2.2.0",
       "evidence": {
         "identity": [
@@ -7669,63 +6149,6 @@
       "purl": "pkg:hackage/parser-combinators@1.3.1",
       "type": "library",
       "version": "1.3.1"
-    },
-    {
-      "bom-ref": "pkg:hackage/plugin@1.0.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "ghcide-test/data/plugin-knownnat/plugin.cabal"
-          }
-        ]
-      },
-      "name": "plugin",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"ghcide-test/data/plugin-knownnat/plugin.cabal\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:demoted-from-main-module",
-          "value": "true"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "declared"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"ghcide-test/data/plugin-knownnat\"]"
-        }
-      ],
-      "purl": "pkg:hackage/plugin@1.0.0",
-      "type": "library",
-      "version": "1.0.0"
     },
     {
       "bom-ref": "pkg:hackage/pretty",
@@ -8417,67 +6840,6 @@
       "version": "1.3.2.5"
     },
     {
-      "bom-ref": "pkg:hackage/reload@0.1.0.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "ghcide-test/data/watched-files/reload/reload.cabal"
-          }
-        ]
-      },
-      "name": "reload",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"ghcide-test/data/watched-files/reload/reload.cabal\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:demoted-from-main-module",
-          "value": "true"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "declared"
-        },
-        {
-          "name": "waybill:nixpkgs-version-disagreement",
-          "value": "{\"emitted\":\"0.1.0.0\",\"nixpkgs\":\"0.0.0.1\",\"note\":\"the emitted version came from a project-local lockfile or freeze file and takes precedence\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\"}"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"ghcide-test/data/watched-files/reload\"]"
-        }
-      ],
-      "purl": "pkg:hackage/reload@0.1.0.0",
-      "type": "library",
-      "version": "0.1.0.0"
-    },
-    {
       "bom-ref": "pkg:hackage/row-types@1.0.1.2",
       "evidence": {
         "identity": [
@@ -8811,132 +7173,6 @@
       "version": "0.2.0.0"
     },
     {
-      "bom-ref": "pkg:hackage/simple-cabal@0.1.0.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "plugins/hls-cabal-plugin/test/testdata/goto-definition/common-section/simple-with-common.cabal"
-          }
-        ]
-      },
-      "licenses": [
-        {
-          "license": {
-            "acknowledgement": "declared",
-            "id": "MIT"
-          }
-        }
-      ],
-      "name": "simple-cabal",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"plugins/hls-cabal-plugin/test/testdata/goto-definition/common-section/simple-with-common.cabal\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:demoted-from-main-module",
-          "value": "true"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "declared"
-        },
-        {
-          "name": "waybill:nixpkgs-version-disagreement",
-          "value": "{\"emitted\":\"0.1.0.0\",\"nixpkgs\":\"0.1.3.1\",\"note\":\"the emitted version came from a project-local lockfile or freeze file and takes precedence\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\"}"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"plugins/hls-cabal-plugin/test/testdata/goto-definition/common-section\"]"
-        }
-      ],
-      "purl": "pkg:hackage/simple-cabal@0.1.0.0",
-      "type": "library",
-      "version": "0.1.0.0"
-    },
-    {
-      "bom-ref": "pkg:hackage/simple-reload@0.1.0.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "plugins/hls-cabal-plugin/test/testdata/simple-reload/simple-reload.cabal"
-          }
-        ]
-      },
-      "name": "simple-reload",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"plugins/hls-cabal-plugin/test/testdata/simple-reload/simple-reload.cabal\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:demoted-from-main-module",
-          "value": "true"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "declared"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"plugins/hls-cabal-plugin/test/testdata/simple-reload\"]"
-        }
-      ],
-      "purl": "pkg:hackage/simple-reload@0.1.0.0",
-      "type": "library",
-      "version": "0.1.0.0"
-    },
-    {
       "bom-ref": "pkg:hackage/sorted-list@0.2.3.1",
       "evidence": {
         "identity": [
@@ -9069,120 +7305,6 @@
       "purl": "pkg:hackage/sqlite-simple@0.4.19.0",
       "type": "library",
       "version": "0.4.19.0"
-    },
-    {
-      "bom-ref": "pkg:hackage/src-modules",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "plugins/hls-cabal-plugin/test/testdata/src-modules/test.cabal"
-          }
-        ]
-      },
-      "name": "src-modules",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"plugins/hls-cabal-plugin/test/testdata/src-modules/test.cabal\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:demoted-from-main-module",
-          "value": "true"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "declared"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"plugins/hls-cabal-plugin/test/testdata/src-modules\"]"
-        }
-      ],
-      "purl": "pkg:hackage/src-modules",
-      "type": "library",
-      "version": "0.0.0-unknown"
-    },
-    {
-      "bom-ref": "pkg:hackage/stack-with-dist-newstyle@0.1.0.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "test/wrapper/testdata/stack-with-dist-newstyle/stack-with-dist-newstyle.cabal"
-          }
-        ]
-      },
-      "name": "stack-with-dist-newstyle",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"test/wrapper/testdata/stack-with-dist-newstyle/stack-with-dist-newstyle.cabal\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:demoted-from-main-module",
-          "value": "true"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "declared"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"test/wrapper/testdata/stack-with-dist-newstyle\"]"
-        }
-      ],
-      "purl": "pkg:hackage/stack-with-dist-newstyle@0.1.0.0",
-      "type": "library",
-      "version": "0.1.0.0"
     },
     {
       "bom-ref": "pkg:hackage/stan@0.2.1.0",
@@ -9564,7 +7686,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"ghcide-test/data/plugin-parser/plugin/plugin.cabal\",\"ghcide/ghcide.cabal\",\"haskell-language-server.cabal\"]"
+          "value": "[\"ghcide/ghcide.cabal\",\"haskell-language-server.cabal\"]"
         },
         {
           "name": "waybill:source-type",
@@ -9592,7 +7714,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\".\",\"ghcide\",\"ghcide-test/data/plugin-parser/plugin\"]"
+          "value": "[\".\",\"ghcide\"]"
         }
       ],
       "purl": "pkg:hackage/syb@0.7.2.4",
@@ -10171,7 +8293,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "ghcide-test/data/working-dir/a/a.cabal"
+            "location": "haskell-language-server.cabal"
           }
         ]
       },
@@ -10179,7 +8301,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"ghcide-test/data/working-dir/a/a.cabal\",\"haskell-language-server.cabal\",\"hls-graph/hls-graph.cabal\"]"
+          "value": "[\"haskell-language-server.cabal\",\"hls-graph/hls-graph.cabal\"]"
         },
         {
           "name": "waybill:source-type",
@@ -10215,7 +8337,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\".\",\"ghcide-test/data/working-dir/a\",\"hls-graph\"]"
+          "value": "[\".\",\"hls-graph\"]"
         }
       ],
       "purl": "pkg:hackage/template-haskell",
@@ -10287,242 +8409,6 @@
       "purl": "pkg:hackage/temporary@1.3",
       "type": "library",
       "version": "1.3"
-    },
-    {
-      "bom-ref": "pkg:hackage/test-hls@0.1.0.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "plugins/hls-cabal-plugin/test/testdata/completer.cabal"
-          }
-        ]
-      },
-      "licenses": [
-        {
-          "license": {
-            "acknowledgement": "declared",
-            "id": "Apache-2.0"
-          }
-        }
-      ],
-      "name": "test-hls",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"plugins/hls-cabal-plugin/test/testdata/completer.cabal\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:demoted-from-main-module",
-          "value": "true"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "declared"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"plugins/hls-cabal-plugin/test/testdata\"]"
-        }
-      ],
-      "purl": "pkg:hackage/test-hls@0.1.0.0",
-      "type": "library",
-      "version": "0.1.0.0"
-    },
-    {
-      "bom-ref": "pkg:hackage/test@0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "plugins/hls-ormolu-plugin/test/testdata/test.cabal"
-          }
-        ]
-      },
-      "name": "test",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"plugins/hls-ormolu-plugin/test/testdata/test.cabal\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:demoted-from-main-module",
-          "value": "true"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "declared"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"plugins/hls-ormolu-plugin/test/testdata\"]"
-        }
-      ],
-      "purl": "pkg:hackage/test@0",
-      "type": "library",
-      "version": "0"
-    },
-    {
-      "bom-ref": "pkg:hackage/test@0.1.0.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "plugins/hls-cabal-plugin/test/testdata/cabal-add-module/library/test.cabal"
-          }
-        ]
-      },
-      "name": "test",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"plugins/hls-cabal-plugin/test/testdata/cabal-add-module/library/test.cabal\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:demoted-from-main-module",
-          "value": "true"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "declared"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"plugins/hls-cabal-plugin/test/testdata/cabal-add-module/library\"]"
-        }
-      ],
-      "purl": "pkg:hackage/test@0.1.0.0",
-      "type": "library",
-      "version": "0.1.0.0"
-    },
-    {
-      "bom-ref": "pkg:hackage/testdata@0.1.0.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "plugins/hls-cabal-fmt-plugin/test/testdata/commented_testdata.cabal"
-          }
-        ]
-      },
-      "name": "testdata",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"plugins/hls-cabal-fmt-plugin/test/testdata/commented_testdata.cabal\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:demoted-from-main-module",
-          "value": "true"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "declared"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"plugins/hls-cabal-fmt-plugin/test/testdata\"]"
-        }
-      ],
-      "purl": "pkg:hackage/testdata@0.1.0.0",
-      "type": "library",
-      "version": "0.1.0.0"
     },
     {
       "bom-ref": "pkg:hackage/text",
@@ -11140,63 +9026,6 @@
       "version": "0.2.20.1"
     },
     {
-      "bom-ref": "pkg:hackage/usage@1.0.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.85,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.85,
-                "technique": "manifest-analysis"
-              }
-            ]
-          }
-        ],
-        "occurrences": [
-          {
-            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "ghcide-test/data/plugin-parser/usage/usage.cabal"
-          }
-        ]
-      },
-      "name": "usage",
-      "properties": [
-        {
-          "name": "waybill:source-files",
-          "value": "[\"ghcide-test/data/plugin-parser/usage/usage.cabal\"]"
-        },
-        {
-          "name": "waybill:source-type",
-          "value": "hackage-main-module"
-        },
-        {
-          "name": "waybill:sbom-tier",
-          "value": "design"
-        },
-        {
-          "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:demoted-from-main-module",
-          "value": "true"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "declared"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"ghcide-test/data/plugin-parser/usage\"]"
-        }
-      ],
-      "purl": "pkg:hackage/usage@1.0.0",
-      "type": "library",
-      "version": "1.0.0"
-    },
-    {
       "bom-ref": "pkg:hackage/vector@0.13.2.0",
       "evidence": {
         "identity": [
@@ -11694,88 +9523,6 @@
       "version": "1.9.5.1"
     },
     {
-      "bom-ref": "pkg:hackage/GLURaw@2.0.0.5",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "d1c6097f7db8592617dc6ee79c514cf6605d1f5ee314ba0a5736cd73d4b679ac"
-        }
-      ],
-      "name": "GLURaw",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/GLURaw@2.0.0.5",
-      "type": "library",
-      "version": "2.0.0.5"
-    },
-    {
-      "bom-ref": "pkg:hackage/GLUT@2.7.0.16",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "b6fae948d0778ee49e1199b20a007d1c4e9e7c008096fcfe6d2f7ec98974b36d"
-        }
-      ],
-      "name": "GLUT",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/GLUT@2.7.0.16",
-      "type": "library",
-      "version": "2.7.0.16"
-    },
-    {
       "bom-ref": "pkg:hackage/HUnit@1.6.2.0",
       "evidence": {
         "identity": [
@@ -12145,47 +9892,6 @@
       "version": "1.4"
     },
     {
-      "bom-ref": "pkg:hackage/ObjectName@1.1.0.2",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "ffa5da1907bfa60de12b9975c25063ed24002699bc6e3774919f2a7d1273b375"
-        }
-      ],
-      "name": "ObjectName",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/ObjectName@1.1.0.2",
-      "type": "library",
-      "version": "1.1.0.2"
-    },
-    {
       "bom-ref": "pkg:hackage/OneTuple@0.4.2.1",
       "evidence": {
         "identity": [
@@ -12266,129 +9972,6 @@
       "purl": "pkg:hackage/Only@0.1",
       "type": "library",
       "version": "0.1"
-    },
-    {
-      "bom-ref": "pkg:hackage/OpenGL@3.0.3.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "5a05ffc752dfc7dd16818d7b3c7c59a27639e246cdfa1963fa02e3ce247a2e19"
-        }
-      ],
-      "name": "OpenGL",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/OpenGL@3.0.3.0",
-      "type": "library",
-      "version": "3.0.3.0"
-    },
-    {
-      "bom-ref": "pkg:hackage/OpenGLRaw@3.3.4.1",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "121abdea149ac74514efb2c1c1c319466757242d1b72a8bdf99d49535f06d31e"
-        }
-      ],
-      "name": "OpenGLRaw",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/OpenGLRaw@3.3.4.1",
-      "type": "library",
-      "version": "3.3.4.1"
-    },
-    {
-      "bom-ref": "pkg:hackage/SHA@1.6.4.4",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "6bd950df6b11a3998bb1452d875d2da043ee43385459afc5f16d471d25178b44"
-        }
-      ],
-      "name": "SHA",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/SHA@1.6.4.4",
-      "type": "library",
-      "version": "1.6.4.4"
     },
     {
       "bom-ref": "pkg:hackage/SVGFonts@1.8.1",
@@ -12678,170 +10261,6 @@
       "version": "1.1.3"
     },
     {
-      "bom-ref": "pkg:hackage/appar@0.1.8",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "c4ceeddc26525b58d82c41b6d3e32141371a200a6794aae185b6266ccc81631f"
-        }
-      ],
-      "name": "appar",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/appar@0.1.8",
-      "type": "library",
-      "version": "0.1.8"
-    },
-    {
-      "bom-ref": "pkg:hackage/asn1-encoding@0.9.6",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "d9f8deabd3b908e5cf83c0d813c08dc0143b3ec1c0d97f660d2cfa02c1c8da0a"
-        }
-      ],
-      "name": "asn1-encoding",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/asn1-encoding@0.9.6",
-      "type": "library",
-      "version": "0.9.6"
-    },
-    {
-      "bom-ref": "pkg:hackage/asn1-parse@0.9.5",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "8f1fe1344d30b39dc594d74df2c55209577722af1497204b4c2b6d6e8747f39e"
-        }
-      ],
-      "name": "asn1-parse",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/asn1-parse@0.9.5",
-      "type": "library",
-      "version": "0.9.5"
-    },
-    {
-      "bom-ref": "pkg:hackage/asn1-types@0.3.4",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "78ee92a251379298ca820fa53edbf4b33c539b9fcd887c86f520c30e3b4e21a8"
-        }
-      ],
-      "name": "asn1-types",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/asn1-types@0.3.4",
-      "type": "library",
-      "version": "0.3.4"
-    },
-    {
       "bom-ref": "pkg:hackage/assoc@1.1.1",
       "evidence": {
         "identity": [
@@ -13004,47 +10423,6 @@
       "purl": "pkg:hackage/attoparsec-aeson@2.2.2.0",
       "type": "library",
       "version": "2.2.2.0"
-    },
-    {
-      "bom-ref": "pkg:hackage/auto-update@0.2.6",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "9a25cc5c9de2a20981ffe981ffcd51fee88597c802c1555dd08fa9c5c64e0e54"
-        }
-      ],
-      "name": "auto-update",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/auto-update@0.2.6",
-      "type": "library",
-      "version": "0.2.6"
     },
     {
       "bom-ref": "pkg:hackage/base-compat@0.14.1",
@@ -13250,47 +10628,6 @@
       "purl": "pkg:hackage/base64-bytestring@1.2.1.0",
       "type": "library",
       "version": "1.2.1.0"
-    },
-    {
-      "bom-ref": "pkg:hackage/basement@0.0.16",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "7fb77e249aef76ba5aed3059d556800ce02b614597c488ba01f0a16449146300"
-        }
-      ],
-      "name": "basement",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/basement@0.0.16",
-      "type": "library",
-      "version": "0.0.16"
     },
     {
       "bom-ref": "pkg:hackage/bifunctors@5.6.3",
@@ -13701,88 +11038,6 @@
       "purl": "pkg:hackage/boring@0.2.2",
       "type": "library",
       "version": "0.2.2"
-    },
-    {
-      "bom-ref": "pkg:hackage/bsb-http-chunked@0.0.0.4",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "148309e23eb8b261c1de374712372d62d8c8dc8ee504c392809c7ec33c0a0e7c"
-        }
-      ],
-      "name": "bsb-http-chunked",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/bsb-http-chunked@0.0.0.4",
-      "type": "library",
-      "version": "0.0.0.4"
-    },
-    {
-      "bom-ref": "pkg:hackage/byteorder@1.0.4",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "bd20bbb586947f99c38a4c93d9d0266f49f6fc581767b51ba568f6d5d52d2919"
-        }
-      ],
-      "name": "byteorder",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/byteorder@1.0.4",
-      "type": "library",
-      "version": "1.0.4"
     },
     {
       "bom-ref": "pkg:hackage/bytes@0.17.5",
@@ -14769,47 +12024,6 @@
       "version": "1.5.6"
     },
     {
-      "bom-ref": "pkg:hackage/cookie@0.5.1",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "1adde62726e3a3bbe147c02514fe0c4f5f2c5a2ff63842deac10c451a2a6f7a0"
-        }
-      ],
-      "name": "cookie",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/cookie@0.5.1",
-      "type": "library",
-      "version": "0.5.1"
-    },
-    {
       "bom-ref": "pkg:hackage/cpphs@1.20.10",
       "evidence": {
         "identity": [
@@ -14892,47 +12106,6 @@
       "version": "0.2.4.0"
     },
     {
-      "bom-ref": "pkg:hackage/cryptohash-md5@0.11.101.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "3b08db0ae39df2b44e83053ad30d7546a4c6200a852c22a240a7e03ae1080f05"
-        }
-      ],
-      "name": "cryptohash-md5",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/cryptohash-md5@0.11.101.0",
-      "type": "library",
-      "version": "0.11.101.0"
-    },
-    {
       "bom-ref": "pkg:hackage/cryptohash-sha256@0.11.102.1",
       "evidence": {
         "identity": [
@@ -14972,88 +12145,6 @@
       "purl": "pkg:hackage/cryptohash-sha256@0.11.102.1",
       "type": "library",
       "version": "0.11.102.1"
-    },
-    {
-      "bom-ref": "pkg:hackage/crypton@1.0.6",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "9c6523e7f46df0bda731e5007a1f6b43b1ee1f0dcd159bed870abbff752b82e6"
-        }
-      ],
-      "name": "crypton",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/crypton@1.0.6",
-      "type": "library",
-      "version": "1.0.6"
-    },
-    {
-      "bom-ref": "pkg:hackage/crypton-x509@1.7.7",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "efece48c8c4adfee209979c2967037d90e6ba1b7b4e7bb1081d1d4cd93daf382"
-        }
-      ],
-      "name": "crypton-x509",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/crypton-x509@1.7.7",
-      "type": "library",
-      "version": "1.7.7"
     },
     {
       "bom-ref": "pkg:hackage/cubicbezier@0.6.0.7",
@@ -15794,47 +12885,6 @@
       "version": "0.2.3.4"
     },
     {
-      "bom-ref": "pkg:hackage/easy-file@0.2.5",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "ee0fa0914b3bb3662838a689d7cd23a2785ccbc29def366664f994bc524ff2bb"
-        }
-      ],
-      "name": "easy-file",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/easy-file@0.2.5",
-      "type": "library",
-      "version": "0.2.5"
-    },
-    {
       "bom-ref": "pkg:hackage/emojis@0.1.4.1",
       "evidence": {
         "identity": [
@@ -15876,47 +12926,6 @@
       "version": "0.1.4.1"
     },
     {
-      "bom-ref": "pkg:hackage/entropy@0.4.1.11",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "f5dd5a01278f8318d9793ed6071b742f13ce36c7456328baae4acc818e2d92ea"
-        }
-      ],
-      "name": "entropy",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/entropy@0.4.1.11",
-      "type": "library",
-      "version": "0.4.1.11"
-    },
-    {
       "bom-ref": "pkg:hackage/erf@2.0.0.0",
       "evidence": {
         "identity": [
@@ -15956,47 +12965,6 @@
       "purl": "pkg:hackage/erf@2.0.0.0",
       "type": "library",
       "version": "2.0.0.0"
-    },
-    {
-      "bom-ref": "pkg:hackage/expiring-cache-map@0.0.6.1",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "0e3bc294978b46ee59bf0b4a7e7a5bd7ed5da7bc261ffebdb0cb1b60353c64b9"
-        }
-      ],
-      "name": "expiring-cache-map",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/expiring-cache-map@0.0.6.1",
-      "type": "library",
-      "version": "0.0.6.1"
     },
     {
       "bom-ref": "pkg:hackage/extensions@0.1.0.2",
@@ -16079,47 +13047,6 @@
       "purl": "pkg:hackage/fail@4.9.0.0",
       "type": "library",
       "version": "4.9.0.0"
-    },
-    {
-      "bom-ref": "pkg:hackage/fast-logger@3.2.6",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "bd66c622de84170ef41cd6ca37f507882322a3968e39a89c620613f33e63c5c3"
-        }
-      ],
-      "name": "fast-logger",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/fast-logger@3.2.6",
-      "type": "library",
-      "version": "3.2.6"
     },
     {
       "bom-ref": "pkg:hackage/fast-math@1.0.2",
@@ -16320,47 +13247,6 @@
       "version": "0.1.6.0"
     },
     {
-      "bom-ref": "pkg:hackage/fixed@0.3",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "9218ebd3af3f07335db8dcd148b3ce40acf984734c244cce5959f57402d48282"
-        }
-      ],
-      "name": "fixed",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/fixed@0.3",
-      "type": "library",
-      "version": "0.3"
-    },
-    {
       "bom-ref": "pkg:hackage/fmlist@0.9.4",
       "evidence": {
         "identity": [
@@ -16482,47 +13368,6 @@
       "purl": "pkg:hackage/free@5.2",
       "type": "library",
       "version": "5.2"
-    },
-    {
-      "bom-ref": "pkg:hackage/fsnotify@0.4.4.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "82b1afd9e2f0bf50afd190de4401132e879c031e06800c161e64eebbd1f2631b"
-        }
-      ],
-      "name": "fsnotify",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/fsnotify@0.4.4.0",
-      "type": "library",
-      "version": "0.4.4.0"
     },
     {
       "bom-ref": "pkg:hackage/generic-arbitrary@1.0.1.2",
@@ -16914,47 +13759,6 @@
       "version": "0.7.12"
     },
     {
-      "bom-ref": "pkg:hackage/ghcid@0.8.9",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "44c29c53fc33541fbde0702c62faa6a756468a24381d1184472b7ede00a308b7"
-        }
-      ],
-      "name": "ghcid",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/ghcid@0.8.9",
-      "type": "library",
-      "version": "0.8.9"
-    },
-    {
       "bom-ref": "pkg:hackage/groups@0.5.3",
       "evidence": {
         "identity": [
@@ -16994,47 +13798,6 @@
       "purl": "pkg:hackage/groups@0.5.3",
       "type": "library",
       "version": "0.5.3"
-    },
-    {
-      "bom-ref": "pkg:hackage/half@0.3.3",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "f476049628d6ff79722fb073c01e85f2a11b2ef3835fdc3fc21a61f05d17ab02"
-        }
-      ],
-      "name": "half",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/half@0.3.3",
-      "type": "library",
-      "version": "0.3.3"
     },
     {
       "bom-ref": "pkg:hackage/haskell-lexer@1.2.1",
@@ -17160,47 +13923,6 @@
       "version": "0.8.15"
     },
     {
-      "bom-ref": "pkg:hackage/haskell98@2.0.0.3",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "bd5d4652f699caa1b1c654dc9ca94ecc2181b453c4f65999915abd63e75ba090"
-        }
-      ],
-      "name": "haskell98",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/haskell98@2.0.0.3",
-      "type": "library",
-      "version": "2.0.0.3"
-    },
-    {
       "bom-ref": "pkg:hackage/heaps@0.4.1",
       "evidence": {
         "identity": [
@@ -17281,88 +14003,6 @@
       "purl": "pkg:hackage/hie-compat@0.3.1.2",
       "type": "library",
       "version": "0.3.1.2"
-    },
-    {
-      "bom-ref": "pkg:hackage/hinotify@0.4.2",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "a7d46f97ac53c95fcb99016483996a06eda273c2698954382f7773f693dfd0c0"
-        }
-      ],
-      "name": "hinotify",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/hinotify@0.4.2",
-      "type": "library",
-      "version": "0.4.2"
-    },
-    {
-      "bom-ref": "pkg:hackage/hourglass@0.2.12",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "44335b5c402e80c60f1db6a74462be4ea29d1a9043aa994334ffee1164f1ca4a"
-        }
-      ],
-      "name": "hourglass",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/hourglass@0.2.12",
-      "type": "library",
-      "version": "0.2.12"
     },
     {
       "bom-ref": "pkg:hackage/hpc",
@@ -17561,170 +14201,6 @@
       "purl": "pkg:hackage/hspec-expectations@0.8.4",
       "type": "library",
       "version": "0.8.4"
-    },
-    {
-      "bom-ref": "pkg:hackage/http-date@0.0.11",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "32f923ac1ad9bdfeadce7c52a03c9ba6225ba60dc14137cb1cdf32ea84ccf4d3"
-        }
-      ],
-      "name": "http-date",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/http-date@0.0.11",
-      "type": "library",
-      "version": "0.0.11"
-    },
-    {
-      "bom-ref": "pkg:hackage/http-semantics@0.3.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "9ccee90bcbbfb29f30f7aed063c62edf0f3eb084ba63dbf9baffbd5db573714f"
-        }
-      ],
-      "name": "http-semantics",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/http-semantics@0.3.0",
-      "type": "library",
-      "version": "0.3.0"
-    },
-    {
-      "bom-ref": "pkg:hackage/http-types@0.12.4",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "4d4b1bb0cc817e5fef0c9c76c9647f69f4d300c45a105043493eff86381be549"
-        }
-      ],
-      "name": "http-types",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/http-types@0.12.4",
-      "type": "library",
-      "version": "0.12.4"
-    },
-    {
-      "bom-ref": "pkg:hackage/http2@5.3.10",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "f46617d617834a9ce7c016eec8160a15129632aa179821c36318b46adf0d4267"
-        }
-      ],
-      "name": "http2",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/http2@5.3.10",
-      "type": "library",
-      "version": "5.3.10"
     },
     {
       "bom-ref": "pkg:hackage/hw-prim@0.6.3.2",
@@ -18130,47 +14606,6 @@
       "version": "0.6.5"
     },
     {
-      "bom-ref": "pkg:hackage/iproute@1.7.15",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "18a331a7e0e6f9dc89a2da95577b0d76bd2690b8f832b72b46d6cc9b667b4ba5"
-        }
-      ],
-      "name": "iproute",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/iproute@1.7.15",
-      "type": "library",
-      "version": "1.7.15"
-    },
-    {
       "bom-ref": "pkg:hackage/js-chart@2.9.4.1",
       "evidence": {
         "identity": [
@@ -18333,47 +14768,6 @@
       "purl": "pkg:hackage/libyaml-clib@0.2.5",
       "type": "library",
       "version": "0.2.5"
-    },
-    {
-      "bom-ref": "pkg:hackage/lifted-base@0.2.3.12",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "c134a95f56750aae806e38957bb03c59627cda16034af9e00a02b699474317c5"
-        }
-      ],
-      "name": "lifted-base",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/lifted-base@0.2.3.12",
-      "type": "library",
-      "version": "0.2.3.12"
     },
     {
       "bom-ref": "pkg:hackage/linear@1.23.3",
@@ -18622,47 +15016,6 @@
       "version": "0.5.0"
     },
     {
-      "bom-ref": "pkg:hackage/memory@0.18.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "fd4eb6f638e24b81b4e6cdd68772a531726f2f67686c8969d3407d82f7862e3e"
-        }
-      ],
-      "name": "memory",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/memory@0.18.0",
-      "type": "library",
-      "version": "0.18.0"
-    },
-    {
       "bom-ref": "pkg:hackage/mfsolve@0.3.2.2",
       "evidence": {
         "identity": [
@@ -18909,47 +15262,6 @@
       "version": "1.0.3.1"
     },
     {
-      "bom-ref": "pkg:hackage/mime-types@0.1.2.2",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "e56e474778d72c387039d3514b52a9af3485f4abe31e62096f381485af494940"
-        }
-      ],
-      "name": "mime-types",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/mime-types@0.1.2.2",
-      "type": "library",
-      "version": "0.1.2.2"
-    },
-    {
       "bom-ref": "pkg:hackage/mmap@0.5.9",
       "evidence": {
         "identity": [
@@ -19071,47 +15383,6 @@
       "purl": "pkg:hackage/monad-control@1.0.3.1",
       "type": "library",
       "version": "1.0.3.1"
-    },
-    {
-      "bom-ref": "pkg:hackage/monad-logger@0.3.42",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "6623446cd42aa1f58a9e21f4abc18cfff13b8991d6ac852d9352d0ffea125010"
-        }
-      ],
-      "name": "monad-logger",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/monad-logger@0.3.42",
-      "type": "library",
-      "version": "0.3.42"
     },
     {
       "bom-ref": "pkg:hackage/monad-loops@0.4.3",
@@ -19401,88 +15672,6 @@
       "version": "3.2.8.0"
     },
     {
-      "bom-ref": "pkg:hackage/network-byte-order@0.1.8",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "529766816e9e3fdb82fe1b147f8499ef482c30d15330d72088d8216ef640e741"
-        }
-      ],
-      "name": "network-byte-order",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/network-byte-order@0.1.8",
-      "type": "library",
-      "version": "0.1.8"
-    },
-    {
-      "bom-ref": "pkg:hackage/network-control@0.1.7",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "05d40d381e5c72beefb209b7e82877b457fbca2880e60ed849bad480b6795b10"
-        }
-      ],
-      "name": "network-control",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/network-control@0.1.7",
-      "type": "library",
-      "version": "0.1.7"
-    },
-    {
       "bom-ref": "pkg:hackage/newtype-generics@0.6.2",
       "evidence": {
         "identity": [
@@ -19756,47 +15945,6 @@
       "version": "0.12.12"
     },
     {
-      "bom-ref": "pkg:hackage/pem@0.2.4",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "770c4c1b9cd24b3db7f511f8a48404a0d098999e28573c3743a8a296bb96f8d4"
-        }
-      ],
-      "name": "pem",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/pem@0.2.4",
-      "type": "library",
-      "version": "0.2.4"
-    },
-    {
       "bom-ref": "pkg:hackage/polyparse@1.13.1",
       "evidence": {
         "identity": [
@@ -20043,47 +16191,6 @@
       "version": "5.6.3"
     },
     {
-      "bom-ref": "pkg:hackage/psqueues@0.2.8.3",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "10bcbe9aeb3ca00d72e86d940cf91b021b83f908885375120d4d51d0240ad076"
-        }
-      ],
-      "name": "psqueues",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/psqueues@0.2.8.3",
-      "type": "library",
-      "version": "0.2.8.3"
-    },
-    {
       "bom-ref": "pkg:hackage/quickcheck-instances@0.3.33",
       "evidence": {
         "identity": [
@@ -20205,47 +16312,6 @@
       "purl": "pkg:hackage/random-shuffle@0.0.4",
       "type": "library",
       "version": "0.0.4"
-    },
-    {
-      "bom-ref": "pkg:hackage/recv@0.1.1",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "8daf77c57f529503dd3038efc3813a8001032ed810bdddff0acb0faca039b721"
-        }
-      ],
-      "name": "recv",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/recv@0.1.1",
-      "type": "library",
-      "version": "0.1.1"
     },
     {
       "bom-ref": "pkg:hackage/reflection@2.1.9",
@@ -20412,47 +16478,6 @@
       "version": "0.94.0.3"
     },
     {
-      "bom-ref": "pkg:hackage/regex-compat@0.95.2.2",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "e27ed1d8c3616a7bd471c66950c7dd3bbdfe435da8319d647bfea12031bb301c"
-        }
-      ],
-      "name": "regex-compat",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/regex-compat@0.95.2.2",
-      "type": "library",
-      "version": "0.95.2.2"
-    },
-    {
       "bom-ref": "pkg:hackage/regex-pcre-builtin@0.95.2.3.8.44",
       "evidence": {
         "identity": [
@@ -20492,47 +16517,6 @@
       "purl": "pkg:hackage/regex-pcre-builtin@0.95.2.3.8.44",
       "type": "library",
       "version": "0.95.2.3.8.44"
-    },
-    {
-      "bom-ref": "pkg:hackage/regex-posix@0.96.0.2",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "7e570460c35c5deec54d1ba46305ddb4679c7d4aae84f631dd0c61daaeaa8150"
-        }
-      ],
-      "name": "regex-posix",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/regex-posix@0.96.0.2",
-      "type": "library",
-      "version": "0.96.0.2"
     },
     {
       "bom-ref": "pkg:hackage/relude@1.2.2.2",
@@ -20615,47 +16599,6 @@
       "purl": "pkg:hackage/resourcet@1.3.0",
       "type": "library",
       "version": "1.3.0"
-    },
-    {
-      "bom-ref": "pkg:hackage/retry@0.9.3.1",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "622e35114b920f76fa2e1ae6515575b9973fac19c679f5426ea6574a5d0b7ed6"
-        }
-      ],
-      "name": "retry",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/retry@0.9.3.1",
-      "type": "library",
-      "version": "0.9.3.1"
     },
     {
       "bom-ref": "pkg:hackage/rvar@0.3.0.2",
@@ -20779,47 +16722,6 @@
       "purl": "pkg:hackage/scientific@0.3.8.1",
       "type": "library",
       "version": "0.3.8.1"
-    },
-    {
-      "bom-ref": "pkg:hackage/scotty@0.22",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "ceb998c12502cd639c8aa59c5b5ea8f2651198e62f2f86cf18b8b5a087b4b81c"
-        }
-      ],
-      "name": "scotty",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/scotty@0.22",
-      "type": "library",
-      "version": "0.22"
     },
     {
       "bom-ref": "pkg:hackage/selective@0.7.0.1",
@@ -20984,47 +16886,6 @@
       "purl": "pkg:hackage/semirings@0.7",
       "type": "library",
       "version": "0.7"
-    },
-    {
-      "bom-ref": "pkg:hackage/simple-sendfile@0.2.32",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "9f28d0a67ac3d956d2dd78eb19ea922c0a9192bbbeeeead20d39f561636828a3"
-        }
-      ],
-      "name": "simple-sendfile",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/simple-sendfile@0.2.32",
-      "type": "library",
-      "version": "0.2.32"
     },
     {
       "bom-ref": "pkg:hackage/slist@0.2.1.0",
@@ -21312,47 +17173,6 @@
       "purl": "pkg:hackage/statistics@0.16.5.0",
       "type": "library",
       "version": "0.16.5.0"
-    },
-    {
-      "bom-ref": "pkg:hackage/stm-chans@3.0.0.11",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "b293ef847e3c7aa0800d20b18912a069ba6951e7d2e35171acecd6ff937975f2"
-        }
-      ],
-      "name": "stm-chans",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/stm-chans@3.0.0.11",
-      "type": "library",
-      "version": "3.0.0.11"
     },
     {
       "bom-ref": "pkg:hackage/stm-hamt@1.2.2.1",
@@ -22216,47 +18036,6 @@
       "version": "0.1.1.5"
     },
     {
-      "bom-ref": "pkg:hackage/time-manager@0.2.4",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "fbc2e3eec5a0311b12f27be0833b75fd1f8282d8329f5c330f2eec1b1a1fb670"
-        }
-      ],
-      "name": "time-manager",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/time-manager@0.2.4",
-      "type": "library",
-      "version": "0.2.4"
-    },
-    {
       "bom-ref": "pkg:hackage/tomland@1.3.3.3",
       "evidence": {
         "identity": [
@@ -22626,47 +18405,6 @@
       "version": "0.7.4.1"
     },
     {
-      "bom-ref": "pkg:hackage/unix-time@0.4.17",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "f63a05be5dcc5ac8f72c26c9fef8dcc993638ca9b545b9bd69b8a3924c201f8c"
-        }
-      ],
-      "name": "unix-time",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/unix-time@0.4.17",
-      "type": "library",
-      "version": "0.4.17"
-    },
-    {
       "bom-ref": "pkg:hackage/utf8-string@1.0.2",
       "evidence": {
         "identity": [
@@ -22788,47 +18526,6 @@
       "purl": "pkg:hackage/validation-selective@0.2.0.0",
       "type": "library",
       "version": "0.2.0.0"
-    },
-    {
-      "bom-ref": "pkg:hackage/vault@0.3.1.6",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "37a4b169bf95120193c03c1039d0cdc21a7c44382281c8c4cff4f861b1d09766"
-        }
-      ],
-      "name": "vault",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/vault@0.3.1.6",
-      "type": "library",
-      "version": "0.3.1.6"
     },
     {
       "bom-ref": "pkg:hackage/vector-algorithms@0.9.1.0",
@@ -23036,375 +18733,6 @@
       "version": "0.2.2"
     },
     {
-      "bom-ref": "pkg:hackage/wai@3.2.4",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "a6088f847d886d7c767092d170c03c7690d197eb3189d7cc67dbaaab33bf6d94"
-        }
-      ],
-      "name": "wai",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/wai@3.2.4",
-      "type": "library",
-      "version": "3.2.4"
-    },
-    {
-      "bom-ref": "pkg:hackage/wai-app-static@3.1.9.1",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "0bb813a7a09cbab0d070ac0710867ca1039e251832b78e4ca63c1341e8a3bc2c"
-        }
-      ],
-      "name": "wai-app-static",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/wai-app-static@3.1.9.1",
-      "type": "library",
-      "version": "3.1.9.1"
-    },
-    {
-      "bom-ref": "pkg:hackage/wai-extra@3.1.18",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "ee63740b8dd478b01196f8968603b1bc0ee00aa5502d17edae579abfd0f150f7"
-        }
-      ],
-      "name": "wai-extra",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/wai-extra@3.1.18",
-      "type": "library",
-      "version": "3.1.18"
-    },
-    {
-      "bom-ref": "pkg:hackage/wai-handler-launch@3.0.3.1",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "55009b08ad5620decad37e7f8ee2a64457bf0f8e8116f8ac2a2f3216987fd8c5"
-        }
-      ],
-      "name": "wai-handler-launch",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/wai-handler-launch@3.0.3.1",
-      "type": "library",
-      "version": "3.0.3.1"
-    },
-    {
-      "bom-ref": "pkg:hackage/wai-logger@2.5.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "5cfbd3076b1f94aca3bd2def06b136b36a22d37974f31c7732b8526ebec3e184"
-        }
-      ],
-      "name": "wai-logger",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/wai-logger@2.5.0",
-      "type": "library",
-      "version": "2.5.0"
-    },
-    {
-      "bom-ref": "pkg:hackage/wai-middleware-static@0.9.4",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "d855d9d6dec5227597685c27780896546e18c2d448376d0ae327104a515e48dc"
-        }
-      ],
-      "name": "wai-middleware-static",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/wai-middleware-static@0.9.4",
-      "type": "library",
-      "version": "0.9.4"
-    },
-    {
-      "bom-ref": "pkg:hackage/wai-websockets@3.0.1.2",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "917cceb08f296d7dc6b6cafb66133ae53888b2c98b8fb2a2d7fa629d75ab5d2c"
-        }
-      ],
-      "name": "wai-websockets",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/wai-websockets@3.0.1.2",
-      "type": "library",
-      "version": "3.0.1.2"
-    },
-    {
-      "bom-ref": "pkg:hackage/warp@3.4.9",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "3a19680d4c3e22d5a4da0da31af30e0c9001501ec84df6ace639ecad1b5b55b0"
-        }
-      ],
-      "name": "warp",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/warp@3.4.9",
-      "type": "library",
-      "version": "3.4.9"
-    },
-    {
-      "bom-ref": "pkg:hackage/websockets@0.13.0.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "9af814f76451b0adbcceb2c46cae463f63c5de50b2b6be66f4ef4d15ce2a49b5"
-        }
-      ],
-      "name": "websockets",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/websockets@0.13.0.0",
-      "type": "library",
-      "version": "0.13.0.0"
-    },
-    {
       "bom-ref": "pkg:hackage/witherable@0.5",
       "evidence": {
         "identity": [
@@ -23444,47 +18772,6 @@
       "purl": "pkg:hackage/witherable@0.5",
       "type": "library",
       "version": "0.5"
-    },
-    {
-      "bom-ref": "pkg:hackage/word8@0.1.3",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "2630934c75728bfbf390c1f0206b225507b354f68d4047b06c018a36823b5d8a"
-        }
-      ],
-      "name": "word8",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "source"
-        },
-        {
-          "name": "waybill:nixpkgs-component-origin",
-          "value": "transitive"
-        },
-        {
-          "name": "waybill:nixpkgs-resolved-via",
-          "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        }
-      ],
-      "purl": "pkg:hackage/word8@0.1.3",
-      "type": "library",
-      "version": "0.1.3"
     },
     {
       "bom-ref": "pkg:hackage/xml@1.3.14",
@@ -24746,49 +20033,12 @@
   "dependencies": [
     {
       "dependsOn": [
-        "pkg:hackage/FieldSuggestions@0.1.0",
-        "pkg:hackage/a@0.1.0.0",
-        "pkg:hackage/a@1.0.0",
-        "pkg:hackage/autogen-completion@0.1.0.0",
-        "pkg:hackage/b@1.0.0",
-        "pkg:hackage/c@1.0.0",
-        "pkg:hackage/cabal-add-bench@0.1.0.0",
-        "pkg:hackage/cabal-add-exe@0.1.0.0",
-        "pkg:hackage/cabal-add-lib@0.1.0.0",
-        "pkg:hackage/cabal-add-multitarget@0.1.0.0",
-        "pkg:hackage/cabal-add-packageYaml@0.1.0.0",
-        "pkg:hackage/cabal-add-tests@0.1.0.0",
-        "pkg:hackage/cabal-cur-ver@0.1.0.0",
-        "pkg:hackage/cabal-file-test@0.0.0.0",
-        "pkg:hackage/canonicalize@0.1.0.0",
-        "pkg:hackage/foo@0.1.0.0",
-        "pkg:hackage/foo@1.0.0",
         "pkg:hackage/ghcide@2.15.0.0",
         "pkg:hackage/haskell-language-server@2.15.0.0",
-        "pkg:hackage/hieBiosMainIs@0.1.0.0",
         "pkg:hackage/hls-graph@2.15.0.0",
         "pkg:hackage/hls-plugin-api@2.15.0.0",
         "pkg:hackage/hls-test-utils@2.15.0.0",
-        "pkg:hackage/hover-deps@0.1.0.0",
-        "pkg:hackage/ignore-fatal@1.0.0",
-        "pkg:hackage/info-util@0.1.0.0",
-        "pkg:hackage/language-pragma-test@0.0.0.0",
-        "pkg:hackage/missingModule@0.1.0.0",
-        "pkg:hackage/module-examples@0.1.0.0",
-        "pkg:hackage/noPrefixMatch@0.1.0.0",
-        "pkg:hackage/outline-cabal",
-        "pkg:hackage/plugin@1.0.0",
-        "pkg:hackage/reload@0.1.0.0",
-        "pkg:hackage/shake-bench@0.2.0.0",
-        "pkg:hackage/simple-cabal@0.1.0.0",
-        "pkg:hackage/simple-reload@0.1.0.0",
-        "pkg:hackage/src-modules",
-        "pkg:hackage/stack-with-dist-newstyle@0.1.0.0",
-        "pkg:hackage/test-hls@0.1.0.0",
-        "pkg:hackage/test@0",
-        "pkg:hackage/test@0.1.0.0",
-        "pkg:hackage/testdata@0.1.0.0",
-        "pkg:hackage/usage@1.0.0"
+        "pkg:hackage/shake-bench@0.2.0.0"
       ],
       "ref": "haskell-language-server@1b4b3c6"
     },
@@ -24996,29 +20246,6 @@
       "ref": "pkg:hackage/Diff@1.0.2"
     },
     {
-      "dependsOn": [],
-      "ref": "pkg:hackage/FieldSuggestions@0.1.0"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/OpenGLRaw@3.3.4.1",
-        "pkg:hackage/base",
-        "pkg:hackage/transformers"
-      ],
-      "ref": "pkg:hackage/GLURaw@2.0.0.5"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/OpenGL@3.0.3.0",
-        "pkg:hackage/StateVar@1.2.2",
-        "pkg:hackage/array",
-        "pkg:hackage/base",
-        "pkg:hackage/containers",
-        "pkg:hackage/transformers"
-      ],
-      "ref": "pkg:hackage/GLUT@2.7.0.16"
-    },
-    {
       "dependsOn": [
         "pkg:hackage/base",
         "pkg:hackage/containers",
@@ -25129,13 +20356,6 @@
     {
       "dependsOn": [
         "pkg:hackage/base",
-        "pkg:hackage/transformers"
-      ],
-      "ref": "pkg:hackage/ObjectName@1.1.0.2"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base",
         "pkg:hackage/ghc-prim",
         "pkg:hackage/template-haskell"
       ],
@@ -25150,32 +20370,6 @@
     },
     {
       "dependsOn": [
-        "pkg:hackage/GLURaw@2.0.0.5",
-        "pkg:hackage/ObjectName@1.1.0.2",
-        "pkg:hackage/OpenGLRaw@3.3.4.1",
-        "pkg:hackage/StateVar@1.2.2",
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/containers",
-        "pkg:hackage/text",
-        "pkg:hackage/transformers"
-      ],
-      "ref": "pkg:hackage/OpenGL@3.0.3.0"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/containers",
-        "pkg:hackage/fixed@0.3",
-        "pkg:hackage/half@0.3.3",
-        "pkg:hackage/text",
-        "pkg:hackage/transformers"
-      ],
-      "ref": "pkg:hackage/OpenGLRaw@3.3.4.1"
-    },
-    {
-      "dependsOn": [
         "pkg:hackage/base",
         "pkg:hackage/containers",
         "pkg:hackage/deepseq",
@@ -25185,15 +20379,6 @@
         "pkg:hackage/transformers"
       ],
       "ref": "pkg:hackage/QuickCheck@2.15.0.1"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/array",
-        "pkg:hackage/base",
-        "pkg:hackage/binary",
-        "pkg:hackage/bytestring"
-      ],
-      "ref": "pkg:hackage/SHA@1.6.4.4"
     },
     {
       "dependsOn": [
@@ -25228,18 +20413,6 @@
     {
       "dependsOn": [],
       "ref": "pkg:hackage/Win32"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base"
-      ],
-      "ref": "pkg:hackage/a@0.1.0.0"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base"
-      ],
-      "ref": "pkg:hackage/a@1.0.0"
     },
     {
       "dependsOn": [
@@ -25348,13 +20521,6 @@
     {
       "dependsOn": [
         "pkg:hackage/base",
-        "pkg:hackage/bytestring"
-      ],
-      "ref": "pkg:hackage/appar@0.1.8"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base",
         "pkg:hackage/containers",
         "pkg:hackage/data-default@0.8.0.2",
         "pkg:hackage/directory",
@@ -25378,33 +20544,6 @@
     {
       "dependsOn": [],
       "ref": "pkg:hackage/array"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/asn1-types@0.3.4",
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/hourglass@0.2.12"
-      ],
-      "ref": "pkg:hackage/asn1-encoding@0.9.6"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/asn1-encoding@0.9.6",
-        "pkg:hackage/asn1-types@0.3.4",
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring"
-      ],
-      "ref": "pkg:hackage/asn1-parse@0.9.5"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/hourglass@0.2.12",
-        "pkg:hackage/memory@0.18.0"
-      ],
-      "ref": "pkg:hackage/asn1-types@0.3.4"
     },
     {
       "dependsOn": [
@@ -25457,24 +20596,6 @@
       "ref": "pkg:hackage/attoparsec@0.14.4"
     },
     {
-      "dependsOn": [
-        "pkg:hackage/base",
-        "pkg:hackage/stm"
-      ],
-      "ref": "pkg:hackage/auto-update@0.2.6"
-    },
-    {
-      "dependsOn": [],
-      "ref": "pkg:hackage/autogen-completion@0.1.0.0"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/a@1.0.0",
-        "pkg:hackage/base"
-      ],
-      "ref": "pkg:hackage/b@1.0.0"
-    },
-    {
       "dependsOn": [],
       "ref": "pkg:hackage/base"
     },
@@ -25523,13 +20644,6 @@
         "pkg:hackage/text-short@0.1.6.1"
       ],
       "ref": "pkg:hackage/base64@1.0"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base",
-        "pkg:hackage/ghc-prim"
-      ],
-      "ref": "pkg:hackage/basement@0.0.16"
     },
     {
       "dependsOn": [
@@ -25643,19 +20757,6 @@
     {
       "dependsOn": [
         "pkg:hackage/base",
-        "pkg:hackage/bytestring"
-      ],
-      "ref": "pkg:hackage/bsb-http-chunked@0.0.0.4"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base"
-      ],
-      "ref": "pkg:hackage/byteorder@1.0.4"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base",
         "pkg:hackage/binary",
         "pkg:hackage/binary-orphans@1.0.5.1",
         "pkg:hackage/bytestring",
@@ -25677,49 +20778,6 @@
     },
     {
       "dependsOn": [
-        "pkg:hackage/a@1.0.0",
-        "pkg:hackage/base"
-      ],
-      "ref": "pkg:hackage/c@1.0.0"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base"
-      ],
-      "ref": "pkg:hackage/cabal-add-bench@0.1.0.0"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base"
-      ],
-      "ref": "pkg:hackage/cabal-add-exe@0.1.0.0"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base"
-      ],
-      "ref": "pkg:hackage/cabal-add-lib@0.1.0.0"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base"
-      ],
-      "ref": "pkg:hackage/cabal-add-multitarget@0.1.0.0"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base"
-      ],
-      "ref": "pkg:hackage/cabal-add-packageYaml@0.1.0.0"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base"
-      ],
-      "ref": "pkg:hackage/cabal-add-tests@0.1.0.0"
-    },
-    {
-      "dependsOn": [
         "pkg:hackage/Cabal",
         "pkg:hackage/Cabal-syntax",
         "pkg:hackage/base",
@@ -25733,16 +20791,6 @@
         "pkg:hackage/process"
       ],
       "ref": "pkg:hackage/cabal-add@0.2"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base"
-      ],
-      "ref": "pkg:hackage/cabal-cur-ver@0.1.0.0"
-    },
-    {
-      "dependsOn": [],
-      "ref": "pkg:hackage/cabal-file-test@0.0.0.0"
     },
     {
       "dependsOn": [
@@ -25805,12 +20853,6 @@
         "pkg:hackage/base"
       ],
       "ref": "pkg:hackage/call-stack@0.4.0"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base"
-      ],
-      "ref": "pkg:hackage/canonicalize@0.1.0.0"
     },
     {
       "dependsOn": [
@@ -26047,17 +21089,6 @@
     {
       "dependsOn": [
         "pkg:hackage/base",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/data-default-class@0.2.0.0",
-        "pkg:hackage/deepseq",
-        "pkg:hackage/text",
-        "pkg:hackage/time"
-      ],
-      "ref": "pkg:hackage/cookie@0.5.1"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base",
         "pkg:hackage/directory",
         "pkg:hackage/polyparse@1.13.1",
         "pkg:hackage/time"
@@ -26117,13 +21148,6 @@
         "pkg:hackage/base",
         "pkg:hackage/bytestring"
       ],
-      "ref": "pkg:hackage/cryptohash-md5@0.11.101.0"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring"
-      ],
       "ref": "pkg:hackage/cryptohash-sha1@0.11.101.0"
     },
     {
@@ -26132,33 +21156,6 @@
         "pkg:hackage/bytestring"
       ],
       "ref": "pkg:hackage/cryptohash-sha256@0.11.102.1"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/asn1-encoding@0.9.6",
-        "pkg:hackage/asn1-parse@0.9.5",
-        "pkg:hackage/asn1-types@0.3.4",
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/containers",
-        "pkg:hackage/crypton@1.0.6",
-        "pkg:hackage/hourglass@0.2.12",
-        "pkg:hackage/memory@0.18.0",
-        "pkg:hackage/pem@0.2.4",
-        "pkg:hackage/transformers"
-      ],
-      "ref": "pkg:hackage/crypton-x509@1.7.7"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base",
-        "pkg:hackage/basement@0.0.16",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/deepseq",
-        "pkg:hackage/integer-gmp",
-        "pkg:hackage/memory@0.18.0"
-      ],
-      "ref": "pkg:hackage/crypton@1.0.6"
     },
     {
       "dependsOn": [
@@ -26448,16 +21445,6 @@
     },
     {
       "dependsOn": [
-        "pkg:hackage/base",
-        "pkg:hackage/directory",
-        "pkg:hackage/filepath",
-        "pkg:hackage/time",
-        "pkg:hackage/unix"
-      ],
-      "ref": "pkg:hackage/easy-file@0.2.5"
-    },
-    {
-      "dependsOn": [
         "pkg:hackage/array",
         "pkg:hackage/base",
         "pkg:hackage/containers",
@@ -26472,14 +21459,6 @@
         "pkg:hackage/text"
       ],
       "ref": "pkg:hackage/emojis@0.1.4.1"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/unix"
-      ],
-      "ref": "pkg:hackage/entropy@0.4.1.11"
     },
     {
       "dependsOn": [
@@ -26499,15 +21478,6 @@
     {
       "dependsOn": [],
       "ref": "pkg:hackage/exceptions"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base",
-        "pkg:hackage/containers",
-        "pkg:hackage/hashable@1.5.1.0",
-        "pkg:hackage/unordered-containers@0.2.20.1"
-      ],
-      "ref": "pkg:hackage/expiring-cache-map@0.0.6.1"
     },
     {
       "dependsOn": [
@@ -26540,22 +21510,6 @@
     {
       "dependsOn": [],
       "ref": "pkg:hackage/fail@4.9.0.0"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/array",
-        "pkg:hackage/auto-update@0.2.6",
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/directory",
-        "pkg:hackage/easy-file@0.2.5",
-        "pkg:hackage/filepath",
-        "pkg:hackage/stm",
-        "pkg:hackage/text",
-        "pkg:hackage/unix-compat@0.7.4.1",
-        "pkg:hackage/unix-time@0.4.17"
-      ],
-      "ref": "pkg:hackage/fast-logger@3.2.6"
     },
     {
       "dependsOn": [
@@ -26620,12 +21574,6 @@
       "dependsOn": [
         "pkg:hackage/base"
       ],
-      "ref": "pkg:hackage/fixed@0.3"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base"
-      ],
       "ref": "pkg:hackage/fmlist@0.9.4"
     },
     {
@@ -26653,22 +21601,6 @@
         "pkg:hackage/vector@0.13.2.0"
       ],
       "ref": "pkg:hackage/foldl@1.4.18"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base"
-      ],
-      "ref": "pkg:hackage/foo@0.1.0.0"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/GLUT@2.7.0.16",
-        "pkg:hackage/OpenGL@3.0.3.0",
-        "pkg:hackage/base",
-        "pkg:hackage/containers",
-        "pkg:hackage/haskell98@2.0.0.3"
-      ],
-      "ref": "pkg:hackage/foo@1.0.0"
     },
     {
       "dependsOn": [
@@ -26727,31 +21659,6 @@
         "pkg:hackage/transformers-base@0.4.6.1"
       ],
       "ref": "pkg:hackage/free@5.2"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/async@2.2.6",
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/containers",
-        "pkg:hackage/directory",
-        "pkg:hackage/exceptions",
-        "pkg:hackage/filepath",
-        "pkg:hackage/hinotify@0.4.2",
-        "pkg:hackage/monad-control@1.0.3.1",
-        "pkg:hackage/monad-logger@0.3.42",
-        "pkg:hackage/random@1.2.1.3",
-        "pkg:hackage/retry@0.9.3.1",
-        "pkg:hackage/safe-exceptions@0.1.7.4",
-        "pkg:hackage/string-interpolate@0.3.4.0",
-        "pkg:hackage/temporary@1.3",
-        "pkg:hackage/text",
-        "pkg:hackage/time",
-        "pkg:hackage/unix",
-        "pkg:hackage/unix-compat@0.7.4.1",
-        "pkg:hackage/unliftio@0.2.25.1"
-      ],
-      "ref": "pkg:hackage/fsnotify@0.4.4.0"
     },
     {
       "dependsOn": [
@@ -26914,23 +21821,6 @@
     },
     {
       "dependsOn": [
-        "pkg:hackage/ansi-terminal@1.1.5",
-        "pkg:hackage/base",
-        "pkg:hackage/cmdargs@0.10.22",
-        "pkg:hackage/containers",
-        "pkg:hackage/directory",
-        "pkg:hackage/extra@1.8.1",
-        "pkg:hackage/filepath",
-        "pkg:hackage/fsnotify@0.4.4.0",
-        "pkg:hackage/process",
-        "pkg:hackage/terminal-size@0.3.4",
-        "pkg:hackage/time",
-        "pkg:hackage/unix"
-      ],
-      "ref": "pkg:hackage/ghcid@0.8.9"
-    },
-    {
-      "dependsOn": [
         "pkg:hackage/Diff@1.0.2",
         "pkg:hackage/Glob@0.10.2",
         "pkg:hackage/Win32",
@@ -27035,15 +21925,6 @@
     {
       "dependsOn": [],
       "ref": "pkg:hackage/haddock-library"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base",
-        "pkg:hackage/binary",
-        "pkg:hackage/deepseq",
-        "pkg:hackage/template-haskell"
-      ],
-      "ref": "pkg:hackage/half@0.3.3"
     },
     {
       "dependsOn": [
@@ -27190,18 +22071,6 @@
     },
     {
       "dependsOn": [
-        "pkg:hackage/array",
-        "pkg:hackage/base",
-        "pkg:hackage/directory",
-        "pkg:hackage/old-locale@1.0.0.7",
-        "pkg:hackage/old-time@1.1.1.0",
-        "pkg:hackage/process",
-        "pkg:hackage/time"
-      ],
-      "ref": "pkg:hackage/haskell98@2.0.0.3"
-    },
-    {
-      "dependsOn": [
         "pkg:hackage/base"
       ],
       "ref": "pkg:hackage/heaps@0.4.1"
@@ -27252,12 +22121,6 @@
     },
     {
       "dependsOn": [
-        "pkg:hackage/base"
-      ],
-      "ref": "pkg:hackage/hieBiosMainIs@0.1.0.0"
-    },
-    {
-      "dependsOn": [
         "pkg:hackage/algebraic-graphs@0.7",
         "pkg:hackage/ansi-terminal@1.1.5",
         "pkg:hackage/array",
@@ -27278,16 +22141,6 @@
         "pkg:hackage/text"
       ],
       "ref": "pkg:hackage/hiedb@0.7.0.0"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/async@2.2.6",
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/containers",
-        "pkg:hackage/unix"
-      ],
-      "ref": "pkg:hackage/hinotify@0.4.2"
     },
     {
       "dependsOn": [
@@ -27435,20 +22288,6 @@
       "ref": "pkg:hackage/hls-test-utils@2.15.0.0"
     },
     {
-      "dependsOn": [
-        "pkg:hackage/base",
-        "pkg:hackage/deepseq"
-      ],
-      "ref": "pkg:hackage/hourglass@0.2.12"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base",
-        "pkg:hackage/lens@5.3.6"
-      ],
-      "ref": "pkg:hackage/hover-deps@0.1.0.0"
-    },
-    {
       "dependsOn": [],
       "ref": "pkg:hackage/hpc"
     },
@@ -27518,61 +22357,6 @@
     },
     {
       "dependsOn": [
-        "pkg:hackage/array",
-        "pkg:hackage/attoparsec@0.14.4",
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/time"
-      ],
-      "ref": "pkg:hackage/http-date@0.0.11"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/array",
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/case-insensitive@1.2.1.0",
-        "pkg:hackage/http-types@0.12.4",
-        "pkg:hackage/network-byte-order@0.1.8",
-        "pkg:hackage/network@3.2.8.0",
-        "pkg:hackage/time-manager@0.2.4",
-        "pkg:hackage/utf8-string@1.0.2"
-      ],
-      "ref": "pkg:hackage/http-semantics@0.3.0"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/array",
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/case-insensitive@1.2.1.0",
-        "pkg:hackage/text"
-      ],
-      "ref": "pkg:hackage/http-types@0.12.4"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/array",
-        "pkg:hackage/async@2.2.6",
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/case-insensitive@1.2.1.0",
-        "pkg:hackage/containers",
-        "pkg:hackage/http-semantics@0.3.0",
-        "pkg:hackage/http-types@0.12.4",
-        "pkg:hackage/iproute@1.7.15",
-        "pkg:hackage/network-byte-order@0.1.8",
-        "pkg:hackage/network-control@0.1.7",
-        "pkg:hackage/network@3.2.8.0",
-        "pkg:hackage/stm",
-        "pkg:hackage/time-manager@0.2.4",
-        "pkg:hackage/unix-time@0.4.17",
-        "pkg:hackage/utf8-string@1.0.2"
-      ],
-      "ref": "pkg:hackage/http2@5.3.10"
-    },
-    {
-      "dependsOn": [
         "pkg:hackage/base",
         "pkg:hackage/deepseq",
         "pkg:hackage/hw-prim@0.6.3.2"
@@ -27591,12 +22375,6 @@
         "pkg:hackage/vector@0.13.2.0"
       ],
       "ref": "pkg:hackage/hw-prim@0.6.3.2"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base"
-      ],
-      "ref": "pkg:hackage/ignore-fatal@1.0.0"
     },
     {
       "dependsOn": [
@@ -27636,12 +22414,6 @@
         "pkg:hackage/transformers"
       ],
       "ref": "pkg:hackage/indexed-traversable@0.1.4"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base"
-      ],
-      "ref": "pkg:hackage/info-util@0.1.0.0"
     },
     {
       "dependsOn": [
@@ -27700,17 +22472,6 @@
     },
     {
       "dependsOn": [
-        "pkg:hackage/appar@0.1.8",
-        "pkg:hackage/base",
-        "pkg:hackage/byteorder@1.0.4",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/containers",
-        "pkg:hackage/network@3.2.8.0"
-      ],
-      "ref": "pkg:hackage/iproute@1.7.15"
-    },
-    {
-      "dependsOn": [
         "pkg:hackage/base"
       ],
       "ref": "pkg:hackage/js-chart@2.9.4.1"
@@ -27749,10 +22510,6 @@
         "pkg:hackage/transformers"
       ],
       "ref": "pkg:hackage/kan-extensions@5.2.8"
-    },
-    {
-      "dependsOn": [],
-      "ref": "pkg:hackage/language-pragma-test@0.0.0.0"
     },
     {
       "dependsOn": [
@@ -27818,14 +22575,6 @@
         "pkg:hackage/resourcet@1.3.0"
       ],
       "ref": "pkg:hackage/libyaml@0.1.4"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base",
-        "pkg:hackage/monad-control@1.0.3.1",
-        "pkg:hackage/transformers-base@0.4.6.1"
-      ],
-      "ref": "pkg:hackage/lifted-base@0.2.3.12"
     },
     {
       "dependsOn": [
@@ -28038,16 +22787,6 @@
     {
       "dependsOn": [
         "pkg:hackage/base",
-        "pkg:hackage/basement@0.0.16",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/deepseq",
-        "pkg:hackage/ghc-prim"
-      ],
-      "ref": "pkg:hackage/memory@0.18.0"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base",
         "pkg:hackage/hashable@1.5.1.0",
         "pkg:hackage/mtl",
         "pkg:hackage/mtl-compat@0.2.2",
@@ -28111,21 +22850,6 @@
     {
       "dependsOn": [
         "pkg:hackage/base",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/containers",
-        "pkg:hackage/text"
-      ],
-      "ref": "pkg:hackage/mime-types@0.1.2.2"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base"
-      ],
-      "ref": "pkg:hackage/missingModule@0.1.0.0"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base",
         "pkg:hackage/bytestring"
       ],
       "ref": "pkg:hackage/mmap@0.5.9"
@@ -28152,12 +22876,6 @@
     },
     {
       "dependsOn": [
-        "pkg:hackage/base"
-      ],
-      "ref": "pkg:hackage/module-examples@0.1.0.0"
-    },
-    {
-      "dependsOn": [
         "pkg:hackage/base",
         "pkg:hackage/stm",
         "pkg:hackage/transformers",
@@ -28165,30 +22883,6 @@
         "pkg:hackage/transformers-compat@0.7.2"
       ],
       "ref": "pkg:hackage/monad-control@1.0.3.1"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/conduit-extra@1.3.8",
-        "pkg:hackage/conduit@1.3.6.1",
-        "pkg:hackage/exceptions",
-        "pkg:hackage/fast-logger@3.2.6",
-        "pkg:hackage/lifted-base@0.2.3.12",
-        "pkg:hackage/monad-control@1.0.3.1",
-        "pkg:hackage/monad-loops@0.4.3",
-        "pkg:hackage/mtl",
-        "pkg:hackage/resourcet@1.3.0",
-        "pkg:hackage/stm",
-        "pkg:hackage/stm-chans@3.0.0.11",
-        "pkg:hackage/template-haskell",
-        "pkg:hackage/text",
-        "pkg:hackage/transformers",
-        "pkg:hackage/transformers-base@0.4.6.1",
-        "pkg:hackage/transformers-compat@0.7.2",
-        "pkg:hackage/unliftio-core@0.2.1.0"
-      ],
-      "ref": "pkg:hackage/monad-logger@0.3.42"
     },
     {
       "dependsOn": [
@@ -28256,21 +22950,6 @@
     {
       "dependsOn": [
         "pkg:hackage/base",
-        "pkg:hackage/bytestring"
-      ],
-      "ref": "pkg:hackage/network-byte-order@0.1.8"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base",
-        "pkg:hackage/psqueues@0.2.8.3",
-        "pkg:hackage/unix-time@0.4.17"
-      ],
-      "ref": "pkg:hackage/network-control@0.1.7"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base",
         "pkg:hackage/deepseq",
         "pkg:hackage/parsec",
         "pkg:hackage/template-haskell",
@@ -28293,12 +22972,6 @@
         "pkg:hackage/base"
       ],
       "ref": "pkg:hackage/newtype-generics@0.6.2"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base"
-      ],
-      "ref": "pkg:hackage/noPrefixMatch@0.1.0.0"
     },
     {
       "dependsOn": [
@@ -28386,10 +23059,6 @@
       "ref": "pkg:hackage/os-string"
     },
     {
-      "dependsOn": [],
-      "ref": "pkg:hackage/outline-cabal"
-    },
-    {
       "dependsOn": [
         "pkg:hackage/array",
         "pkg:hackage/base",
@@ -28424,22 +23093,6 @@
         "pkg:hackage/unordered-containers@0.2.20.1"
       ],
       "ref": "pkg:hackage/parsers@0.12.12"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base",
-        "pkg:hackage/basement@0.0.16",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/memory@0.18.0"
-      ],
-      "ref": "pkg:hackage/pem@0.2.4"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base",
-        "pkg:hackage/ghc-typelits-knownnat@0.7.13"
-      ],
-      "ref": "pkg:hackage/plugin@1.0.0"
     },
     {
       "dependsOn": [
@@ -28556,14 +23209,6 @@
     },
     {
       "dependsOn": [
-        "pkg:hackage/base",
-        "pkg:hackage/deepseq",
-        "pkg:hackage/hashable@1.5.1.0"
-      ],
-      "ref": "pkg:hackage/psqueues@0.2.8.3"
-    },
-    {
-      "dependsOn": [
         "pkg:hackage/OneTuple@0.4.2.1",
         "pkg:hackage/QuickCheck@2.15.0.1",
         "pkg:hackage/array",
@@ -28636,14 +23281,6 @@
     },
     {
       "dependsOn": [
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/network@3.2.8.0"
-      ],
-      "ref": "pkg:hackage/recv@0.1.1"
-    },
-    {
-      "dependsOn": [
         "pkg:hackage/base"
       ],
       "ref": "pkg:hackage/refact@0.3.0.2"
@@ -28678,31 +23315,12 @@
       "dependsOn": [
         "pkg:hackage/array",
         "pkg:hackage/base",
-        "pkg:hackage/regex-base@0.94.0.3",
-        "pkg:hackage/regex-posix@0.96.0.2"
-      ],
-      "ref": "pkg:hackage/regex-compat@0.95.2.2"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/array",
-        "pkg:hackage/base",
         "pkg:hackage/bytestring",
         "pkg:hackage/containers",
         "pkg:hackage/regex-base@0.94.0.3",
         "pkg:hackage/text"
       ],
       "ref": "pkg:hackage/regex-pcre-builtin@0.95.2.3.8.44"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/array",
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/containers",
-        "pkg:hackage/regex-base@0.94.0.3"
-      ],
-      "ref": "pkg:hackage/regex-posix@0.96.0.2"
     },
     {
       "dependsOn": [
@@ -28740,34 +23358,6 @@
     },
     {
       "dependsOn": [
-        "pkg:hackage/Cabal",
-        "pkg:hackage/aeson@2.2.4.1",
-        "pkg:hackage/async@2.2.6",
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/containers",
-        "pkg:hackage/data-default@0.8.0.2",
-        "pkg:hackage/directory",
-        "pkg:hackage/filepath",
-        "pkg:hackage/ghcid@0.8.9",
-        "pkg:hackage/http-types@0.12.4",
-        "pkg:hackage/mime-types@0.1.2.2",
-        "pkg:hackage/process",
-        "pkg:hackage/scotty@0.22",
-        "pkg:hackage/text",
-        "pkg:hackage/transformers",
-        "pkg:hackage/wai-extra@3.1.18",
-        "pkg:hackage/wai-handler-launch@3.0.3.1",
-        "pkg:hackage/wai-middleware-static@0.9.4",
-        "pkg:hackage/wai-websockets@3.0.1.2",
-        "pkg:hackage/wai@3.2.4",
-        "pkg:hackage/warp@3.4.9",
-        "pkg:hackage/websockets@0.13.0.0"
-      ],
-      "ref": "pkg:hackage/reload@0.1.0.0"
-    },
-    {
-      "dependsOn": [
         "pkg:hackage/base",
         "pkg:hackage/bytestring",
         "pkg:hackage/containers",
@@ -28793,19 +23383,6 @@
         "pkg:hackage/unliftio-core@0.2.1.0"
       ],
       "ref": "pkg:hackage/resourcet@1.3.0"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base",
-        "pkg:hackage/exceptions",
-        "pkg:hackage/ghc-prim",
-        "pkg:hackage/mtl",
-        "pkg:hackage/mtl-compat@0.2.2",
-        "pkg:hackage/random@1.2.1.3",
-        "pkg:hackage/transformers",
-        "pkg:hackage/unliftio-core@0.2.1.0"
-      ],
-      "ref": "pkg:hackage/retry@0.9.3.1"
     },
     {
       "dependsOn": [
@@ -28860,34 +23437,6 @@
         "pkg:hackage/text"
       ],
       "ref": "pkg:hackage/scientific@0.3.8.1"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/aeson@2.2.4.1",
-        "pkg:hackage/base",
-        "pkg:hackage/blaze-builder@0.4.4.1",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/case-insensitive@1.2.1.0",
-        "pkg:hackage/cookie@0.5.1",
-        "pkg:hackage/data-default-class@0.2.0.0",
-        "pkg:hackage/exceptions",
-        "pkg:hackage/http-types@0.12.4",
-        "pkg:hackage/monad-control@1.0.3.1",
-        "pkg:hackage/mtl",
-        "pkg:hackage/network@3.2.8.0",
-        "pkg:hackage/regex-compat@0.95.2.2",
-        "pkg:hackage/resourcet@1.3.0",
-        "pkg:hackage/stm",
-        "pkg:hackage/text",
-        "pkg:hackage/time",
-        "pkg:hackage/transformers",
-        "pkg:hackage/transformers-base@0.4.6.1",
-        "pkg:hackage/unliftio@0.2.25.1",
-        "pkg:hackage/wai-extra@3.1.18",
-        "pkg:hackage/wai@3.2.4",
-        "pkg:hackage/warp@3.4.9"
-      ],
-      "ref": "pkg:hackage/scotty@0.22"
     },
     {
       "dependsOn": [
@@ -28993,31 +23542,6 @@
     },
     {
       "dependsOn": [
-        "pkg:hackage/Cabal",
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/directory",
-        "pkg:hackage/filepath"
-      ],
-      "ref": "pkg:hackage/simple-cabal@0.1.0.0"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base"
-      ],
-      "ref": "pkg:hackage/simple-reload@0.1.0.0"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/network@3.2.8.0",
-        "pkg:hackage/unix"
-      ],
-      "ref": "pkg:hackage/simple-sendfile@0.2.32"
-    },
-    {
-      "dependsOn": [
         "pkg:hackage/base",
         "pkg:hackage/containers"
       ],
@@ -29076,14 +23600,6 @@
         "pkg:hackage/transformers"
       ],
       "ref": "pkg:hackage/sqlite-simple@0.4.19.0"
-    },
-    {
-      "dependsOn": [],
-      "ref": "pkg:hackage/src-modules"
-    },
-    {
-      "dependsOn": [],
-      "ref": "pkg:hackage/stack-with-dist-newstyle@0.1.0.0"
     },
     {
       "dependsOn": [
@@ -29152,13 +23668,6 @@
     {
       "dependsOn": [],
       "ref": "pkg:hackage/stm"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base",
-        "pkg:hackage/stm"
-      ],
-      "ref": "pkg:hackage/stm-chans@3.0.0.11"
     },
     {
       "dependsOn": [
@@ -29426,26 +23935,6 @@
     },
     {
       "dependsOn": [],
-      "ref": "pkg:hackage/test-hls@0.1.0.0"
-    },
-    {
-      "dependsOn": [],
-      "ref": "pkg:hackage/test@0"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base"
-      ],
-      "ref": "pkg:hackage/test@0.1.0.0"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base"
-      ],
-      "ref": "pkg:hackage/testdata@0.1.0.0"
-    },
-    {
-      "dependsOn": [],
       "ref": "pkg:hackage/text"
     },
     {
@@ -29588,15 +24077,6 @@
     },
     {
       "dependsOn": [
-        "pkg:hackage/auto-update@0.2.6",
-        "pkg:hackage/base",
-        "pkg:hackage/containers",
-        "pkg:hackage/stm"
-      ],
-      "ref": "pkg:hackage/time-manager@0.2.4"
-    },
-    {
-      "dependsOn": [
         "pkg:hackage/base",
         "pkg:hackage/bytestring",
         "pkg:hackage/containers",
@@ -29703,15 +24183,6 @@
     {
       "dependsOn": [
         "pkg:hackage/base",
-        "pkg:hackage/binary",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/old-time@1.1.1.0"
-      ],
-      "ref": "pkg:hackage/unix-time@0.4.17"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base",
         "pkg:hackage/transformers"
       ],
       "ref": "pkg:hackage/unliftio-core@0.2.1.0"
@@ -29746,13 +24217,6 @@
     {
       "dependsOn": [
         "pkg:hackage/base",
-        "pkg:hackage/plugin@1.0.0"
-      ],
-      "ref": "pkg:hackage/usage@1.0.0"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base",
         "pkg:hackage/bytestring"
       ],
       "ref": "pkg:hackage/utf8-string@1.0.2"
@@ -29777,15 +24241,6 @@
         "pkg:hackage/selective@0.7.0.1"
       ],
       "ref": "pkg:hackage/validation-selective@0.2.0.0"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base",
-        "pkg:hackage/containers",
-        "pkg:hackage/hashable@1.5.1.0",
-        "pkg:hackage/unordered-containers@0.2.20.1"
-      ],
-      "ref": "pkg:hackage/vault@0.3.1.6"
     },
     {
       "dependsOn": [
@@ -29843,189 +24298,6 @@
     {
       "dependsOn": [
         "pkg:hackage/base",
-        "pkg:hackage/base64-bytestring@1.2.1.0",
-        "pkg:hackage/blaze-html@0.9.2.0",
-        "pkg:hackage/blaze-markup@0.8.3.0",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/containers",
-        "pkg:hackage/cryptohash-md5@0.11.101.0",
-        "pkg:hackage/directory",
-        "pkg:hackage/file-embed@0.0.16.0",
-        "pkg:hackage/filepath",
-        "pkg:hackage/http-date@0.0.11",
-        "pkg:hackage/http-types@0.12.4",
-        "pkg:hackage/mime-types@0.1.2.2",
-        "pkg:hackage/old-locale@1.0.0.7",
-        "pkg:hackage/optparse-applicative@0.18.1.0",
-        "pkg:hackage/template-haskell",
-        "pkg:hackage/text",
-        "pkg:hackage/time",
-        "pkg:hackage/transformers",
-        "pkg:hackage/unix-compat@0.7.4.1",
-        "pkg:hackage/unordered-containers@0.2.20.1",
-        "pkg:hackage/wai-extra@3.1.18",
-        "pkg:hackage/wai@3.2.4",
-        "pkg:hackage/warp@3.4.9",
-        "pkg:hackage/zlib@0.7.1.1"
-      ],
-      "ref": "pkg:hackage/wai-app-static@3.1.9.1"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/HUnit@1.6.2.0",
-        "pkg:hackage/aeson@2.2.4.1",
-        "pkg:hackage/ansi-terminal@1.1.5",
-        "pkg:hackage/base",
-        "pkg:hackage/base64-bytestring@1.2.1.0",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/call-stack@0.4.0",
-        "pkg:hackage/case-insensitive@1.2.1.0",
-        "pkg:hackage/containers",
-        "pkg:hackage/cookie@0.5.1",
-        "pkg:hackage/data-default@0.8.0.2",
-        "pkg:hackage/directory",
-        "pkg:hackage/fast-logger@3.2.6",
-        "pkg:hackage/http-types@0.12.4",
-        "pkg:hackage/iproute@1.7.15",
-        "pkg:hackage/network@3.2.8.0",
-        "pkg:hackage/resourcet@1.3.0",
-        "pkg:hackage/streaming-commons@0.2.3.1",
-        "pkg:hackage/text",
-        "pkg:hackage/time",
-        "pkg:hackage/transformers",
-        "pkg:hackage/unix",
-        "pkg:hackage/vault@0.3.1.6",
-        "pkg:hackage/wai-logger@2.5.0",
-        "pkg:hackage/wai@3.2.4",
-        "pkg:hackage/warp@3.4.9",
-        "pkg:hackage/word8@0.1.3"
-      ],
-      "ref": "pkg:hackage/wai-extra@3.1.18"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/async@2.2.6",
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/http-types@0.12.4",
-        "pkg:hackage/process",
-        "pkg:hackage/streaming-commons@0.2.3.1",
-        "pkg:hackage/transformers",
-        "pkg:hackage/wai@3.2.4",
-        "pkg:hackage/warp@3.4.9"
-      ],
-      "ref": "pkg:hackage/wai-handler-launch@3.0.3.1"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base",
-        "pkg:hackage/byteorder@1.0.4",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/fast-logger@3.2.6",
-        "pkg:hackage/http-types@0.12.4",
-        "pkg:hackage/network@3.2.8.0",
-        "pkg:hackage/wai@3.2.4"
-      ],
-      "ref": "pkg:hackage/wai-logger@2.5.0"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base",
-        "pkg:hackage/base16-bytestring@1.0.2.0",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/cryptohash-sha1@0.11.101.0",
-        "pkg:hackage/directory",
-        "pkg:hackage/expiring-cache-map@0.0.6.1",
-        "pkg:hackage/filepath",
-        "pkg:hackage/http-types@0.12.4",
-        "pkg:hackage/mime-types@0.1.2.2",
-        "pkg:hackage/text",
-        "pkg:hackage/time",
-        "pkg:hackage/wai@3.2.4"
-      ],
-      "ref": "pkg:hackage/wai-middleware-static@0.9.4"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/case-insensitive@1.2.1.0",
-        "pkg:hackage/file-embed@0.0.16.0",
-        "pkg:hackage/http-types@0.12.4",
-        "pkg:hackage/network@3.2.8.0",
-        "pkg:hackage/text",
-        "pkg:hackage/transformers",
-        "pkg:hackage/wai-app-static@3.1.9.1",
-        "pkg:hackage/wai@3.2.4",
-        "pkg:hackage/warp@3.4.9",
-        "pkg:hackage/websockets@0.13.0.0"
-      ],
-      "ref": "pkg:hackage/wai-websockets@3.0.1.2"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/http-types@0.12.4",
-        "pkg:hackage/network@3.2.8.0",
-        "pkg:hackage/text",
-        "pkg:hackage/vault@0.3.1.6"
-      ],
-      "ref": "pkg:hackage/wai@3.2.4"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/array",
-        "pkg:hackage/async@2.2.6",
-        "pkg:hackage/auto-update@0.2.6",
-        "pkg:hackage/base",
-        "pkg:hackage/bsb-http-chunked@0.0.0.4",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/case-insensitive@1.2.1.0",
-        "pkg:hackage/containers",
-        "pkg:hackage/crypton-x509@1.7.7",
-        "pkg:hackage/ghc-prim",
-        "pkg:hackage/hashable@1.5.1.0",
-        "pkg:hackage/http-date@0.0.11",
-        "pkg:hackage/http-types@0.12.4",
-        "pkg:hackage/http2@5.3.10",
-        "pkg:hackage/iproute@1.7.15",
-        "pkg:hackage/network@3.2.8.0",
-        "pkg:hackage/recv@0.1.1",
-        "pkg:hackage/simple-sendfile@0.2.32",
-        "pkg:hackage/stm",
-        "pkg:hackage/streaming-commons@0.2.3.1",
-        "pkg:hackage/text",
-        "pkg:hackage/time-manager@0.2.4",
-        "pkg:hackage/unix",
-        "pkg:hackage/vault@0.3.1.6",
-        "pkg:hackage/wai@3.2.4",
-        "pkg:hackage/word8@0.1.3"
-      ],
-      "ref": "pkg:hackage/warp@3.4.9"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/SHA@1.6.4.4",
-        "pkg:hackage/async@2.2.6",
-        "pkg:hackage/attoparsec@0.14.4",
-        "pkg:hackage/base",
-        "pkg:hackage/base64-bytestring@1.2.1.0",
-        "pkg:hackage/binary",
-        "pkg:hackage/bytestring",
-        "pkg:hackage/case-insensitive@1.2.1.0",
-        "pkg:hackage/containers",
-        "pkg:hackage/entropy@0.4.1.11",
-        "pkg:hackage/network@3.2.8.0",
-        "pkg:hackage/random@1.2.1.3",
-        "pkg:hackage/streaming-commons@0.2.3.1",
-        "pkg:hackage/text"
-      ],
-      "ref": "pkg:hackage/websockets@0.13.0.0"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base",
         "pkg:hackage/base-orphans@0.9.4",
         "pkg:hackage/containers",
         "pkg:hackage/hashable@1.5.1.0",
@@ -30036,12 +24308,6 @@
         "pkg:hackage/vector@0.13.2.0"
       ],
       "ref": "pkg:hackage/witherable@0.5"
-    },
-    {
-      "dependsOn": [
-        "pkg:hackage/base"
-      ],
-      "ref": "pkg:hackage/word8@0.1.3"
     },
     {
       "dependsOn": [
@@ -30144,11 +24410,11 @@
       },
       {
         "name": "waybill:nixpkgs-haskell-resolution",
-        "value": "{\"disagreements\":9,\"resolved\":97,\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"unresolved\":{\"absent-from-package-set\":1,\"compiler-supplied\":24}}"
+        "value": "{\"disagreements\":5,\"resolved\":97,\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"unresolved\":{\"absent-from-package-set\":1,\"compiler-supplied\":24}}"
       },
       {
         "name": "waybill:nixpkgs-haskell-closure",
-        "value": "{\"declared\":162,\"relations-walked\":2817,\"transitive\":294,\"unresolved\":{\"compiler-supplied\":8}}"
+        "value": "{\"declared\":128,\"relations-walked\":2349,\"transitive\":232,\"unresolved\":{\"compiler-supplied\":8}}"
       },
       {
         "name": "waybill:file-inventory-skipped-build-dirs",
@@ -30184,7 +24450,7 @@
       },
       {
         "name": "waybill:workspaces-detected",
-        "value": "[\".\",\"docs\",\"ghcide\",\"ghcide-test/data/cabal-exe/a\",\"ghcide-test/data/cross-cradle/a\",\"ghcide-test/data/ignore-fatal\",\"ghcide-test/data/multi/a\",\"ghcide-test/data/multi/b\",\"ghcide-test/data/multi/c\",\"ghcide-test/data/plugin-knownnat\",\"ghcide-test/data/plugin-parser/plugin\",\"ghcide-test/data/plugin-parser/usage\",\"ghcide-test/data/rootUri/dirA\",\"ghcide-test/data/rootUri/dirB\",\"ghcide-test/data/watched-files/reload\",\"ghcide-test/data/working-dir/a\",\"hls-graph\",\"hls-plugin-api\",\"hls-test-utils\",\"plugins/hls-cabal-fmt-plugin/test/testdata\",\"plugins/hls-cabal-gild-plugin/test/testdata\",\"plugins/hls-cabal-plugin/test/testdata\",\"plugins/hls-cabal-plugin/test/testdata/cabal-add-module/library\",\"plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/bench\",\"plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/exe\",\"plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/lib\",\"plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/multitarget\",\"plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/packageYaml\",\"plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/tests\",\"plugins/hls-cabal-plugin/test/testdata/code-actions\",\"plugins/hls-cabal-plugin/test/testdata/completion\",\"plugins/hls-cabal-plugin/test/testdata/goto-definition/common-section\",\"plugins/hls-cabal-plugin/test/testdata/goto-definition/modules\",\"plugins/hls-cabal-plugin/test/testdata/hover\",\"plugins/hls-cabal-plugin/test/testdata/outline-cabal\",\"plugins/hls-cabal-plugin/test/testdata/simple-cabal\",\"plugins/hls-cabal-plugin/test/testdata/simple-reload\",\"plugins/hls-cabal-plugin/test/testdata/src-modules\",\"plugins/hls-eval-plugin/test/testdata\",\"plugins/hls-eval-plugin/test/testdata/info-util\",\"plugins/hls-ormolu-plugin/test/testdata\",\"plugins/hls-rename-plugin/test/testdata/mod_name/canonicalize\",\"plugins/hls-stan-plugin/test/testdata/extensions-cabal-file\",\"plugins/hls-stan-plugin/test/testdata/extensions-language-pragma\",\"shake-bench\",\"test/testdata/hieBiosMainIs\",\"test/testdata/missingModuleTest/missingModule\",\"test/testdata/missingModuleTest/noPrefixMatch\",\"test/wrapper/testdata/cabal-cur-ver\",\"test/wrapper/testdata/stack-specific-ghc\",\"test/wrapper/testdata/stack-with-dist-newstyle\"]"
+        "value": "[\".\",\"docs\",\"ghcide\",\"hls-graph\",\"hls-plugin-api\",\"hls-test-utils\",\"shake-bench\"]"
       },
       {
         "name": "waybill:unresolved-declared-dep-count",
@@ -30192,7 +24458,7 @@
       },
       {
         "name": "waybill:cabal-entries-skipped",
-        "value": "1"
+        "value": "0"
       }
     ],
     "supplier": {
