@@ -95,6 +95,14 @@ into planning rather than assumed.
 artifact. The 134/146 build-tooling-only derivations are identifiable from the
 closure itself.
 
+## Clarifications
+
+### Session 2026-09-29
+
+- Q: Build-tooling-only derivations — drop them, or emit them marked? → A: Emit them, marked as build-tooling scope, so consumers can filter rather than lose them.
+- Q: Which flake attribute does the closure come from when several exist? → A: `packages.<system>.default` only, with an operator flag to name a different one; degrade if `default` is absent.
+- Q: What VEX status does a backported CVE patch produce? → A: Two graded statements — `affected` for the version, `not_affected` for this specific build.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - The SBOM lists what the build actually consumed (Priority: P1)
@@ -118,7 +126,8 @@ components traceable to derivations classified as artifact inputs.
 2. **Given** the same project, **When** the closure is not enabled, **Then**
    the document is byte-identical to milestone 1034's output.
 3. **Given** a derivation nix classifies as build tooling only, **When** the
-   closure is emitted, **Then** it is not emitted as an artifact component.
+   closure is emitted, **Then** it appears carrying a build-tooling scope
+   marker, distinguishable from artifact inputs by that marker alone.
 
 ---
 
@@ -178,7 +187,7 @@ any stronger provenance.
 
 ---
 
-### User Story 4 - A backport is treated as evidence of affectedness too (Priority: P2)
+### User Story 4 - A backport yields both claims, separately (Priority: P2)
 
 A consumer learns that a component's version was considered vulnerable to a CVE,
 not merely that this build is patched against it.
@@ -197,8 +206,11 @@ the `not_affected` claim about this build.
 **Acceptance Scenarios**:
 
 1. **Given** a component carrying a backport for a CVE, **When** VEX is
-   emitted, **Then** the statement about *this* build and the signal about the
-   *version* are distinguishable, not conflated into one claim.
+   emitted, **Then** two statements appear — `affected` subject to the version
+   and `not_affected` subject to this build — each carrying its evidence grade.
+2. **Given** the same component, **When** a consumer reads only the
+   `not_affected` statement, **Then** its subject makes clear it covers this
+   build and not the version generally.
 
 ---
 
@@ -234,8 +246,9 @@ are evaluated, and that the existing guard refusing `--accept-flake-config` and
   `default, moat-ghc910, moat-ghc94, moat-ghc96`; slack-web exposes
   `default, slack-web`. Degradation, not error.
 - **Several package attributes.** moat's four are the same library against
-  different GHC versions. Which to take — or whether to take all — is a real
-  decision, not a hypothetical.
+  different GHC versions. Settled: take `default`, let the operator name
+  another (FR-015a). A flake with attributes but no `default` degrades and
+  lists them (FR-015b).
 - **`builtins.getFlake` on a local path requires `--impure`.** Measured:
   `error: cannot call 'getFlake' on unlocked flake reference … (use --impure to
   override)`. The safety guard forbids `--impure`, so the project flake MUST be
@@ -253,9 +266,13 @@ are evaluated, and that the existing guard refusing `--accept-flake-config` and
 
 - **FR-001**: Closure emission MUST be opt-in and MUST NOT change output when
   not requested.
-- **FR-002**: Derivations nix classifies as build-tooling-only MUST NOT be
-  emitted as artifact components. The classification MUST come from nix's own
-  `nativeBuildInputs` / `buildInputs` rather than name heuristics.
+- **FR-002**: Derivations nix classifies as build-tooling-only MUST be emitted,
+  carrying a scope marker distinguishing them from artifact inputs. The
+  classification MUST come from nix's own `nativeBuildInputs` / `buildInputs`
+  rather than name heuristics.
+  *A consumer can filter a marked component down; it cannot recover a dropped
+  one. The distinction is free because nix already records it, and a compiler
+  that built the artifact is within scope for a CISA Build-type SBOM.*
 - **FR-003**: Derivations nix classifies as artifact inputs MUST be emitted as
   components carrying their derivation provenance.
 - **FR-004**: Patch derivations MUST NOT be emitted as components. They describe
@@ -282,11 +299,21 @@ are evaluated, and that the existing guard refusing `--accept-flake-config` and
   evidence grade identifying it as such.
 - **FR-010**: The number of patches carrying no CVE identifier MUST be recorded
   at document scope, so partial coverage is visible rather than inferred.
-- **FR-011**: VEX status derived from a backport MUST NOT claim more than the
-  evidence supports. A filename match MUST NOT alone produce an ungraded
-  `not_affected`.
-- **FR-012**: A backport MUST be expressible as evidence the *version* is
-  affected, distinct from any claim about *this build*.
+- **FR-011**: A backport MUST produce **two** VEX statements, not one:
+  `affected` for the component version, and `not_affected` for the specific
+  build this document describes. Both MUST carry the evidence grade from
+  FR-009.
+  *The two claims have different evidential strength. That nixpkgs applied a
+  CVE-named patch is strong evidence someone believed the version vulnerable;
+  that the patch fully resolves the issue is weaker, resting on a filename. A
+  single `not_affected` would let a consumer suppress a real finding on the
+  weaker half.*
+- **FR-012**: The two statements MUST be distinguishable by their subject — the
+  version versus this build — so a consumer cannot collapse them into one
+  claim.
+- **FR-012a**: Neither statement MUST be emitted without its evidence grade.
+  An ungraded `not_affected` derived from a filename is precisely the claim
+  FR-009 exists to prevent.
 
 **Invocation**
 
@@ -296,6 +323,15 @@ are evaluated, and that the existing guard refusing `--accept-flake-config` and
   `--accept-flake-config`, no `--impure`.
 - **FR-015**: A flake exposing no usable attribute MUST degrade with a reason
   code, not error.
+- **FR-015a**: The closure MUST be taken from `packages.<system>.default`, and
+  the operator MUST be able to name a different attribute.
+  *Merging several attributes would put three GHC toolchains and three copies
+  of every dependency into one document, describing a build nobody performed.
+  moat exposes `default`, `moat-ghc910`, `moat-ghc94`, `moat-ghc96` — the same
+  library against three compilers.*
+- **FR-015b**: A flake exposing `packages.<system>` but no `default` MUST
+  degrade with a reason code naming the attributes that *are* available, so the
+  operator can pick one rather than guess.
 - **FR-016**: The closure query MUST be bounded in wall-clock time, and MUST
   inherit milestone 1034's `--offline` refusal.
 
@@ -322,20 +358,27 @@ are evaluated, and that the existing guard refusing `--accept-flake-config` and
   components not currently emitted, and every added component traces to a
   derivation classified as an artifact input. Baseline measured: 216 and 218
   such components exist.
-- **SC-002**: No derivation classified as build-tooling-only is emitted as an
-  artifact component.
+- **SC-002**: Every derivation classified as build-tooling-only is emitted with
+  a scope marker, and none is marked as an artifact input. On the measured
+  projects that is 134 and 146 components.
 - **SC-003**: With the feature off, all committed corpus goldens are unchanged.
 - **SC-004**: `CVE-2019-13232` appears in `pedigree.patches[].resolves[]` on the
   component carrying it, for both measured projects, and the emitted document
   validates against the CycloneDX 1.6 schema.
 - **SC-005**: Every patch-derived CVE association carries an evidence grade, and
   a test asserts an ungraded one cannot be emitted.
+- **SC-005a**: For `CVE-2019-13232` on a measured project, both statements are
+  emitted — `affected` subject to the version, `not_affected` subject to this
+  build — and a test asserts neither appears without the other.
 - **SC-006**: The count of patches without a CVE is emitted; on the measured
   projects it is 40 and 46.
 - **SC-007**: The argv guard holds on this path, demonstrated by the same
   mutation that proves it on the 1034 path.
 - **SC-008**: A flake exposing no `packages.<system>` degrades with a reason
-  code and a successful scan.
+  code and a successful scan — measured case: haskell-language-server.
+- **SC-009**: On moat, the closure is taken from `default` alone; the document
+  contains one GHC toolchain, not three, and naming `moat-ghc96` instead
+  produces a different document.
 
 ## Assumptions
 

@@ -29,6 +29,22 @@
 - [X] Feature meets measurable outcomes defined in Success Criteria
 - [X] No implementation details leak into specification
 
+## Clarification session 2026-09-29
+
+Three questions asked and integrated. One reversed a requirement, one settled an
+edge case the spec had posed as open, and one replaced an under-specified
+prohibition with a positive rule:
+
+| Question | Outcome | Sections touched |
+|---|---|---|
+| Build tooling: drop or emit marked? | **Emit marked** — reverses FR-002 | FR-002, SC-002, US1 |
+| Which flake attribute when several exist? | **`default`**, operator may override | FR-015a/b, Edge Cases, SC-008/009 |
+| VEX status from a backport? | **Two graded statements** — `affected` for the version, `not_affected` for the build | FR-011/012/012a, US4, SC-005a |
+
+The first is worth noting: FR-002 originally said build tooling MUST NOT be
+emitted, which contradicted the standing preference for more information over
+less, and would have discarded a distinction nix supplies for free.
+
 ## Notes
 
 Same three items pass only under a stated reading as in milestone 1034, for the
