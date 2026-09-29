@@ -1073,7 +1073,68 @@ pub(crate) fn enrich(
         summary.closure = Some(result.summary);
     }
 
+    // Phase 2 of the tier: the closure has now added components the first
+    // evaluation never saw. Phase 1 corrected the package set before the walk,
+    // so those components inherited any correction that applied to an entry it
+    // touched -- but nix was never *asked* about a package that appears only
+    // transitively, which on real projects is most of them (34 of 53 on one,
+    // 146 of 190 on another). Asking now closes that gap; the measured cost of
+    // a second evaluation is a fraction of a second.
     if nix_eval_ran {
+        if let Some(cfg) = &opts.nix_eval {
+            let unasked: Vec<String> = components
+                .iter()
+                .filter(|c| is_haskell(c) && !is_main_module(c))
+                .map(|c| c.name.clone())
+                .filter(|n| !nix_eval_asked.contains(n))
+                .collect();
+            if !unasked.is_empty() {
+                let evaluator = super::eval::invoke::NixEvaluator;
+                match super::eval::run(&pinned.revision, &unasked, cfg, &evaluator) {
+                    Ok(outcome) => {
+                        let mut corrected = 0usize;
+                        for c in components.iter_mut().filter(|c| is_haskell(c)) {
+                            let Some(Some(evaluated)) = outcome.versions.get(&c.name) else {
+                                continue;
+                            };
+                            if !c.version.is_empty() && &c.version != evaluated {
+                                nix_eval_divergences.push(
+                                    package_set::EvaluatedDivergence {
+                                        name: c.name.clone(),
+                                        file_parsed: c.version.clone(),
+                                        evaluated: evaluated.clone(),
+                                    },
+                                );
+                                correct_version_in_place(
+                                    c,
+                                    evaluated,
+                                    &mut summary.renames,
+                                );
+                                corrected += 1;
+                            }
+                        }
+                        nix_eval_asked.extend(unasked.iter().cloned());
+                        if let Some(n) = summary.nix_eval.as_mut() {
+                            n.evaluated += outcome.versions.len();
+                            n.superseded += corrected;
+                        }
+                        tracing::info!(
+                            transitive_evaluated = outcome.versions.len(),
+                            corrected,
+                            "nix-eval: second pass over transitively-reached packages"
+                        );
+                    }
+                    Err(reason) => {
+                        // Phase 1's results stand; only the extra coverage is
+                        // lost, so this is not a degradation of the pass.
+                        tracing::info!(
+                            reason = reason.wire(),
+                            "nix-eval: second pass unavailable; declared-only coverage"
+                        );
+                    }
+                }
+            }
+        }
         annotate_nix_eval_provenance(components, &nix_eval_asked, &nix_eval_divergences);
     }
 
@@ -1144,6 +1205,31 @@ fn new_closure_component(name: &str) -> ResolvedComponent {
 /// format's **native** checksum field — research R2 verified this value is a
 /// flat SHA-256 of the source tarball, so a `waybill:` annotation would
 /// violate Principle V.
+/// Correct one component's version in place, recording the PURL rewrite.
+///
+/// Narrower than [`apply_resolved`] on purpose: this runs on a component that
+/// has already been resolved and annotated, so it must change the version and
+/// the identity and nothing else. Re-running `apply_resolved` would re-stamp
+/// provenance annotations that describe the earlier, superseded resolution.
+fn correct_version_in_place(
+    c: &mut ResolvedComponent,
+    version: &str,
+    renames: &mut Vec<(String, String)>,
+) {
+    c.version = version.to_string();
+    if let Ok(p) = waybill_common::types::purl::Purl::new(&format!(
+        "pkg:hackage/{}@{}",
+        c.name, version
+    )) {
+        let before = c.purl.as_str().to_string();
+        let after = p.as_str().to_string();
+        if before != after {
+            renames.push((before, after));
+        }
+        c.purl = p;
+    }
+}
+
 /// Attach C177 / C181 to every Haskell component the document will carry.
 ///
 /// Called from the normal path AND from every degradation path that runs after

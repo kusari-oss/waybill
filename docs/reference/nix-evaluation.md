@@ -149,14 +149,19 @@ from "never ran".
 
 ## Coverage
 
-The tier asks Nix about a project's **declared** dependencies.
-Components reached only transitively are resolved from the same package
-set, so a correction propagates to them, but Nix is never asked about a
-package that appears only transitively.
+The tier evaluates in two passes: declared dependencies first, so the
+transitive walk starts from corrected data, then the packages that walk
+reached. Measured coverage on two real Haskell libraries is 51 of 53 and
+190 of 190 components.
 
-On one Haskell library that is 21 of 53 components; on a larger one, 45
-of 190. Every component carries `waybill:nix-eval-origin`, so which is
-which is visible in the document rather than inferred.
+What stays `file-parsed` is the scanned project itself. Asking nixpkgs
+about it would be meaningless at best and wrong at worst — a project
+shares its name with whatever nixpkgs publishes under that name, and
+those are different artifacts. One measured case: the local source is
+2.2.2.0 while nixpkgs carries 2.2.0.0 under the same name.
+
+Every component carries `waybill:nix-eval-origin`, so which is which is
+visible in the document rather than inferred.
 
 On every project tested so far, file parsing and evaluation agreed on
 every component. The tier has not yet corrected a version outside the
