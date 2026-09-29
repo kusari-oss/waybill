@@ -221,6 +221,82 @@ pub(crate) fn parse(text: &str) -> PackageSet {
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
     use super::*;
+    use std::collections::BTreeMap;
+
+    /// A package set with two known versions, built through the public parse
+    /// path so the test cannot drift from the real entry shape.
+    fn two_package_set() -> PackageSet {
+        parse(
+            r#"
+  "waybill-fixture-alpha" = callPackage ({ mkDerivation }: mkDerivation {
+     pname = "waybill-fixture-alpha"; version = "1.0.0";
+   }) {};
+  "waybill-fixture-beta" = callPackage ({ mkDerivation }: mkDerivation {
+     pname = "waybill-fixture-beta"; version = "2.0.0";
+   }) {};
+"#,
+        )
+    }
+
+    #[test]
+    fn evaluation_supersedes_a_file_parsed_version_and_reports_the_loser() {
+        let mut set = two_package_set();
+        // Control: the fixture really does start where we think it does. A
+        // parse that silently produced nothing would make every assertion
+        // below vacuous.
+        assert_eq!(set.get("waybill-fixture-alpha").map(|e| e.version.as_str()), Some("1.0.0"));
+
+        let mut evaluated = BTreeMap::new();
+        evaluated.insert("waybill-fixture-alpha".to_string(), Some("1.5.0".to_string()));
+
+        let diverged = set.apply_evaluated_versions(&evaluated);
+
+        assert_eq!(diverged.len(), 1, "one component disagreed");
+        assert_eq!(diverged[0].name, "waybill-fixture-alpha");
+        assert_eq!(diverged[0].file_parsed, "1.0.0", "the loser is retained, not dropped");
+        assert_eq!(diverged[0].evaluated, "1.5.0");
+        assert_eq!(
+            set.get("waybill-fixture-alpha").map(|e| e.version.as_str()),
+            Some("1.5.0"),
+            "evaluation wins: in nix, evaluation is what is real"
+        );
+        assert_eq!(
+            set.get("waybill-fixture-beta").map(|e| e.version.as_str()),
+            Some("2.0.0"),
+            "an untouched package must not move"
+        );
+    }
+
+    #[test]
+    fn agreement_produces_no_divergence_record() {
+        let mut set = two_package_set();
+        let mut evaluated = BTreeMap::new();
+        evaluated.insert("waybill-fixture-alpha".to_string(), Some("1.0.0".to_string()));
+        assert!(set.apply_evaluated_versions(&evaluated).is_empty());
+    }
+
+    #[test]
+    fn a_null_evaluation_result_never_disturbs_a_parsed_version() {
+        // `null` means the attribute was absent or `tryEval` caught it. It is
+        // not a version, and treating it as one would erase good data.
+        let mut set = two_package_set();
+        let mut evaluated = BTreeMap::new();
+        evaluated.insert("waybill-fixture-alpha".to_string(), None);
+        assert!(set.apply_evaluated_versions(&evaluated).is_empty());
+        assert_eq!(set.get("waybill-fixture-alpha").map(|e| e.version.as_str()), Some("1.0.0"));
+    }
+
+    #[test]
+    fn an_evaluated_name_absent_from_the_parsed_set_is_ignored_here() {
+        // Principle XII constraint 1 is about component introduction, which
+        // is the caller's concern; this function only reconciles versions for
+        // entries the set already has.
+        let mut set = two_package_set();
+        let mut evaluated = BTreeMap::new();
+        evaluated.insert("waybill-fixture-unknown".to_string(), Some("9.9.9".to_string()));
+        assert!(set.apply_evaluated_versions(&evaluated).is_empty());
+        assert_eq!(set.len(), 2);
+    }
 
     /// Shaped exactly like the real file, including the unquoted attribute
     /// name that a `"name" =` parser would miss, and a quoted one.
@@ -606,6 +682,60 @@ impl PackageSet {
         }
         changed
     }
+
+    /// Apply versions obtained by evaluating Nix, superseding what parsing the
+    /// package-set files produced.
+    ///
+    /// Evaluation wins. In Nix, evaluation is what is real: the files are an
+    /// approximation of it, and issue #1033 is the proof that the
+    /// approximation can be wrong -- two components shipped wrong versions
+    /// because a file that supersedes the generated set was not read.
+    ///
+    /// Returns one record per component where the two disagreed. The losing
+    /// value is returned rather than dropped so the caller can keep it in the
+    /// document: that divergence is how #1033 was found, and hiding it would
+    /// remove the signal that catches the next one.
+    pub(crate) fn apply_evaluated_versions(
+        &mut self,
+        evaluated: &std::collections::BTreeMap<String, Option<String>>,
+    ) -> Vec<EvaluatedDivergence> {
+        let mut diverged = Vec::new();
+        for (name, version) in evaluated {
+            // `None` means the attribute was absent or `tryEval` caught it --
+            // not a version, and not a reason to disturb what parsing found.
+            let Some(evaluated_version) = version else {
+                continue;
+            };
+            let Some(target) = self.entries.get_mut(name) else {
+                continue;
+            };
+            if &target.version != evaluated_version {
+                diverged.push(EvaluatedDivergence {
+                    name: name.clone(),
+                    file_parsed: target.version.clone(),
+                    evaluated: evaluated_version.clone(),
+                });
+                target.version = evaluated_version.clone();
+            }
+        }
+        diverged
+    }
+}
+
+/// One component whose evaluated version differed from the file-parsed one.
+///
+/// Not to be confused with the milestone-926 disagreement record (catalogue
+/// row C172), which compares a *locally established* version against the
+/// pinned revision's and lets the local value win. This compares two readings
+/// of the same revision -- one by evaluation, one by file-parsing -- and the
+/// evaluated value wins. Opposite precedence, different pair of sources.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct EvaluatedDivergence {
+    pub(crate) name: String,
+    /// The version parsing produced, superseded but retained.
+    pub(crate) file_parsed: String,
+    /// The version Nix reported, which is what the component now carries.
+    pub(crate) evaluated: String,
 }
 
 #[cfg(test)]

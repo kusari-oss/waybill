@@ -179,6 +179,9 @@ pub struct CycloneDxBuilder {
     /// Issue #973 (C174) — the nixpkgs-backed Haskell resolution pass as
     /// a whole, pre-rendered as JSON. `Some` exactly when the pass ran.
     nixpkgs_haskell_resolution: Option<String>,
+    nix_eval_tier: Option<String>,
+    nix_eval_degraded: Option<String>,
+    nix_eval_system: Option<String>,
     /// Milestone 985 (#962, C175) — the closure's record, pre-rendered JSON.
     nixpkgs_haskell_closure: Option<String>,
     /// Milestone 133 US4 — `--file-inventory` mode label. Only
@@ -245,6 +248,9 @@ impl CycloneDxBuilder {
             file_inventory_stats: None,
             nixpkgs_haskell_degraded: None,
             nixpkgs_haskell_resolution: None,
+            nix_eval_tier: None,
+            nix_eval_degraded: None,
+            nix_eval_system: None,
             nixpkgs_haskell_closure: None,
             file_inventory_mode: None,
             file_inventory_source_shapes: None,
@@ -309,6 +315,24 @@ impl CycloneDxBuilder {
 
     /// Issue #973 (C174) — record what the nixpkgs-backed Haskell
     /// resolution pass did, not only whether it failed.
+    /// C178 — what the opt-in `nix eval` tier did.
+    pub fn with_nix_eval_tier(mut self, value: Option<String>) -> Self {
+        self.nix_eval_tier = value;
+        self
+    }
+
+    /// C180 — why the `nix eval` tier degraded.
+    pub fn with_nix_eval_degraded(mut self, value: Option<String>) -> Self {
+        self.nix_eval_degraded = value;
+        self
+    }
+
+    /// C179 — the platform the evaluated results describe.
+    pub fn with_nix_eval_system(mut self, value: Option<String>) -> Self {
+        self.nix_eval_system = value;
+        self
+    }
+
     pub fn with_nixpkgs_haskell_resolution(mut self, value: Option<String>) -> Self {
         self.nixpkgs_haskell_resolution = value;
         self
@@ -835,6 +859,9 @@ impl CycloneDxBuilder {
                 enrichment_degraded: self.config.enrichment_degraded.as_deref(),
                 resolve_identity: self.resolve_identity.as_deref(),
                 nixpkgs_haskell_resolution: self.nixpkgs_haskell_resolution.as_deref(),
+                nix_eval_tier: self.nix_eval_tier.as_deref(),
+                nix_eval_degraded: self.nix_eval_degraded.as_deref(),
+                nix_eval_system: self.nix_eval_system.as_deref(),
                 nixpkgs_haskell_closure: self.nixpkgs_haskell_closure.as_deref(),
             },
         );

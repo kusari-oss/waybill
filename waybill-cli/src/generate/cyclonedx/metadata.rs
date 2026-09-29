@@ -201,6 +201,12 @@ pub struct MetadataExtras<'a> {
     // so a mid-list insertion could silently re-bind an adjacent argument
     // with no type error. #844 tracks fixing the shape itself.
     pub nixpkgs_haskell_resolution: Option<&'a str>,
+    /// C178 — what the opt-in `nix eval` tier did. Pre-rendered JSON.
+    pub nix_eval_tier: Option<&'a str>,
+    /// C180 — why the `nix eval` tier degraded, when it did.
+    pub nix_eval_degraded: Option<&'a str>,
+    /// C179 — the platform the evaluated results describe.
+    pub nix_eval_system: Option<&'a str>,
     // Milestone 985 (#962, C175) — the transitive runtime closure's record.
     // Appended at the end for the same reason C174 was: this list is
     // positional and its neighbours are all `Option<&str>`, so a mid-list
@@ -263,6 +269,9 @@ pub fn build_metadata(
         enrichment_degraded,
         resolve_identity,
         nixpkgs_haskell_resolution,
+        nix_eval_tier,
+        nix_eval_degraded,
+        nix_eval_system,
         nixpkgs_haskell_closure,
     } = extras;
 
@@ -368,6 +377,34 @@ pub fn build_metadata(
         properties.push(json!({
             "name": "waybill:nixpkgs-haskell-degraded",
             "value": reason,
+        }));
+    }
+
+    // C180 (#971 part A) — the `nix eval` tier degraded. Emitted only when
+    // the operator opted in AND the tier could not contribute, so neither a
+    // default scan nor a successful evaluation carries it.
+    if let Some(reason) = nix_eval_degraded {
+        properties.push(json!({
+            "name": "waybill:nix-eval-degraded",
+            "value": reason,
+        }));
+    }
+
+    // C178 (#971 part A) — what the tier did. Present whenever the tier ran,
+    // including when it degraded, because "it ran and got nothing" and "it
+    // never ran" are different facts and only this distinguishes them.
+    if let Some(v) = nix_eval_tier {
+        properties.push(json!({
+            "name": "waybill:nix-eval-tier",
+            "value": v,
+        }));
+    }
+
+    // C179 — the platform the results describe.
+    if let Some(v) = nix_eval_system {
+        properties.push(json!({
+            "name": "waybill:nix-eval-system",
+            "value": v,
         }));
     }
 

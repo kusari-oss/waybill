@@ -477,17 +477,48 @@ fn assemble_graph(
 ///
 /// Returns a Vec of subproject-paths like `":app"`, `":lib"`. Returns
 /// `vec![String::new()]` if the project has no explicit subprojects
+/// Arguments for `./gradlew :<sub>:dependencies`, split out so the `--offline`
+/// decision is testable without spawning Gradle.
+///
+/// `dependencies` resolves a configuration against remote repositories, so a
+/// scan running under `--offline` must pass Gradle's own `--offline` or it
+/// makes outbound calls the operator was promised would not happen.
+pub(super) fn dependency_task_args(
+    task: &str,
+    configuration: &str,
+    daemon: bool,
+    offline: bool,
+) -> Vec<String> {
+    let mut args = vec![
+        task.to_string(),
+        "--configuration".to_string(),
+        configuration.to_string(),
+    ];
+    if !daemon {
+        args.push("--no-daemon".to_string());
+    }
+    args.push("--quiet".to_string());
+    if offline {
+        args.push("--offline".to_string());
+    }
+    args
+}
+
 /// (single-project build).
 pub(super) fn enumerate_subprojects(
     wrapper: &Path,
     project_dir: &Path,
     timeout: Duration,
+    offline: bool,
 ) -> Result<Vec<String>, SubprocessOutcome> {
     let mut cmd = Command::new(wrapper);
     cmd.current_dir(project_dir);
     cmd.arg("projects");
     cmd.arg("--no-daemon");
     cmd.arg("--quiet");
+    if offline {
+        cmd.arg("--offline");
+    }
 
     let output = spawn_with_timeout(cmd, timeout)?;
     if !output.status.success() {
@@ -539,7 +570,7 @@ pub fn resolve_via_subprocess(
     let wrapper = discover_wrapper(project_dir).ok_or(SubprocessOutcome::ToolMissing)?;
     let timeout = Duration::from_secs(config.gradle_timeout_secs.max(1));
 
-    let subs = enumerate_subprojects(&wrapper, project_dir, timeout)?;
+    let subs = enumerate_subprojects(&wrapper, project_dir, timeout, config.offline)?;
 
     let mut default_configs = vec!["runtimeClasspath".to_string(), "testRuntimeClasspath".to_string()];
     for extra in &config.gradle_extra_configurations {
@@ -558,12 +589,12 @@ pub fn resolve_via_subprocess(
             };
             let mut cmd = Command::new(&wrapper);
             cmd.current_dir(project_dir);
-            cmd.arg(&task);
-            cmd.arg("--configuration").arg(cfg);
-            if !config.gradle_daemon {
-                cmd.arg("--no-daemon");
-            }
-            cmd.arg("--quiet");
+            cmd.args(dependency_task_args(
+                &task,
+                cfg,
+                config.gradle_daemon,
+                config.offline,
+            ));
 
             let output = spawn_with_timeout(cmd, timeout)?;
             if !output.status.success() {
@@ -613,6 +644,33 @@ pub fn resolve_via_subprocess(
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
+    #[test]
+    fn dependency_resolution_passes_gradles_own_offline_when_the_scan_is_offline() {
+        // `--offline` promises no outbound network calls. `gradlew
+        // :sub:dependencies` resolves against remote repositories, so without
+        // this the promise is broken by an opt-in tier the operator enabled
+        // for unrelated reasons.
+        let args = super::dependency_task_args(":api:dependencies", "runtimeClasspath", false, true);
+        assert!(
+            args.iter().any(|a| a == "--offline"),
+            "offline scan must pass gradle --offline: {args:?}"
+        );
+    }
+
+    #[test]
+    fn an_online_scan_does_not_pass_offline() {
+        let args = super::dependency_task_args(":api:dependencies", "runtimeClasspath", false, false);
+        assert!(
+            !args.iter().any(|a| a == "--offline"),
+            "an online scan must not restrict gradle: {args:?}"
+        );
+        // Control: the rest of the argv is still what it was, so the test
+        // above is not passing because the builder returns nothing useful.
+        assert!(args.iter().any(|a| a == "--no-daemon"));
+        assert!(args.iter().any(|a| a == "--quiet"));
+        assert_eq!(args.first().map(String::as_str), Some(":api:dependencies"));
+    }
+
     use super::*;
 
     const SIMPLE_TREE: &str = "\

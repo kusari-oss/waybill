@@ -1,6 +1,6 @@
 # waybill Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-09-26
+Auto-generated from all feature plans. Last updated: 2026-09-28
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -397,6 +397,8 @@ Auto-generated from all feature plans. Last updated: 2026-09-26
 - N/A — all state is in-process per scan. The per-revision cache (985-nix-haskell-runtime-closure)
 - Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. No nightly. `waybill-ebpf` untouched. + Existing only — `spdx` (already backs `SpdxExpression`), `toml`, `serde_json`, `serde_yaml`, `quick-xml`, `regex`, `tracing`. **Zero new Cargo dependencies.** (1010-manifest-declared-license)
 - N/A — all state in-process per scan; licenses are attached to `PackageDbEntry` and flow through the existing resolution pipeline. (1010-manifest-declared-license)
+- Rust stable, workspace toolchain pinned by + Existing only — `std::process::Command` + (1034-nix-eval-tier)
+- N/A — all state in-process per scan. The existing per-revision (1034-nix-eval-tier)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -575,9 +577,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 1034-nix-eval-tier: Added Rust stable, workspace toolchain pinned by + Existing only — `std::process::Command` +
 - 1010-manifest-declared-license: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. No nightly. `waybill-ebpf` untouched. + Existing only — `spdx` (already backs `SpdxExpression`), `toml`, `serde_json`, `serde_yaml`, `quick-xml`, `regex`, `tracing`. **Zero new Cargo dependencies.**
 - 985-nix-haskell-runtime-closure: Added Rust stable, workspace toolchain pinned by + Existing only — `regex` (already parses this file),
-- 926-nixpkgs-haskell-versions: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. No nightly. `waybill-ebpf` untouched. + Existing only — `reqwest` (workspace, `rustls-tls`) for retrieval, `serde`/`serde_json` for annotation values, `sha2` + `data-encoding` for hex encoding, `tracing`, `anyhow`/`thiserror`, `clap` for the opt-out flag. The Nix-base32 decoder is ~20 lines of stdlib arithmetic (custom alphabet, reversed bit order — no crate provides it). **Zero new Cargo dependencies.**
 
 
 <!-- MANUAL ADDITIONS START -->

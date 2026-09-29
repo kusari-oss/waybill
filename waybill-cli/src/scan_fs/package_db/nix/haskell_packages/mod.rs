@@ -457,7 +457,7 @@ pub(crate) const ANN_CANDIDATE_COMPILERS: &str = "waybill:nixpkgs-candidate-comp
 pub(crate) const ANN_VERSION_DISAGREEMENT: &str = "waybill:nixpkgs-version-disagreement";
 
 /// Options the operator controls.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub(crate) struct ResolveOptions {
     /// `--offline` (FR-009).
     pub(crate) offline: bool,
@@ -470,6 +470,11 @@ pub(crate) struct ResolveOptions {
     /// an operator who wants versions on declared dependencies but not a 3.8×
     /// document should not have to give up both (FR-016).
     pub(crate) closure_disabled: bool,
+    /// Milestone 1034 (#971 part A) — `--nix-eval`.
+    ///
+    /// `None` is the default and means no `nix` process is started at all
+    /// (spec FR-002), which is what makes the flag-off path byte-identical.
+    pub(crate) nix_eval: Option<super::eval::TierConfig>,
 }
 
 // The FR-019 budget is not carried here: it belongs to the retrieval
@@ -506,6 +511,25 @@ pub(crate) struct EnrichmentSummary {
     /// rewrite silently orphans its component unless the endpoints are
     /// rewritten too. The caller MUST apply these; `apply_renames` does it.
     pub(crate) renames: Vec<(String, String)>,
+    /// Milestone 1034 (#971 part A) — what the `nix eval` tier did, when the
+    /// operator opted in. `None` when `--nix-eval` was absent, which is what
+    /// keeps the default path byte-identical (spec FR-002).
+    pub(crate) nix_eval: Option<NixEvalSummary>,
+}
+
+/// What the evaluation tier did for one scan.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub(crate) struct NixEvalSummary {
+    /// Platform evaluated for; `None` when the tier degraded before
+    /// establishing one.
+    pub(crate) system: Option<String>,
+    /// Attribute names evaluation returned a result for.
+    pub(crate) evaluated: usize,
+    /// Components whose evaluated version superseded the file-parsed one.
+    pub(crate) superseded: usize,
+    /// Why the tier contributed nothing, when it did not. Wire form of
+    /// `DegradationReason`, a closed set.
+    pub(crate) degraded_reason: Option<String>,
 }
 
 /// Rewrite dependency-edge endpoints after a pass changed component PURLs
@@ -625,6 +649,16 @@ pub(crate) fn reconcile_optional_with_closure(
     restored
 }
 
+/// Is this the project being scanned, rather than one of its dependencies?
+///
+/// Mirrors the detection in `nix/mod.rs`, which keys on `source_type` ending
+/// in `main-module`.
+fn is_main_module(c: &ResolvedComponent) -> bool {
+    c.source_type
+        .as_deref()
+        .is_some_and(|t| t.ends_with("main-module"))
+}
+
 fn is_haskell(c: &ResolvedComponent) -> bool {
     c.purl.as_str().starts_with("pkg:hackage/")
 }
@@ -705,6 +739,7 @@ pub(crate) fn enrich(
         }
     };
     let mut packages = package_set::parse(&text);
+    let mut nix_eval_divergences = Vec::new();
     // Issue #1033 — apply the shared override file's version rebinds.
     //
     // Best-effort by design: this file supplements the generated set, so if it
@@ -738,14 +773,106 @@ pub(crate) fn enrich(
             );
         }
     }
+
+    // Milestone 1034 (#971 part A) — the opt-in evaluation tier.
+    //
+    // Last in the ladder because it is the most authoritative: parsing the
+    // generated set, then the override file (#1033), then asking Nix. Every
+    // failure here degrades to whatever the earlier rungs produced, so a
+    // missing or unusable `nix` costs nothing that was already established.
+    let mut nix_eval_summary: Option<NixEvalSummary> = None;
+    let mut nix_eval_asked: std::collections::HashSet<String> = Default::default();
+    // Captured where the tier finishes rather than read off `nix_eval_summary`,
+    // which is moved into the summary struct further down.
+    let mut nix_eval_ran_early = false;
+    if opts.nix_eval.is_some() && opts.offline {
+        // `--offline` promises no outbound network calls. Evaluation resolves
+        // the pinned revision through `getFlake`, which fetches when the nix
+        // store lacks it, so the tier cannot honour that promise -- and nix's
+        // own `--offline` does not stop it.
+        let reason = super::eval::reason::DegradationReason::OfflineRequested;
+        nix_eval_summary = Some(NixEvalSummary {
+            degraded_reason: Some(reason.wire().to_string()),
+            ..Default::default()
+        });
+        tracing::info!(
+            reason = reason.wire(),
+            "nix-eval: skipped, --offline forbids the network this tier may need"
+        );
+    } else if let Some(cfg) = &opts.nix_eval {
+        // Every Haskell component, not just the ones awaiting a version.
+        // `is_enrichable` excludes components that already have one, but a
+        // version that is present and *wrong* is precisely the #1033 case this
+        // tier exists to correct — filtering those out would leave the tier
+        // unable to supersede anything, which is the whole point of it.
+        //
+        // The scanned project itself is excluded. Asking nixpkgs about it is
+        // not just useless but actively unsafe: a project shares its name with
+        // whatever nixpkgs publishes under that name, and those are different
+        // artifacts. Measured on one real project — the local source is
+        // 2.2.2.0 and nixpkgs carries 2.2.0.0 under the same name. Applying
+        // that answer would make the document claim the scanned tree is a
+        // version it is not. The m926 local-version guard happens to prevent
+        // it today; this removes the question instead of relying on that.
+        let names: Vec<String> = components
+            .iter()
+            .filter(|c| is_haskell(c) && !is_main_module(c))
+            .map(|c| c.name.clone())
+            .collect();
+        nix_eval_asked = names.iter().cloned().collect();
+        let evaluator = super::eval::invoke::NixEvaluator;
+        match super::eval::run(&pinned.revision, &names, cfg, &evaluator) {
+            Ok(outcome) => {
+                nix_eval_ran_early = true;
+                nix_eval_divergences = packages.apply_evaluated_versions(&outcome.versions);
+                nix_eval_summary = Some(NixEvalSummary {
+                    system: Some(outcome.system.as_str().to_string()),
+                    evaluated: outcome.versions.len(),
+                    superseded: nix_eval_divergences.len(),
+                    degraded_reason: None,
+                });
+                tracing::info!(
+                    // the outcome's own revision, not the caller's: this is
+                    // the revision the versions actually describe
+                    revision = %outcome.revision,
+                    system = outcome.system.as_str(),
+                    evaluated = outcome.versions.len(),
+                    superseded = nix_eval_divergences.len(),
+                    "nix-eval: evaluation superseded file-parsed versions"
+                );
+            }
+            Err(reason) => {
+                nix_eval_summary = Some(NixEvalSummary {
+                    degraded_reason: Some(reason.wire().to_string()),
+                    ..Default::default()
+                });
+                tracing::info!(
+                    revision = %pinned.revision,
+                    reason = reason.wire(),
+                    detail = %reason,
+                    "nix-eval: degrading to file-parsed versions"
+                );
+            }
+        }
+    }
+
     let packages = packages;
     tracing::debug!(
         revision = %pinned.revision,
         packages = packages.len(),
+        nix_eval_superseded = nix_eval_divergences.len(),
         "nixpkgs-haskell: package set parsed"
     );
     if packages.is_empty() {
-        return Some(degrade_all(components, UnresolvedReason::SourceUnreachable));
+        // The tier ran before this rung; a later failure must not
+        // erase what it established, or the document goes silent
+        // about an evaluation that actually happened.
+        let mut s = degrade_all(components, UnresolvedReason::SourceUnreachable);
+        s.nix_eval = nix_eval_summary;
+        if nix_eval_ran_early {
+            annotate_nix_eval_provenance(components, &nix_eval_asked, &nix_eval_divergences);
+        }
+        return Some(s);
     }
 
     // Boot libraries, unioned across every candidate compiler (FR-014a).
@@ -762,12 +889,22 @@ pub(crate) fn enrich(
                     reason = reason.as_str(),
                     "nixpkgs-haskell: degrading, compiler configuration unavailable"
                 );
-                return Some(degrade_all(components, reason));
+                // The tier ran before this rung; a later failure must not
+                // erase what it established, or the document goes silent
+                // about an evaluation that actually happened.
+                let mut s = degrade_all(components, reason);
+                s.nix_eval = nix_eval_summary;
+                if nix_eval_ran_early {
+                    annotate_nix_eval_provenance(components, &nix_eval_asked, &nix_eval_divergences);
+                }
+                return Some(s);
             }
         };
 
+    let nix_eval_ran = nix_eval_ran_early;
     let mut summary = EnrichmentSummary {
         revision: Some(pinned.revision.clone()),
+        nix_eval: nix_eval_summary,
         ..Default::default()
     };
     let candidate_note = (candidates.len() > 1).then(|| {
@@ -936,6 +1073,72 @@ pub(crate) fn enrich(
         summary.closure = Some(result.summary);
     }
 
+    // Phase 2 of the tier: the closure has now added components the first
+    // evaluation never saw. Phase 1 corrected the package set before the walk,
+    // so those components inherited any correction that applied to an entry it
+    // touched -- but nix was never *asked* about a package that appears only
+    // transitively, which on real projects is most of them (34 of 53 on one,
+    // 146 of 190 on another). Asking now closes that gap; the measured cost of
+    // a second evaluation is a fraction of a second.
+    if nix_eval_ran {
+        if let Some(cfg) = &opts.nix_eval {
+            let unasked: Vec<String> = components
+                .iter()
+                .filter(|c| is_haskell(c) && !is_main_module(c))
+                .map(|c| c.name.clone())
+                .filter(|n| !nix_eval_asked.contains(n))
+                .collect();
+            if !unasked.is_empty() {
+                let evaluator = super::eval::invoke::NixEvaluator;
+                match super::eval::run(&pinned.revision, &unasked, cfg, &evaluator) {
+                    Ok(outcome) => {
+                        let mut corrected = 0usize;
+                        for c in components.iter_mut().filter(|c| is_haskell(c)) {
+                            let Some(Some(evaluated)) = outcome.versions.get(&c.name) else {
+                                continue;
+                            };
+                            if !c.version.is_empty() && &c.version != evaluated {
+                                nix_eval_divergences.push(
+                                    package_set::EvaluatedDivergence {
+                                        name: c.name.clone(),
+                                        file_parsed: c.version.clone(),
+                                        evaluated: evaluated.clone(),
+                                    },
+                                );
+                                correct_version_in_place(
+                                    c,
+                                    evaluated,
+                                    &mut summary.renames,
+                                );
+                                corrected += 1;
+                            }
+                        }
+                        nix_eval_asked.extend(unasked.iter().cloned());
+                        if let Some(n) = summary.nix_eval.as_mut() {
+                            n.evaluated += outcome.versions.len();
+                            n.superseded += corrected;
+                        }
+                        tracing::info!(
+                            transitive_evaluated = outcome.versions.len(),
+                            corrected,
+                            "nix-eval: second pass over transitively-reached packages"
+                        );
+                    }
+                    Err(reason) => {
+                        // Phase 1's results stand; only the extra coverage is
+                        // lost, so this is not a degradation of the pass.
+                        tracing::info!(
+                            reason = reason.wire(),
+                            "nix-eval: second pass unavailable; declared-only coverage"
+                        );
+                    }
+                }
+            }
+        }
+        annotate_nix_eval_provenance(components, &nix_eval_asked, &nix_eval_divergences);
+    }
+
+
     Some(summary)
 }
 
@@ -1002,6 +1205,83 @@ fn new_closure_component(name: &str) -> ResolvedComponent {
 /// format's **native** checksum field — research R2 verified this value is a
 /// flat SHA-256 of the source tarball, so a `waybill:` annotation would
 /// violate Principle V.
+/// Correct one component's version in place, recording the PURL rewrite.
+///
+/// Narrower than [`apply_resolved`] on purpose: this runs on a component that
+/// has already been resolved and annotated, so it must change the version and
+/// the identity and nothing else. Re-running `apply_resolved` would re-stamp
+/// provenance annotations that describe the earlier, superseded resolution.
+fn correct_version_in_place(
+    c: &mut ResolvedComponent,
+    version: &str,
+    renames: &mut Vec<(String, String)>,
+) {
+    c.version = version.to_string();
+    if let Ok(p) = waybill_common::types::purl::Purl::new(&format!(
+        "pkg:hackage/{}@{}",
+        c.name, version
+    )) {
+        let before = c.purl.as_str().to_string();
+        let after = p.as_str().to_string();
+        if before != after {
+            renames.push((before, after));
+        }
+        c.purl = p;
+    }
+}
+
+/// Attach C177 / C181 to every Haskell component the document will carry.
+///
+/// Called from the normal path AND from every degradation path that runs after
+/// the tier. The tier's work must not be erased by a later, unrelated failure:
+/// a scan that evaluated 21 attributes and then degraded for want of a compiler
+/// configuration still knows which components were checked, and saying so is
+/// the point of C181.
+fn annotate_nix_eval_provenance(
+    components: &mut [ResolvedComponent],
+    asked: &std::collections::HashSet<String>,
+    divergences: &[package_set::EvaluatedDivergence],
+) {
+    let superseded: std::collections::HashMap<&str, &str> = divergences
+        .iter()
+        .map(|d| (d.name.as_str(), d.file_parsed.as_str()))
+        .collect();
+    for c in components.iter_mut().filter(|c| is_haskell(c)) {
+        let origin = if asked.contains(&c.name) {
+            "evaluated"
+        } else {
+            "file-parsed"
+        };
+        c.extra_annotations.insert(
+            ANN_NIX_EVAL_ORIGIN.to_string(),
+            serde_json::Value::String(origin.to_string()),
+        );
+        if let Some(file_parsed) = superseded.get(c.name.as_str()) {
+            c.extra_annotations.insert(
+                ANN_NIX_EVAL_SUPERSEDED.to_string(),
+                serde_json::Value::String((*file_parsed).to_string()),
+            );
+        }
+    }
+}
+
+/// C181 — whether this component's version came from evaluating Nix or from
+/// parsing the package-set files.
+///
+/// Emitted on **every** component the tier examined, agreements included.
+/// Marking only the superseded ones would make absence ambiguous: a consumer
+/// could not tell "the tier checked this and agreed" from "the tier never
+/// looked at it", and those are different claims. This is the trap C175
+/// documents for declared-vs-transitive, applied here.
+const ANN_NIX_EVAL_ORIGIN: &str = "waybill:nix-eval-origin";
+
+/// C177 — the file-parsed version an evaluated one superseded.
+///
+/// Retained rather than dropped: the divergence between the two sources is how
+/// issue #1033 was found, and discarding the loser would remove the signal
+/// that catches the next one.
+const ANN_NIX_EVAL_SUPERSEDED: &str = "waybill:nix-eval-superseded-version";
+
 fn apply_resolved(
     c: &mut ResolvedComponent,
     version: &str,
@@ -1333,7 +1613,14 @@ mod enrich_tests {
     const CONFIG: &str = r#"self: super: { waybill-fixture-boot = null; }"#;
 
     fn opts() -> ResolveOptions {
-        ResolveOptions { offline: false, disabled: false, closure_disabled: false }
+        ResolveOptions {
+            offline: false,
+            disabled: false,
+            closure_disabled: false,
+            // These tests exercise the file-parsing ladder; the eval tier is
+            // off, which is also the default and the byte-identical path.
+            nix_eval: None,
+        }
     }
 
     fn isolated_cache() -> tempfile::TempDir {
