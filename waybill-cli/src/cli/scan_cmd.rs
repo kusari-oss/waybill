@@ -625,6 +625,74 @@ pub struct ScanArgs {
     #[arg(long = "helm-render", default_value_t = false)]
     pub helm_render: bool,
 
+    /// Milestone 1034 (#971 part A) — Opt-in `nix eval` resolution tier.
+    ///
+    /// **THIS EXECUTES CODE.** Every other `sbom scan` flag reads
+    /// files; this one starts `nix` and evaluates Nix expressions.
+    /// Treat it the way you would treat running the project's build:
+    /// **use it inside a sandbox, or only against a flake you trust.**
+    ///
+    /// The payoff is a more accurate SBOM. Parsing nixpkgs files
+    /// reconstructs what Nix *would* compute; evaluating asks Nix what
+    /// it *does* compute. Issue #1033 shipped two wrong versions
+    /// because a file that supersedes the generated package set was
+    /// not read — evaluation does not have that failure mode.
+    ///
+    /// What is evaluated today: nixpkgs, at the revision the project's
+    /// `flake.lock` pins. The project's *own* flake is NOT evaluated,
+    /// so expressions the scanned repository authors do not run. The
+    /// code that does run is nixpkgs — third-party, unaudited by
+    /// waybill — and the repository chooses which revision of it. That
+    /// revision must be a 40-character hex object id or the tier
+    /// degrades, so it cannot smuggle an expression in.
+    ///
+    /// Defences, all on by default and not configurable: evaluation
+    /// runs in Nix's pure mode (the host environment is unreadable),
+    /// with import-from-derivation refused so evaluation cannot build
+    /// or run a builder, and waybill verifies that refusal is actually
+    /// in effect first — a `nix` that does not support the setting
+    /// accepts the request, ignores it, and exits 0, so asking is not
+    /// evidence of getting. Evaluation is also bounded in wall-clock
+    /// time, because Nix bounds recursion depth but not time.
+    ///
+    /// Requires the `nix` binary on `$PATH`. Every failure — absent
+    /// tool, unusable daemon, unfetchable revision, no evaluable
+    /// attribute, evaluation error, or budget exhaustion — degrades
+    /// to file-parsing and records a reason in the emitted document.
+    /// The scan does NOT abort.
+    ///
+    /// Default (flag omitted): no `nix` process is started at all.
+    #[arg(long = "nix-eval", default_value_t = false)]
+    pub nix_eval: bool,
+
+    /// The Nix platform to evaluate for, e.g. `x86_64-linux`.
+    ///
+    /// Defaults to the host's. Naming it matters twice: results are
+    /// platform-dependent (`hinotify` is 0.4.2 on `x86_64-linux` and
+    /// 0.1.8 on `aarch64-darwin` at one nixpkgs revision), and passing
+    /// it explicitly is what lets evaluation stay pure —
+    /// `builtins.currentSystem` does not exist in pure mode.
+    #[arg(long = "nix-eval-system", value_name = "SYSTEM", requires = "nix_eval")]
+    pub nix_eval_system: Option<String>,
+
+    /// Wall-clock budget for `nix` evaluation, in seconds.
+    ///
+    /// waybill imposes this because Nix does not: `max-call-depth`
+    /// stops runaway recursion, and `timeout` is the *build* timeout,
+    /// which this tier never reaches. A shallow non-recursive
+    /// evaluation ran past 45 seconds unimpeded when measured.
+    /// Acquiring the pinned revision is budgeted separately, so a cold
+    /// Nix store does not consume the evaluation budget.
+    ///
+    /// There is no unbounded setting; `0` is rejected.
+    #[arg(
+        long = "nix-eval-timeout-secs",
+        value_name = "SECS",
+        requires = "nix_eval",
+        value_parser = clap::value_parser!(u64).range(1..)
+    )]
+    pub nix_eval_timeout_secs: Option<u64>,
+
     /// Output path override. Two forms are accepted:
     ///
     /// * Bare `--output <path>` — applies to the single requested
@@ -4258,6 +4326,22 @@ pub async fn execute(
     // The pass gates itself: a repository without both a nixpkgs-shaped
     // pinned input and at least one Haskell dependency does no work and
     // produces no annotation (SC-009).
+    // Milestone 1034 (#971 part A) — resolve the operator's `--nix-eval`
+    // choice once, before the pass that consumes it. An unparseable
+    // `--nix-eval-system` is an argument error rather than a degradation: the
+    // operator mistyped an invocation, which is a different thing from the
+    // environment being unable to satisfy a valid one.
+    let nix_eval_cfg = if args.nix_eval {
+        use scan_fs::package_db::nix::eval::TierConfig;
+        let system = match args.nix_eval_system.as_deref() {
+            Some(s) => Some(s.parse().map_err(|e| anyhow::anyhow!("--nix-eval-system: {e}"))?),
+            None => None,
+        };
+        Some(TierConfig::from_flags(system, args.nix_eval_timeout_secs))
+    } else {
+        None
+    };
+
     let nixpkgs_haskell_summary = {
         use scan_fs::package_db::nix::haskell_packages as nhp;
         let source = nhp::fetch::HttpSource::new(args.nixpkgs_timeout_secs);
@@ -4268,6 +4352,10 @@ pub async fn execute(
                 offline,
                 disabled: args.no_nixpkgs_haskell,
                 closure_disabled: args.no_nixpkgs_haskell_closure,
+                // Milestone 1034 (#971 part A). `None` unless the operator
+                // opted in, and `None` means no `nix` process is started at
+                // all -- which is what keeps the default path byte-identical.
+                nix_eval: nix_eval_cfg.clone(),
             },
             &source,
         )
@@ -4578,7 +4666,38 @@ pub async fn execute(
         .as_ref()
         .and_then(|s| s.closure.as_ref())
         .map(|c| c.to_document_value().to_string());
+    // #971 part A (C178/C180): `Some` exactly when the tier ran, so a scan
+    // without `--nix-eval` is byte-identical. Rendered here so the borrow
+    // outlives `artifacts`.
+    let nix_eval_tier_json: Option<String> = nixpkgs_haskell_summary
+        .as_ref()
+        .and_then(|s| s.nix_eval.as_ref())
+        .map(|n| {
+            serde_json::json!({
+                "revision": nixpkgs_haskell_summary
+                    .as_ref()
+                    .and_then(|s| s.revision.as_deref()),
+                "system": n.system,
+                "evaluated": n.evaluated,
+                "superseded": n.superseded,
+                "degraded-reason": n.degraded_reason,
+            })
+            .to_string()
+        });
+    let nix_eval_degraded: Option<&str> = nixpkgs_haskell_summary
+        .as_ref()
+        .and_then(|s| s.nix_eval.as_ref())
+        .and_then(|n| n.degraded_reason.as_deref());
+
+    let nix_eval_system: Option<&str> = nixpkgs_haskell_summary
+        .as_ref()
+        .and_then(|s| s.nix_eval.as_ref())
+        .and_then(|n| n.system.as_deref());
+
     let artifacts = ScanArtifacts {
+        nix_eval_tier: nix_eval_tier_json.as_deref(),
+        nix_eval_system,
+        nix_eval_degraded,
         nixpkgs_haskell_degraded,
         nixpkgs_haskell_resolution: nixpkgs_haskell_resolution_json.as_deref(),
         nixpkgs_haskell_closure: nixpkgs_haskell_closure_json.as_deref(),
@@ -6393,6 +6512,9 @@ mod tests {
     ) -> ScanArgs {
         ScanArgs {
             path: Some(PathBuf::from(".")),
+            nix_eval: false,
+            nix_eval_system: None,
+            nix_eval_timeout_secs: None,
             no_nixpkgs_haskell: false,
             no_nixpkgs_haskell_closure: false,
             nixpkgs_timeout_secs: 30,

@@ -581,6 +581,34 @@ pub fn annotate_document(
     // C173 above names a failure; this names what the pass DID, so a
     // document that resolved 97 components no longer looks, at document
     // scope, exactly like one that never ran.
+
+    // C180 (#971 part A) — the `nix eval` tier degraded. Present only when
+    // the operator opted in and the tier could not contribute.
+    if let Some(reason) = artifacts.nix_eval_degraded {
+        push(&mut out,
+            "waybill:nix-eval-degraded",
+            json!(reason),
+        );
+    }
+
+    // C178 (#971 part A) — what the tier did. Present whenever it ran,
+    // degradation included: "ran and got nothing" and "never ran" are
+    // different facts, and only this tells them apart.
+    if let Some(v) = artifacts.nix_eval_tier {
+        push(&mut out,
+            "waybill:nix-eval-tier",
+            json!(v),
+        );
+    }
+
+    // C179 (#971 part A) — the platform the evaluated results describe.
+    if let Some(v) = artifacts.nix_eval_system {
+        push(&mut out,
+            "waybill:nix-eval-system",
+            json!(v),
+        );
+    }
+
     if let Some(v) = artifacts.nixpkgs_haskell_resolution {
         push(&mut out,
             "waybill:nixpkgs-haskell-resolution",

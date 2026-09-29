@@ -115,6 +115,33 @@ pub struct ScanArtifacts<'a> {
     /// dependencies, no `flake.lock`, or `--no-nixpkgs-haskell-closure` stays
     /// byte-identical to the pre-feature output (FR-015, FR-017).
     pub nixpkgs_haskell_closure: Option<&'a str>,
+    /// Milestone 1034 (#971 part A, C178) — document-scope record of what the
+    /// opt-in `nix eval` tier did: the revision and platform it evaluated
+    /// for, how many attributes it resolved, and how many file-parsed
+    /// versions it superseded. Pre-rendered JSON.
+    ///
+    /// `Some` exactly when the tier ran, so a scan without `--nix-eval` stays
+    /// byte-identical. Deliberately NOT folded into
+    /// `nixpkgs_haskell_resolution` (C174), which records the *file-parsing*
+    /// pass: both can be present in one document, and a consumer reading one
+    /// must not be led to think it describes the other.
+    pub nix_eval_tier: Option<&'a str>,
+    /// Milestone 1034 (#971 part A, C180) — why the `nix eval` tier
+    /// contributed nothing, when it did not. Closed set of wire forms.
+    ///
+    /// Separate from `nixpkgs_haskell_degraded` (C173) for the reason C173 is
+    /// itself separate from `enrichment_degraded`: one slot cannot say which
+    /// of several independent mechanisms degraded, and more than one can.
+    pub nix_eval_degraded: Option<&'a str>,
+    /// Milestone 1034 (#971 part A, C179) — the Nix platform the evaluated
+    /// results describe.
+    ///
+    /// Also present inside `nix_eval_tier`'s JSON, and carried separately on
+    /// purpose. It is the single fact that changes what the whole document
+    /// *means* — `hinotify` is 0.4.2 on `x86_64-linux` and 0.1.8 on
+    /// `aarch64-darwin` at one revision — and a consumer should not have to
+    /// parse a nested JSON string out of a property value to find it.
+    pub nix_eval_system: Option<&'a str>,
     /// Document-level scope mode. Resolved from
     /// `--include-declared-deps` (with the `--path`/`--image`
     /// auto-default rule). Surfaced in CDX `metadata.lifecycles[]`

@@ -1,0 +1,14 @@
+cabal-version:      2.4
+name:               waybill-fixture-ifd
+version:            0.1.0.0
+synopsis:           Fixture for milestone 1034; not a real package.
+
+library
+    exposed-modules:  Fixture
+    -- Synthetic coordinates: real Hackage names in a committed fixture trip
+    -- the advisory scan (see PRs #285, #640). The tier does not need them to
+    -- resolve — it asks nixpkgs, gets null, and the components still carry
+    -- their provenance annotations, which is what these tests assert.
+    build-depends:    waybill-fixture-alpha
+                    , waybill-fixture-beta
+    default-language: Haskell2010

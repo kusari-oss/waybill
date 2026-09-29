@@ -670,6 +670,11 @@ spdx23_anno!(c173_spdx23, "waybill:nixpkgs-haskell-degraded", document);
 spdx23_anno!(c174_spdx23, "waybill:nixpkgs-haskell-resolution", document);
 spdx23_anno!(c175_spdx23, "waybill:nixpkgs-component-origin", component);
 spdx23_anno!(c176_spdx23, "waybill:nixpkgs-haskell-closure", document);
+spdx23_anno!(c178_spdx23, "waybill:nix-eval-tier", document);
+spdx23_anno!(c179_spdx23, "waybill:nix-eval-system", document);
+spdx23_anno!(c180_spdx23, "waybill:nix-eval-degraded", document);
+spdx23_anno!(c177_spdx23, "waybill:nix-eval-superseded-version", component);
+spdx23_anno!(c181_spdx23, "waybill:nix-eval-origin", component);
 spdx23_anno!(c163_spdx23, "waybill:document-resolve",                     document);
 spdx23_anno!(c162_spdx23, "waybill:cabal-entries-skipped",                 document);
 

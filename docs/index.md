@@ -51,6 +51,10 @@ the way it did, or contribute to the pipeline.
 - [SBOM types](reference/sbom-types.md) — CISA SBOM Type signaling
   (Design / Source / Build / Analyzed / Deployed / Runtime), the
   four-column equivalence table, and the `--sbom-type` flag.
+- [Nix evaluation options](reference/nix-evaluation.md) — `--nix-eval`,
+  `--nix-eval-system`, `--nix-eval-timeout-secs`. Resolves versions by
+  evaluating Nix rather than parsing nixpkgs files. **Executes code**: run
+  it sandboxed or against a trusted flake.
 - [Cross-tier binding](reference/cross-tier-binding.md) — `--bind-to-source`,
   `verify-binding`, `trace-binding`, and the binding-hash-v1 algorithm.
 - [Cross-format SBOM mapping](reference/sbom-format-mapping.md) — per-feature
