@@ -295,6 +295,13 @@ are evaluated, and that the existing guard refusing `--accept-flake-config` and
   a component is spurious would discard the Haskell standard distribution.*
 - **FR-004**: Patch derivations MUST NOT be emitted as components. They describe
   a modification to a component, not a component.
+- **FR-004a**: A closure member that **applies** a patch MUST be emitted
+  whatever its role, including `Unreferenced`.
+  *Distinct from FR-004, which is about the patch file. Measured (research
+  R8): the components carrying CVEs span every role — `unzip` is tooling,
+  `libssh2` an artifact input, `perl` both, `jq` and `lua` neither. Scoping any
+  role out would drop part of the evidence; `jq` and `lua` alone carry 6 of
+  moat's 18 CVEs.*
 
 **Patches**
 

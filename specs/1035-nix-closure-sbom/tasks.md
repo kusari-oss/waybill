@@ -35,11 +35,12 @@ its pre-flight, argv guard, budget and degradation reasons directly.
 **⚠️ No user story work begins until this phase completes.**
 
 - [ ] T004 Implement the closure query in `closure/mod.rs`, reusing milestone 1034's `eval::invoke::run_bounded` and pre-flight unchanged; address the flake through the **CLI flakeref form** (`nix derivation show -r <path>#<attr>`), never `builtins.getFlake` — research R4 measured that `getFlake` on a local path requires `--impure`, which the argv guard refuses
-- [ ] T005 Implement attribute selection in `closure/mod.rs`: `packages.<system>.default`, operator override, degrade naming available attributes when `default` is absent (FR-015a/b)
-- [ ] T006 Implement `ClosureMember` parsing in `closure/derivation.rs`. **Output paths are stored without the `/nix/store/` prefix while `env` fields carry it** — compare basenames. Getting this wrong classifies every member as unreferenced, silently; the first classifier reported 1,275 of 1,275 that way
-- [ ] T007 [P] Implement `DerivationRole` in `closure/classify.rs` from nix's own `nativeBuildInputs`/`buildInputs` families — no name heuristics
-- [ ] T008 [P] Unit-test the basename join with a fixture where the prefix differs, asserting a non-zero classification — a test that only checks "it parsed" passes on the broken version
-- [ ] T009 [P] Unit-test role assignment against the measured split, asserting counts in the right order of magnitude rather than exact equality
+- [ ] T005 Wire the wall-clock budget around the closure subprocess in `closure/mod.rs`, reusing milestone 1034's pattern. One budget covers acquisition and query, for m1034's measured reason: `getFlake` fetches during evaluation and there is no seam to bound separately
+- [ ] T006 Implement attribute selection in `closure/mod.rs`: `packages.<system>.default`, operator override, degrade naming available attributes when `default` is absent (FR-015a/b)
+- [ ] T007 Implement `ClosureMember` parsing in `closure/derivation.rs`. **Output paths are stored without the `/nix/store/` prefix while `env` fields carry it** — compare basenames. Getting this wrong classifies every member as unreferenced, silently; the first classifier reported 1,275 of 1,275 that way
+- [ ] T008 [P] Implement `DerivationRole` in `closure/classify.rs` from nix's own `nativeBuildInputs`/`buildInputs` families — no name heuristics
+- [ ] T009 [P] Unit-test the basename join with a fixture where the prefix differs, asserting a non-zero classification — a test that only checks "it parsed" passes on the broken version
+- [ ] T010 [P] Unit-test role assignment against the measured split, asserting counts in the right order of magnitude rather than exact equality
 
 **Checkpoint**: a closure can be fetched, parsed and classified. Nothing is emitted.
 
@@ -55,11 +56,12 @@ outstanding.
 **Independent Test**: assert the argv guard applies on this path, and that the
 help and docs state repository-authored expressions are evaluated.
 
-- [ ] T010 [P] [US5] Write the failing test: the closure query's argv passes `argv_is_safe`, in `waybill-cli/src/scan_fs/package_db/nix/closure/mod.rs` tests
-- [ ] T011 [US5] Route every closure invocation through the milestone-1034 argv guard in `closure/mod.rs`
-- [ ] T012 [US5] Verify the guard has teeth here: add `--accept-flake-config` to the closure argv, confirm T010 fails, restore. A flake can request `allow-import-from-derivation` via `nixConfig` and slack-web does
-- [ ] T013 [US5] Write the `--nix-closure` help text stating it evaluates the **project's own flake**, with the sandbox-or-trusted-flake guidance, in `waybill-cli/src/cli/scan_cmd.rs`
-- [ ] T014 [US5] Correct `docs/reference/nix-evaluation.md`, which states the project's own flake is not evaluated — true of `--nix-eval`, false here (FR-017)
+- [ ] T011 [P] [US5] Write the failing test: the closure query's argv passes `argv_is_safe`, in `waybill-cli/src/scan_fs/package_db/nix/closure/mod.rs` tests
+- [ ] T012 [US5] Route every closure invocation through the milestone-1034 argv guard in `closure/mod.rs`
+- [ ] T013 [US5] Verify the guard has teeth here: add `--accept-flake-config` to the closure argv, confirm T011 fails, restore. A flake can request `allow-import-from-derivation` via `nixConfig` and slack-web does
+- [ ] T014 [US5] Write the failing test: `--offline --nix-closure` starts **no** nix process and degrades with `offline-requested`, mirroring m1034's test. The closure query resolves the flake through nix, which fetches when the store lacks it — a promise of no outbound calls kept only when a cache happens to be warm is not one
+- [ ] T015 [US5] Write the `--nix-closure` help text stating it evaluates the **project's own flake**, with the sandbox-or-trusted-flake guidance, in `waybill-cli/src/cli/scan_cmd.rs`
+- [ ] T016 [US5] Correct `docs/reference/nix-evaluation.md`, which states the project's own flake is not evaluated — true of `--nix-eval`, false here (FR-017)
 
 **Checkpoint**: the risk is stated before anything acts on it.
 
@@ -70,13 +72,14 @@ help and docs state repository-authored expressions are evaluated.
 **Independent Test**: scan a Nix-built project and assert closure components
 appear beyond the manifest-derived set, each traceable to a classified derivation.
 
-- [ ] T015 [P] [US1] Write the failing test: at least 200 components carrying `waybill:closure-role` appear on a measured project (SC-001; baselines are 216 and 218)
-- [ ] T016 [P] [US1] Write the failing test: the manifest-derived set survives intact alongside the closure set (FR-003a) — GHC boot libraries and executable-stanza dependencies are absent from the closure by construction, and dropping them would discard the Haskell standard distribution
-- [ ] T017 [US1] Emit artifact-input and build-tooling members as components in `closure/emit.rs`, supplementing rather than replacing
-- [ ] T018 [US1] Emit C182 `waybill:closure-role` on every closure-derived component
-- [ ] T019 [US1] Suppress `Unreferenced` members **except** any that apply a patch — research R8: `jq` and `lua` are `neither` and carry 6 of moat's 18 CVEs
-- [ ] T020 [US1] Emit C184 `waybill:nix-closure` at document scope: attribute, derivation count, per-role counts (FR-018)
-- [ ] T021 [US1] Assert the flag-off path starts no nix process and emits none of C182–C184
+- [ ] T017 [P] [US1] Write the failing test: at least 200 components carrying `waybill:closure-role` appear on a measured project (SC-001; baselines are 216 and 218)
+- [ ] T018 [P] [US1] Write the failing test: the manifest-derived set survives intact alongside the closure set (FR-003a) — GHC boot libraries and executable-stanza dependencies are absent from the closure by construction, and dropping them would discard the Haskell standard distribution
+- [ ] T019 [US1] Emit artifact-input and build-tooling members as components in `closure/emit.rs`, supplementing rather than replacing
+- [ ] T020 [US1] Emit C182 `waybill:closure-role` on every closure-derived component
+- [ ] T021 [US1] Suppress `Unreferenced` members **except** any that apply a patch (FR-004a) — research R8: `jq` and `lua` are `neither` and carry 6 of moat's 18 CVEs
+- [ ] T022 [US1] Emit C184 `waybill:nix-closure` at document scope: attribute, derivation count, per-role counts (FR-018)
+- [ ] T023 [P] [US1] Write the failing test for SC-009: scanning one project twice with `default` and with a named attribute produces **different** documents. An override that silently ignored its argument passes every other test here
+- [ ] T024 [US1] Assert the flag-off path starts no nix process and emits none of C182–C184
 
 **Checkpoint**: SC-001 and SC-002 satisfiable. US5 + US1 is the minimum shippable pair.
 
@@ -91,10 +94,10 @@ shape as milestone 1034's safety gate preceding its resolution story.
 
 **Independent Test**: assert no CVE association can be emitted without a grade.
 
-- [ ] T022 [P] [US3] Write the failing test: an ungraded CVE association cannot be constructed, in `closure/patches.rs`
-- [ ] T023 [US3] Implement `EvidenceGrade` in `closure/patches.rs` as an enum with the single variant `FilenameDerived` — not a `bool` and not an `Option`, so a future stronger provenance is distinguishable rather than indistinguishable from a filename match
-- [ ] T024 [US3] Make the grade non-optional in the type that carries a CVE association, so FR-012a is enforced by construction rather than by a check
-- [ ] T025 [US3] Emit C183 `waybill:patch-evidence-grade`
+- [ ] T025 [P] [US3] Write the failing test: an ungraded CVE association cannot be constructed, in `closure/patches.rs`
+- [ ] T026 [US3] Implement `EvidenceGrade` in `closure/patches.rs` as an enum with the single variant `FilenameDerived` — not a `bool` and not an `Option`, so a future stronger provenance is distinguishable rather than indistinguishable from a filename match
+- [ ] T027 [US3] Make the grade non-optional in the type that carries a CVE association, so FR-012a is enforced by construction rather than by a check
+- [ ] T028 [US3] Emit C183 `waybill:patch-evidence-grade`
 
 **Checkpoint**: nothing can claim a CVE without saying how it knows.
 
@@ -105,14 +108,14 @@ shape as milestone 1034's safety gate preceding its resolution story.
 **Independent Test**: scan a project whose closure carries a CVE-named patch and
 assert it appears in `pedigree.patches[]` on the component that applies it.
 
-- [ ] T026 [P] [US2] Write the failing test: `CVE-2019-13232` appears in `pedigree.patches[].resolves[]` on **`unzip`** for both measured projects, and the document validates against the CycloneDX 1.6 schema (SC-004)
-- [ ] T027 [P] [US2] Write the failing test: at least 18 and 14 distinct CVEs are recovered (SC-006a). A run recovering 3 and 4 means the implementation scanned derivation names instead of joining — a silent fivefold undercount
-- [ ] T028 [US2] Implement patch attribution in `closure/patches.rs` via each derivation's own `env.patches` field, resolving store-path basenames (research R7)
-- [ ] T029 [US2] Extract CVE identifiers from patch basenames with the existing `regex` dep
-- [ ] T030 [US2] Implement CycloneDX `pedigree.patches[]` emission in `waybill-cli/src/generate/cyclonedx/pedigree.rs` — the first use of `pedigree` in waybill, so this is new emission machinery, not a new field on an existing path
-- [ ] T031 [US2] Emit patches with no CVE as `type: "backport"` with no `resolves` entry — silence would make partial coverage look like absence
-- [ ] T032 [US2] Emit the patch total and no-CVE count at document scope (SC-006b). On slack-web that is 320 and 279: ~87% of backports name no CVE, and without the count a consumer reads missing VEX as missing backport
-- [ ] T033 [US2] Bridge the patch facts into SPDX 2.3 and SPDX 3, which have no `pedigree` equivalent — the one place the formats differ in capability rather than spelling
+- [ ] T029 [P] [US2] Write the failing test: `CVE-2019-13232` appears in `pedigree.patches[].resolves[]` on **`unzip`** for both measured projects, and the document validates against the CycloneDX 1.6 schema (SC-004)
+- [ ] T030 [P] [US2] Write the failing test: at least 18 and 14 distinct CVEs are recovered (SC-006a). A run recovering 3 and 4 means the implementation scanned derivation names instead of joining — a silent fivefold undercount
+- [ ] T031 [US2] Implement patch attribution in `closure/patches.rs` via each derivation's own `env.patches` field, resolving store-path basenames (research R7)
+- [ ] T032 [US2] Extract CVE identifiers from patch basenames with the existing `regex` dep
+- [ ] T033 [US2] Implement CycloneDX `pedigree.patches[]` emission in `waybill-cli/src/generate/cyclonedx/pedigree.rs` **and register it in `cyclonedx/mod.rs`** — the first use of `pedigree` in waybill, so this is new emission machinery rather than a new field on an existing path, and an unregistered module compiles to nothing
+- [ ] T034 [US2] Emit patches with no CVE as `type: "backport"` with no `resolves` entry — silence would make partial coverage look like absence
+- [ ] T035 [US2] Emit the patch total and no-CVE count at document scope (SC-006b). On slack-web that is 320 and 279: ~87% of backports name no CVE, and without the count a consumer reads missing VEX as missing backport
+- [ ] T036 [US2] Bridge the patch facts into SPDX 2.3 and SPDX 3, which have no `pedigree` equivalent — the one place the formats differ in capability rather than spelling
 
 **Checkpoint**: SC-004 and SC-006 satisfiable.
 
@@ -123,25 +126,25 @@ assert it appears in `pedigree.patches[]` on the component that applies it.
 **Independent Test**: assert two VEX statements per backport, with different
 subjects and both graded.
 
-- [ ] T034 [P] [US4] Write the failing test for SC-005a: `affected` subject to the version and `not_affected` subject to this build, and neither emitted without the other
-- [ ] T035 [US4] Extend the OpenVEX emitter in `waybill-cli/src/generate/openvex/` to produce both statements, replacing the blanket `under_investigation` for patch-derived findings only
-- [ ] T036 [US4] Carry the evidence grade onto both statements (FR-012a)
-- [ ] T037 [US4] Assert a lone `not_affected` cannot be emitted — that is the overclaim FR-011 exists to prevent, and it would let a consumer suppress a real finding on filename evidence
+- [ ] T037 [P] [US4] Write the failing test for SC-005a: `affected` subject to the version and `not_affected` subject to this build, and neither emitted without the other
+- [ ] T038 [US4] Extend the OpenVEX emitter in `waybill-cli/src/generate/openvex/` to produce both statements, replacing the blanket `under_investigation` for patch-derived findings only
+- [ ] T039 [US4] Carry the evidence grade onto both statements (FR-012a)
+- [ ] T040 [US4] Assert a lone `not_affected` cannot be emitted — that is the overclaim FR-011 exists to prevent, and it would let a consumer suppress a real finding on filename evidence
 
 ---
 
 ## Phase 8: Polish & Cross-Cutting Concerns
 
-- [ ] T038 Add catalogue rows C182–C184 to `docs/reference/sbom-format-mapping.md` **in the same change as** their extractors in `waybill-cli/src/parity/extractors/` — the gate fails in both directions, as milestone 1034 found
-- [ ] T039 Edit the catalogue by **exact string match**, never anchored regex, and diff the whole field afterwards
-- [ ] T040 [P] Write extractors for C182–C184 across all three formats
-- [ ] T041 [P] Implement research task **T-R2**: whether closure composition holds outside Haskell; commit the probe
-- [ ] T042 [P] Implement research task **T-R3**: cold-store cost on a clean runner; commit the probe
-- [ ] T043 Document the feature in `docs/reference/nix-evaluation.md` alongside `--nix-eval`, including the ~87% no-CVE coverage limit
-- [ ] T044 Verify SC-003: with the flag off, every committed corpus golden is unchanged
-- [ ] T045 Regenerate corpus goldens **in CI, not locally**, only if T044 shows legitimate churn
-- [ ] T046 Run the walker-audit grep locally if any new `fn walk`-shaped function appeared — it is not in `pre-pr.sh`
-- [ ] T047 Run `./scripts/pre-pr.sh > /tmp/prepr.log 2>&1; echo "EXIT=$?"` — read the **script's** status, never a pipeline's — then assert `>>> all pre-PR checks passed.` and the per-target `test result: ok. N passed; 0 failed`
+- [ ] T041 Add catalogue rows C182–C184 to `docs/reference/sbom-format-mapping.md` **in the same change as** their extractors in `waybill-cli/src/parity/extractors/` — the gate fails in both directions, as milestone 1034 found
+- [ ] T042 Edit the catalogue by **exact string match**, never anchored regex, and diff the whole field afterwards
+- [ ] T043 [P] Write extractors for C182–C184 across all three formats
+- [ ] T044 [P] Implement research task **T-R2**: whether closure composition holds outside Haskell; commit the probe
+- [ ] T045 [P] Implement research task **T-R3**: cold-store cost on a clean runner; commit the probe
+- [ ] T046 Document the feature in `docs/reference/nix-evaluation.md` alongside `--nix-eval`, including the ~87% no-CVE coverage limit
+- [ ] T047 Verify SC-003: with the flag off, every committed corpus golden is unchanged
+- [ ] T048 Regenerate corpus goldens **in CI, not locally**, only if T047 shows legitimate churn
+- [ ] T049 Run the walker-audit grep locally if any new `fn walk`-shaped function appeared — it is not in `pre-pr.sh`
+- [ ] T050 Run `./scripts/pre-pr.sh > /tmp/prepr.log 2>&1; echo "EXIT=$?"` — read the **script's** status, never a pipeline's — then assert `>>> all pre-PR checks passed.` and the per-target `test result: ok. N passed; 0 failed`
 
 ---
 
@@ -171,17 +174,17 @@ Phase 8 (Polish)
   association; retrofitting it would mean shipping ungraded claims first.
 - Phase 3 before Phase 4, for the same reason milestone 1034 gated its
   resolution story behind its safety gate.
-- T038 and T040 land together; either alone fails the parity gate.
-- T045 depends on T044 showing *legitimate* churn. Unexplained churn is a defect
+- T041 and T043 land together; either alone fails the parity gate.
+- T048 depends on T047 showing *legitimate* churn. Unexplained churn is a defect
   to investigate, not goldens to refresh.
 
 **Parallel opportunities**
 
 - Phase 2: T007, T008, T009
-- Phase 3: T010 (T011–T012 follow)
-- Phase 4: T015, T016
-- Phase 6: T026, T027
-- Phase 8: T040, T041, T042
+- Phase 3: T011 (T012–T013 follow)
+- Phase 4: T017, T018
+- Phase 6: T029, T030
+- Phase 8: T043, T044, T045
 
 ---
 
