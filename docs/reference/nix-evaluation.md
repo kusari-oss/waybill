@@ -206,6 +206,13 @@ Defences are on by default and not configurable:
   not evidence of getting. waybill checks `nix config show` reflects it.
 - **A wall-clock budget.** Nix bounds recursion depth but not time.
 - **No writes** outside the Nix store and waybill's own cache.
+- **The flake is never allowed to configure Nix.** A flake can request
+  settings of its own through `nixConfig`, including
+  `allow-import-from-derivation` — real ones do; `slack-web` sets it.
+  Nix ignores such requests as untrusted unless `--accept-flake-config`
+  is passed, which waybill never passes. Measured: a flake carrying that
+  setting is refused by waybill's invocation and builds its derivation
+  once `--accept-flake-config` is added.
 
 The guidance is stricter than today's behavior for two reasons. nixpkgs
 is code waybill does not audit, and whether a given attribute triggers

@@ -76,7 +76,36 @@ while kill -0 $pid 2>/dev/null; do
   if [ $t -ge 45 ]; then
     kill -9 $pid 2>/dev/null
     echo "   STILL RUNNING at ${t}s -> nix imposed no time bound; killed externally"
-    exit 0
+    break
   fi
 done
-echo "   completed in under ${t}s -- RE-SCALE THE EXPRESSION, this probe proved nothing"
+if kill -0 $pid 2>/dev/null; then :; elif [ $t -lt 45 ]; then
+  echo "   completed in under ${t}s -- RE-SCALE THE EXPRESSION, this probe proved nothing"
+fi
+
+# ------------------------------------------------- flake-supplied nix settings
+echo
+echo "## R9 — can a flake re-enable IFD through its own nixConfig?"
+D="$SCRATCH/nixcfg"; rm -rf "$D"; mkdir -p "$D"; cd "$D"
+cat > flake.nix <<NIX
+{
+  nixConfig.allow-import-from-derivation = true;
+  outputs = _: {
+    packages.__SYS__.default = import (derivation {
+      name = "waybill-nixcfg-marker"; system = "__SYS__"; builder = "/bin/sh";
+      args = [ "-c" "echo '\"ifd-ran-anyway\"' > \$out" ];
+    });
+  };
+}
+NIX
+sed -i.bak "s/__SYS__/$SYS/g" flake.nix && rm -f flake.nix.bak
+git init -q . && git add -A
+echo "-- waybill's invocation, no --accept-flake-config (EXPECT: refused):"
+nix eval --no-write-lock-file --option allow-import-from-derivation false \
+  ".#packages.$SYS.default" 2>&1 | grep -E 'cannot build|disabled' | tail -1
+echo "-- with --accept-flake-config, which waybill never passes (EXPECT: it runs):"
+nix eval --no-write-lock-file --accept-flake-config \
+  --option allow-import-from-derivation false \
+  ".#packages.$SYS.default" 2>&1 | grep -E 'ifd-ran-anyway|cannot build' | tail -1
+nix store delete /nix/store/*waybill-nixcfg-marker* >/dev/null 2>&1
+echo "   (the refusal holds only because that flag is absent)"
