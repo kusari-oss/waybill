@@ -1,0 +1,390 @@
+# Feature Specification: Nix derivation closure as SBOM content
+
+**Feature Branch**: `1035-nix-closure-sbom`
+**Created**: 2026-09-29
+**Status**: Draft
+**Issues**: **#1034** (how deep to follow a Nix closure) and **#1040** (vulnerability
+signals nixpkgs already carries). The directory number is the next sequential
+milestone number, not an issue reference.
+
+## Why this exists
+
+Milestone 1034 shipped `--nix-eval`, which asks Nix for package versions instead
+of reconstructing them from nixpkgs files. It emits **53** and **190** hackage
+components for two real Haskell libraries.
+
+The derivation closure for those same projects holds **1,275** and **1,535**
+derivations. Most of what a Nix build actually consumes is absent from the
+document.
+
+Two things live in that gap, and they are different in kind.
+
+**Components waybill cannot currently see.** C libraries, toolchain, and the
+transitive build inputs that no manifest mentions. A Nix-built artifact depends
+on them; the SBOM does not say so.
+
+**Evidence that a vulnerability was already fixed.** nixpkgs backports security
+patches without moving the version string. `unzip` in nixpkgs carries CVE-named
+patches against a version unchanged since 2009. Nothing in an SBOM keyed on
+version strings can express that, in either direction — neither "this build is
+patched" nor "this version is affected".
+
+## Measurements this feature is built on
+
+All taken 2026-09-28/29. The classifier is committed at
+`specs/1034-nix-eval-tier/measurements/classify-derivation-closure.py` and
+reproduces every figure below.
+
+| | moat | slack-web |
+|---|---|---|
+| derivations in closure | 1,275 | 1,535 |
+| — artifact input | 264 | 390 |
+| — build tooling only | 134 | 146 |
+| — both | 52 | 55 |
+| — neither | 825 | 944 |
+| of "neither": patch derivations | 43 | 50 |
+| of those: naming a CVE | 3 | 4 |
+| hackage components waybill emits today | 53 | 190 |
+| closure query cost (warm) | 1.09 s / 5.7 MB | 1.07 s / 7.4 MB |
+
+The CVEs found: `CVE-2019-13232` (three patches, both projects) and
+`CVE-2021-4217` (slack-web).
+
+### How much of this is actually new
+
+Measured 2026-09-29, comparing closure artifact inputs against the components
+waybill emits today for the same project:
+
+| | moat | slack-web |
+|---|---|---|
+| closure artifact inputs | 249 | 378 |
+| hackage components emitted today | 53 | 190 |
+| overlap | 33 | 160 |
+| **in closure, not emitted** | **216** | **218** |
+| emitted, not in closure | 20 | 30 |
+
+So the closure is roughly **4×** moat's current component count and **2×**
+slack-web's, and the gain is genuinely new content rather than the same
+components counted differently. Examples of what is missing today:
+`ChasingBottoms`, `Diff`, `OneTuple`, `adjunctions`, `aeson`, `autoconf`,
+`automake`.
+
+**The reverse direction is a finding of its own.** 20 and 30 components waybill
+emits today do *not* appear in the closure of `.#default`. Enumerated, they are
+mostly explained:
+
+- **GHC boot libraries** — `base`, `bytestring`, `containers`, `text`,
+  `template-haskell`, `ghc-prim`, `integer-gmp` and the rest. These ship inside
+  the compiler derivation rather than as closure members of their own, so their
+  absence is an artefact of where nix puts them, not a gap. 18 of moat's 20 and
+  roughly 22 of slack-web's 30.
+- **The scanned project's own main modules** — `moat` and `readme`. Expected.
+- **Unexplained: 8 on slack-web** — `butcher`, `deque`, `microlens`,
+  `microlens-th`, `monad-loops`, `multistate`, `strict-list`, `unsafe`. These
+  are ordinary Hackage packages, absent from `.#default`'s closure but present
+  in the manifest-derived set. The plausible reading is that they belong to an
+  attribute other than `default` (slack-web has a `main/` directory), which
+  would mean one attribute's closure does not cover a project.
+
+That last group is the one that matters, because it decides whether closure
+emission *replaces* the manifest-derived set or sits beside it. It is carried
+into planning rather than assumed.
+
+**The build-versus-artifact split needs no heuristic.** Nix records it:
+`nativeBuildInputs` is host tooling, `buildInputs` is what goes into the
+artifact. The 134/146 build-tooling-only derivations are identifiable from the
+closure itself.
+
+## User Scenarios & Testing *(mandatory)*
+
+### User Story 1 - The SBOM lists what the build actually consumed (Priority: P1)
+
+An operator scanning a Nix-built project gets components for the artifact's real
+inputs — including the C libraries and transitive dependencies no manifest
+mentions — rather than only what the language ecosystem's manifests declare.
+
+**Why this priority**: It is the feature. Without it the other stories have no
+document to attach to.
+
+**Independent Test**: Scan a Nix-built project with the closure enabled and
+assert the component count exceeds the manifest-derived count, with the added
+components traceable to derivations classified as artifact inputs.
+
+**Acceptance Scenarios**:
+
+1. **Given** a project whose closure contains artifact inputs absent from its
+   manifests, **When** the closure is emitted, **Then** those appear as
+   components carrying their derivation provenance.
+2. **Given** the same project, **When** the closure is not enabled, **Then**
+   the document is byte-identical to milestone 1034's output.
+3. **Given** a derivation nix classifies as build tooling only, **When** the
+   closure is emitted, **Then** it is not emitted as an artifact component.
+
+---
+
+### User Story 2 - Backported security patches are visible (Priority: P1)
+
+A consumer can see that a component carries a backported fix for a named CVE,
+in a field their tooling already understands.
+
+**Why this priority**: Equal to US1, and independently valuable — it is the half
+of #1040 that needs no vulnerability database, only what nixpkgs already
+records. A version string cannot express it.
+
+**Independent Test**: Scan a project whose closure contains a CVE-named patch
+and assert the emitting component carries it in CycloneDX
+`pedigree.patches[]` with `type: backport` and a `resolves[]` entry of
+`type: security`.
+
+**Acceptance Scenarios**:
+
+1. **Given** a closure containing `CVE-2019-13232-1.patch` applied to a
+   component, **When** the document is emitted, **Then** that component's
+   `pedigree.patches[]` records a `backport` resolving a security issue with
+   that CVE id.
+2. **Given** a patch derivation whose name carries no CVE, **When** the document
+   is emitted, **Then** the patch is still recorded, without a `resolves[]`
+   security entry.
+3. **Given** SPDX 2.3 or SPDX 3 output, **When** the document is emitted,
+   **Then** the same facts are carried, since neither format has a native
+   equivalent.
+
+---
+
+### User Story 3 - The patch evidence says how much to trust it (Priority: P1)
+
+A consumer can tell a CVE id that came from a filename from one established some
+stronger way, and tooling can decide accordingly.
+
+**Why this priority**: P1 because US2 is *unsafe* without it. The CVE is parsed
+out of a filename like `CVE-2019-13232-1.patch`. Backports that do not name a
+CVE are invisible, and silently so; a filename is not proof the patch fully
+resolves the issue. waybill's existing VEX emits only `under_investigation`,
+its source comment calling that "the status waybill can honestly emit today".
+Asserting `not_affected` on filename evidence without grading it would be a
+larger accuracy claim than the evidence supports (Constitution Principle IX).
+
+**Independent Test**: Assert every emitted patch-derived CVE association carries
+an evidence grade, and that a grade exists distinguishing filename-derived from
+any stronger provenance.
+
+**Acceptance Scenarios**:
+
+1. **Given** a CVE parsed from a patch filename, **When** it is emitted,
+   **Then** it carries an evidence grade identifying it as filename-derived.
+2. **Given** a closure whose patch set is partially CVE-named, **When** the
+   document is emitted, **Then** the count of patches *without* a CVE is
+   recorded, so partial coverage is visible rather than inferred from absence.
+
+---
+
+### User Story 4 - A backport is treated as evidence of affectedness too (Priority: P2)
+
+A consumer learns that a component's version was considered vulnerable to a CVE,
+not merely that this build is patched against it.
+
+**Why this priority**: P2 — US2 delivers value without it — but it may be the
+more useful half. nixpkgs applied the patch because it believed the package was
+vulnerable, and the version string did not move, so nothing else in the document
+says so. It tells a consumer that a version-range match they would otherwise
+dismiss is real, and flags the *unpatched* build of the same version as
+affected.
+
+**Independent Test**: Assert a component carrying a backport for a CVE also
+yields a positive affectedness signal for the unpatched version, distinct from
+the `not_affected` claim about this build.
+
+**Acceptance Scenarios**:
+
+1. **Given** a component carrying a backport for a CVE, **When** VEX is
+   emitted, **Then** the statement about *this* build and the signal about the
+   *version* are distinguishable, not conflated into one claim.
+
+---
+
+### User Story 5 - The operator knows the risk changed (Priority: P1)
+
+An operator enabling this sees that it evaluates the scanned project's own
+flake, which milestone 1034 deliberately does not.
+
+**Why this priority**: P1 because the guidance is currently written as a margin
+of safety, and this makes it literal. Milestone 1034's tier evaluates nixpkgs at
+a pinned revision; repository-authored expressions never run. Taking a closure
+requires instantiating the project's flake, so they do.
+
+**Independent Test**: Assert the flag's help and
+`docs/reference/nix-evaluation.md` state that repository-authored expressions
+are evaluated, and that the existing guard refusing `--accept-flake-config` and
+`--impure` is in force on this path.
+
+**Acceptance Scenarios**:
+
+1. **Given** the closure path, **When** it invokes nix, **Then** the argv guard
+   from PR #1044 applies unchanged, so the scanned flake cannot select nix's
+   evaluation settings.
+2. **Given** the docs, **When** an operator reads them, **Then** the statement
+   that the project's own flake is not evaluated is corrected for this path.
+
+---
+
+### Edge Cases
+
+- **No `packages.<system>` attribute.** Measured: haskell-language-server
+  exposes only `docs` and devShells. moat exposes
+  `default, moat-ghc910, moat-ghc94, moat-ghc96`; slack-web exposes
+  `default, slack-web`. Degradation, not error.
+- **Several package attributes.** moat's four are the same library against
+  different GHC versions. Which to take — or whether to take all — is a real
+  decision, not a hypothetical.
+- **`builtins.getFlake` on a local path requires `--impure`.** Measured:
+  `error: cannot call 'getFlake' on unlocked flake reference … (use --impure to
+  override)`. The safety guard forbids `--impure`, so the project flake MUST be
+  addressed through the CLI flakeref form, which works without it.
+- **A patch applying to several components**, or several patches to one.
+- **A CVE-named patch nixpkgs applies to a component waybill does not emit.**
+- **Closure output size.** 5.7–7.4 MB of JSON per query.
+- **`--offline`.** Inherits milestone 1034's refusal for the same reason.
+
+## Requirements *(mandatory)*
+
+### Functional Requirements
+
+**Scope and shape**
+
+- **FR-001**: Closure emission MUST be opt-in and MUST NOT change output when
+  not requested.
+- **FR-002**: Derivations nix classifies as build-tooling-only MUST NOT be
+  emitted as artifact components. The classification MUST come from nix's own
+  `nativeBuildInputs` / `buildInputs` rather than name heuristics.
+- **FR-003**: Derivations nix classifies as artifact inputs MUST be emitted as
+  components carrying their derivation provenance.
+- **FR-004**: Patch derivations MUST NOT be emitted as components. They describe
+  a modification to a component, not a component.
+
+**Patches**
+
+- **FR-005**: A patch applied to an emitted component MUST be recorded in that
+  component's CycloneDX `pedigree.patches[]` with `type: "backport"`.
+  Verified against `bom-1.6.schema.json`: the `patch.type` enum is
+  `['unofficial','monkey','backport','cherry-pick']`.
+- **FR-006**: A patch whose name carries a CVE identifier MUST record it in
+  `resolves[]` as an issue of `type: "security"` with that `id`. Verified: the
+  `issue.type` enum is `['defect','enhancement','security']` and `issue`
+  carries `id`, `source` and `references`.
+- **FR-007**: SPDX 2.3 and SPDX 3 MUST carry the same facts. Neither has a
+  native equivalent, so both need the annotation bridge.
+- **FR-008**: waybill uses `pedigree` nowhere today; this MUST use the native
+  field rather than a `waybill:` property (Constitution Principle V).
+
+**Evidence**
+
+- **FR-009**: Every CVE association derived from a patch filename MUST carry an
+  evidence grade identifying it as such.
+- **FR-010**: The number of patches carrying no CVE identifier MUST be recorded
+  at document scope, so partial coverage is visible rather than inferred.
+- **FR-011**: VEX status derived from a backport MUST NOT claim more than the
+  evidence supports. A filename match MUST NOT alone produce an ungraded
+  `not_affected`.
+- **FR-012**: A backport MUST be expressible as evidence the *version* is
+  affected, distinct from any claim about *this build*.
+
+**Invocation**
+
+- **FR-013**: The project flake MUST be addressed through the CLI flakeref form.
+  `builtins.getFlake` on a local path requires `--impure`, which FR-014 forbids.
+- **FR-014**: The argv guard from PR #1044 MUST apply on this path: no
+  `--accept-flake-config`, no `--impure`.
+- **FR-015**: A flake exposing no usable attribute MUST degrade with a reason
+  code, not error.
+- **FR-016**: The closure query MUST be bounded in wall-clock time, and MUST
+  inherit milestone 1034's `--offline` refusal.
+
+**Transparency**
+
+- **FR-017**: The flag's help and `docs/reference/nix-evaluation.md` MUST state
+  that this path evaluates repository-authored expressions, correcting the
+  statement that the project's own flake is not evaluated.
+- **FR-018**: The document MUST record how many closure members were emitted,
+  suppressed as tooling, and recorded as patches.
+
+### Key Entities
+
+- **Closure member**: one derivation, with a name, a version where it has one,
+  and how nix referenced it (tooling, artifact input, both, neither).
+- **Patch record**: a modification applied to a component, optionally naming a
+  CVE, with the grade of that identification.
+- **Affectedness signal**: the inverse reading of a backport — that the version
+  was considered vulnerable — distinct from a status claim about this build.
+
+## Success Criteria *(mandatory)*
+
+- **SC-001**: On both measured projects, closure emission adds at least 200
+  components not currently emitted, and every added component traces to a
+  derivation classified as an artifact input. Baseline measured: 216 and 218
+  such components exist.
+- **SC-002**: No derivation classified as build-tooling-only is emitted as an
+  artifact component.
+- **SC-003**: With the feature off, all committed corpus goldens are unchanged.
+- **SC-004**: `CVE-2019-13232` appears in `pedigree.patches[].resolves[]` on the
+  component carrying it, for both measured projects, and the emitted document
+  validates against the CycloneDX 1.6 schema.
+- **SC-005**: Every patch-derived CVE association carries an evidence grade, and
+  a test asserts an ungraded one cannot be emitted.
+- **SC-006**: The count of patches without a CVE is emitted; on the measured
+  projects it is 40 and 46.
+- **SC-007**: The argv guard holds on this path, demonstrated by the same
+  mutation that proves it on the 1034 path.
+- **SC-008**: A flake exposing no `packages.<system>` degrades with a reason
+  code and a successful scan.
+
+## Assumptions
+
+- **A-1**: CycloneDX is the primary target for patch data, because it is the
+  only format with a native carrier. SPDX gets the bridge.
+- **A-2**: Opt-in, separate from `--nix-eval`. An operator may want evaluated
+  versions without a 1,500-derivation closure.
+- **A-3**: Haskell projects are the measured case. The closure mechanism is
+  language-agnostic; only the reader integration is not.
+- **A-4**: The `neither` bucket beyond patches — fetched sources, setup hooks,
+  bootstrap toolchain — is out of scope for v1. It is the largest bucket and the
+  least understood, and nothing measured yet argues it belongs in a document.
+
+## Out of Scope
+
+- Making closure emission, or `--nix-eval`, the default.
+- A vulnerability database. This emits what nixpkgs already records.
+- Resolving the CISA/VEX question of what a backport means for `affected`
+  status generally; this feature emits the evidence and grades it.
+- The 433/433 "other" derivations in the `neither` bucket.
+
+## Research constraint *(binds the planning phase)*
+
+Milestone 1034's history is the reason this section exists. Three claims about
+Nix reached artifacts there without a probe behind them, and all three were
+wrong:
+
+- m926's §R1 cited Constitution Principle I to avoid invoking `nix` at all.
+- m143's §R7 declared `cabal.project` a presence-only signal.
+- m1034's own spec claimed the tier evaluates repository-authored expressions.
+  It does not — caught only by mutation-testing the acceptance test that claim
+  justified.
+
+The lesson recorded there is narrower than "measure": *a measurement of what a
+tool does is not a measurement of what our use of it does.*
+
+Planning MUST cite the measurements in this document or take new ones, and MUST
+NOT assert new claims about nix behaviour without a committed probe.
+
+**Not yet measured, and load-bearing:**
+
+- Why 8 ordinary Hackage packages on slack-web (`butcher`, `deque`,
+  `microlens`, `monad-loops`, `multistate`, `strict-list`, `unsafe`,
+  `microlens-th`) are in the manifest-derived set but absent from
+  `.#default`'s closure. Boot libraries and main modules account for the rest;
+  these do not. If the cause is that they belong to another flake attribute,
+  then one attribute's closure does not cover a project, and closure emission
+  must supplement rather than replace. Scope question, not a detail.
+- Which component a patch derivation attaches to, mechanically. The closure
+  records the patch; the attribution has not been demonstrated.
+- Whether closure composition holds outside Haskell.
+- The cost on a cold Nix store.
