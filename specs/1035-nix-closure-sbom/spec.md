@@ -79,16 +79,18 @@ mostly explained:
   absence is an artefact of where nix puts them, not a gap. 18 of moat's 20 and
   roughly 22 of slack-web's 30.
 - **The scanned project's own main modules** — `moat` and `readme`. Expected.
-- **Unexplained: 8 on slack-web** — `butcher`, `deque`, `microlens`,
-  `microlens-th`, `monad-loops`, `multistate`, `strict-list`, `unsafe`. These
-  are ordinary Hackage packages, absent from `.#default`'s closure but present
-  in the manifest-derived set. The plausible reading is that they belong to an
-  attribute other than `default` (slack-web has a `main/` directory), which
-  would mean one attribute's closure does not cover a project.
+- **Declared by a stanza nix does not build — 8 on slack-web.** `butcher` and
+  `monad-loops` are declared by the `executable slack-web-cli` stanza
+  (`slack-web.cabal:243`); the rest are reached transitively from them.
+  `packages.<system>.default` builds the library, so an executable's
+  dependencies never enter its closure.
 
-That last group is the one that matters, because it decides whether closure
-emission *replaces* the manifest-derived set or sits beside it. It is carried
-into planning rather than assumed.
+**This settles replace-versus-supplement: supplement.** The two sets answer
+different questions — the manifest set covers every cabal stanza, the closure
+covers only what the chosen attribute builds. Neither is wrong, and a document
+replacing one with the other loses real content whichever way it chooses. See
+research §R1; the original hypothesis, that these belonged to another flake
+attribute, was measured and disproved.
 
 **The build-versus-artifact split needs no heuristic.** Nix records it:
 `nativeBuildInputs` is host tooling, `buildInputs` is what goes into the
@@ -275,6 +277,14 @@ are evaluated, and that the existing guard refusing `--accept-flake-config` and
   that built the artifact is within scope for a CISA Build-type SBOM.*
 - **FR-003**: Derivations nix classifies as artifact inputs MUST be emitted as
   components carrying their derivation provenance.
+- **FR-003a**: Closure-derived components MUST supplement the manifest-derived
+  set, never replace it, and the two MUST remain distinguishable.
+  *Measured: the manifest set covers every cabal stanza while the closure
+  covers only what the selected attribute builds — slack-web's `butcher` and
+  `monad-loops` come from its executable stanza and are absent from the
+  library's closure. GHC boot libraries are likewise absent by construction,
+  shipping inside the compiler derivation. Treating closure-absence as evidence
+  a component is spurious would discard the Haskell standard distribution.*
 - **FR-004**: Patch derivations MUST NOT be emitted as components. They describe
   a modification to a component, not a component.
 
@@ -420,13 +430,8 @@ NOT assert new claims about nix behaviour without a committed probe.
 
 **Not yet measured, and load-bearing:**
 
-- Why 8 ordinary Hackage packages on slack-web (`butcher`, `deque`,
-  `microlens`, `monad-loops`, `multistate`, `strict-list`, `unsafe`,
-  `microlens-th`) are in the manifest-derived set but absent from
-  `.#default`'s closure. Boot libraries and main modules account for the rest;
-  these do not. If the cause is that they belong to another flake attribute,
-  then one attribute's closure does not cover a project, and closure emission
-  must supplement rather than replace. Scope question, not a detail.
+- Mechanically attributing a patch derivation to the component it patches. The
+  closure records both; the join has not been demonstrated (research T-R1).
 - Which component a patch derivation attaches to, mechanically. The closure
   records the patch; the attribution has not been demonstrated.
 - Whether closure composition holds outside Haskell.
