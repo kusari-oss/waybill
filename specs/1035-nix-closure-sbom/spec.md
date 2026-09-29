@@ -43,12 +43,20 @@ reproduces every figure below.
 | — both | 52 | 55 |
 | — neither | 825 | 944 |
 | of "neither": patch derivations | 43 | 50 |
-| of those: naming a CVE | 3 | 4 |
+| **distinct CVEs, via `env.patches`** | **18** | **14** |
+| components carrying them | 4 | 3 |
 | hackage components waybill emits today | 53 | 190 |
 | closure query cost (warm) | 1.09 s / 5.7 MB | 1.07 s / 7.4 MB |
 
-The CVEs found: `CVE-2019-13232` (three patches, both projects) and
-`CVE-2021-4217` (slack-web).
+**Scanning derivation names undercounts fivefold.** That approach finds 3 and
+4 CVEs; joining through each derivation's own `patches` field finds 18 and 14,
+because many patches are files referenced by store path rather than separate
+CVE-named derivations. `unzip 6.0` alone carries **11 CVEs across 26 patches**
+in both closures — the case #1040 was filed on, confirmed rather than argued.
+
+The components carrying them are `unzip` (tooling), `libssh2` (artifact),
+`perl` (both), `jq` and `lua` (neither) — every role, which is why A-4 is
+narrow and why build tooling is emitted.
 
 ### How much of this is actually new
 
@@ -372,16 +380,25 @@ are evaluated, and that the existing guard refusing `--accept-flake-config` and
   a scope marker, and none is marked as an artifact input. On the measured
   projects that is 134 and 146 components.
 - **SC-003**: With the feature off, all committed corpus goldens are unchanged.
-- **SC-004**: `CVE-2019-13232` appears in `pedigree.patches[].resolves[]` on the
-  component carrying it, for both measured projects, and the emitted document
-  validates against the CycloneDX 1.6 schema.
+- **SC-004**: `CVE-2019-13232` appears in `pedigree.patches[].resolves[]` on
+  **`unzip`**, the component that applies it, for both measured projects, and
+  the emitted document validates against the CycloneDX 1.6 schema.
 - **SC-005**: Every patch-derived CVE association carries an evidence grade, and
   a test asserts an ungraded one cannot be emitted.
 - **SC-005a**: For `CVE-2019-13232` on a measured project, both statements are
   emitted — `affected` subject to the version, `not_affected` subject to this
   build — and a test asserts neither appears without the other.
-- **SC-006**: The count of patches without a CVE is emitted; on the measured
-  projects it is 40 and 46.
+- **SC-006**: The count of patches without a CVE is emitted at document scope,
+  so partial coverage is visible rather than inferred from absence.
+- **SC-006a**: At least 18 and 14 distinct CVEs are recovered from the measured
+  projects — the counts reachable through `env.patches`. A run recovering only
+  3 and 4 indicates the implementation is scanning derivation names instead of
+  the join, which is a silent fivefold undercount.
+- **SC-006b**: The emitted patch total and no-CVE count match the closure. On
+  slack-web that is 320 patches of which 279 name no CVE — so roughly 87% of
+  backports carry no CVE in their filename, and a consumer reading only VEX
+  statements sees a minority of the patching that occurred. This is the figure
+  that makes the coverage limit legible.
 - **SC-007**: The argv guard holds on this path, demonstrated by the same
   mutation that proves it on the 1034 path.
 - **SC-008**: A flake exposing no `packages.<system>` degrades with a reason
@@ -398,9 +415,14 @@ are evaluated, and that the existing guard refusing `--accept-flake-config` and
   versions without a 1,500-derivation closure.
 - **A-3**: Haskell projects are the measured case. The closure mechanism is
   language-agnostic; only the reader integration is not.
-- **A-4**: The `neither` bucket beyond patches — fetched sources, setup hooks,
-  bootstrap toolchain — is out of scope for v1. It is the largest bucket and the
-  least understood, and nothing measured yet argues it belongs in a document.
+- **A-4**: Of the `neither` bucket, **fetched sources, setup hooks and
+  bootstrap toolchain** are out of scope for v1 — nothing measured argues they
+  belong in a document.
+  *Narrowed 2026-09-29 by research R8. The original assumption excluded the
+  bucket wholesale, which would have discarded a third of the CVE evidence:
+  `jq` and `lua` are classified `neither` and carry 6 of moat's 18 CVEs. A
+  closure member that applies a CVE-named patch is in scope whatever its
+  role.*
 
 ## Out of Scope
 
@@ -408,7 +430,9 @@ are evaluated, and that the existing guard refusing `--accept-flake-config` and
 - A vulnerability database. This emits what nixpkgs already records.
 - Resolving the CISA/VEX question of what a backport means for `affected`
   status generally; this feature emits the evidence and grades it.
-- The 433/433 "other" derivations in the `neither` bucket.
+- Fetched sources, setup hooks and bootstrap toolchain within the `neither`
+  bucket — **except** any member that applies a patch, which is in scope
+  regardless of role (A-4, research R8).
 
 ## Research constraint *(binds the planning phase)*
 

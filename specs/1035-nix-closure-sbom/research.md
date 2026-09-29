@@ -183,7 +183,7 @@ feature is opt-in and bounded, and `--offline` refuses it outright.
 
 | ID | What | Why not now |
 |----|------|-------------|
-| **T-R1** | Mechanically attribute a patch derivation to the component it patches. The closure records both; the join has not been demonstrated. | Needs the reader, not a probe |
+| ~~T-R1~~ | ~~Attribute a patch to the component it patches~~ | **Resolved, R7.** `env.patches` gives the join. |
 | **T-R2** | Whether closure composition holds outside Haskell. | No non-Haskell Nix project measured |
 | **T-R3** | Cold-store cost (R6). | Needs a clean runner |
 
@@ -198,3 +198,74 @@ Each must produce a committed probe.
 | 20/30 components absent from the closure "plausibly belong to another attribute" | **Wrong.** R1: they are executable-stanza and boot-library components. Both of slack-web's attributes are the same derivation. |
 | Replace-versus-supplement is an open scope question | **Settled: supplement.** R1, from measurement rather than preference. |
 | Build tooling not emitted | Already reversed by the 2026-09-29 clarification; R3 confirms the split is free. |
+
+---
+
+## R7 ⚠ — Patch attribution works, and finds far more than the filename scan did
+
+**Decision**: T-R1 is resolved. Patches attribute to components mechanically
+through the derivation's own `patches` field. No heuristic, no guessing.
+
+**MEASURED**: 111 derivations in moat's closure carry a non-empty `env.patches`
+field listing the store paths they apply:
+
+```
+  patchutils : /nix/store/b8znwq…-Make-grepdiff1-test-case-pcre-aware.patch …
+  pkg-config : /nix/store/n5kkah…-gcc-15.patch /nix/store/f4bvwq…-requires-private.patch
+```
+
+Resolving those basenames gives the join. 61 and 66 derivations apply at least
+one patch.
+
+⚠ **The earlier CVE count was a five-fold undercount.** Scanning *derivation
+names* for CVE patterns — what the first classifier did — found 3 and 4 CVEs.
+Joining through `env.patches` finds:
+
+| | moat | slack-web |
+|---|---|---|
+| distinct CVEs | **18** | **14** |
+| components carrying them | 4 | 3 |
+
+The difference is that many patches are not separate derivations with
+CVE-shaped names; they are files referenced by store path. The `patches` field
+catches both, and the CVE is in the basename either way.
+
+`unzip 6.0` carries **11 CVEs across 26 patches** in both projects — the case
+#1040 was filed on, now confirmed in two real closures rather than argued from
+one example.
+
+## R8 ⚠ — The CVE-carrying components span every role, including one v1 excluded
+
+**MEASURED**, joining patch attribution against the role classification:
+
+| project | component | role | CVEs |
+|---|---|---|---|
+| moat | `unzip` | **tooling** | 11 |
+| moat | `libssh2` | artifact | 1 |
+| moat | `jq` | **neither** | 5 |
+| moat | `lua` | **neither** | 1 |
+| slack-web | `unzip` | **tooling** | 11 |
+| slack-web | `perl` | both | 2 |
+| slack-web | `lua` | **neither** | 1 |
+
+Two consequences, both correcting earlier positions.
+
+⚠ **Spec assumption A-4 would discard a third of the evidence.** It scopes the
+`neither` bucket out of v1 as "the largest bucket and the least understood, and
+nothing measured yet argues it belongs in a document". Something does now: `jq`
+and `lua` sit in it and carry 6 of moat's 18 CVEs. A-4 must narrow to exclude
+only what has been shown to carry nothing — fetched sources, setup hooks,
+bootstrap toolchain — rather than the bucket wholesale.
+
+**The build-tooling clarification turns out to be load-bearing** for a reason
+neither of us gave when deciding it. It was argued on "a consumer can filter
+down but cannot recover what we dropped". The stronger reason is that `unzip`
+is tooling and carries 11 CVEs — the single richest vulnerability signal in
+both closures. Dropping tooling, as the spec originally required, would have
+discarded it.
+
+**REASONED**: this also sharpens what the feature is *for*. The patch evidence
+does not cluster in the Haskell dependency graph at all. It is in the C
+utilities nixpkgs uses to build things — `unzip`, `jq`, `lua`, `perl`,
+`libssh2` — which no Haskell manifest mentions and which waybill does not emit
+today in any form.
