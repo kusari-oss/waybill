@@ -217,6 +217,9 @@ pub(crate) fn finalize(
             .ok()
             .map(|s| s.split(',').filter(|p| !p.is_empty()).map(String::from).collect())
             .unwrap_or_default(),
+        // Same channel the Go reader already uses (`package_db/mod.rs:1190`),
+        // rather than a second mechanism for the same fact.
+        offline: std::env::var("WAYBILL_OFFLINE").is_ok(),
     };
 
     // Defensive sort — the shared walker's on_dir dispatch fires in

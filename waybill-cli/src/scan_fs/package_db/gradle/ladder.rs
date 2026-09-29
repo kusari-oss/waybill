@@ -160,6 +160,13 @@ pub struct GradleLadderConfig {
     pub gradle_daemon: bool,
     pub gradle_timeout_secs: u64,
     pub gradle_extra_configurations: Vec<String>,
+    /// The scan's `--offline`.
+    ///
+    /// `./gradlew :sub:dependencies` resolves configurations against remote
+    /// repositories, so without this the subprocess tier makes outbound calls
+    /// that `--offline` promised would not happen. Gradle has its own
+    /// `--offline`; passing it through is all this needs.
+    pub offline: bool,
 }
 
 impl GradleLadderConfig {
@@ -173,6 +180,7 @@ impl GradleLadderConfig {
             gradle_daemon: false,
             gradle_timeout_secs: 300,
             gradle_extra_configurations: Vec::new(),
+            offline: false,
         }
     }
 }
