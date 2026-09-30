@@ -143,6 +143,11 @@ pub struct NixpkgsSecuritySummary {
     /// insecure, so a member carrying one is in the closure only because the
     /// build permitted it. Its presence is the permission.
     pub accepted_insecure: bool,
+    /// How many distinct packages carried a declaration. The record is coarse
+    /// by design (FR-015a) — which packages they are is already answerable
+    /// from the declaration-derived statements — but a count distinguishes
+    /// one accepted exception from twenty.
+    pub accepted_insecure_count: usize,
     /// CVE-bearing declarations, for the VEX emitter. Deliberately not on
     /// the components — see [`DeclaredFinding`].
     pub findings: Vec<DeclaredFinding>,
@@ -203,6 +208,9 @@ impl NixpkgsSecuritySummary {
                 } => {
                     s.members_checked += 1;
                     *s.confirmed_by_set.entry(source.wire()).or_insert(0) += 1;
+                    if !declarations.is_empty() {
+                        s.accepted_insecure_count += 1;
+                    }
                     for d in declarations {
                         s.declarations_total += 1;
                         s.accepted_insecure = true;
@@ -277,6 +285,29 @@ pub(crate) fn annotate_prose(
     stamped
 }
 
+/// C187 — that this build contains a package nixpkgs marks insecure.
+pub const ANN_ACCEPTED_INSECURE: &str = "waybill:nixpkgs-accepted-insecure";
+
+/// The wording of the acceptance record (FR-015, FR-016).
+///
+/// States a property of the **build**, never of the operator's intent. Nix
+/// refuses to evaluate a package marked insecure unless it was permitted, so
+/// the package's presence proves permission was granted — but
+/// `NIXPKGS_ALLOW_INSECURE=1` permits everything at once and is
+/// indistinguishable from a targeted entry in `permittedInsecurePackages`.
+/// "This build accepted one" is supportable; "the operator chose this
+/// package" is not, and the difference matters to anyone reading the record
+/// as evidence of a decision.
+pub(crate) fn acceptance_record(count: usize) -> String {
+    format!(
+        "This build contains {count} package(s) that nixpkgs marks insecure, \
+         and therefore permitted them: Nix refuses to evaluate such a package \
+         otherwise. Whether the permission was targeted or blanket \
+         (NIXPKGS_ALLOW_INSECURE) is not observable here. Absence of this \
+         record means no such package was found, not that one was rejected."
+    )
+}
+
 /// The (component, CVE) pairs where a declaration displaces a patch-derived
 /// `not_affected` (spec FR-012).
 ///
@@ -290,6 +321,15 @@ pub(crate) fn withheld_pairs(
     findings: &[DeclaredFinding],
 ) -> std::collections::BTreeSet<(String, String)> {
     use crate::scan_fs::package_db::nix::closure::emit::ANN_CLOSURE_PATCHES;
+    use crate::scan_fs::package_db::nix::closure::patches::EvidenceGrade;
+
+    // The rule derives from the grade ordering rather than restating it. If
+    // a third provenance is ever added, the reconciliation follows without
+    // anyone remembering to update it here — and if the ordering is ever
+    // changed, this changes with it instead of silently disagreeing.
+    if !EvidenceGrade::NixpkgsDeclared.outranks(EvidenceGrade::FilenameDerived) {
+        return Default::default();
+    }
 
     // CVEs each component's patches name, from the annotation milestone 1035
     // stamps. Read from the component rather than re-derived, so the two
@@ -678,6 +718,74 @@ mod tests {
         assert_eq!(s.declarations_total, 3);
         assert_eq!(s.declarations_without_cve, 2);
         assert_eq!(s.distinct_cves, 1);
+    }
+
+    #[test]
+    fn the_acceptance_record_claims_only_what_presence_supports() {
+        // FR-016. Presence proves permission was granted, because Nix will
+        // not evaluate the package otherwise. It does NOT prove the operator
+        // named that package -- NIXPKGS_ALLOW_INSECURE permits everything at
+        // once and is indistinguishable from a targeted entry.
+        let r = acceptance_record(2);
+        assert!(r.contains("This build contains"), "{r}");
+        assert!(
+            r.contains("not observable"),
+            "the blanket-vs-targeted ambiguity must be stated, not glossed: {r}"
+        );
+        for forbidden in ["the operator chose", "explicitly listed", "deliberately selected"] {
+            assert!(
+                !r.contains(forbidden),
+                "claims intent the evidence does not support ({forbidden}): {r}"
+            );
+        }
+    }
+
+    #[test]
+    fn the_acceptance_record_says_absence_is_not_rejection() {
+        // FR-016a. A build with no insecure packages and a build that was
+        // never asked look identical from outside. Without this sentence a
+        // reader can take a missing record as a clean bill of health.
+        let r = acceptance_record(1);
+        assert!(
+            r.contains("Absence of this record means no such package was found"),
+            "absence must not read as rejection: {r}"
+        );
+    }
+
+    #[test]
+    fn the_acceptance_count_distinguishes_one_exception_from_many() {
+        // Coarse by design (FR-015a), but one accepted package and twenty
+        // are different risk postures and the record should not flatten them.
+        let one: std::collections::BTreeMap<String, AttributeResolution> =
+            [("a".to_string(), confirmed(&["CVE-2099-0001: x"]))]
+                .into_iter()
+                .collect();
+        let many: std::collections::BTreeMap<String, AttributeResolution> = [
+            ("a".to_string(), confirmed(&["CVE-2099-0001: x"])),
+            ("b".to_string(), confirmed(&["prose"])),
+            ("c".to_string(), confirmed(&[])),
+        ]
+        .into_iter()
+        .collect();
+        assert_eq!(NixpkgsSecuritySummary::build(&one).accepted_insecure_count, 1);
+        // `c` declares nothing, so it is not an accepted exception.
+        assert_eq!(NixpkgsSecuritySummary::build(&many).accepted_insecure_count, 2);
+    }
+
+    #[test]
+    fn a_build_with_no_declarations_records_no_acceptance() {
+        // The common case, and it must stay silent: a project that builds has
+        // already permitted whatever it contains, so most scans find nothing
+        // and that is not a failure.
+        let res: std::collections::BTreeMap<String, AttributeResolution> =
+            [("clean".to_string(), confirmed(&[]))].into_iter().collect();
+        let s = NixpkgsSecuritySummary::build(&res);
+        assert!(!s.accepted_insecure);
+        assert_eq!(s.accepted_insecure_count, 0);
+        // CONTROL: the member WAS checked, so this is "nixpkgs said nothing"
+        // rather than "we could not ask".
+        assert_eq!(s.members_checked, 1);
+        assert_eq!(s.members_unchecked, 0);
     }
 
     #[test]

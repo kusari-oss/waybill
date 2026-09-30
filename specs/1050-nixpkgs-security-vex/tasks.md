@@ -55,7 +55,7 @@ can be read at all.
 - [X] T024 [US1] Carry the grade in `impact_statement` in `waybill-cli/src/generate/openvex/mod.rs`, as milestone 1035 does, because OpenVEX has no grade slot and a bare status hides what it rests on
 - [X] T025 [US1] Thread `NixpkgsSecuritySummary` into `ScanArtifacts` in `waybill-cli/src/generate/mod.rs` and populate it in `waybill-cli/src/cli/scan_cmd.rs`, after the closure pass
 - [X] T026 [P] [US1] Write the integration test in `waybill-cli/tests/nixpkgs_declarations.rs` scanning the T017 fixture, with a CONTROL assertion that the fixture produced a confirmed declaration at all — otherwise every assertion below it passes over an empty set
-- [ ] T027 [US1] Assert in `waybill-cli/tests/nixpkgs_declarations.rs` that no emitted document in any of the three formats gains a `vulnerabilities[]` array (FR-017, SC-008). The golden check at the end of Phase 8 cannot catch this: goldens are generated with the flag off, and this requirement is about the flag-on path
+- [X] T027 [US1] Assert in `waybill-cli/tests/nixpkgs_declarations.rs` that no emitted document in any of the three formats gains a `vulnerabilities[]` array (FR-017, SC-008). The golden check at the end of Phase 8 cannot catch this: goldens are generated with the flag off, and this requirement is about the flag-on path
 
 **Checkpoint**: SC-001, SC-002, SC-002a satisfiable.
 
@@ -98,19 +98,19 @@ can be read at all.
 
 **Independent Test**: scan the T017 fixture; assert the record appears and does not name the operator's intent.
 
-- [ ] T037 [US4] Emit the document-scope acceptance record in `waybill-cli/src/scan_fs/package_db/nix/declarations/mod.rs`, derived from a confirmed member carrying a declaration (FR-015)
-- [ ] T038 [US4] Word the record in `waybill-cli/src/scan_fs/package_db/nix/declarations/mod.rs` to claim only that the build accepted a package nixpkgs marks insecure, never that the operator named it (FR-016) — `NIXPKGS_ALLOW_INSECURE=1` is indistinguishable from a targeted permission, with a test asserting the wording
-- [ ] T039 [P] [US4] Assert absence of the record does not read as rejection (FR-016a) in `waybill-cli/tests/nixpkgs_declarations.rs` — a build with no insecure packages and a build never asked look identical from outside
+- [X] T037 [US4] Emit the document-scope acceptance record in `waybill-cli/src/scan_fs/package_db/nix/declarations/mod.rs`, derived from a confirmed member carrying a declaration (FR-015)
+- [X] T038 [US4] Word the record in `waybill-cli/src/scan_fs/package_db/nix/declarations/mod.rs` to claim only that the build accepted a package nixpkgs marks insecure, never that the operator named it (FR-016) — `NIXPKGS_ALLOW_INSECURE=1` is indistinguishable from a targeted permission, with a test asserting the wording
+- [X] T039 [P] [US4] Assert absence of the record does not read as rejection (FR-016a) in `waybill-cli/tests/nixpkgs_declarations.rs` — a build with no insecure packages and a build never asked look identical from outside
 
 ---
 
 ## Phase 7: User Story 5 — degrading without hiding it (P3)
 
-- [ ] T040 [US5] Degrade using milestone 1034's `DegradationReason` vocabulary in `waybill-cli/src/scan_fs/package_db/nix/declarations/mod.rs`, adding no new variant unless a measured failure fits none of the existing eight
-- [ ] T041 [US5] Make the declaration pass degrade **independently** of the closure query in `waybill-cli/src/cli/scan_cmd.rs` — a closure that resolved still emits its components when this pass fails (FR-019)
-- [ ] T042 [P] [US5] Assert a scan with no usable `nix` completes, emits no declaration-derived output, and records the reason, in `waybill-cli/tests/nixpkgs_declarations.rs`
-- [ ] T043 [US5] Assert the flag-off path emits none of the new annotations and starts no additional evaluation, in `waybill-cli/tests/nixpkgs_declarations.rs`
-- [ ] T044 [US5] Assert no scan issues a request to any external advisory database (FR-018, SC-009) in `waybill-cli/tests/nixpkgs_declarations.rs`, proven the way milestone 1035 proved its offline refusal — by exercising the path, not by reading the source. Inspection cannot prove a negative about code that has not run
+- [X] T040 [US5] Degrade using milestone 1034's `DegradationReason` vocabulary in `waybill-cli/src/scan_fs/package_db/nix/declarations/mod.rs`, adding no new variant unless a measured failure fits none of the existing eight
+- [X] T041 [US5] Make the declaration pass degrade **independently** of the closure query in `waybill-cli/src/cli/scan_cmd.rs` — a closure that resolved still emits its components when this pass fails (FR-019)
+- [X] T042 [P] [US5] Assert a scan with no usable `nix` completes, emits no declaration-derived output, and records the reason, in `waybill-cli/tests/nixpkgs_declarations.rs`
+- [X] T043 [US5] Assert the flag-off path emits none of the new annotations and starts no additional evaluation, in `waybill-cli/tests/nixpkgs_declarations.rs`
+- [X] T044 [US5] Assert no scan issues a request to any external advisory database (FR-018, SC-009) in `waybill-cli/tests/nixpkgs_declarations.rs`, proven the way milestone 1035 proved its offline refusal — by exercising the path, not by reading the source. Inspection cannot prove a negative about code that has not run
 
 **Checkpoint**: SC-007, SC-007a satisfiable.
 

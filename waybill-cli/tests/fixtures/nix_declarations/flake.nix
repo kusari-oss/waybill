@@ -5,17 +5,24 @@
 
   outputs = { self, nixpkgs }:
     let
-      system = builtins.currentSystem or "x86_64-linux";
-      pkgs = import nixpkgs { inherit system; };
+      # Every system the test suite might run on. `builtins.currentSystem`
+      # is unavailable under pure evaluation -- which is how waybill
+      # evaluates -- so a fixture that leans on it silently defines its
+      # packages for the wrong platform and the closure query degrades with
+      # `no-evaluable-attribute`. That reads as a broken feature rather than
+      # a broken fixture.
+      systems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
+      forAll = nixpkgs.lib.genAttrs systems;
     in {
       # Deliberately plain. See README.md: a package defined here is not in
-      # nixpkgs, so it can carry no nixpkgs declaration, and pretending
-      # otherwise would test a path that cannot exist.
-      packages.${system}.default = pkgs.stdenv.mkDerivation {
-        pname = "waybill-fixture-root";
-        version = "0.1.0";
-        dontUnpack = true;
-        installPhase = "mkdir -p $out";
-      };
+      # nixpkgs, so it can carry no nixpkgs declaration.
+      packages = forAll (system: {
+        default = nixpkgs.legacyPackages.${system}.stdenv.mkDerivation {
+          pname = "waybill-fixture-root";
+          version = "0.1.0";
+          dontUnpack = true;
+          installPhase = "mkdir -p $out";
+        };
+      });
     };
 }
