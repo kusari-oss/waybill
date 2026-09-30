@@ -1,0 +1,2 @@
+waybill-fixture-alpha==2.25.1
+waybill-fixture-beta==1.1.4
