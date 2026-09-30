@@ -137,9 +137,9 @@ shape as milestone 1034's safety gate preceding its resolution story.
 
 **Independent Test**: assert no CVE association can be emitted without a grade.
 
-- [ ] T025 [P] [US3] Write the failing test: an ungraded CVE association cannot be constructed, in `closure/patches.rs`
-- [ ] T026 [US3] Implement `EvidenceGrade` in `closure/patches.rs` as an enum with the single variant `FilenameDerived` — not a `bool` and not an `Option`, so a future stronger provenance is distinguishable rather than indistinguishable from a filename match
-- [ ] T027 [US3] Make the grade non-optional in the type that carries a CVE association, so FR-012a is enforced by construction rather than by a check
+- [X] T025 [P] [US3] Write the failing test: an ungraded CVE association cannot be constructed, in `closure/patches.rs`
+- [X] T026 [US3] Implement `EvidenceGrade` in `closure/patches.rs` as an enum with the single variant `FilenameDerived` — not a `bool` and not an `Option`, so a future stronger provenance is distinguishable rather than indistinguishable from a filename match
+- [X] T027 [US3] Make the grade non-optional in the type that carries a CVE association, so FR-012a is enforced by construction rather than by a check
 - [ ] T028 [US3] Emit C183 `waybill:patch-evidence-grade`
 
 **Checkpoint**: nothing can claim a CVE without saying how it knows.
@@ -153,8 +153,8 @@ assert it appears in `pedigree.patches[]` on the component that applies it.
 
 - [ ] T029 [P] [US2] Write the failing test: `CVE-2019-13232` appears in `pedigree.patches[].resolves[]` on **`unzip`** for both measured projects, and the document validates against the CycloneDX 1.6 schema (SC-004)
 - [ ] T030 [P] [US2] Write the failing test: at least 18 and 14 distinct CVEs are recovered (SC-006a). A run recovering 3 and 4 means the implementation scanned derivation names instead of joining — a silent fivefold undercount
-- [ ] T031 [US2] Implement patch attribution in `closure/patches.rs` via each derivation's own `env.patches` field, resolving store-path basenames (research R7)
-- [ ] T032 [US2] Extract CVE identifiers from patch basenames with the existing `regex` dep
+- [X] T031 [US2] Implement patch attribution in `closure/patches.rs` via each derivation's own `env.patches` field, resolving store-path basenames (research R7)
+- [X] T032 [US2] Extract CVE identifiers from patch basenames with the existing `regex` dep
 - [ ] T033 [US2] Implement CycloneDX `pedigree.patches[]` emission in `waybill-cli/src/generate/cyclonedx/pedigree.rs` **and register it in `cyclonedx/mod.rs`** — the first use of `pedigree` in waybill, so this is new emission machinery rather than a new field on an existing path, and an unregistered module compiles to nothing
 - [ ] T034 [US2] Emit patches with no CVE as `type: "backport"` with no `resolves` entry — silence would make partial coverage look like absence
 - [ ] T035 [US2] Emit the patch total and no-CVE count at document scope (SC-006b). On slack-web that is 320 and 279: ~87% of backports name no CVE, and without the count a consumer reads missing VEX as missing backport
