@@ -223,6 +223,60 @@ impl NixpkgsSecuritySummary {
     }
 }
 
+/// C186 — what nixpkgs says about a component, where it named no CVE.
+///
+/// A composition fact, not a match result. "Vendors Electron 2.0" and
+/// "Includes vulnerable versions of bundled libraries: openssl, ffmpeg, gdal,
+/// and proj" each say the same thing: there are components inside this one
+/// that the SBOM does not list. That is nixpkgs reporting the component graph
+/// is incomplete, which is what an SBOM is for — so it lands here rather than
+/// in VEX, and no identifier has to be invented to carry it.
+pub const ANN_NIXPKGS_DECLARATION: &str = "waybill:nixpkgs-declaration";
+
+/// Stamp prose declarations onto the components they are about (FR-010).
+///
+/// Only the entries naming no CVE. The CVE-bearing ones travel to VEX
+/// through [`DeclaredFinding`] and deliberately never touch this bag, which
+/// auto-flows into SBOM properties — a CVE claim in an SBOM is what this
+/// milestone exists not to emit.
+///
+/// The text is carried verbatim. These entries are worth emitting *because*
+/// of what the maintainer wrote; reducing one to a flag would keep the fact
+/// that something is wrong and discard what it is.
+pub(crate) fn annotate_prose(
+    components: &mut [waybill_common::resolution::ResolvedComponent],
+    resolutions: &std::collections::BTreeMap<String, AttributeResolution>,
+) -> usize {
+    let mut stamped = 0;
+    for c in components.iter_mut() {
+        let Some(AttributeResolution::Confirmed { declarations, .. }) = resolutions.get(&c.name)
+        else {
+            continue;
+        };
+        let prose: Vec<&str> = declarations
+            .iter()
+            .filter(|d| !d.names_a_cve())
+            .map(|d| d.text.as_str())
+            .collect();
+        if prose.is_empty() {
+            continue;
+        }
+        // An array, JSON-encoded as a string: the m134 / m147 / m173
+        // convention for array-valued annotations, and a component can carry
+        // several (four measured packages declare a vendored EOL Electron
+        // alongside other entries).
+        let Ok(encoded) = serde_json::to_string(&prose) else {
+            continue;
+        };
+        c.extra_annotations.insert(
+            ANN_NIXPKGS_DECLARATION.to_string(),
+            serde_json::Value::String(encoded),
+        );
+        stamped += 1;
+    }
+    stamped
+}
+
 /// The (component, CVE) pairs where a declaration displaces a patch-derived
 /// `not_affected` (spec FR-012).
 ///
@@ -286,8 +340,13 @@ pub(crate) fn run(
     system: &str,
     budget: std::time::Duration,
     purl_of: &dyn Fn(&str) -> Option<String>,
-) -> Result<NixpkgsSecuritySummary, crate::scan_fs::package_db::nix::eval::reason::DegradationReason>
-{
+) -> Result<
+    (
+        NixpkgsSecuritySummary,
+        std::collections::BTreeMap<String, AttributeResolution>,
+    ),
+    crate::scan_fs::package_db::nix::eval::reason::DegradationReason,
+> {
     use crate::scan_fs::package_db::nix::eval::reason::DegradationReason;
 
     // `declared_pname`, not `pname`: the latter falls back to the
@@ -303,7 +362,7 @@ pub(crate) fn run(
             .extend(drv.output_paths().map(str::to_string));
     }
     if members.is_empty() {
-        return Ok(NixpkgsSecuritySummary::default());
+        return Ok((NixpkgsSecuritySummary::default(), Default::default()));
     }
 
     // Reaching nixpkgs through the revision `flake.lock` pins keeps the
@@ -335,7 +394,11 @@ pub(crate) fn run(
     let names: Vec<String> = members.keys().cloned().collect();
     let candidates = evaluate::evaluate(&revision, system, &names, budget)?;
     let resolutions = resolve::resolve_all(&members, &candidates);
-    Ok(NixpkgsSecuritySummary::build_with_purls(&resolutions, purl_of))
+    let summary = NixpkgsSecuritySummary::build_with_purls(&resolutions, purl_of);
+    // Returned rather than stamped here: the prose annotation mutates the
+    // component set, and doing that inside a function whose job is to *ask*
+    // nixpkgs a question would hide a write behind a read.
+    Ok((summary, resolutions))
 }
 
 #[cfg(test)]
@@ -484,6 +547,137 @@ mod tests {
             "the nested sets should contribute more than top-level; got {:?}",
             s.confirmed_by_set
         );
+    }
+
+    /// Build a component the way the closure emitter does, then rename it.
+    ///
+    /// Reuses that path rather than hand-listing forty fields, so a field
+    /// added there cannot leave this helper silently stale.
+    fn component(name: &str, purl: &str) -> waybill_common::resolution::ResolvedComponent {
+        use crate::scan_fs::package_db::nix::closure::{
+            classify::classify, derivation::RawClosure, emit, ClassifiedClosure,
+        };
+        let raw = RawClosure::parse(
+            r#"{"derivations":{"d-a.drv":{"env":{"pname":"seed","version":"1.0",
+                 "buildInputs":"/nix/store/o1"},"outputs":{"out":{"path":"o2"}}},
+               "d-b.drv":{"env":{"pname":"dep","version":"1.0"},
+                 "outputs":{"out":{"path":"o1"}}}},"version":3}"#,
+        )
+        .expect("seed closure parses");
+        let roles = classify(&raw);
+        let mut c = emit::components(&ClassifiedClosure {
+            attribute: "default".into(),
+            raw,
+            roles,
+        })
+        .pop()
+        .expect("the seed closure yields a component");
+        c.name = name.to_string();
+        c.purl = waybill_common::types::purl::Purl::new(purl).expect("valid purl");
+        c.extra_annotations.clear();
+        c
+    }
+
+    fn confirmed(texts: &[&str]) -> AttributeResolution {
+        AttributeResolution::Confirmed {
+            source: DeclarationSource::TopLevel,
+            declarations: texts.iter().map(|t| parse::Declaration::parse(t)).collect(),
+        }
+    }
+
+    #[test]
+    fn a_prose_declaration_reaches_the_component_with_its_text_intact() {
+        // FR-010a. These entries are worth emitting *because* of what the
+        // maintainer wrote — reducing one to a flag keeps the fact that
+        // something is wrong and discards what it is.
+        let text = "Includes vulnerable versions of bundled libraries: \
+                    openssl, ffmpeg, gdal, and proj.";
+        let mut comps = vec![component("bundler", "pkg:generic/bundler@1.0")];
+        let res = [("bundler".to_string(), confirmed(&[text]))]
+            .into_iter()
+            .collect();
+
+        assert_eq!(annotate_prose(&mut comps, &res), 1);
+        let raw = comps[0].extra_annotations[ANN_NIXPKGS_DECLARATION]
+            .as_str()
+            .expect("encoded as a string");
+        let got: Vec<String> = serde_json::from_str(raw).expect("decodes as an array");
+        assert_eq!(got.len(), 1);
+        assert_eq!(got[0], text, "the text must survive verbatim");
+        assert!(got[0].contains("openssl"), "the named components are the point");
+    }
+
+    #[test]
+    fn a_cve_bearing_declaration_never_reaches_the_component() {
+        // The SBOM/VEX boundary. This bag auto-flows into SBOM properties,
+        // and a CVE claim in an SBOM is what this milestone exists not to
+        // emit. CVE-bearing entries travel to VEX through DeclaredFinding.
+        let mut comps = vec![component("cved", "pkg:generic/cved@1.0")];
+        let res = [(
+            "cved".to_string(),
+            confirmed(&["CVE-2099-0001: synthetic entry"]),
+        )]
+        .into_iter()
+        .collect();
+
+        assert_eq!(annotate_prose(&mut comps, &res), 0);
+        assert!(
+            !comps[0].extra_annotations.contains_key(ANN_NIXPKGS_DECLARATION),
+            "a CVE-bearing declaration must not land in the SBOM"
+        );
+    }
+
+    #[test]
+    fn a_component_with_both_kinds_emits_the_prose_and_withholds_the_cve() {
+        // Neither displaces the other: the prose reaches the SBOM, the CVE
+        // reaches VEX, and each goes to exactly one place.
+        let mut comps = vec![component("both", "pkg:generic/both@1.0")];
+        let res = [(
+            "both".to_string(),
+            confirmed(&["CVE-2099-0001: named", "Vendors an end-of-life component"]),
+        )]
+        .into_iter()
+        .collect();
+
+        assert_eq!(annotate_prose(&mut comps, &res), 1);
+        let raw = comps[0].extra_annotations[ANN_NIXPKGS_DECLARATION]
+            .as_str()
+            .unwrap();
+        let got: Vec<String> = serde_json::from_str(raw).unwrap();
+        assert_eq!(got.len(), 1, "only the prose entry: {got:?}");
+        assert!(got[0].contains("end-of-life"));
+        assert!(
+            !raw.contains("CVE-2099-0001"),
+            "the identifier must not leak into the SBOM: {raw}"
+        );
+    }
+
+    #[test]
+    fn an_unchecked_member_is_never_annotated() {
+        // "We could not ask" must not be emitted as "nixpkgs said this".
+        let mut comps = vec![component("unknown", "pkg:generic/unknown@1.0")];
+        for r in [AttributeResolution::PathMismatch, AttributeResolution::NoAttribute] {
+            let res = [("unknown".to_string(), r)].into_iter().collect();
+            assert_eq!(annotate_prose(&mut comps, &res), 0);
+            assert!(!comps[0].extra_annotations.contains_key(ANN_NIXPKGS_DECLARATION));
+        }
+    }
+
+    #[test]
+    fn the_no_cve_count_reaches_the_summary() {
+        // FR-011. Without it a consumer seeing few VEX statements cannot
+        // tell whether nixpkgs said little, or whether most of what it said
+        // had no identifier to hang a statement on.
+        let res: std::collections::BTreeMap<String, AttributeResolution> = [
+            ("a".to_string(), confirmed(&["CVE-2099-0001: named", "prose one"])),
+            ("b".to_string(), confirmed(&["prose two"])),
+        ]
+        .into_iter()
+        .collect();
+        let s = NixpkgsSecuritySummary::build(&res);
+        assert_eq!(s.declarations_total, 3);
+        assert_eq!(s.declarations_without_cve, 2);
+        assert_eq!(s.distinct_cves, 1);
     }
 
     #[test]

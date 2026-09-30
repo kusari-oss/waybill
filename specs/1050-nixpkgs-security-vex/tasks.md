@@ -83,10 +83,10 @@ can be read at all.
 
 **Independent Test**: scan a fixture whose declaration is prose; assert the text appears verbatim on the component.
 
-- [ ] T033 [P] [US3] Write the failing test in `waybill-cli/tests/nixpkgs_declarations.rs`: a prose declaration reaches the component annotation with its text intact, not paraphrased or reduced to a flag
-- [ ] T034 [US3] Emit the per-component annotation in `waybill-cli/src/scan_fs/package_db/nix/declarations/mod.rs`, carrying the declaration text verbatim (FR-010a)
-- [ ] T035 [US3] Emit the no-CVE declaration count at document scope (FR-011) in `waybill-cli/src/scan_fs/package_db/nix/declarations/mod.rs` — the same reason milestone 1035 emits it for patches: partial coverage must not read as absence
-- [ ] T036 [US3] Assert a component carrying both CVE-bearing and prose declarations emits both, neither displacing the other, in `waybill-cli/tests/nixpkgs_declarations.rs`
+- [X] T033 [P] [US3] Write the failing test in `waybill-cli/tests/nixpkgs_declarations.rs`: a prose declaration reaches the component annotation with its text intact, not paraphrased or reduced to a flag
+- [X] T034 [US3] Emit the per-component annotation in `waybill-cli/src/scan_fs/package_db/nix/declarations/mod.rs`, carrying the declaration text verbatim (FR-010a)
+- [X] T035 [US3] Emit the no-CVE declaration count at document scope (FR-011) in `waybill-cli/src/scan_fs/package_db/nix/declarations/mod.rs` — the same reason milestone 1035 emits it for patches: partial coverage must not read as absence
+- [X] T036 [US3] Assert a component carrying both CVE-bearing and prose declarations emits both, neither displacing the other, in `waybill-cli/tests/nixpkgs_declarations.rs`
 
 **Checkpoint**: SC-003 satisfiable.
 

@@ -4660,7 +4660,14 @@ pub async fn execute(
                     &|pname| by_name.get(pname).cloned(),
                 )
             }) {
-                Ok(mut s) => {
+                Ok((mut s, resolutions)) => {
+                    // US3: prose declarations become a per-component
+                    // annotation. Composition facts -- each says there are
+                    // components inside this one the SBOM does not list --
+                    // so they belong in the SBOM, unlike the CVE-bearing
+                    // entries which go only to VEX.
+                    let stamped =
+                        declarations::annotate_prose(&mut components, &resolutions);
                     // FR-013a. Computed here because it is a property of the
                     // interaction between two passes, and counted through the
                     // same helper the emitter withholds by, so the number
@@ -4674,6 +4681,7 @@ pub async fn execute(
                         without_cve = s.declarations_without_cve,
                         distinct_cves = s.distinct_cves,
                         withheld = s.reconciliations_withheld,
+                        prose_components = stamped,
                         "nixpkgs-declarations: what the package set says"
                     );
                     Some(s)
