@@ -386,3 +386,70 @@ fn compose_with_split_directory_yields_single_sbom() {
         );
     }
 }
+
+// ============================================================
+// Issue #1045 — the FR-008 empty-root fallback dropped everything
+// ============================================================
+
+fn fixture_requirements_only() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests/fixtures/project_discovery/requirements_txt_only")
+}
+
+/// The fallback must emit what it says it emits.
+///
+/// A project whose only manifest is `requirements.txt` produces no root
+/// main-module, so `root-only` takes the FR-008 fallback and WARNs that it
+/// is "falling back to full-scope emission". It was not: the fallback
+/// re-ran the filter with `All` over the slices the `root-only` pass had
+/// already filtered, and `All` is a zero-op, so the dropped components
+/// never came back. Reported against 0.9.0 and 0.10.0-alpha.2 with a real
+/// project that ingested with 0 dependencies and 0 vulnerabilities, and
+/// nothing raised an error.
+#[test]
+fn issue_1045_empty_root_fallback_emits_the_same_packages_as_all() {
+    let fixture = fixture_requirements_only();
+    let (root_only_bytes, logs) = run_scan(&fixture, Some("root-only"));
+    let (all_bytes, _) = run_scan(&fixture, Some("all"));
+
+    let mut root_only = component_purls(&parse_cdx(&root_only_bytes));
+    let mut all = component_purls(&parse_cdx(&all_bytes));
+    root_only.sort();
+    all.sort();
+
+    // CONTROL: the fixture yields packages at all under `all`, so the
+    // equality below is not two empty vectors agreeing.
+    assert!(
+        all.len() >= 2,
+        "fixture produced no packages under `all`; the assertion below \
+         would pass vacuously. got {all:?}"
+    );
+    // CONTROL: the fallback actually fired. Without this the test would
+    // also pass if `root-only` simply found a root and filtered nothing.
+    assert!(
+        logs.contains("found zero root-level manifests"),
+        "the FR-008 fallback did not fire, so this test is not exercising \
+         it. logs:\n{logs}"
+    );
+
+    assert_eq!(
+        root_only, all,
+        "root-only fell back to full scope but emitted a different set"
+    );
+}
+
+/// The file-tier entry is not a substitute for the packages.
+///
+/// The bug's visible symptom was an SBOM carrying exactly one component --
+/// `requirements.txt` itself -- which looks like a successful scan of a
+/// project with no dependencies.
+#[test]
+fn issue_1045_fallback_emits_more_than_the_manifest_file_itself() {
+    let (bytes, _) = run_scan(&fixture_requirements_only(), Some("root-only"));
+    let cdx = parse_cdx(&bytes);
+    let purls = component_purls(&cdx);
+    assert!(
+        purls.iter().any(|p| p.starts_with("pkg:pypi/")),
+        "no pypi component survived the fallback; got {purls:?}"
+    );
+}

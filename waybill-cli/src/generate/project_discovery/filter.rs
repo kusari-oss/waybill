@@ -115,6 +115,40 @@ pub fn apply_scope_filter(
         }
     }
 
+    // Nothing in scope: return the inputs untouched (issue #1045).
+    //
+    // This is the FR-008 "zero root-level manifests" case, and the filter
+    // answers it here rather than leaving the caller to undo the filtering
+    // afterwards. It could not: `apply_scope_filter` consumes its inputs,
+    // and running it again with `All` — which is what the caller used to do
+    // — is a zero-op over whatever it is handed, so the already-dropped
+    // components never came back. A project whose only manifest is
+    // `requirements.txt` produces no main-module at all, so it took this
+    // path and emitted a single file-tier component while WARNing that it
+    // had fallen back to full scope. Reported in production against 0.9.0:
+    // a project with 7 pinned packages, all carrying known CVEs, ingested
+    // with 0 dependencies and 0 vulnerabilities, and nothing errored.
+    //
+    // Returning early makes that failure unreachable rather than merely
+    // fixed at one call site: there is no longer a state in which the
+    // filter has dropped components it has no roots to justify dropping.
+    //
+    // The counts describe what the filter DID, which is nothing — so
+    // `nested_projects_ignored` is 0 even when `all_roots` is non-empty.
+    // Those roots were found and then emitted, not ignored.
+    if in_scope_roots.is_empty() {
+        return (
+            components,
+            relationships,
+            ProjectDiscoveryReport {
+                mode,
+                root_main_modules: 0,
+                workspace_members_followed: 0,
+                nested_projects_ignored: 0,
+            },
+        );
+    }
+
     let nested_projects_ignored =
         all_roots.len().saturating_sub(in_scope_roots.len());
 
@@ -418,6 +452,39 @@ mod tests {
         assert_eq!(report.mode, ProjectDiscoveryMode::All);
         assert_eq!(report.root_main_modules, 0);
         assert_eq!(report.workspace_members_followed, 0);
+        assert_eq!(report.nested_projects_ignored, 0);
+    }
+
+    /// Issue #1045 — no in-scope roots means no filtering, not empty output.
+    ///
+    /// The caller cannot repair this after the fact: `apply_scope_filter`
+    /// consumes its inputs, so a second call with `All` operates on what the
+    /// first call already dropped. That was the shipped behaviour, and it
+    /// emptied the SBOM of a `requirements.txt`-only project while logging
+    /// that it had fallen back to full scope.
+    #[test]
+    fn zero_in_scope_roots_returns_the_inputs_untouched() {
+        // A dependency with no main-module anywhere — the requirements.txt
+        // shape, where no reader elects a root.
+        let dep = mk_component("pkg:pypi/waybill-fixture-alpha@2.25.1", None);
+        let comps = vec![dep];
+        let scan_root = PathBuf::from(".");
+        let (out_c, out_r, report) = apply_scope_filter(
+            comps.clone(),
+            vec![],
+            ProjectDiscoveryMode::RootOnly,
+            &scan_root,
+        );
+        // CONTROL: this is the zero-root path, not a path where a root was
+        // found and everything happened to survive.
+        assert_eq!(report.root_main_modules, 0);
+        assert_eq!(
+            out_c.len(),
+            comps.len(),
+            "the component was dropped with no root to justify dropping it"
+        );
+        assert!(out_r.is_empty());
+        // Nothing was ignored, because nothing was filtered.
         assert_eq!(report.nested_projects_ignored, 0);
     }
 

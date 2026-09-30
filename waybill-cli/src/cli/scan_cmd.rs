@@ -4264,21 +4264,22 @@ pub async fn execute(
                 );
             if report.root_main_modules == 0 {
                 // FR-008 fallback — zero root-level manifests found.
-                // Re-run the filter with `All` to get the unfiltered
-                // slices back (zero-op fast-path).
+                //
+                // `out_c`/`out_r` ARE the full-scope slices here: the
+                // filter returns its inputs untouched when nothing is in
+                // scope (issue #1045). This branch used to re-run the
+                // filter with `All` to "get the unfiltered slices back",
+                // which could not work — `All` is a zero-op over whatever
+                // it is handed, and what it was handed was the already
+                // filtered output. Every dependency was dropped while this
+                // WARN claimed full-scope emission.
                 tracing::warn!(
                     mode = %mode,
+                    components = out_c.len(),
                     "scan: project-discovery=<mode> found zero root-level manifests; falling back to full-scope emission",
                 );
-                let (fc, fr, _) =
-                    crate::generate::project_discovery::filter::apply_scope_filter(
-                        out_c,
-                        out_r,
-                        crate::generate::project_discovery::ProjectDiscoveryMode::All,
-                        &canonical_root,
-                    );
-                components = fc;
-                relationships = fr;
+                components = out_c;
+                relationships = out_r;
                 None
             } else {
                 tracing::info!(
