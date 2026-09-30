@@ -4629,6 +4629,61 @@ pub async fn execute(
         _ => None,
     };
 
+    // Milestone 1050 (#1039, #1040) — what nixpkgs itself declares about the
+    // packages this build contains.
+    //
+    // Runs automatically under `--nix-closure` with no flag of its own: the
+    // operator already consented to evaluation by passing that flag, and this
+    // reads the same package set for more of the same kind of information.
+    // Measured at ~1.6s against a closure scan measured in tens of seconds.
+    //
+    // Degrades independently of the closure query. A closure that resolved
+    // still emits its components when this fails, because "the closure is
+    // unknown" and "what nixpkgs says about it is unknown" are different
+    // gaps and a consumer needs to tell them apart.
+    let nixpkgs_security_summary = match &nix_closure {
+        Some(Ok(classified)) => {
+            use scan_fs::package_db::nix::declarations;
+            let by_name: std::collections::HashMap<String, String> = components
+                .iter()
+                .map(|c| (c.name.clone(), c.purl.as_str().to_string()))
+                .collect();
+            let system = scan_fs::package_db::nix::eval::invoke::detect_host_system(
+                std::time::Duration::from_secs(60),
+            );
+            match system.and_then(|sys| {
+                declarations::run(
+                    classified,
+                    &root_path,
+                    sys.as_str(),
+                    std::time::Duration::from_secs(300),
+                    &|pname| by_name.get(pname).cloned(),
+                )
+            }) {
+                Ok(s) => {
+                    tracing::info!(
+                        checked = s.members_checked,
+                        unchecked = s.members_unchecked,
+                        declarations = s.declarations_total,
+                        without_cve = s.declarations_without_cve,
+                        distinct_cves = s.distinct_cves,
+                        "nixpkgs-declarations: what the package set says"
+                    );
+                    Some(s)
+                }
+                Err(reason) => {
+                    tracing::info!(
+                        reason = reason.wire(),
+                        detail = %reason,
+                        "nixpkgs-declarations: degrading; the closure is unaffected"
+                    );
+                    None
+                }
+            }
+        }
+        _ => None,
+    };
+
     // `orphan`. `full` mode forwards an empty `DedupeIndex` so every
     // surviving content-shape match emits regardless of coverage.
     let file_inventory_mode = scan_fs::file_tier::FileInventoryMode::parse(&args.file_inventory)
@@ -4885,6 +4940,7 @@ pub async fn execute(
         // signal for the C123 annotation.
         helm_extraction_mode: helm_extraction_mode.as_ref(),
         nix_closure_summary: nix_closure_summary.as_ref(),
+        nixpkgs_security_summary: nixpkgs_security_summary.as_ref(),
         pants_resolve_summary,
         // The unsplit document represents every resolve rather than one, so
         // it has no identity to state (FR-008). The split sets this per

@@ -121,3 +121,32 @@ The wire value must be distinct from `filename-derived` and must name the
 source, not the confidence: the grade says *how we know*, and a consumer
 weighing "the maintainer said so" against "a filename said so" needs the
 provenance, not a number that implies a precision nobody measured.
+
+
+## R8 — what the resolution cannot reach, found during implementation
+
+**Finding**: declarations are read from **plain nixpkgs at the pinned
+revision**. Two classes of closure member therefore never resolve:
+
+- **Packages defined in the project's own flake.** They are not in nixpkgs,
+  so there is no maintainer statement to read. Correct: inventing one would
+  be fabrication.
+- **Packages the project overlays or overrides.** The override changes the
+  output path, so the verification rejects the candidate and records the
+  member unchecked. Safe — no claim lands on the wrong build — but it means
+  coverage is bounded by how much a project customises its package set, and
+  part of the measured 8% path-mismatch is overlays rather than name
+  collisions.
+
+**Why not evaluate the project's actual package set instead?** It needs
+`getFlake` on a path, which needs `--impure`, which milestone 1034's argv
+guard refuses. That guard is right: `--impure` restores access to the host
+environment, and the loss would not be visible in any emitted document. The
+narrower reach is the price of keeping the evaluation pure, and it is paid in
+coverage rather than in correctness.
+
+**Consequence for testing**: no committed fixture can exercise the
+declaration path, because a fixture's packages are by definition its own.
+Statement and annotation shapes are unit-tested over hand-built summaries —
+milestone 1035's pattern for its backport statements — and coverage is
+checked against real closures through the env-gated cross-check.

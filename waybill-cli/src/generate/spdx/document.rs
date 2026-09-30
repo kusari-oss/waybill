@@ -1251,6 +1251,7 @@ mod tests {
             go_toolchains_detected: None,
             cross_ecosystem_edges_report: None,
             nix_closure_summary: None,
+            nixpkgs_security_summary: None,
             helm_extraction_mode: None,
             pants_resolve_summary: None,
             haskell_parse_summary: None,

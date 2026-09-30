@@ -55,6 +55,99 @@ fn grade_note(cve: &str, grade: &str) -> String {
     )
 }
 
+/// The note a declaration-derived statement carries.
+///
+/// Says *who* asserted it, not only how strong it is. A consumer weighing
+/// this against a patch-derived claim needs the source: "nixpkgs declares"
+/// and "a filename contains" are different kinds of evidence, and the grade
+/// alone does not convey which is which to a reader who has not memorised
+/// the vocabulary.
+///
+/// Carries the maintainer's own words, because on the measured sample those
+/// words routinely say more than the identifier does — the reason for the
+/// declaration is often the actionable part.
+fn declaration_note(cve: &str, grade: &str, text: &str) -> String {
+    format!(
+        "nixpkgs declares this package insecure. The {cve} association is \
+         {grade}: it comes from `meta.knownVulnerabilities` in the package \
+         set this build pins, which is a maintainer stating that this \
+         version is vulnerable — stronger than a filename match, and still a \
+         claim about the version rather than about whether this build \
+         reaches the vulnerable code. nixpkgs says: {text}"
+    )
+}
+
+/// The build's own identity — the subject of every "this build" statement.
+///
+/// Extracted so the backport and declaration paths cannot drift onto
+/// different subjects. They make claims about one artifact, and a consumer
+/// weighing a withheld `not_affected` against the `affected` that displaced
+/// it is only comparing like with like if both name the same product.
+fn root_component_purl(artifacts: &ScanArtifacts<'_>) -> Option<String> {
+    artifacts
+        .components
+        .iter()
+        .find(|c| {
+            c.extra_annotations
+                .get("waybill:component-role")
+                .and_then(|v| v.as_str())
+                == Some("main-module")
+        })
+        .map(|c| c.purl.as_str().to_string())
+}
+
+/// Statements for what nixpkgs itself declares (spec US1).
+///
+/// One `affected` per (component, CVE), naming the **build** as product with
+/// the declared component as a subcomponent. That is the same shape milestone
+/// 1035 gives its `not_affected`, and deliberately so: under the FR-012
+/// reconciliation a declaration displaces that statement, and a consumer
+/// comparing what they got against what they would have got should be
+/// comparing like with like.
+///
+/// The weaker, patch-derived `affected` stays version-scoped. The document
+/// therefore carries two `affected` shapes, which is the point rather than an
+/// inconsistency — the stronger evidence earns the stronger subject.
+fn declaration_statements(
+    artifacts: &ScanArtifacts<'_>,
+    root: &str,
+) -> Vec<OpenVexStatement> {
+    use crate::scan_fs::package_db::nix::closure::patches::EvidenceGrade;
+    let Some(summary) = artifacts.nixpkgs_security_summary else {
+        return Vec::new();
+    };
+    let grade = EvidenceGrade::NixpkgsDeclared.wire();
+
+    summary
+        .findings
+        .iter()
+        .map(|f| OpenVexStatement {
+            vulnerability: OpenVexVulnerability {
+                name: f.cve.clone(),
+                description: None,
+                aliases: Vec::new(),
+            },
+            products: vec![OpenVexProduct {
+                id: root.to_string(),
+                identifiers: [("purl".to_string(), root.to_string())]
+                    .into_iter()
+                    .collect(),
+                subcomponents: vec![OpenVexProduct {
+                    id: f.component_purl.clone(),
+                    identifiers: [("purl".to_string(), f.component_purl.clone())]
+                        .into_iter()
+                        .collect(),
+                    subcomponents: Vec::new(),
+                }],
+            }],
+            status: OpenVexStatus::Affected,
+            justification: None,
+            impact_statement: Some(declaration_note(&f.cve, grade, &f.text)),
+            action_statement: None,
+        })
+        .collect()
+}
+
 /// Build the two statements a backport produces (spec FR-011).
 ///
 /// Two, never one. That nixpkgs applied a CVE-named patch is strong evidence
@@ -77,17 +170,7 @@ fn backport_statements(artifacts: &ScanArtifacts<'_>) -> Vec<OpenVexStatement> {
     // Subject of the `not_affected` half: the thing being built. Without a
     // root there is nothing to say "this build" about, so the pair is not
     // emitted at all rather than half of it being emitted.
-    let Some(root) = artifacts
-        .components
-        .iter()
-        .find(|c| {
-            c.extra_annotations
-                .get("waybill:component-role")
-                .and_then(|v| v.as_str())
-                == Some("main-module")
-        })
-        .map(|c| c.purl.as_str().to_string())
-    else {
+    let Some(root) = root_component_purl(artifacts) else {
         return Vec::new();
     };
 
@@ -203,8 +286,14 @@ pub fn serialize_openvex(
     // the only ones waybill emits with a status stronger than
     // `under_investigation`.
     let backport = backport_statements(artifacts);
+    // Milestone 1050: what nixpkgs itself declares. Shares the root-component
+    // lookup with the backport path, so both halves of the story address the
+    // same subject.
+    let declared = root_component_purl(artifacts)
+        .map(|root| declaration_statements(artifacts, &root))
+        .unwrap_or_default();
 
-    if products_by_advisory.is_empty() && backport.is_empty() {
+    if products_by_advisory.is_empty() && backport.is_empty() && declared.is_empty() {
         return Ok(None);
     }
 
@@ -233,7 +322,7 @@ pub fn serialize_openvex(
         })
         .collect();
     let statements: Vec<OpenVexStatement> =
-        statements.into_iter().chain(backport).collect();
+        statements.into_iter().chain(backport).chain(declared).collect();
 
     let author = format!("waybill-{}", cfg.mikebom_version);
     let timestamp = cfg
@@ -367,6 +456,7 @@ mod tests {
     ) -> ScanArtifacts<'a> {
         ScanArtifacts {
             target_name: "demo",
+            nixpkgs_security_summary: None,
             components: comps,
             relationships: &[],
             integrity: integ,
@@ -462,6 +552,139 @@ mod tests {
         let artifact = serialize_openvex(&arts, &mk_cfg()).unwrap().unwrap();
         let doc: serde_json::Value = serde_json::from_slice(&artifact.bytes).unwrap();
         doc["statements"].as_array().unwrap().clone()
+    }
+
+    // ============================================================
+    // Milestone 1050 — what nixpkgs itself declares
+    // ============================================================
+
+    /// A build whose closure contains a package nixpkgs declares insecure.
+    ///
+    /// Built by hand rather than from a fixture, and deliberately: waybill
+    /// resolves declarations against plain nixpkgs, so a fixture's own
+    /// packages resolve to nothing and could not exercise this at all
+    /// (research R8). The shapes below are what the spec constrains.
+    fn declared_summary(
+        findings: &[(&str, &str, &str)],
+    ) -> crate::scan_fs::package_db::nix::declarations::NixpkgsSecuritySummary {
+        use crate::scan_fs::package_db::nix::declarations::{
+            DeclaredFinding, NixpkgsSecuritySummary,
+        };
+        NixpkgsSecuritySummary {
+            members_checked: 1,
+            findings: findings
+                .iter()
+                .map(|(purl, cve, text)| DeclaredFinding {
+                    component_purl: (*purl).to_string(),
+                    cve: (*cve).to_string(),
+                    text: (*text).to_string(),
+                })
+                .collect(),
+            ..Default::default()
+        }
+    }
+
+    fn scan_with_declarations(
+        summary: &crate::scan_fs::package_db::nix::declarations::NixpkgsSecuritySummary,
+    ) -> Vec<serde_json::Value> {
+        let mut root = mk_component("pkg:generic/the-build@1.0");
+        root.extra_annotations.insert(
+            "waybill:component-role".to_string(),
+            serde_json::Value::String("main-module".to_string()),
+        );
+        let comps = [mk_component("pkg:generic/unzip@6.0"), root];
+        let integ = empty_integrity();
+        let mut arts = mk_artifacts(&comps, &integ);
+        arts.nixpkgs_security_summary = Some(summary);
+        let artifact = serialize_openvex(&arts, &mk_cfg()).unwrap().unwrap();
+        let doc: serde_json::Value = serde_json::from_slice(&artifact.bytes).unwrap();
+        doc["statements"].as_array().unwrap().clone()
+    }
+
+    #[test]
+    fn a_declaration_is_attributable_to_nixpkgs_and_distinct_from_a_patch() {
+        // SC-002, both halves. Asserting only the contrast with
+        // patch-derived would leave "attributable to nixpkgs" untested, and
+        // a statement attributed to nothing would pass that.
+        let s = declared_summary(&[(
+            "pkg:generic/unzip@6.0",
+            "CVE-2099-0001",
+            "synthetic entry for the waybill fixture",
+        )]);
+        let stmts = scan_with_declarations(&s);
+        // CONTROL: a statement was produced at all.
+        assert_eq!(stmts.len(), 1, "{stmts:#?}");
+
+        let note = stmts[0]["impact_statement"].as_str().unwrap_or_default();
+        assert!(
+            note.contains("nixpkgs declares"),
+            "not positively attributed to nixpkgs: {note:?}"
+        );
+        assert!(
+            note.contains("nixpkgs-declared"),
+            "carries no grade: {note:?}"
+        );
+        assert!(
+            !note.contains("filename-derived"),
+            "must be distinguishable from a patch-derived claim: {note:?}"
+        );
+        assert!(
+            note.contains("synthetic entry"),
+            "the maintainer's own words are the actionable half: {note:?}"
+        );
+    }
+
+    #[test]
+    fn a_declaration_names_the_build_with_the_component_as_subcomponent() {
+        // FR-006a. The same shape milestone 1035 gives its `not_affected`,
+        // so the FR-012 swap compares like with like.
+        let s = declared_summary(&[(
+            "pkg:generic/unzip@6.0",
+            "CVE-2099-0001",
+            "synthetic",
+        )]);
+        let stmts = scan_with_declarations(&s);
+        assert_eq!(stmts[0]["status"], "affected");
+        assert_eq!(stmts[0]["products"][0]["@id"], "pkg:generic/the-build@1.0");
+        assert_eq!(
+            stmts[0]["products"][0]["subcomponents"][0]["@id"],
+            "pkg:generic/unzip@6.0",
+            "naming the component as the product would assert the version \
+             itself is affected, which is a different and broader claim"
+        );
+    }
+
+    #[test]
+    fn a_declaration_naming_several_identifiers_yields_one_statement_each() {
+        // FR-004. One statement per identifier, not one carrying a
+        // concatenated subject a consumer would have to split.
+        let s = declared_summary(&[
+            ("pkg:generic/unzip@6.0", "CVE-2099-0001", "first"),
+            ("pkg:generic/unzip@6.0", "CVE-2099-0002", "second"),
+        ]);
+        let stmts = scan_with_declarations(&s);
+        assert_eq!(stmts.len(), 2);
+        let names: std::collections::BTreeSet<&str> = stmts
+            .iter()
+            .filter_map(|s| s["vulnerability"]["name"].as_str())
+            .collect();
+        assert_eq!(
+            names,
+            ["CVE-2099-0001", "CVE-2099-0002"].into_iter().collect()
+        );
+    }
+
+    #[test]
+    fn a_scan_with_no_declarations_adds_no_statements() {
+        // The common case: a build that permitted nothing. Must not read as
+        // a failure, and must not fabricate a sidecar.
+        let comps = [mk_component("pkg:generic/a@1")];
+        let integ = empty_integrity();
+        let arts = mk_artifacts(&comps, &integ);
+        assert!(
+            serialize_openvex(&arts, &mk_cfg()).unwrap().is_none(),
+            "no advisories, no patches and no declarations means no sidecar"
+        );
     }
 
     #[test]

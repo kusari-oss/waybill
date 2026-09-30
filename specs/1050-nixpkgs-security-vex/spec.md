@@ -429,6 +429,13 @@ emits no declaration-derived statements, and records why.
   computed cases while appearing to work on the literal ones.
 - **Scope is the closure.** Declarations are read for components the build
   actually contains, not for every package in nixpkgs.
+- **Reach is bounded by how much the project customises nixpkgs.** Found
+  during implementation (research R8): declarations come from plain nixpkgs
+  at the pinned revision, so a package the project defines itself or
+  overlays does not resolve — the first has no nixpkgs statement to read, the
+  second fails the output-path check and is recorded unchecked. Safe in both
+  cases, since no claim lands on the wrong build, but it caps coverage and is
+  why FR-001d emits the unchecked count rather than assuming it is small.
 - **The acceptance signal needs no config discovery.** Measured: Nix refuses to
   *evaluate* a package marked insecure, so presence in a closure proves
   permission was granted. waybill never locates `permittedInsecurePackages`.

@@ -96,6 +96,25 @@ impl AttributeResolution {
     }
 }
 
+/// One CVE-bearing declaration, bound to the component it is about.
+///
+/// Carried to the VEX emitter through this record rather than on the
+/// component's `extra_annotations`, and the distinction is deliberate: that
+/// bag auto-flows into SBOM properties, and a CVE claim in an SBOM is
+/// precisely what this feature exists not to emit. An SBOM is a composition
+/// snapshot; a claim about a vulnerability belongs in VEX, where it can be
+/// superseded without rewriting the composition.
+///
+/// The prose declarations go the other way — they *are* composition facts
+/// ("this vendors an EOL Electron") and ride the annotation bag.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DeclaredFinding {
+    pub component_purl: String,
+    pub cve: String,
+    /// The declaration's own words, for the statement's note.
+    pub text: String,
+}
+
 /// What this pass contributed, for the document-scope record.
 ///
 /// A sibling of milestone 1035's `NixClosureSummary` rather than an extension
@@ -124,9 +143,44 @@ pub struct NixpkgsSecuritySummary {
     /// insecure, so a member carrying one is in the closure only because the
     /// build permitted it. Its presence is the permission.
     pub accepted_insecure: bool,
+    /// CVE-bearing declarations, for the VEX emitter. Deliberately not on
+    /// the components — see [`DeclaredFinding`].
+    pub findings: Vec<DeclaredFinding>,
 }
 
 impl NixpkgsSecuritySummary {
+    /// Build the record. `purl_of` maps a member's `pname` to the PURL the
+    /// emitted component carries, so findings bind to the identity a
+    /// consumer will actually see rather than to a nix-internal name.
+    pub(crate) fn build_with_purls(
+        resolutions: &std::collections::BTreeMap<String, AttributeResolution>,
+        purl_of: &dyn Fn(&str) -> Option<String>,
+    ) -> Self {
+        let mut s = Self::build(resolutions);
+        for (pname, r) in resolutions {
+            let AttributeResolution::Confirmed { declarations, .. } = r else {
+                continue;
+            };
+            let Some(purl) = purl_of(pname) else { continue };
+            for d in declarations {
+                for cve in &d.cves {
+                    s.findings.push(DeclaredFinding {
+                        component_purl: purl.clone(),
+                        cve: cve.clone(),
+                        text: d.text.clone(),
+                    });
+                }
+            }
+        }
+        s.findings.sort_by(|a, b| {
+            (&a.component_purl, &a.cve).cmp(&(&b.component_purl, &b.cve))
+        });
+        s.findings.dedup_by(|a, b| {
+            a.component_purl == b.component_purl && a.cve == b.cve
+        });
+        s
+    }
+
     pub(crate) fn build(
         resolutions: &std::collections::BTreeMap<String, AttributeResolution>,
     ) -> Self {
@@ -158,6 +212,70 @@ impl NixpkgsSecuritySummary {
         s.distinct_cves = cves.len();
         s
     }
+}
+
+/// Ask the pinned package set what it declares about this build's packages.
+///
+/// Degrades rather than fails (FR-019), and degrades *independently* of the
+/// closure query: a closure that resolved still emits its components when
+/// this returns an error. The two are separate passes over the same data and
+/// the spec requires their outcomes be separately visible.
+pub(crate) fn run(
+    closure: &crate::scan_fs::package_db::nix::closure::ClassifiedClosure,
+    project_root: &std::path::Path,
+    system: &str,
+    budget: std::time::Duration,
+    purl_of: &dyn Fn(&str) -> Option<String>,
+) -> Result<NixpkgsSecuritySummary, crate::scan_fs::package_db::nix::eval::reason::DegradationReason>
+{
+    use crate::scan_fs::package_db::nix::eval::reason::DegradationReason;
+
+    // `declared_pname`, not `pname`: the latter falls back to the
+    // derivation's own name, and on a measured closure 447 of 823 such names
+    // are patch files and fetched tarballs. Those have no `meta` and asking
+    // nixpkgs about them is meaningless.
+    let mut members: std::collections::BTreeMap<String, Vec<String>> = Default::default();
+    for drv in closure.raw.derivations.values() {
+        let Some(p) = drv.declared_pname() else { continue };
+        members
+            .entry(p.to_string())
+            .or_default()
+            .extend(drv.output_paths().map(str::to_string));
+    }
+    if members.is_empty() {
+        return Ok(NixpkgsSecuritySummary::default());
+    }
+
+    // Reaching nixpkgs through the revision `flake.lock` pins keeps the
+    // evaluation pure. Reaching it through the project's flake by path would
+    // need `--impure`, which milestone 1034's argv guard refuses — correctly,
+    // since that flag restores access to the host environment and the loss
+    // would not be visible in any emitted document.
+    let lock_path = project_root.join("flake.lock");
+    let doc = crate::scan_fs::package_db::nix::lockfile::parse_flake_lock(&lock_path)
+        .map_err(|e| DegradationReason::RevisionUnfetchable {
+            revision: String::new(),
+            detail: format!("flake.lock: {e}"),
+        })?;
+    let revision = doc
+        .nodes
+        .values()
+        .filter_map(|n| n.locked.as_ref())
+        .find_map(|l| {
+            l.repo
+                .as_deref()
+                .filter(|r| *r == "nixpkgs")
+                .and_then(|_| l.rev.clone())
+        })
+        .ok_or(DegradationReason::RevisionUnfetchable {
+            revision: String::new(),
+            detail: "no pinned nixpkgs revision in flake.lock".to_string(),
+        })?;
+
+    let names: Vec<String> = members.keys().cloned().collect();
+    let candidates = evaluate::evaluate(&revision, system, &names, budget)?;
+    let resolutions = resolve::resolve_all(&members, &candidates);
+    Ok(NixpkgsSecuritySummary::build_with_purls(&resolutions, purl_of))
 }
 
 #[cfg(test)]
