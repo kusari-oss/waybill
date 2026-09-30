@@ -60,3 +60,39 @@ guess rather than marker, and both are recorded in Assumptions:
   maintainer asserting "this version is vulnerable" is stronger evidence than
   a filename containing a CVE identifier, and milestone 1035 built the grade
   as an enum with one variant precisely so a second could be distinguished.
+
+
+## Analysis remediation, 2026-09-30
+
+`/speckit.analyze` found one CRITICAL and three HIGH gaps. All six findings
+are fixed; the spec and tasks below reflect that.
+
+- **G1 (CRITICAL)** — no task touched the three emitter files, so four
+  document-scope signals were computed into `NixpkgsSecuritySummary` and never
+  emitted. Per-component annotations ride the `extra_annotations`
+  pass-through; document-scope ones need explicit emission in
+  `cyclonedx/metadata.rs`, `spdx/annotations.rs` and `spdx/v3_annotations.rs`,
+  as milestone 1035 required. Four tasks added, ahead of the catalogue rows —
+  otherwise those rows would have shipped extractors pointing at fields
+  nothing writes.
+- **G2, G3 (HIGH)** — FR-017 (no vulnerability arrays) and FR-018 (no external
+  advisory queries) were negative requirements with no verification. One task
+  each. FR-018's test exercises the path rather than reading the source,
+  because inspection cannot prove a negative about code that has not run.
+- **A1 (HIGH)** — the T016 gate, the one task whose failure invalidates the
+  plan, said "materially different" with no threshold. Now a band: confirmed
+  65–77%, path-mismatch ≥ 5%, haskell > top-level. The lower bound on
+  mismatch matters as much as the coverage band — a mismatch near zero means
+  the verification is rejecting nothing and may not be running.
+- **U1 (MEDIUM)** — SC-002 has two halves and T021 asserted one. Now asserts
+  the nixpkgs attribution positively, not only the contrast with
+  patch-derived.
+- **A2 (MEDIUM)** — SC-004 was non-discriminating: it described milestone
+  1035's existing pedigree output, so it passed before this milestone began.
+  Restated around what this feature actually adds, with the original recorded
+  rather than replaced.
+
+Task count 53 → 59. Renumbered by a single-pass map over file order rather
+than sequential per-id replacement, which clobbers when a target id already
+exists. All 25 cross-references verified to resolve, and verified to point at
+the semantically intended task rather than merely at *a* task.

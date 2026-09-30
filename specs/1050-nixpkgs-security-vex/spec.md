@@ -383,9 +383,18 @@ emits no declaration-derived statements, and records why.
   `not_affected` it would displace.
 - **SC-003**: Declarations naming no CVE are visible in the output, and their
   count appears at document scope.
-- **SC-004**: For the `unzip` case — Alpine files three CVEs that Nix patches —
-  a consumer reading waybill output can determine that this build applied
-  patches named for those CVEs, without consulting another distro's data.
+- **SC-004**: A consumer can distinguish the three states this feature exists
+  to separate, on one document, without consulting an external feed:
+  *nixpkgs declares this affected*, *this build patched it*, and *nobody has
+  said anything*. The third is distinguishable from *we could not check*
+  (FR-001c).
+  *An earlier form of this criterion asked whether a consumer could tell that
+  the build applied patches named for the Alpine-filed `unzip` CVEs. That is
+  already true of milestone 1035's pedigree output, so it passed before this
+  milestone began and could not have validated it. Recorded rather than
+  silently replaced, because a criterion that does not discriminate is worth
+  recognising by shape: it describes the world before the work as accurately
+  as the world after.*
 - **SC-005**: A CVE claimed by both a declaration and a patch yields exactly
   one VEX statement for that CVE on that component — `affected`, from the
   declaration — while the patch remains present in that component's pedigree.
