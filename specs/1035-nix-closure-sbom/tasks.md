@@ -169,18 +169,18 @@ assert it appears in `pedigree.patches[]` on the component that applies it.
 **Independent Test**: assert two VEX statements per backport, with different
 subjects and both graded.
 
-- [ ] T037 [P] [US4] Write the failing test for SC-005a: `affected` subject to the version and `not_affected` subject to this build, and neither emitted without the other
-- [ ] T038 [US4] Extend the OpenVEX emitter in `waybill-cli/src/generate/openvex/` to produce both statements, replacing the blanket `under_investigation` for patch-derived findings only
-- [ ] T039 [US4] Carry the evidence grade onto both statements (FR-012a)
-- [ ] T040 [US4] Assert a lone `not_affected` cannot be emitted — that is the overclaim FR-011 exists to prevent, and it would let a consumer suppress a real finding on filename evidence
+- [X] T037 [P] [US4] Write the failing test for SC-005a: `affected` subject to the version and `not_affected` subject to this build, and neither emitted without the other
+- [X] T038 [US4] Extend the OpenVEX emitter in `waybill-cli/src/generate/openvex/` to produce both statements, replacing the blanket `under_investigation` for patch-derived findings only
+- [X] T039 [US4] Carry the evidence grade onto both statements (FR-012a)
+- [X] T040 [US4] Assert a lone `not_affected` cannot be emitted — that is the overclaim FR-011 exists to prevent, and it would let a consumer suppress a real finding on filename evidence
 
 ---
 
 ## Phase 8: Polish & Cross-Cutting Concerns
 
-- [ ] T041 Add catalogue rows C182–C184 to `docs/reference/sbom-format-mapping.md` **in the same change as** their extractors in `waybill-cli/src/parity/extractors/` — the gate fails in both directions, as milestone 1034 found
-- [ ] T042 Edit the catalogue by **exact string match**, never anchored regex, and diff the whole field afterwards
-- [ ] T043 [P] Write extractors for C182–C184 across all three formats
+- [X] T041 Add catalogue rows C182–C185 to `docs/reference/sbom-format-mapping.md` **in the same change as** their extractors in `waybill-cli/src/parity/extractors/` — the gate fails in both directions, as milestone 1034 found
+- [X] T042 Edit the catalogue by **exact string match**, never anchored regex, and diff the whole field afterwards
+- [X] T043 [P] Write extractors for C182–C185 across all three formats
 - [ ] T044 [P] Implement research task **T-R2**: whether closure composition holds outside Haskell; commit the probe
 - [ ] T045 [P] Implement research task **T-R3**: cold-store cost on a clean runner; commit the probe
 - [ ] T046 Document the feature in `docs/reference/nix-evaluation.md` alongside `--nix-eval`, including the measured 89–91% no-CVE coverage limit

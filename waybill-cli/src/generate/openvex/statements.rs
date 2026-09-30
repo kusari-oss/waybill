@@ -95,6 +95,21 @@ pub struct OpenVexProduct {
     /// statements at instance granularity.
     #[serde(skip_serializing_if = "std::collections::BTreeMap::is_empty", default)]
     pub identifiers: std::collections::BTreeMap<String, String>,
+    /// Milestone 1035 (#1034, #1040) — the components inside this product
+    /// a statement is about.
+    ///
+    /// OpenVEX 0.2.0 `Product.subcomponents`. This is how "my build embeds
+    /// a vulnerable component but is not affected by the vulnerability" is
+    /// said in OpenVEX: the product is the build, the subcomponent is the
+    /// component. Without it a `not_affected` statement about a backport
+    /// would have to name the component as the product, which asserts the
+    /// component version itself is not affected — a materially stronger and
+    /// different claim.
+    ///
+    /// Empty for every pre-1035 statement, and skipped when empty, so the
+    /// existing wire shape is unchanged.
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    pub subcomponents: Vec<OpenVexProduct>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
@@ -140,6 +155,7 @@ mod tests {
         let product = OpenVexProduct {
             id: "pkg:cargo/foo@1.2.3".to_string(),
             identifiers: std::collections::BTreeMap::new(),
+            subcomponents: Vec::new(),
         };
         let serialized = serde_json::to_string(&product).unwrap();
         assert_eq!(serialized, r#"{"@id":"pkg:cargo/foo@1.2.3"}"#);
@@ -167,6 +183,7 @@ mod tests {
         let product = OpenVexProduct {
             id: "pkg:cargo/foo@1.2.3".to_string(),
             identifiers: idents,
+            subcomponents: Vec::new(),
         };
         let serialized = serde_json::to_string(&product).unwrap();
         // BTreeMap iteration is sorted; identifier-type keys appear

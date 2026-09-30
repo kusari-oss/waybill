@@ -675,6 +675,10 @@ spdx23_anno!(c179_spdx23, "waybill:nix-eval-system", document);
 spdx23_anno!(c180_spdx23, "waybill:nix-eval-degraded", document);
 spdx23_anno!(c177_spdx23, "waybill:nix-eval-superseded-version", component);
 spdx23_anno!(c181_spdx23, "waybill:nix-eval-origin", component);
+spdx23_anno!(c182_spdx23, "waybill:closure-role", component);
+spdx23_anno!(c183_spdx23, "waybill:patch-evidence-grade", document);
+spdx23_anno!(c184_spdx23, "waybill:nix-closure", document);
+spdx23_anno!(c185_spdx23, "waybill:closure-patches", component);
 spdx23_anno!(c163_spdx23, "waybill:document-resolve",                     document);
 spdx23_anno!(c162_spdx23, "waybill:cabal-entries-skipped",                 document);
 
