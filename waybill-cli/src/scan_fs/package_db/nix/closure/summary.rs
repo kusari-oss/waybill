@@ -34,11 +34,6 @@ pub struct NixClosureSummary {
     /// the CVE count for coverage.
     pub patches_without_cve: usize,
     pub distinct_cves: usize,
-    /// The per-component patch records themselves, carried alongside the
-    /// counts rather than plumbed separately: they are the same
-    /// contribution, and a second channel could drift out of step with the
-    /// totals emitted from the first.
-    pub patched: Vec<ComponentPatches>,
 }
 
 impl NixClosureSummary {
@@ -55,7 +50,6 @@ impl NixClosureSummary {
             patches: totals.patches,
             patches_without_cve: totals.without_cve,
             distinct_cves: totals.distinct_cves,
-            patched: patched.to_vec(),
         }
     }
 

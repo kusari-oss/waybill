@@ -155,6 +155,37 @@ pub(crate) fn attribute(closure: &RawClosure) -> Vec<ComponentPatches> {
     merge_by_identity(out)
 }
 
+/// The patch list as both formats carry it.
+///
+/// One builder, because CycloneDX puts this in native
+/// `pedigree.patches[]` while SPDX has no equivalent and takes it as an
+/// annotation. Two builders would let the formats disagree about the same
+/// fact, and the parity extractor would then have to reconcile a difference
+/// that is not real.
+pub(crate) fn patches_json(record: &ComponentPatches) -> serde_json::Value {
+    serde_json::Value::Array(
+        record
+            .patches
+            .iter()
+            .map(|p| {
+                // `type` is the only required member; the enum is
+                // ['unofficial','monkey','backport','cherry-pick'], and a
+                // nixpkgs patch over a released version is a backport.
+                let mut obj = serde_json::json!({ "type": "backport" });
+                if !p.resolves.is_empty() {
+                    obj["resolves"] = serde_json::Value::Array(
+                        p.resolves
+                            .iter()
+                            .map(|c| serde_json::json!({"type": "security", "id": c.id}))
+                            .collect(),
+                    );
+                }
+                obj
+            })
+            .collect(),
+    )
+}
+
 /// Collapse entries for the same `(component, version)`.
 ///
 /// A closure can hold several derivations with one pname — measured, `unzip

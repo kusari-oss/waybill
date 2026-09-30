@@ -12,89 +12,66 @@
 
 use serde_json::{json, Value};
 
-use crate::scan_fs::package_db::nix::closure::patches::ComponentPatches;
+use crate::scan_fs::package_db::nix::closure::emit::ANN_CLOSURE_PATCHES;
 
-/// Build the `pedigree` object for one component, or `None` when it applies
-/// no patches.
+/// Build the `pedigree` object from the annotation the closure emitter
+/// stamped on the component.
 ///
-/// Absent rather than empty: an empty `patches[]` asserts that the closure
-/// was consulted and held nothing, which is a different claim from the
-/// component not having been in the closure at all.
-pub(crate) fn pedigree_for(record: &ComponentPatches) -> Option<Value> {
-    if record.patches.is_empty() {
+/// Reading the component's own annotation rather than re-joining against the
+/// closure means CycloneDX and SPDX render the same stored fact, and neither
+/// can drift from the other.
+pub(crate) fn from_annotation(
+    component: &waybill_common::resolution::ResolvedComponent,
+) -> Option<Value> {
+    let raw = component
+        .extra_annotations
+        .get(ANN_CLOSURE_PATCHES)?
+        .as_str()?;
+    let patches: Value = serde_json::from_str(raw).ok()?;
+    // Absent rather than empty: an empty `patches[]` would assert the closure
+    // was consulted and held nothing, a different claim from the component
+    // never having been in a closure.
+    if patches.as_array().is_none_or(|a| a.is_empty()) {
         return None;
     }
-    let patches: Vec<Value> = record
-        .patches
-        .iter()
-        .map(|p| {
-            // `type` is the only required member. The enum is
-            // ['unofficial','monkey','backport','cherry-pick']; a nixpkgs
-            // patch applied over a released version is a backport.
-            let mut obj = json!({ "type": "backport" });
-            let resolves: Vec<Value> = p
-                .resolves
-                .iter()
-                .map(|cve| json!({ "type": "security", "id": cve.id }))
-                .collect();
-            // A patch naming no CVE is still recorded, with no `resolves`
-            // (spec FR-010). Silence about it would make partial coverage
-            // read as absence — and measured, 89% and 91% of the patches in
-            // the two closures name no CVE, so that is the common case.
-            if !resolves.is_empty() {
-                obj["resolves"] = Value::Array(resolves);
-            }
-            obj
-        })
-        .collect();
     Some(json!({ "patches": patches }))
-}
-
-/// Index the records by the `(name, version)` a CycloneDX component is
-/// matched on.
-pub(crate) fn index(
-    records: &[ComponentPatches],
-) -> std::collections::HashMap<(&str, &str), &ComponentPatches> {
-    records
-        .iter()
-        .map(|r| {
-            (
-                (r.component.as_str(), r.version.as_deref().unwrap_or("")),
-                r,
-            )
-        })
-        .collect()
 }
 
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
     use super::*;
+    use crate::scan_fs::package_db::nix::closure::classify::classify;
     use crate::scan_fs::package_db::nix::closure::derivation::RawClosure;
-    use crate::scan_fs::package_db::nix::closure::patches::attribute;
+    use crate::scan_fs::package_db::nix::closure::{emit, ClassifiedClosure};
 
     const CLOSURE: &str = r#"{
       "derivations": {
         "d-z.drv": { "env": {"pname":"zippy","version":"6.0",
                              "patches":"/nix/store/h-CVE-2019-13232-1.patch /nix/store/h-tidy.patch"},
                      "outputs":{"out":{"path":"o1"}} },
-        "d-q.drv": { "env": {"pname":"quiet","version":"1.0"},
+        "d-p.drv": { "env": {"pname":"plain","version":"2.0"},
+                     "outputs":{"out":{"path":"o3"}} },
+        "d-a.drv": { "env": {"pname":"app","version":"1.0",
+                             "buildInputs":"/nix/store/o1 /nix/store/o3"},
                      "outputs":{"out":{"path":"o2"}} }
       },
       "version": 3
     }"#;
 
-    fn records() -> Vec<ComponentPatches> {
-        attribute(&RawClosure::parse(CLOSURE).unwrap())
+    fn components() -> Vec<waybill_common::resolution::ResolvedComponent> {
+        let raw = RawClosure::parse(CLOSURE).unwrap();
+        let roles = classify(&raw);
+        emit::components(&ClassifiedClosure { attribute: "default".into(), raw, roles })
     }
 
     #[test]
     fn a_cve_named_patch_resolves_a_security_issue() {
-        let r = records();
-        // CONTROL: attribution produced a record at all, so the shape
-        // assertions below are not passing over an empty list.
-        assert_eq!(r.len(), 1, "only the patch-applier is recorded");
-        let p = pedigree_for(&r[0]).unwrap();
+        let cs = components();
+        // CONTROL: the patch-applier is present at all, so the shape
+        // assertions below are not passing over an empty document.
+        let z = cs.iter().find(|c| c.name == "zippy").expect("zippy emitted");
+        let p = from_annotation(z).expect("pedigree from the stamped annotation");
         let patches = p["patches"].as_array().unwrap();
         assert_eq!(patches.len(), 2);
 
@@ -110,8 +87,9 @@ mod tests {
     fn a_patch_naming_no_cve_is_recorded_without_resolves() {
         // Recorded rather than dropped: measured, this is ~90% of them, and
         // dropping them would make partial coverage read as absence.
-        let r = records();
-        let p = pedigree_for(&r[0]).unwrap();
+        let cs = components();
+        let z = cs.iter().find(|c| c.name == "zippy").unwrap();
+        let p = from_annotation(z).unwrap();
         let bare: Vec<&Value> = p["patches"]
             .as_array()
             .unwrap()
@@ -124,19 +102,29 @@ mod tests {
 
     #[test]
     fn a_component_applying_nothing_gets_no_pedigree_at_all() {
-        let empty = ComponentPatches {
-            component: "quiet".into(),
-            version: Some("1.0".into()),
-            patches: vec![],
-        };
-        assert!(pedigree_for(&empty).is_none(), "absent, not empty");
+        let cs = components();
+        // `plain` is emitted — it is an artifact input — but applies no
+        // patch. `app` would not do: it is the unreferenced root and is not
+        // emitted at all, so it could not distinguish "no patches" from
+        // "no component".
+        let a = cs.iter().find(|c| c.name == "plain").expect("plain emitted");
+        assert!(
+            !a.extra_annotations.contains_key(ANN_CLOSURE_PATCHES),
+            "no annotation is stamped when nothing is applied"
+        );
+        assert!(from_annotation(a).is_none(), "absent, not empty");
     }
 
     #[test]
-    fn the_index_keys_on_name_and_version() {
-        let r = records();
-        let idx = index(&r);
-        assert!(idx.contains_key(&("zippy", "6.0")));
-        assert!(!idx.contains_key(&("zippy", "7.0")), "version is part of the key");
+    fn the_annotation_and_the_native_field_carry_the_same_array() {
+        // The point of reading the component's own annotation: SPDX renders
+        // that string and CycloneDX renders this object, so if they were
+        // built separately they could disagree about one fact.
+        let cs = components();
+        let z = cs.iter().find(|c| c.name == "zippy").unwrap();
+        let stored: Value =
+            serde_json::from_str(z.extra_annotations[ANN_CLOSURE_PATCHES].as_str().unwrap())
+                .unwrap();
+        assert_eq!(from_annotation(z).unwrap()["patches"], stored);
     }
 }

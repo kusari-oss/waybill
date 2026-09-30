@@ -35,9 +35,20 @@ A patch whose name carries no CVE is still recorded — `type: "backport"` with
 no `resolves` entry. Silence about it would make partial coverage look like
 absence.
 
-**SPDX 2.3 and SPDX 3 have no equivalent** and take the annotation bridge. This
-is the one place the three formats genuinely diverge in capability rather than
-in spelling.
+**SPDX 2.3 and SPDX 3 have no equivalent** and take the annotation bridge,
+`waybill:closure-patches` (C185). This is the one place the three formats
+genuinely diverge in capability rather than in spelling.
+
+Both sides render one stored fact rather than being built separately: the
+closure emitter stamps the patch array on the component as a JSON string (the
+m134 / m147 / m173 convention for array-valued annotations), CycloneDX parses
+that into native `pedigree.patches[]` and suppresses the property, and the two
+SPDX emitters carry the annotation through the ordinary pass-through. Verified
+on a measured project: the arrays are byte-identical across all three.
+
+The CDX suppression cannot use `is_field_owned_annotation_key`, which both the
+CDX and SPDX pass-throughs consult — using it would drop the annotation from
+SPDX as well, which is the opposite of the intent.
 
 ## VEX
 
@@ -68,7 +79,7 @@ VEX statement read as absence of a backport.
 
 ## Catalogue and parity
 
-Rows **C182**, **C183**, **C184** land with their extractors in the same
+Rows **C182**, **C183**, **C184**, **C185** land with their extractors in the same
 change. `every_catalog_row_has_an_extractor` checks both directions — an
 extractor without a row fails it too, as milestone 1034 discovered.
 
@@ -77,5 +88,5 @@ anchored on one row has silently edited the next one before.
 
 ## Byte-identity
 
-With `--nix-closure` absent, no closure query runs, none of C182–C184 is
+With `--nix-closure` absent, no closure query runs, none of C182–C185 is
 emitted, no `pedigree` appears, and every committed corpus golden is unchanged.

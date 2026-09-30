@@ -18,6 +18,15 @@ use super::ClassifiedClosure;
 /// C182 — how nix referenced this member.
 pub(crate) const ANN_CLOSURE_ROLE: &str = "waybill:closure-role";
 
+/// C185 — the patches this member applies.
+///
+/// CycloneDX carries these natively in `pedigree.patches[]` and suppresses
+/// this property; SPDX 2.3 and SPDX 3 have no equivalent and carry the
+/// annotation. That is the one place the three formats differ in capability
+/// rather than in spelling. The value is the JSON array encoded as a string,
+/// matching the m134 / m147 / m173 convention for array-valued annotations.
+pub(crate) const ANN_CLOSURE_PATCHES: &str = "waybill:closure-patches";
+
 /// Roles that become components on the strength of the role alone.
 ///
 /// `Unreferenced` is excluded here, but that is not the whole rule — see
@@ -138,6 +147,17 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
             .and_modify(|(seen, _)| *seen = seen.union(role))
             .or_insert((role, component));
     }
+    // Attribution runs here so the patch facts ride on the component itself.
+    // One source of truth: CycloneDX translates it to native `pedigree`, the
+    // two SPDX emitters carry it as an annotation, and nothing has to join
+    // the two sides back together at emission time.
+    let patched = super::patches::attribute(&closure.raw);
+    let index: std::collections::HashMap<(&str, &str), &super::patches::ComponentPatches> =
+        patched
+            .iter()
+            .map(|r| ((r.component.as_str(), r.version.as_deref().unwrap_or("")), r))
+            .collect();
+
     merged
         .into_values()
         .map(|(role, mut component)| {
@@ -145,6 +165,18 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
                 ANN_CLOSURE_ROLE.to_string(),
                 serde_json::Value::String(role.wire().to_string()),
             );
+            if let Some(record) =
+                index.get(&(component.name.as_str(), component.version.as_str()))
+            {
+                if !record.patches.is_empty() {
+                    component.extra_annotations.insert(
+                        ANN_CLOSURE_PATCHES.to_string(),
+                        serde_json::Value::String(
+                            super::patches::patches_json(record).to_string(),
+                        ),
+                    );
+                }
+            }
             component
         })
         .collect()

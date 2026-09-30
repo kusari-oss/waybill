@@ -158,7 +158,7 @@ assert it appears in `pedigree.patches[]` on the component that applies it.
 - [X] T033 [US2] Implement CycloneDX `pedigree.patches[]` emission in `waybill-cli/src/generate/cyclonedx/pedigree.rs` **and register it in `cyclonedx/mod.rs`** — the first use of `pedigree` in waybill, so this is new emission machinery rather than a new field on an existing path, and an unregistered module compiles to nothing
 - [X] T034 [US2] Emit patches with no CVE as `type: "backport"` with no `resolves` entry — silence would make partial coverage look like absence
 - [X] T035 [US2] Emit the patch total and no-CVE count at document scope (SC-006b). Measured after merging build variants: 187 patches of which 167 name no CVE on moat, 169 of which 153 on slack-web — 89% and 91% of backports name no CVE, and without the count a consumer reads missing VEX as missing backport
-- [ ] T036 [US2] Bridge the patch facts into SPDX 2.3 and SPDX 3, which have no `pedigree` equivalent — the one place the formats differ in capability rather than spelling
+- [X] T036 [US2] Bridge the patch facts into SPDX 2.3 and SPDX 3, which have no `pedigree` equivalent — the one place the formats differ in capability rather than spelling
 
 **Checkpoint**: SC-004 and SC-006 satisfiable.
 

@@ -1245,15 +1245,8 @@ impl CycloneDxBuilder {
             // the closure's own store hashes do not survive into the
             // document. Absent entirely for components with no patches, and
             // for every component when `--nix-closure` is off.
-            if let Some(summary) = self.nix_closure_summary.as_ref() {
-                let idx = super::pedigree::index(&summary.patched);
-                if let Some(record) =
-                    idx.get(&(component.name.as_str(), component.version.as_str()))
-                {
-                    if let Some(p) = super::pedigree::pedigree_for(record) {
-                        entry["pedigree"] = p;
-                    }
-                }
+            if let Some(p) = super::pedigree::from_annotation(component) {
+                entry["pedigree"] = p;
             }
 
             // Milestone 052/part-2: native CDX `scope` field. Per
@@ -1695,6 +1688,18 @@ impl CycloneDxBuilder {
                     // `c.evidence.source_file_paths` higher up in
                     // this function — re-emitting from the bag
                     // would double-stamp and produce value drift.
+                    continue;
+                }
+                if key == crate::scan_fs::package_db::nix::closure::emit::ANN_CLOSURE_PATCHES {
+                    // Milestone 1035: CycloneDX carries these in native
+                    // `pedigree.patches[]` just above, so re-emitting the
+                    // annotation here would state the same fact twice in one
+                    // document. SPDX 2.3 and SPDX 3 have no `pedigree` and do
+                    // carry the annotation — the one place the three formats
+                    // differ in capability rather than spelling. This cannot
+                    // use `is_field_owned_annotation_key`, which both the CDX
+                    // and SPDX pass-throughs consult and which would therefore
+                    // drop it from SPDX too.
                     continue;
                 }
                 if emitted_names.contains(key.as_str()) {
