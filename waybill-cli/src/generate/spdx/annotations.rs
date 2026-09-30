@@ -24,6 +24,7 @@ use waybill_common::resolution::{ResolutionTechnique, ResolvedComponent};
 
 use super::document::{SpdxAnnotation, SpdxAnnotationType};
 use crate::generate::ScanArtifacts;
+use crate::scan_fs::package_db::nix::closure::summary as closure_summary;
 
 /// Versioned envelope identifier. Bumping this constant requires a
 /// coordinated update to `contracts/waybill-annotation.schema.json`
@@ -950,6 +951,22 @@ pub fn annotate_document(
             json!(mode.as_wire_str()),
         );
     }
+
+    // Milestone 1035 (#1034, #1040): C184 doc-scope record of the
+    // `--nix-closure` query, and C183 the grade of the CVE associations it
+    // produced. The C184 value is the same canonical string every format
+    // carries, so the parity row compares equal without compensation.
+    // Both absent when the flag is off or the tier degraded.
+    if let Some(summary) = artifacts.nix_closure_summary {{
+        push(
+            &mut out,
+            closure_summary::ANN_NIX_CLOSURE,
+            json!(summary.nix_closure_wire()),
+        );
+        if let Some(grade) = summary.patch_evidence_grade_value() {{
+            push(&mut out, closure_summary::ANN_PATCH_EVIDENCE_GRADE, grade);
+        }}
+    }}
 
     // Milestone 235 US4: C146 doc-scope Gradle-resolution-tier
     // annotation. Emitted iff any Gradle project was touched.

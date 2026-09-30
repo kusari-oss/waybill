@@ -295,7 +295,7 @@ fn resolving_argv(expr: &str) -> Vec<&str> {
 }
 
 /// Flags that would hand control of evaluation settings back to the flake.
-const UNSAFE_FLAGS: &[&str] = &["--accept-flake-config", "--impure"];
+pub(crate) const UNSAFE_FLAGS: &[&str] = &["--accept-flake-config", "--impure"];
 
 /// Is this argv safe for evaluating expressions we do not control?
 ///
@@ -310,7 +310,7 @@ const UNSAFE_FLAGS: &[&str] = &["--accept-flake-config", "--impure"];
 ///
 /// Checked at the point of use rather than only in a test: a guard that runs
 /// only under `cargo test` does not guard the code that ships.
-fn argv_is_safe(argv: &[&str]) -> bool {
+pub(crate) fn argv_is_safe(argv: &[&str]) -> bool {
     !argv.iter().any(|a| UNSAFE_FLAGS.contains(a))
 }
 

@@ -975,6 +975,38 @@ cdx_anno!(c179_cdx, "waybill:nix-eval-system", document);
 cdx_anno!(c180_cdx, "waybill:nix-eval-degraded", document);
 cdx_anno!(c177_cdx, "waybill:nix-eval-superseded-version", component);
 cdx_anno!(c181_cdx, "waybill:nix-eval-origin", component);
+cdx_anno!(c182_cdx, "waybill:closure-role", component);
+cdx_anno!(c183_cdx, "waybill:patch-evidence-grade", document);
+cdx_anno!(c184_cdx, "waybill:nix-closure", document);
+
+/// C185 — the patches a closure member applies.
+///
+/// The one row in the catalogue whose CycloneDX side is a **native field**
+/// rather than a property: CDX has `pedigree.patches[]` and both SPDX
+/// versions have no equivalent, so they carry the annotation instead. The
+/// extractor reads the native array back into the same string the SPDX side
+/// stores, which is why the row can still be `SymmetricEqual`.
+///
+/// This is compensation for a real capability difference between the
+/// formats, not for an accidental difference in how waybill spells one
+/// thing. Both sides are rendered from a single stored value at emission —
+/// see `cyclonedx::pedigree::from_annotation`.
+pub(super) fn c185_cdx(doc: &Value) -> BTreeSet<String> {
+    walk_cdx_components_and_main_module(doc)
+        .iter()
+        .filter_map(|c| c.get("pedigree").and_then(|p| p.get("patches")))
+        .filter_map(|patches| patches.as_array())
+        .flatten()
+        // One entry per patch, not one per component: the SPDX side stores
+        // the array in an annotation and `decode_envelope` unpacks arrays
+        // element-wise, so returning the whole array as a single string
+        // here would disagree in cardinality on any document that actually
+        // carries patches. The fixture-driven gate would not have caught
+        // that — it holds no closure data, so both sides read empty and
+        // compare equal.
+        .map(|patch| patch.to_string())
+        .collect()
+}
 cdx_anno!(c161_cdx, "waybill:resolve-ownership",                     document);
 cdx_anno!(c163_cdx, "waybill:document-resolve",                     document);
 cdx_anno!(c162_cdx, "waybill:cabal-entries-skipped",                 document);

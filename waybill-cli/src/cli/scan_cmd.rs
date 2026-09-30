@@ -665,6 +665,48 @@ pub struct ScanArgs {
     #[arg(long = "nix-eval", default_value_t = false)]
     pub nix_eval: bool,
 
+    /// Milestone 1035 (#1034, #1040) — emit the Nix derivation closure.
+    ///
+    /// **THIS EXECUTES THE SCANNED PROJECT'S OWN FLAKE.** `--nix-eval`
+    /// evaluates nixpkgs at a pinned revision and never runs
+    /// repository-authored expressions; this does run them, because a
+    /// derivation closure cannot be obtained without instantiating the
+    /// project's flake. Use it inside a sandbox, or only against a
+    /// flake you trust.
+    ///
+    /// What it buys: the components a Nix build actually consumed, and
+    /// the security patches nixpkgs backported without moving a version
+    /// string. Measured on two real Haskell libraries — 216 and 218
+    /// components absent from today's output, and `unzip 6.0` carrying
+    /// 11 CVEs across 26 patches that no version-keyed SBOM can express.
+    ///
+    /// Build tooling is emitted too, marked with its role, so a
+    /// consumer can filter rather than lose it. The richest
+    /// vulnerability signal in both measured closures was build
+    /// tooling.
+    ///
+    /// Defences are milestone 1034's, unchanged and now load-bearing:
+    /// pure mode, import-from-derivation refused and the refusal
+    /// verified, no `--accept-flake-config`, and a wall-clock budget.
+    ///
+    /// Default (flag omitted): no `nix` process is started at all.
+    #[arg(long = "nix-closure", default_value_t = false)]
+    pub nix_closure: bool,
+
+    /// The flake attribute whose closure to take, under
+    /// `packages.<system>`. Defaults to `default`.
+    ///
+    /// Attributes are never merged: a project exposing `default`,
+    /// `pkg-ghc910`, `pkg-ghc94` and `pkg-ghc96` builds the same library
+    /// against three compilers, and merging them would describe a build
+    /// nobody performed.
+    #[arg(
+        long = "nix-closure-attr",
+        value_name = "ATTR",
+        requires = "nix_closure"
+    )]
+    pub nix_closure_attr: Option<String>,
+
     /// The Nix platform to evaluate for, e.g. `x86_64-linux`.
     ///
     /// Defaults to the host's. Naming it matters twice: results are
@@ -4342,6 +4384,49 @@ pub async fn execute(
         None
     };
 
+    // Milestone 1035 (#1034, #1040) — the derivation closure.
+    //
+    // Runs after the manifest-derived set exists, because it supplements that
+    // set rather than replacing it (spec FR-003a): the manifest covers every
+    // cabal stanza while a closure covers only what its attribute builds, and
+    // GHC boot libraries live inside the compiler derivation rather than
+    // beside it. Measured — treating closure-absence as evidence a component
+    // is spurious would discard the Haskell standard distribution.
+    let nix_closure = {
+        use scan_fs::package_db::nix::closure;
+        match closure::admission(args.nix_closure, offline) {
+            Err(None) => None,
+            Err(Some(reason)) => {
+                tracing::info!(
+                    reason = reason.wire(),
+                    "nix-closure: skipped before any nix process started"
+                );
+                Some(Err(reason))
+            }
+            Ok(()) => {
+                let cfg = closure::ClosureConfig::from_flags(
+                    args.nix_closure_attr.clone(),
+                    None,
+                );
+                // The platform must be explicit for evaluation to stay pure;
+                // `builtins.currentSystem` does not exist in pure mode.
+                let system = scan_fs::package_db::nix::eval::invoke::detect_host_system(
+                    cfg.budget,
+                );
+                Some(match system {
+                    Ok(sys) => closure::resolve(&root_path, &sys, &cfg).inspect(|c| {
+                        tracing::info!(
+                            attribute = %c.attribute,
+                            derivations = c.raw.derivations.len(),
+                            roles = ?c.role_counts(),
+                            "nix-closure: classified"
+                        );
+                    }),
+                    Err(reason) => Err(reason),
+                })
+            }
+        }
+    };
     let nixpkgs_haskell_summary = {
         use scan_fs::package_db::nix::haskell_packages as nhp;
         let source = nhp::fetch::HttpSource::new(args.nixpkgs_timeout_secs);
@@ -4492,6 +4577,56 @@ pub async fn execute(
             "nixpkgs-haskell: version resolution complete"
         );
     }
+
+    // Milestone 1035 (#1034, #1040) — insert the closure's contribution.
+    //
+    // Deliberately after the nixpkgs-haskell enrichment rather than beside
+    // the closure query above. That enrichment assigns versions and rewrites
+    // dependency-edge endpoints, and running before it meant the closure's
+    // components were present, versionless-adjacent and name-matchable while
+    // it worked. Measured: 41 components that a flag-off scan emitted as
+    // `pkg:hackage/QuickCheck@2.15.0.1` came out of a flag-on scan as
+    // `pkg:generic/QuickCheck@2.15.0.1` -- enabling the closure *downgraded*
+    // precise PURLs to the generic fallback the closure uses because
+    // `pkg:nix` is not a purl-spec type. More information, emphatically not
+    // less, is the whole point of the tier.
+    match &nix_closure {
+        Some(Err(reason)) => tracing::info!(
+            reason = reason.wire(),
+            detail = %reason,
+            "nix-closure: degrading; the manifest-derived set is unaffected"
+        ),
+        Some(Ok(classified)) => {
+            let added = scan_fs::package_db::nix::closure::emit::components(classified);
+            let (merged, appended) = merge_closure_components(&mut components, added);
+            tracing::info!(
+                appended,
+                merged,
+                existing = components.len() - appended,
+                "nix-closure: supplementing the manifest-derived set"
+            );
+        }
+        None => {}
+    }
+    // The document-scope record (FR-018). Built only on the success path, so
+    // a degraded tier emits no counts rather than zeros -- a zero would read
+    // as "the closure held nothing", which is a different claim.
+    let nix_closure_summary = match &nix_closure {
+        Some(Ok(classified)) => {
+            use scan_fs::package_db::nix::closure;
+            let patched = closure::patches::attribute(&classified.raw);
+            let summary =
+                closure::summary::NixClosureSummary::build(classified, &patched);
+            tracing::info!(
+                patches = summary.patches,
+                without_cve = summary.patches_without_cve,
+                distinct_cves = summary.distinct_cves,
+                "nix-closure: patch attribution"
+            );
+            Some(summary)
+        }
+        _ => None,
+    };
 
     // `orphan`. `full` mode forwards an empty `DedupeIndex` so every
     // surviving content-shape match emits regardless of coverage.
@@ -4748,6 +4883,7 @@ pub async fn execute(
         // Milestone 204 (#554): doc-scope helm image-extraction-mode
         // signal for the C123 annotation.
         helm_extraction_mode: helm_extraction_mode.as_ref(),
+        nix_closure_summary: nix_closure_summary.as_ref(),
         pants_resolve_summary,
         // The unsplit document represents every resolve rather than one, so
         // it has no identity to state (FR-008). The split sets this per
@@ -5378,6 +5514,65 @@ impl AdvisoryContext {
             && self.warm_flag_was_default
             && self.fallback_count.map(|n| n > 0).unwrap_or(false)
     }
+}
+
+/// Fold the closure's components into the manifest-derived set.
+///
+/// Spec FR-003a says the closure supplements and never replaces. A plain
+/// append satisfies the letter of that and breaks its intent: the closure
+/// identifies members as `pkg:generic/<name>@<version>`, because `pkg:nix`
+/// is not a purl-spec type and a wrong-but-well-formed PURL would be worse
+/// than a generic one. Appending a generic twin beside an existing
+/// `pkg:hackage/...` leaves the document asserting two identities for one
+/// package.
+///
+/// So a closure member that matches something already present by
+/// `(name, version)` contributes its annotations to that component -- the
+/// role, and any patches it applies -- and does not become a second entry.
+/// The existing PURL is kept, since the reader that produced it knew the
+/// ecosystem and the closure does not. Only members nothing else found are
+/// appended, which is where the tier's value actually is: the C toolchain,
+/// the build tooling, and the patches applied to them.
+///
+/// Matching is on `(name, version)` and not on name alone. A design-tier
+/// component whose version never resolved therefore does not absorb a
+/// closure member of the same name: measured, one of 370 components comes
+/// out as both `pkg:hackage/os-string` (design, no version) and
+/// `pkg:generic/os-string@2.0.10` (build). Those are two different
+/// observations -- what the manifest declares, and what the build used --
+/// and collapsing them would assert the manifest resolved something it did
+/// not. Folding design into build is the reconciler's kind of job, not this
+/// function's; the milestone-191 reconciler folds design into *source* and
+/// deliberately leaves build alone.
+///
+/// Returns `(merged, appended)`.
+fn merge_closure_components(
+    components: &mut Vec<waybill_common::resolution::ResolvedComponent>,
+    added: Vec<waybill_common::resolution::ResolvedComponent>,
+) -> (usize, usize) {
+    let index: std::collections::HashMap<(String, String), usize> = components
+        .iter()
+        .enumerate()
+        .map(|(i, c)| ((c.name.clone(), c.version.clone()), i))
+        .collect();
+    let (mut merged, mut appended) = (0usize, 0usize);
+    for c in added {
+        match index.get(&(c.name.clone(), c.version.clone())) {
+            Some(&i) => {
+                for (k, v) in c.extra_annotations {
+                    // The existing component's own annotations win: it was
+                    // produced by a reader that knew the ecosystem.
+                    components[i].extra_annotations.entry(k).or_insert(v);
+                }
+                merged += 1;
+            }
+            None => {
+                components.push(c);
+                appended += 1;
+            }
+        }
+    }
+    (merged, appended)
 }
 
 #[cfg(test)]
@@ -6515,6 +6710,8 @@ mod tests {
             nix_eval: false,
             nix_eval_system: None,
             nix_eval_timeout_secs: None,
+            nix_closure: false,
+            nix_closure_attr: None,
             no_nixpkgs_haskell: false,
             no_nixpkgs_haskell_closure: false,
             nixpkgs_timeout_secs: 30,

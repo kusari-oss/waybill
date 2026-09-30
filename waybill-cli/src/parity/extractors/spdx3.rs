@@ -735,6 +735,10 @@ spdx3_anno!(c179_spdx3, "waybill:nix-eval-system", document);
 spdx3_anno!(c180_spdx3, "waybill:nix-eval-degraded", document);
 spdx3_anno!(c177_spdx3, "waybill:nix-eval-superseded-version", component);
 spdx3_anno!(c181_spdx3, "waybill:nix-eval-origin", component);
+spdx3_anno!(c182_spdx3, "waybill:closure-role", component);
+spdx3_anno!(c183_spdx3, "waybill:patch-evidence-grade", document);
+spdx3_anno!(c184_spdx3, "waybill:nix-closure", document);
+spdx3_anno!(c185_spdx3, "waybill:closure-patches", component);
 spdx3_anno!(c163_spdx3, "waybill:document-resolve",                     document);
 spdx3_anno!(c162_spdx3, "waybill:cabal-entries-skipped",                 document);
 

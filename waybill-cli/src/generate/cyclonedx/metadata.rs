@@ -7,6 +7,7 @@ use waybill_common::types::purl::encode_purl_segment;
 use serde_json::json;
 
 use crate::generate::RootComponentOverride;
+use crate::scan_fs::package_db::nix::closure::summary as closure_summary;
 
 /// Normalize a string for inclusion in a CPE 2.3 segment.
 ///
@@ -147,6 +148,12 @@ pub struct MetadataExtras<'a> {
     // per FR-004 / SC-004 byte-identity for non-Helm scans).
     // `Some(Unrendered)` → `"partial"`. `Some(Rendered)` → `"full"`.
     pub helm_extraction_mode: Option<&'a crate::scan_fs::package_db::HelmExtractionMode>,
+    // Milestone 1035 (#1034, #1040) — doc-scope record of a `--nix-closure`
+    // query. Drives C184 `waybill:nix-closure` and C183
+    // `waybill:patch-evidence-grade`. `None` iff the flag was absent or the
+    // tier degraded (both annotations absent; byte-identity preserved).
+    pub nix_closure_summary:
+        Option<&'a crate::scan_fs::package_db::nix::closure::summary::NixClosureSummary>,
     // Milestone 235 US4 — aggregate Gradle-resolution tier signal.
     // Drives the C146 `waybill:gradle-resolution-tier` doc-scope
     // annotation. `None` iff no Gradle project was touched
@@ -240,6 +247,7 @@ pub fn build_metadata(
     } = subject;
     let MetadataExtras {
         components,
+        nix_closure_summary,
         os_release_missing_fields,
         scan_target_coord,
         source_document_binding,
@@ -973,6 +981,24 @@ pub fn build_metadata(
             "name": "waybill:image-extraction-completeness",
             "value": mode.as_wire_str(),
         }));
+    }
+
+    // Milestone 1035 (#1034, #1040): C184 doc-scope record of the closure
+    // query and C183 the grade of its CVE associations. The object is
+    // encoded as a JSON string because a CDX property value is a string —
+    // the m134/m147/m173 precedent. Both absent when the flag is off or the
+    // tier degraded, so output stays byte-identical to a scan without it.
+    if let Some(summary) = nix_closure_summary {
+        properties.push(json!({
+            "name": closure_summary::ANN_NIX_CLOSURE,
+            "value": summary.nix_closure_wire(),
+        }));
+        if let Some(grade) = summary.patch_evidence_grade_value() {
+            properties.push(json!({
+                "name": closure_summary::ANN_PATCH_EVIDENCE_GRADE,
+                "value": grade.as_str().unwrap_or_default(),
+            }));
+        }
     }
 
     // Milestone 665 T021: doc-scope `waybill:binary-scan-suppressed`

@@ -14,6 +14,7 @@ pub mod compositions;
 pub mod dependencies;
 pub mod evidence;
 pub mod metadata;
+pub mod pedigree;
 pub mod serializer;
 pub mod services;
 pub mod vex;
@@ -97,6 +98,7 @@ impl SbomSerializer for CycloneDxJsonSerializer {
             // image-extraction-mode signal from ScanArtifacts into the
             // builder for the C123
             // `waybill:image-extraction-completeness` metadata property.
+            .with_nix_closure_summary(scan.nix_closure_summary.cloned())
             .with_helm_extraction_mode(scan.helm_extraction_mode.copied())
             // Milestone 235 US4 — propagate the doc-scope
             // Gradle-resolution-tier signal from ScanArtifacts for the

@@ -27,7 +27,7 @@ use sha2::{Digest, Sha256};
 use crate::generate::{EmittedArtifact, OutputConfig, ScanArtifacts};
 
 use statements::{
-    OpenVexDocument, OpenVexProduct, OpenVexStatement, OpenVexStatus,
+    OpenVexDocument, OpenVexJustification, OpenVexProduct, OpenVexStatement, OpenVexStatus,
     OpenVexVulnerability, OPENVEX_CONTEXT_V0_2_0,
 };
 
@@ -40,6 +40,126 @@ pub const OPENVEX_DEFAULT_FILENAME: &str = "waybill.openvex.json";
 /// 160-bit budget as SPDX's `documentNamespace` (32 chars × 5 bits).
 const ID_HASH_PREFIX_LEN: usize = 32;
 const ID_BASE: &str = "https://waybill.kusari.dev/openvex/";
+
+/// The evidence grade every backport-derived statement carries (FR-012a).
+///
+/// Spelled into the impact statement rather than left to a separate field
+/// because OpenVEX has no grade slot, and a consumer reading only the status
+/// would otherwise see `not_affected` with no indication of what it rests on.
+fn grade_note(cve: &str, grade: &str) -> String {
+    format!(
+        "Resolved by a nixpkgs backport applied to this build. \
+         The patch-to-{cve} association is {grade}: it comes from the patch \
+         filename, which is evidence the maintainers believed this version \
+         vulnerable, but not proof the patch fully resolves the issue."
+    )
+}
+
+/// Build the two statements a backport produces (spec FR-011).
+///
+/// Two, never one. That nixpkgs applied a CVE-named patch is strong evidence
+/// somebody believed the version vulnerable; that the patch fully resolves
+/// the issue is weaker, resting on a filename. A lone `not_affected` would
+/// let a consumer suppress a real finding on the weaker half, which is the
+/// overclaim FR-009 exists to prevent.
+///
+/// They are distinguishable by subject (FR-012): the first is about the
+/// component version as published, the second about the build this document
+/// describes, with the component named as a subcomponent. That is the
+/// canonical OpenVEX shape for "my product embeds this component and is not
+/// affected", and naming the component as the *product* of the
+/// `not_affected` would instead assert the version itself is clean.
+fn backport_statements(artifacts: &ScanArtifacts<'_>) -> Vec<OpenVexStatement> {
+    use crate::scan_fs::package_db::nix::closure::emit::ANN_CLOSURE_PATCHES;
+    use crate::scan_fs::package_db::nix::closure::patches::EvidenceGrade;
+
+    let grade = EvidenceGrade::FilenameDerived.wire();
+    // Subject of the `not_affected` half: the thing being built. Without a
+    // root there is nothing to say "this build" about, so the pair is not
+    // emitted at all rather than half of it being emitted.
+    let Some(root) = artifacts
+        .components
+        .iter()
+        .find(|c| {
+            c.extra_annotations
+                .get("waybill:component-role")
+                .and_then(|v| v.as_str())
+                == Some("main-module")
+        })
+        .map(|c| c.purl.as_str().to_string())
+    else {
+        return Vec::new();
+    };
+
+    let mut by_cve: BTreeMap<String, BTreeMap<String, ()>> = BTreeMap::new();
+    for c in artifacts.components {
+        let Some(raw) = c
+            .extra_annotations
+            .get(ANN_CLOSURE_PATCHES)
+            .and_then(|v| v.as_str())
+        else {
+            continue;
+        };
+        let Ok(patches) = serde_json::from_str::<serde_json::Value>(raw) else {
+            continue;
+        };
+        for id in patches
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter_map(|p| p.get("resolves"))
+            .filter_map(|r| r.as_array())
+            .flatten()
+            .filter_map(|i| i.get("id").and_then(|v| v.as_str()))
+        {
+            by_cve
+                .entry(id.to_string())
+                .or_default()
+                .insert(c.purl.as_str().to_string(), ());
+        }
+    }
+
+    let mut out = Vec::new();
+    for (cve, purls) in by_cve {
+        let products: Vec<OpenVexProduct> = purls
+            .keys()
+            .map(|purl| OpenVexProduct {
+                id: purl.clone(),
+                identifiers: [("purl".to_string(), purl.clone())].into_iter().collect(),
+                subcomponents: Vec::new(),
+            })
+            .collect();
+        let vuln = |name: &str| OpenVexVulnerability {
+            name: name.to_string(),
+            description: None,
+            aliases: Vec::new(),
+        };
+
+        // 1. The version as published is affected.
+        out.push(OpenVexStatement {
+            vulnerability: vuln(&cve),
+            products: products.clone(),
+            status: OpenVexStatus::Affected,
+            justification: None,
+            impact_statement: Some(grade_note(&cve, grade)),
+            action_statement: None,
+        });
+        // 2. This build is not, because the patch was applied to it.
+        out.push(OpenVexStatement {
+            vulnerability: vuln(&cve),
+            products: vec![OpenVexProduct {
+                id: root.clone(),
+                identifiers: [("purl".to_string(), root.clone())].into_iter().collect(),
+                subcomponents: products,
+            }],
+            status: OpenVexStatus::NotAffected,
+            justification: Some(OpenVexJustification::VulnerableCodeNotPresent),
+            impact_statement: Some(grade_note(&cve, grade)),
+            action_statement: None,
+        });
+    }
+    out
+}
 
 /// Build the OpenVEX sidecar for a scan. Returns `Ok(None)` when the
 /// scan has zero advisories across every component — no file is
@@ -75,10 +195,16 @@ pub fn serialize_openvex(
                 .push(OpenVexProduct {
                     id: purl,
                     identifiers,
+                    subcomponents: Vec::new(),
                 });
         }
     }
-    if products_by_advisory.is_empty() {
+    // Milestone 1035 (#1034, #1040): backport-derived statements, which are
+    // the only ones waybill emits with a status stronger than
+    // `under_investigation`.
+    let backport = backport_statements(artifacts);
+
+    if products_by_advisory.is_empty() && backport.is_empty() {
         return Ok(None);
     }
 
@@ -106,6 +232,8 @@ pub fn serialize_openvex(
             }
         })
         .collect();
+    let statements: Vec<OpenVexStatement> =
+        statements.into_iter().chain(backport).collect();
 
     let author = format!("waybill-{}", cfg.mikebom_version);
     let timestamp = cfg
@@ -251,6 +379,7 @@ mod tests {
             go_workspace_mode: None,
             go_toolchains_detected: None,
             cross_ecosystem_edges_report: None,
+            nix_closure_summary: None,
             helm_extraction_mode: None,
             pants_resolve_summary: None,
             resolve_identity: None,
@@ -305,6 +434,118 @@ mod tests {
         let arts = mk_artifacts(&[], &integ);
         let result = serialize_openvex(&arts, &mk_cfg()).unwrap();
         assert!(result.is_none());
+    }
+
+    /// A closure-derived component applying one CVE-named patch, plus the
+    /// root the `not_affected` half is about.
+    fn backport_scan() -> Vec<ResolvedComponent> {
+        let mut patched = mk_component("pkg:generic/unzip@6.0");
+        patched.extra_annotations.insert(
+            crate::scan_fs::package_db::nix::closure::emit::ANN_CLOSURE_PATCHES
+                .to_string(),
+            serde_json::Value::String(
+                r#"[{"type":"backport","resolves":[{"type":"security","id":"CVE-2019-13232"}]},{"type":"backport"}]"#
+                    .to_string(),
+            ),
+        );
+        let mut root = mk_component("pkg:generic/the-build@1.0");
+        root.extra_annotations.insert(
+            "waybill:component-role".to_string(),
+            serde_json::Value::String("main-module".to_string()),
+        );
+        vec![patched, root]
+    }
+
+    fn backport_statements_of(comps: &[ResolvedComponent]) -> Vec<serde_json::Value> {
+        let integ = empty_integrity();
+        let arts = mk_artifacts(comps, &integ);
+        let artifact = serialize_openvex(&arts, &mk_cfg()).unwrap().unwrap();
+        let doc: serde_json::Value = serde_json::from_slice(&artifact.bytes).unwrap();
+        doc["statements"].as_array().unwrap().clone()
+    }
+
+    #[test]
+    fn a_backport_produces_both_statements_with_different_subjects() {
+        // Spec FR-011 / FR-012 / SC-005a. Two claims of different evidential
+        // strength: that a CVE-named patch was applied is strong evidence the
+        // version was believed vulnerable; that it fully resolves the issue
+        // rests on a filename.
+        let stmts = backport_statements_of(&backport_scan());
+        // CONTROL: statements were produced at all, so the pairing assertions
+        // below are not passing over an empty list.
+        assert_eq!(stmts.len(), 2, "{stmts:#?}");
+
+        let affected: Vec<&serde_json::Value> =
+            stmts.iter().filter(|s| s["status"] == "affected").collect();
+        let not: Vec<&serde_json::Value> =
+            stmts.iter().filter(|s| s["status"] == "not_affected").collect();
+        assert_eq!(affected.len(), 1);
+        assert_eq!(not.len(), 1);
+
+        // The subjects differ, so a consumer cannot collapse them (FR-012).
+        assert_eq!(affected[0]["products"][0]["@id"], "pkg:generic/unzip@6.0");
+        assert_eq!(not[0]["products"][0]["@id"], "pkg:generic/the-build@1.0");
+        assert_eq!(
+            not[0]["products"][0]["subcomponents"][0]["@id"],
+            "pkg:generic/unzip@6.0",
+            "the component is named as a subcomponent of the build, not as the \
+             product -- naming it as the product would assert the version \
+             itself is clean"
+        );
+        assert_eq!(not[0]["justification"], "vulnerable_code_not_present");
+    }
+
+    #[test]
+    fn neither_statement_is_emitted_without_its_grade() {
+        // FR-012a. An ungraded `not_affected` from a filename is exactly the
+        // claim FR-009 exists to prevent: a consumer could suppress a real
+        // finding on it.
+        let stmts = backport_statements_of(&backport_scan());
+        assert_eq!(stmts.len(), 2);
+        for s in &stmts {
+            let note = s["impact_statement"].as_str().unwrap_or("");
+            assert!(
+                note.contains("filename-derived"),
+                "{} statement carries no grade: {note:?}",
+                s["status"]
+            );
+        }
+    }
+
+    #[test]
+    fn a_lone_not_affected_cannot_be_emitted() {
+        // T040. The two are built together from one record, so the only way
+        // to get one without the other is to change that -- which this
+        // pins. Counted per CVE: every not_affected has an affected twin.
+        let stmts = backport_statements_of(&backport_scan());
+        let count = |st: &str| stmts.iter().filter(|s| s["status"] == st).count();
+        assert_eq!(count("not_affected"), count("affected"));
+        assert!(count("not_affected") > 0, "control: the pair exists at all");
+    }
+
+    #[test]
+    fn a_patch_naming_no_cve_produces_no_statement_either_way() {
+        // Nothing to assert about: there is no vulnerability identifier, so
+        // an `affected` would name nothing and a `not_affected` would
+        // suppress nothing.
+        let mut c = mk_component("pkg:generic/quiet@1.0");
+        c.extra_annotations.insert(
+            crate::scan_fs::package_db::nix::closure::emit::ANN_CLOSURE_PATCHES
+                .to_string(),
+            serde_json::Value::String(r#"[{"type":"backport"}]"#.to_string()),
+        );
+        let mut root = mk_component("pkg:generic/the-build@1.0");
+        root.extra_annotations.insert(
+            "waybill:component-role".to_string(),
+            serde_json::Value::String("main-module".to_string()),
+        );
+        let integ = empty_integrity();
+        let comps = [c, root];
+        let arts = mk_artifacts(&comps, &integ);
+        assert!(
+            serialize_openvex(&arts, &mk_cfg()).unwrap().is_none(),
+            "no advisories and no CVE-named patch means no sidecar"
+        );
     }
 
     #[test]

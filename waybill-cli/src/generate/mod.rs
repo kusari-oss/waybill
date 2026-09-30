@@ -211,6 +211,16 @@ pub struct ScanArtifacts<'a> {
     /// SPDX 2.3, and SPDX 3 emitters.
     pub cross_ecosystem_edges_report:
         Option<&'a cross_ecosystem_edges::CrossEcosystemEdgesReport>,
+    /// Milestone 1035 (#1034, #1040): document-scope record of a
+    /// `--nix-closure` query — the attribute evaluated, derivations seen,
+    /// counts by role, and the patch totals. Drives the C184
+    /// `waybill:nix-closure` and C183 `waybill:patch-evidence-grade`
+    /// annotations across all three formats. `None` iff the flag was absent
+    /// or the tier degraded, in which case neither annotation is emitted and
+    /// output is byte-identical to a scan without the flag.
+    pub nix_closure_summary: Option<
+        &'a crate::scan_fs::package_db::nix::closure::summary::NixClosureSummary,
+    >,
     /// Milestone 204 (#554): document-scope Helm image-extraction-mode
     /// signal driving the C123 `waybill:image-extraction-completeness`
     /// annotation. `None` when no helm reader ran during the scan
