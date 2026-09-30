@@ -40,6 +40,32 @@ impl RawDerivation {
         self.env.get("version").map(String::as_str)
     }
 
+    /// The package name, only when the derivation actually declares one.
+    ///
+    /// Distinct from [`Self::pname`], which falls back to the derivation's
+    /// own `name` so that every closure member has something to be called.
+    /// That fallback is right for emission and wrong for asking nixpkgs
+    /// questions: measured on a real closure, 447 of 823 names it produces
+    /// are patch files and fetched tarballs — `CVE-2019-13232-1.patch`,
+    /// `001-fix-rpath.patch`, bare commit hashes. Those have no `meta`, will
+    /// never be an attribute, and counting them as unreachable packages
+    /// understates coverage by more than half while measuring the wrong
+    /// thing entirely.
+    pub(crate) fn declared_pname(&self) -> Option<&str> {
+        self.env.get("pname").map(String::as_str)
+    }
+
+    /// Every output path this derivation declares.
+    ///
+    /// All of them, not the default one: a derivation commonly has `out`,
+    /// `dev`, `man` and `lib`, and an attribute's `outPath` is only ever the
+    /// default. Matching against a single arbitrarily-chosen output rejects
+    /// real matches — which is how a coverage measurement first came back at
+    /// zero.
+    pub(crate) fn output_paths(&self) -> impl Iterator<Item = &str> {
+        self.outputs.values().filter_map(|o| o.path.as_deref())
+    }
+
     /// Store paths listed in a whitespace-separated `env` field.
     pub(crate) fn paths_in(&self, field: &str) -> impl Iterator<Item = &str> {
         self.env
