@@ -212,6 +212,36 @@ mod tests {
              nothing, which is silent"
         );
         assert!(tooling > 20, "only {tooling} build-tooling members");
+
+        // SC-001: the closure contributes at least 200 components. Measured
+        // after merging build variants: 348 on one project. Counted through
+        // `emit::components` rather than from the role tallies, because the
+        // tallies are per-derivation and the emitted set is per-identity —
+        // asserting on the former would not notice the merge breaking.
+        let emitted = super::super::emit::components(&super::super::ClassifiedClosure {
+            attribute: "default".to_string(),
+            raw: closure,
+            roles,
+        });
+        eprintln!("emitted components after variant merge: {}", emitted.len());
+        assert!(
+            emitted.len() >= 200,
+            "only {} components emitted; measured is 348",
+            emitted.len()
+        );
+        // And they are distinct identities. A regression in the merge shows
+        // up here as a count that is high for the wrong reason.
+        let ids: std::collections::BTreeSet<String> = emitted
+            .iter()
+            .map(|c| format!("{}@{}", c.name, c.version))
+            .collect();
+        assert_eq!(
+            ids.len(),
+            emitted.len(),
+            "{} duplicate identities among {} emitted components",
+            emitted.len() - ids.len(),
+            emitted.len()
+        );
     }
 
     #[test]

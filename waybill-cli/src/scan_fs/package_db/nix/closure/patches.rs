@@ -355,12 +355,28 @@ mod tests {
                 eprintln!("    {} {:?} -> {:?}", cp.component, cp.version, cves);
             }
         }
+        // SC-006a. The floor is the lower of the two measured projects (14;
+        // the other recovers 18), not a round number: a name scan recovers 3
+        // and 4 on these same closures, so anything in that range means the
+        // implementation stopped joining through `env.patches` and started
+        // scanning derivation names — a silent fivefold undercount that
+        // still produces plausible-looking output.
         assert!(all.len() > 10, "only {} components apply patches", all.len());
         assert!(
-            t.distinct_cves >= 10,
-            "only {} distinct CVEs — a name scan recovers about this many, \
-             the env.patches join recovers ~5x more",
+            t.distinct_cves >= 14,
+            "only {} distinct CVEs; measured floor is 14 and a name scan \
+             recovers 3-4",
             t.distinct_cves
+        );
+        // SC-006b. Most backports name no CVE — 89% and 91% measured — and
+        // that ratio is the whole reason the count is emitted. If it ever
+        // inverts, either attribution broke or the CVE regex started
+        // matching things it should not.
+        assert!(
+            t.without_cve > t.patches / 2,
+            "{} of {} patches name no CVE; measured is ~90%",
+            t.without_cve,
+            t.patches
         );
     }
 

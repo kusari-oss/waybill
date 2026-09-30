@@ -115,7 +115,7 @@ help and docs state repository-authored expressions are evaluated.
 **Independent Test**: scan a Nix-built project and assert closure components
 appear beyond the manifest-derived set, each traceable to a classified derivation.
 
-- [ ] T017 [P] [US1] Write the failing test: at least 200 components carrying `waybill:closure-role` appear on a measured project (SC-001; baselines are 216 and 218)
+- [X] T017 [P] [US1] Write the failing test: at least 200 components carrying `waybill:closure-role` appear on a measured project (SC-001; baselines are 216 and 218)
 - [ ] T018 [P] [US1] Write the failing test: the manifest-derived set survives intact alongside the closure set (FR-003a) — GHC boot libraries and executable-stanza dependencies are absent from the closure by construction, and dropping them would discard the Haskell standard distribution
 - [X] T019 [US1] Emit artifact-input and build-tooling members as components in `closure/emit.rs`, supplementing rather than replacing
 - [X] T020 [US1] Emit C182 `waybill:closure-role` on every closure-derived component
@@ -151,8 +151,8 @@ shape as milestone 1034's safety gate preceding its resolution story.
 **Independent Test**: scan a project whose closure carries a CVE-named patch and
 assert it appears in `pedigree.patches[]` on the component that applies it.
 
-- [ ] T029 [P] [US2] Write the failing test: `CVE-2019-13232` appears in `pedigree.patches[].resolves[]` on **`unzip`** for both measured projects, and the document validates against the CycloneDX 1.6 schema (SC-004)
-- [ ] T030 [P] [US2] Write the failing test: at least 18 and 14 distinct CVEs are recovered (SC-006a). A run recovering 3 and 4 means the implementation scanned derivation names instead of joining — a silent fivefold undercount
+- [X] T029 [P] [US2] Write the failing test: `CVE-2019-13232` appears in `pedigree.patches[].resolves[]` on **`unzip`** for both measured projects, and the document validates against the CycloneDX 1.6 schema (SC-004)
+- [X] T030 [P] [US2] Write the failing test: at least 18 and 14 distinct CVEs are recovered (SC-006a). A run recovering 3 and 4 means the implementation scanned derivation names instead of joining — a silent fivefold undercount
 - [X] T031 [US2] Implement patch attribution in `closure/patches.rs` via each derivation's own `env.patches` field, resolving store-path basenames (research R7)
 - [X] T032 [US2] Extract CVE identifiers from patch basenames with the existing `regex` dep
 - [X] T033 [US2] Implement CycloneDX `pedigree.patches[]` emission in `waybill-cli/src/generate/cyclonedx/pedigree.rs` **and register it in `cyclonedx/mod.rs`** — the first use of `pedigree` in waybill, so this is new emission machinery rather than a new field on an existing path, and an unregistered module compiles to nothing
@@ -183,7 +183,7 @@ subjects and both graded.
 - [X] T043 [P] Write extractors for C182–C185 across all three formats
 - [ ] T044 [P] Implement research task **T-R2**: whether closure composition holds outside Haskell; commit the probe
 - [ ] T045 [P] Implement research task **T-R3**: cold-store cost on a clean runner; commit the probe
-- [ ] T046 Document the feature in `docs/reference/nix-evaluation.md` alongside `--nix-eval`, including the measured 89–91% no-CVE coverage limit
+- [X] T046 Document the feature in `docs/reference/nix-evaluation.md` alongside `--nix-eval`, including the measured 89–91% no-CVE coverage limit
 - [ ] T047 Verify SC-003: with the flag off, every committed corpus golden is unchanged
 - [ ] T048 Regenerate corpus goldens **in CI, not locally**, only if T047 shows legitimate churn
 - [ ] T049 Run the walker-audit grep locally if any new `fn walk`-shaped function appeared — it is not in `pre-pr.sh`
