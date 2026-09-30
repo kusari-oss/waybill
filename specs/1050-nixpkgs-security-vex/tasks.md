@@ -67,11 +67,11 @@ can be read at all.
 
 **Independent Test**: construct a scan where both speak; assert exactly one VEX statement for that CVE and the patch still present in pedigree.
 
-- [ ] T028 [P] [US2] Write the failing test for SC-005 in `waybill-cli/tests/nixpkgs_declarations.rs`: one `affected`, no `not_affected`, **and** the patch still in `pedigree.patches[]`. Assert both halves — asserting only the suppression passes equally well if the pedigree entry was dropped too
-- [ ] T029 [US2] Implement the reconciliation in `waybill-cli/src/generate/openvex/mod.rs`: when a declaration and a patch name one CVE on one component, emit the declaration's `affected` and withhold the patch-derived `not_affected` (FR-012)
-- [ ] T030 [US2] Match on (component, CVE) exactly in `waybill-cli/src/generate/openvex/mod.rs` — statements about different components or different CVEs MUST NOT reconcile against each other (FR-014), with a test for the different-component case
-- [ ] T031 [US2] Record the withheld count on `NixpkgsSecuritySummary` in `waybill-cli/src/scan_fs/package_db/nix/declarations/mod.rs` (FR-013a), so "no patch statement produced" stays distinguishable from "a patch statement withheld"
-- [ ] T032 [US2] Mutation-test the reconciliation in `waybill-cli/src/generate/openvex/mod.rs`: disable the withholding and confirm T028 fails, then restore. Assert the mutation applied **before** running the tests — a mutation run that silently did not apply reports a pass and proves nothing
+- [X] T028 [P] [US2] Write the failing test for SC-005 in `waybill-cli/tests/nixpkgs_declarations.rs`: one `affected`, no `not_affected`, **and** the patch still in `pedigree.patches[]`. Assert both halves — asserting only the suppression passes equally well if the pedigree entry was dropped too
+- [X] T029 [US2] Implement the reconciliation in `waybill-cli/src/generate/openvex/mod.rs`: when a declaration and a patch name one CVE on one component, emit the declaration's `affected` and withhold the patch-derived `not_affected` (FR-012)
+- [X] T030 [US2] Match on (component, CVE) exactly in `waybill-cli/src/generate/openvex/mod.rs` — statements about different components or different CVEs MUST NOT reconcile against each other (FR-014), with a test for the different-component case
+- [X] T031 [US2] Record the withheld count on `NixpkgsSecuritySummary` in `waybill-cli/src/scan_fs/package_db/nix/declarations/mod.rs` (FR-013a), so "no patch statement produced" stays distinguishable from "a patch statement withheld"
+- [X] T032 [US2] Mutation-test the reconciliation in `waybill-cli/src/generate/openvex/mod.rs`: disable the withholding and confirm T028 fails, then restore. Assert the mutation applied **before** running the tests — a mutation run that silently did not apply reports a pass and proves nothing
 
 **Checkpoint**: SC-005, SC-005a satisfiable.
 

@@ -146,6 +146,15 @@ pub struct NixpkgsSecuritySummary {
     /// CVE-bearing declarations, for the VEX emitter. Deliberately not on
     /// the components — see [`DeclaredFinding`].
     pub findings: Vec<DeclaredFinding>,
+    /// How many patch-derived `not_affected` statements a declaration
+    /// displaced (FR-013a).
+    ///
+    /// Emitted because silence and suppression look identical from outside.
+    /// A consumer who finds no `not_affected` for a CVE needs to know whether
+    /// none was produced or one was withheld — the second means the build
+    /// patched it and nixpkgs disagreed, which is a fact about the build
+    /// worth having.
+    pub reconciliations_withheld: usize,
 }
 
 impl NixpkgsSecuritySummary {
@@ -212,6 +221,57 @@ impl NixpkgsSecuritySummary {
         s.distinct_cves = cves.len();
         s
     }
+}
+
+/// The (component, CVE) pairs where a declaration displaces a patch-derived
+/// `not_affected` (spec FR-012).
+///
+/// One definition, used by both the emitter that withholds the statement and
+/// the record that counts the withholdings. Computing it twice would let the
+/// count drift from the behaviour it describes, and a count that disagrees
+/// with the document is worse than no count — it tells a reader the
+/// suppression happened somewhere they cannot find.
+pub(crate) fn withheld_pairs(
+    components: &[waybill_common::resolution::ResolvedComponent],
+    findings: &[DeclaredFinding],
+) -> std::collections::BTreeSet<(String, String)> {
+    use crate::scan_fs::package_db::nix::closure::emit::ANN_CLOSURE_PATCHES;
+
+    // CVEs each component's patches name, from the annotation milestone 1035
+    // stamps. Read from the component rather than re-derived, so the two
+    // features agree about what was patched by construction.
+    let mut patched: std::collections::BTreeSet<(String, String)> = Default::default();
+    for c in components {
+        let Some(raw) = c
+            .extra_annotations
+            .get(ANN_CLOSURE_PATCHES)
+            .and_then(|v| v.as_str())
+        else {
+            continue;
+        };
+        let Ok(list) = serde_json::from_str::<serde_json::Value>(raw) else {
+            continue;
+        };
+        for id in list
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter_map(|p| p.get("resolves"))
+            .filter_map(|r| r.as_array())
+            .flatten()
+            .filter_map(|i| i.get("id").and_then(|v| v.as_str()))
+        {
+            patched.insert((c.purl.as_str().to_string(), id.to_string()));
+        }
+    }
+
+    // The intersection. A declaration about one component and a patch about
+    // another are unrelated claims (FR-014) and neither displaces the other.
+    findings
+        .iter()
+        .map(|f| (f.component_purl.clone(), f.cve.clone()))
+        .filter(|k| patched.contains(k))
+        .collect()
 }
 
 /// Ask the pinned package set what it declares about this build's packages.

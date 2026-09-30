@@ -4660,13 +4660,20 @@ pub async fn execute(
                     &|pname| by_name.get(pname).cloned(),
                 )
             }) {
-                Ok(s) => {
+                Ok(mut s) => {
+                    // FR-013a. Computed here because it is a property of the
+                    // interaction between two passes, and counted through the
+                    // same helper the emitter withholds by, so the number
+                    // cannot disagree with the document.
+                    s.reconciliations_withheld =
+                        declarations::withheld_pairs(&components, &s.findings).len();
                     tracing::info!(
                         checked = s.members_checked,
                         unchecked = s.members_unchecked,
                         declarations = s.declarations_total,
                         without_cve = s.declarations_without_cve,
                         distinct_cves = s.distinct_cves,
+                        withheld = s.reconciliations_withheld,
                         "nixpkgs-declarations: what the package set says"
                     );
                     Some(s)
