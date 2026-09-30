@@ -34,6 +34,34 @@ composition snapshot; a match is a query result against a feed that moves
 daily, and baking it in produces a document that is wrong within days with no
 way to tell a stale claim from a current one. This feature emits VEX.
 
+## Clarifications
+
+### Session 2026-09-30
+
+- Q: `meta` is absent from the derivation — zero of 1,275 measured closure
+  derivations carry it — so how does waybill reach a closure member's
+  declaration? → A: Resolve a candidate nixpkgs attribute from the member's
+  `pname`, then **verify by output path** before trusting it. Accept the
+  declaration only when the candidate attribute's output path matches the
+  closure member's. Members whose attribute cannot be confirmed are recorded
+  as unchecked rather than guessed at or silently omitted.
+- Q: What is the subject of a declaration-derived VEX statement — the
+  component version, or the build? → A: The **build**, with the component as a
+  subcomponent, mirroring milestone 1035's `not_affected` shape. nixpkgs
+  describes the package as it ships it, which is what is in this build, and
+  the statement a declaration replaces under FR-012 carries that same shape.
+- Q: Opt-in flag, or automatic? → A: **Automatic under `--nix-closure`**, no
+  new flag. The operator already consented to evaluation by passing that flag,
+  and this reads the same package set for more of the same kind of
+  information. Output without `--nix-closure` stays byte-identical. The second
+  evaluation pass must be measured before the plan commits to it.
+- Q: Where does the acceptance record live? → A: **Document-scope SBOM
+  annotation.** It states how the build was configured — that someone accepted
+  a policy exception — rather than whether a vulnerability applies, which puts
+  it on the same side of the SBOM/VEX line as the prose declarations. Which
+  packages are involved is already answerable from the declaration-derived
+  statements, so this record stays coarse.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - A consumer learns what the package set itself declares (Priority: P1)
@@ -55,7 +83,8 @@ statement naming that CVE, with nixpkgs identified as the source.
 
 1. **Given** a closure containing a component nixpkgs declares insecure with a
    CVE-bearing entry, **When** the operator scans it, **Then** a VEX statement
-   names that CVE against that component.
+   names that CVE with the build as its product and that component as a
+   subcomponent.
 2. **Given** a closure whose components carry no declarations, **When** the
    operator scans it, **Then** no declaration-derived statements appear and
    output is unchanged from before this feature.
@@ -164,7 +193,7 @@ emits no declaration-derived statements, and records why.
 
 1. **Given** no usable `nix`, **When** the operator scans, **Then** the scan
    succeeds and records that declarations were not consulted, with a reason.
-2. **Given** the feature is not requested, **When** the operator scans, **Then**
+2. **Given** `--nix-closure` is absent, **When** the operator scans, **Then**
    output is byte-identical to a scan from before this feature existed.
 
 ---
@@ -178,6 +207,11 @@ emits no declaration-derived statements, and records why.
 - A declaration's text names a CVE inside prose, e.g. "CVE-2019-9501: heap
   buffer overflow, potentially allowing remote code execution". The identifier
   must be extracted without discarding the surrounding description.
+- A closure member's `pname` matches a top-level nixpkgs attribute that is a
+  *different* package. Caught by the output-path check (FR-001b); the member
+  is recorded unchecked rather than wrongly flagged.
+- A closure member lives in a nested set (`python3Packages.*`,
+  `perlPackages.*`) and has no top-level attribute. Unchecked.
 - A component in an OSV-covered language ecosystem also carries a nixpkgs
   declaration. Measured: OSV already has these with version ranges, so waybill
   adds nothing on the CVE axis and must not imply it discovered something new.
@@ -196,6 +230,24 @@ emits no declaration-derived statements, and records why.
 
 - **FR-001**: The system MUST read `meta.knownVulnerabilities` for components
   it emits from a Nix build.
+- **FR-001a**: Because `meta` is not present in a derivation — measured: zero
+  of 1,275 closure derivations carry it — the system MUST resolve a candidate
+  nixpkgs attribute from the member's `pname` and evaluate the declaration
+  there.
+- **FR-001b**: The system MUST verify a candidate attribute by comparing its
+  output path against the closure member's before accepting the declaration.
+  *Attribute names and `pname`s coincide often but not always. An unrelated
+  top-level attribute sharing a `pname` would otherwise produce a security
+  claim against the wrong component, which is worse than producing none: a
+  false `affected` sends someone to patch something that was never in the
+  build, and erodes trust in every other statement in the document.*
+- **FR-001c**: A member whose candidate attribute cannot be confirmed MUST be
+  recorded as unchecked. It MUST NOT be reported as carrying no declaration,
+  because "nixpkgs says nothing about this" and "we could not ask" are
+  different claims.
+- **FR-001d**: The count of unchecked members MUST be emitted at document
+  scope, so coverage is a number a consumer can read rather than an assumption
+  they have to make.
 - **FR-002**: The system MUST extract CVE identifiers from declaration text,
   including identifiers embedded in a longer description.
 - **FR-003**: The system MUST preserve the full declaration text, not only the
@@ -208,6 +260,16 @@ emits no declaration-derived statements, and records why.
 
 - **FR-006**: CVE-bearing declarations MUST be emitted as VEX statements, not
   as SBOM vulnerability arrays.
+- **FR-006a**: A declaration-derived statement MUST name the **build** as its
+  product, with the declared component as a subcomponent.
+  *nixpkgs describes the package as it ships it, so the claim it supports is
+  "this artifact is affected, via this component" — which is also the question
+  a consumer has. The weaker patch-derived `affected` stays version-scoped;
+  the document therefore carries two `affected` shapes, and that difference is
+  the point rather than an inconsistency.*
+- **FR-006b**: That shape MUST match the statement it replaces under FR-012,
+  so a consumer comparing a withheld `not_affected` against the `affected`
+  that displaced it is comparing like with like.
 - **FR-007**: Every declaration-derived statement MUST identify nixpkgs as the
   asserting party, distinguishably from a third-party advisory feed.
 - **FR-008**: Declaration-derived statements MUST carry an evidence grade, as
@@ -259,11 +321,22 @@ emits no declaration-derived statements, and records why.
 
 **Acceptance signal**
 
-- **FR-015**: The system MUST record that a build contains a package nixpkgs
-  marks insecure.
+- **FR-015**: The system MUST record, as a document-scope SBOM annotation,
+  that the build contains a package nixpkgs marks insecure and therefore
+  permitted it.
+  *This describes how the build was configured rather than whether a
+  vulnerability applies, which is why it belongs in the SBOM rather than in
+  VEX — the same reasoning that places the prose declarations there.*
+- **FR-015a**: The record MAY stay coarse — that at least one such package is
+  present — because which packages they are is already answerable from the
+  declaration-derived statements.
 - **FR-016**: That record MUST NOT assert that the operator named the specific
-  package, since a blanket permission cannot be distinguished from a targeted
-  one.
+  package, since a blanket permission (`NIXPKGS_ALLOW_INSECURE=1`) cannot be
+  distinguished from a targeted one.
+- **FR-016a**: Absence of the record MUST NOT be read as the build having
+  rejected anything. A build with no insecure packages and a build that was
+  never asked look identical from outside, and the wording must not imply
+  otherwise.
 
 **Scope and degradation**
 
@@ -272,8 +345,19 @@ emits no declaration-derived statements, and records why.
 - **FR-018**: The system MUST NOT query any external advisory database.
 - **FR-019**: When declarations cannot be consulted, the system MUST complete
   the scan, emit no declaration-derived statements, and record a named reason.
-- **FR-020**: When the feature is not requested, output MUST be byte-identical
-  to output from before this feature.
+- **FR-020**: When `--nix-closure` is absent, output MUST be byte-identical to
+  output from before this feature.
+- **FR-020a**: The feature MUST run automatically whenever `--nix-closure`
+  runs, with no flag of its own.
+  *The operator consented to evaluation and to executing code from the scanned
+  tree when they passed that flag; this reads the same package set for more of
+  the same kind of information, so it introduces no new consent boundary. It
+  also avoids splitting one story — what nixpkgs declares, and what the build
+  patched — across two switches.*
+- **FR-020b**: The added evaluation cost MUST be measured against a real
+  closure before implementation commits to running it unconditionally. If it
+  proves material, the decision to make it automatic is reopened rather than
+  absorbed.
 
 ### Key Entities
 
@@ -294,6 +378,9 @@ emits no declaration-derived statements, and records why.
   components yields a VEX statement for every CVE those declarations name.
 - **SC-002**: Every declaration-derived statement is attributable to nixpkgs
   and distinguishable from a patch-derived one without inspecting the text.
+- **SC-002a**: Every declaration-derived statement names the build as product
+  and the component as subcomponent, and a test asserts the shape matches the
+  `not_affected` it would displace.
 - **SC-003**: Declarations naming no CVE are visible in the output, and their
   count appears at document scope.
 - **SC-004**: For the `unzip` case — Alpine files three CVEs that Nix patches —
@@ -306,19 +393,28 @@ emits no declaration-derived statements, and records why.
   pass equally well if the patch evidence had been dropped too.
 - **SC-005a**: The count of withheld patch statements appears at document
   scope, so silence is distinguishable from suppression.
-- **SC-006**: With the feature unrequested, every committed corpus golden is
+- **SC-006**: Without `--nix-closure`, every committed corpus golden is
   unchanged.
+- **SC-006a**: The wall-clock cost the feature adds to a `--nix-closure` scan
+  is measured on a real project and recorded. A figure over roughly a fifth of
+  the existing closure-scan time reopens the automatic-by-default decision.
 - **SC-007**: With `nix` unavailable, the scan completes and names the reason.
+- **SC-007a**: Declaration coverage is reported as a count of checked versus
+  unchecked members on a measured project, so the feature's reach is a figure
+  rather than a claim. A test asserts an unchecked member is not reported as
+  declaration-free.
 - **SC-008**: No emitted SBOM gains a vulnerability array in any format.
 - **SC-009**: No scan issues a request to an external advisory database, proven
   the way milestone 1035 proved the offline refusal rather than by inspection.
 
 ## Assumptions
 
-- **Declarations require evaluation.** `meta.knownVulnerabilities` is a Nix
-  attribute, so reading it means evaluating nixpkgs. This rides on the
-  evaluation milestones 1034 and 1035 already established rather than adding a
-  new execution path, and inherits their degradation vocabulary. A
+- **Declarations require evaluation, and are not in the closure data.**
+  Measured: `meta` appears in none of the 1,275 derivations of a real closure.
+  It is eval-time nixpkgs data, so it is reached by a second evaluation
+  against the pinned package set (FR-001a–d), not by reading what
+  `--nix-closure` already collected. This rides on the evaluation milestones
+  1034 and 1035 established and inherits their degradation vocabulary. A
   file-parsing route was considered and rejected: the attribute is set by
   arbitrary Nix expressions, and grepping for it would silently miss the
   computed cases while appearing to work on the literal ones.
