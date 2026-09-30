@@ -665,6 +665,48 @@ pub struct ScanArgs {
     #[arg(long = "nix-eval", default_value_t = false)]
     pub nix_eval: bool,
 
+    /// Milestone 1035 (#1034, #1040) — emit the Nix derivation closure.
+    ///
+    /// **THIS EXECUTES THE SCANNED PROJECT'S OWN FLAKE.** `--nix-eval`
+    /// evaluates nixpkgs at a pinned revision and never runs
+    /// repository-authored expressions; this does run them, because a
+    /// derivation closure cannot be obtained without instantiating the
+    /// project's flake. Use it inside a sandbox, or only against a
+    /// flake you trust.
+    ///
+    /// What it buys: the components a Nix build actually consumed, and
+    /// the security patches nixpkgs backported without moving a version
+    /// string. Measured on two real Haskell libraries — 216 and 218
+    /// components absent from today's output, and `unzip 6.0` carrying
+    /// 11 CVEs across 26 patches that no version-keyed SBOM can express.
+    ///
+    /// Build tooling is emitted too, marked with its role, so a
+    /// consumer can filter rather than lose it. The richest
+    /// vulnerability signal in both measured closures was build
+    /// tooling.
+    ///
+    /// Defences are milestone 1034's, unchanged and now load-bearing:
+    /// pure mode, import-from-derivation refused and the refusal
+    /// verified, no `--accept-flake-config`, and a wall-clock budget.
+    ///
+    /// Default (flag omitted): no `nix` process is started at all.
+    #[arg(long = "nix-closure", default_value_t = false)]
+    pub nix_closure: bool,
+
+    /// The flake attribute whose closure to take, under
+    /// `packages.<system>`. Defaults to `default`.
+    ///
+    /// Attributes are never merged: a project exposing `default`,
+    /// `pkg-ghc910`, `pkg-ghc94` and `pkg-ghc96` builds the same library
+    /// against three compilers, and merging them would describe a build
+    /// nobody performed.
+    #[arg(
+        long = "nix-closure-attr",
+        value_name = "ATTR",
+        requires = "nix_closure"
+    )]
+    pub nix_closure_attr: Option<String>,
+
     /// The Nix platform to evaluate for, e.g. `x86_64-linux`.
     ///
     /// Defaults to the host's. Naming it matters twice: results are
@@ -6515,6 +6557,8 @@ mod tests {
             nix_eval: false,
             nix_eval_system: None,
             nix_eval_timeout_secs: None,
+            nix_closure: false,
+            nix_closure_attr: None,
             no_nixpkgs_haskell: false,
             no_nixpkgs_haskell_closure: false,
             nixpkgs_timeout_secs: 30,

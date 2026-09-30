@@ -24,9 +24,9 @@ its pre-flight, argv guard, budget and degradation reasons directly.
 
 ## Phase 1: Setup
 
-- [ ] T001 Create `waybill-cli/src/scan_fs/package_db/nix/closure/{mod,derivation,classify,patches,emit}.rs` with `pub(crate)` stubs, registered from `nix/mod.rs`
-- [ ] T002 Add `--nix-closure` and `--nix-closure-attr` to `ScanArgs` in `waybill-cli/src/cli/scan_cmd.rs` per contracts/cli-flags.md, with `requires` on the companion
-- [ ] T003 [P] Build with `cargo build --all-targets` to confirm the new clap fields compile in test helpers, not only the bin — a literal `ScanArgs` initializer exists at `scan_cmd.rs` and `--bins` alone will not catch it
+- [X] T001 Create `waybill-cli/src/scan_fs/package_db/nix/closure/{mod,derivation,classify,patches,emit}.rs` with `pub(crate)` stubs, registered from `nix/mod.rs`
+- [X] T002 Add `--nix-closure` and `--nix-closure-attr` to `ScanArgs` in `waybill-cli/src/cli/scan_cmd.rs` per contracts/cli-flags.md, with `requires` on the companion
+- [X] T003 [P] Build with `cargo build --all-targets` to confirm the new clap fields compile in test helpers, not only the bin — a literal `ScanArgs` initializer exists at `scan_cmd.rs` and `--bins` alone will not catch it
 
 ---
 
@@ -34,13 +34,13 @@ its pre-flight, argv guard, budget and degradation reasons directly.
 
 **⚠️ No user story work begins until this phase completes.**
 
-- [ ] T004 Implement the closure query in `closure/mod.rs`, reusing milestone 1034's `eval::invoke::run_bounded` and pre-flight unchanged; address the flake through the **CLI flakeref form** (`nix derivation show -r <path>#<attr>`), never `builtins.getFlake` — research R4 measured that `getFlake` on a local path requires `--impure`, which the argv guard refuses
-- [ ] T005 Wire the wall-clock budget around the closure subprocess in `closure/mod.rs`, reusing milestone 1034's pattern. One budget covers acquisition and query, for m1034's measured reason: `getFlake` fetches during evaluation and there is no seam to bound separately
-- [ ] T006 Implement attribute selection in `closure/mod.rs`: `packages.<system>.default`, operator override, degrade naming available attributes when `default` is absent (FR-015a/b)
-- [ ] T007 Implement `ClosureMember` parsing in `closure/derivation.rs`. **Output paths are stored without the `/nix/store/` prefix while `env` fields carry it** — compare basenames. Getting this wrong classifies every member as unreferenced, silently; the first classifier reported 1,275 of 1,275 that way
-- [ ] T008 [P] Implement `DerivationRole` in `closure/classify.rs` from nix's own `nativeBuildInputs`/`buildInputs` families — no name heuristics
-- [ ] T009 [P] Unit-test the basename join with a fixture where the prefix differs, asserting a non-zero classification — a test that only checks "it parsed" passes on the broken version
-- [ ] T010 [P] Unit-test role assignment against the measured split, asserting counts in the right order of magnitude rather than exact equality
+- [X] T004 Implement the closure query in `closure/mod.rs`, reusing milestone 1034's `eval::invoke::run_bounded` and pre-flight unchanged; address the flake through the **CLI flakeref form** (`nix derivation show -r <path>#<attr>`), never `builtins.getFlake` — research R4 measured that `getFlake` on a local path requires `--impure`, which the argv guard refuses
+- [X] T005 Wire the wall-clock budget around the closure subprocess in `closure/mod.rs`, reusing milestone 1034's pattern. One budget covers acquisition and query, for m1034's measured reason: `getFlake` fetches during evaluation and there is no seam to bound separately
+- [X] T006 Implement attribute selection in `closure/mod.rs`: `packages.<system>.default`, operator override, degrade naming available attributes when `default` is absent (FR-015a/b)
+- [X] T007 Implement `ClosureMember` parsing in `closure/derivation.rs`. **Output paths are stored without the `/nix/store/` prefix while `env` fields carry it** — compare basenames. Getting this wrong classifies every member as unreferenced, silently; the first classifier reported 1,275 of 1,275 that way
+- [X] T008 [P] Implement `DerivationRole` in `closure/classify.rs` from nix's own `nativeBuildInputs`/`buildInputs` families — no name heuristics
+- [X] T009 [P] Unit-test the basename join with a fixture where the prefix differs, asserting a non-zero classification — a test that only checks "it parsed" passes on the broken version
+- [X] T010 [P] Unit-test role assignment against the measured split, asserting counts in the right order of magnitude rather than exact equality
 
 **Checkpoint**: a closure can be fetched, parsed and classified. Nothing is emitted.
 
