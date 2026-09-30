@@ -96,7 +96,13 @@ nix eval --json  --option allow-import-from-derivation false --expr '<versions>'
 The expression evaluates
 `(builtins.getFlake "github:NixOS/nixpkgs/<rev>").legacyPackages.<system>`.
 The project's **own** flake is not evaluated, so expressions the scanned
-repository authors do not run. The code that does run is nixpkgs —
+repository authors do not run.
+
+> **This is true of `--nix-eval` only.** `--nix-closure` (milestone 1035) takes
+> a derivation closure, which cannot be obtained without instantiating the
+> project's flake — so under that flag, repository-authored expressions *do*
+> run. The defences below apply to both paths and become load-bearing rather
+> than precautionary under `--nix-closure`. The code that does run is nixpkgs —
 third-party, and not audited by waybill. The repository chooses which
 revision of it; that revision must be a 40-character hex object id or
 the tier declines to use it.

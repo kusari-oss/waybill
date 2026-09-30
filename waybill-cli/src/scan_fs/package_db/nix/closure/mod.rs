@@ -113,6 +113,27 @@ fn attributes_argv(flakeref: &str) -> Vec<&str> {
     ]
 }
 
+/// Decide whether the tier may run at all, before any nix process starts.
+///
+/// `--offline` refuses it, for milestone 1034's measured reason: resolving a
+/// flake reference fetches when the store lacks it, and nix's own `--offline`
+/// governs substituters rather than flake inputs. A promise of "no outbound
+/// network calls" kept only when a cache happens to be warm is not a promise.
+///
+/// Separate from [`resolve`] so the refusal is assertable without a `nix` on
+/// the bench, and so the *order* is unambiguous: this is checked first, and a
+/// refusal here means no subprocess is spawned at all.
+pub(crate) fn admission(enabled: bool, offline: bool) -> Result<(), Option<DegradationReason>> {
+    if !enabled {
+        // Not a degradation — nothing was asked for, and nothing is recorded.
+        return Err(None);
+    }
+    if offline {
+        return Err(Some(DegradationReason::OfflineRequested));
+    }
+    Ok(())
+}
+
 /// Take and classify the closure of one flake attribute.
 ///
 /// Every failure degrades. The closure supplements the manifest-derived set
@@ -204,7 +225,7 @@ mod tests {
             "the setting must be passed as false, not merely named"
         );
         assert!(
-            !argv.iter().any(|a| *a == "--impure"),
+            !argv.contains(&"--impure"),
             "getFlake on a local path needs --impure; the CLI flakeref form \
              exists precisely to avoid it"
         );
@@ -221,6 +242,29 @@ mod tests {
         assert!(guard(&closure_argv("/p#a")).is_ok());
         assert!(guard(&["derivation", "show", "--accept-flake-config"]).is_err());
         assert!(guard(&["derivation", "show", "--impure"]).is_err());
+    }
+
+    #[test]
+    fn offline_refuses_before_any_process_starts() {
+        // The refusal must precede the subprocess, not follow it. Checking
+        // after spawning would already have made the call `--offline`
+        // promised would not happen.
+        let refused = admission(true, true).unwrap_err().unwrap();
+        assert_eq!(refused.wire(), "offline-requested");
+    }
+
+    #[test]
+    fn the_flag_off_path_is_not_a_degradation() {
+        // Nothing was asked for, so nothing is recorded — distinct from
+        // asking and being refused, which a consumer must be able to tell
+        // apart.
+        assert!(admission(false, false).unwrap_err().is_none());
+        assert!(admission(false, true).unwrap_err().is_none());
+    }
+
+    #[test]
+    fn enabled_and_online_is_admitted() {
+        assert!(admission(true, false).is_ok());
     }
 
     #[test]

@@ -4384,6 +4384,71 @@ pub async fn execute(
         None
     };
 
+    // Milestone 1035 (#1034, #1040) — the derivation closure.
+    //
+    // Runs after the manifest-derived set exists, because it supplements that
+    // set rather than replacing it (spec FR-003a): the manifest covers every
+    // cabal stanza while a closure covers only what its attribute builds, and
+    // GHC boot libraries live inside the compiler derivation rather than
+    // beside it. Measured — treating closure-absence as evidence a component
+    // is spurious would discard the Haskell standard distribution.
+    let nix_closure = {
+        use scan_fs::package_db::nix::closure;
+        match closure::admission(args.nix_closure, offline) {
+            Err(None) => None,
+            Err(Some(reason)) => {
+                tracing::info!(
+                    reason = reason.wire(),
+                    "nix-closure: skipped before any nix process started"
+                );
+                Some(Err(reason))
+            }
+            Ok(()) => {
+                let cfg = closure::ClosureConfig::from_flags(
+                    args.nix_closure_attr.clone(),
+                    None,
+                );
+                // The platform must be explicit for evaluation to stay pure;
+                // `builtins.currentSystem` does not exist in pure mode.
+                let system = scan_fs::package_db::nix::eval::invoke::detect_host_system(
+                    cfg.budget,
+                );
+                Some(match system {
+                    Ok(sys) => closure::resolve(&root_path, &sys, &cfg).inspect(|c| {
+                        tracing::info!(
+                            attribute = %c.attribute,
+                            derivations = c.raw.derivations.len(),
+                            roles = ?c.role_counts(),
+                            "nix-closure: classified"
+                        );
+                    }),
+                    Err(reason) => Err(reason),
+                })
+            }
+        }
+    };
+    match &nix_closure {
+        Some(Err(reason)) => tracing::info!(
+            reason = reason.wire(),
+            detail = %reason,
+            "nix-closure: degrading; the manifest-derived set is unaffected"
+        ),
+        Some(Ok(classified)) => {
+            // Supplement, never replace (FR-003a). Appending leaves the
+            // manifest-derived set exactly as it was, which is what the
+            // measurement requires: boot libraries and other-stanza
+            // dependencies are absent from any single attribute's closure.
+            let added = scan_fs::package_db::nix::closure::emit::components(classified);
+            tracing::info!(
+                added = added.len(),
+                existing = components.len(),
+                "nix-closure: supplementing the manifest-derived set"
+            );
+            components.extend(added);
+        }
+        None => {}
+    }
+
     let nixpkgs_haskell_summary = {
         use scan_fs::package_db::nix::haskell_packages as nhp;
         let source = nhp::fetch::HttpSource::new(args.nixpkgs_timeout_secs);

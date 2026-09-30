@@ -15,12 +15,10 @@ directions.
 **Phases 1–2 are done and committed; 10 of 50 tasks.** Resume at **T011**, the
 first task of Phase 3.
 
-**The tree does not pass `cargo clippy -D warnings`, and that is expected.**
-Every type in `scan_fs/package_db/nix/closure/` is dead code, because only
-emission connects the module to the scan pipeline and emission is Phase 4.
-The chain is parse → classify → query → *emit*, and nothing before the last
-link has a caller. Do not "fix" this by deleting types or adding
-`#[allow(dead_code)]`; it clears when Phase 4 lands. No PR before then.
+**The tree passes `cargo clippy -D warnings`** as of the Phase 3/4 commit.
+It did not before: every type was dead until emission gave the module a
+caller, which is why the chain parse → classify → query → *emit* had to reach
+its last link before the gate could pass.
 
 What exists and passes (12 unit tests):
 
@@ -101,12 +99,12 @@ outstanding.
 **Independent Test**: assert the argv guard applies on this path, and that the
 help and docs state repository-authored expressions are evaluated.
 
-- [ ] T011 [P] [US5] Write the failing test: the closure query's argv passes `argv_is_safe`, in `waybill-cli/src/scan_fs/package_db/nix/closure/mod.rs` tests
-- [ ] T012 [US5] Route every closure invocation through the milestone-1034 argv guard in `closure/mod.rs`
-- [ ] T013 [US5] Verify the guard has teeth here: add `--accept-flake-config` to the closure argv, confirm T011 fails, restore. A flake can request `allow-import-from-derivation` via `nixConfig` and slack-web does
-- [ ] T014 [US5] Write the failing test: `--offline --nix-closure` starts **no** nix process and degrades with `offline-requested`, mirroring m1034's test. The closure query resolves the flake through nix, which fetches when the store lacks it — a promise of no outbound calls kept only when a cache happens to be warm is not one
-- [ ] T015 [US5] Write the `--nix-closure` help text stating it evaluates the **project's own flake**, with the sandbox-or-trusted-flake guidance, in `waybill-cli/src/cli/scan_cmd.rs`
-- [ ] T016 [US5] Correct `docs/reference/nix-evaluation.md`, which states the project's own flake is not evaluated — true of `--nix-eval`, false here (FR-017)
+- [X] T011 [P] [US5] Write the failing test: the closure query's argv passes `argv_is_safe`, in `waybill-cli/src/scan_fs/package_db/nix/closure/mod.rs` tests
+- [X] T012 [US5] Route every closure invocation through the milestone-1034 argv guard in `closure/mod.rs`
+- [X] T013 [US5] Verify the guard has teeth here: add `--accept-flake-config` to the closure argv, confirm T011 fails, restore. A flake can request `allow-import-from-derivation` via `nixConfig` and slack-web does
+- [X] T014 [US5] Write the failing test: `--offline --nix-closure` starts **no** nix process and degrades with `offline-requested`, mirroring m1034's test. The closure query resolves the flake through nix, which fetches when the store lacks it — a promise of no outbound calls kept only when a cache happens to be warm is not one
+- [X] T015 [US5] Write the `--nix-closure` help text stating it evaluates the **project's own flake**, with the sandbox-or-trusted-flake guidance, in `waybill-cli/src/cli/scan_cmd.rs`
+- [X] T016 [US5] Correct `docs/reference/nix-evaluation.md`, which states the project's own flake is not evaluated — true of `--nix-eval`, false here (FR-017)
 
 **Checkpoint**: the risk is stated before anything acts on it.
 
@@ -119,9 +117,9 @@ appear beyond the manifest-derived set, each traceable to a classified derivatio
 
 - [ ] T017 [P] [US1] Write the failing test: at least 200 components carrying `waybill:closure-role` appear on a measured project (SC-001; baselines are 216 and 218)
 - [ ] T018 [P] [US1] Write the failing test: the manifest-derived set survives intact alongside the closure set (FR-003a) — GHC boot libraries and executable-stanza dependencies are absent from the closure by construction, and dropping them would discard the Haskell standard distribution
-- [ ] T019 [US1] Emit artifact-input and build-tooling members as components in `closure/emit.rs`, supplementing rather than replacing
-- [ ] T020 [US1] Emit C182 `waybill:closure-role` on every closure-derived component
-- [ ] T021 [US1] Suppress `Unreferenced` members **except** any that apply a patch (FR-004a) — research R8: `jq` and `lua` are `neither` and carry 6 of moat's 18 CVEs
+- [X] T019 [US1] Emit artifact-input and build-tooling members as components in `closure/emit.rs`, supplementing rather than replacing
+- [X] T020 [US1] Emit C182 `waybill:closure-role` on every closure-derived component
+- [X] T021 [US1] Suppress `Unreferenced` members **except** any that apply a patch (FR-004a) — research R8: `jq` and `lua` are `neither` and carry 6 of moat's 18 CVEs
 - [ ] T022 [US1] Emit C184 `waybill:nix-closure` at document scope: attribute, derivation count, per-role counts (FR-018)
 - [ ] T023 [P] [US1] Write the failing test for SC-009: scanning one project twice with `default` and with a named attribute produces **different** documents. An override that silently ignored its argument passes every other test here
 - [ ] T024 [US1] Assert the flag-off path starts no nix process and emits none of C182–C184
