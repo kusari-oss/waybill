@@ -217,9 +217,20 @@ emits no declaration-derived statements, and records why.
   vulnerable" is a different and stronger kind of evidence than a filename
   containing a CVE identifier, and a consumer weighing the two must be able to
   tell them apart.
-- **FR-010**: Prose declarations MUST reach the output rather than being
-  dropped for lacking an identifier. [NEEDS CLARIFICATION: see Q1 — which
-  carrier]
+- **FR-010**: Prose declarations MUST be emitted as a per-component SBOM
+  annotation, not as VEX.
+  *These are composition facts, not match results. "Vendors Electron 2.0" and
+  "Includes vulnerable versions of bundled libraries: openssl, ffmpeg, gdal,
+  and proj" each say the same thing: there are components inside this one that
+  the SBOM does not list. That is nixpkgs reporting the component graph is
+  incomplete, which is what an SBOM is for, and it does not breach the rule
+  against putting match results in an SBOM because no match was performed. The
+  rejected alternative was a VEX statement carrying a synthetic identifier,
+  which would mean fabricating a vulnerability ID and emitting invalid
+  OpenVEX.*
+- **FR-010a**: The annotation MUST carry the declaration text verbatim. The
+  value of these entries is the maintainer's own words; paraphrasing or
+  reducing them to a flag would discard what makes them worth emitting.
 - **FR-011**: The count of declarations that named no CVE MUST be recorded at
   document scope, so a consumer can tell partial coverage from absence — the
   same reason milestone 1035 records the equivalent figure for patches.
@@ -227,10 +238,22 @@ emits no declaration-derived statements, and records why.
 **Reconciling with patch evidence**
 
 - **FR-012**: When a nixpkgs declaration and a milestone-1035 patch statement
-  concern the same CVE on the same component, the system MUST apply a stated,
-  deterministic rule. [NEEDS CLARIFICATION: see Q2 — which rule]
-- **FR-013**: Neither source MUST be silently discarded by that rule. A
-  consumer MUST be able to see that both spoke.
+  concern the same CVE on the same component, the declaration MUST win in VEX:
+  the system emits `affected` from the declaration and MUST NOT emit the
+  patch-derived `not_affected` for that CVE.
+  *A first-party maintainer statement that a version is vulnerable outranks a
+  CVE identifier read out of a patch filename. Emitting a `not_affected`
+  against an explicit contrary declaration would let a consumer dismiss a real
+  finding on the weaker of two pieces of evidence, which is precisely the
+  overclaim the graded two-statement model exists to prevent.*
+- **FR-013**: Suppressing that statement MUST NOT lose the patch evidence. The
+  patch remains recorded in the component's pedigree, which milestone 1035
+  emits independently of VEX, so the fact that this build applied a patch
+  named for that CVE stays visible to anyone reading the SBOM. What is
+  withheld is only the *suppression*, not the *evidence*.
+- **FR-013a**: The system MUST record at document scope that a reconciliation
+  occurred and how many times, so a consumer can tell "no patch statement was
+  produced" from "a patch statement was withheld".
 - **FR-014**: Statements concerning different components, or different CVEs,
   MUST NOT be reconciled against each other.
 
@@ -276,9 +299,13 @@ emits no declaration-derived statements, and records why.
 - **SC-004**: For the `unzip` case — Alpine files three CVEs that Nix patches —
   a consumer reading waybill output can determine that this build applied
   patches named for those CVEs, without consulting another distro's data.
-- **SC-005**: A CVE claimed by both a declaration and a patch produces output a
-  consumer can act on, with both sources visible; a test asserts neither is
-  dropped.
+- **SC-005**: A CVE claimed by both a declaration and a patch yields exactly
+  one VEX statement for that CVE on that component — `affected`, from the
+  declaration — while the patch remains present in that component's pedigree.
+  A test asserts both halves, because asserting only the suppression would
+  pass equally well if the patch evidence had been dropped too.
+- **SC-005a**: The count of withheld patch statements appears at document
+  scope, so silence is distinguishable from suppression.
 - **SC-006**: With the feature unrequested, every committed corpus golden is
   unchanged.
 - **SC-007**: With `nix` unavailable, the scan completes and names the reason.
@@ -309,6 +336,13 @@ emits no declaration-derived statements, and records why.
   provenance could be distinguished rather than conflated.
 - Milestone 1035's patch-derived statements are the substrate; this feature
   adds a second source to them rather than replacing them.
+- **Prose declarations belong in the SBOM, not in VEX** (FR-010). Settled
+  2026-09-30. They describe what is inside a component rather than asserting
+  anything about a vulnerability's applicability, so the SBOM is their home
+  and no identifier has to be invented to carry them.
+- **A declaration outranks a patch filename** (FR-012). Settled 2026-09-30.
+  The suppression is withheld; the evidence is not, because pedigree carries
+  the patch regardless of what VEX says.
 
 ## Out of Scope
 

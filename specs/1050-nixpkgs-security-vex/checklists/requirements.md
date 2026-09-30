@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [x] No [NEEDS CLARIFICATION] markers remain
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -31,9 +31,18 @@
 
 ## Notes
 
-**Two markers remain, both deliberate.** Each is a decision with more than one
-defensible answer and materially different consequences, which is what the
-marker is for. Both are posed to the maintainer below rather than guessed.
+**Both markers resolved by the maintainer, 2026-09-30.**
+
+- *Where do prose declarations go?* Per-component SBOM annotation (FR-010).
+  They are composition facts — each one says there are components inside this
+  one that the SBOM does not list — so the SBOM is their home, and nothing has
+  to be fabricated to carry them. The rejected alternative needed a synthetic
+  vulnerability identifier and would have produced invalid OpenVEX.
+- *Declaration versus patch on one CVE?* The declaration wins in VEX
+  (FR-012). The patch-derived `not_affected` is withheld, but the patch itself
+  stays in pedigree, so what is suppressed is the suppression and not the
+  evidence. A count at document scope keeps silence distinguishable from
+  suppression.
 
 **Every measured number in this spec is traceable** to
 `measurements/README.md`, which carries the probes. Nothing here is derived
