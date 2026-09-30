@@ -278,6 +278,42 @@ in builtins.listToAttrs (map (n: {{ name = n; value = ver n; }}) [ {list} ])"#
     )
 }
 
+/// The argv for the resolving call.
+///
+/// One definition, used by the invocation and asserted on by tests — two would
+/// drift, and the drift would be invisible.
+fn resolving_argv(expr: &str) -> Vec<&str> {
+    vec![
+        "eval",
+        "--json",
+        "--option",
+        preflight::IFD_SETTING,
+        "false",
+        "--expr",
+        expr,
+    ]
+}
+
+/// Flags that would hand control of evaluation settings back to the flake.
+const UNSAFE_FLAGS: &[&str] = &["--accept-flake-config", "--impure"];
+
+/// Is this argv safe for evaluating expressions we do not control?
+///
+/// Two ways the safety model can be lost without any visible change in output:
+///
+/// * `--accept-flake-config` lets the scanned flake set nix options, including
+///   the import-from-derivation refusal this tier depends on; and
+/// * `--impure` restores access to the host environment.
+///
+/// Both are one careless argument away, and neither failure is observable in
+/// an emitted document — hence a check rather than a comment.
+///
+/// Checked at the point of use rather than only in a test: a guard that runs
+/// only under `cargo test` does not guard the code that ships.
+fn argv_is_safe(argv: &[&str]) -> bool {
+    !argv.iter().any(|a| UNSAFE_FLAGS.contains(a))
+}
+
 /// The production [`super::Evaluator`], which actually runs `nix`.
 pub(crate) struct NixEvaluator;
 
@@ -325,18 +361,33 @@ impl super::Evaluator for NixEvaluator {
             });
         }
         let expr = versions_expr(revision, system, &safe);
-        let out = run_bounded(
-            &[
-                "eval",
-                "--json",
-                "--option",
-                preflight::IFD_SETTING,
-                "false",
-                "--expr",
-                &expr,
-            ],
-            budget,
-        )?;
+        let argv = resolving_argv(&expr);
+        if !argv_is_safe(&argv) {
+            // Unreachable unless someone edits `resolving_argv`. That is
+            // exactly the edit this catches, and the consequence — a scanned
+            // flake choosing nix's evaluation settings — is invisible in every
+            // emitted document, so it degrades rather than proceeds.
+            return Err(DegradationReason::EvaluationFailed(
+                "refusing to evaluate: the nix invocation would hand \
+                 evaluation settings to the scanned flake"
+                    .to_string(),
+            ));
+        }
+        // NOTE: `--accept-flake-config` MUST NOT appear here.
+        //
+        // A flake can ask nix to change evaluation settings via its own
+        // `nixConfig`, including `allow-import-from-derivation`. Nix ignores
+        // such settings as untrusted *unless* `--accept-flake-config` is
+        // passed — at which point the flake's value wins and the refusal below
+        // is silently defeated. Measured: a fixture flake setting
+        // `nixConfig.allow-import-from-derivation = true` is refused by this
+        // invocation and builds its derivation when `--accept-flake-config` is
+        // added.
+        //
+        // Real flakes do carry these settings — slack-web sets
+        // `allow-import-from-derivation` and `extra-substituters` — so this is
+        // not hypothetical. `argv_is_safe` enforces it.
+        let out = run_bounded(&argv, budget)?;
         if !out.status_success {
             let stderr = out.stderr.trim();
             // A flake that exposes nothing evaluable is a degradation, not an
@@ -402,18 +453,22 @@ mod expr_tests {
         }
     }
 
-    /// The argv the resolving call is built from, so a test can assert on it
-    /// without running `nix`.
-    fn resolving_argv(expr: &str) -> Vec<&str> {
-        vec![
-            "eval",
-            "--json",
-            "--option",
-            preflight::IFD_SETTING,
-            "false",
-            "--expr",
-            expr,
-        ]
+    #[test]
+    fn the_resolving_argv_never_hands_settings_back_to_the_flake() {
+        // A flake's own `nixConfig` can ask for
+        // `allow-import-from-derivation = true`. Nix ignores that as untrusted
+        // unless `--accept-flake-config` is passed, at which point the flake
+        // wins and this tier's central safety control is defeated with no
+        // change visible in any emitted document.
+        //
+        // Measured against a fixture flake carrying that setting: refused by
+        // our argv, built when `--accept-flake-config` was added. Real flakes
+        // do carry it.
+        assert!(argv_is_safe(&resolving_argv("<expr>")));
+
+        // The guard has teeth in both directions.
+        assert!(!argv_is_safe(&["eval", "--accept-flake-config"]));
+        assert!(!argv_is_safe(&["eval", "--impure"]));
     }
 
     #[test]
