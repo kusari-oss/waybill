@@ -116,13 +116,13 @@ help and docs state repository-authored expressions are evaluated.
 appear beyond the manifest-derived set, each traceable to a classified derivation.
 
 - [X] T017 [P] [US1] Write the failing test: at least 200 components carrying `waybill:closure-role` appear on a measured project (SC-001; baselines are 216 and 218)
-- [ ] T018 [P] [US1] Write the failing test: the manifest-derived set survives intact alongside the closure set (FR-003a) — GHC boot libraries and executable-stanza dependencies are absent from the closure by construction, and dropping them would discard the Haskell standard distribution
+- [X] T018 [P] [US1] Write the failing test: the manifest-derived set survives intact alongside the closure set (FR-003a) — GHC boot libraries and executable-stanza dependencies are absent from the closure by construction, and dropping them would discard the Haskell standard distribution
 - [X] T019 [US1] Emit artifact-input and build-tooling members as components in `closure/emit.rs`, supplementing rather than replacing
 - [X] T020 [US1] Emit C182 `waybill:closure-role` on every closure-derived component
 - [X] T021 [US1] Suppress `Unreferenced` members **except** any that apply a patch (FR-004a) — research R8: `jq` and `lua` are `neither` and carry 6 of moat's 18 CVEs
 - [X] T022 [US1] Emit C184 `waybill:nix-closure` at document scope: attribute, derivation count, per-role counts (FR-018)
 - [ ] T023 [P] [US1] Write the failing test for SC-009: scanning one project twice with `default` and with a named attribute produces **different** documents. An override that silently ignored its argument passes every other test here
-- [ ] T024 [US1] Assert the flag-off path starts no nix process and emits none of C182–C184
+- [X] T024 [US1] Assert the flag-off path starts no nix process and emits none of C182–C184
 
 **Checkpoint**: SC-001 and SC-002 satisfiable. US5 + US1 is the minimum shippable pair.
 

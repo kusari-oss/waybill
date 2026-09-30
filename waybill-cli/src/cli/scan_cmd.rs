@@ -4427,47 +4427,6 @@ pub async fn execute(
             }
         }
     };
-    match &nix_closure {
-        Some(Err(reason)) => tracing::info!(
-            reason = reason.wire(),
-            detail = %reason,
-            "nix-closure: degrading; the manifest-derived set is unaffected"
-        ),
-        Some(Ok(classified)) => {
-            // Supplement, never replace (FR-003a). Appending leaves the
-            // manifest-derived set exactly as it was, which is what the
-            // measurement requires: boot libraries and other-stanza
-            // dependencies are absent from any single attribute's closure.
-            let added = scan_fs::package_db::nix::closure::emit::components(classified);
-            tracing::info!(
-                added = added.len(),
-                existing = components.len(),
-                "nix-closure: supplementing the manifest-derived set"
-            );
-            components.extend(added);
-        }
-        None => {}
-    }
-    // The document-scope record (FR-018). Built only on the success path, so
-    // a degraded tier emits no counts rather than zeros — a zero would read
-    // as "the closure held nothing", which is a different claim.
-    let nix_closure_summary = match &nix_closure {
-        Some(Ok(classified)) => {
-            use scan_fs::package_db::nix::closure;
-            let patched = closure::patches::attribute(&classified.raw);
-            let summary =
-                closure::summary::NixClosureSummary::build(classified, &patched);
-            tracing::info!(
-                patches = summary.patches,
-                without_cve = summary.patches_without_cve,
-                distinct_cves = summary.distinct_cves,
-                "nix-closure: patch attribution"
-            );
-            Some(summary)
-        }
-        _ => None,
-    };
-
     let nixpkgs_haskell_summary = {
         use scan_fs::package_db::nix::haskell_packages as nhp;
         let source = nhp::fetch::HttpSource::new(args.nixpkgs_timeout_secs);
@@ -4618,6 +4577,56 @@ pub async fn execute(
             "nixpkgs-haskell: version resolution complete"
         );
     }
+
+    // Milestone 1035 (#1034, #1040) — insert the closure's contribution.
+    //
+    // Deliberately after the nixpkgs-haskell enrichment rather than beside
+    // the closure query above. That enrichment assigns versions and rewrites
+    // dependency-edge endpoints, and running before it meant the closure's
+    // components were present, versionless-adjacent and name-matchable while
+    // it worked. Measured: 41 components that a flag-off scan emitted as
+    // `pkg:hackage/QuickCheck@2.15.0.1` came out of a flag-on scan as
+    // `pkg:generic/QuickCheck@2.15.0.1` -- enabling the closure *downgraded*
+    // precise PURLs to the generic fallback the closure uses because
+    // `pkg:nix` is not a purl-spec type. More information, emphatically not
+    // less, is the whole point of the tier.
+    match &nix_closure {
+        Some(Err(reason)) => tracing::info!(
+            reason = reason.wire(),
+            detail = %reason,
+            "nix-closure: degrading; the manifest-derived set is unaffected"
+        ),
+        Some(Ok(classified)) => {
+            let added = scan_fs::package_db::nix::closure::emit::components(classified);
+            let (merged, appended) = merge_closure_components(&mut components, added);
+            tracing::info!(
+                appended,
+                merged,
+                existing = components.len() - appended,
+                "nix-closure: supplementing the manifest-derived set"
+            );
+        }
+        None => {}
+    }
+    // The document-scope record (FR-018). Built only on the success path, so
+    // a degraded tier emits no counts rather than zeros -- a zero would read
+    // as "the closure held nothing", which is a different claim.
+    let nix_closure_summary = match &nix_closure {
+        Some(Ok(classified)) => {
+            use scan_fs::package_db::nix::closure;
+            let patched = closure::patches::attribute(&classified.raw);
+            let summary =
+                closure::summary::NixClosureSummary::build(classified, &patched);
+            tracing::info!(
+                patches = summary.patches,
+                without_cve = summary.patches_without_cve,
+                distinct_cves = summary.distinct_cves,
+                "nix-closure: patch attribution"
+            );
+            Some(summary)
+        }
+        _ => None,
+    };
 
     // `orphan`. `full` mode forwards an empty `DedupeIndex` so every
     // surviving content-shape match emits regardless of coverage.
@@ -5505,6 +5514,65 @@ impl AdvisoryContext {
             && self.warm_flag_was_default
             && self.fallback_count.map(|n| n > 0).unwrap_or(false)
     }
+}
+
+/// Fold the closure's components into the manifest-derived set.
+///
+/// Spec FR-003a says the closure supplements and never replaces. A plain
+/// append satisfies the letter of that and breaks its intent: the closure
+/// identifies members as `pkg:generic/<name>@<version>`, because `pkg:nix`
+/// is not a purl-spec type and a wrong-but-well-formed PURL would be worse
+/// than a generic one. Appending a generic twin beside an existing
+/// `pkg:hackage/...` leaves the document asserting two identities for one
+/// package.
+///
+/// So a closure member that matches something already present by
+/// `(name, version)` contributes its annotations to that component -- the
+/// role, and any patches it applies -- and does not become a second entry.
+/// The existing PURL is kept, since the reader that produced it knew the
+/// ecosystem and the closure does not. Only members nothing else found are
+/// appended, which is where the tier's value actually is: the C toolchain,
+/// the build tooling, and the patches applied to them.
+///
+/// Matching is on `(name, version)` and not on name alone. A design-tier
+/// component whose version never resolved therefore does not absorb a
+/// closure member of the same name: measured, one of 370 components comes
+/// out as both `pkg:hackage/os-string` (design, no version) and
+/// `pkg:generic/os-string@2.0.10` (build). Those are two different
+/// observations -- what the manifest declares, and what the build used --
+/// and collapsing them would assert the manifest resolved something it did
+/// not. Folding design into build is the reconciler's kind of job, not this
+/// function's; the milestone-191 reconciler folds design into *source* and
+/// deliberately leaves build alone.
+///
+/// Returns `(merged, appended)`.
+fn merge_closure_components(
+    components: &mut Vec<waybill_common::resolution::ResolvedComponent>,
+    added: Vec<waybill_common::resolution::ResolvedComponent>,
+) -> (usize, usize) {
+    let index: std::collections::HashMap<(String, String), usize> = components
+        .iter()
+        .enumerate()
+        .map(|(i, c)| ((c.name.clone(), c.version.clone()), i))
+        .collect();
+    let (mut merged, mut appended) = (0usize, 0usize);
+    for c in added {
+        match index.get(&(c.name.clone(), c.version.clone())) {
+            Some(&i) => {
+                for (k, v) in c.extra_annotations {
+                    // The existing component's own annotations win: it was
+                    // produced by a reader that knew the ecosystem.
+                    components[i].extra_annotations.entry(k).or_insert(v);
+                }
+                merged += 1;
+            }
+            None => {
+                components.push(c);
+                appended += 1;
+            }
+        }
+    }
+    (merged, appended)
 }
 
 #[cfg(test)]

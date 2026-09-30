@@ -227,6 +227,22 @@ Each component carries `waybill:closure-role`:
 | `build-tooling` | Reached through `nativeBuildInputs` — builds it, is not part of it |
 | `both` | Referenced both ways |
 
+A closure member that the manifest readers already found contributes its
+role and patches to that component rather than becoming a second entry —
+the closure identifies members as `pkg:generic/<name>@<version>`, since
+`pkg:nix` is not a purl-spec type, and a generic twin beside an existing
+`pkg:hackage/…` would leave the document asserting two identities for one
+package. Measured on one project: 32 members merged that way and 316 were
+genuinely new.
+
+One residue is left deliberately. Matching is on name *and* version, so a
+component whose version never resolved does not absorb a closure member of
+the same name — measured, one of 370 components appears as both
+`pkg:hackage/os-string` (design tier, no version) and
+`pkg:generic/os-string@2.0.10` (build tier). Those are two different
+observations, what the manifest declares and what the build used, and
+collapsing them would assert the manifest resolved something it did not.
+
 Members referenced by neither are not emitted, with one exception: those
 that apply a patch are. Measured, `jq` and `lua` are unreferenced in one
 project's closure and carry 6 of its 18 CVEs, so dropping them would leave
