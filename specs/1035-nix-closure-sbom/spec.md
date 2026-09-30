@@ -402,7 +402,7 @@ are evaluated, and that the existing guard refusing `--accept-flake-config` and
   3 and 4 indicates the implementation is scanning derivation names instead of
   the join, which is a silent fivefold undercount.
 - **SC-006b**: The emitted patch total and no-CVE count match the closure. On
-  slack-web that is 320 patches of which 279 name no CVE — so roughly 87% of
+  slack-web that is 169 patches of which 153 name no CVE — so roughly 91% of
   backports carry no CVE in their filename, and a consumer reading only VEX
   statements sees a minority of the patching that occurred. This is the figure
   that makes the coverage limit legible.

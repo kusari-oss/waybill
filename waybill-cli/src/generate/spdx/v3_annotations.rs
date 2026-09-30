@@ -29,6 +29,7 @@ use waybill_common::attestation::metadata::GenerationContext;
 use waybill_common::resolution::{ResolutionTechnique, ResolvedComponent};
 
 use super::annotations::{coerce_envelope_value, MikebomAnnotationCommentV1};
+use crate::scan_fs::package_db::nix::closure::summary as closure_summary;
 use crate::generate::ScanArtifacts;
 
 /// Build the `Annotation` elements for component-level waybill
@@ -906,6 +907,18 @@ fn push_document_fields(
     // non-Helm scans per FR-004 (annotation absent when `None`).
     if let Some(mode) = scan.helm_extraction_mode {
         push(out, "waybill:image-extraction-completeness", json!(mode.as_wire_str()));
+    }
+
+    // Milestone 1035 (#1034, #1040): C184 doc-scope record of the
+    // `--nix-closure` query, and C183 the grade of the CVE associations it
+    // produced. The C184 value is the same canonical string every format
+    // carries, so the parity row compares equal without compensation.
+    // Both absent when the flag is off or the tier degraded.
+    if let Some(summary) = scan.nix_closure_summary {
+        push(out, closure_summary::ANN_NIX_CLOSURE, json!(summary.nix_closure_wire()));
+        if let Some(grade) = summary.patch_evidence_grade_value() {
+            push(out, closure_summary::ANN_PATCH_EVIDENCE_GRADE, grade);
+        }
     }
 
     // Milestone 235 US4: C146 doc-scope Gradle-resolution-tier

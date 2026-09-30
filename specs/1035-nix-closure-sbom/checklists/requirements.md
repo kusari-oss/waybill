@@ -62,8 +62,17 @@ same reasons, plus one new:
 
 3. **"Success criteria are measurable"** — every SC cites a measured figure
    except SC-005 and SC-007, which assert the existence of a property rather
-   than a threshold. SC-006's 40 and 46 are derived from the measured 43/50
-   patches minus 3/4 CVE-named.
+   than a threshold.
+
+   SC-006's figures were originally **40 and 46**, obtained by subtracting the
+   CVE-named patches from a name-scanning count — derived arithmetic presented
+   as measurement, which the repository rule forbids. Implementation measured
+   the join directly and found 167 of 187 on moat and 153 of 169 on slack-web,
+   after merging the build variants that list one component twice. The spec,
+   the emission contract and tasks.md now carry the measured figures. The
+   original numbers are recorded here rather than silently replaced, since the
+   gap between them is the point: the derivation undercounted by roughly
+   fourfold and read as plausible throughout.
 
 4. **The load-bearing unknown was measured rather than assumed.** SC-001
    originally claimed "more components" without knowing whether the closure's

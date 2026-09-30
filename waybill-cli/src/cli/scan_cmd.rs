@@ -4448,6 +4448,25 @@ pub async fn execute(
         }
         None => {}
     }
+    // The document-scope record (FR-018). Built only on the success path, so
+    // a degraded tier emits no counts rather than zeros — a zero would read
+    // as "the closure held nothing", which is a different claim.
+    let nix_closure_summary = match &nix_closure {
+        Some(Ok(classified)) => {
+            use scan_fs::package_db::nix::closure;
+            let patched = closure::patches::attribute(&classified.raw);
+            let summary =
+                closure::summary::NixClosureSummary::build(classified, &patched);
+            tracing::info!(
+                patches = summary.patches,
+                without_cve = summary.patches_without_cve,
+                distinct_cves = summary.distinct_cves,
+                "nix-closure: patch attribution"
+            );
+            Some(summary)
+        }
+        _ => None,
+    };
 
     let nixpkgs_haskell_summary = {
         use scan_fs::package_db::nix::haskell_packages as nhp;
@@ -4855,6 +4874,7 @@ pub async fn execute(
         // Milestone 204 (#554): doc-scope helm image-extraction-mode
         // signal for the C123 annotation.
         helm_extraction_mode: helm_extraction_mode.as_ref(),
+        nix_closure_summary: nix_closure_summary.as_ref(),
         pants_resolve_summary,
         // The unsplit document represents every resolve rather than one, so
         // it has no identity to state (FR-008). The split sets this per

@@ -39,6 +39,38 @@ pub(crate) enum DerivationRole {
 }
 
 impl DerivationRole {
+    /// Combine the roles of two derivations that share one component
+    /// identity.
+    ///
+    /// One closure holds several derivations per `(pname, version)` — build
+    /// variants — and measured, 13 of 97 duplicated identities in a real
+    /// closure disagree about their role: `flex 2.6.4` is `Both` as one
+    /// variant and `Unreferenced` as another. Picking either would be a
+    /// coin toss reported as a fact, so the flags are unioned.
+    ///
+    /// `Unreferenced` means neither flag, so it is absorbed rather than
+    /// winning: a component referenced through any variant is referenced.
+    pub(crate) fn union(self, other: Self) -> Self {
+        let (a_in, a_tool) = self.flags();
+        let (b_in, b_tool) = other.flags();
+        match (a_in || b_in, a_tool || b_tool) {
+            (true, true) => Self::Both,
+            (true, false) => Self::ArtifactInput,
+            (false, true) => Self::BuildTooling,
+            (false, false) => Self::Unreferenced,
+        }
+    }
+
+    /// `(goes into the artifact, builds the artifact)`.
+    fn flags(self) -> (bool, bool) {
+        match self {
+            Self::ArtifactInput => (true, false),
+            Self::BuildTooling => (false, true),
+            Self::Both => (true, true),
+            Self::Unreferenced => (false, false),
+        }
+    }
+
     /// The stable wire form for the `waybill:closure-role` annotation.
     pub(crate) fn wire(self) -> &'static str {
         match self {

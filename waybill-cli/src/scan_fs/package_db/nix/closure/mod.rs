@@ -21,6 +21,7 @@ pub(crate) mod classify;
 pub(crate) mod derivation;
 pub(crate) mod emit;
 pub(crate) mod patches;
+pub(crate) mod summary;
 
 use std::path::Path;
 use std::time::Duration;

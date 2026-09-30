@@ -120,7 +120,7 @@ appear beyond the manifest-derived set, each traceable to a classified derivatio
 - [X] T019 [US1] Emit artifact-input and build-tooling members as components in `closure/emit.rs`, supplementing rather than replacing
 - [X] T020 [US1] Emit C182 `waybill:closure-role` on every closure-derived component
 - [X] T021 [US1] Suppress `Unreferenced` members **except** any that apply a patch (FR-004a) — research R8: `jq` and `lua` are `neither` and carry 6 of moat's 18 CVEs
-- [ ] T022 [US1] Emit C184 `waybill:nix-closure` at document scope: attribute, derivation count, per-role counts (FR-018)
+- [X] T022 [US1] Emit C184 `waybill:nix-closure` at document scope: attribute, derivation count, per-role counts (FR-018)
 - [ ] T023 [P] [US1] Write the failing test for SC-009: scanning one project twice with `default` and with a named attribute produces **different** documents. An override that silently ignored its argument passes every other test here
 - [ ] T024 [US1] Assert the flag-off path starts no nix process and emits none of C182–C184
 
@@ -140,7 +140,7 @@ shape as milestone 1034's safety gate preceding its resolution story.
 - [X] T025 [P] [US3] Write the failing test: an ungraded CVE association cannot be constructed, in `closure/patches.rs`
 - [X] T026 [US3] Implement `EvidenceGrade` in `closure/patches.rs` as an enum with the single variant `FilenameDerived` — not a `bool` and not an `Option`, so a future stronger provenance is distinguishable rather than indistinguishable from a filename match
 - [X] T027 [US3] Make the grade non-optional in the type that carries a CVE association, so FR-012a is enforced by construction rather than by a check
-- [ ] T028 [US3] Emit C183 `waybill:patch-evidence-grade`
+- [X] T028 [US3] Emit C183 `waybill:patch-evidence-grade`
 
 **Checkpoint**: nothing can claim a CVE without saying how it knows.
 
@@ -155,9 +155,9 @@ assert it appears in `pedigree.patches[]` on the component that applies it.
 - [ ] T030 [P] [US2] Write the failing test: at least 18 and 14 distinct CVEs are recovered (SC-006a). A run recovering 3 and 4 means the implementation scanned derivation names instead of joining — a silent fivefold undercount
 - [X] T031 [US2] Implement patch attribution in `closure/patches.rs` via each derivation's own `env.patches` field, resolving store-path basenames (research R7)
 - [X] T032 [US2] Extract CVE identifiers from patch basenames with the existing `regex` dep
-- [ ] T033 [US2] Implement CycloneDX `pedigree.patches[]` emission in `waybill-cli/src/generate/cyclonedx/pedigree.rs` **and register it in `cyclonedx/mod.rs`** — the first use of `pedigree` in waybill, so this is new emission machinery rather than a new field on an existing path, and an unregistered module compiles to nothing
-- [ ] T034 [US2] Emit patches with no CVE as `type: "backport"` with no `resolves` entry — silence would make partial coverage look like absence
-- [ ] T035 [US2] Emit the patch total and no-CVE count at document scope (SC-006b). On slack-web that is 320 and 279: ~87% of backports name no CVE, and without the count a consumer reads missing VEX as missing backport
+- [X] T033 [US2] Implement CycloneDX `pedigree.patches[]` emission in `waybill-cli/src/generate/cyclonedx/pedigree.rs` **and register it in `cyclonedx/mod.rs`** — the first use of `pedigree` in waybill, so this is new emission machinery rather than a new field on an existing path, and an unregistered module compiles to nothing
+- [X] T034 [US2] Emit patches with no CVE as `type: "backport"` with no `resolves` entry — silence would make partial coverage look like absence
+- [X] T035 [US2] Emit the patch total and no-CVE count at document scope (SC-006b). Measured after merging build variants: 187 patches of which 167 name no CVE on moat, 169 of which 153 on slack-web — 89% and 91% of backports name no CVE, and without the count a consumer reads missing VEX as missing backport
 - [ ] T036 [US2] Bridge the patch facts into SPDX 2.3 and SPDX 3, which have no `pedigree` equivalent — the one place the formats differ in capability rather than spelling
 
 **Checkpoint**: SC-004 and SC-006 satisfiable.
@@ -183,7 +183,7 @@ subjects and both graded.
 - [ ] T043 [P] Write extractors for C182–C184 across all three formats
 - [ ] T044 [P] Implement research task **T-R2**: whether closure composition holds outside Haskell; commit the probe
 - [ ] T045 [P] Implement research task **T-R3**: cold-store cost on a clean runner; commit the probe
-- [ ] T046 Document the feature in `docs/reference/nix-evaluation.md` alongside `--nix-eval`, including the ~87% no-CVE coverage limit
+- [ ] T046 Document the feature in `docs/reference/nix-evaluation.md` alongside `--nix-eval`, including the measured 89–91% no-CVE coverage limit
 - [ ] T047 Verify SC-003: with the flag off, every committed corpus golden is unchanged
 - [ ] T048 Regenerate corpus goldens **in CI, not locally**, only if T047 shows legitimate churn
 - [ ] T049 Run the walker-audit grep locally if any new `fn walk`-shaped function appeared — it is not in `pre-pr.sh`

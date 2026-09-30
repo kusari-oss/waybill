@@ -62,7 +62,7 @@ The grade is what makes a stronger status honest.
 emitted by role, patch count, and **patches carrying no CVE** (FR-010, FR-018).
 
 That last figure is the one a consumer needs to judge the rest. On the measured
-projects it is 40 and 46 — most patches name no CVE, so the CVE-derived VEX
+projects it is 167 of 187 and 153 of 169 — most patches name no CVE, so the CVE-derived VEX
 covers a minority of the backports present. Omitting it would let absence of a
 VEX statement read as absence of a backport.
 

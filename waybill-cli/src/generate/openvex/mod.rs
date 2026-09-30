@@ -251,6 +251,7 @@ mod tests {
             go_workspace_mode: None,
             go_toolchains_detected: None,
             cross_ecosystem_edges_report: None,
+            nix_closure_summary: None,
             helm_extraction_mode: None,
             pants_resolve_summary: None,
             resolve_identity: None,

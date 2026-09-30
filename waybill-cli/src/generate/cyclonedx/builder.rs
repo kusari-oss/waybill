@@ -100,6 +100,13 @@ pub struct CycloneDxBuilder {
     cross_ecosystem_edges_report: Option<
         crate::generate::cross_ecosystem_edges::CrossEcosystemEdgesReport,
     >,
+    /// Milestone 1035 (#1034, #1040): doc-scope record of a `--nix-closure`
+    /// query, driving C184 `waybill:nix-closure` and C183
+    /// `waybill:patch-evidence-grade`. `None` ⇒ the flag was absent or the
+    /// tier degraded (both annotations absent).
+    nix_closure_summary: Option<
+        crate::scan_fs::package_db::nix::closure::summary::NixClosureSummary,
+    >,
     /// Milestone 204 (#554): doc-scope helm image-extraction-mode
     /// signal for the C123 `waybill:image-extraction-completeness`
     /// annotation. `None` ⇒ no helm reader ran (C123 absent).
@@ -234,6 +241,7 @@ impl CycloneDxBuilder {
             go_workspace_mode: None,
             go_toolchains_detected: None,
             cross_ecosystem_edges_report: None,
+            nix_closure_summary: None,
             helm_extraction_mode: None,
             gradle_scan_summary: None,
             no_binary_scan_mode: None,
@@ -572,6 +580,19 @@ impl CycloneDxBuilder {
         self
     }
 
+    /// Milestone 1035 (#1034, #1040) — record the doc-scope closure query.
+    /// Drives C184 and C183. `None` ⇒ flag absent or tier degraded, and
+    /// output is byte-identical to a scan without `--nix-closure`.
+    pub fn with_nix_closure_summary(
+        mut self,
+        summary: Option<
+            crate::scan_fs::package_db::nix::closure::summary::NixClosureSummary,
+        >,
+    ) -> Self {
+        self.nix_closure_summary = summary;
+        self
+    }
+
     /// Milestone 204 (#554) — record the doc-scope helm image-extraction
     /// mode signal per FR-005. Drives the C123
     /// `waybill:image-extraction-completeness` document-scope
@@ -827,6 +848,7 @@ impl CycloneDxBuilder {
             },
             MetadataExtras {
                 components: effective_components,
+                nix_closure_summary: self.nix_closure_summary.as_ref(),
                 os_release_missing_fields: &self.os_release_missing_fields,
                 scan_target_coord,
                 source_document_binding: self.source_document_binding.as_ref(),
@@ -1215,6 +1237,24 @@ impl CycloneDxBuilder {
                 );
                 serde_json::Value::Object(base)
             };
+
+            // Milestone 1035 (#1034, #1040): native `pedigree.patches[]` for
+            // closure members that apply patches. waybill's first use of
+            // `pedigree`. Matched on (name, version) because that is the
+            // identity nix records and the identity the component carries;
+            // the closure's own store hashes do not survive into the
+            // document. Absent entirely for components with no patches, and
+            // for every component when `--nix-closure` is off.
+            if let Some(summary) = self.nix_closure_summary.as_ref() {
+                let idx = super::pedigree::index(&summary.patched);
+                if let Some(record) =
+                    idx.get(&(component.name.as_str(), component.version.as_str()))
+                {
+                    if let Some(p) = super::pedigree::pedigree_for(record) {
+                        entry["pedigree"] = p;
+                    }
+                }
+            }
 
             // Milestone 052/part-2: native CDX `scope` field. Per
             // FR-010, components with non-Runtime lifecycle_scope
