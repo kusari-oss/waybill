@@ -184,10 +184,10 @@ subjects and both graded.
 - [X] T044 [P] Implement research task **T-R2**: whether closure composition holds outside Haskell; commit the probe
 - [~] T045 [P] Implement research task **T-R3**: cold-store cost on a clean runner; probe committed at `measurements/closure-cold-cost.sh`, **not yet run** — a truthful cold figure needs a runner with an empty Nix store and none was available. The probe refuses to fake one; see `measurements/README.md`
 - [X] T046 Document the feature in `docs/reference/nix-evaluation.md` alongside `--nix-eval`, including the measured 89–91% no-CVE coverage limit
-- [ ] T047 Verify SC-003: with the flag off, every committed corpus golden is unchanged
-- [ ] T048 Regenerate corpus goldens **in CI, not locally**, only if T047 shows legitimate churn
-- [ ] T049 Run the walker-audit grep locally if any new `fn walk`-shaped function appeared — it is not in `pre-pr.sh`
-- [ ] T050 Run `./scripts/pre-pr.sh > /tmp/prepr.log 2>&1; echo "EXIT=$?"` — read the **script's** status, never a pipeline's — then assert `>>> all pre-PR checks passed.` and the per-target `test result: ok. N passed; 0 failed`
+- [X] T047 Verify SC-003: with the flag off, every committed corpus golden is unchanged
+- [X] T048 Regenerate corpus goldens **in CI, not locally**, only if T047 shows legitimate churn — **not needed**: T047 showed zero churn (clean working tree after a full green gate), so there was nothing to regenerate
+- [X] T049 Run the walker-audit grep locally if any new `fn walk`-shaped function appeared — it is not in `pre-pr.sh`
+- [X] T050 Run `./scripts/pre-pr.sh > /tmp/prepr.log 2>&1; echo "EXIT=$?"` — read the **script's** status, never a pipeline's — then assert `>>> all pre-PR checks passed.` and the per-target `test result: ok. N passed; 0 failed`
 
 ---
 
