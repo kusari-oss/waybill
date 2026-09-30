@@ -117,3 +117,47 @@ A first attempt at this probe used `checkinstall`, which is Linux-only, and
 got an "unsupported for this system" refusal that looks like a confirmation
 if you only check that the command failed. The probe now asserts on the
 message, not the exit status.
+
+
+## Q4 — can a closure member's declaration be reached at all, and how often?
+
+`attribute-coverage.sh`. Added during planning, because the spec assumed a
+mechanism that did not exist: `meta` is absent from every one of moat's 1,275
+derivations.
+
+Resolving each member's `pname` across an ordered list of package sets and
+verifying by output path, against the project's own pinned nixpkgs:
+
+| | count | share |
+|---|---:|---:|
+| members (distinct pname + version) | 380 | |
+| confirmed by output path | 273 | 71% |
+| no attribute in any probed set | 72 | 18% |
+| attribute found, output path differs | 35 | 9% |
+
+Confirmed by set: haskell 118, python3 69, top-level 86, perl 0. **Top-level
+alone reaches only 86 (22%)** — the nested sets are most of the coverage, not
+a refinement.
+
+Evaluation of all 376 names takes **0.6–1.1 s** in one expression.
+
+Two findings the implementation depends on:
+
+- **The 9% is the check earning its keep.** Those members have an attribute of
+  the right name that builds something else. Accepting them would attach a
+  security claim to the wrong component.
+- **Zero confirmed members carry a declaration**, and that is structural. Nix
+  refuses to *evaluate* a package marked insecure, so a project that builds
+  has already permitted any it contains. The feature fires only where an
+  operator accepted an exception, so an empty result is the common case and
+  needs to be distinguishable from a failed one.
+
+Three traps cost a measurement round each and are commented in the probe:
+
+- The closure JSON omits the `/nix/store/` prefix that `outPath` carries.
+  Comparing raw gives **0%** and reads as "the mechanism does not work".
+- `or null` is needed on the attribute lookup: a missing attribute is not a
+  throw and escapes `tryEval`.
+- `deepSeq` must be *inside* `tryEval`, which returns a lazy value — otherwise
+  the throw escapes at serialisation time and the first unfree package kills
+  the run.
