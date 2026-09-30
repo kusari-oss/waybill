@@ -107,6 +107,10 @@ pub struct CycloneDxBuilder {
     nix_closure_summary: Option<
         crate::scan_fs::package_db::nix::closure::summary::NixClosureSummary,
     >,
+    /// Milestone 1050 — the declaration pass's record, driving C187/C188/C189.
+    nixpkgs_security_summary: Option<
+        crate::scan_fs::package_db::nix::declarations::NixpkgsSecuritySummary,
+    >,
     /// Milestone 204 (#554): doc-scope helm image-extraction-mode
     /// signal for the C123 `waybill:image-extraction-completeness`
     /// annotation. `None` ⇒ no helm reader ran (C123 absent).
@@ -241,6 +245,7 @@ impl CycloneDxBuilder {
             go_workspace_mode: None,
             go_toolchains_detected: None,
             cross_ecosystem_edges_report: None,
+            nixpkgs_security_summary: None,
             nix_closure_summary: None,
             helm_extraction_mode: None,
             gradle_scan_summary: None,
@@ -583,6 +588,18 @@ impl CycloneDxBuilder {
     /// Milestone 1035 (#1034, #1040) — record the doc-scope closure query.
     /// Drives C184 and C183. `None` ⇒ flag absent or tier degraded, and
     /// output is byte-identical to a scan without `--nix-closure`.
+    /// Milestone 1050 — record what nixpkgs declared. `None` ⇒ the flag was
+    /// absent or the pass degraded, and none of C187–C189 is emitted.
+    pub fn with_nixpkgs_security_summary(
+        mut self,
+        summary: Option<
+            crate::scan_fs::package_db::nix::declarations::NixpkgsSecuritySummary,
+        >,
+    ) -> Self {
+        self.nixpkgs_security_summary = summary;
+        self
+    }
+
     pub fn with_nix_closure_summary(
         mut self,
         summary: Option<
@@ -849,6 +866,7 @@ impl CycloneDxBuilder {
             MetadataExtras {
                 components: effective_components,
                 nix_closure_summary: self.nix_closure_summary.as_ref(),
+                nixpkgs_security_summary: self.nixpkgs_security_summary.as_ref(),
                 os_release_missing_fields: &self.os_release_missing_fields,
                 scan_target_coord,
                 source_document_binding: self.source_document_binding.as_ref(),

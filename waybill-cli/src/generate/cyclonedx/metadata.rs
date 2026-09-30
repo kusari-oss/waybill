@@ -8,6 +8,7 @@ use serde_json::json;
 
 use crate::generate::RootComponentOverride;
 use crate::scan_fs::package_db::nix::closure::summary as closure_summary;
+use crate::scan_fs::package_db::nix::declarations;
 
 /// Normalize a string for inclusion in a CPE 2.3 segment.
 ///
@@ -154,6 +155,10 @@ pub struct MetadataExtras<'a> {
     // tier degraded (both annotations absent; byte-identity preserved).
     pub nix_closure_summary:
         Option<&'a crate::scan_fs::package_db::nix::closure::summary::NixClosureSummary>,
+    // Milestone 1050 — the declaration pass's record. `None` iff
+    // `--nix-closure` was absent or the pass degraded.
+    pub nixpkgs_security_summary:
+        Option<&'a crate::scan_fs::package_db::nix::declarations::NixpkgsSecuritySummary>,
     // Milestone 235 US4 — aggregate Gradle-resolution tier signal.
     // Drives the C146 `waybill:gradle-resolution-tier` doc-scope
     // annotation. `None` iff no Gradle project was touched
@@ -247,6 +252,7 @@ pub fn build_metadata(
     } = subject;
     let MetadataExtras {
         components,
+        nixpkgs_security_summary,
         nix_closure_summary,
         os_release_missing_fields,
         scan_target_coord,
@@ -981,6 +987,33 @@ pub fn build_metadata(
             "name": "waybill:image-extraction-completeness",
             "value": mode.as_wire_str(),
         }));
+    }
+
+    // Milestone 1050 (#1039, #1040): what the declaration pass saw (C188),
+    // whether the build accepted a package nixpkgs marks insecure (C187),
+    // and the grade of the CVE claims it produced (C189).
+    //
+    // Computing these into the summary does not emit them: per-component
+    // annotations ride the `extra_annotations` pass-through, document-scope
+    // ones need this. Without it the catalogue rows would carry extractors
+    // pointing at fields nothing writes.
+    if let Some(s) = nixpkgs_security_summary {
+        properties.push(json!({
+            "name": declarations::ANN_NIXPKGS_SECURITY,
+            "value": s.wire(),
+        }));
+        if let Some(record) = s.acceptance() {
+            properties.push(json!({
+                "name": declarations::ANN_ACCEPTED_INSECURE,
+                "value": record,
+            }));
+        }
+        if let Some(g) = s.grade() {
+            properties.push(json!({
+                "name": declarations::ANN_DECLARATION_GRADE,
+                "value": g,
+            }));
+        }
     }
 
     // Milestone 1035 (#1034, #1040): C184 doc-scope record of the closure

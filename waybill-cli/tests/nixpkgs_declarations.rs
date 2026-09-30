@@ -157,6 +157,57 @@ fn no_emitted_sbom_gains_a_vulnerabilities_array() {
     );
 }
 
+/// T048 — the document-scope signals reach every format, or none does.
+///
+/// Computing a value into the summary does not emit it: per-component
+/// annotations ride the `extra_annotations` pass-through, document-scope ones
+/// need explicit emission in each of the three emitter files. This asserts
+/// the three formats agree with each other about whether the pass ran, which
+/// is the property that breaks when one emitter is forgotten.
+#[test]
+fn the_three_formats_agree_about_whether_the_pass_ran() {
+    if !nix_available() {
+        eprintln!("skipping: no `nix` on PATH");
+        return;
+    }
+    let out_dir = tempdir().expect("output tempdir");
+    let home = tempdir().expect("home tempdir");
+    let mut seen = Vec::new();
+    for (fmt, name) in [
+        ("cyclonedx-json", "cdx.json"),
+        ("spdx-2.3-json", "spdx23.json"),
+        ("spdx-3-json", "spdx3.json"),
+    ] {
+        let path = out_dir.path().join(name);
+        let out = Command::new(waybill_bin())
+            .env_remove("HOME")
+            .env("HOME", home.path())
+            .env("WAYBILL_FIXTURES_DIR", env!("WAYBILL_FIXTURES_DIR"))
+            .env("NO_COLOR", "1")
+            .args(["sbom", "scan", "--path"])
+            .arg(fixture())
+            .args(["--format", fmt, "--output"])
+            .arg(&path)
+            .args(["--no-deps-dev", "--no-clearly-defined", "--nix-closure"])
+            .output()
+            .expect("waybill invokes");
+        assert!(out.status.success(), "{fmt} scan failed");
+        let text = std::fs::read_to_string(&path).expect("read output");
+        seen.push((fmt, text.contains("waybill:nixpkgs-security")));
+    }
+    // CONTROL: all three scans produced a document.
+    assert_eq!(seen.len(), 3);
+    let first = seen[0].1;
+    for (fmt, present) in &seen {
+        assert_eq!(
+            *present, first,
+            "{fmt} disagrees with the others about whether the record was \
+             emitted; a document-scope signal added to one emitter and \
+             forgotten in another looks like this: {seen:?}"
+        );
+    }
+}
+
 /// T044 / FR-018, SC-009 — no advisory database is consulted.
 ///
 /// Proven by exercising the path with every external enricher disabled and

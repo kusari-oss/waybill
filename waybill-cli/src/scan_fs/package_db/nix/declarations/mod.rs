@@ -163,6 +163,55 @@ pub struct NixpkgsSecuritySummary {
 }
 
 impl NixpkgsSecuritySummary {
+    /// The C188 wire value, identical in all three formats.
+    ///
+    /// One canonical string rather than an object in SPDX and a string in
+    /// CycloneDX: a CDX property value must be a string, and a row differing
+    /// in shape between formats forces its parity extractor to compensate —
+    /// which papered over a real defect in milestone 1035.
+    pub fn wire(&self) -> String {
+        self.value().to_string()
+    }
+
+    /// The C188 annotation value.
+    ///
+    /// Coverage comes first because it bounds everything after it. A reader
+    /// who does not know how many members were checked cannot interpret a
+    /// declaration count, and the common case for this feature is finding
+    /// nothing — a project that builds has already permitted whatever it
+    /// contains.
+    pub fn value(&self) -> serde_json::Value {
+        serde_json::json!({
+            "members-checked": self.members_checked,
+            "members-unchecked": self.members_unchecked,
+            "confirmed-by-set": self.confirmed_by_set,
+            "declarations": self.declarations_total,
+            "declarations-without-cve": self.declarations_without_cve,
+            "distinct-cves": self.distinct_cves,
+            "reconciliations-withheld": self.reconciliations_withheld,
+            "accepted-insecure": self.accepted_insecure_count,
+        })
+    }
+
+    /// The C187 acceptance record, or `None` when the build accepted nothing.
+    ///
+    /// Absent rather than a "false" value: a record saying "accepted: 0"
+    /// invites reading as a clean bill of health, and FR-016a is explicit
+    /// that absence must not mean rejection.
+    pub fn acceptance(&self) -> Option<String> {
+        (self.accepted_insecure_count > 0)
+            .then(|| acceptance_record(self.accepted_insecure_count))
+    }
+
+    /// The C189 grade, or `None` when no CVE was recovered.
+    ///
+    /// A grade attached to nothing would assert a standard of evidence for
+    /// claims that do not exist — the same rule milestone 1035 applies.
+    pub fn grade(&self) -> Option<&'static str> {
+        use crate::scan_fs::package_db::nix::closure::patches::EvidenceGrade;
+        (self.distinct_cves > 0).then(|| EvidenceGrade::NixpkgsDeclared.wire())
+    }
+
     /// Build the record. `purl_of` maps a member's `pname` to the PURL the
     /// emitted component carries, so findings bind to the identity a
     /// consumer will actually see rather than to a nix-internal name.
@@ -230,6 +279,12 @@ impl NixpkgsSecuritySummary {
         s
     }
 }
+
+/// C188 — what the declaration pass saw.
+pub const ANN_NIXPKGS_SECURITY: &str = "waybill:nixpkgs-security";
+
+/// C189 — how CVE associations from declarations were established.
+pub const ANN_DECLARATION_GRADE: &str = "waybill:nixpkgs-declaration-grade";
 
 /// C186 — what nixpkgs says about a component, where it named no CVE.
 ///
@@ -786,6 +841,66 @@ mod tests {
         // rather than "we could not ask".
         assert_eq!(s.members_checked, 1);
         assert_eq!(s.members_unchecked, 0);
+    }
+
+    #[test]
+    fn the_record_leads_with_coverage_and_carries_every_count() {
+        // T048's half that can be asserted without a document: the wire
+        // value carries all seven figures. A record missing one is a reader
+        // who cannot interpret the rest — coverage bounds everything after
+        // it, and the common case for this feature is finding nothing.
+        let res: std::collections::BTreeMap<String, AttributeResolution> = [
+            ("a".to_string(), confirmed(&["CVE-2099-0001: x", "prose"])),
+            ("b".to_string(), AttributeResolution::PathMismatch),
+            ("c".to_string(), AttributeResolution::NoAttribute),
+        ]
+        .into_iter()
+        .collect();
+        let mut s = NixpkgsSecuritySummary::build(&res);
+        s.reconciliations_withheld = 1;
+
+        let v = s.value();
+        assert_eq!(v["members-checked"], 1);
+        assert_eq!(v["members-unchecked"], 2, "both unchecked kinds counted");
+        assert_eq!(v["declarations"], 2);
+        assert_eq!(v["declarations-without-cve"], 1);
+        assert_eq!(v["distinct-cves"], 1);
+        assert_eq!(v["reconciliations-withheld"], 1);
+        assert_eq!(v["accepted-insecure"], 1);
+        assert!(v["confirmed-by-set"].is_object());
+
+        // The wire form is a string, because a CycloneDX property value must
+        // be one. If SPDX carried an object instead, the parity extractor
+        // would have to reconcile a shape difference that is not a real
+        // difference.
+        assert_eq!(s.wire(), v.to_string());
+    }
+
+    #[test]
+    fn the_acceptance_record_and_grade_are_absent_rather_than_empty() {
+        // A property saying "accepted: 0" invites reading as a clean bill of
+        // health, and FR-016a is explicit that absence must not mean
+        // rejection. A grade attached to no claims asserts a standard of
+        // evidence for claims that do not exist.
+        let clean: std::collections::BTreeMap<String, AttributeResolution> =
+            [("c".to_string(), confirmed(&[]))].into_iter().collect();
+        let s = NixpkgsSecuritySummary::build(&clean);
+        assert!(s.acceptance().is_none());
+        assert!(s.grade().is_none());
+        // CONTROL: the member was checked, so this is "nixpkgs said nothing"
+        // and not "the pass did not run".
+        assert_eq!(s.members_checked, 1);
+
+        let prose_only: std::collections::BTreeMap<String, AttributeResolution> =
+            [("p".to_string(), confirmed(&["vendors something EOL"]))]
+                .into_iter()
+                .collect();
+        let s = NixpkgsSecuritySummary::build(&prose_only);
+        assert!(s.acceptance().is_some(), "a prose declaration is still an exception");
+        assert!(
+            s.grade().is_none(),
+            "no CVE was recovered, so no grade is warranted"
+        );
     }
 
     #[test]

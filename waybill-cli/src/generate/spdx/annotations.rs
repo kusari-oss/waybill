@@ -25,6 +25,7 @@ use waybill_common::resolution::{ResolutionTechnique, ResolvedComponent};
 use super::document::{SpdxAnnotation, SpdxAnnotationType};
 use crate::generate::ScanArtifacts;
 use crate::scan_fs::package_db::nix::closure::summary as closure_summary;
+use crate::scan_fs::package_db::nix::declarations;
 
 /// Versioned envelope identifier. Bumping this constant requires a
 /// coordinated update to `contracts/waybill-annotation.schema.json`
@@ -951,6 +952,20 @@ pub fn annotate_document(
             json!(mode.as_wire_str()),
         );
     }
+
+    // Milestone 1050 (#1039, #1040): the declaration pass's record (C188),
+    // the acceptance record (C187) and the grade of its CVE claims (C189).
+    // Same canonical strings every format carries, so the parity rows
+    // compare equal without the extractor compensating.
+    if let Some(sum) = artifacts.nixpkgs_security_summary {{
+        push(&mut out, declarations::ANN_NIXPKGS_SECURITY, json!(sum.wire()));
+        if let Some(record) = sum.acceptance() {{
+            push(&mut out, declarations::ANN_ACCEPTED_INSECURE, json!(record));
+        }}
+        if let Some(g) = sum.grade() {{
+            push(&mut out, declarations::ANN_DECLARATION_GRADE, json!(g));
+        }}
+    }}
 
     // Milestone 1035 (#1034, #1040): C184 doc-scope record of the
     // `--nix-closure` query, and C183 the grade of the CVE associations it

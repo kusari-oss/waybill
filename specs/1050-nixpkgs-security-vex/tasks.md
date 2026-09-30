@@ -118,15 +118,15 @@ can be read at all.
 
 ## Phase 8: Polish & cross-cutting
 
-- [ ] T045 Emit the four document-scope signals — unchecked-member count (FR-001d), no-CVE declaration count (FR-011), withheld-reconciliation count (FR-013a) and the acceptance record (FR-015) — in `waybill-cli/src/generate/cyclonedx/metadata.rs`
-- [ ] T046 [P] Emit the same four signals in `waybill-cli/src/generate/spdx/annotations.rs`
-- [ ] T047 [P] Emit the same four signals in `waybill-cli/src/generate/spdx/v3_annotations.rs`
-- [ ] T048 Verify all four reach all three formats with one scan of the T017 fixture, in `waybill-cli/tests/nixpkgs_declarations.rs`. Computing a value into `NixpkgsSecuritySummary` does **not** emit it: per-component annotations ride the `extra_annotations` pass-through, document-scope ones need explicit emission in each of the three files above, as milestone 1035 required. Without this the catalogue rows below would carry extractors pointing at fields nothing writes
-- [ ] T049 Add catalogue rows C186–C189 to `docs/reference/sbom-format-mapping.md` **in the same change as** their extractors — the gate fails in both directions, as milestone 1034 found
-- [ ] T050 Edit `docs/reference/sbom-format-mapping.md` by **exact string match**, never anchored regex, and diff the whole field afterwards — a DOTALL pattern anchored on one row has silently edited the next one before
-- [ ] T051 [P] Write extractors for C186–C189 across all three formats in `waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3,mod}.rs`, carrying the Principle V audit from research R6 into each row
-- [ ] T052 Extend the extractor-correctness test in `waybill-cli/src/parity/extractors/mod.rs` to cover the new rows, with per-side non-empty CONTROL assertions — registration-only checking passes when an extractor points at a field nobody writes, which is how milestone 1035 shipped a cardinality bug
-- [ ] T053 Run the parity suite in the **lib** target (`cargo test -p waybill --lib`), not `--bins` — milestone 1035 read "3 passed" from `--bins parity` while the real suite had not run at all
+- [X] T045 Emit the four document-scope signals — unchecked-member count (FR-001d), no-CVE declaration count (FR-011), withheld-reconciliation count (FR-013a) and the acceptance record (FR-015) — in `waybill-cli/src/generate/cyclonedx/metadata.rs`
+- [X] T046 [P] Emit the same four signals in `waybill-cli/src/generate/spdx/annotations.rs`
+- [X] T047 [P] Emit the same four signals in `waybill-cli/src/generate/spdx/v3_annotations.rs`
+- [X] T048 Verify all four reach all three formats with one scan of the T017 fixture, in `waybill-cli/tests/nixpkgs_declarations.rs`. Computing a value into `NixpkgsSecuritySummary` does **not** emit it: per-component annotations ride the `extra_annotations` pass-through, document-scope ones need explicit emission in each of the three files above, as milestone 1035 required. Without this the catalogue rows below would carry extractors pointing at fields nothing writes
+- [X] T049 Add catalogue rows C186–C189 to `docs/reference/sbom-format-mapping.md` **in the same change as** their extractors — the gate fails in both directions, as milestone 1034 found
+- [X] T050 Edit `docs/reference/sbom-format-mapping.md` by **exact string match**, never anchored regex, and diff the whole field afterwards — a DOTALL pattern anchored on one row has silently edited the next one before
+- [X] T051 [P] Write extractors for C186–C189 across all three formats in `waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3,mod}.rs`, carrying the Principle V audit from research R6 into each row
+- [X] T052 Extend the extractor-correctness test in `waybill-cli/src/parity/extractors/mod.rs` to cover the new rows, with per-side non-empty CONTROL assertions — registration-only checking passes when an extractor points at a field nobody writes, which is how milestone 1035 shipped a cardinality bug
+- [X] T053 Run the parity suite in the **lib** target (`cargo test -p waybill --lib`), not `--bins` — milestone 1035 read "3 passed" from `--bins parity` while the real suite had not run at all
 - [ ] T054 [P] Measure the added wall-clock cost against a real closure and record it in `specs/1050-nixpkgs-security-vex/measurements/README.md` (FR-020b). A figure above roughly a fifth of closure-scan time reopens the automatic-by-default decision rather than absorbing it (SC-006a)
 - [ ] T055 [P] Document the feature in `docs/reference/nix-evaluation.md` alongside `--nix-closure`, leading with the coverage annotation and stating plainly that an empty result is the common case because a building project has already permitted what it contains
 - [ ] T056 Verify SC-006: with `--nix-closure` absent, every golden under `waybill-cli/tests/fixtures/public_corpus/` is unchanged (`git status --porcelain` clean after the suite)

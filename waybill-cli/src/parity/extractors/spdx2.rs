@@ -679,6 +679,10 @@ spdx23_anno!(c182_spdx23, "waybill:closure-role", component);
 spdx23_anno!(c183_spdx23, "waybill:patch-evidence-grade", document);
 spdx23_anno!(c184_spdx23, "waybill:nix-closure", document);
 spdx23_anno!(c185_spdx23, "waybill:closure-patches", component);
+spdx23_anno!(c186_spdx23, "waybill:nixpkgs-declaration", component);
+spdx23_anno!(c187_spdx23, "waybill:nixpkgs-accepted-insecure", document);
+spdx23_anno!(c188_spdx23, "waybill:nixpkgs-security", document);
+spdx23_anno!(c189_spdx23, "waybill:nixpkgs-declaration-grade", document);
 spdx23_anno!(c163_spdx23, "waybill:document-resolve",                     document);
 spdx23_anno!(c162_spdx23, "waybill:cabal-entries-skipped",                 document);
 
