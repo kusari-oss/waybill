@@ -10,6 +10,51 @@ directions.
 
 **Organization**: By user story. Note the ordering exception under Phase 5.
 
+## State of play (2026-09-29)
+
+**Phases 1–2 are done and committed; 10 of 50 tasks.** Resume at **T011**, the
+first task of Phase 3.
+
+**The tree does not pass `cargo clippy -D warnings`, and that is expected.**
+Every type in `scan_fs/package_db/nix/closure/` is dead code, because only
+emission connects the module to the scan pipeline and emission is Phase 4.
+The chain is parse → classify → query → *emit*, and nothing before the last
+link has a caller. Do not "fix" this by deleting types or adding
+`#[allow(dead_code)]`; it clears when Phase 4 lands. No PR before then.
+
+What exists and passes (12 unit tests):
+
+| | |
+|---|---|
+| `derivation.rs` | parsing, and the store-path basename join |
+| `classify.rs` | roles from nix's own `nativeBuildInputs`/`buildInputs` |
+| `mod.rs` | bounded query, attribute selection, argv guard reuse |
+| `scan_cmd.rs` | `--nix-closure`, `--nix-closure-attr` |
+
+**Reproducing the measurements.** Nothing in this repo holds a closure dump —
+they are 5.7–7.4 MB and were taken in a scratch directory that does not
+survive. Regenerate against any Nix-built Haskell project:
+
+```sh
+cd <project> && nix derivation show -r .#default > /tmp/closure.json
+python3 specs/1034-nix-eval-tier/measurements/classify-derivation-closure.py /tmp/closure.json
+python3 specs/1035-nix-closure-sbom/measurements/patch-attribution.py /tmp/closure.json
+WAYBILL_TEST_CLOSURE_JSON=/tmp/closure.json cargo test -p waybill --bins nix::closure::classify -- --nocapture
+```
+
+The last one cross-checks the Rust classifier against the Python one. The
+figures throughout these documents came from two public Nix-built Haskell
+libraries; the baselines are cited as measurements, not as thresholds a
+different project must hit.
+
+**Two things a reader should not have to rediscover.** This branch was cut
+from main before PR #1044 merged, so main is merged in at `b2972c6b` to pick
+up the argv guard that `plan.md` and `contracts/closure-invocation.md` both
+call load-bearing. And the store-path basename join fails *silently* — see
+the two tests in `derivation.rs` that pin it from both directions.
+
+---
+
 ## Format: `[ID] [P?] [Story] Description`
 
 - **[P]**: parallelizable — different files, no dependency on incomplete work
