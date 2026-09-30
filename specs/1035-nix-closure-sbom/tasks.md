@@ -121,7 +121,7 @@ appear beyond the manifest-derived set, each traceable to a classified derivatio
 - [X] T020 [US1] Emit C182 `waybill:closure-role` on every closure-derived component
 - [X] T021 [US1] Suppress `Unreferenced` members **except** any that apply a patch (FR-004a) — research R8: `jq` and `lua` are `neither` and carry 6 of moat's 18 CVEs
 - [X] T022 [US1] Emit C184 `waybill:nix-closure` at document scope: attribute, derivation count, per-role counts (FR-018)
-- [ ] T023 [P] [US1] Write the failing test for SC-009: scanning one project twice with `default` and with a named attribute produces **different** documents. An override that silently ignored its argument passes every other test here
+- [X] T023 [P] [US1] Write the failing test for SC-009: scanning one project twice with `default` and with a named attribute produces **different** documents. An override that silently ignored its argument passes every other test here
 - [X] T024 [US1] Assert the flag-off path starts no nix process and emits none of C182–C184
 
 **Checkpoint**: SC-001 and SC-002 satisfiable. US5 + US1 is the minimum shippable pair.
@@ -181,8 +181,8 @@ subjects and both graded.
 - [X] T041 Add catalogue rows C182–C185 to `docs/reference/sbom-format-mapping.md` **in the same change as** their extractors in `waybill-cli/src/parity/extractors/` — the gate fails in both directions, as milestone 1034 found
 - [X] T042 Edit the catalogue by **exact string match**, never anchored regex, and diff the whole field afterwards
 - [X] T043 [P] Write extractors for C182–C185 across all three formats
-- [ ] T044 [P] Implement research task **T-R2**: whether closure composition holds outside Haskell; commit the probe
-- [ ] T045 [P] Implement research task **T-R3**: cold-store cost on a clean runner; commit the probe
+- [X] T044 [P] Implement research task **T-R2**: whether closure composition holds outside Haskell; commit the probe
+- [~] T045 [P] Implement research task **T-R3**: cold-store cost on a clean runner; probe committed at `measurements/closure-cold-cost.sh`, **not yet run** — a truthful cold figure needs a runner with an empty Nix store and none was available. The probe refuses to fake one; see `measurements/README.md`
 - [X] T046 Document the feature in `docs/reference/nix-evaluation.md` alongside `--nix-eval`, including the measured 89–91% no-CVE coverage limit
 - [ ] T047 Verify SC-003: with the flag off, every committed corpus golden is unchanged
 - [ ] T048 Regenerate corpus goldens **in CI, not locally**, only if T047 shows legitimate churn
