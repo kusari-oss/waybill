@@ -26,17 +26,47 @@ use super::derivation::{store_basename, RawClosure};
 /// `Option<CveId>` would record the association and lose how it was obtained.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) enum EvidenceGrade {
-    /// Parsed from the patch derivation's filename. The only grade v1
-    /// produces, and weaker than it looks: a filename is not proof the patch
-    /// fully resolves the issue, and a backport that does not name a CVE is
-    /// invisible.
+    /// Parsed from the patch derivation's filename. Weaker than it looks: a
+    /// filename is not proof the patch fully resolves the issue, and a
+    /// backport that does not name a CVE is invisible.
     FilenameDerived,
+    /// Declared by nixpkgs in `meta.knownVulnerabilities` — a maintainer
+    /// stating that this version is vulnerable.
+    ///
+    /// The second variant this enum was deliberately built single-variant to
+    /// accept. It is stronger evidence than a filename match: somebody who
+    /// maintains the package said so, and Nix enforces it by refusing to
+    /// evaluate the package unless the build explicitly permits it.
+    ///
+    /// Stronger, not certain. It says the package set believes this version
+    /// vulnerable, which is a claim about the version and not about whether
+    /// this particular build reaches the vulnerable code.
+    NixpkgsDeclared,
 }
 
 impl EvidenceGrade {
     pub(crate) fn wire(self) -> &'static str {
         match self {
             Self::FilenameDerived => "filename-derived",
+            Self::NixpkgsDeclared => "nixpkgs-declared",
+        }
+    }
+
+    /// Whether this grade outranks another as *provenance*.
+    ///
+    /// An ordering over sources, not a confidence score. No number is
+    /// implied because none was measured — the question a consumer has is
+    /// "who said this", and a maintainer's declaration answers it better
+    /// than a filename does. Milestone 1035's reconciliation consults this
+    /// when both sources speak about one CVE on one component.
+    pub(crate) fn outranks(self, other: Self) -> bool {
+        self.rank() > other.rank()
+    }
+
+    fn rank(self) -> u8 {
+        match self {
+            Self::FilenameDerived => 0,
+            Self::NixpkgsDeclared => 1,
         }
     }
 }
@@ -267,6 +297,33 @@ mod tests {
 
     fn attributed() -> Vec<ComponentPatches> {
         attribute(&RawClosure::parse(CLOSURE).unwrap())
+    }
+
+    #[test]
+    fn a_maintainer_declaration_outranks_a_filename_match() {
+        // The ordering the reconciliation consults. A declaration is
+        // somebody who maintains the package saying so; a filename is a
+        // string that happens to contain an identifier.
+        assert!(EvidenceGrade::NixpkgsDeclared.outranks(EvidenceGrade::FilenameDerived));
+        assert!(!EvidenceGrade::FilenameDerived.outranks(EvidenceGrade::NixpkgsDeclared));
+    }
+
+    #[test]
+    fn a_grade_does_not_outrank_itself() {
+        // Guards the reconciliation against treating two same-source claims
+        // as one displacing the other.
+        for g in [EvidenceGrade::FilenameDerived, EvidenceGrade::NixpkgsDeclared] {
+            assert!(!g.outranks(g), "{g:?}");
+        }
+    }
+
+    #[test]
+    fn every_grade_has_a_distinct_wire_form() {
+        // A consumer weighing two claims needs to tell the sources apart
+        // without reading the text, which is the whole point of the grade.
+        let grades = [EvidenceGrade::FilenameDerived, EvidenceGrade::NixpkgsDeclared];
+        let wires: std::collections::BTreeSet<&str> = grades.iter().map(|g| g.wire()).collect();
+        assert_eq!(wires.len(), grades.len(), "wire forms collide: {wires:?}");
     }
 
     #[test]

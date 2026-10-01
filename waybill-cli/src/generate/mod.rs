@@ -211,6 +211,13 @@ pub struct ScanArtifacts<'a> {
     /// SPDX 2.3, and SPDX 3 emitters.
     pub cross_ecosystem_edges_report:
         Option<&'a cross_ecosystem_edges::CrossEcosystemEdgesReport>,
+    /// Milestone 1050 (#1039, #1040): what nixpkgs itself declares about the
+    /// packages this build contains. Drives the declaration-derived VEX
+    /// statements and the document-scope coverage record. `None` iff
+    /// `--nix-closure` was absent or the declaration pass degraded.
+    pub nixpkgs_security_summary: Option<
+        &'a crate::scan_fs::package_db::nix::declarations::NixpkgsSecuritySummary,
+    >,
     /// Milestone 1035 (#1034, #1040): document-scope record of a
     /// `--nix-closure` query — the attribute evaluated, derivations seen,
     /// counts by role, and the patch totals. Drives the C184

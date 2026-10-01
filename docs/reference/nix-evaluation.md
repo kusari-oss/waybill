@@ -320,6 +320,119 @@ substituters rather than flake inputs, so the tier declines rather than
 reaching the network behind the flag. With the flag absent, no `nix`
 process starts and none of the closure annotations is emitted.
 
+## What nixpkgs itself declares
+
+`--nix-closure` also reads `meta.knownVulnerabilities` — the security
+metadata the package set carries about its own packages — and emits it
+beside the patch evidence. No extra flag to switch it on; the operator
+already consented to evaluation.
+
+It is not free. Measured warm on a 1,275-derivation project, the pass costs
+**706 ms against a 388 ms closure query** — it roughly doubles the scan
+rather than disappearing into it. Pass `--no-nixpkgs-security` to skip it;
+components, patch attribution and the patch-derived VEX are unchanged. Both
+phases log an `elapsed_ms`, so the figure is available from any scan:
+
+```sh
+waybill sbom scan --path . --nix-closure 2>&1 | grep elapsed_ms
+```
+
+### Read the coverage first
+
+It bounds everything else, and the common case is finding nothing:
+
+```sh
+jq -r '.metadata.properties[]
+       | select(.name=="waybill:nixpkgs-security").value' sbom.json
+```
+
+**Expect an empty result on most projects.** A project that builds has
+already permitted whatever insecure packages it contains — Nix refuses to
+*evaluate* one otherwise. So silence means "this build accepted no policy
+exceptions", not "the check did not run". The coverage record is what
+distinguishes those.
+
+**Expect partial coverage.** Measured on one real project: 273 of 376
+members confirmed (72%), 103 unchecked. Declarations are read from plain
+nixpkgs at the revision `flake.lock` pins, so two kinds of member never
+resolve:
+
+- **packages the project defines itself** — not in nixpkgs, so there is no
+  maintainer statement to read;
+- **packages the project overlays or overrides** — the override changes the
+  output path, the verification rejects the candidate, and the member is
+  recorded unchecked.
+
+Both are safe: nothing is attached to the wrong build. A heavily-overlaid
+project simply sees a higher unchecked count. Reaching the project's actual
+package set would require `--impure`, which would restore access to the host
+environment, and the narrower reach is the price of keeping the evaluation
+pure.
+
+Of the members that *do* resolve, 33 of 376 (9%) were rejected because an
+attribute of that name builds something else. Those are false attributions
+the check prevents — a security claim on a component that was never in the
+build.
+
+### Two kinds of declaration, two destinations
+
+About 72% of entries name a CVE and 28% do not, and the split is not a matter
+of strength — it is a matter of what they describe.
+
+**CVE-bearing entries become VEX**, never SBOM content:
+
+```sh
+jq -r '.statements[]
+       | select(.impact_statement // "" | test("nixpkgs declares"))
+       | "\(.vulnerability.name)  \(.products[0].subcomponents[0]["@id"])"' \
+  sbom.openvex.json
+```
+
+Each names the build as its product with the declared component as a
+subcomponent — "this artifact is affected, via this component" — and carries
+`nixpkgs-declared` as its evidence grade, distinct from the
+`filename-derived` grade a patch earns.
+
+**Entries naming no CVE become a per-component annotation** on the SBOM:
+
+```sh
+jq -r '.components[]
+       | select(.properties[]?.name=="waybill:nixpkgs-declaration")
+       | .name' sbom.json
+```
+
+These are the ones no advisory feed carries: `googleearth-pro` declaring it
+bundles vulnerable openssl, ffmpeg, gdal and proj; four packages declaring a
+vendored end-of-life Electron; `minio` declaring upstream abandonment. An
+SBOM of such a package lists the package, not the OpenSSL inside it — so no
+version matcher can reach it. They are in the SBOM rather than in VEX because
+each is a *composition* fact: it says there are components inside this one
+that the document does not list.
+
+### When nixpkgs and a patch disagree
+
+If nixpkgs declares a CVE that a patch on the same component also names, the
+declaration wins: the `affected` is emitted and the patch-derived
+`not_affected` is withheld. A maintainer stating a version is vulnerable
+outranks a CVE read out of a filename, and a `not_affected` against an
+explicit contrary declaration would let a consumer dismiss a real finding on
+the weaker evidence.
+
+Nothing is lost. The patch stays in the component's `pedigree.patches[]`, so
+the build's patching is still visible; what is withheld is the suppression,
+not the evidence. `reconciliations-withheld` in the coverage record counts
+them, so silence stays distinguishable from suppression.
+
+### Why not just use an advisory database
+
+For language ecosystems, do — OSV has them, and this adds nothing. For system
+packages OSV is complete *per distro*, and Nix is not one of the distros.
+Measured: Alpine files `ALPINE-CVE-2014-8139`, `-8140` and `-8141` against
+`unzip`, and Nix builds that same upstream 6.0 with patches named for those
+same three CVEs. Borrowing a neighbouring distro's advisories gives a
+confidently wrong answer. `pkg:generic/unzip@6.0`, which is what waybill
+emits for a closure member, matches nothing in OSV at all.
+
 ## Security guidance
 
 **Prefer a sandbox.** Either flag starts an evaluator on a tree you are

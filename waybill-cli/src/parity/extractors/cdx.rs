@@ -978,6 +978,10 @@ cdx_anno!(c181_cdx, "waybill:nix-eval-origin", component);
 cdx_anno!(c182_cdx, "waybill:closure-role", component);
 cdx_anno!(c183_cdx, "waybill:patch-evidence-grade", document);
 cdx_anno!(c184_cdx, "waybill:nix-closure", document);
+cdx_anno!(c186_cdx, "waybill:nixpkgs-declaration", component);
+cdx_anno!(c187_cdx, "waybill:nixpkgs-accepted-insecure", document);
+cdx_anno!(c188_cdx, "waybill:nixpkgs-security", document);
+cdx_anno!(c189_cdx, "waybill:nixpkgs-declaration-grade", document);
 
 /// C185 — the patches a closure member applies.
 ///

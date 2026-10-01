@@ -237,7 +237,7 @@ mod tests {
 /// than escaping, names outside this set are refused entry — a Haskell package
 /// name is `[A-Za-z0-9._-]` by Hackage's own rules, so nothing legitimate is
 /// lost, and there is no escaping bug to get wrong later.
-fn is_safe_attribute_name(name: &str) -> bool {
+pub(crate) fn is_safe_attribute_name(name: &str) -> bool {
     !name.is_empty()
         && name
             .chars()
@@ -255,7 +255,7 @@ fn is_safe_attribute_name(name: &str) -> bool {
 /// the package-set fetch for the same revision happens first and fails on
 /// anything that is not a real revision — but that is defence by accident,
 /// resting on an unrelated upstream call. This makes it defence by design.
-fn is_valid_revision(rev: &str) -> bool {
+pub(crate) fn is_valid_revision(rev: &str) -> bool {
     rev.len() == 40 && rev.chars().all(|c| c.is_ascii_digit() || ('a'..='f').contains(&c))
 }
 

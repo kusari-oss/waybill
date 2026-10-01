@@ -55,6 +55,120 @@ fn grade_note(cve: &str, grade: &str) -> String {
     )
 }
 
+/// The note a declaration-derived statement carries.
+///
+/// Says *who* asserted it, not only how strong it is. A consumer weighing
+/// this against a patch-derived claim needs the source: "nixpkgs declares"
+/// and "a filename contains" are different kinds of evidence, and the grade
+/// alone does not convey which is which to a reader who has not memorised
+/// the vocabulary.
+///
+/// Carries the maintainer's own words, because on the measured sample those
+/// words routinely say more than the identifier does — the reason for the
+/// declaration is often the actionable part.
+fn declaration_note(cve: &str, grade: &str, text: &str) -> String {
+    format!(
+        "nixpkgs declares this package insecure. The {cve} association is \
+         {grade}: it comes from `meta.knownVulnerabilities` in the package \
+         set this build pins, which is a maintainer stating that this \
+         version is vulnerable — stronger than a filename match, and still a \
+         claim about the version rather than about whether this build \
+         reaches the vulnerable code. nixpkgs says: {text}"
+    )
+}
+
+/// Whether this statement is the patch-derived `not_affected` a declaration
+/// displaces.
+///
+/// Matches on (subcomponent, CVE) exactly. The patch-derived `affected` is
+/// left alone: it is version-scoped and says something weaker but not
+/// contradictory, and FR-012 withholds only the suppression.
+fn is_withheld_not_affected(
+    st: &OpenVexStatement,
+    withheld: &std::collections::BTreeSet<(String, String)>,
+) -> bool {
+    if st.status != OpenVexStatus::NotAffected {
+        return false;
+    }
+    st.products
+        .first()
+        .and_then(|p| p.subcomponents.first())
+        .is_some_and(|sub| {
+            withheld.contains(&(sub.id.clone(), st.vulnerability.name.clone()))
+        })
+}
+
+/// The build's own identity — the subject of every "this build" statement.
+///
+/// Extracted so the backport and declaration paths cannot drift onto
+/// different subjects. They make claims about one artifact, and a consumer
+/// weighing a withheld `not_affected` against the `affected` that displaced
+/// it is only comparing like with like if both name the same product.
+fn root_component_purl(artifacts: &ScanArtifacts<'_>) -> Option<String> {
+    artifacts
+        .components
+        .iter()
+        .find(|c| {
+            c.extra_annotations
+                .get("waybill:component-role")
+                .and_then(|v| v.as_str())
+                == Some("main-module")
+        })
+        .map(|c| c.purl.as_str().to_string())
+}
+
+/// Statements for what nixpkgs itself declares (spec US1).
+///
+/// One `affected` per (component, CVE), naming the **build** as product with
+/// the declared component as a subcomponent. That is the same shape milestone
+/// 1035 gives its `not_affected`, and deliberately so: under the FR-012
+/// reconciliation a declaration displaces that statement, and a consumer
+/// comparing what they got against what they would have got should be
+/// comparing like with like.
+///
+/// The weaker, patch-derived `affected` stays version-scoped. The document
+/// therefore carries two `affected` shapes, which is the point rather than an
+/// inconsistency — the stronger evidence earns the stronger subject.
+fn declaration_statements(
+    artifacts: &ScanArtifacts<'_>,
+    root: &str,
+) -> Vec<OpenVexStatement> {
+    use crate::scan_fs::package_db::nix::closure::patches::EvidenceGrade;
+    let Some(summary) = artifacts.nixpkgs_security_summary else {
+        return Vec::new();
+    };
+    let grade = EvidenceGrade::NixpkgsDeclared.wire();
+
+    summary
+        .findings
+        .iter()
+        .map(|f| OpenVexStatement {
+            vulnerability: OpenVexVulnerability {
+                name: f.cve.clone(),
+                description: None,
+                aliases: Vec::new(),
+            },
+            products: vec![OpenVexProduct {
+                id: root.to_string(),
+                identifiers: [("purl".to_string(), root.to_string())]
+                    .into_iter()
+                    .collect(),
+                subcomponents: vec![OpenVexProduct {
+                    id: f.component_purl.clone(),
+                    identifiers: [("purl".to_string(), f.component_purl.clone())]
+                        .into_iter()
+                        .collect(),
+                    subcomponents: Vec::new(),
+                }],
+            }],
+            status: OpenVexStatus::Affected,
+            justification: None,
+            impact_statement: Some(declaration_note(&f.cve, grade, &f.text)),
+            action_statement: None,
+        })
+        .collect()
+}
+
 /// Build the two statements a backport produces (spec FR-011).
 ///
 /// Two, never one. That nixpkgs applied a CVE-named patch is strong evidence
@@ -77,17 +191,7 @@ fn backport_statements(artifacts: &ScanArtifacts<'_>) -> Vec<OpenVexStatement> {
     // Subject of the `not_affected` half: the thing being built. Without a
     // root there is nothing to say "this build" about, so the pair is not
     // emitted at all rather than half of it being emitted.
-    let Some(root) = artifacts
-        .components
-        .iter()
-        .find(|c| {
-            c.extra_annotations
-                .get("waybill:component-role")
-                .and_then(|v| v.as_str())
-                == Some("main-module")
-        })
-        .map(|c| c.purl.as_str().to_string())
-    else {
+    let Some(root) = root_component_purl(artifacts) else {
         return Vec::new();
     };
 
@@ -203,8 +307,43 @@ pub fn serialize_openvex(
     // the only ones waybill emits with a status stronger than
     // `under_investigation`.
     let backport = backport_statements(artifacts);
+    // Milestone 1050: what nixpkgs itself declares. Shares the root-component
+    // lookup with the backport path, so both halves of the story address the
+    // same subject.
+    let declared = root_component_purl(artifacts)
+        .map(|root| declaration_statements(artifacts, &root))
+        .unwrap_or_default();
 
-    if products_by_advisory.is_empty() && backport.is_empty() {
+    // FR-012. Where nixpkgs declares a CVE that a patch on the same component
+    // also names, the declaration wins and the patch-derived `not_affected`
+    // is withheld. A maintainer stating that a version is vulnerable outranks
+    // a CVE read out of a filename, and emitting a `not_affected` against an
+    // explicit contrary declaration would let a consumer dismiss a real
+    // finding on the weaker evidence.
+    //
+    // Nothing is lost by withholding it: milestone 1035 records the patch in
+    // the component's `pedigree.patches[]` regardless of what VEX says, so
+    // the build's patching stays visible. What is suppressed is the
+    // suppression, not the evidence (FR-013).
+    let backport = if declared.is_empty() {
+        backport
+    } else {
+        let withheld = artifacts
+            .nixpkgs_security_summary
+            .map(|s| {
+                crate::scan_fs::package_db::nix::declarations::withheld_pairs(
+                    artifacts.components,
+                    &s.findings,
+                )
+            })
+            .unwrap_or_default();
+        backport
+            .into_iter()
+            .filter(|st| !is_withheld_not_affected(st, &withheld))
+            .collect()
+    };
+
+    if products_by_advisory.is_empty() && backport.is_empty() && declared.is_empty() {
         return Ok(None);
     }
 
@@ -233,7 +372,7 @@ pub fn serialize_openvex(
         })
         .collect();
     let statements: Vec<OpenVexStatement> =
-        statements.into_iter().chain(backport).collect();
+        statements.into_iter().chain(backport).chain(declared).collect();
 
     let author = format!("waybill-{}", cfg.mikebom_version);
     let timestamp = cfg
@@ -367,6 +506,7 @@ mod tests {
     ) -> ScanArtifacts<'a> {
         ScanArtifacts {
             target_name: "demo",
+            nixpkgs_security_summary: None,
             components: comps,
             relationships: &[],
             integrity: integ,
@@ -462,6 +602,235 @@ mod tests {
         let artifact = serialize_openvex(&arts, &mk_cfg()).unwrap().unwrap();
         let doc: serde_json::Value = serde_json::from_slice(&artifact.bytes).unwrap();
         doc["statements"].as_array().unwrap().clone()
+    }
+
+    // ============================================================
+    // Milestone 1050 — what nixpkgs itself declares
+    // ============================================================
+
+    /// A build whose closure contains a package nixpkgs declares insecure.
+    ///
+    /// Built by hand rather than from a fixture, and deliberately: waybill
+    /// resolves declarations against plain nixpkgs, so a fixture's own
+    /// packages resolve to nothing and could not exercise this at all
+    /// (research R8). The shapes below are what the spec constrains.
+    fn declared_summary(
+        findings: &[(&str, &str, &str)],
+    ) -> crate::scan_fs::package_db::nix::declarations::NixpkgsSecuritySummary {
+        use crate::scan_fs::package_db::nix::declarations::{
+            DeclaredFinding, NixpkgsSecuritySummary,
+        };
+        NixpkgsSecuritySummary {
+            members_checked: 1,
+            findings: findings
+                .iter()
+                .map(|(purl, cve, text)| DeclaredFinding {
+                    component_purl: (*purl).to_string(),
+                    cve: (*cve).to_string(),
+                    text: (*text).to_string(),
+                })
+                .collect(),
+            ..Default::default()
+        }
+    }
+
+    fn scan_with_declarations(
+        summary: &crate::scan_fs::package_db::nix::declarations::NixpkgsSecuritySummary,
+    ) -> Vec<serde_json::Value> {
+        let mut root = mk_component("pkg:generic/the-build@1.0");
+        root.extra_annotations.insert(
+            "waybill:component-role".to_string(),
+            serde_json::Value::String("main-module".to_string()),
+        );
+        let comps = [mk_component("pkg:generic/unzip@6.0"), root];
+        let integ = empty_integrity();
+        let mut arts = mk_artifacts(&comps, &integ);
+        arts.nixpkgs_security_summary = Some(summary);
+        let artifact = serialize_openvex(&arts, &mk_cfg()).unwrap().unwrap();
+        let doc: serde_json::Value = serde_json::from_slice(&artifact.bytes).unwrap();
+        doc["statements"].as_array().unwrap().clone()
+    }
+
+    #[test]
+    fn a_declaration_is_attributable_to_nixpkgs_and_distinct_from_a_patch() {
+        // SC-002, both halves. Asserting only the contrast with
+        // patch-derived would leave "attributable to nixpkgs" untested, and
+        // a statement attributed to nothing would pass that.
+        let s = declared_summary(&[(
+            "pkg:generic/unzip@6.0",
+            "CVE-2099-0001",
+            "synthetic entry for the waybill fixture",
+        )]);
+        let stmts = scan_with_declarations(&s);
+        // CONTROL: a statement was produced at all.
+        assert_eq!(stmts.len(), 1, "{stmts:#?}");
+
+        let note = stmts[0]["impact_statement"].as_str().unwrap_or_default();
+        assert!(
+            note.contains("nixpkgs declares"),
+            "not positively attributed to nixpkgs: {note:?}"
+        );
+        assert!(
+            note.contains("nixpkgs-declared"),
+            "carries no grade: {note:?}"
+        );
+        assert!(
+            !note.contains("filename-derived"),
+            "must be distinguishable from a patch-derived claim: {note:?}"
+        );
+        assert!(
+            note.contains("synthetic entry"),
+            "the maintainer's own words are the actionable half: {note:?}"
+        );
+    }
+
+    #[test]
+    fn a_declaration_names_the_build_with_the_component_as_subcomponent() {
+        // FR-006a. The same shape milestone 1035 gives its `not_affected`,
+        // so the FR-012 swap compares like with like.
+        let s = declared_summary(&[(
+            "pkg:generic/unzip@6.0",
+            "CVE-2099-0001",
+            "synthetic",
+        )]);
+        let stmts = scan_with_declarations(&s);
+        assert_eq!(stmts[0]["status"], "affected");
+        assert_eq!(stmts[0]["products"][0]["@id"], "pkg:generic/the-build@1.0");
+        assert_eq!(
+            stmts[0]["products"][0]["subcomponents"][0]["@id"],
+            "pkg:generic/unzip@6.0",
+            "naming the component as the product would assert the version \
+             itself is affected, which is a different and broader claim"
+        );
+    }
+
+    #[test]
+    fn a_declaration_naming_several_identifiers_yields_one_statement_each() {
+        // FR-004. One statement per identifier, not one carrying a
+        // concatenated subject a consumer would have to split.
+        let s = declared_summary(&[
+            ("pkg:generic/unzip@6.0", "CVE-2099-0001", "first"),
+            ("pkg:generic/unzip@6.0", "CVE-2099-0002", "second"),
+        ]);
+        let stmts = scan_with_declarations(&s);
+        assert_eq!(stmts.len(), 2);
+        let names: std::collections::BTreeSet<&str> = stmts
+            .iter()
+            .filter_map(|s| s["vulnerability"]["name"].as_str())
+            .collect();
+        assert_eq!(
+            names,
+            ["CVE-2099-0001", "CVE-2099-0002"].into_iter().collect()
+        );
+    }
+
+    #[test]
+    fn a_scan_with_no_declarations_adds_no_statements() {
+        // The common case: a build that permitted nothing. Must not read as
+        // a failure, and must not fabricate a sidecar.
+        let comps = [mk_component("pkg:generic/a@1")];
+        let integ = empty_integrity();
+        let arts = mk_artifacts(&comps, &integ);
+        assert!(
+            serialize_openvex(&arts, &mk_cfg()).unwrap().is_none(),
+            "no advisories, no patches and no declarations means no sidecar"
+        );
+    }
+
+    /// A component both patched and declared. Carries the milestone-1035
+    /// patch annotation *and* appears in the declaration findings.
+    fn contested_scan() -> (Vec<ResolvedComponent>, crate::scan_fs::package_db::nix::declarations::NixpkgsSecuritySummary) {
+        use crate::scan_fs::package_db::nix::closure::emit::ANN_CLOSURE_PATCHES;
+        let mut patched = mk_component("pkg:generic/unzip@6.0");
+        patched.extra_annotations.insert(
+            ANN_CLOSURE_PATCHES.to_string(),
+            serde_json::Value::String(
+                r#"[{"type":"backport","resolves":[{"type":"security","id":"CVE-2099-0001"}]}]"#
+                    .to_string(),
+            ),
+        );
+        let mut root = mk_component("pkg:generic/the-build@1.0");
+        root.extra_annotations.insert(
+            "waybill:component-role".to_string(),
+            serde_json::Value::String("main-module".to_string()),
+        );
+        let summary = declared_summary(&[(
+            "pkg:generic/unzip@6.0",
+            "CVE-2099-0001",
+            "nixpkgs considers this version vulnerable",
+        )]);
+        (vec![patched, root], summary)
+    }
+
+    #[test]
+    fn a_declaration_withholds_the_patch_derived_not_affected() {
+        // SC-005. Both halves asserted: that the suppression is gone, AND
+        // that the patch evidence survives. Checking only the first would
+        // pass equally well if the pedigree entry had been dropped too,
+        // which is the outcome this rule exists to avoid.
+        let (comps, summary) = contested_scan();
+        let integ = empty_integrity();
+        let mut arts = mk_artifacts(&comps, &integ);
+        arts.nixpkgs_security_summary = Some(&summary);
+        let artifact = serialize_openvex(&arts, &mk_cfg()).unwrap().unwrap();
+        let doc: serde_json::Value = serde_json::from_slice(&artifact.bytes).unwrap();
+        let stmts = doc["statements"].as_array().unwrap();
+
+        let of = |st: &str| {
+            stmts
+                .iter()
+                .filter(|s| s["status"] == st && s["vulnerability"]["name"] == "CVE-2099-0001")
+                .count()
+        };
+        // CONTROL: statements were produced at all.
+        assert!(!stmts.is_empty(), "{stmts:#?}");
+        assert_eq!(
+            of("not_affected"),
+            0,
+            "the patch-derived suppression must be withheld against an \
+             explicit contrary declaration: {stmts:#?}"
+        );
+        assert!(
+            of("affected") >= 1,
+            "the declaration's affected must survive: {stmts:#?}"
+        );
+
+        // The other half of FR-013: the patch evidence is untouched. VEX
+        // withholds the suppression; the pedigree still records the patch.
+        let still_patched = comps.iter().any(|c| {
+            c.extra_annotations
+                .get(crate::scan_fs::package_db::nix::closure::emit::ANN_CLOSURE_PATCHES)
+                .and_then(|v| v.as_str())
+                .is_some_and(|s| s.contains("CVE-2099-0001"))
+        });
+        assert!(
+            still_patched,
+            "withholding the statement must not remove the patch evidence"
+        );
+    }
+
+    #[test]
+    fn a_declaration_about_another_component_withholds_nothing() {
+        // FR-014. Claims about different components are unrelated, and
+        // neither displaces the other. Without this the rule would suppress
+        // on CVE alone and silently drop a valid not_affected.
+        let (comps, _) = contested_scan();
+        let elsewhere = declared_summary(&[(
+            "pkg:generic/something-else@1.0",
+            "CVE-2099-0001",
+            "different component",
+        )]);
+        let integ = empty_integrity();
+        let mut arts = mk_artifacts(&comps, &integ);
+        arts.nixpkgs_security_summary = Some(&elsewhere);
+        let artifact = serialize_openvex(&arts, &mk_cfg()).unwrap().unwrap();
+        let doc: serde_json::Value = serde_json::from_slice(&artifact.bytes).unwrap();
+        let stmts = doc["statements"].as_array().unwrap();
+        assert!(
+            stmts.iter().any(|s| s["status"] == "not_affected"),
+            "a declaration about another component must not withhold this \
+             one's suppression: {stmts:#?}"
+        );
     }
 
     #[test]

@@ -17,6 +17,7 @@
 //! decision about GHC boot libraries whose version belongs to the compiler.
 
 pub(crate) mod closure;
+pub(crate) mod declarations;
 pub(crate) mod eval;
 pub(crate) mod haskell_packages;
 pub(crate) mod identity;

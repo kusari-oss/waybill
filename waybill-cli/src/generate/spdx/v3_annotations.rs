@@ -30,6 +30,7 @@ use waybill_common::resolution::{ResolutionTechnique, ResolvedComponent};
 
 use super::annotations::{coerce_envelope_value, MikebomAnnotationCommentV1};
 use crate::scan_fs::package_db::nix::closure::summary as closure_summary;
+use crate::scan_fs::package_db::nix::declarations;
 use crate::generate::ScanArtifacts;
 
 /// Build the `Annotation` elements for component-level waybill
@@ -908,6 +909,20 @@ fn push_document_fields(
     if let Some(mode) = scan.helm_extraction_mode {
         push(out, "waybill:image-extraction-completeness", json!(mode.as_wire_str()));
     }
+
+    // Milestone 1050 (#1039, #1040): the declaration pass's record (C188),
+    // the acceptance record (C187) and the grade of its CVE claims (C189).
+    // Same canonical strings every format carries, so the parity rows
+    // compare equal without the extractor compensating.
+    if let Some(sum) = scan.nixpkgs_security_summary {{
+        push(out, declarations::ANN_NIXPKGS_SECURITY, json!(sum.wire()));
+        if let Some(record) = sum.acceptance() {{
+            push(out, declarations::ANN_ACCEPTED_INSECURE, json!(record));
+        }}
+        if let Some(g) = sum.grade() {{
+            push(out, declarations::ANN_DECLARATION_GRADE, json!(g));
+        }}
+    }}
 
     // Milestone 1035 (#1034, #1040): C184 doc-scope record of the
     // `--nix-closure` query, and C183 the grade of the CVE associations it
