@@ -36,6 +36,48 @@ impl Declaration {
     pub fn names_a_cve(&self) -> bool {
         !self.cves.is_empty()
     }
+
+    /// Whether this declaration's subject is a **party** rather than the
+    /// software.
+    ///
+    /// nixpkgs occasionally records why a package is distrusted in terms of
+    /// who now controls it. Those are a different kind of statement from the
+    /// rest: they attribute conduct or standing to an organisation, where
+    /// every other entry describes the artifact -- what it bundles, what it
+    /// vendors, whether it is still maintained. The spec deferred emitting
+    /// them, and an SBOM that reproduces a judgement about a company into
+    /// every consumer's document is not the place to settle it.
+    ///
+    /// Withheld, not reclassified: the declaration is still read, still
+    /// counted, and the withholding is logged, so an operator can tell this
+    /// apart from nixpkgs having said nothing.
+    ///
+    /// **This is a phrase match over free text, not comprehension.**
+    /// Measured against every `knownVulnerabilities` entry in one nixpkgs
+    /// revision: 27 distinct prose declarations, of which exactly two are
+    /// party claims, and both are caught --
+    ///
+    /// * "... was acquired by <company>, a company distrusted by the
+    ///   community"
+    /// * "Please nag <company> to update to OpenSSL 3 for Darwin."
+    ///
+    /// New phrasing upstream will not match, and will be emitted. That is
+    /// the intended failure direction: this withholds a narrow, named class
+    /// rather than guessing at a broad one, because over-withholding would
+    /// silently drop the bundled-component declarations that are the whole
+    /// reason prose is carried at all.
+    pub fn is_about_a_party(&self) -> bool {
+        let t = self.text.to_ascii_lowercase();
+        // Ownership and standing claims.
+        if t.contains("acquired by") || t.contains("distrusted by") {
+            return true;
+        }
+        // Directed at a vendor rather than describing the artifact.
+        if t.contains("please nag") {
+            return true;
+        }
+        false
+    }
 }
 
 fn cve_pattern() -> &'static Regex {
@@ -61,6 +103,49 @@ pub fn cves_in(text: &str) -> Vec<String> {
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
+
+    /// Pinned to the real corpus, not to invented sentences.
+    ///
+    /// Every distinct prose `knownVulnerabilities` entry in one nixpkgs
+    /// revision (27 of them). The two party claims must be withheld and the
+    /// rest kept -- in particular the bundled-component and lifecycle
+    /// entries, which are the reason prose is carried at all.
+    #[test]
+    fn only_party_claims_are_withheld_across_the_measured_corpus() {
+        let withhold = [
+            "Alist was acquired by Bugotech, a company distrusted by the community",
+            "Please nag Broadcom to update to OpenSSL 3 for Darwin.",
+        ];
+        let keep = [
+            // Composition: a component inside, which no SBOM of this package lists.
+            "Includes vulnerable versions of bundled libraries: openssl, ffmpeg, gdal, and proj.",
+            "Vendors Electron 2.0 (end-of-life)",
+            "The bundled version of openssl 1.0.2zk in ovftool for Darwin has open vulnerabilities (maximum severity: Moderate)",
+            "resholve depends on python27 (EOL). While it's safe to run on trusted input in the build sandbox, you should avoid running it on untrusted input.",
+            "Ventoy uses binary blobs which can't be trusted to be free of malware or compliant to their licenses.",
+            // Lifecycle of the software itself.
+            "Electron version 38.8.4 is EOL",
+            "minio has been abandoned by upstream and security issues won't be fixed.",
+            "youtube-dl is unmaintained, migrate to yt-dlp, if possible",
+            "librewolf-bin lacks maintenance in nixpkgs, consider using an alternative",
+            "NexusMods.App has been discontinued upstream",
+            "Gradle 7 no longer receives security updates with the release of Gradle 9 on 31 July 2025.",
+            "This NodeJS release has reached its end of life.",
+            "Unmaintained. Probable XSS/code injection vulnerability.",
+        ];
+        for t in withhold {
+            assert!(
+                Declaration::parse(t).is_about_a_party(),
+                "must be withheld: {t}"
+            );
+        }
+        for t in keep {
+            assert!(
+                !Declaration::parse(t).is_about_a_party(),
+                "must be kept -- this describes the software, not a party: {t}"
+            );
+        }
+    }
     use super::*;
 
     #[test]

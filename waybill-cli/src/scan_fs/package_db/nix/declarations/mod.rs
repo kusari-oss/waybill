@@ -318,16 +318,26 @@ pub(crate) fn annotate_prose(
     resolutions: &std::collections::BTreeMap<String, AttributeResolution>,
 ) -> usize {
     let mut stamped = 0;
+    let mut withheld_party_claims = 0usize;
     for c in components.iter_mut() {
         let Some(AttributeResolution::Confirmed { declarations, .. }) = resolutions.get(&c.name)
         else {
             continue;
         };
+        // Prose that describes the artifact -- what it bundles, what it
+        // vendors, whether it is still maintained. Claims whose subject is a
+        // party are withheld (spec out-of-scope; see
+        // `Declaration::is_about_a_party`), counted below so the withholding
+        // is visible rather than silent.
         let prose: Vec<&str> = declarations
             .iter()
-            .filter(|d| !d.names_a_cve())
+            .filter(|d| !d.names_a_cve() && !d.is_about_a_party())
             .map(|d| d.text.as_str())
             .collect();
+        withheld_party_claims += declarations
+            .iter()
+            .filter(|d| !d.names_a_cve() && d.is_about_a_party())
+            .count();
         if prose.is_empty() {
             continue;
         }
@@ -343,6 +353,15 @@ pub(crate) fn annotate_prose(
             serde_json::Value::String(encoded),
         );
         stamped += 1;
+    }
+    if withheld_party_claims > 0 {
+        // Visible, because a withheld declaration and an absent one look the
+        // same in the document.
+        tracing::info!(
+            withheld_party_claims,
+            "nixpkgs declarations withheld: their subject is a party rather than the \
+             software. Composition and lifecycle declarations are unaffected."
+        );
     }
     stamped
 }

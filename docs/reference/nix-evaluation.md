@@ -328,7 +328,7 @@ beside the patch evidence. No extra flag to switch it on; the operator
 already consented to evaluation.
 
 It is not free. Measured warm on a 1,275-derivation project, the pass costs
-**706 ms against a 388 ms closure query** — it roughly doubles the scan
+**~935 ms against a 387 ms closure query** — it roughly doubles the scan
 rather than disappearing into it. Pass `--no-nixpkgs-security` to skip it;
 components, patch attribution and the patch-derived VEX are unchanged. Both
 phases log an `elapsed_ms`, so the figure is available from any scan:
@@ -352,8 +352,8 @@ already permitted whatever insecure packages it contains — Nix refuses to
 exceptions", not "the check did not run". The coverage record is what
 distinguishes those.
 
-**Expect partial coverage.** Measured on one real project: 273 of 376
-members confirmed (72%), 103 unchecked. Declarations are read from plain
+**Expect partial coverage.** Measured on one real project: 280 of 376
+members confirmed (74%), 96 unchecked. Declarations are read from plain
 nixpkgs at the revision `flake.lock` pins, so two kinds of member never
 resolve:
 
@@ -369,10 +369,13 @@ package set would require `--impure`, which would restore access to the host
 environment, and the narrower reach is the price of keeping the evaluation
 pure.
 
-Of the members that *do* resolve, 33 of 376 (9%) were rejected because an
-attribute of that name builds something else. Those are false attributions
-the check prevents — a security claim on a component that was never in the
-build.
+Some members are rejected because an attribute of that name builds
+something else: moat's closure holds the Haskell library `lens`, while
+top-level `pkgs.lens` is `lens-desktop`, an unrelated application. Those are
+false attributions the output-path check prevents — a security claim on a
+component that was never in the build. waybill tries every package set and
+takes the first whose output path matches, so a wrong name in an earlier set
+no longer hides a right one in a later set.
 
 ### Two kinds of declaration, two destinations
 
@@ -408,6 +411,15 @@ SBOM of such a package lists the package, not the OpenSSL inside it — so no
 version matcher can reach it. They are in the SBOM rather than in VEX because
 each is a *composition* fact: it says there are components inside this one
 that the document does not list.
+
+**Not everything nixpkgs writes here is published.** A declaration whose
+subject is a party rather than the software — "… was acquired by \<company\>,
+a company distrusted by the community" — is withheld. It is still read and
+counted, and the withholding is logged, so it stays distinguishable from
+nixpkgs having said nothing; it simply does not go into a document that
+every consumer of the artifact will read. Two of the 27 distinct prose
+declarations in one revision fall in this class. Composition and lifecycle
+declarations are unaffected.
 
 ### When nixpkgs and a patch disagree
 

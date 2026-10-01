@@ -364,6 +364,24 @@ emits no declaration-derived statements, and records why.
   patch-derived VEX statements are byte-identical with and without. Absent
   the flag the pass runs, so no existing invocation changes meaning.
 
+- **FR-022**: A declaration whose subject is a party rather than the
+  software is withheld rather than emitted. It is still read, still counted,
+  and the count is logged, so a withheld declaration stays distinguishable
+  from an absent one. The filter matches the party class rather than
+  allow-listing the composition one, so unrecognised phrasing is emitted
+  rather than withheld — over-withholding would silently discard the
+  bundled-component declarations that are the reason prose is carried.
+
+- **FR-023**: The probe reads a member's declarations even when nixpkgs
+  refuses to evaluate that member's derivation. Evaluating an insecure
+  package's `outPath` throws under the default config, and insecure packages
+  are the only ones carrying declarations, so a probe that reads both in one
+  fallible step can never fire.
+
+- **FR-024**: Where several package sets hold an attribute of a member's
+  name, the one whose output path matches the member wins — not merely the
+  first that exists. An attribute of the right name in an earlier set may
+  build different software entirely.
 ### Key Entities
 
 - **Declaration**: a single `meta.knownVulnerabilities` entry on one component.
@@ -472,9 +490,12 @@ emits no declaration-derived statements, and records why.
 - Reachability or call-graph analysis.
 - Vulnerability arrays in any SBOM format.
 - Queries to any external advisory database, including OSV.
-- The supply-chain trust declarations (`alist` — "acquired by [a company]
-  distrusted by the community"). These are a different kind of claim, they
-  name a party rather than a defect, and emitting them is a separate decision.
+- ~~The supply-chain trust declarations~~ — **decided, post-merge.** These
+  are a different kind of claim: they name a party rather than a defect. The
+  decision is to **withhold** them (FR-022). They are read and counted like
+  any other declaration, and the withholding is logged, but they are not
+  emitted. Composition and lifecycle declarations are unaffected. Measured:
+  2 of the 27 distinct prose declarations in one nixpkgs revision.
 - `meta.insecure` as a signal independent of `knownVulnerabilities`.
 
 ## Dependencies

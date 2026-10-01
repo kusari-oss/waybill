@@ -202,3 +202,118 @@ Two corrections fall out of this:
 
 The per-phase `elapsed_ms` fields on both log lines are kept, so the next
 person gets the number from any scan rather than re-deriving it.
+
+
+## Q6 — the feature could not fire, and the coverage figure was hiding it
+
+Added after milestone 1050 merged, when the shipped binary was run against
+real repositories for the first time. Two defects, both of which presented
+as a *coverage number* rather than as a failure, and which masked each other.
+
+### The probe could not read an insecure package
+
+`meta.knownVulnerabilities` and `outPath` were read inside one `tryEval`:
+
+```nix
+raw = if cand == null then null else { out = cand.outPath; kv = cand.meta.knownVulnerabilities or []; };
+r   = builtins.tryEval (builtins.deepSeq raw raw);
+```
+
+Measured against moat's pinned revision:
+
+| read | result |
+|---|---|
+| `alist.meta.knownVulnerabilities` | `success: true` — both strings returned |
+| `alist.outPath` | **`success: false`** |
+
+Nix refuses to *evaluate* the derivation of a package marked insecure. The
+probe reads the output path to verify the candidate, so the throw discarded
+the candidate — and the packages that throw are **exactly** the packages
+that carry declarations. The feature could not fire on the only case it
+exists for.
+
+Fixed by importing with the gates open
+(`config.allowInsecurePredicate = _: true; allowUnfree = true;`). These
+govern whether evaluation is *permitted*, not what is built: measured,
+`hello.outPath` is byte-identical under this config and under plain
+`legacyPackages`, so verification keeps its meaning.
+
+**Why it survived review.** Every real scan reported `declarations=0`, and
+the documentation explained that as "the common case, because a building
+project has already permitted what it contains" — true, and indistinguishable
+from the bug. The fixture deliberately carried no declaration (R8), so no
+test exercised the fire path. A passing suite and a feature that can never
+fire looked identical.
+
+### A wrong attribute shadowed the right one
+
+The probe took the first set whose attribute *existed*, not the first whose
+output path *matched*. moat's closure contains the Haskell library `lens`;
+top-level `pkgs.lens` is `lens-desktop`, an unrelated application. Under the
+default config that attribute happened to throw (unfree), so the search fell
+through to `haskellPackages.lens` and confirmed — by luck. With the gates
+open it evaluates, the search stops, verification correctly rejects it, and
+the real match is never tried.
+
+Fixed by returning every set's candidate in precedence order and selecting
+the first whose output path matches.
+
+### Both fixes, measured
+
+| | before | gates open | + first-match |
+|---|---:|---:|---:|
+| moat, members checked | 273 | 272 | **280** |
+| slack-web, members checked | — | 391 | **407** |
+| control (accepts `alist`), declarations | 0 | 2 | 2 |
+| control (accepts `dcraw`), distinct CVEs | — | 5 | 5 |
+
+The shadowing bug alone cost 7 confirmable members on moat and 16 on
+slack-web. Coverage on moat is now 280/376 (74%), not 273/376 (72%).
+
+Cost is unchanged in practice. A first reading of 3443 ms was cold cache
+from a fresh release build; three warm runs give **983 / 935 / 934 ms**
+against a 387 ms closure query, versus 917 ms before. Correctness cost
+about 2%, not 3.7×.
+
+### What the controls are
+
+Two throwaway flakes, in `measurements/`, each pinning moat's nixpkgs
+revision and accepting one package nixpkgs marks insecure via
+`permittedInsecurePackages`:
+
+- `control-insecure` — `alist`, whose declarations name no CVE;
+- `control-cve` — `dcraw`, which names CVE-2018-19655 and CVE-2018-19565.
+
+Building either requires the right version string: `alist-3.57.0`, not a
+guessed one. Nix refuses to evaluate otherwise, which is itself a live
+confirmation of the Q3 gate finding.
+
+## Q7 — which prose is publishable
+
+57 attributes in this revision carry `knownVulnerabilities`; 27 distinct
+entries name no CVE. Classified by hand:
+
+| kind | count | example |
+|---|---:|---|
+| a component inside the package | 5 | "Includes vulnerable versions of bundled libraries: openssl, ffmpeg, gdal, and proj" |
+| lifecycle of the software itself | ~18 | "minio has been abandoned by upstream" |
+| **a claim about a party** | **2** | "… was acquired by \<company\>, a company distrusted by the community"; "Please nag \<company\> to update to OpenSSL 3" |
+
+The spec deferred the party claims. They are now **withheld** — read,
+counted, and logged, but not emitted — while composition and lifecycle
+entries are published.
+
+The filter matches the party class rather than allow-listing the
+composition one, because an allowlist of "bundled|vendors|includes" would
+also drop "abandoned by upstream", which is wanted. New upstream phrasing
+will therefore be *emitted* rather than withheld: that is the chosen failure
+direction, since over-withholding silently discards the bundled-component
+declarations that are the reason prose is carried at all. The test pins the
+rule against all 27 measured strings, in both directions.
+
+**A gap this classification found.** `nexus` declares `Sonatype-2015-0286`
+and `Sonatype-2022-6438` — real advisory identifiers that are not CVEs. The
+identifier pattern matches `CVE-\d{4}-\d+` only, so these are filed as prose
+and reach the SBOM annotation rather than VEX, where OpenVEX would accept
+them as vulnerability names. Not changed here; widening the pattern is its
+own decision.
