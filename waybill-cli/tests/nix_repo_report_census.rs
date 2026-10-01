@@ -15,13 +15,34 @@ use std::process::Command;
 fn binary_path() -> &'static str { env!("CARGO_BIN_EXE_waybill") }
 
 fn report(root: &Path) -> serde_json::Value {
-    let out = std::env::temp_dir().join(format!("nix-rep-{}.json", std::process::id()));
+    // The output path must be unique per CALL, not per process.
+    //
+    // `std::process::id()` is the *test binary's* pid, so every test in this
+    // file derived the same path -- and the harness runs them on parallel
+    // threads. Both shelled out to `repo report --output <same file>`, and a
+    // read that landed while the other invocation had the file open and
+    // truncated saw zero bytes: `EOF while parsing a value`. It is timing
+    // dependent, so it passed 25/25 locally and failed on a slower, more
+    // contended CI runner.
+    //
+    // A per-call tempdir removes the shared name entirely rather than making
+    // the window smaller. It is also self-cleaning, which the old path was
+    // not -- it left a file in the system temp dir after every run.
+    let dir = tempfile::tempdir().unwrap();
+    let out = dir.path().join("report.json");
     let st = Command::new(binary_path())
         .args(["repo", "report", "--path", root.to_str().unwrap(),
                "--output", out.to_str().unwrap()])
         .status().unwrap();
     assert!(st.success(), "repo report failed: {st:?}");
-    serde_json::from_slice(&std::fs::read(&out).unwrap()).unwrap()
+    let bytes = std::fs::read(&out).unwrap();
+    assert!(
+        !bytes.is_empty(),
+        "repo report exited 0 but wrote nothing to {}; if this fires, the \
+         output path is being shared again",
+        out.display()
+    );
+    serde_json::from_slice(&bytes).unwrap()
 }
 
 fn nix_tree() -> tempfile::TempDir {

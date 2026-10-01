@@ -269,6 +269,8 @@ fn backport_statements(artifacts: &ScanArtifacts<'_>) -> Vec<OpenVexStatement> {
 /// scan has zero advisories across every component — no file is
 /// then written and the SPDX serializer skips the
 /// `externalDocumentRefs` entry.
+use crate::scan_fs::package_db::nix::declarations::ANN_NIXPKGS_DECLARATION;
+
 pub fn serialize_openvex(
     artifacts: &ScanArtifacts<'_>,
     cfg: &OutputConfig,
@@ -310,9 +312,32 @@ pub fn serialize_openvex(
     // Milestone 1050: what nixpkgs itself declares. Shares the root-component
     // lookup with the backport path, so both halves of the story address the
     // same subject.
-    let declared = root_component_purl(artifacts)
-        .map(|root| declaration_statements(artifacts, &root))
-        .unwrap_or_default();
+    let declared = match root_component_purl(artifacts) {
+        Some(root) => declaration_statements(artifacts, &root),
+        None => {
+            // Every statement names the build as its product, so with no
+            // main-module component there is no subject to attach one to.
+            // Say so: the scan summary reports the declarations it found,
+            // and a document that then contains none of them looks like the
+            // read failed. Measured on a bare Nix flake carrying no language
+            // manifest -- five declarations found, nothing emitted, no word
+            // about it.
+            let found = artifacts
+                .components
+                .iter()
+                .filter(|c| c.extra_annotations.contains_key(ANN_NIXPKGS_DECLARATION))
+                .count();
+            if found > 0 {
+                tracing::warn!(
+                    components_with_declarations = found,
+                    "nixpkgs declarations found but not emitted as VEX: this scan has no \
+                     main-module component to name as the affected product. Supply \
+                     --root-name/--root-version, or scan a tree with a language manifest."
+                );
+            }
+            Vec::new()
+        }
+    };
 
     // FR-012. Where nixpkgs declares a CVE that a patch on the same component
     // also names, the declaration wins and the patch-derived `not_affected`

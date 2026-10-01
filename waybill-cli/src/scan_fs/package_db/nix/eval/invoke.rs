@@ -146,6 +146,29 @@ pub(crate) fn detect_host_system(budget: Duration) -> Result<NixSystem, Degradat
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
+
+    /// Nix prints warnings before errors, so a blind prefix hides the cause.
+    #[test]
+    fn the_detail_starts_at_the_error_not_the_warnings() {
+        let stderr = "\
+warning: ignoring untrusted flake configuration setting 'allow-import-from-derivation'.
+Pass '--accept-flake-config' to trust it
+warning: ignoring untrusted flake configuration setting 'extra-substituters'.
+error: cannot build '/nix/store/aaa-cabal2nix-thing.drv^out' during evaluation because the option 'allow-import-from-derivation' is disabled
+";
+        let d = salient_stderr(stderr);
+        assert!(d.starts_with("error:"), "must lead with the error: {d:?}");
+        assert!(d.contains("allow-import-from-derivation' is disabled"));
+        assert!(!d.contains("untrusted flake configuration"), "warnings must not crowd it out: {d:?}");
+    }
+
+    /// CONTROL: with no error line there is nothing to seek to, and the
+    /// output must still be the message rather than empty.
+    #[test]
+    fn stderr_without_an_error_line_is_still_reported() {
+        let d = salient_stderr("something unusual happened\nand then stopped\n");
+        assert!(d.starts_with("something unusual"), "{d:?}");
+    }
     use super::*;
 
     fn nix_available() -> bool {
@@ -317,6 +340,35 @@ pub(crate) fn argv_is_safe(argv: &[&str]) -> bool {
 /// The production [`super::Evaluator`], which actually runs `nix`.
 pub(crate) struct NixEvaluator;
 
+/// The part of nix's stderr an operator can act on.
+///
+/// A blind prefix is the wrong thing to keep. Nix prints warnings before
+/// errors, so `stderr.take(200)` on a flake that sets its own `nixConfig`
+/// returns "ignoring untrusted flake configuration setting ..." and
+/// truncates before the line that says what actually went wrong. Measured
+/// on a Haskell flake: the operator was shown a warning about untrusted
+/// config while the real cause -- `cannot build 'cabal2nix-....drv' during
+/// evaluation because the option 'allow-import-from-derivation' is
+/// disabled` -- never appeared. That reads as "waybill is broken on my
+/// repo" rather than "waybill declined by policy".
+///
+/// So: start at the first line mentioning an error, and fall back to the
+/// prefix when there is none.
+fn salient_stderr(stderr: &str) -> String {
+    let start = stderr
+        .lines()
+        .position(|l| l.trim_start().starts_with("error") || l.contains(": error:"))
+        .unwrap_or(0);
+    stderr
+        .lines()
+        .skip(start)
+        .collect::<Vec<_>>()
+        .join("\n")
+        .chars()
+        .take(300)
+        .collect()
+}
+
 impl super::Evaluator for NixEvaluator {
     fn verify_ifd_refusal(
         &self,
@@ -399,12 +451,10 @@ impl super::Evaluator for NixEvaluator {
             if stderr.contains("getFlake") || stderr.contains("unable to download") {
                 return Err(DegradationReason::RevisionUnfetchable {
                     revision: revision.to_string(),
-                    detail: stderr.chars().take(200).collect(),
+                    detail: salient_stderr(stderr),
                 });
             }
-            return Err(DegradationReason::EvaluationFailed(
-                stderr.chars().take(200).collect(),
-            ));
+            return Err(DegradationReason::EvaluationFailed(salient_stderr(stderr)));
         }
         serde_json::from_str(&out.stdout)
             .map_err(|e| DegradationReason::EvaluationFailed(format!("unparseable json: {e}")))

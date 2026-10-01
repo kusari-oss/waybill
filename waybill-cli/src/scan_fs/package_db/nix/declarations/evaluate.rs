@@ -48,7 +48,23 @@ pub(crate) fn build_expr(revision: &str, system: &str, names: &[String]) -> Stri
         .join("\n    ");
     format!(
         r#"let
-  pkgs = (builtins.getFlake "github:NixOS/nixpkgs/{revision}").legacyPackages."{system}";
+  # `legacyPackages` carries nixpkgs' default config, under which evaluating
+  # an insecure package's `outPath` THROWS. That is fatal here: the probe
+  # reads the output path to verify the candidate, so the throw discarded
+  # the candidate -- and the packages that throw are exactly the packages
+  # that carry declarations. The feature could not fire on the case it
+  # exists for, and "declarations=0" read as "nothing to declare".
+  #
+  # Importing with the gates open fixes it. `allowInsecurePredicate` and
+  # `allowUnfree` govern whether evaluation is PERMITTED, not what is built:
+  # measured, `hello.outPath` is byte-identical under this config and under
+  # plain `legacyPackages`, so output-path verification keeps its meaning
+  # and still rejects an attribute that builds something else. Nothing is
+  # built here regardless -- the probe reads paths and metadata.
+  pkgs = import (builtins.getFlake "github:NixOS/nixpkgs/{revision}") {{
+    system = "{system}";
+    config = {{ allowInsecurePredicate = _: true; allowUnfree = true; }};
+  }};
   sets = [
     {sets}
   ];
@@ -62,8 +78,21 @@ pub(crate) fn build_expr(revision: &str, system: &str, names: &[String]) -> Stri
       }};
       r = builtins.tryEval (builtins.deepSeq raw raw);
     in if r.success then r.value else null;
-  first = n: builtins.foldl' (a: s: if a != null then a else probeIn s n) null sets;
-in builtins.listToAttrs (map (n: {{ name = n; value = first n; }}) [ {list} ])"#
+  # EVERY set's candidate, in precedence order -- not the first one found.
+  #
+  # Stopping at the first non-null candidate conflates "an attribute of this
+  # name exists" with "this is the attribute". Measured: moat's closure
+  # contains the Haskell library `lens`, and top-level `pkgs.lens` is
+  # `lens-desktop`, an unrelated application. Taking the first hit yields
+  # lens-desktop, whose output path rightly fails verification -- and the
+  # real match in `haskellPackages` is then never tried, so a member that
+  # could be confirmed is filed unchecked.
+  #
+  # The caller walks this list and takes the first whose output path matches
+  # the member, so precedence is preserved while a wrong guess no longer
+  # shadows a right one.
+  all = n: builtins.filter (c: c != null) (map (s: probeIn s n) sets);
+in builtins.listToAttrs (map (n: {{ name = n; value = all n; }}) [ {list} ])"#
     )
 }
 
@@ -73,7 +102,7 @@ pub(crate) fn evaluate(
     system: &str,
     names: &[String],
     budget: Duration,
-) -> Result<BTreeMap<String, Candidate>, DegradationReason> {
+) -> Result<BTreeMap<String, Vec<Candidate>>, DegradationReason> {
     // The revision is interpolated into a Nix string literal, so an
     // unvalidated value is an expression-injection vector. Reuses milestone
     // 1034's guard rather than restating the rule.
@@ -130,12 +159,14 @@ pub(crate) fn evaluate(
 }
 
 /// Decode what the evaluation returned. A `null` means no set had the name.
-pub(crate) fn parse_output(stdout: &str) -> Result<BTreeMap<String, Candidate>, DegradationReason> {
-    let raw: BTreeMap<String, Option<serde_json::Value>> = serde_json::from_str(stdout)
+pub(crate) fn parse_output(
+    stdout: &str,
+) -> Result<BTreeMap<String, Vec<Candidate>>, DegradationReason> {
+    let raw: BTreeMap<String, Vec<serde_json::Value>> = serde_json::from_str(stdout)
         .map_err(|e| DegradationReason::EvaluationFailed(format!("undecodable output: {e}")))?;
-    let mut out = BTreeMap::new();
-    for (name, v) in raw {
-        let Some(v) = v else { continue };
+    let mut out: BTreeMap<String, Vec<Candidate>> = BTreeMap::new();
+    for (name, vs) in raw {
+        for v in vs {
         let (Some(set_id), Some(path)) = (
             v.get("setId").and_then(|x| x.as_str()),
             v.get("out").and_then(|x| x.as_str()),
@@ -155,14 +186,12 @@ pub(crate) fn parse_output(stdout: &str) -> Result<BTreeMap<String, Candidate>, 
                     .collect()
             })
             .unwrap_or_default();
-        out.insert(
-            name,
-            Candidate {
-                source,
-                out_path: path.to_string(),
-                declarations,
-            },
-        );
+        out.entry(name.clone()).or_default().push(Candidate {
+            source,
+            out_path: path.to_string(),
+            declarations,
+        });
+        }
     }
     Ok(out)
 }
@@ -226,7 +255,34 @@ mod tests {
         // Impurity stays scoped to getFlake. `builtins.currentSystem` would
         // widen it and would also make cross-platform scans silently wrong.
         let e = build_expr("0123456789abcdef0123456789abcdef01234567", "x86_64-linux", &["foo".into()]);
-        assert!(e.contains(r#"legacyPackages."x86_64-linux""#));
+        assert!(e.contains(r#"system = "x86_64-linux";"#));
+        assert!(!e.contains("currentSystem"));
+    }
+
+    /// The probe must be able to read an INSECURE package, which is the only
+    /// kind that carries a declaration.
+    ///
+    /// Under nixpkgs' default config (`legacyPackages`), evaluating such a
+    /// package's `outPath` throws. The probe reads `outPath` and
+    /// `knownVulnerabilities` inside one `tryEval`, so that throw discarded
+    /// the declaration too, and the feature could not fire on the only case
+    /// it exists for. Every real scan reported `declarations=0`, which is
+    /// also what a clean project reports -- the bug and the healthy result
+    /// were indistinguishable.
+    ///
+    /// Pins the gate that makes the read possible. An integration test
+    /// covers the end-to-end fire path against a flake that accepts an
+    /// insecure package.
+    #[test]
+    fn the_probe_opens_the_gates_that_would_hide_a_declaration() {
+        let e = build_expr("0123456789abcdef0123456789abcdef01234567", "x86_64-linux", &["foo".into()]);
+        assert!(
+            e.contains("allowInsecurePredicate"),
+            "without this an insecure package's outPath throws and takes its \
+             declaration with it: {e}"
+        );
+        // Still pure: the gates govern permission, not where inputs come from.
+        assert!(!e.contains("--impure"));
         assert!(!e.contains("currentSystem"));
     }
 
@@ -246,15 +302,15 @@ mod tests {
     #[test]
     fn output_decodes_declarations_and_skips_names_no_set_knew() {
         let stdout = r#"{
-          "known":   {"setId":"haskell","out":"/nix/store/aaa-known-1.0",
-                      "kv":["CVE-2020-1: boom","vendors an EOL thing"]},
-          "clean":   {"setId":"top-level","out":"/nix/store/bbb-clean-2.0","kv":[]},
-          "missing": null
+          "known":   [{"setId":"haskell","out":"/nix/store/aaa-known-1.0",
+                      "kv":["CVE-2020-1: boom","vendors an EOL thing"]}],
+          "clean":   [{"setId":"top-level","out":"/nix/store/bbb-clean-2.0","kv":[]}],
+          "missing": []
         }"#;
         let m = parse_output(stdout).unwrap();
-        assert_eq!(m.len(), 2, "the null must be skipped: {:?}", m.keys());
+        assert_eq!(m.len(), 2, "the empty list must be skipped: {:?}", m.keys());
 
-        let k = &m["known"];
+        let k = &m["known"][0];
         assert_eq!(k.source, DeclarationSource::Haskell);
         assert_eq!(k.declarations.len(), 2);
         assert_eq!(k.declarations[0].cves, vec!["CVE-2020-1"]);
@@ -262,7 +318,24 @@ mod tests {
 
         // An empty list is a real answer -- "nixpkgs says nothing" -- and is
         // not the same as the name being absent.
-        assert!(m["clean"].declarations.is_empty());
+        assert!(m["clean"][0].declarations.is_empty());
+    }
+
+    /// Several sets can answer for one name, and the order must survive the
+    /// decode: the resolver relies on it to prefer an earlier set when both
+    /// match.
+    #[test]
+    fn every_sets_candidate_survives_the_decode_in_order() {
+        let stdout = r#"{
+          "lens": [
+            {"setId":"top-level","out":"/nix/store/aaa-lens-desktop-1.0","kv":[]},
+            {"setId":"haskell","out":"/nix/store/bbb-lens-5.2","kv":[]}
+          ]
+        }"#;
+        let m = parse_output(stdout).unwrap();
+        assert_eq!(m["lens"].len(), 2, "both candidates must be kept");
+        assert_eq!(m["lens"][0].source, DeclarationSource::TopLevel);
+        assert_eq!(m["lens"][1].source, DeclarationSource::Haskell);
     }
 
     #[test]
