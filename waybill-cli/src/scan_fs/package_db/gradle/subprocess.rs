@@ -25,7 +25,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::sync::mpsc;
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use super::ladder::{EdgeScope, GradleLadderConfig, GradleResolvedGraph};
 use super::tier::GradleResolutionTier;
@@ -116,13 +116,33 @@ pub(super) fn discover_wrapper(project_dir: &Path) -> Option<PathBuf> {
 
 /// Spawn a subprocess with a hard timeout.
 ///
-/// On timeout: SIGTERM the child, wait up to 2s, then SIGKILL. Returns
-/// `SubprocessOutcome::Timeout` when the timeout elapses.
+/// On timeout the child is killed and reaped, and
+/// `SubprocessOutcome::Timeout` is returned.
 ///
-/// Pattern lifted from `golang/go_mod_graph.rs::run_go_mod_graph`
-/// (m055) — kept in-file rather than shared because Gradle's process
-/// tree can spawn worker JVMs the parent doesn't own; the go-side
-/// helper doesn't handle that.
+/// The kill is `Child::kill`, i.e. SIGKILL with no SIGTERM grace period.
+/// A SIGTERM→grace→SIGKILL sequence needs `libc`, which is an optional
+/// dependency here (activated only by `ebpf-tracing`), so it is not
+/// available on the default build. Gradle is being asked for a read-only
+/// dependency listing, so there is no in-flight write for a grace period
+/// to protect.
+///
+/// Known limitation: SIGKILL reaches the direct child only. Gradle
+/// invoked with `--no-daemon` can still spawn worker JVMs in its own
+/// process tree, and those are not killed here — that needs a process
+/// group (`setsid` + `killpg`), which also needs `libc`.
+///
+/// Waiting is a `try_wait` poll loop rather than a wait thread, so the
+/// child stays owned by this function and can actually be killed. An
+/// earlier version moved the child into a wait thread and timed out on
+/// an mpsc `recv_timeout`, which left the subprocess running: the
+/// timeout was reported but the process was only reaped at interpreter
+/// shutdown, so a caller waiting on waybill's own exit blocked for the
+/// child's full natural runtime. Mirrors
+/// `nix/eval/invoke.rs::run_bounded`.
+/// Poll interval for the `spawn_with_timeout` deadline loop. Matches
+/// `nix/eval/invoke.rs`'s `POLL`.
+const WAIT_POLL: Duration = Duration::from_millis(50);
+
 pub(super) fn spawn_with_timeout(
     mut cmd: Command,
     timeout: Duration,
@@ -159,40 +179,46 @@ pub(super) fn spawn_with_timeout(
         let _ = tx_stderr.send(Vec::new());
     }
 
-    // Wait for the child in a separate thread so we can time it out.
-    let (tx_wait, rx_wait) = mpsc::channel::<std::io::Result<std::process::ExitStatus>>();
-    let child_id = child.id();
-    let wait_handle = thread::spawn(move || {
-        let status = child.wait();
-        let _ = tx_wait.send(status);
-    });
-    let _ = child_id;
+    // Poll for exit against a deadline. `child` deliberately stays owned
+    // here: a wait thread would take it out of reach of the kill below.
+    let deadline = Instant::now() + timeout;
+    let status = loop {
+        match child.try_wait() {
+            Ok(Some(status)) => break status,
+            Ok(None) => {
+                if Instant::now() >= deadline {
+                    // Kill, then reap. The `wait` is what makes the
+                    // difference observable: it closes the child's pipe
+                    // ends, which releases the reader threads above and
+                    // lets this process exit without waiting out the
+                    // child's natural runtime.
+                    let _ = child.kill();
+                    let _ = child.wait();
+                    return Err(SubprocessOutcome::Timeout);
+                }
+                thread::sleep(WAIT_POLL);
+            }
+            // A failed `wait` leaves the child's state unknown; kill it
+            // rather than leaking it, and report as the pre-existing code
+            // did.
+            Err(_) => {
+                let _ = child.kill();
+                let _ = child.wait();
+                return Err(SubprocessOutcome::ToolMissing);
+            }
+        }
+    };
 
-    match rx_wait.recv_timeout(timeout) {
-        Ok(Ok(status)) => {
-            let _ = wait_handle.join();
-            let stdout_bytes = rx_stdout.recv().unwrap_or_default();
-            let stderr_bytes = rx_stderr.recv().unwrap_or_default();
-            Ok(std::process::Output {
-                status,
-                stdout: stdout_bytes,
-                stderr: stderr_bytes,
-            })
-        }
-        Ok(Err(_)) => Err(SubprocessOutcome::ToolMissing),
-        Err(_) => {
-            // Timeout — the wait thread still holds the Child; we can't
-            // reach it from here. Best-effort: give up on this scan; the
-            // subprocess will be reaped when the wait thread joins in
-            // process shutdown. Emit Timeout regardless.
-            //
-            // NOTE for the follow-up milestone (SC-005): plumb the Child
-            // handle out to a scoped Kill so this becomes a proper
-            // SIGTERM→2s→SIGKILL sequence. MVP acceptable per spec:
-            // "kill cleanly on timeout" is best-effort here.
-            Err(SubprocessOutcome::Timeout)
-        }
-    }
+    // The child has exited, so both pipes are closed and the reader
+    // threads have finished or are about to; these recvs cannot block
+    // indefinitely.
+    let stdout_bytes = rx_stdout.recv().unwrap_or_default();
+    let stderr_bytes = rx_stderr.recv().unwrap_or_default();
+    Ok(std::process::Output {
+        status,
+        stdout: stdout_bytes,
+        stderr: stderr_bytes,
+    })
 }
 
 /// Parse the output of `./gradlew :<sub>:dependencies --configuration
