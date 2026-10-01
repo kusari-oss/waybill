@@ -234,7 +234,7 @@ mod tests {
     fn a_name_that_is_not_attribute_shaped_never_reaches_the_expression() {
         // CONTROL: the safe name survives, so this is testing the filter and
         // not an empty input.
-        let names = vec!["aeson".to_string(), "evil\"; x = ".to_string()];
+        let names = ["aeson".to_string(), "evil\"; x = ".to_string()];
         let safe: Vec<String> = names
             .iter()
             .filter(|n| is_safe_attribute_name(n))

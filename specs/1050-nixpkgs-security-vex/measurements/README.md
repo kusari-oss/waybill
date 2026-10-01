@@ -161,3 +161,44 @@ Three traps cost a measurement round each and are commented in the probe:
 - `deepSeq` must be *inside* `tryEval`, which returns a lazy value — otherwise
   the throw escapes at serialisation time and the first unfree package kills
   the run.
+
+
+## Q5 — what does the pass cost, and can that cost be absorbed?
+
+SC-006a asked for the added wall-clock cost of a `--nix-closure` scan, with
+the rule that a figure over roughly a fifth of the existing closure-scan time
+reopens the decision to run automatically. It does.
+
+Three consecutive runs against moat (1,275 derivations, 376 closure members),
+everything warm, timed by an `Instant` around each phase rather than by
+toggling a flag — a toggle cannot distinguish "the pass is slow" from "the
+pass changed what a later phase does":
+
+| phase | run 1 | run 2 | run 3 |
+|---|---:|---:|---:|
+| closure query + classify | 388 ms | 388 ms | 388 ms |
+| declarations pass | 706 ms | 706 ms | 706 ms |
+| whole scan, wall clock | 2.91 s | 1.25 s | 1.25 s |
+
+Run 1 is cold-start; runs 2 and 3 agree.
+
+**The pass costs more than the closure query it rides on.** Against a
+pre-feature scan of roughly 550 ms it adds 706 ms — it does not disappear
+into the existing work, it roughly doubles it. That is six times the
+threshold, not a margin to argue about.
+
+Two corrections fall out of this:
+
+- A comment at the call site claimed "~1.6s against a closure scan measured
+  in tens of seconds". Both halves were wrong. The closure query is 388 ms
+  warm, and the ratio that comment implied — a rounding error — was the
+  entire basis for running the pass with no way to decline it. The figure
+  appears to have been carried over from an early cold-eval observation and
+  never re-measured against the phase it was being compared to.
+- `--no-nixpkgs-security` now exists. The default still runs, because the
+  absolute cost is under a second and the pass is silent on projects with
+  nothing to declare, but an operator who wants only the composition is no
+  longer required to pay for the security read.
+
+The per-phase `elapsed_ms` fields on both log lines are kept, so the next
+person gets the number from any scan rather than re-deriving it.

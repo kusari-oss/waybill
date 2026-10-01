@@ -359,6 +359,11 @@ emits no declaration-derived statements, and records why.
   proves material, the decision to make it automatic is reopened rather than
   absorbed.
 
+- **FR-021**: A `--no-nixpkgs-security` flag skips the declaration pass. The
+  closure tier is unaffected by it: components, patch attribution and the
+  patch-derived VEX statements are byte-identical with and without. Absent
+  the flag the pass runs, so no existing invocation changes meaning.
+
 ### Key Entities
 
 - **Declaration**: a single `meta.knownVulnerabilities` entry on one component.
@@ -407,6 +412,12 @@ emits no declaration-derived statements, and records why.
 - **SC-006a**: The wall-clock cost the feature adds to a `--nix-closure` scan
   is measured on a real project and recorded. A figure over roughly a fifth of
   the existing closure-scan time reopens the automatic-by-default decision.
+  **Measured, and it did.** 706 ms against a 388 ms closure query on a
+  1,275-derivation project — the pass costs more than the query it rides on.
+  Resolution: the default stands, because the absolute cost is under a second
+  and the pass is silent where there is nothing to declare, but FR-021 adds
+  `--no-nixpkgs-security` so the cost is declinable. See
+  `measurements/README.md` Q5.
 - **SC-007**: With `nix` unavailable, the scan completes and names the reason.
 - **SC-007a**: Declaration coverage is reported as a count of checked versus
   unchecked members on a measured project, so the feature's reach is a figure

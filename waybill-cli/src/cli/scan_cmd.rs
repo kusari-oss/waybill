@@ -1277,6 +1277,24 @@ pub struct ScanArgs {
     #[arg(long)]
     pub no_nixpkgs_haskell_closure: bool,
 
+    /// Skip reading what nixpkgs declares about the closure's packages.
+    ///
+    /// Milestone 1050 (#1039). Under `--nix-closure`, waybill evaluates each
+    /// closure member's `meta.knownVulnerabilities` and emits what it finds
+    /// as VEX and, for the entries naming no CVE, as a per-component
+    /// annotation.
+    ///
+    /// Measured on a 1,275-derivation project, warm: the pass costs 706 ms
+    /// against a 388 ms closure query, roughly doubling the scan. The
+    /// absolute figure is under a second, which is why it still runs by
+    /// default -- but the ratio is large enough that an operator who wants
+    /// only the composition needs a way out, and this is it.
+    ///
+    /// Setting this does not affect the closure itself: components, patch
+    /// attribution, and the patch-derived VEX statements are unchanged.
+    #[arg(long)]
+    pub no_nixpkgs_security: bool,
+
     /// Seconds to wait when retrieving the pinned nixpkgs package set
     /// before degrading to versionless output (milestone 926, #947).
     ///
@@ -4405,6 +4423,7 @@ pub async fn execute(
                 Some(Err(reason))
             }
             Ok(()) => {
+                let started = std::time::Instant::now();
                 let cfg = closure::ClosureConfig::from_flags(
                     args.nix_closure_attr.clone(),
                     None,
@@ -4420,6 +4439,7 @@ pub async fn execute(
                             attribute = %c.attribute,
                             derivations = c.raw.derivations.len(),
                             roles = ?c.role_counts(),
+                            elapsed_ms = started.elapsed().as_millis(),
                             "nix-closure: classified"
                         );
                     }),
@@ -4632,18 +4652,28 @@ pub async fn execute(
     // Milestone 1050 (#1039, #1040) — what nixpkgs itself declares about the
     // packages this build contains.
     //
-    // Runs automatically under `--nix-closure` with no flag of its own: the
-    // operator already consented to evaluation by passing that flag, and this
-    // reads the same package set for more of the same kind of information.
-    // Measured at ~1.6s against a closure scan measured in tens of seconds.
+    // Runs automatically under `--nix-closure`: the operator already consented
+    // to evaluation by passing that flag, and this reads the same package set
+    // for more of the same kind of information.
+    //
+    // It is not free. Measured warm on a 1,275-derivation project it costs
+    // 706 ms against a 388 ms closure query -- it roughly doubles the scan
+    // rather than disappearing into it, which is why `--no-nixpkgs-security`
+    // exists. The default stands because the absolute cost is under a second
+    // and the pass is silent on projects with nothing to declare.
     //
     // Degrades independently of the closure query. A closure that resolved
     // still emits its components when this fails, because "the closure is
     // unknown" and "what nixpkgs says about it is unknown" are different
     // gaps and a consumer needs to tell them apart.
     let nixpkgs_security_summary = match &nix_closure {
-        Some(Ok(classified)) => {
+        Some(Ok(classified)) if !args.no_nixpkgs_security => {
             use scan_fs::package_db::nix::declarations;
+            // Timed because the pass runs automatically: an operator who
+            // finds a scan slower has to be able to see whether this is why,
+            // and the decision to run it without a flag rests on a ratio
+            // that only a per-phase figure can settle.
+            let started = std::time::Instant::now();
             let by_name: std::collections::HashMap<String, String> = components
                 .iter()
                 .map(|c| (c.name.clone(), c.purl.as_str().to_string()))
@@ -4682,6 +4712,7 @@ pub async fn execute(
                         distinct_cves = s.distinct_cves,
                         withheld = s.reconciliations_withheld,
                         prose_components = stamped,
+                        elapsed_ms = started.elapsed().as_millis(),
                         "nixpkgs-declarations: what the package set says"
                     );
                     Some(s)
@@ -4690,6 +4721,7 @@ pub async fn execute(
                     tracing::info!(
                         reason = reason.wire(),
                         detail = %reason,
+                        elapsed_ms = started.elapsed().as_millis(),
                         "nixpkgs-declarations: degrading; the closure is unaffected"
                     );
                     None
@@ -6153,6 +6185,37 @@ mod tests {
         assert!(!default.inner.preserve_manifest_main_module, "still defaults off");
     }
 
+    /// T054 / FR-021 — the declaration pass is declinable.
+    ///
+    /// Pins the CLI surface only. The gate itself is one `if !` at the call
+    /// site, and what can break independently is the flag's existence,
+    /// spelling and default: a rename would silently stop honouring every
+    /// existing `--no-nixpkgs-security` on the command line, because clap
+    /// rejects unknown flags loudly but a renamed one is a different flag.
+    ///
+    /// Defaulting off is the load-bearing half. The pass costs 706 ms
+    /// against a 388 ms closure query (measurements Q5), and the decision
+    /// to pay that by default is what this asserts has not been quietly
+    /// inverted.
+    #[test]
+    fn no_nixpkgs_security_is_accepted_and_defaults_off_m1050() {
+        let parsed = <ScanArgsForTest as clap::Parser>::try_parse_from([
+            "scan",
+            "--path",
+            ".",
+            "--no-nixpkgs-security",
+        ])
+        .expect("FR-021: the opt-out MUST parse");
+        assert!(parsed.inner.no_nixpkgs_security);
+
+        let default = <ScanArgsForTest as clap::Parser>::try_parse_from(["scan", "--path", "."])
+            .expect("baseline parse");
+        assert!(
+            !default.inner.no_nixpkgs_security,
+            "FR-021: absent the flag the pass MUST run, so no existing invocation changes meaning"
+        );
+    }
+
     // ----- Issue #927 (m923) — enrichment default -----
 
     /// Build the source the way `run()` does, from a parsed command line.
@@ -6786,6 +6849,7 @@ mod tests {
             nix_closure_attr: None,
             no_nixpkgs_haskell: false,
             no_nixpkgs_haskell_closure: false,
+            no_nixpkgs_security: false,
             nixpkgs_timeout_secs: 30,
             image: None,
             image_src: vec![],

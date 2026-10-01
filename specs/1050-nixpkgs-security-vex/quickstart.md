@@ -2,7 +2,10 @@
 
 ## What an operator does
 
-Nothing new. The feature runs whenever `--nix-closure` does (FR-020a).
+No flag to switch it on: the feature runs whenever `--nix-closure` does
+(FR-020a). One flag to switch it off — `--no-nixpkgs-security` (FR-021),
+added after measurement put the pass at 706 ms against a 388 ms closure
+query, which is more than a `--nix-closure` scan can absorb silently.
 
 ```sh
 waybill sbom scan --path . --nix-closure \

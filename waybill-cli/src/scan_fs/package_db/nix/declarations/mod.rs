@@ -91,6 +91,13 @@ pub enum AttributeResolution {
 
 impl AttributeResolution {
     /// Whether this member's declarations are known at all.
+    ///
+    /// Test-only. Production code matches the enum exhaustively instead --
+    /// see `NixpkgsSecuritySummary::build` -- so that a variant added later
+    /// cannot be silently absorbed into an "unchecked" bucket. Tests want
+    /// the one-bit question, and asking it through a named predicate keeps
+    /// them from re-spelling the `Confirmed { .. }` pattern at each site.
+    #[cfg(test)]
     pub(crate) fn is_checked(&self) -> bool {
         matches!(self, Self::Confirmed { .. })
     }

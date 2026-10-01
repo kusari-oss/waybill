@@ -127,12 +127,12 @@ can be read at all.
 - [X] T051 [P] Write extractors for C186–C189 across all three formats in `waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3,mod}.rs`, carrying the Principle V audit from research R6 into each row
 - [X] T052 Extend the extractor-correctness test in `waybill-cli/src/parity/extractors/mod.rs` to cover the new rows, with per-side non-empty CONTROL assertions — registration-only checking passes when an extractor points at a field nobody writes, which is how milestone 1035 shipped a cardinality bug
 - [X] T053 Run the parity suite in the **lib** target (`cargo test -p waybill --lib`), not `--bins` — milestone 1035 read "3 passed" from `--bins parity` while the real suite had not run at all
-- [ ] T054 [P] Measure the added wall-clock cost against a real closure and record it in `specs/1050-nixpkgs-security-vex/measurements/README.md` (FR-020b). A figure above roughly a fifth of closure-scan time reopens the automatic-by-default decision rather than absorbing it (SC-006a)
-- [ ] T055 [P] Document the feature in `docs/reference/nix-evaluation.md` alongside `--nix-closure`, leading with the coverage annotation and stating plainly that an empty result is the common case because a building project has already permitted what it contains
-- [ ] T056 Verify SC-006: with `--nix-closure` absent, every golden under `waybill-cli/tests/fixtures/public_corpus/` is unchanged (`git status --porcelain` clean after the suite)
-- [ ] T057 Regenerate corpus goldens **in CI, not locally**, only if T056 shows legitimate churn
-- [ ] T058 Run the walker-audit grep with the workflow's exact command if any `fn walk`-shaped function appeared — it is not in `pre-pr.sh`, and an approximation of the command matched 52 entries against an allowlist of 12 when a shell glob ate `--include=*.rs`
-- [ ] T059 Run `./scripts/pre-pr.sh > /tmp/prepr.log 2>&1; echo "EXIT=$?"` — read the **script's** status, never a pipeline's — then assert `>>> all pre-PR checks passed.` and the per-target `test result: ok. N passed; 0 failed`
+- [X] T054 [P] Measure the added wall-clock cost against a real closure and record it in `specs/1050-nixpkgs-security-vex/measurements/README.md` (FR-020b). A figure above roughly a fifth of closure-scan time reopens the automatic-by-default decision rather than absorbing it (SC-006a)
+- [X] T055 [P] Document the feature in `docs/reference/nix-evaluation.md` alongside `--nix-closure`, leading with the coverage annotation and stating plainly that an empty result is the common case because a building project has already permitted what it contains
+- [X] T056 Verify SC-006: with `--nix-closure` absent, every golden under `waybill-cli/tests/fixtures/public_corpus/` is unchanged (`git status --porcelain` clean after the suite)
+- [X] T057 Regenerate corpus goldens **in CI, not locally**, only if T056 shows legitimate churn — **not needed**: T056 found zero churn (6430 tests, working tree held only this milestone's own edits), so there was nothing to regenerate
+- [X] T058 Run the walker-audit grep with the workflow's exact command if any `fn walk`-shaped function appeared — it is not in `pre-pr.sh`, and an approximation of the command matched 52 entries against an allowlist of 12 when a shell glob ate `--include=*.rs`
+- [X] T059 Run `./scripts/pre-pr.sh > /tmp/prepr.log 2>&1; echo "EXIT=$?"` — read the **script's** status, never a pipeline's — then assert `>>> all pre-PR checks passed.` and the per-target `test result: ok. N passed; 0 failed`
 
 ---
 
