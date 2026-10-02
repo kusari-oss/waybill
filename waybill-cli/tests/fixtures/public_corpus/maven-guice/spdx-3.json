@@ -1835,7 +1835,7 @@
       "name": "K3SGURGETEMDOBGC",
       "simplelicensing_licenseText": "License text not extracted by waybill. Consult the original package (e.g., /usr/share/licenses/<name>/ on Debian/RPM, or upstream project source) for the full text.",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/licenseref/K3SGURGETEMDOBGC",
-      "type": "simplelicensing_CustomLicense"
+      "type": "expandedlicensing_CustomLicense"
     },
     {
       "creationInfo": "<masked>",
