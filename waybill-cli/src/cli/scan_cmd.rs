@@ -4964,6 +4964,13 @@ pub async fn execute(
         include_dev: true,
         include_hashes: !args.no_hashes,
         include_source_files: true, // path-pattern evidence is the whole value prop here
+        // #1084: canonical first, then as given — they differ wherever a
+        // symlink sits above the root (macOS `/var` -> `/private/var`).
+        scan_roots: {
+            let canonical =
+                std::fs::canonicalize(&root_path).unwrap_or_else(|_| root_path.clone());
+            if canonical == root_path { vec![canonical] } else { vec![canonical, root_path.clone()] }
+        },
         // Milestone 221 US4 (feature 221-cisa-2026-elements-audit /
         // FR-013) — operator-supplied SBOM document version.
         // `None` when `--sbom-version` is unset (byte-identity path

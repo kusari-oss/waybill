@@ -64,6 +64,8 @@ pub struct MetadataSubject<'a> {
 #[derive(Default)]
 pub struct MetadataExtras<'a> {
     pub components: &'a [ResolvedComponent],
+    /// #1084: see `ScanArtifacts::scan_roots`.
+    pub scan_roots: &'a [std::path::PathBuf],
     pub os_release_missing_fields: &'a [String],
     pub scan_target_coord: Option<&'a crate::scan_fs::package_db::maven::ScanTargetCoord>,
     pub source_document_binding: Option<&'a waybill::binding::SourceDocumentId>,
@@ -252,6 +254,7 @@ pub fn build_metadata(
     } = subject;
     let MetadataExtras {
         components,
+        scan_roots,
         nixpkgs_security_summary,
         nix_closure_summary,
         os_release_missing_fields,
@@ -1326,7 +1329,7 @@ pub fn build_metadata(
         // (paths arrive pre-normalized from the source-population sites
         // in `scan_fs::mod.rs`).
         if let Some(value) = crate::scan_fs::sbom_path::source_files_as_json_array(
-            &c.evidence.source_file_paths,
+            &crate::scan_fs::sbom_path::emitted_source_files(&c.evidence.source_file_paths, scan_roots),
         ) {
             comp_props.push(json!({
                 "name": "waybill:source-files",

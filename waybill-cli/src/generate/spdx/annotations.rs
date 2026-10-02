@@ -149,12 +149,14 @@ pub fn build_annotation(
 /// emitted in CDX for a given `ResolvedComponent`, its SPDX
 /// annotation twin is emitted here too (that's the FR-015 / FR-016
 /// fidelity guarantee). Absent fields stay absent.
+#[allow(clippy::too_many_arguments)]
 pub fn annotate_component(
     annotator: &str,
     date: &str,
     c: &ResolvedComponent,
     _include_dev: bool,
     include_source_files: bool,
+    scan_roots: &[std::path::PathBuf],
     compiler_pipeline: Option<
         &waybill_common::attestation::compiler_pipeline::CompilerPipelineData,
     >,
@@ -312,7 +314,10 @@ pub fn annotate_component(
         push(
             &mut out,
             "waybill:source-files",
-            json!(c.evidence.source_file_paths),
+            json!(crate::scan_fs::sbom_path::emitted_source_files(
+                &c.evidence.source_file_paths,
+                scan_roots,
+            )),
         );
     }
     // C19 cpe-candidates — only when MORE than one candidate was
@@ -1498,7 +1503,7 @@ mod tests {
             "pkg:golang/example.com/testify@v1",
             Some(waybill_common::resolution::LifecycleScope::Test),
         );
-        let annos = annotate_component("Tool: waybill-test", "2026-05-23T00:00:00Z", &c, false, false, None, None);
+        let annos = annotate_component("Tool: waybill-test", "2026-05-23T00:00:00Z", &c, false, false, &[], None, None);
         let scope_annos: Vec<_> = annos
             .iter()
             .filter(|a| parse_envelope(a).field == "waybill:lifecycle-scope")
@@ -1515,7 +1520,7 @@ mod tests {
             (waybill_common::resolution::LifecycleScope::Build, "build"),
         ] {
             let c = mk_minimal_component("pkg:cargo/x@1", Some(scope));
-            let annos = annotate_component("Tool: waybill-test", "2026-05-23T00:00:00Z", &c, false, false, None, None);
+            let annos = annotate_component("Tool: waybill-test", "2026-05-23T00:00:00Z", &c, false, false, &[], None, None);
             let found = annos
                 .iter()
                 .any(|a| {
@@ -1536,7 +1541,7 @@ mod tests {
             None,
         ] {
             let c = mk_minimal_component("pkg:deb/debian/libc6@2.36", scope);
-            let annos = annotate_component("Tool: waybill-test", "2026-05-23T00:00:00Z", &c, false, false, None, None);
+            let annos = annotate_component("Tool: waybill-test", "2026-05-23T00:00:00Z", &c, false, false, &[], None, None);
             let leaked = annos
                 .iter()
                 .any(|a| parse_envelope(a).field == "waybill:lifecycle-scope");

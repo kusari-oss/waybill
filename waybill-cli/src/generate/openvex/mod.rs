@@ -557,6 +557,7 @@ mod tests {
             include_dev: false,
             include_hashes: true,
             include_source_files: false,
+            scan_roots: Vec::new(),
             // Milestone 221 US4 — test default preserves pre-m221 behavior.
             sbom_version: None,
             enrichment_degraded: None,

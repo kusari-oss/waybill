@@ -323,6 +323,7 @@ pub fn build_packages(
             artifacts.include_hashes,
             artifacts.include_dev,
             artifacts.include_source_files,
+            &artifacts.scan_roots,
             annotator,
             date,
             artifacts.identifiers,
@@ -446,6 +447,7 @@ fn component_to_package(
     include_hashes: bool,
     include_dev: bool,
     include_source_files: bool,
+    scan_roots: &[std::path::PathBuf],
     annotator: &str,
     date: &str,
     identifiers: &[waybill::binding::identifiers::Identifier],
@@ -589,6 +591,7 @@ fn component_to_package(
         c,
         include_dev,
         include_source_files,
+        scan_roots,
         compiler_pipeline,
         cross_ecosystem_edges_report,
     );
@@ -763,6 +766,7 @@ mod tests {
             include_dev: false,
             include_hashes: true,
             include_source_files: false,
+            scan_roots: Vec::new(),
             // Milestone 221 US4 — test default preserves pre-m221 behavior.
             sbom_version: None,
             enrichment_degraded: None,

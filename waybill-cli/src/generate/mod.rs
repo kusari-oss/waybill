@@ -67,6 +67,10 @@ pub struct ScanArtifacts<'a> {
     pub include_dev: bool,
     pub include_hashes: bool,
     pub include_source_files: bool,
+    /// #1084: the scan root's spellings (canonical, then as given), used to
+    /// make `path+file://` main-module markers root-relative where
+    /// `waybill:source-files` is written. Empty means "leave paths as is".
+    pub scan_roots: Vec<std::path::PathBuf>,
     /// Milestone 221 US4 (feature 221-cisa-2026-elements-audit /
     /// FR-013) — operator-supplied SBOM document version from
     /// `--sbom-version <N>`. Threaded through to:

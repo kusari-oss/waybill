@@ -234,7 +234,7 @@
         },
         {
           "name": "waybill:source-files",
-          "value": "[\"path+file://<WORKSPACE>/tests/fixtures/maven/pom-three-deps\"]"
+          "value": "[\".\"]"
         },
         {
           "name": "waybill:workspace-member",

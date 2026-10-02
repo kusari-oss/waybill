@@ -816,6 +816,7 @@ pub fn build_document(
             CREATION_INFO_ID,
             scan.include_dev,
             scan.include_source_files,
+            &scan.scan_roots,
             scan.compiler_pipeline,
             scan.cross_ecosystem_edges_report,
         );

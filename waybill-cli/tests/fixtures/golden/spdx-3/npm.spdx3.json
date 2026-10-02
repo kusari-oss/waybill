@@ -259,7 +259,7 @@
       "annotationType": "other",
       "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-5HFUSO7AP4Y635BXHT6BN5VP/anno-CNOSYITM7E2VOZBF",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"path+file://<WORKSPACE>/tests/fixtures/npm/node-modules-walk\"]}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\".\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-5HFUSO7AP4Y635BXHT6BN5VP/pkg-IZGDOM2QHWPWWLEX",
       "type": "Annotation"
     },

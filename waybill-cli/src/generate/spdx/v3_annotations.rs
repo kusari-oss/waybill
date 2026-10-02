@@ -44,6 +44,7 @@ pub fn build_component_annotations(
     creation_info_id: &str,
     _include_dev: bool,
     include_source_files: bool,
+    scan_roots: &[std::path::PathBuf],
     compiler_pipeline: Option<
         &waybill_common::attestation::compiler_pipeline::CompilerPipelineData,
     >,
@@ -64,6 +65,7 @@ pub fn build_component_annotations(
             c,
             _include_dev,
             include_source_files,
+            scan_roots,
             compiler_pipeline,
             cross_ecosystem_edges_report,
         );
@@ -228,6 +230,7 @@ fn push_component_fields(
     c: &ResolvedComponent,
     _include_dev: bool,
     include_source_files: bool,
+    scan_roots: &[std::path::PathBuf],
     compiler_pipeline: Option<
         &waybill_common::attestation::compiler_pipeline::CompilerPipelineData,
     >,
@@ -356,7 +359,10 @@ fn push_component_fields(
         push(
             out,
             "waybill:source-files",
-            json!(c.evidence.source_file_paths),
+            json!(crate::scan_fs::sbom_path::emitted_source_files(
+                &c.evidence.source_file_paths,
+                scan_roots,
+            )),
         );
     }
     // C19 cpe-candidates — emits full candidate list when more
@@ -1231,6 +1237,7 @@ mod tests {
                 &c,
                 true,
                 true,
+                &[],
                 None,
             None,
             );
@@ -1275,6 +1282,7 @@ mod tests {
             &c,
             /* include_dev = */ true,
             /* include_source_files = */ true,
+            &[],
             None,
             None,
         );
