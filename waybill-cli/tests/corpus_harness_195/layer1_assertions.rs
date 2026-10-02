@@ -283,6 +283,123 @@ pub fn go_opentelemetry_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFail
 }
 
 // -----------------------------------------------------------------------
+// nix-closure-moat — the `--nix-closure` target
+// -----------------------------------------------------------------------
+
+fn nix_fail(invariant_name: &'static str, observed: String, expected: &str, suggested_action: &'static str) -> AssertionFailure {
+    AssertionFailure {
+        invariant_name,
+        format: FailureFormat::Cdx,
+        observed,
+        expected: expected.to_string(),
+        suggested_action,
+    }
+}
+
+/// Structural invariants only; exact counts are the goldens' job, and the
+/// closure is per-system (CI's x86_64-linux closure is not the one measured
+/// on aarch64-darwin when the target was added).
+pub fn nix_closure_moat_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
+    let doc = |name: &str| -> Option<serde_json::Value> {
+        cdx_doc_property(&sboms.cdx, name).and_then(|v| serde_json::from_str(&v).ok())
+    };
+
+    // C184 — the closure query ran and classified something. Absent means
+    // the tier degraded (no `nix`, an `--offline` that crept back in, an
+    // input it had to fetch), which would leave every other assertion
+    // vacuous.
+    let Some(closure) = doc("waybill:nix-closure") else {
+        return Err(nix_fail(
+            "nix-closure-record-present",
+            "no waybill:nix-closure document property".to_string(),
+            "the C184 record, emitted when --nix-closure succeeds",
+            "the closure tier degraded — check the scan log for `nix-closure: degrading` and the harness's ScanMode::NixClosure flags",
+        ));
+    };
+    if closure["attribute"] != "default" || closure["derivations"].as_u64().unwrap_or(0) == 0 {
+        return Err(nix_fail(
+            "nix-closure-classified",
+            closure.to_string(),
+            "attribute `default` with a nonzero derivation count",
+            "the closure query ran against the wrong attribute or returned nothing",
+        ));
+    }
+    for role in ["artifact-input", "build-tooling", "both", "unreferenced"] {
+        if closure["roles"][role].as_u64().unwrap_or(0) == 0 {
+            return Err(nix_fail(
+                "nix-closure-roles-populated",
+                closure["roles"].to_string(),
+                "all four roles nonzero, as measured on this project",
+                "the role classifier (m1034) stopped assigning a role",
+            ));
+        }
+    }
+
+    // The closure's emitted components are the ones the document tags, and
+    // the record's count of them agrees with the document.
+    let emitted = closure["components-emitted"].as_u64().unwrap_or(0) as usize;
+    let tagged = sboms.cdx["components"]
+        .as_array()
+        .map(|cs| {
+            cs.iter()
+                .filter(|c| {
+                    c["properties"].as_array().is_some_and(|ps| {
+                        ps.iter().any(|p| p["name"] == "waybill:closure-role")
+                    })
+                })
+                .count()
+        })
+        .unwrap_or(0);
+    if emitted == 0 || tagged != emitted {
+        return Err(nix_fail(
+            "closure-components-match-record",
+            format!("components-emitted={emitted}, components carrying waybill:closure-role={tagged}"),
+            "equal and nonzero",
+            "the C184 count and the emitted components disagree — m1035 supplement/merge",
+        ));
+    }
+
+    // Patch evidence (m1035): patches reach `pedigree.patches`, and the C183
+    // grade is present exactly when a CVE was recovered from them.
+    let with_patches = sboms.cdx["components"]
+        .as_array()
+        .map(|cs| cs.iter().filter(|c| c.pointer("/pedigree/patches").and_then(|p| p.as_array()).is_some_and(|p| !p.is_empty())).count())
+        .unwrap_or(0);
+    if closure["patches"].as_u64().unwrap_or(0) == 0 || with_patches == 0 {
+        return Err(nix_fail(
+            "closure-patches-emitted",
+            format!("record patches={}, components with pedigree.patches={with_patches}", closure["patches"]),
+            "both nonzero",
+            "patch attribution (m1035) produced nothing",
+        ));
+    }
+    let has_cves = closure["distinct-cves"].as_u64().unwrap_or(0) > 0;
+    let grade = cdx_doc_property(&sboms.cdx, "waybill:patch-evidence-grade");
+    if has_cves != grade.is_some() {
+        return Err(nix_fail(
+            "patch-grade-iff-cves",
+            format!("distinct-cves>0 = {has_cves}, waybill:patch-evidence-grade = {grade:?}"),
+            "the grade present exactly when a CVE was recovered",
+            "C183 is gated on C184's distinct-cves",
+        ));
+    }
+
+    // C188 — the declaration pass ran against the closure.
+    let checked = doc("waybill:nixpkgs-security")
+        .and_then(|v| v["members-checked"].as_u64())
+        .unwrap_or(0);
+    if checked == 0 {
+        return Err(nix_fail(
+            "nixpkgs-declaration-pass-ran",
+            format!("members-checked={checked}"),
+            "nonzero — measured 280 on aarch64-darwin",
+            "the m1050 declaration pass degraded or checked nothing",
+        ));
+    }
+    Ok(())
+}
+
+// -----------------------------------------------------------------------
 // rust-ripgrep (US2)
 // -----------------------------------------------------------------------
 

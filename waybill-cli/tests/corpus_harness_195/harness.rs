@@ -8,7 +8,7 @@
 use std::path::PathBuf;
 
 use super::cache::{CorpusCacheDir, CorpusCacheKey};
-use super::manifest::{CorpusTarget, PinnedRef, SourceKind};
+use super::manifest::{CorpusTarget, PinnedRef, ScanMode, SourceKind};
 
 // -----------------------------------------------------------------------
 // Data-model Entity 2 — EmittedSboms
@@ -89,6 +89,10 @@ pub enum CorpusInfraError {
     /// Haskell package set hydrated, so the offline scan would resolve
     /// nothing and the assertions would be vacuous rather than failing.
     NixpkgsHydration { target: &'static str, stderr: String },
+    /// A `ScanMode::NixClosure` target's flake inputs could not be put in
+    /// the nix store before the scan, so the scan would fetch them itself —
+    /// the network activity the pre-warm exists to keep out of the scan.
+    NixFlakeArchive { target: &'static str, stderr: String },
 }
 
 impl std::fmt::Display for CorpusInfraError {
@@ -113,6 +117,12 @@ impl std::fmt::Display for CorpusInfraError {
                 writeln!(f, "invariant: nixpkgs-hydration")?;
                 writeln!(f, "target:    {target}")?;
                 writeln!(f, "next:      check network / verify the nixpkgs revision pinned by the target's flake.lock is still fetchable")?;
+                writeln!(f, "underlying error: {}", truncate_stderr(stderr))?;
+            }
+            CorpusInfraError::NixFlakeArchive { target, stderr } => {
+                writeln!(f, "invariant: nix-flake-archive")?;
+                writeln!(f, "target:    {target}")?;
+                writeln!(f, "next:      check `nix` is on PATH and the target's flake inputs are still fetchable")?;
                 writeln!(f, "underlying error: {}", truncate_stderr(stderr))?;
             }
             CorpusInfraError::OciPull { target, stderr } => {
@@ -196,10 +206,19 @@ pub fn scan_target(target: &CorpusTarget) -> Result<EmittedSboms, CorpusInfraErr
     // there could make a red run look green, and a corpus run must not write
     // to the machine's own cache.
     cmd.env("WAYBILL_NIXPKGS_CACHE", cache.nixpkgs_cache_dir());
-    cmd.arg("--offline"); // Corpus scans MUST NOT hit the network
-                          // from the waybill side — network activity
-                          // is confined to the cache-hydration step.
+    // Corpus scans MUST NOT hit the network from the waybill side —
+    // network activity is confined to the cache-hydration step. The one
+    // exception is `ScanMode::NixClosure`, whose tier `--offline` refuses;
+    // see that variant for how it is kept as close to offline as the tier
+    // allows.
+    if matches!(target.scan_mode, ScanMode::Offline) {
+        cmd.arg("--offline");
+    }
     cmd.arg("sbom").arg("scan");
+    if let ScanMode::NixClosure { attr } = target.scan_mode {
+        cmd.arg("--nix-closure").arg("--nix-closure-attr").arg(attr);
+        cmd.arg("--no-deps-dev").arg("--no-clearly-defined");
+    }
     match &target.source {
         SourceKind::Git { .. } => {
             cmd.arg("--path").arg(&cache_dir);

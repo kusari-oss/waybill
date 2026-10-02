@@ -15,6 +15,26 @@ pub struct CorpusTarget {
     pub ecosystem: Ecosystem,
     pub exercises: &'static str,
     pub layer1: fn(&EmittedSboms) -> Result<(), AssertionFailure>,
+    pub scan_mode: ScanMode,
+}
+
+/// How the harness invokes `waybill sbom scan` for a target.
+pub enum ScanMode {
+    /// `--offline`: waybill makes no network call. Every target but the
+    /// closure one.
+    Offline,
+    /// `--nix-closure --nix-closure-attr <attr>`, which `--offline`
+    /// refuses by design (m1034: resolving a flake can fetch inputs, and
+    /// nix's own `--offline` governs substituters, not flake inputs).
+    ///
+    /// The one sanctioned exception to the offline rule. To keep it as
+    /// close to offline as the tier allows: hydration runs
+    /// `nix flake archive` first, so every input is in the store before
+    /// the scan and nix has nothing to fetch; and the scan turns off
+    /// waybill's own online enrichment (`--no-deps-dev
+    /// --no-clearly-defined`), so nix is the only process that could
+    /// reach the network at all.
+    NixClosure { attr: &'static str },
 }
 
 pub enum SourceKind {
@@ -52,6 +72,7 @@ pub const TARGETS: &[CorpusTarget] = &[
         ecosystem: Ecosystem::Go,
         exercises: "m194 US1 (Go stdlib edge synthesis) + m053 main-module version-resolution + m055 transitive-edges",
         layer1: super::layer1_assertions::go_cobra_layer1,
+        scan_mode: ScanMode::Offline,
     },
     // #879 — the first MULTI-MODULE Go target. `go-cobra` and
     // `pants-example-golang` each have one go.sum, so the path where
@@ -80,6 +101,42 @@ pub const TARGETS: &[CorpusTarget] = &[
                     every declaring go.sum, and every module sharing a `go` version keeps \
                     its stdlib edge",
         layer1: super::layer1_assertions::go_opentelemetry_layer1,
+        scan_mode: ScanMode::Offline,
+    },
+    // The first corpus target that runs `--nix-closure`, so the first to
+    // exercise milestones 1034 (closure query), 1035 (closure-derived
+    // components, patch evidence) and 1050 (nixpkgs declaration pass) end to
+    // end. Until it existed those tiers had unit tests and no corpus
+    // coverage, because every target ran `--offline`, which the tier refuses.
+    //
+    // moat is the project milestone 1034/1035 measured against. Measured
+    // here before adding (aarch64-darwin, so counts differ from CI's
+    // x86_64-linux closure, which the goldens pin): 1,275 derivations,
+    // all four roles populated (264 artifact-input / 134 build-tooling /
+    // 52 both / 825 unreferenced), 316 closure components appended and 32
+    // merged into manifest-derived ones, 187 patches of which 18 distinct
+    // CVEs, and 280 members checked by the declaration pass. Its
+    // `flake.lock` pins nixpkgs `a799d3e3` — the revision #1051's census
+    // was taken at.
+    //
+    // Not covered: no member of this closure carries
+    // `meta.knownVulnerabilities`, so the declaration → VEX path (#1051) is
+    // exercised only up to "checked, nothing declared".
+    CorpusTarget {
+        name: "nix-closure-moat",
+        source: SourceKind::Git {
+            clone_url: "https://github.com/MercuryTechnologies/moat",
+        },
+        pinned: PinnedRef::Sha {
+            // HEAD of `master` as of 2026-10-02 (last commit 2026-06-11).
+            hex: "d06905558ba68b49b17f36c875e97f7234a9c19b",
+        },
+        ecosystem: Ecosystem::Haskell,
+        exercises: "--nix-closure end to end: closure classification and roles (m1034), \
+                    closure-derived components and patch evidence (m1035), and the nixpkgs \
+                    declaration pass's coverage record (m1050)",
+        layer1: super::layer1_assertions::nix_closure_moat_layer1,
+        scan_mode: ScanMode::NixClosure { attr: "default" },
     },
     // T022 (US2) — Rust source target:
     CorpusTarget {
@@ -92,6 +149,7 @@ pub const TARGETS: &[CorpusTarget] = &[
         ecosystem: Ecosystem::Rust,
         exercises: "m064 cargo main-module + m087 workspace-version + m088 procmacro edges",
         layer1: super::layer1_assertions::rust_ripgrep_layer1,
+        scan_mode: ScanMode::Offline,
     },
     // T025 (US2) — npm source target:
     CorpusTarget {
@@ -104,6 +162,7 @@ pub const TARGETS: &[CorpusTarget] = &[
         ecosystem: Ecosystem::Npm,
         exercises: "m066 npm main-module + m147 peer-edges + m180 optional-dep classification",
         layer1: super::layer1_assertions::npm_express_layer1,
+        scan_mode: ScanMode::Offline,
     },
     // T028 (US2) — Python source target:
     CorpusTarget {
@@ -116,6 +175,7 @@ pub const TARGETS: &[CorpusTarget] = &[
         ecosystem: Ecosystem::Python,
         exercises: "m068 pip main-module + m183 pip extras/optional",
         layer1: super::layer1_assertions::python_flask_layer1,
+        scan_mode: ScanMode::Offline,
     },
     // T031 (US2) — Java/Maven source target:
     CorpusTarget {
@@ -128,6 +188,7 @@ pub const TARGETS: &[CorpusTarget] = &[
         ecosystem: Ecosystem::JavaMaven,
         exercises: "m070 Maven main-module + m085 Maven SPDX dep edges + m184 optional deps",
         layer1: super::layer1_assertions::maven_guice_layer1,
+        scan_mode: ScanMode::Offline,
     },
     // T034 (US2) — Polyglot container image target:
     CorpusTarget {
@@ -149,6 +210,7 @@ pub const TARGETS: &[CorpusTarget] = &[
         ecosystem: Ecosystem::PolyglotImage,
         exercises: "deb reader + Go BuildInfo (gosu bin) + m177 TransitiveEdgesUnresolvable classifier",
         layer1: super::layer1_assertions::image_postgres16_layer1,
+        scan_mode: ScanMode::Offline,
     },
     // Pants example repos — permanent regression gates for m223 (pex-lockfile
     // reader), m224 (coursier-JVM), m226 (Pants Go enricher), m672 (front-
@@ -169,6 +231,7 @@ pub const TARGETS: &[CorpusTarget] = &[
         ecosystem: Ecosystem::Python,
         exercises: "m673 US1 (repo-root `python-default.lock` discovery) + m223 Pants pex-lockfile reader",
         layer1: super::layer1_assertions::pants_example_python_layer1,
+        scan_mode: ScanMode::Offline,
     },
     CorpusTarget {
         name: "pants-example-django",
@@ -182,6 +245,7 @@ pub const TARGETS: &[CorpusTarget] = &[
         ecosystem: Ecosystem::Python,
         exercises: "m673 US2 (`lockfiles/python-default.lock` discovery) + m223 Pants pex-lockfile reader",
         layer1: super::layer1_assertions::pants_example_django_layer1,
+        scan_mode: ScanMode::Offline,
     },
     // Feature 676 (issue #756 fix) — re-enable pants-example-jvm now that
     // the m224 reader accepts both string and coord-table shapes for the
@@ -200,6 +264,7 @@ pub const TARGETS: &[CorpusTarget] = &[
                     unblocked by #676 (coord-table directDependencies + \
                     dependencies fix)",
         layer1: super::layer1_assertions::pants_example_jvm_layer1,
+        scan_mode: ScanMode::Offline,
     },
     CorpusTarget {
         name: "pants-example-golang",
@@ -213,6 +278,7 @@ pub const TARGETS: &[CorpusTarget] = &[
         ecosystem: Ecosystem::Go,
         exercises: "m226 Pants Go enricher + m053/m055 Go go.sum reader",
         layer1: super::layer1_assertions::pants_example_golang_layer1,
+        scan_mode: ScanMode::Offline,
     },
     // Feature 675 — Pants JavaScript / npm regression gate.
     // Locks in current behavior of the standard npm reader stack
@@ -234,6 +300,7 @@ pub const TARGETS: &[CorpusTarget] = &[
                     Pants-managed JavaScript monorepo — regression-locks \
                     issue #760 option-B behavior",
         layer1: super::layer1_assertions::pants_example_javascript_layer1,
+        scan_mode: ScanMode::Offline,
     },
     // #898 — Haskell source target. The FIRST Haskell target in either
     // corpus; its absence is what let the #891 defects live, and the gap
@@ -262,6 +329,7 @@ pub const TARGETS: &[CorpusTarget] = &[
         ecosystem: Ecosystem::Haskell,
         exercises: "m143 .cabal design-tier emission + #936 cross-manifest constraint union + #938 per-dependency lockfile scoping + #943 case-preserving Hackage identifiers",
         layer1: super::layer1_assertions::haskell_aeson_layer1,
+        scan_mode: ScanMode::Offline,
     },
     // The SECOND corpus target that resolves through nixpkgs, and the reason
     // it exists: until it did, `haskell-language-server` was the only one, so
@@ -301,6 +369,7 @@ pub const TARGETS: &[CorpusTarget] = &[
                     generality), the #1032 cabal.project glob arm (`code/*/*.cabal`), and \
                     the transitive closure path where #1033's defect lived",
         layer1: super::layer1_assertions::haskell_security_advisories_layer1,
+        scan_mode: ScanMode::Offline,
     },
     // #969 — the FIRST corpus target that exercises nixpkgs-backed Haskell
     // version resolution. `haskell-aeson` has no `flake.lock` at all, so the
@@ -345,6 +414,7 @@ pub const TARGETS: &[CorpusTarget] = &[
                     assignment, boot-library classification, and the #973 \
                     document-scope resolution record",
         layer1: super::layer1_assertions::haskell_language_server_layer1,
+        scan_mode: ScanMode::Offline,
     },
 ];
 
