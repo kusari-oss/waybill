@@ -46,7 +46,9 @@ No new exit codes. The milestone reuses the existing contract:
 |---|---|---|
 | Successful scan (any component count, including zero) | `0` | Empty or info-level tracing |
 | Fatal error (path not readable, image tarball corrupt) | `1` | Error message to stderr |
-| Fail-closed reader error (npm v1 / cargo v1/v2 — unchanged from milestone 003) | `3` | Specific refusal message |
+| Fail-closed reader error (npm v1 / cargo v1/v2 — unchanged from milestone 003) | ~~`3`~~ `1` — see correction below | Specific refusal message |
+
+> **Correction (#828, 2026-10-01).** No commit in git history maps this refusal to `3` (or to `2`); it has always exited `1`, indistinguishable from other fatal errors, and that is now the contract — pinned by `scan_cargo_unsupported_lockfile_version_fails_closed_with_exit_1`. The row's examples are also stale: npm v1 has warned and skipped rather than failing closed since milestone 105, and cargo v1/v2 lockfiles parse since #826. The one remaining fail-closed case is a `Cargo.lock` declaring a format version waybill does not support (above 4).
 
 **New reader errors** (malformed `.rpm`, malformed BDB, malformed binary) are NOT fail-closed per FR-017 / FR-019b / FR-007. They emit a single WARN log line naming the file and zero components for that file, but exit code remains `0` and other files in the scan root are processed normally (SC-008).
 

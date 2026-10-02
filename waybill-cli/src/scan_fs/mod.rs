@@ -2437,8 +2437,32 @@ mod external_refs_tests {
 /// documented in `contracts/cli-interface.md`.
 #[derive(Debug, thiserror::Error)]
 pub enum ScanError {
-    #[error("{0}")]
+    // `transparent`, not `"{0}"`: `#[from]` also makes the field the
+    // error's `source`, so `"{0}"` printed the inner message once per
+    // wrapping layer in anyhow's `Caused by:` chain (#748).
+    #[error(transparent)]
     PackageDb(#[from] package_db::PackageDbError),
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod scan_error_tests {
+    use super::*;
+
+    /// #748: the reader's refusal must appear once in the rendered
+    /// chain, not once per wrapping layer.
+    #[test]
+    fn refusal_message_appears_once_in_the_error_chain() {
+        let inner = package_db::cargo::CargoError::LockfileUnsupportedVersion {
+            path: std::path::PathBuf::from("/tmp/Cargo.lock"),
+            version: 5,
+        };
+        let message = inner.to_string();
+        let err = anyhow::Error::from(ScanError::from(package_db::PackageDbError::from(inner)))
+            .context("scan failed for /tmp");
+        let chain: Vec<String> = err.chain().map(|e| e.to_string()).collect();
+        assert_eq!(chain, vec!["scan failed for /tmp".to_string(), message]);
+    }
 }
 
 /// Milestone 179 dispatch-table tests for

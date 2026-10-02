@@ -295,9 +295,9 @@ pub struct PackageDbEntry {
 /// a partial SBOM.
 #[derive(Debug, thiserror::Error)]
 pub enum PackageDbError {
-    #[error("{0}")]
+    #[error(transparent)]
     Npm(#[from] npm::NpmError),
-    #[error("{0}")]
+    #[error(transparent)]
     Cargo(#[from] cargo::CargoError),
 }
 
