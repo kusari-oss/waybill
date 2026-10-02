@@ -1588,6 +1588,7 @@ pub fn tag_components_with_layer_digest(
 pub fn tag_components_with_workspace_member(
     components: &mut [waybill_common::resolution::ResolvedComponent],
     scan_root_abs: &Path,
+    mode: ScanMode,
 ) {
     for c in components.iter_mut() {
         // #759: a binary found by walking was not declared by any
@@ -1604,7 +1605,7 @@ pub fn tag_components_with_workspace_member(
             .evidence
             .source_file_paths
             .iter()
-            .filter_map(|p| workspace_root::derive_workspace_root(p, scan_root_abs))
+            .filter_map(|p| workspace_root::derive_workspace_root(p, scan_root_abs, mode))
             .collect();
         if workspaces.is_empty() {
             continue;

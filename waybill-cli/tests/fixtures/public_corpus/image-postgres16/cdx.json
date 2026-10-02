@@ -92,7 +92,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/adduser@3.152?arch=all&distro=debian-13",
@@ -365,7 +365,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/apt@3.0.3?arch=amd64&distro=debian-13",
@@ -566,7 +566,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/base-files@13.8%2Bdeb13u6?arch=amd64&distro=debian-13",
@@ -667,7 +667,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/base-passwd@3.6.7?arch=amd64&distro=debian-13",
@@ -872,7 +872,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/bash@5.2.37-2%2Bb9?arch=amd64&distro=debian-13",
@@ -1149,7 +1149,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/bsdutils@2.41-5?arch=amd64&distro=debian-13&epoch=1",
@@ -1718,7 +1718,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/coreutils@9.7-3?arch=amd64&distro=debian-13",
@@ -1827,7 +1827,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/dash@0.5.12-12?arch=amd64&distro=debian-13",
@@ -2380,7 +2380,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/debconf@1.5.91?arch=all&distro=debian-13",
@@ -2533,7 +2533,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/debian-archive-keyring@2025.1?arch=all&distro=debian-13",
@@ -2670,7 +2670,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/debianutils@5.23.2?arch=amd64&distro=debian-13",
@@ -2915,7 +2915,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/diffutils@3.10-4?arch=amd64&distro=debian-13&epoch=1",
@@ -3140,7 +3140,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/dirmngr@2.4.7-21%2Bdeb13u1%2Bb4?arch=amd64&distro=debian-13",
@@ -3333,7 +3333,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/dpkg@1.22.22?arch=amd64&distro=debian-13",
@@ -3706,7 +3706,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/findutils@4.10.0-3?arch=amd64&distro=debian-13",
@@ -3839,7 +3839,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/gcc-14-base@14.2.0-19?arch=amd64&distro=debian-13",
@@ -4156,7 +4156,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/gnupg-l10n@2.4.7-21%2Bdeb13u1?arch=all&distro=debian-13",
@@ -4361,7 +4361,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/gnupg@2.4.7-21%2Bdeb13u1?arch=all&distro=debian-13",
@@ -4614,7 +4614,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/gpg-agent@2.4.7-21%2Bdeb13u1%2Bb4?arch=amd64&distro=debian-13",
@@ -4835,7 +4835,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/gpg@2.4.7-21%2Bdeb13u1%2Bb4?arch=amd64&distro=debian-13",
@@ -5052,7 +5052,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/gpgconf@2.4.7-21%2Bdeb13u1%2Bb4?arch=amd64&distro=debian-13",
@@ -5261,7 +5261,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/gpgsm@2.4.7-21%2Bdeb13u1%2Bb4?arch=amd64&distro=debian-13",
@@ -5350,7 +5350,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/grep@3.11-4?arch=amd64&distro=debian-13",
@@ -5499,7 +5499,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/gzip@1.13-1?arch=amd64&distro=debian-13",
@@ -5576,7 +5576,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/hostname@3.25?arch=amd64&distro=debian-13",
@@ -5685,7 +5685,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/init-system-helpers@1.69~deb13u1?arch=all&distro=debian-13",
@@ -5850,7 +5850,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/less@668-1?arch=amd64&distro=debian-13",
@@ -5939,7 +5939,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libacl1@2.3.2-2%2Bb1?arch=amd64&distro=debian-13",
@@ -6076,7 +6076,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libapt-pkg7.0@3.0.3?arch=amd64&distro=debian-13",
@@ -6285,7 +6285,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libassuan9@3.0.2-2?arch=amd64&distro=debian-13",
@@ -6378,7 +6378,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libattr1@2.5.2-3?arch=amd64&distro=debian-13&epoch=1",
@@ -6467,7 +6467,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libaudit-common@4.0.2-2?arch=all&distro=debian-13&epoch=1",
@@ -6556,7 +6556,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libaudit1@4.0.2-2%2Bb2?arch=amd64&distro=debian-13&epoch=1",
@@ -6789,7 +6789,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libblkid1@2.41-5?arch=amd64&distro=debian-13",
@@ -7034,7 +7034,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libbsd0@0.12.2-2?arch=amd64&distro=debian-13",
@@ -7123,7 +7123,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libbz2-1.0@1.0.8-6?arch=amd64&distro=debian-13",
@@ -7832,7 +7832,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libc-bin@2.41-12%2Bdeb13u3?arch=amd64&distro=debian-13",
@@ -8577,7 +8577,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libc-l10n@2.41-12%2Bdeb13u3?arch=all&distro=debian-13",
@@ -10274,7 +10274,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libc6@2.41-12%2Bdeb13u3?arch=amd64&distro=debian-13",
@@ -10379,7 +10379,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libcap-ng0@0.8.5-4%2Bb1?arch=amd64&distro=debian-13",
@@ -10508,7 +10508,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libcap2@2.75-10%2Bdeb13u1%2Bb1?arch=amd64&distro=debian-13&epoch=1",
@@ -10741,7 +10741,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libcom-err2@1.47.2-3%2Bb11?arch=amd64&distro=debian-13",
@@ -10818,7 +10818,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libcrypt1@4.4.38-1?arch=amd64&distro=debian-13&epoch=1",
@@ -11039,7 +11039,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libdb5.3t64@5.3.28%2Bdfsg2-9?arch=amd64&distro=debian-13",
@@ -11128,7 +11128,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libdebconfclient0@0.280?arch=amd64&distro=debian-13",
@@ -11205,7 +11205,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libedit2@3.1-20250104-1?arch=amd64&distro=debian-13",
@@ -11354,7 +11354,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libffi8@3.4.8-2?arch=amd64&distro=debian-13",
@@ -11487,7 +11487,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libgcc-s1@14.2.0-19?arch=amd64&distro=debian-13",
@@ -11592,7 +11592,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libgcrypt20@1.11.0-7%2Bdeb13u1?arch=amd64&distro=debian-13",
@@ -11693,7 +11693,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libgdbm-compat4t64@1.24-2?arch=amd64&distro=debian-13",
@@ -11794,7 +11794,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libgdbm6t64@1.24-2?arch=amd64&distro=debian-13",
@@ -11919,7 +11919,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libgmp10@6.3.0%2Bdfsg-3?arch=amd64&distro=debian-13&epoch=2",
@@ -11982,7 +11982,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libgnutls30t64@3.8.9-3%2Bdeb13u4?arch=amd64&distro=debian-13",
@@ -12107,7 +12107,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libgpg-error0@1.51-4?arch=amd64&distro=debian-13",
@@ -12170,7 +12170,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libgssapi-krb5-2@1.21.3-5%2Bdeb13u1?arch=amd64&distro=debian-13",
@@ -12343,7 +12343,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libhogweed6t64@3.10.1-1?arch=amd64&distro=debian-13",
@@ -12452,7 +12452,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libicu76@76.1-4?arch=amd64&distro=debian-13",
@@ -12589,7 +12589,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libidn2-0@2.3.8-2?arch=amd64&distro=debian-13",
@@ -12706,7 +12706,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libjson-perl@4.10000-1?arch=all&distro=debian-13",
@@ -12769,7 +12769,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libk5crypto3@1.21.3-5%2Bdeb13u1?arch=amd64&distro=debian-13",
@@ -12858,7 +12858,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libkeyutils1@1.6.3-6?arch=amd64&distro=debian-13",
@@ -12925,7 +12925,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libkrb5-3@1.21.3-5%2Bdeb13u1?arch=amd64&distro=debian-13",
@@ -12988,7 +12988,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libkrb5support0@1.21.3-5%2Bdeb13u1?arch=amd64&distro=debian-13",
@@ -13161,7 +13161,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libksba8@1.6.7-2%2Bb1?arch=amd64&distro=debian-13",
@@ -13394,7 +13394,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/liblastlog2-2@2.41-5?arch=amd64&distro=debian-13",
@@ -13907,7 +13907,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libldap2@2.6.10%2Bdfsg-1?arch=amd64&distro=debian-13",
@@ -14032,7 +14032,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libllvm19@19.1.7-3%2Bb1?arch=amd64&distro=debian-13&epoch=1",
@@ -14133,7 +14133,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/liblz4-1@1.10.0-4?arch=amd64&distro=debian-13",
@@ -14330,7 +14330,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/liblzma5@5.8.1-1%2Bdeb13u1?arch=amd64&distro=debian-13",
@@ -14503,7 +14503,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libmd0@1.1.0-2%2Bb1?arch=amd64&distro=debian-13",
@@ -14736,7 +14736,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libmount1@2.41-5?arch=amd64&distro=debian-13",
@@ -14845,7 +14845,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libncursesw6@6.5%2B20250216-2?arch=amd64&distro=debian-13",
@@ -15018,7 +15018,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libnettle8t64@3.10.1-1?arch=amd64&distro=debian-13",
@@ -15095,7 +15095,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libnpth0t64@1.8-3?arch=amd64&distro=debian-13",
@@ -15184,7 +15184,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libnss-wrapper@1.1.16-1?arch=amd64&distro=debian-13",
@@ -15381,7 +15381,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libp11-kit0@0.25.5-3?arch=amd64&distro=debian-13",
@@ -15582,7 +15582,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libpam-modules-bin@1.7.0-5?arch=amd64&distro=debian-13",
@@ -15971,7 +15971,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libpam-modules@1.7.0-5?arch=amd64&distro=debian-13",
@@ -16204,7 +16204,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libpam-runtime@1.7.0-5?arch=all&distro=debian-13",
@@ -16389,7 +16389,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libpam0g@1.7.0-5?arch=amd64&distro=debian-13",
@@ -16514,7 +16514,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libpcre2-8-0@10.46-1~deb13u1?arch=amd64&distro=debian-13",
@@ -18507,7 +18507,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libperl5.40@5.40.1-6?arch=amd64&distro=debian-13",
@@ -18764,7 +18764,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libpq5@18.4-1.pgdg13%2B1?arch=amd64&distro=debian-13",
@@ -18865,7 +18865,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libproc2-0@4.0.4-9?arch=amd64&distro=debian-13&epoch=2",
@@ -18994,7 +18994,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libreadline8t64@8.2-6?arch=amd64&distro=debian-13",
@@ -19323,7 +19323,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libsasl2-2@2.1.28%2Bdfsg1-9?arch=amd64&distro=debian-13",
@@ -19652,7 +19652,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libsasl2-modules-db@2.1.28%2Bdfsg1-9?arch=amd64&distro=debian-13",
@@ -19729,7 +19729,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libseccomp2@2.6.0-2?arch=amd64&distro=debian-13",
@@ -19822,7 +19822,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libselinux1@3.8.1-1?arch=amd64&distro=debian-13",
@@ -19911,7 +19911,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libsemanage-common@3.8.1-1?arch=all&distro=debian-13",
@@ -20000,7 +20000,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libsemanage2@3.8.1-1?arch=amd64&distro=debian-13",
@@ -20113,7 +20113,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libsepol2@3.8.1-1?arch=amd64&distro=debian-13",
@@ -20346,7 +20346,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libsmartcols1@2.41-5?arch=amd64&distro=debian-13",
@@ -20435,7 +20435,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libsqlite3-0@3.46.1-7%2Bdeb13u1?arch=amd64&distro=debian-13",
@@ -20564,7 +20564,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libssl3t64@3.5.6-1~deb13u2?arch=amd64&distro=debian-13",
@@ -20717,7 +20717,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libstdc%2B%2B6@14.2.0-19?arch=amd64&distro=debian-13",
@@ -20854,7 +20854,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libsystemd0@257.13-1~deb13u1?arch=amd64&distro=debian-13",
@@ -20991,7 +20991,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libtasn1-6@4.20.0-2%2Bdeb13u1?arch=amd64&distro=debian-13",
@@ -21100,7 +21100,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libtext-charwidth-perl@0.04-11%2Bb4?arch=amd64&distro=debian-13",
@@ -21201,7 +21201,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libtext-wrapi18n-perl@0.06-10?arch=all&distro=debian-13",
@@ -21306,7 +21306,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libtinfo6@6.5%2B20250216-2?arch=amd64&distro=debian-13",
@@ -21443,7 +21443,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libudev1@257.13-1~deb13u1?arch=amd64&distro=debian-13",
@@ -21772,7 +21772,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libunistring5@1.3-2?arch=amd64&distro=debian-13",
@@ -22005,7 +22005,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libuuid1@2.41-5?arch=amd64&distro=debian-13",
@@ -22094,7 +22094,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libxml2@2.12.7%2Bdfsg%2Breally2.9.14-2.1%2Bdeb13u3?arch=amd64&distro=debian-13",
@@ -22161,7 +22161,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libxslt1.1@1.1.35-1.2%2Bdeb13u3?arch=amd64&distro=debian-13",
@@ -22262,7 +22262,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libxxhash0@0.8.3-2?arch=amd64&distro=debian-13",
@@ -22351,7 +22351,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libz3-4@4.13.3-1?arch=amd64&distro=debian-13",
@@ -22476,7 +22476,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libzstd1@1.5.7%2Bdfsg-1?arch=amd64&distro=debian-13",
@@ -25505,7 +25505,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/locales@2.41-12%2Bdeb13u3?arch=all&distro=debian-13",
@@ -25606,7 +25606,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/login.defs@4.17.4-2?arch=all&distro=debian-13&epoch=1",
@@ -25855,7 +25855,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/login@4.16.0-2%2Breally2.41-5?arch=amd64&distro=debian-13&epoch=1",
@@ -25956,7 +25956,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/mawk@1.3.4.20250131-1?arch=amd64&distro=debian-13",
@@ -26225,7 +26225,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/mount@2.41-5?arch=amd64&distro=debian-13",
@@ -26506,7 +26506,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/ncurses-base@6.5%2B20250216-2?arch=all&distro=debian-13",
@@ -26631,7 +26631,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/ncurses-bin@6.5%2B20250216-2?arch=amd64&distro=debian-13",
@@ -26720,7 +26720,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/netbase@6.5?arch=all&distro=debian-13",
@@ -26833,7 +26833,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/openssl-provider-legacy@3.5.6-1~deb13u2?arch=amd64&distro=debian-13",
@@ -26962,7 +26962,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/openssl@3.5.6-1~deb13u2?arch=amd64&distro=debian-13",
@@ -27179,7 +27179,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/passwd@4.17.4-2?arch=amd64&distro=debian-13&epoch=1",
@@ -30092,7 +30092,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/perl-base@5.40.1-6?arch=amd64&distro=debian-13",
@@ -35865,7 +35865,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/perl-modules-5.40@5.40.1-6?arch=all&distro=debian-13",
@@ -36430,7 +36430,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/perl@5.40.1-6?arch=amd64&distro=debian-13",
@@ -36555,7 +36555,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/pinentry-curses@1.3.1-2?arch=amd64&distro=debian-13",
@@ -42928,7 +42928,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/postgresql-16@16.14-1.pgdg13%2B1?arch=amd64&distro=debian-13",
@@ -44537,7 +44537,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/postgresql-client-16@16.14-1.pgdg13%2B1?arch=amd64&distro=debian-13",
@@ -44638,7 +44638,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/postgresql-client-common@291.pgdg13%2B1?arch=all&distro=debian-13",
@@ -44843,7 +44843,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/postgresql-common@291.pgdg13%2B1?arch=all&distro=debian-13",
@@ -45064,7 +45064,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/procps@4.0.4-9?arch=amd64&distro=debian-13&epoch=2",
@@ -45189,7 +45189,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/readline-common@8.2-6?arch=all&distro=debian-13",
@@ -45350,7 +45350,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/sed@4.9-2%2Bdeb13u1?arch=amd64&distro=debian-13",
@@ -45483,7 +45483,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/sensible-utils@0.0.25?arch=all&distro=debian-13",
@@ -45572,7 +45572,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/sqv@1.3.0-3%2Bb2?arch=amd64&distro=debian-13",
@@ -45657,7 +45657,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/ssl-cert@1.1.3?arch=all&distro=debian-13",
@@ -45790,7 +45790,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/sysvinit-utils@3.14-4?arch=amd64&distro=debian-13",
@@ -45927,7 +45927,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/tar@1.35%2Bdfsg-3.1?arch=amd64&distro=debian-13",
@@ -47776,7 +47776,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/tzdata@2026b-0%2Bdeb13u1?arch=all&distro=debian-13",
@@ -47873,7 +47873,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/ucf@3.0052?arch=all&distro=debian-13",
@@ -48610,7 +48610,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/util-linux@2.41-5?arch=amd64&distro=debian-13",
@@ -48927,7 +48927,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/xz-utils@5.8.1-1%2Bdeb13u1?arch=amd64&distro=debian-13",
@@ -49004,7 +49004,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/zlib1g@1.3.dfsg%2Breally1.3.1-1%2Bb1?arch=amd64&distro=debian-13&epoch=1",
@@ -49141,7 +49141,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/zstd@1.5.7%2Bdfsg-1?arch=amd64&distro=debian-13",
@@ -56068,7 +56068,7 @@
       },
       {
         "name": "waybill:workspaces-detected",
-        "value": "[\"var/lib/dpkg\"]"
+        "value": "[\".\"]"
       },
       {
         "name": "waybill:unresolved-declared-dep-count",

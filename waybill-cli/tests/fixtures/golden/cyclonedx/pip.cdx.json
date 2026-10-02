@@ -48,7 +48,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\".venv/lib/python3.12/site-packages/certifi-2023.7.22.dist-info\"]"
+          "value": "[\".venv\"]"
         }
       ],
       "purl": "pkg:pypi/certifi@2023.7.22",
@@ -105,7 +105,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\".venv/lib/python3.12/site-packages/charset_normalizer-3.3.2.dist-info\"]"
+          "value": "[\".venv\"]"
         }
       ],
       "purl": "pkg:pypi/charset-normalizer@3.3.2",
@@ -162,7 +162,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\".venv/lib/python3.12/site-packages/flask-3.0.0.dist-info\"]"
+          "value": "[\".venv\"]"
         }
       ],
       "purl": "pkg:pypi/flask@3.0.0",
@@ -219,7 +219,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\".venv/lib/python3.12/site-packages/idna-3.6.dist-info\"]"
+          "value": "[\".venv\"]"
         }
       ],
       "purl": "pkg:pypi/idna@3.6",
@@ -276,7 +276,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\".venv/lib/python3.12/site-packages/jinja2-3.1.2.dist-info\"]"
+          "value": "[\".venv\"]"
         }
       ],
       "purl": "pkg:pypi/jinja2@3.1.2",
@@ -333,7 +333,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\".venv/lib/python3.12/site-packages/requests-2.31.0.dist-info\"]"
+          "value": "[\".venv\"]"
         }
       ],
       "purl": "pkg:pypi/requests@2.31.0",
@@ -390,7 +390,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\".venv/lib/python3.12/site-packages/urllib3-2.0.7.dist-info\"]"
+          "value": "[\".venv\"]"
         }
       ],
       "purl": "pkg:pypi/urllib3@2.0.7",
@@ -544,7 +544,7 @@
       },
       {
         "name": "waybill:workspaces-detected",
-        "value": "[\".venv/lib/python3.12/site-packages/certifi-2023.7.22.dist-info\",\".venv/lib/python3.12/site-packages/charset_normalizer-3.3.2.dist-info\",\".venv/lib/python3.12/site-packages/flask-3.0.0.dist-info\",\".venv/lib/python3.12/site-packages/idna-3.6.dist-info\",\".venv/lib/python3.12/site-packages/jinja2-3.1.2.dist-info\",\".venv/lib/python3.12/site-packages/requests-2.31.0.dist-info\",\".venv/lib/python3.12/site-packages/urllib3-2.0.7.dist-info\"]"
+        "value": "[\".venv\"]"
       },
       {
         "name": "waybill:unresolved-declared-dep-count",

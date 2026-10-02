@@ -267,7 +267,7 @@
       "annotationType": "other",
       "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-5HFUSO7AP4Y635BXHT6BN5VP/anno-CYQNVWHHZXPDDAPG",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspaces-detected\",\"value\":\"[\\\".\\\",\\\"node_modules/express\\\",\\\"node_modules/safe-buffer\\\"]\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspaces-detected\",\"value\":\"[\\\".\\\"]\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-5HFUSO7AP4Y635BXHT6BN5VP",
       "type": "Annotation"
     },
@@ -275,7 +275,7 @@
       "annotationType": "other",
       "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-5HFUSO7AP4Y635BXHT6BN5VP/anno-DLN4E6BAEMIYB67M",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"node_modules/express\\\"]\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-5HFUSO7AP4Y635BXHT6BN5VP/pkg-TXLIZUEJRNELTNPP",
       "type": "Annotation"
     },
@@ -299,7 +299,7 @@
       "annotationType": "other",
       "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-5HFUSO7AP4Y635BXHT6BN5VP/anno-GNYTIOXBV7IRAZUG",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"node_modules/safe-buffer\\\"]\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-5HFUSO7AP4Y635BXHT6BN5VP/pkg-M4HOORJPEJNNEAJV",
       "type": "Annotation"
     },
