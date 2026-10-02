@@ -112,6 +112,14 @@ fn corpus_go_cobra() {
     run_target("go-cobra");
 }
 
+// #879 — the first multi-module Go target (29 modules). See
+// `layer1_assertions::go_opentelemetry_layer1`.
+#[test]
+#[ignore = "public-corpus target: needs WAYBILL_RUN_PUBLIC_CORPUS=1 and a populated corpus cache. Ignored rather than silently early-returning: a gated test that prints `skipping` and reports `ok` is indistinguishable from one that compared goldens, and a green local run then implies corpus coverage it does not have. CI passes --include-ignored. See #918."]
+fn corpus_go_opentelemetry() {
+    run_target("go-opentelemetry");
+}
+
 #[test]
 #[ignore = "public-corpus target: needs WAYBILL_RUN_PUBLIC_CORPUS=1 and a populated corpus cache. Ignored rather than silently early-returning: a gated test that prints `skipping` and reports `ok` is indistinguishable from one that compared goldens, and a green local run then implies corpus coverage it does not have. CI passes --include-ignored. See #918."]
 fn corpus_rust_ripgrep() {

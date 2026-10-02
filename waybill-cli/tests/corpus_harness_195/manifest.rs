@@ -53,6 +53,34 @@ pub const TARGETS: &[CorpusTarget] = &[
         exercises: "m194 US1 (Go stdlib edge synthesis) + m053 main-module version-resolution + m055 transitive-edges",
         layer1: super::layer1_assertions::go_cobra_layer1,
     },
+    // #879 — the first MULTI-MODULE Go target. `go-cobra` and
+    // `pants-example-golang` each have one go.sum, so the path where
+    // several modules in one tree declare the same dependency had no corpus
+    // coverage at all. Two defects lived there, both fixed in #1066: a
+    // shared module recorded only the first declaring go.sum, and every
+    // module after the first that shared a `go` version lost its stdlib
+    // edge.
+    //
+    // Measured before adding, offline, in this harness's configuration:
+    // 29 go.mod / 29 go.sum, 334 components, every one of the 29 modules
+    // linked to stdlib, and `testify@v1.12.1` recorded in all 29 go.sum
+    // files. Before #1066 the same tree gave 2 stdlib edges and no
+    // component with more than one go.sum occurrence.
+    CorpusTarget {
+        name: "go-opentelemetry",
+        source: SourceKind::Git {
+            clone_url: "https://github.com/open-telemetry/opentelemetry-go",
+        },
+        pinned: PinnedRef::Sha {
+            // HEAD of `main` as of 2026-10-01.
+            hex: "55899e389dcbc559393069a2a46dac41a88b0772",
+        },
+        ecosystem: Ecosystem::Go,
+        exercises: "#879 multi-module Go: a dependency shared by several modules records \
+                    every declaring go.sum, and every module sharing a `go` version keeps \
+                    its stdlib edge",
+        layer1: super::layer1_assertions::go_opentelemetry_layer1,
+    },
     // T022 (US2) — Rust source target:
     CorpusTarget {
         name: "rust-ripgrep",
