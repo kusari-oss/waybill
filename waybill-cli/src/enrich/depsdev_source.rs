@@ -30,6 +30,10 @@ use std::time::Instant;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use super::source::EnrichmentSource;
 
+/// One batch chunk's outcome: the per-key results in request order, and
+/// the response's cache max-age. `None` when the chunk failed.
+type ChunkResult = Option<(Vec<Option<VersionInfo>>, Option<u64>)>;
+
 /// An enrichment source backed by the deps.dev v3 API.
 ///
 /// Covers ecosystems deps.dev actually indexes (cargo, npm, pypi, go,
@@ -204,7 +208,7 @@ impl DepsDevSource {
     async fn fetch_chunk_batched(
         client: &DepsDevClient,
         chunk: &[EnrichmentKey],
-    ) -> Option<(Vec<Option<VersionInfo>>, Option<u64>)> {
+    ) -> ChunkResult {
         // Match by the echoed request, never by position (C-3.1).
         // The echo is uncanonicalized, and deps.dev normalises names
         // per ecosystem, so the index is built from what we SENT.
@@ -377,8 +381,7 @@ impl DepsDevSource {
                     let c = client.clone();
                     set.spawn(async move { (gi, Self::fetch_chunk_batched(&c, &ks).await) });
                 }
-                let mut results: Vec<Option<(Vec<Option<VersionInfo>>, Option<u64>)>> =
-                    vec![None; group.len()];
+                let mut results: Vec<ChunkResult> = vec![None; group.len()];
                 while let Some(joined) = set.join_next().await {
                     match joined {
                         Ok((gi, got)) => results[gi] = got,
