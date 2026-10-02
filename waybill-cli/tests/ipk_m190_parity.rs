@@ -278,7 +278,7 @@ fn spdx3_custom_license_ids(doc: &Value) -> Vec<String> {
         .as_array()
         .expect("graph array")
         .iter()
-        .filter(|e| e["type"].as_str() == Some("simplelicensing_CustomLicense"))
+        .filter(|e| e["type"].as_str() == Some("expandedlicensing_CustomLicense"))
         .filter_map(|e| e["spdxId"].as_str().map(str::to_string))
         .collect()
 }
@@ -467,14 +467,14 @@ fn us2_spdx3_emits_license_expression_for_compound_license() {
 fn us2_spdx3_emits_custom_license_for_vendor_operand() {
     // FR-005 / US2 acceptance #3: vendor-license operand → the
     // existing m154 CustomLicense sweep must emit at least one
-    // simplelicensing_CustomLicense element.
+    // expandedlicensing_CustomLicense element.
     let dir = tempfile::tempdir().unwrap();
     build_ipk_with_license(dir.path(), "vendor-license-fixture", "SomeVendorLicense");
     let doc = scan(dir.path(), "spdx-3-json");
     let ids = spdx3_custom_license_ids(&doc);
     assert!(
         !ids.is_empty(),
-        "SPDX 3 must emit a simplelicensing_CustomLicense for vendor operand; got zero"
+        "SPDX 3 must emit a expandedlicensing_CustomLicense for vendor operand; got zero"
     );
 }
 
