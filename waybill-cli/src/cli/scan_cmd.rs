@@ -4255,7 +4255,7 @@ pub async fn execute(
     {
         let canonical_root = std::fs::canonicalize(&root_path)
             .unwrap_or_else(|_| root_path.clone());
-        scan_fs::tag_components_with_workspace_member(&mut components, &canonical_root);
+        scan_fs::tag_components_with_workspace_member(&mut components, &canonical_root, scan_mode);
     }
 
     // Milestone 220: post-discovery scope filter. Runs AFTER
