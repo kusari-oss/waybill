@@ -5,6 +5,9 @@
 //! binary `"; "`-joined into one source path. Normalisation stripped the
 //! scan root from the start of that string only, so every path after the
 //! first reached the SBOM as an absolute path on the scanning host.
+//!
+//! Unix-only: the fixture copies `/bin/ls`.
+#![cfg(unix)]
 
 use std::path::Path;
 use std::process::Command;
@@ -49,7 +52,6 @@ fn source_files(c: &serde_json::Value) -> Vec<String> {
 /// Two copies of one executable in different directories give each
 /// library it links two parents. `/bin/ls` exists on every Unix CI host
 /// and links at least the C library, whatever its binary format.
-#[cfg(unix)]
 #[test]
 fn every_source_path_is_relative_and_separate() {
     let dir = tempfile::tempdir().expect("tempdir");
