@@ -15,7 +15,7 @@
 
 use std::collections::HashMap;
 use std::io::Read;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use sha2::Digest;
 
@@ -416,6 +416,7 @@ fn _unused_lints_silencer() {
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
     use super::*;
+    use std::path::PathBuf;
     use crate::scan_fs::file_tier::content_shape::build_orphan_exclusion_globs;
     use sha2::Digest;
     use tempfile::TempDir;
