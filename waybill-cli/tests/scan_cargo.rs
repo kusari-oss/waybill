@@ -136,6 +136,29 @@ fn scan_cargo_warns_once_per_lockfile_on_read_or_parse_failure() {
     }
 }
 
+/// The one fail-closed cargo case. Exit 1 is the contract (#828): the
+/// refusal is not distinguished from other fatal errors. The message
+/// must appear once (#748) and no partial SBOM may be written.
+#[test]
+fn scan_cargo_unsupported_lockfile_version_fails_closed_with_exit_1() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let lock_path = dir.path().join("Cargo.lock");
+    std::fs::write(
+        &lock_path,
+        "version = 5\n\n[[package]]\nname = \"x\"\nversion = \"0.1.0\"\n",
+    )
+    .expect("write lockfile");
+    let (output, _tmp, sbom_path) = run_scan_with_output(dir.path());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(output.status.code(), Some(1), "stderr: {stderr}");
+    assert_eq!(
+        stderr.matches("unsupported Cargo.lock format version 5").count(),
+        1,
+        "refusal must be reported once: {stderr}",
+    );
+    assert!(!sbom_path.exists(), "no SBOM may be written on refusal");
+}
+
 #[test]
 fn scan_cargo_v1_lockfile_emits_components() {
     let (output, _tmp, sbom_path) = run_scan_with_output(&fixture("lockfile-v1-refused"));

@@ -20,6 +20,7 @@ mikebom's `sbom scan` CLI surface does NOT grow new flags in this milestone. All
 
 **Behaviour:**
 - Scan aborts with non-zero exit code (mirror npm v1 refusal — same `2` chosen for parity).
+  > **Correction (#828, 2026-10-01).** No commit in git history maps this refusal to `2`; it has always exited `1`, and `1` is the contract. v1/v2 lockfiles parse since #826; the refusal now fires only for format versions above 4. See `specs/004-rpm-binary-sboms/contracts/cli-interface.md` § Exit codes.
 - Stderr contains the exact string: `error: Cargo.lock v1/v2 not supported; regenerate with cargo ≥1.53`.
 - No SBOM file is written.
 - If ANY other Cargo.lock in a different project root succeeds, the refusal still fires. The SBOM is NOT written partially. The user's fix is deterministic (`cargo generate-lockfile` on any Rust ≥1.53).
