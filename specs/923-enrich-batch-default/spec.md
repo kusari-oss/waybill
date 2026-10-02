@@ -212,6 +212,13 @@ full content and reports the degradation.
   failure is observed before the next request goes out. Should that ever
   change, this requirement becomes "at most one concurrency group" and the
   change MUST be deliberate rather than a silent weakening.
+
+  *Amended by #929.* Batch chunks now run concurrently, `CONCURRENT_REQUESTS`
+  at a time. The first chunk is sent alone as a probe, so the requirement
+  above holds unchanged for an endpoint that fails from the start: one
+  attempt, then the circuit opens. A failure that begins mid-scan, after
+  the probe succeeded, costs at most the one concurrency group already in
+  flight. That weaker bound applies only to that case, deliberately.
 - **FR-007b**: The scan MUST emit a log line when it stops using the batched
   path, naming the failure that caused it. The document-scope record (FR-007)
   tells a consumer afterwards; the log tells the operator while it is

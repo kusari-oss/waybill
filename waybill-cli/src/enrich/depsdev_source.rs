@@ -202,7 +202,7 @@ impl DepsDevSource {
     /// keys, so a failure costs 100 lookups' worth of speed, not the
     /// scan (C-4.0 / FR-005c).
     async fn fetch_chunk_batched(
-        &self,
+        client: &DepsDevClient,
         chunk: &[EnrichmentKey],
     ) -> Option<(Vec<Option<VersionInfo>>, Option<u64>)> {
         // Match by the echoed request, never by position (C-3.1).
@@ -219,7 +219,7 @@ impl DepsDevSource {
         let mut token: Option<String> = None;
         let mut max_age: Option<u64> = None;
         loop {
-            let (page, page_max_age) = match self.client.get_version_batch(chunk, token.clone()).await {
+            let (page, page_max_age) = match client.get_version_batch(chunk, token.clone()).await {
                 Ok(p) => p,
                 Err(e) => {
                     warn!(error = %e, "deps.dev batch request failed — falling back");
@@ -347,13 +347,22 @@ impl DepsDevSource {
             // anyway — ~23 wasted round-trips on a 2,300-package
             // repository.
             //
-            // Exactly one wasted attempt is achievable because requests are
-            // issued sequentially: the failure is observed before the next
-            // one goes out. If that ever changes, this guarantee becomes
-            // "at most one concurrency group" and the weakening must be
-            // deliberate (see #929).
+            // #929: chunks now run concurrently, CONCURRENT_REQUESTS at a
+            // time — they used to be grouped by it and then awaited one by
+            // one, so effective concurrency was 1. To keep FR-007a's
+            // "exactly one attempt" for an endpoint that is down, the FIRST
+            // chunk goes alone as a probe: if it fails, the circuit opens
+            // before anything else is sent. Only a failure that starts
+            // mid-scan, after the probe succeeded, can cost more than one
+            // attempt — at most the one concurrency group in flight.
+            let client = std::sync::Arc::new(self.client.clone());
             let mut batch_circuit_open = true;
-            for group in chunks.chunks(CONCURRENT_REQUESTS) {
+            let (probe, rest) = chunks.split_at(chunks.len().min(1));
+            let groups = std::iter::once(probe).chain(rest.chunks(CONCURRENT_REQUESTS));
+            for group in groups {
+                if group.is_empty() {
+                    continue;
+                }
                 if !batch_circuit_open {
                     // Circuit tripped: everything remaining goes straight to
                     // the per-component path without another batch attempt.
@@ -362,28 +371,24 @@ impl DepsDevSource {
                     }
                     continue;
                 }
-                // The indices are kept BESIDE the future, not inside it.
-                // Awaiting a future is what issues its request, so a skipped
-                // chunk must be identifiable without driving it — the first
-                // version of this breaker awaited to read the indices and so
-                // sent every request it meant to skip.
-                let mut pending = Vec::new();
-                for idxs in group {
-                    let ks: Vec<EnrichmentKey> =
-                        idxs.iter().map(|&i| keys[i].clone()).collect();
-                    pending.push((
-                        idxs.clone(),
-                        async move { self.fetch_chunk_batched(&ks).await },
-                    ));
+                let mut set = tokio::task::JoinSet::new();
+                for (gi, idxs) in group.iter().enumerate() {
+                    let ks: Vec<EnrichmentKey> = idxs.iter().map(|&i| keys[i].clone()).collect();
+                    let c = client.clone();
+                    set.spawn(async move { (gi, Self::fetch_chunk_batched(&c, &ks).await) });
                 }
-                for (idxs, fut) in pending {
-                    if !batch_circuit_open {
-                        // Tripped by an earlier chunk. Drop the future
-                        // unawaited — no request is issued.
-                        still_missing.extend(idxs);
-                        continue;
+                let mut results: Vec<Option<(Vec<Option<VersionInfo>>, Option<u64>)>> =
+                    vec![None; group.len()];
+                while let Some(joined) = set.join_next().await {
+                    match joined {
+                        Ok((gi, got)) => results[gi] = got,
+                        // A panicked chunk falls back like a failed one.
+                        Err(e) => warn!(error = %e, "deps.dev batch worker task panicked"),
                     }
-                    let got = fut.await;
+                }
+                // Applied in chunk order, not completion order, so the cache
+                // and the fallback list do not depend on network timing.
+                for (idxs, got) in group.iter().zip(results) {
                     match got {
                         Some((vals, max_age)) => {
                             let bound = self.disk.effective_max_age(max_age);
@@ -406,22 +411,14 @@ impl DepsDevSource {
                         }
                         None => {
                             self.batch_fallbacks.fetch_add(1, Ordering::Relaxed);
-                            still_missing.extend(idxs);
+                            still_missing.extend(idxs.iter().copied());
                             // #927 FR-007b — say so once, where an operator
-                            // watching a scan get slow will see it. The
-                            // document-scope degradation record (C158) tells
-                            // whoever reads the document later; these are
-                            // different audiences.
-                            //
-                            // "Once" is guaranteed by the skip at the top of
-                            // this loop: once the circuit is open no later
-                            // chunk awaits its future, so no later chunk can
-                            // reach this branch. A second `if
-                            // batch_circuit_open` here stood until T016 and
-                            // was unreachable-when-false — it only masked
-                            // the breaker being removed, which is precisely
-                            // what the test needs to be able to see.
-                            {
+                            // watching a scan get slow will see it. Several
+                            // chunks of one concurrent group can fail
+                            // together, so this needs its own guard (#929);
+                            // sequentially, the skip above made a second
+                            // failure unreachable.
+                            if batch_circuit_open {
                                 warn!("{BATCH_TRIP_WARNING}");
                                 #[cfg(test)]
                                 if let Some((for_base, sink)) = BATCH_TRIP_SINK
@@ -1362,6 +1359,47 @@ mod batch_tests {
     /// Three chunks' worth of work with a persistently failing endpoint
     /// must produce exactly ONE batch attempt. Before this change it
     /// produced one per chunk.
+    #[tokio::test]
+    async fn batch_chunks_after_the_first_run_concurrently() {
+        // #929: chunks were grouped by CONCURRENT_REQUESTS and then
+        // awaited one at a time, so effective concurrency was 1. With a
+        // 300 ms endpoint and nine chunks, sequential takes >= 2.7 s; the
+        // probe chunk plus one concurrent group of eight takes ~0.6 s.
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/v3alpha/versionbatch"))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .set_body_json(serde_json::json!({"responses": [], "nextPageToken": ""}))
+                    .set_delay(std::time::Duration::from_millis(300)),
+            )
+            .mount(&server)
+            .await;
+        let n = super::super::deps_dev_batch::BATCH_SIZE * 9;
+        let names: Vec<String> = (0..n).map(|i| format!("c{i}")).collect();
+        let refs: Vec<&str> = names.iter().map(String::as_str).collect();
+        let k = keys(&refs);
+
+        let s = src(&server, true);
+        let mut p = ProgressReporter::new(k.len());
+        let started = std::time::Instant::now();
+        let _ = s.fetch_many(&k, &mut p).await;
+        let elapsed = started.elapsed();
+
+        let posts = server
+            .received_requests()
+            .await
+            .expect("recorded requests")
+            .iter()
+            .filter(|r| r.url.path().ends_with("/versionbatch"))
+            .count();
+        assert_eq!(posts, 9, "one request per chunk");
+        assert!(
+            elapsed < std::time::Duration::from_millis(1500),
+            "nine 300 ms chunks took {elapsed:?}; sequential is >= 2.7 s",
+        );
+    }
+
     #[tokio::test]
     async fn a_persistent_batch_failure_is_attempted_exactly_once() {
         let server = MockServer::start().await;
