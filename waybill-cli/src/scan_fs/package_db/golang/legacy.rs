@@ -1706,6 +1706,37 @@ fn stamp_go_transitive_annotations(
     }
 }
 
+/// Fold a later project root's entry for a module version into the entry
+/// an earlier root already emitted.
+///
+/// - **Path** (#879): the later root's go.sum declares the module too, so
+///   it is recorded. Dropping the entry whole meant a module required by
+///   39 modules named one go.sum.
+/// - **`depends`** (#1069): unioned. A module version's requirements are
+///   fixed by its own go.mod; what differs between roots is how much of
+///   them each root's pruned module graph reveals. Measured on
+///   opentelemetry-go (29 modules), 6 of 34 shared module versions had
+///   per-root `depends` that differed only by such subsets — `grpc` kept
+///   2 `otel/sdk*` edges six other roots lacked, and lacked the
+///   `genproto/googleapis/api` edge they had. First-wins kept whichever
+///   subset the lexically-first root saw. Dependencies on modules absent
+///   from the document are dropped by the resolver, so the union cannot
+///   add a dangling edge.
+/// - **Transitive annotations**: first-wins, unchanged. They never
+///   disagreed in that measurement.
+fn merge_shared_module_entry(kept: &mut PackageDbEntry, other: PackageDbEntry) {
+    if kept.source_path != other.source_path
+        && !kept.extra_source_paths.contains(&other.source_path)
+    {
+        kept.extra_source_paths.push(other.source_path);
+    }
+    for dep in other.depends {
+        if !kept.depends.contains(&dep) {
+            kept.depends.push(dep);
+        }
+    }
+}
+
 pub fn read(
     rootfs: &Path,
     _include_dev: bool,
@@ -2008,20 +2039,10 @@ pub fn read(
                     slot.insert(out.len());
                     out.push(entry);
                 }
-                // #879: another project root already emitted this
-                // module version. Keep that entry's metadata — which
-                // root's `depends` and transitive annotations should win
-                // is undecided, and first-wins is the existing answer —
-                // but record that this root's go.sum declares it too.
-                // Dropping the entry whole lost the path, so a module
-                // required by 39 modules named one go.sum.
+                // Another project root already emitted this module
+                // version; fold this root's observation into it.
                 std::collections::hash_map::Entry::Occupied(slot) => {
-                    let kept = &mut out[*slot.get()];
-                    if kept.source_path != entry.source_path
-                        && !kept.extra_source_paths.contains(&entry.source_path)
-                    {
-                        kept.extra_source_paths.push(entry.source_path);
-                    }
+                    merge_shared_module_entry(&mut out[*slot.get()], entry);
                 }
             }
         }
@@ -3733,6 +3754,38 @@ tool (
             vec!["github.com/spf13/pflag".to_string()],
             "cobra's cached go.mod declared pflag — expected edge populated",
         );
+    }
+
+    /// #1069: a later root's view of a shared module adds the
+    /// requirements the first root's pruned graph did not reveal, and its
+    /// path; it removes nothing and duplicates nothing.
+    #[test]
+    fn shared_module_entry_unions_depends_and_records_the_path() {
+        let doc = parse_go_mod("module example.com/app\ngo 1.22\nrequire google.golang.org/grpc v1.83.2\n");
+        let sums = parse_go_sum("google.golang.org/grpc v1.83.2 h1:ok=\n");
+        let entries = build_entries_from_go_module(&doc, &sums, "/a/go.sum", &GoModCache::default());
+        let mut kept = entries
+            .iter()
+            .find(|e| e.name == "google.golang.org/grpc")
+            .expect("grpc entry")
+            .clone();
+        kept.depends = vec!["go.opentelemetry.io/otel/sdk".into(), "golang.org/x/net".into()];
+        let mut other = kept.clone();
+        other.source_path = "/b/go.sum".into();
+        other.depends = vec!["golang.org/x/net".into(), "google.golang.org/genproto/googleapis/api".into()];
+
+        merge_shared_module_entry(&mut kept, other);
+
+        assert_eq!(
+            kept.depends,
+            vec![
+                "go.opentelemetry.io/otel/sdk".to_string(),
+                "golang.org/x/net".to_string(),
+                "google.golang.org/genproto/googleapis/api".to_string(),
+            ],
+        );
+        assert_eq!(kept.source_path, "/a/go.sum");
+        assert_eq!(kept.extra_source_paths, vec!["/b/go.sum".to_string()]);
     }
 
     #[test]
