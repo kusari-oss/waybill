@@ -35,7 +35,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspaces-detected\",\"value\":\"[\\\"usr/local/bin\\\",\\\"var/lib/dpkg\\\"]\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspaces-detected\",\"value\":\"[\\\"var/lib/dpkg\\\"]\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -10718,12 +10718,6 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:b4ee886bfa230299aa732f8e388201e2aa27c41854717dabca17a9f02657525b\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"usr/local/bin\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -10779,12 +10773,6 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:b4ee886bfa230299aa732f8e388201e2aa27c41854717dabca17a9f02657525b\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"usr/local/bin\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -10850,12 +10838,6 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:layer-digest\",\"value\":\"sha256:b4ee886bfa230299aa732f8e388201e2aa27c41854717dabca17a9f02657525b\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"usr/local/bin\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -10877,47 +10859,6 @@
       "name": "golang.org/x/sys",
       "supplier": "Organization: golang.org/x",
       "versionInfo": "v0.1.0"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-3XGM64VZODRVNRYM",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Sys/Hostname/Hostname.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Sys/Hostname/Hostname.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "01a1ac6bf5f3ac8242f6d92a0257963b6a5a257eb21397dfa92f6cf69a62d66b"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "Hostname.so",
-      "versionInfo": "NOASSERTION"
     },
     {
       "SPDXID": "SPDXRef-Package-4AZQXPNGVHUZQLBE",
@@ -11081,47 +11022,6 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "dash.preinst",
-      "versionInfo": "NOASSERTION"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-YZRJ5Q7TOQXBXY5N",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Unicode/Collate/Collate.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Unicode/Collate/Collate.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "08464ea1396c820cd5a1a1c7e4e232a7196d919db7168c3baef56dda3d3089f8"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "Collate.so",
       "versionInfo": "NOASSERTION"
     },
     {
@@ -11371,129 +11271,6 @@
       "versionInfo": "NOASSERTION"
     },
     {
-      "SPDXID": "SPDXRef-Package-7NNOYXC32C3LIUN7",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/File/DosGlob/DosGlob.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/File/DosGlob/DosGlob.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "0d1a034b081434d8ccd9ee642bab9ee9346bd606b1b37c484a169b8e71e467df"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "DosGlob.so",
-      "versionInfo": "NOASSERTION"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-NYRHSR4R6W3JBRCZ",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/attributes/attributes.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/attributes/attributes.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "0e4c2431411a7eb5b66717cad3cf7ccba72793484627445a954f9917a7691498"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "attributes.so",
-      "versionInfo": "NOASSERTION"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-JDI6I56WUYYSBOVG",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/share/perl/5.40/ExtUtils/xsubpp\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/share/perl/5.40/ExtUtils/xsubpp\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "0ec9716a9d863d02564977c850b31992a0dd032f4235f53d5cb1b8754212d095"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "xsubpp",
-      "versionInfo": "NOASSERTION"
-    },
-    {
       "SPDXID": "SPDXRef-Package-42535IMQFQXAKCQM",
       "annotations": [
         {
@@ -11532,88 +11309,6 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "procps.postinst",
-      "versionInfo": "NOASSERTION"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-672JFRM6AIMAPJ4V",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/List/Util/Util.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/List/Util/Util.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "0fb5cdd60843c5590f8da9639c2744121d0d8314253837fbb8a25d651ec63f80"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "Util.so",
-      "versionInfo": "NOASSERTION"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-AE4L36GLWUSFXHVV",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/File/Glob/Glob.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/File/Glob/Glob.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "100ccd2d6a3a846e9bae00b252f3189f4760b92834a0f4e518730143f5359729"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "Glob.so",
       "versionInfo": "NOASSERTION"
     },
     {
@@ -11740,47 +11435,6 @@
       "versionInfo": "NOASSERTION"
     },
     {
-      "SPDXID": "SPDXRef-Package-4PSR3P2NIAZAGCG5",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/B/B.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/B/B.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "1236b20260f8acacf729b7d26e91bd92e03b4b03dae20d758ff605bbb1475ba5"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "B.so",
-      "versionInfo": "NOASSERTION"
-    },
-    {
       "SPDXID": "SPDXRef-Package-YT3Z56LJYKBB4DGG",
       "annotations": [
         {
@@ -11863,47 +11517,6 @@
       "versionInfo": "NOASSERTION"
     },
     {
-      "SPDXID": "SPDXRef-Package-MSSVAFB4F3BDSSGB",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Encode/Unicode/Unicode.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Encode/Unicode/Unicode.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "193f84978bdb1f438c971e5db04c65ecc06e1b2163c1f96333fafb68c501db7f"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "Unicode.so",
-      "versionInfo": "NOASSERTION"
-    },
-    {
       "SPDXID": "SPDXRef-Package-LNB6WY6ORZSQLGCO",
       "annotations": [
         {
@@ -11942,47 +11555,6 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "locales.postinst",
-      "versionInfo": "NOASSERTION"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-335AQTZRBEANDZIE",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/threads/threads.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/threads/threads.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "1ce6781794024b266b4e3868b02adf3bde798adf890250313edac426e92e1fc5"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "threads.so",
       "versionInfo": "NOASSERTION"
     },
     {
@@ -12065,47 +11637,6 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "base-passwd.postrm",
-      "versionInfo": "NOASSERTION"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-VGSTLSYDR57XPLDG",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Unicode/Normalize/Normalize.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Unicode/Normalize/Normalize.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "1d5a6a9f78486bcaaed368e06d8fc97114f81f8bb4ca8c16362fd81d707bfabc"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "Normalize.so",
       "versionInfo": "NOASSERTION"
     },
     {
@@ -12355,47 +11886,6 @@
       "versionInfo": "NOASSERTION"
     },
     {
-      "SPDXID": "SPDXRef-Package-KBSZ2K332GN7IRZ7",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Time/HiRes/HiRes.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Time/HiRes/HiRes.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "2c64ed7c23cdf31801ac5d738595f4977a8c7a2f377cf2c04e190850b98de71b"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "HiRes.so",
-      "versionInfo": "NOASSERTION"
-    },
-    {
       "SPDXID": "SPDXRef-Package-JWPAYNNKZAY6S6LN",
       "annotations": [
         {
@@ -12598,47 +12088,6 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "readline-common.postrm",
-      "versionInfo": "NOASSERTION"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-JCOGZ77624ZD4KUP",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/IPC/SysV/SysV.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/IPC/SysV/SysV.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "3c20df61a23d1adffbb4fee4fce60d71a3edd35a39ce71b2eb036fe3a812e9bd"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "SysV.so",
       "versionInfo": "NOASSERTION"
     },
     {
@@ -12929,47 +12378,6 @@
       "versionInfo": "NOASSERTION"
     },
     {
-      "SPDXID": "SPDXRef-Package-6AAHNO2MSTNZW7PS",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/mro/mro.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/mro/mro.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "44367c26928474a9d2edfe033972d310e83ef4f244d10c3f4c78a99210be86e0"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "mro.so",
-      "versionInfo": "NOASSERTION"
-    },
-    {
       "SPDXID": "SPDXRef-Package-KCNKSZP5PBFVVTWU",
       "annotations": [
         {
@@ -13093,47 +12501,6 @@
       "versionInfo": "NOASSERTION"
     },
     {
-      "SPDXID": "SPDXRef-Package-R43DSJ54A77MXV6F",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/ODBM_File/ODBM_File.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/ODBM_File/ODBM_File.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "509e4b43da19daa37fb0a5ffe83121aefa62ca752c730b361f39d59526703023"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "ODBM_File.so",
-      "versionInfo": "NOASSERTION"
-    },
-    {
       "SPDXID": "SPDXRef-Package-6ULUUQBTD7BCSU6S",
       "annotations": [
         {
@@ -13172,88 +12539,6 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "debian-archive-keyring.preinst",
-      "versionInfo": "NOASSERTION"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-4YTQLRBT7CAUBDCW",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Fcntl/Fcntl.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Fcntl/Fcntl.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "52a96cccf27c0a20a489fb9aa21aca0b01214006e9e47245162ebba15a781c63"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "Fcntl.so",
-      "versionInfo": "NOASSERTION"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-JD7KSFKPU3I6H6LR",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/PerlIO/mmap/mmap.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/PerlIO/mmap/mmap.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "541b6f6be37026d5dd45999d79e8d2975fd71566d1c88e00ea49af4d2d1cb375"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "mmap.so",
       "versionInfo": "NOASSERTION"
     },
     {
@@ -13339,47 +12624,6 @@
       "versionInfo": "NOASSERTION"
     },
     {
-      "SPDXID": "SPDXRef-Package-VUHA3AY6KRMUCAHD",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Encode/KR/KR.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Encode/KR/KR.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "5d4bf7708d4f57bd2683c53654f10f496b0a7af831adcc9a937f11acde7835bf"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "KR.so",
-      "versionInfo": "NOASSERTION"
-    },
-    {
       "SPDXID": "SPDXRef-Package-GC2DKRO64OSXP62E",
       "annotations": [
         {
@@ -13418,47 +12662,6 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "postgresql-common.prerm",
-      "versionInfo": "NOASSERTION"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-KLX3MYWRJSPXY27A",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Encode/EBCDIC/EBCDIC.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Encode/EBCDIC/EBCDIC.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "5fbbf8606c88c5cd345afecb20a15a8d3987db64214646b1789def8912187d17"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "EBCDIC.so",
       "versionInfo": "NOASSERTION"
     },
     {
@@ -13503,47 +12706,6 @@
       "versionInfo": "NOASSERTION"
     },
     {
-      "SPDXID": "SPDXRef-Package-PR4IESXIAXFNWAXQ",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/GDBM_File/GDBM_File.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/GDBM_File/GDBM_File.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "63bd498302b7980bbe0c5bc4696a9f27287dc02ae508428d1a542ff0d2806607"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "GDBM_File.so",
-      "versionInfo": "NOASSERTION"
-    },
-    {
       "SPDXID": "SPDXRef-Package-5KMFWD4QPGSH5LN3",
       "annotations": [
         {
@@ -13585,47 +12747,6 @@
       "versionInfo": "NOASSERTION"
     },
     {
-      "SPDXID": "SPDXRef-Package-RCWNZXEF36VRVZKA",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Cwd/Cwd.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Cwd/Cwd.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "689cb3d33bfcc5dcdecf5d787ffa716844369c649eb0a3aac0d5916ae9bb66df"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "Cwd.so",
-      "versionInfo": "NOASSERTION"
-    },
-    {
       "SPDXID": "SPDXRef-Package-UG43UR22E4XF4DVP",
       "annotations": [
         {
@@ -13664,47 +12785,6 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "less.prerm",
-      "versionInfo": "NOASSERTION"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-APYRGI2LFXQQWBIW",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/I18N/Langinfo/Langinfo.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/I18N/Langinfo/Langinfo.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "6c6d211da0fa9fff1eeb45c44dd91361d65162dcc1bf2a09d1528e933a69422e"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "Langinfo.so",
       "versionInfo": "NOASSERTION"
     },
     {
@@ -13787,47 +12867,6 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "dirmngr.postrm",
-      "versionInfo": "NOASSERTION"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-INPXM5VL7HDMWZDY",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/NDBM_File/NDBM_File.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/NDBM_File/NDBM_File.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "76258934d08b34c0078c87e5ad601bdb6f830d3b9c93d78682d944705c46fd7f"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "NDBM_File.so",
       "versionInfo": "NOASSERTION"
     },
     {
@@ -14077,47 +13116,6 @@
       "versionInfo": "NOASSERTION"
     },
     {
-      "SPDXID": "SPDXRef-Package-4D46MW6PHY53RGLX",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/DB_File/DB_File.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/DB_File/DB_File.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "85f57674689f61782a776494caad9d7797e7fd610dc22a782f4ffafcee9db3ca"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "DB_File.so",
-      "versionInfo": "NOASSERTION"
-    },
-    {
       "SPDXID": "SPDXRef-Package-QKNQRWOZ637TTDOJ",
       "annotations": [
         {
@@ -14159,47 +13157,6 @@
       "versionInfo": "NOASSERTION"
     },
     {
-      "SPDXID": "SPDXRef-Package-CEHDSJIM36UHQXJJ",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/re/re.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/re/re.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "873731c3442a19e9a2eb8fa62eb9a2fc68badeb36adc62a382bf3e0392559a3d"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "re.so",
-      "versionInfo": "NOASSERTION"
-    },
-    {
       "SPDXID": "SPDXRef-Package-PNLC54UOB4SMPTSF",
       "annotations": [
         {
@@ -14238,88 +13195,6 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "libpam-modules:amd64.preinst",
-      "versionInfo": "NOASSERTION"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-FHG7QFFYA6ZEAU6G",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Time/Piece/Piece.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Time/Piece/Piece.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "88923aacc23a12f56ce69d45b798625408232825159ae00e0db3ce92dff9eff6"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "Piece.so",
-      "versionInfo": "NOASSERTION"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-UZIROI7CRLIBU5GK",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Digest/MD5/MD5.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Digest/MD5/MD5.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "8c09ae6178dce1863a527b894f4e9f72d43b708c1f0387bce03ae5653cfcd6ba"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "MD5.so",
       "versionInfo": "NOASSERTION"
     },
     {
@@ -14405,47 +13280,6 @@
       "versionInfo": "NOASSERTION"
     },
     {
-      "SPDXID": "SPDXRef-Package-AMGW4LFYOYJQWJEF",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/MIME/Base64/Base64.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/MIME/Base64/Base64.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "8f2eae42032d87fe06ef5fe33e90d4b968fc4c68976212fa951ddac60f093996"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "Base64.so",
-      "versionInfo": "NOASSERTION"
-    },
-    {
       "SPDXID": "SPDXRef-Package-IQIHIXGDBTODIGD2",
       "annotations": [
         {
@@ -14484,47 +13318,6 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "dash.postrm",
-      "versionInfo": "NOASSERTION"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-CRFH2WQR4WAXRET6",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/PerlIO/via/via.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/PerlIO/via/via.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "910b9f13da6d3aa8d9862721622a3148e6eef219218d554bd27471dc5fb8fd7b"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "via.so",
       "versionInfo": "NOASSERTION"
     },
     {
@@ -14651,47 +13444,6 @@
       "versionInfo": "NOASSERTION"
     },
     {
-      "SPDXID": "SPDXRef-Package-76HZYJTPAP4CLVH2",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Encode/Byte/Byte.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Encode/Byte/Byte.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "95ab98fb0e50bc1b3b38a7db90610d8dab5514607c8f366b06ff117a38d6ec37"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "Byte.so",
-      "versionInfo": "NOASSERTION"
-    },
-    {
       "SPDXID": "SPDXRef-Package-MVV3PXV3EDDDIJEV",
       "annotations": [
         {
@@ -14774,47 +13526,6 @@
       "versionInfo": "NOASSERTION"
     },
     {
-      "SPDXID": "SPDXRef-Package-HFAWTE3R6OLR6IEL",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Hash/Util/FieldHash/FieldHash.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Hash/Util/FieldHash/FieldHash.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "99ec413b095645982926cf9c98a50642f68c08ea7d0d9be8b6487dcb7fc42882"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "FieldHash.so",
-      "versionInfo": "NOASSERTION"
-    },
-    {
       "SPDXID": "SPDXRef-Package-5NTQMCTC5G4X7QYR",
       "annotations": [
         {
@@ -14856,47 +13567,6 @@
       "versionInfo": "NOASSERTION"
     },
     {
-      "SPDXID": "SPDXRef-Package-2EXJTLDWSA2LGR5W",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Compress/Raw/Zlib/Zlib.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Compress/Raw/Zlib/Zlib.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "9c4e58a51e9e96da967728b6061586d9f368ac04b6747f922fe513593116b07f"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "Zlib.so",
-      "versionInfo": "NOASSERTION"
-    },
-    {
       "SPDXID": "SPDXRef-Package-BRFJR457JAVPXFHG",
       "annotations": [
         {
@@ -14935,47 +13605,6 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "locales.postrm",
-      "versionInfo": "NOASSERTION"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-BH7HPTSOWL62RHHJ",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/SDBM_File/SDBM_File.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/SDBM_File/SDBM_File.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "9f14ab6a0e8d744682e5b300963bcda34462fe8259d570c51054647cba468e47"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "SDBM_File.so",
       "versionInfo": "NOASSERTION"
     },
     {
@@ -15266,47 +13895,6 @@
       "versionInfo": "NOASSERTION"
     },
     {
-      "SPDXID": "SPDXRef-Package-25GWO7PVXPF3A45V",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Encode/TW/TW.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Encode/TW/TW.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "af86040dfcf1b2ecc3eaac5ff10948cdebb6bd1003a604ec78159bf6e6f77a83"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "TW.so",
-      "versionInfo": "NOASSERTION"
-    },
-    {
       "SPDXID": "SPDXRef-Package-FPYFFXAHBJJ6E7TE",
       "annotations": [
         {
@@ -15345,47 +13933,6 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "pinentry-curses.prerm",
-      "versionInfo": "NOASSERTION"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-QZ7VKEV435ILWHR3",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/PerlIO/encoding/encoding.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/PerlIO/encoding/encoding.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "b669d4df3e0d128f8b7ed32b42a8c3fe961cd4d0facf21cc71bd23ca22cffd08"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "encoding.so",
       "versionInfo": "NOASSERTION"
     },
     {
@@ -15594,47 +14141,6 @@
       "versionInfo": "NOASSERTION"
     },
     {
-      "SPDXID": "SPDXRef-Package-YUADXZHHGBT64TAY",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Opcode/Opcode.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Opcode/Opcode.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "bb92c4b0508eb15ba478fc8731935e489bd552de3254407b034f1222d041941d"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "Opcode.so",
-      "versionInfo": "NOASSERTION"
-    },
-    {
       "SPDXID": "SPDXRef-Package-WQGPZRMEXGYJ3MGS",
       "annotations": [
         {
@@ -15673,47 +14179,6 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "libpam-runtime.prerm",
-      "versionInfo": "NOASSERTION"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-WVQIQA4KPK3LWIBE",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Data/Dumper/Dumper.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Data/Dumper/Dumper.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "bdba172954c881bb6264ef073c3c43486dd402f7f20c839c6a69479e860a2121"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "Dumper.so",
       "versionInfo": "NOASSERTION"
     },
     {
@@ -15837,47 +14302,6 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "base-files.postinst",
-      "versionInfo": "NOASSERTION"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-TCFJ5BV3PBUX4MOW",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/POSIX/POSIX.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/POSIX/POSIX.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "c44915c5296300d7e74be1c70ae10109b9cf45d96a598e005b98fccd7075b842"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "POSIX.so",
       "versionInfo": "NOASSERTION"
     },
     {
@@ -16045,88 +14469,6 @@
       "versionInfo": "NOASSERTION"
     },
     {
-      "SPDXID": "SPDXRef-Package-IYUZV6EDLPY3CY76",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Hash/Util/Util.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Hash/Util/Util.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "cac4401803849164b0e3524458944d22525f7092e344bca8f63e048a2224fa34"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "Util.so",
-      "versionInfo": "NOASSERTION"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-KKH6TTWNNJ7JZEIE",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Encode/JP/JP.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Encode/JP/JP.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "cb258bddc4bec84554426d8f82864facc206e78144a97cf212f766f26436ebd7"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "JP.so",
-      "versionInfo": "NOASSERTION"
-    },
-    {
       "SPDXID": "SPDXRef-Package-MBYAFVRLO476H2FV",
       "annotations": [
         {
@@ -16247,129 +14589,6 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "perl.postinst",
-      "versionInfo": "NOASSERTION"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-NJ3IJZ7OCN6JWQZ5",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Sys/Syslog/Syslog.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Sys/Syslog/Syslog.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "cf4bd2e569fdf434bcc58335d411bce0f9b9210e806f710973549ef05f21188c"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "Syslog.so",
-      "versionInfo": "NOASSERTION"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-KI4NWX3Q4S5ZC4G4",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/threads/shared/shared.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/threads/shared/shared.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "cf7fb9e5896962dd3bb5799ee0855d9ac2498ad02dc7d2da42e38bd7e73bf1aa"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "shared.so",
-      "versionInfo": "NOASSERTION"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-7AQRVCOKBQCGBKRO",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Encode/Encode.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Encode/Encode.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "cfb78df99b104c5417df54a26c0c83c67741c7c4f16491fad827d95331e368e4"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "Encode.so",
       "versionInfo": "NOASSERTION"
     },
     {
@@ -16496,47 +14715,6 @@
       "versionInfo": "NOASSERTION"
     },
     {
-      "SPDXID": "SPDXRef-Package-HIUPFPUJNAD5USRD",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Math/BigInt/FastCalc/FastCalc.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Math/BigInt/FastCalc/FastCalc.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "d1df38888f4ba596f8dd856a6610fc97df02ffc01722ad1e545880cc1ebcc721"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "FastCalc.so",
-      "versionInfo": "NOASSERTION"
-    },
-    {
       "SPDXID": "SPDXRef-Package-ZY5L5VXHF2XCRMSX",
       "annotations": [
         {
@@ -16619,47 +14797,6 @@
       "versionInfo": "NOASSERTION"
     },
     {
-      "SPDXID": "SPDXRef-Package-WSWBQNV6SFE6J2MV",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Filter/Util/Call/Call.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Filter/Util/Call/Call.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "d4a3e709c27b0f1bc29cc45eb66c351d2e14a734acae736cd6826d94c86ed1b7"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "Call.so",
-      "versionInfo": "NOASSERTION"
-    },
-    {
       "SPDXID": "SPDXRef-Package-RNSRCHTVUTV5INJN",
       "annotations": [
         {
@@ -16698,47 +14835,6 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "login.postinst",
-      "versionInfo": "NOASSERTION"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-DKWJWL4UQAEUL7TK",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Socket/Socket.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Socket/Socket.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "d65d1c6c001958cb43fb18a3962417dd7f9a4179a27056b32eaec6a9298c9850"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "Socket.so",
       "versionInfo": "NOASSERTION"
     },
     {
@@ -17029,47 +15125,6 @@
       "versionInfo": "NOASSERTION"
     },
     {
-      "SPDXID": "SPDXRef-Package-7B5OK2D4MT2ZR2UU",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Storable/Storable.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Storable/Storable.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "e05f888b1e952854d8f927208da245a05b86d973ebb14471c4a95382f41d565a"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "Storable.so",
-      "versionInfo": "NOASSERTION"
-    },
-    {
       "SPDXID": "SPDXRef-Package-4K46ABJAIX32RWWR",
       "annotations": [
         {
@@ -17108,47 +15163,6 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "dpkg.postrm",
-      "versionInfo": "NOASSERTION"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-L34Q2CYNZNKV36UK",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Encode/Symbol/Symbol.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Encode/Symbol/Symbol.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "e3e216be08d034f9124acbe37d836f7c08389381bd839453a55a24e0f227228d"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "Symbol.so",
       "versionInfo": "NOASSERTION"
     },
     {
@@ -17439,47 +15453,6 @@
       "versionInfo": "NOASSERTION"
     },
     {
-      "SPDXID": "SPDXRef-Package-UARZNFNI75HPU5XX",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/IO/IO.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/IO/IO.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "ed3d0d69b9ef39709cf6213ba15e54d856d16d2045c8c901875c1e5cdefd93ad"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "IO.so",
-      "versionInfo": "NOASSERTION"
-    },
-    {
       "SPDXID": "SPDXRef-Package-AJSVE4RODBMJ575A",
       "annotations": [
         {
@@ -17562,129 +15535,6 @@
       "versionInfo": "NOASSERTION"
     },
     {
-      "SPDXID": "SPDXRef-Package-TF23LF4QOZBDY7O5",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Digest/SHA/SHA.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Digest/SHA/SHA.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "f2ad08a89a069ddeedf74568942f6d5ec45c2a3c28f54c0c18b31e36d927560e"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "SHA.so",
-      "versionInfo": "NOASSERTION"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-O4UB7X6EX4FGPWSV",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Devel/Peek/Peek.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Devel/Peek/Peek.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "f68673189e1a1919962159eaa5fe18390ccd086e5e19bce1382bd48f7f272678"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "Peek.so",
-      "versionInfo": "NOASSERTION"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-ODLOEK7XSGRG6MNU",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Compress/Raw/Bzip2/Bzip2.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Compress/Raw/Bzip2/Bzip2.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "f731686ff23c5b943c7d512f110f53d7ca6bf3b3dd25c33c19d03d5083f0c1ce"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "Bzip2.so",
-      "versionInfo": "NOASSERTION"
-    },
-    {
       "SPDXID": "SPDXRef-Package-B4ZIXJSJB6NDVQOC",
       "annotations": [
         {
@@ -17723,47 +15573,6 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "gpg-agent.postrm",
-      "versionInfo": "NOASSERTION"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-MG5TABFXJXYAFL7A",
-      "annotations": [
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Encode/CN/CN.so\"]}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"usr/lib/x86_64-linux-gnu/perl/5.40/auto/Encode/CN/CN.so\"]}"
-        }
-      ],
-      "checksums": [
-        {
-          "algorithm": "SHA256",
-          "checksumValue": "fc39c1d874227816e18b675a4b24179f28ca5313ba1e253a8fcc972c387303fb"
-        }
-      ],
-      "downloadLocation": "NOASSERTION",
-      "filesAnalyzed": false,
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "name": "CN.so",
       "versionInfo": "NOASSERTION"
     },
     {
@@ -17856,16 +15665,6 @@
       "spdxElementId": "SPDXRef-DOCUMENT"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-25GWO7PVXPF3A45V",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-2EXJTLDWSA2LGR5W",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-2KXIUK2LY6KYAZED",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
@@ -17881,17 +15680,7 @@
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-335AQTZRBEANDZIE",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-3HPQK522PTBP6UMZ",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-3XGM64VZODRVNRYM",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
@@ -17906,11 +15695,6 @@
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-4D46MW6PHY53RGLX",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-4K46ABJAIX32RWWR",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
@@ -17921,22 +15705,12 @@
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-4PSR3P2NIAZAGCG5",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-4Q2BUNIZCUK5XRQE",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-4V7YLQVNJLKK5GRT",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-4YTQLRBT7CAUBDCW",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
@@ -17991,17 +15765,7 @@
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-672JFRM6AIMAPJ4V",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-6A3DNSL3BCTNCGM7",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-6AAHNO2MSTNZW7PS",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
@@ -18031,22 +15795,7 @@
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-76HZYJTPAP4CLVH2",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-7AABTW4AXYA3WST5",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-7AQRVCOKBQCGBKRO",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-7B5OK2D4MT2ZR2UU",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
@@ -18062,11 +15811,6 @@
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-7JN4QC5TC2TOP4AY",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-7NNOYXC32C3LIUN7",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
@@ -18096,27 +15840,12 @@
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-AE4L36GLWUSFXHVV",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-AGYV2VOFX3BFLXBN",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-AJSVE4RODBMJ575A",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-AMGW4LFYOYJQWJEF",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-APYRGI2LFXQQWBIW",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
@@ -18136,11 +15865,6 @@
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-BH7HPTSOWL62RHHJ",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-BRFJR457JAVPXFHG",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
@@ -18151,22 +15875,7 @@
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-CEHDSJIM36UHQXJJ",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-CQZMMDLVHV3LIN36",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-CRFH2WQR4WAXRET6",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-DKWJWL4UQAEUL7TK",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
@@ -18192,11 +15901,6 @@
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-FAXIAOBSH3NHLMCO",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-FHG7QFFYA6ZEAU6G",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
@@ -18246,16 +15950,6 @@
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-HFAWTE3R6OLR6IEL",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-HIUPFPUJNAD5USRD",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-I4NLBQUCUOGHT4FV",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
@@ -18271,37 +15965,12 @@
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-INPXM5VL7HDMWZDY",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-IPOOBRCQ2KECP6VM",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-IQIHIXGDBTODIGD2",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-IYUZV6EDLPY3CY76",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-JCOGZ77624ZD4KUP",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-JD7KSFKPU3I6H6LR",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-JDI6I56WUYYSBOVG",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
@@ -18331,11 +16000,6 @@
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-KBSZ2K332GN7IRZ7",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-KCNKSZP5PBFVVTWU",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
@@ -18346,22 +16010,7 @@
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-KI4NWX3Q4S5ZC4G4",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-KKH6TTWNNJ7JZEIE",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-KLNO523DSHOZIBBO",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-KLX3MYWRJSPXY27A",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
@@ -18377,11 +16026,6 @@
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-KYA3NSCO7YGOEPQJ",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-L34Q2CYNZNKV36UK",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
@@ -18446,17 +16090,7 @@
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-MG5TABFXJXYAFL7A",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-MK2YKXDR7IPUK7BT",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-MSSVAFB4F3BDSSGB",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
@@ -18486,32 +16120,12 @@
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-NJ3IJZ7OCN6JWQZ5",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-NTSZSZDDRS2S2JLO",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-NYRHSR4R6W3JBRCZ",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-O4OGPULKSKU5JPPM",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-O4UB7X6EX4FGPWSV",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-ODLOEK7XSGRG6MNU",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
@@ -18541,27 +16155,12 @@
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-PR4IESXIAXFNWAXQ",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-Q4QRHEVSTGYJ73SA",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-QKNQRWOZ637TTDOJ",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-QZ7VKEV435ILWHR3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-R43DSJ54A77MXV6F",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
@@ -18577,11 +16176,6 @@
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-RB3CE7GRKFQAFV73",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-RCWNZXEF36VRVZKA",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
@@ -18646,16 +16240,6 @@
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-TCFJ5BV3PBUX4MOW",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-TF23LF4QOZBDY7O5",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-TGYIBJNQ5MCWKCZV",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
@@ -18667,11 +16251,6 @@
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-TXYUU4MHHUQZQS3X",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-UARZNFNI75HPU5XX",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
@@ -18696,17 +16275,7 @@
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-UZIROI7CRLIBU5GK",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-VEZM6UAWC53X2P4O",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-VGSTLSYDR57XPLDG",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
@@ -18722,11 +16291,6 @@
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-VPOJYEHAC6FS4GVK",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-VUHA3AY6KRMUCAHD",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
@@ -18751,17 +16315,7 @@
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-WSWBQNV6SFE6J2MV",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-WSYXMFCCGVD37CX6",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-WVQIQA4KPK3LWIBE",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
@@ -18811,17 +16365,7 @@
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-YUADXZHHGBT64TAY",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-YV4GU57N5SI6DT4N",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-YZRJ5Q7TOQXBXY5N",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
