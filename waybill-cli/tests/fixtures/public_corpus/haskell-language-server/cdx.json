@@ -490,6 +490,14 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-plugin-api/hls-plugin-api.cabal"
           }
         ]
       },
@@ -700,6 +708,10 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-plugin-api/hls-plugin-api.cabal"
           }
         ]
       },
@@ -768,6 +780,26 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-graph/hls-graph.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-plugin-api/hls-plugin-api.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-test-utils/hls-test-utils.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "shake-bench/shake-bench.cabal"
           }
         ]
       },
@@ -969,6 +1001,10 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
           }
         ]
       },
@@ -1037,6 +1073,18 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-graph/hls-graph.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-test-utils/hls-test-utils.cabal"
           }
         ]
       },
@@ -1108,6 +1156,26 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-graph/hls-graph.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-plugin-api/hls-plugin-api.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-test-utils/hls-test-utils.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "shake-bench/shake-bench.cabal"
           }
         ]
       },
@@ -1251,6 +1319,10 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
           }
         ]
       },
@@ -1315,6 +1387,26 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-graph/hls-graph.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-plugin-api/hls-plugin-api.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-test-utils/hls-test-utils.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "shake-bench/shake-bench.cabal"
           }
         ]
       },
@@ -1681,6 +1773,10 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-plugin-api/hls-plugin-api.cabal"
           }
         ]
       },
@@ -1748,6 +1844,22 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-graph/hls-graph.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-plugin-api/hls-plugin-api.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-test-utils/hls-test-utils.cabal"
           }
         ]
       },
@@ -1959,6 +2071,18 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-plugin-api/hls-plugin-api.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-test-utils/hls-test-utils.cabal"
           }
         ]
       },
@@ -2026,6 +2150,18 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-graph/hls-graph.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-plugin-api/hls-plugin-api.cabal"
           }
         ]
       },
@@ -2094,6 +2230,10 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-plugin-api/hls-plugin-api.cabal"
           }
         ]
       },
@@ -2161,6 +2301,10 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-plugin-api/hls-plugin-api.cabal"
           }
         ]
       },
@@ -2232,6 +2376,22 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-graph/hls-graph.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-test-utils/hls-test-utils.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "shake-bench/shake-bench.cabal"
           }
         ]
       },
@@ -2300,6 +2460,14 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-plugin-api/hls-plugin-api.cabal"
           }
         ]
       },
@@ -2434,6 +2602,10 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
           }
         ]
       },
@@ -2501,6 +2673,14 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-graph/hls-graph.cabal"
           }
         ]
       },
@@ -2565,6 +2745,26 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-graph/hls-graph.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-plugin-api/hls-plugin-api.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-test-utils/hls-test-utils.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "shake-bench/shake-bench.cabal"
           }
         ]
       },
@@ -2707,6 +2907,26 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-graph/hls-graph.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-plugin-api/hls-plugin-api.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-test-utils/hls-test-utils.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "shake-bench/shake-bench.cabal"
           }
         ]
       },
@@ -2842,6 +3062,10 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-graph/hls-graph.cabal"
           }
         ]
       },
@@ -3122,6 +3346,14 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-plugin-api/hls-plugin-api.cabal"
           }
         ]
       },
@@ -3190,6 +3422,10 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
           }
         ]
       },
@@ -3254,6 +3490,10 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
           }
         ]
       },
@@ -3937,6 +4177,18 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-graph/hls-graph.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-plugin-api/hls-plugin-api.cabal"
           }
         ]
       },
@@ -4073,6 +4325,10 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
           }
         ]
       },
@@ -4144,6 +4400,10 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
           }
         ]
       },
@@ -4708,6 +4968,10 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
           }
         ]
       },
@@ -4984,6 +5248,22 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-plugin-api/hls-plugin-api.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-test-utils/hls-test-utils.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "shake-bench/shake-bench.cabal"
           }
         ]
       },
@@ -5051,6 +5331,18 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-plugin-api/hls-plugin-api.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "shake-bench/shake-bench.cabal"
           }
         ]
       },
@@ -5118,6 +5410,14 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-graph/hls-graph.cabal"
           }
         ]
       },
@@ -5185,6 +5485,18 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-plugin-api/hls-plugin-api.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-test-utils/hls-test-utils.cabal"
           }
         ]
       },
@@ -5256,6 +5568,10 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-test-utils/hls-test-utils.cabal"
           }
         ]
       },
@@ -5327,6 +5643,18 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-plugin-api/hls-plugin-api.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-test-utils/hls-test-utils.cabal"
           }
         ]
       },
@@ -5469,6 +5797,10 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-plugin-api/hls-plugin-api.cabal"
           }
         ]
       },
@@ -5607,6 +5939,18 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-plugin-api/hls-plugin-api.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "shake-bench/shake-bench.cabal"
           }
         ]
       },
@@ -5751,6 +6095,10 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-plugin-api/hls-plugin-api.cabal"
           }
         ]
       },
@@ -5822,6 +6170,14 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-plugin-api/hls-plugin-api.cabal"
           }
         ]
       },
@@ -6237,6 +6593,14 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-plugin-api/hls-plugin-api.cabal"
           }
         ]
       },
@@ -6442,6 +6806,10 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
           }
         ]
       },
@@ -6581,6 +6949,14 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-plugin-api/hls-plugin-api.cabal"
           }
         ]
       },
@@ -6787,6 +7163,14 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-plugin-api/hls-plugin-api.cabal"
           }
         ]
       },
@@ -6925,6 +7309,14 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-test-utils/hls-test-utils.cabal"
           }
         ]
       },
@@ -7059,6 +7451,10 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "shake-bench/shake-bench.cabal"
           }
         ]
       },
@@ -7258,6 +7654,10 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
           }
         ]
       },
@@ -7396,6 +7796,18 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-graph/hls-graph.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-plugin-api/hls-plugin-api.cabal"
           }
         ]
       },
@@ -7464,6 +7876,14 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-graph/hls-graph.cabal"
           }
         ]
       },
@@ -7673,6 +8093,10 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
           }
         ]
       },
@@ -7807,6 +8231,18 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-graph/hls-graph.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-plugin-api/hls-plugin-api.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-test-utils/hls-test-utils.cabal"
           }
         ]
       },
@@ -7874,6 +8310,10 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-test-utils/hls-test-utils.cabal"
           }
         ]
       },
@@ -7941,6 +8381,10 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "hls-plugin-api/hls-plugin-api.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-test-utils/hls-test-utils.cabal"
           }
         ]
       },
@@ -8084,6 +8528,14 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-plugin-api/hls-plugin-api.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-test-utils/hls-test-utils.cabal"
           }
         ]
       },
@@ -8155,6 +8607,10 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-plugin-api/hls-plugin-api.cabal"
           }
         ]
       },
@@ -8227,6 +8683,18 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-graph/hls-graph.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-plugin-api/hls-plugin-api.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-test-utils/hls-test-utils.cabal"
           }
         ]
       },
@@ -8294,6 +8762,10 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-graph/hls-graph.cabal"
           }
         ]
       },
@@ -8362,6 +8834,10 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-test-utils/hls-test-utils.cabal"
           }
         ]
       },
@@ -8429,6 +8905,26 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-graph/hls-graph.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-plugin-api/hls-plugin-api.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-test-utils/hls-test-utils.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "shake-bench/shake-bench.cabal"
           }
         ]
       },
@@ -8497,6 +8993,14 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-test-utils/hls-test-utils.cabal"
           }
         ]
       },
@@ -8564,6 +9068,18 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-graph/hls-graph.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-plugin-api/hls-plugin-api.cabal"
           }
         ]
       },
@@ -8632,6 +9148,18 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-graph/hls-graph.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-plugin-api/hls-plugin-api.cabal"
           }
         ]
       },
@@ -8767,6 +9295,14 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-plugin-api/hls-plugin-api.cabal"
           }
         ]
       },
@@ -8835,6 +9371,18 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-graph/hls-graph.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-plugin-api/hls-plugin-api.cabal"
           }
         ]
       },
@@ -8906,6 +9454,10 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
           }
         ]
       },
@@ -8973,6 +9525,18 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-graph/hls-graph.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "hls-plugin-api/hls-plugin-api.cabal"
           }
         ]
       },
@@ -9044,6 +9608,10 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "ghcide/ghcide.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "haskell-language-server.cabal"
           }
         ]
       },

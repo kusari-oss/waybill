@@ -210,6 +210,10 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "code/hsec-core/hsec-core.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/hsec-tools/hsec-tools.cabal"
           }
         ]
       },
@@ -278,6 +282,14 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "code/hsec-tools/hsec-tools.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/osv/osv.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/purl/purl.cabal"
           }
         ]
       },
@@ -496,6 +508,26 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "code/cvss/cvss.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/hsec-core/hsec-core.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/hsec-sync/hsec-sync.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/hsec-tools/hsec-tools.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/osv/osv.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/purl/purl.cabal"
           }
         ]
       },
@@ -568,6 +600,10 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "code/hsec-sync/hsec-sync.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/hsec-tools/hsec-tools.cabal"
           }
         ]
       },
@@ -995,6 +1031,18 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "code/cvss/cvss.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/hsec-core/hsec-core.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/hsec-tools/hsec-tools.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/purl/purl.cabal"
           }
         ]
       },
@@ -1207,6 +1255,10 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "code/hsec-sync/hsec-sync.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/hsec-tools/hsec-tools.cabal"
           }
         ]
       },
@@ -1350,6 +1402,10 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "code/hsec-sync/hsec-sync.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/hsec-tools/hsec-tools.cabal"
           }
         ]
       },
@@ -1492,6 +1548,10 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "code/hsec-sync/hsec-sync.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/hsec-tools/hsec-tools.cabal"
           }
         ]
       },
@@ -1985,6 +2045,10 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "code/hsec-sync/hsec-sync.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/hsec-tools/hsec-tools.cabal"
           }
         ]
       },
@@ -2199,6 +2263,10 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "code/hsec-core/hsec-core.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/hsec-tools/hsec-tools.cabal"
           }
         ]
       },
@@ -2270,6 +2338,10 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "code/hsec-sync/hsec-sync.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/hsec-tools/hsec-tools.cabal"
           }
         ]
       },
@@ -2481,6 +2553,10 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "code/hsec-core/hsec-core.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/hsec-tools/hsec-tools.cabal"
           }
         ]
       },
@@ -2552,6 +2628,10 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "code/hsec-tools/hsec-tools.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/purl/purl.cabal"
           }
         ]
       },
@@ -3264,6 +3344,26 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "code/cvss/cvss.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/hsec-core/hsec-core.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/hsec-sync/hsec-sync.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/hsec-tools/hsec-tools.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/osv/osv.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/purl/purl.cabal"
           }
         ]
       },
@@ -3492,6 +3592,18 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "code/cvss/cvss.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/hsec-core/hsec-core.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/hsec-sync/hsec-sync.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/purl/purl.cabal"
           }
         ]
       },
@@ -3783,6 +3895,26 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "code/cvss/cvss.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/hsec-core/hsec-core.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/hsec-sync/hsec-sync.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/hsec-tools/hsec-tools.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/osv/osv.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/purl/purl.cabal"
           }
         ]
       },
@@ -3855,6 +3987,14 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "code/hsec-core/hsec-core.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/hsec-tools/hsec-tools.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/osv/osv.cabal"
           }
         ]
       },
@@ -3998,6 +4138,10 @@
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "code/hsec-sync/hsec-sync.cabal"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "code/hsec-tools/hsec-tools.cabal"
           }
         ]
       },

@@ -1508,6 +1508,10 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "lockfiles/python-default.lock"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "requirements.txt"
           }
         ]

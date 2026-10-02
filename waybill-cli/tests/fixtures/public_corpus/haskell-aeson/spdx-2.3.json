@@ -316,7 +316,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"text-iso8601/text-iso8601.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -586,7 +586,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"attoparsec-aeson/attoparsec-aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"attoparsec-aeson/attoparsec-aeson.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"attoparsec-iso8601/attoparsec-iso8601.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"text-iso8601/text-iso8601.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -790,7 +790,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"attoparsec-aeson/attoparsec-aeson.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"attoparsec-iso8601/attoparsec-iso8601.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"benchmarks/aeson-benchmarks.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"examples/aeson-examples.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"text-iso8601/text-iso8601.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1078,7 +1078,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"benchmarks/aeson-benchmarks.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1282,7 +1282,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"attoparsec-aeson/attoparsec-aeson.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"benchmarks/aeson-benchmarks.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"examples/aeson-examples.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1360,7 +1360,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"attoparsec-aeson/attoparsec-aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1432,7 +1432,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"benchmarks/aeson-benchmarks.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1648,7 +1648,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"benchmarks/aeson-benchmarks.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"examples/aeson-examples.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1942,7 +1942,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"benchmarks/aeson-benchmarks.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2170,7 +2170,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"benchmarks/aeson-benchmarks.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2386,7 +2386,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"attoparsec-aeson/attoparsec-aeson.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"attoparsec-iso8601/attoparsec-iso8601.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"text-iso8601/text-iso8601.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2962,7 +2962,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"text-iso8601/text-iso8601.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3034,7 +3034,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"attoparsec-aeson/attoparsec-aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3250,7 +3250,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"benchmarks/aeson-benchmarks.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3328,7 +3328,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"text-iso8601/text-iso8601.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3400,7 +3400,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"benchmarks/aeson-benchmarks.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"benchmarks/aeson-benchmarks.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"text-iso8601/text-iso8601.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3550,7 +3550,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"text-iso8601/text-iso8601.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3628,7 +3628,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"text-iso8601/text-iso8601.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3778,7 +3778,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"attoparsec-aeson/attoparsec-aeson.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"attoparsec-iso8601/attoparsec-iso8601.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"benchmarks/aeson-benchmarks.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"examples/aeson-examples.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"text-iso8601/text-iso8601.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -4138,7 +4138,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"attoparsec-iso8601/attoparsec-iso8601.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"benchmarks/aeson-benchmarks.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"examples/aeson-examples.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"text-iso8601/text-iso8601.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -4216,7 +4216,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"attoparsec-iso8601/attoparsec-iso8601.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"text-iso8601/text-iso8601.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -4288,7 +4288,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"benchmarks/aeson-benchmarks.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -4432,7 +4432,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"aeson.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"attoparsec-aeson/attoparsec-aeson.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"benchmarks/aeson-benchmarks.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"examples/aeson-examples.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",

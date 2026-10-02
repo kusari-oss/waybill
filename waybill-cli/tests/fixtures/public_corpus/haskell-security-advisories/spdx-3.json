@@ -21901,7 +21901,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-43FAKJQQOINFOMGO",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-sync/hsec-sync.cabal\",\"sha256\":\"<masked-sha256>\"}]}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-sync/hsec-sync.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-tools/hsec-tools.cabal\",\"sha256\":\"<masked-sha256>\"}]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-4AZ7HCK4ZDSW7VVA",
       "type": "Annotation"
     },
@@ -22469,7 +22469,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-5FNS67WIIB5HDEED",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-sync/hsec-sync.cabal\",\"sha256\":\"<masked-sha256>\"}]}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-sync/hsec-sync.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-tools/hsec-tools.cabal\",\"sha256\":\"<masked-sha256>\"}]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-E7SIUDR3HH5TANDU",
       "type": "Annotation"
     },
@@ -23189,7 +23189,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-7ABPFIRSAXONF7YF",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-core/hsec-core.cabal\",\"sha256\":\"<masked-sha256>\"}]}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-core/hsec-core.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-tools/hsec-tools.cabal\",\"sha256\":\"<masked-sha256>\"}]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-YCWAC7XMZAZVM73A",
       "type": "Annotation"
     },
@@ -23765,7 +23765,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-AWKI7MWDZWFB2WXH",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/cvss/cvss.cabal\",\"sha256\":\"<masked-sha256>\"}]}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/cvss/cvss.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-core/hsec-core.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-sync/hsec-sync.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-tools/hsec-tools.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/osv/osv.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/purl/purl.cabal\",\"sha256\":\"<masked-sha256>\"}]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-SNFSSWGYUZTK2KW3",
       "type": "Annotation"
     },
@@ -23925,7 +23925,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-B7UVKKA7ZSYODYF4",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-sync/hsec-sync.cabal\",\"sha256\":\"<masked-sha256>\"}]}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-sync/hsec-sync.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-tools/hsec-tools.cabal\",\"sha256\":\"<masked-sha256>\"}]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-SKZ7EN7ALZJSMRAA",
       "type": "Annotation"
     },
@@ -24653,7 +24653,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-DFKFGMXWMVFE2XD5",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-tools/hsec-tools.cabal\",\"sha256\":\"<masked-sha256>\"}]}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-tools/hsec-tools.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/osv/osv.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/purl/purl.cabal\",\"sha256\":\"<masked-sha256>\"}]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-VRR7ZPYX3SUI4TTV",
       "type": "Annotation"
     },
@@ -25245,7 +25245,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-EUI22SPPSLKM5KOS",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-sync/hsec-sync.cabal\",\"sha256\":\"<masked-sha256>\"}]}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-sync/hsec-sync.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-tools/hsec-tools.cabal\",\"sha256\":\"<masked-sha256>\"}]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-AQEZ4PIKABQ47NR7",
       "type": "Annotation"
     },
@@ -25285,7 +25285,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-F5OAFWS4I2AQADOP",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/cvss/cvss.cabal\",\"sha256\":\"<masked-sha256>\"}]}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/cvss/cvss.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-core/hsec-core.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-tools/hsec-tools.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/purl/purl.cabal\",\"sha256\":\"<masked-sha256>\"}]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-UYVEY7DDE5244QDF",
       "type": "Annotation"
     },
@@ -25509,7 +25509,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-FQ5NLKGLA7NCF6SG",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-core/hsec-core.cabal\",\"sha256\":\"<masked-sha256>\"}]}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-core/hsec-core.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-tools/hsec-tools.cabal\",\"sha256\":\"<masked-sha256>\"}]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-P2X7MOVTC2JGD4IG",
       "type": "Annotation"
     },
@@ -26149,7 +26149,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-HHPXW5SFJ2DHWLIH",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/cvss/cvss.cabal\",\"sha256\":\"<masked-sha256>\"}]}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/cvss/cvss.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-core/hsec-core.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-sync/hsec-sync.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-tools/hsec-tools.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/osv/osv.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/purl/purl.cabal\",\"sha256\":\"<masked-sha256>\"}]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-SYME6EXQ24LSZR3V",
       "type": "Annotation"
     },
@@ -26341,7 +26341,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-I74ORTFNN2NTQWSR",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-tools/hsec-tools.cabal\",\"sha256\":\"<masked-sha256>\"}]}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-tools/hsec-tools.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/purl/purl.cabal\",\"sha256\":\"<masked-sha256>\"}]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3DG5VCCDNI76BG6R",
       "type": "Annotation"
     },
@@ -28637,7 +28637,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-OM427G2CZ5QONCAU",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-sync/hsec-sync.cabal\",\"sha256\":\"<masked-sha256>\"}]}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-sync/hsec-sync.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-tools/hsec-tools.cabal\",\"sha256\":\"<masked-sha256>\"}]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-OQRCAHDID6YLQVHQ",
       "type": "Annotation"
     },
@@ -29077,7 +29077,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-PRRDQVPZWMJVTAAZ",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-sync/hsec-sync.cabal\",\"sha256\":\"<masked-sha256>\"}]}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-sync/hsec-sync.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-tools/hsec-tools.cabal\",\"sha256\":\"<masked-sha256>\"}]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-I6KMKSF2R7I3TODX",
       "type": "Annotation"
     },
@@ -30589,7 +30589,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-TTSL6PQKJ46BJMPI",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-sync/hsec-sync.cabal\",\"sha256\":\"<masked-sha256>\"}]}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-sync/hsec-sync.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-tools/hsec-tools.cabal\",\"sha256\":\"<masked-sha256>\"}]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-6QLBIN4OMQGCVQVJ",
       "type": "Annotation"
     },
@@ -30861,7 +30861,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-UEOEPLS7GRV6466V",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-core/hsec-core.cabal\",\"sha256\":\"<masked-sha256>\"}]}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-core/hsec-core.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-tools/hsec-tools.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/osv/osv.cabal\",\"sha256\":\"<masked-sha256>\"}]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-Y2XG3P7JIRI2DCD4",
       "type": "Annotation"
     },
@@ -31709,7 +31709,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-WUTQO4VT4ELV4O6J",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/cvss/cvss.cabal\",\"sha256\":\"<masked-sha256>\"}]}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/cvss/cvss.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-core/hsec-core.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-sync/hsec-sync.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-tools/hsec-tools.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/osv/osv.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/purl/purl.cabal\",\"sha256\":\"<masked-sha256>\"}]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5TQBM62ZJVNBEKVK",
       "type": "Annotation"
     },
@@ -31989,7 +31989,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-XIMPFDKRCT6R6SYN",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-core/hsec-core.cabal\",\"sha256\":\"<masked-sha256>\"}]}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-core/hsec-core.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-tools/hsec-tools.cabal\",\"sha256\":\"<masked-sha256>\"}]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-P6ML5RG5USJUJEB6",
       "type": "Annotation"
     },
@@ -32349,7 +32349,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-YL6QXVXE3BYJFWT6",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/cvss/cvss.cabal\",\"sha256\":\"<masked-sha256>\"}]}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/cvss/cvss.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-core/hsec-core.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-sync/hsec-sync.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/purl/purl.cabal\",\"sha256\":\"<masked-sha256>\"}]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-SY2I2EQFDNRW34W5",
       "type": "Annotation"
     },

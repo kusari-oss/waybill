@@ -76,6 +76,10 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "python-default.lock"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "requirements.txt"
           }
         ]
@@ -508,6 +512,10 @@
           }
         ],
         "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "python-default.lock"
+          },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "requirements.txt"

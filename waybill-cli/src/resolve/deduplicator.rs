@@ -63,6 +63,7 @@ pub fn deduplicate(components: Vec<ResolvedComponent>) -> Vec<ResolvedComponent>
         });
 
         let mut best = group.remove(0);
+        let mut occurrences_grew = false;
 
         // Merge evidence from remaining entries.
         for other in group {
@@ -74,6 +75,16 @@ pub fn deduplicate(components: Vec<ResolvedComponent>) -> Vec<ResolvedComponent>
             for file_path in other.evidence.source_file_paths {
                 if !best.evidence.source_file_paths.contains(&file_path) {
                     best.evidence.source_file_paths.push(file_path);
+                }
+            }
+            // #1063: union by location, like `source_file_paths` above.
+            // Dropping these left the two fields disagreeing about where
+            // the component was found, and `evidence.occurrences` is the
+            // standards-native one consumers read.
+            for occ in other.occurrences {
+                if !best.occurrences.iter().any(|o| o.location == occ.location) {
+                    best.occurrences.push(occ);
+                    occurrences_grew = true;
                 }
             }
             for hash in other.hashes {
@@ -280,6 +291,14 @@ pub fn deduplicate(components: Vec<ResolvedComponent>) -> Vec<ResolvedComponent>
                 }
                 best.extra_annotations.entry(key).or_insert(value);
             }
+        }
+
+        // Group order follows input order, which the parallel walker
+        // does not fix; sort so the merged list does not depend on it.
+        // Only when the merge added something, so an unmerged list keeps
+        // the order its reader chose (dpkg's is already sorted).
+        if occurrences_grew {
+            best.occurrences.sort_by(|a, b| a.location.cmp(&b.location));
         }
 
         result.push(best);
@@ -685,6 +704,42 @@ mod tests {
         assert!(merged.evidence.source_connection_ids.contains(&"conn-1".to_string()));
         assert!(merged.evidence.source_connection_ids.contains(&"conn-2".to_string()));
         assert!(merged.evidence.source_file_paths.contains(&"/path/to/serde".to_string()));
+    }
+
+    /// #1063: the survivor carries every location the group was found
+    /// at, as `source_file_paths` already does — once each, sorted so the
+    /// result does not depend on which member won.
+    #[test]
+    fn occurrences_merged_across_duplicates() {
+        let occ = |loc: &str| waybill_common::resolution::FileOccurrence {
+            location: loc.to_string(),
+            sha256: "aa".to_string(),
+            md5_legacy: None,
+            apk_sha1: None,
+            rpm_file_digest: None,
+        };
+        let mut winner = make_component(
+            "pkg:generic/tool@1",
+            ResolutionTechnique::UrlPattern,
+            0.95,
+            vec![],
+            vec!["b/bin/tool", "shared/tool"],
+        );
+        winner.occurrences = vec![occ("b/bin/tool"), occ("shared/tool")];
+        let mut loser = make_component(
+            "pkg:generic/tool@1",
+            ResolutionTechnique::HashMatch,
+            0.90,
+            vec![],
+            vec!["a/bin/tool", "shared/tool"],
+        );
+        loser.occurrences = vec![occ("a/bin/tool"), occ("shared/tool")];
+
+        let deduped = deduplicate(vec![winner, loser]);
+        assert_eq!(deduped.len(), 1);
+        let locations: Vec<&str> =
+            deduped[0].occurrences.iter().map(|o| o.location.as_str()).collect();
+        assert_eq!(locations, vec!["a/bin/tool", "b/bin/tool", "shared/tool"]);
     }
 
     #[test]
