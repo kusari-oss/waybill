@@ -288,11 +288,20 @@ jobs:
       # install it has run. Declining to REQUEST rust-src is not enough: the
       # cache step installs it incidentally (see its note above), which is why
       # the first attempt at this switch produced a green run.
+      #
+      # Since #904 removal alone is not enough either: the build resolves
+      # through waybill-ebpf/rust-toolchain.toml, and rustup re-installs a
+      # component that file lists (measured: `info: downloading component
+      # rust-src` mid-build, then a green run). RUSTUP_AUTO_INSTALL=0 turns
+      # that off for every later step, so both builds see the missing
+      # component. Measured locally with rustup 1.29.1: with it set, rustc
+      # runs and rust-src stays absent; without it, rustup downloads it.
       - name: Remove rust-src (break_env only — TEST PATH)
         if: ${{ inputs.break_env }}
         shell: bash
         run: |
           rustup component remove rust-src --toolchain nightly || true
+          echo "RUSTUP_AUTO_INSTALL=0" >> "$GITHUB_ENV"
           echo "components after removal:"
           rustup component list --toolchain nightly | grep '(installed)' || true
 
