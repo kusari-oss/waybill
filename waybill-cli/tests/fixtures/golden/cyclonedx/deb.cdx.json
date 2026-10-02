@@ -34,7 +34,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/libc6@2.36-9?arch=amd64&distro=debian-12",
@@ -77,7 +77,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"var/lib/dpkg\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:deb/debian/zlib1g@1.2.13.dfsg-1?arch=amd64&distro=debian-12&epoch=1",
@@ -187,7 +187,7 @@
       },
       {
         "name": "waybill:workspaces-detected",
-        "value": "[\"var/lib/dpkg\"]"
+        "value": "[\".\"]"
       },
       {
         "name": "waybill:unresolved-declared-dep-count",

@@ -50,7 +50,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"node_modules/express\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:npm/express@4.18.2",
@@ -109,7 +109,7 @@
         },
         {
           "name": "waybill:workspace-member",
-          "value": "[\"node_modules/safe-buffer\"]"
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:npm/safe-buffer@5.2.1",
@@ -293,7 +293,7 @@
       },
       {
         "name": "waybill:workspaces-detected",
-        "value": "[\".\",\"node_modules/express\",\"node_modules/safe-buffer\"]"
+        "value": "[\".\"]"
       },
       {
         "name": "waybill:unresolved-declared-dep-count",

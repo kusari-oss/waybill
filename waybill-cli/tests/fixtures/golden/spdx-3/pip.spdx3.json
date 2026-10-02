@@ -430,7 +430,7 @@
       "annotationType": "other",
       "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-VVW2F2NCRC4VON4LYZEXGHVR/anno-27KEN367EACMCAGK",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".venv/lib/python3.12/site-packages/flask-3.0.0.dist-info\\\"]\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".venv\\\"]\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-VVW2F2NCRC4VON4LYZEXGHVR/pkg-ND26YIDZX2IHEVKH",
       "type": "Annotation"
     },
@@ -438,7 +438,7 @@
       "annotationType": "other",
       "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-VVW2F2NCRC4VON4LYZEXGHVR/anno-2DHH2ECCBXMSCCP2",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".venv/lib/python3.12/site-packages/certifi-2023.7.22.dist-info\\\"]\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".venv\\\"]\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-VVW2F2NCRC4VON4LYZEXGHVR/pkg-IGBIL3UCACAQFOM3",
       "type": "Annotation"
     },
@@ -462,7 +462,7 @@
       "annotationType": "other",
       "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-VVW2F2NCRC4VON4LYZEXGHVR/anno-4PP56VK63EBYTDKN",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".venv/lib/python3.12/site-packages/idna-3.6.dist-info\\\"]\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".venv\\\"]\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-VVW2F2NCRC4VON4LYZEXGHVR/pkg-KVTB5ZDMEOOSAO3A",
       "type": "Annotation"
     },
@@ -542,7 +542,7 @@
       "annotationType": "other",
       "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-VVW2F2NCRC4VON4LYZEXGHVR/anno-EEJNVYQJ7WWN6UDD",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".venv/lib/python3.12/site-packages/jinja2-3.1.2.dist-info\\\"]\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".venv\\\"]\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-VVW2F2NCRC4VON4LYZEXGHVR/pkg-E7GW44NAPCTLSLSL",
       "type": "Annotation"
     },
@@ -566,7 +566,7 @@
       "annotationType": "other",
       "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-VVW2F2NCRC4VON4LYZEXGHVR/anno-FCJIUMP4XLLZRNCS",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspaces-detected\",\"value\":\"[\\\".venv/lib/python3.12/site-packages/certifi-2023.7.22.dist-info\\\",\\\".venv/lib/python3.12/site-packages/charset_normalizer-3.3.2.dist-info\\\",\\\".venv/lib/python3.12/site-packages/flask-3.0.0.dist-info\\\",\\\".venv/lib/python3.12/site-packages/idna-3.6.dist-info\\\",\\\".venv/lib/python3.12/site-packages/jinja2-3.1.2.dist-info\\\",\\\".venv/lib/python3.12/site-packages/requests-2.31.0.dist-info\\\",\\\".venv/lib/python3.12/site-packages/urllib3-2.0.7.dist-info\\\"]\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspaces-detected\",\"value\":\"[\\\".venv\\\"]\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-VVW2F2NCRC4VON4LYZEXGHVR",
       "type": "Annotation"
     },
@@ -654,7 +654,7 @@
       "annotationType": "other",
       "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-VVW2F2NCRC4VON4LYZEXGHVR/anno-MIFWDOGC34COKJT7",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".venv/lib/python3.12/site-packages/requests-2.31.0.dist-info\\\"]\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".venv\\\"]\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-VVW2F2NCRC4VON4LYZEXGHVR/pkg-6PK6TYQPA2QWXM26",
       "type": "Annotation"
     },
@@ -758,7 +758,7 @@
       "annotationType": "other",
       "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-VVW2F2NCRC4VON4LYZEXGHVR/anno-T2SWPG6UWKWGYDYG",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".venv/lib/python3.12/site-packages/urllib3-2.0.7.dist-info\\\"]\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".venv\\\"]\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-VVW2F2NCRC4VON4LYZEXGHVR/pkg-R4X6ZI7PYUOFDI6S",
       "type": "Annotation"
     },
@@ -838,7 +838,7 @@
       "annotationType": "other",
       "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-VVW2F2NCRC4VON4LYZEXGHVR/anno-YH2UQJCNYCJJJA27",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".venv/lib/python3.12/site-packages/charset_normalizer-3.3.2.dist-info\\\"]\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".venv\\\"]\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-VVW2F2NCRC4VON4LYZEXGHVR/pkg-Z2NM5GYCT4SAIAVF",
       "type": "Annotation"
     },

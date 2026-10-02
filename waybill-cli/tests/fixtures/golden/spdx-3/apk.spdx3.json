@@ -164,7 +164,7 @@
       "annotationType": "other",
       "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-4N5CVJREWYZY5OYJYBFVZIOO/anno-5NMHM7B4UEPK4PVF",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lib/apk/db\\\"]\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-4N5CVJREWYZY5OYJYBFVZIOO/pkg-DHDBA3PTGCIRJAUV",
       "type": "Annotation"
     },
@@ -172,7 +172,7 @@
       "annotationType": "other",
       "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-4N5CVJREWYZY5OYJYBFVZIOO/anno-7W2VYOJL4EDKMOBZ",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lib/apk/db\\\"]\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-4N5CVJREWYZY5OYJYBFVZIOO/pkg-NJ6CH7QTZDKJ74FQ",
       "type": "Annotation"
     },
@@ -212,7 +212,7 @@
       "annotationType": "other",
       "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-4N5CVJREWYZY5OYJYBFVZIOO/anno-GAFMM3J6L2LA3RH5",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspaces-detected\",\"value\":\"[\\\"lib/apk/db\\\"]\"}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspaces-detected\",\"value\":\"[\\\".\\\"]\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-4N5CVJREWYZY5OYJYBFVZIOO",
       "type": "Annotation"
     },
