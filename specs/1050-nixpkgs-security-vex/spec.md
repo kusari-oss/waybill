@@ -296,6 +296,16 @@ emits no declaration-derived statements, and records why.
 - **FR-011**: The count of declarations that named no CVE MUST be recorded at
   document scope, so a consumer can tell partial coverage from absence — the
   same reason milestone 1035 records the equivalent figure for patches.
+- **FR-011a** (*#1051*): Declarations naming a GHSA or a vendor advisory
+  identifier (`<Vendor>-YYYY-N`) MUST produce VEX like CVE-bearing ones, not
+  the prose annotation. The C188 record MUST additionally carry
+  `declarations-without-identifier` and `distinct-identifiers`;
+  `declarations-without-cve` and `distinct-cves` keep their CVE-only meaning,
+  so an existing consumer of those fields reads the same value as before. The
+  C189 grade is present whenever any identifier was recovered, since every
+  such identifier is now a VEX claim of that grade.
+  *Additive by decision, over renaming the CVE fields (breaking) or widening
+  what they count (their names would stop being true).*
 
 **Reconciling with patch evidence**
 

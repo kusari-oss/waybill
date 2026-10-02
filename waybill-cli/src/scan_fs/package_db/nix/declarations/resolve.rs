@@ -94,7 +94,7 @@ mod tests {
         match r {
             AttributeResolution::Confirmed { declarations, .. } => {
                 assert_eq!(declarations.len(), 1);
-                assert_eq!(declarations[0].cves, vec!["CVE-2020-1"]);
+                assert_eq!(declarations[0].identifiers, vec!["CVE-2020-1"]);
             }
             other => panic!("expected Confirmed, got {other:?}"),
         }

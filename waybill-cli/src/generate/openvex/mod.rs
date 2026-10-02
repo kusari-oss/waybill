@@ -144,7 +144,7 @@ fn declaration_statements(
         .iter()
         .map(|f| OpenVexStatement {
             vulnerability: OpenVexVulnerability {
-                name: f.cve.clone(),
+                name: f.vulnerability.clone(),
                 description: None,
                 aliases: Vec::new(),
             },
@@ -163,7 +163,7 @@ fn declaration_statements(
             }],
             status: OpenVexStatus::Affected,
             justification: None,
-            impact_statement: Some(declaration_note(&f.cve, grade, &f.text)),
+            impact_statement: Some(declaration_note(&f.vulnerability, grade, &f.text)),
             action_statement: None,
         })
         .collect()
@@ -651,7 +651,7 @@ mod tests {
                 .iter()
                 .map(|(purl, cve, text)| DeclaredFinding {
                     component_purl: (*purl).to_string(),
-                    cve: (*cve).to_string(),
+                    vulnerability: (*cve).to_string(),
                     text: (*text).to_string(),
                 })
                 .collect(),
