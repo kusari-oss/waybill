@@ -317,3 +317,33 @@ identifier pattern matches `CVE-\d{4}-\d+` only, so these are filed as prose
 and reach the SBOM annotation rather than VEX, where OpenVEX would accept
 them as vulnerability names. Not changed here; widening the pattern is its
 own decision.
+
+## Q5 — which non-CVE identifier shapes actually occur? (#1051)
+
+`kv-identifier-census.py`. A **whole-tree static census** rather than an
+evaluated sample: every string literal inside every
+`knownVulnerabilities = [ … ]` list under `pkgs/`, at
+`a799d3e3886da994fa307f817a6bc705ae538eeb` (the revision #1051 cites, via
+`nix flake prefetch`). Run 2026-10-02.
+
+| | |
+|---|---:|
+| files declaring the attribute | 79 |
+| string-literal entries | 159 (153 distinct) |
+| naming a CVE | 120 |
+| prose | 36 |
+| `PREFIX-YYYY-N` — `Sonatype-2015-0286`, `Sonatype-2022-6438` | 2 |
+| containing GHSA ids — `django-ckeditor`, three in one sentence | 1 |
+| prose entries containing any other `<word>-<digits>` token | **0** |
+
+So the shapes that occur are CVE, GHSA and one vendor `PREFIX-YYYY-NNNN`
+form, and a pattern covering exactly those matches nothing in the prose at
+this revision. The GHSA entry is a second instance of the gap above.
+
+Static, so literals only: `lib.optional cond "…"` forms are not counted.
+Five were found by hand (Garage, Electron, Netbox, Lima, Xen), all EOL prose
+interpolating `${version}`, none an identifier.
+
+Not implemented: the identifiers also feed C188's `distinct-cves` and
+`declarations-without-cve` wire fields, so widening the pattern changes what
+a consumer-visible field means. Options are recorded on #1051.
