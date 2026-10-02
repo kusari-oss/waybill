@@ -11,7 +11,7 @@ mandatory pre-PR gate runs both clippy and the full test suite:
 
 # Equivalent manual invocation:
 cargo +stable clippy --workspace --all-targets -- -D warnings
-cargo +stable test --workspace
+cargo +stable test --workspace --no-fail-fast
 ```
 
 For SBOM-spec-touching changes, also opt-in to the SPDX-3
