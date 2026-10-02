@@ -559,7 +559,7 @@ pub fn build_document(
 
     // Milestone 154 (closes issue #487): sweep the emitted
     // simplelicensing_LicenseExpression elements for inline LicenseRef-*
-    // substrings and emit matching simplelicensing_CustomLicense elements
+    // substrings and emit matching expandedlicensing_CustomLicense elements
     // per SPDX 3.0.1 § licensing_CustomLicense. Paired follow-up to
     // milestone 153's SPDX 2.3 hasExtractedLicensingInfos[] sweep —
     // preserves cross-format symmetry (same LicenseRef set defined in

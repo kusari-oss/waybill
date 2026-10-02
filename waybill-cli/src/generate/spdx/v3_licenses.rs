@@ -160,7 +160,7 @@ fn canonicalize_or_raw(expr: &str) -> String {
             // Milestone 190 (#551): unknown/vendor licenses must hash to
             // a stable `LicenseRef-<idstring>` token so the m154
             // CustomLicense sweep at `sweep_custom_licenses` fires and
-            // emits a matching `simplelicensing_CustomLicense` element.
+            // emits a matching `expandedlicensing_CustomLicense` element.
             // Mirrors the SPDX 2.3 packages.rs:264 pattern verbatim.
             // Pre-m190: raw text preserved; the sweep found no
             // LicenseRef-* tokens and never emitted CustomLicense for
@@ -221,20 +221,20 @@ fn license_ref_regex() -> &'static regex::Regex {
 /// Milestone 154 (closes issue #487) — sweep every emitted
 /// `simplelicensing_LicenseExpression` element's expression string for
 /// inline `LicenseRef-<idstring>` substrings and emit a matching
-/// `simplelicensing_CustomLicense` graph element per distinct LicenseRef.
+/// `expandedlicensing_CustomLicense` graph element per distinct LicenseRef.
 ///
 /// Paired follow-up to milestone 153 which added the SPDX 2.3
 /// `hasExtractedLicensingInfos[]` sweep. The two milestones together
 /// preserve cross-format symmetry (spec FR-009 / FR-010 / FR-011): the
 /// SPDX 2.3 side's `hasExtractedLicensingInfos[]` entries and this
-/// milestone's `simplelicensing_CustomLicense` elements describe the
+/// milestone's `expandedlicensing_CustomLicense` elements describe the
 /// same LicenseRef set with byte-identical placeholder text.
 ///
 /// # Field shape (per SPDX 3.0.1 spec § licensing_CustomLicense)
 ///
 /// ```json
 /// {
-///   "type": "simplelicensing_CustomLicense",
+///   "type": "expandedlicensing_CustomLicense",
 ///   "spdxId": "{doc_iri}/licenseref/{idstring}",
 ///   "creationInfo": "{creation_info_id}",
 ///   "name": "{idstring}",
@@ -260,7 +260,7 @@ fn license_ref_regex() -> &'static regex::Regex {
 ///
 /// Empty input → empty output. Combined with the caller's push-each-
 /// element loop at `v3_document.rs`, this guarantees zero
-/// `simplelicensing_CustomLicense` elements in `@graph` for happy-path
+/// `expandedlicensing_CustomLicense` elements in `@graph` for happy-path
 /// scans (byte-identity preserved).
 pub(super) fn sweep_custom_licenses(
     license_expression_elements: &[Value],
@@ -290,7 +290,7 @@ pub(super) fn sweep_custom_licenses(
                     .to_string();
                 by_idstring.entry(idstring.clone()).or_insert_with(|| {
                     json!({
-                        "type": "simplelicensing_CustomLicense",
+                        "type": "expandedlicensing_CustomLicense",
                         "spdxId": format!("{doc_iri}/licenseref/{idstring}"),
                         "creationInfo": creation_info_id,
                         "name": idstring,
@@ -344,7 +344,7 @@ mod tests {
         let inputs = vec![mk_license_expr("LicenseRef-PD")];
         let out = sweep_custom_licenses(&inputs, DOC_IRI, CREATION_INFO_ID);
         assert_eq!(out.len(), 1);
-        assert_eq!(out[0]["type"], "simplelicensing_CustomLicense");
+        assert_eq!(out[0]["type"], "expandedlicensing_CustomLicense");
         assert_eq!(
             out[0]["spdxId"],
             format!("{DOC_IRI}/licenseref/PD")
@@ -456,7 +456,7 @@ mod tests {
         // US2 A2 + FR-007: no LicenseRef-* anywhere → returned Vec is
         // empty. Combined with the wiring at v3_document.rs (push each
         // returned element onto @graph), an empty return means zero
-        // simplelicensing_CustomLicense elements appear in @graph —
+        // expandedlicensing_CustomLicense elements appear in @graph —
         // byte-identity preserved for happy-path scans.
         let inputs = vec![
             mk_license_expr("MIT"),

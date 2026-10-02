@@ -461,6 +461,43 @@ fn every_existing_golden_passes_validator() {
 /// FR-003 / SC-002 — fresh source-tier emission passes the validator.
 /// Source-tier here is `waybill sbom scan --path <synthetic source
 /// tree>` — exactly the operator path that produces source-tier SBOMs.
+/// #1083 — a document carrying a custom license passes the validator.
+///
+/// Every `LicenseRef-…` becomes a custom-license element. It was emitted as
+/// `simplelicensing_CustomLicense`, a class SPDX 3.0.1 does not define (the
+/// class is `expandedlicensing_CustomLicense`), so any document with one
+/// failed the JSON-schema stage. No existing fixture carried a LicenseRef,
+/// so this gate never saw it. The legacy slash form `Unlicense/MIT` is what
+/// produced one in the wild (`BurntSushi/ripgrep`'s `grep-index` crate).
+#[test]
+fn custom_license_emission_passes_validator() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    std::fs::write(
+        dir.path().join("Cargo.toml"),
+        "[package]\nname = \"legacy-license\"\nversion = \"0.1.0\"\nlicense = \"Unlicense/MIT\"\n",
+    )
+    .expect("write Cargo.toml");
+    std::fs::write(
+        dir.path().join("Cargo.lock"),
+        "version = 4\n\n[[package]]\nname = \"legacy-license\"\nversion = \"0.1.0\"\n",
+    )
+    .expect("write Cargo.lock");
+    std::fs::create_dir_all(dir.path().join("src")).expect("mkdir src");
+    std::fs::write(dir.path().join("src/main.rs"), "fn main() {}\n").expect("write main.rs");
+
+    let emitted = emit_spdx3_for_path(dir.path());
+    let customs = emitted.json["@graph"]
+        .as_array()
+        .expect("@graph")
+        .iter()
+        .filter(|e| e["type"] == "expandedlicensing_CustomLicense")
+        .count();
+    // The control: without a custom-license element this test validates a
+    // document that never exercised the defect.
+    assert!(customs >= 1, "fixture must yield a custom-license element");
+    assert_validation_or_skip(&emitted.output_path, "custom-license-emission");
+}
+
 #[test]
 fn fresh_source_tier_emission_passes() {
     let emitted = emit_minimal_source_tier_sbom();
