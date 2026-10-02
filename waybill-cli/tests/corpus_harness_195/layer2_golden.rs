@@ -68,21 +68,29 @@ pub fn compare_golden(
         FailureFormat::All => unreachable!(),
     });
 
-    if update_goldens_gate() || !golden.exists() {
-        // #978 — say so. Writing and returning Ok is indistinguishable from a
-        // real comparison in the test output, and in CI the workspace is
-        // discarded each run, so a target with no committed golden re-writes
-        // and re-passes every night while comparing nothing. The
-        // `every_target_has_committed_goldens` audit is the actual gate; this
-        // line makes the condition visible to anyone reading a log.
-        if !golden.exists() {
-            eprintln!(
-                "!! {target} / {format:?}: NO COMMITTED GOLDEN at {} -- writing it and \
-                 PASSING WITHOUT COMPARING. This target is not regression-gated \
-                 until the file is committed (#978).",
-                golden.display()
-            );
-        }
+    // #1067 — a missing golden is written only in regen mode. Bootstrapping
+    // it on any run meant the natural first step when adding a target —
+    // running it locally to check its Layer 1 assertions — wrote goldens from
+    // the developer's machine and reported `ok`. Rule zero exists to prevent
+    // exactly that: on a host with a populated Go module cache,
+    // `go-opentelemetry` emitted 957 edges where CI emits 280. The #978 audit
+    // catches a bootstrap that never finished, not one finished on the wrong
+    // machine.
+    if !golden.exists() && !update_goldens_gate() {
+        return Err(AssertionFailure {
+            invariant_name: "layer2-golden-missing",
+            format: match format {
+                FailureFormat::Cdx => FailureFormat::Cdx,
+                FailureFormat::Spdx23 => FailureFormat::Spdx23,
+                FailureFormat::Spdx3 => FailureFormat::Spdx3,
+                FailureFormat::All => unreachable!(),
+            },
+            observed: format!("no committed golden at {}", golden.display()),
+            expected: "a golden generated in CI".to_string(),
+            suggested_action: "generate through CI -- `gh workflow run \"Public corpus regression\" -f branch=<your-branch> -f regen_goldens=true` -- then install the `corpus-goldens-regen` artifact. Never locally: rule zero in docs/development/refreshing-corpus-goldens.md (#1067)",
+        });
+    }
+    if update_goldens_gate() {
         if let Some(parent) = golden.parent() {
             std::fs::create_dir_all(parent).ok();
         }
@@ -399,6 +407,37 @@ fn mask_doc_prefix(s: &str) -> String {
 mod m865_masking_tests {
     use super::*;
     use serde_json::json;
+
+    /// #1067: outside regen mode a missing golden fails, and nothing is
+    /// written. It used to be written from whatever machine ran the test,
+    /// and the test passed.
+    #[test]
+    fn a_missing_golden_fails_and_is_not_written_outside_regen_mode() {
+        if update_goldens_gate() {
+            return; // regen mode is the one place a missing golden is written
+        }
+        let target = "no-such-target-1067";
+        let tmp = tempfile::tempdir().unwrap();
+        let sboms = EmittedSboms {
+            cdx: json!({}),
+            spdx_2_3: json!({}),
+            spdx_3: json!({}),
+            paths: super::super::harness::EmittedPaths {
+                cdx: tmp.path().join("cdx.json"),
+                spdx_2_3: tmp.path().join("spdx23.json"),
+                spdx_3: tmp.path().join("spdx3.json"),
+            },
+        };
+        let result = compare_golden(target, FailureFormat::Cdx, &sboms);
+        // Clean up before asserting, so a regression cannot leave a stray
+        // target directory in the committed fixture tree.
+        let dir = fixtures_root().join(target);
+        let written = dir.exists();
+        std::fs::remove_dir_all(&dir).ok();
+        assert!(!written, "no golden may be written outside regen mode");
+        let err = result.expect_err("a missing golden must not compare as a pass");
+        assert_eq!(err.invariant_name, "layer2-golden-missing");
+    }
 
     /// The defect: masking keyed on `spdxId`, so every other IRI-bearing
     /// field kept the real document hash and the stored golden referenced
