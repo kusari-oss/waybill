@@ -262,6 +262,9 @@ impl CorpusCacheDir {
             // free once hydrated.
             let work = work_dir_for(&dir, target);
             self.hydrate_nixpkgs(target, &work)?;
+            // Every run, not once: the nix store is not part of the corpus
+            // cache, and CI's starts empty even when this cache is restored.
+            prewarm_nix_closure(target, &work)?;
             return Ok(work);
         }
         match &target.source {
@@ -316,6 +319,7 @@ impl CorpusCacheDir {
                 // passes vacuously. Hydration is the sanctioned place for
                 // network activity; the scan itself stays offline.
                 self.hydrate_nixpkgs(target, &repo_dir)?;
+                prewarm_nix_closure(target, &repo_dir)?;
                 std::fs::write(&marker, hex).map_err(|e| CorpusInfraError::CacheIo {
                     path: marker.clone(),
                     kind: e.kind(),
@@ -363,6 +367,31 @@ impl CorpusCacheDir {
             }
         }
     }
+}
+
+/// Put a `ScanMode::NixClosure` target's flake inputs in the nix store
+/// before its scan, so the scan — which runs without `--offline`, because the
+/// tier refuses it — finds everything local and nix has nothing to fetch.
+/// No-op for every other target.
+fn prewarm_nix_closure(target: &CorpusTarget, repo_dir: &Path) -> Result<(), CorpusInfraError> {
+    if !matches!(target.scan_mode, super::manifest::ScanMode::NixClosure { .. }) {
+        return Ok(());
+    }
+    let output = std::process::Command::new("nix")
+        .args(["flake", "archive", "--json", "."])
+        .current_dir(repo_dir)
+        .output()
+        .map_err(|e| CorpusInfraError::NixFlakeArchive {
+            target: target.name,
+            stderr: format!("spawn failed: {e}"),
+        })?;
+    if !output.status.success() {
+        return Err(CorpusInfraError::NixFlakeArchive {
+            target: target.name,
+            stderr: String::from_utf8_lossy(&output.stderr).to_string(),
+        });
+    }
+    Ok(())
 }
 
 fn work_dir_for(cache_dir: &Path, target: &CorpusTarget) -> PathBuf {
