@@ -43,12 +43,19 @@ One `meta.knownVulnerabilities` entry.
 | Field | Notes |
 |---|---|
 | `text` | Verbatim. FR-010a — the maintainer's words are the value. |
-| `cves` | Identifiers extracted from `text`; may be empty. Extraction MUST NOT consume the text (FR-003). |
+| `identifiers` | Advisory identifiers extracted from `text`; may be empty. Extraction MUST NOT consume the text (FR-003). Recognised shapes (FR-011a): `CVE-YYYY-N`, `GHSA-xxxx-xxxx-xxxx`, and `<Vendor>-YYYY-N` (e.g. `Sonatype-2015-0286`). |
 
-A declaration with a non-empty `cves` produces VEX (FR-006). A declaration with
-an empty `cves` produces the per-component annotation (FR-010). A declaration
-naming several CVEs produces one statement each (FR-004) and is not split for
-the annotation.
+A declaration with a non-empty `identifiers` produces VEX (FR-006). A
+declaration with an empty `identifiers` produces the per-component annotation
+(FR-010). A declaration naming several identifiers produces one statement each
+(FR-004) and is not split for the annotation.
+
+*Amended by #1051.* This field was `cves` and matched `CVE-YYYY-N` only, so a
+declaration naming a GHSA or a vendor advisory was filed as prose and reached
+the SBOM annotation rather than VEX. The shapes were chosen from a whole-tree
+census (`measurements/kv-identifier-census.py`, README Q5): at nixpkgs
+`a799d3e3`, those three shapes cover every identifier among 159 entries, and
+none of them matches anything in the 36 prose entries.
 
 ## `EvidenceGrade` — extended, not replaced
 
@@ -94,8 +101,10 @@ built the same way.
 | `members_unchecked` | FR-001d, SC-007a |
 | `confirmed_by_set` | R1's per-set breakdown |
 | `declarations_total` | |
-| `declarations_without_cve` | FR-011 |
-| `distinct_cves` | |
+| `declarations_without_cve` | FR-011 — CVE-only, unchanged by FR-011a |
+| `distinct_cves` | CVE-only, unchanged by FR-011a |
+| `declarations_without_identifier` | FR-011a — declarations naming no recognised identifier: the ones that remain prose |
+| `distinct_identifiers` | FR-011a — every distinct identifier, CVEs included |
 | `reconciliations_withheld` | FR-013a, SC-005a |
 | `accepted_insecure` | FR-015 — whether any confirmed member carried a declaration at all |
 

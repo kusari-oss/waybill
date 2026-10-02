@@ -117,7 +117,8 @@ impl AttributeResolution {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DeclaredFinding {
     pub component_purl: String,
-    pub cve: String,
+    /// The advisory identifier: a CVE, a GHSA, or a vendor id (#1051).
+    pub vulnerability: String,
     /// The declaration's own words, for the statement's note.
     pub text: String,
 }
@@ -144,6 +145,12 @@ pub struct NixpkgsSecuritySummary {
     /// reading as their absence entirely.
     pub declarations_without_cve: usize,
     pub distinct_cves: usize,
+    /// Declarations naming no recognised identifier: the ones that remain
+    /// prose (FR-011a). `declarations_without_cve` keeps its CVE-only
+    /// meaning, so a GHSA-bearing declaration counts there but not here.
+    pub declarations_without_identifier: usize,
+    /// Every distinct identifier, CVEs included (FR-011a).
+    pub distinct_identifiers: usize,
     /// Whether any confirmed member carried a declaration at all.
     ///
     /// Derived, not observed: Nix refuses to *evaluate* a package marked
@@ -155,7 +162,7 @@ pub struct NixpkgsSecuritySummary {
     /// from the declaration-derived statements — but a count distinguishes
     /// one accepted exception from twenty.
     pub accepted_insecure_count: usize,
-    /// CVE-bearing declarations, for the VEX emitter. Deliberately not on
+    /// Identifier-bearing declarations, for the VEX emitter. Deliberately not on
     /// the components — see [`DeclaredFinding`].
     pub findings: Vec<DeclaredFinding>,
     /// How many patch-derived `not_affected` statements a declaration
@@ -194,7 +201,9 @@ impl NixpkgsSecuritySummary {
             "confirmed-by-set": self.confirmed_by_set,
             "declarations": self.declarations_total,
             "declarations-without-cve": self.declarations_without_cve,
+            "declarations-without-identifier": self.declarations_without_identifier,
             "distinct-cves": self.distinct_cves,
+            "distinct-identifiers": self.distinct_identifiers,
             "reconciliations-withheld": self.reconciliations_withheld,
             "accepted-insecure": self.accepted_insecure_count,
         })
@@ -210,13 +219,16 @@ impl NixpkgsSecuritySummary {
             .then(|| acceptance_record(self.accepted_insecure_count))
     }
 
-    /// The C189 grade, or `None` when no CVE was recovered.
+    /// The C189 grade, or `None` when no identifier was recovered.
+    ///
+    /// Gated on identifiers rather than CVEs since #1051 (FR-011a): a GHSA
+    /// or vendor id is now a VEX claim of the same grade.
     ///
     /// A grade attached to nothing would assert a standard of evidence for
     /// claims that do not exist — the same rule milestone 1035 applies.
     pub fn grade(&self) -> Option<&'static str> {
         use crate::scan_fs::package_db::nix::closure::patches::EvidenceGrade;
-        (self.distinct_cves > 0).then(|| EvidenceGrade::NixpkgsDeclared.wire())
+        (self.distinct_identifiers > 0).then(|| EvidenceGrade::NixpkgsDeclared.wire())
     }
 
     /// Build the record. `purl_of` maps a member's `pname` to the PURL the
@@ -233,20 +245,20 @@ impl NixpkgsSecuritySummary {
             };
             let Some(purl) = purl_of(pname) else { continue };
             for d in declarations {
-                for cve in &d.cves {
+                for id in &d.identifiers {
                     s.findings.push(DeclaredFinding {
                         component_purl: purl.clone(),
-                        cve: cve.clone(),
+                        vulnerability: id.clone(),
                         text: d.text.clone(),
                     });
                 }
             }
         }
         s.findings.sort_by(|a, b| {
-            (&a.component_purl, &a.cve).cmp(&(&b.component_purl, &b.cve))
+            (&a.component_purl, &a.vulnerability).cmp(&(&b.component_purl, &b.vulnerability))
         });
         s.findings.dedup_by(|a, b| {
-            a.component_purl == b.component_purl && a.cve == b.cve
+            a.component_purl == b.component_purl && a.vulnerability == b.vulnerability
         });
         s
     }
@@ -256,6 +268,7 @@ impl NixpkgsSecuritySummary {
     ) -> Self {
         let mut s = Self::default();
         let mut cves = std::collections::BTreeSet::new();
+        let mut identifiers = std::collections::BTreeSet::new();
         for r in resolutions.values() {
             match r {
                 AttributeResolution::Confirmed {
@@ -270,10 +283,14 @@ impl NixpkgsSecuritySummary {
                     for d in declarations {
                         s.declarations_total += 1;
                         s.accepted_insecure = true;
-                        if d.names_a_cve() {
-                            cves.extend(d.cves.iter().cloned());
-                        } else {
+                        cves.extend(d.cves().map(str::to_string));
+                        if d.cves().next().is_none() {
                             s.declarations_without_cve += 1;
+                        }
+                        if d.names_an_identifier() {
+                            identifiers.extend(d.identifiers.iter().cloned());
+                        } else {
+                            s.declarations_without_identifier += 1;
                         }
                     }
                 }
@@ -283,6 +300,7 @@ impl NixpkgsSecuritySummary {
             }
         }
         s.distinct_cves = cves.len();
+        s.distinct_identifiers = identifiers.len();
         s
     }
 }
@@ -331,12 +349,12 @@ pub(crate) fn annotate_prose(
         // is visible rather than silent.
         let prose: Vec<&str> = declarations
             .iter()
-            .filter(|d| !d.names_a_cve() && !d.is_about_a_party())
+            .filter(|d| !d.names_an_identifier() && !d.is_about_a_party())
             .map(|d| d.text.as_str())
             .collect();
         withheld_party_claims += declarations
             .iter()
-            .filter(|d| !d.names_a_cve() && d.is_about_a_party())
+            .filter(|d| !d.names_an_identifier() && d.is_about_a_party())
             .count();
         if prose.is_empty() {
             continue;
@@ -444,7 +462,7 @@ pub(crate) fn withheld_pairs(
     // another are unrelated claims (FR-014) and neither displaces the other.
     findings
         .iter()
-        .map(|f| (f.component_purl.clone(), f.cve.clone()))
+        .map(|f| (f.component_purl.clone(), f.vulnerability.clone()))
         .filter(|k| patched.contains(k))
         .collect()
 }
@@ -801,6 +819,37 @@ mod tests {
         assert_eq!(s.distinct_cves, 1);
     }
 
+    /// #1051 / FR-011a: a declaration naming a non-CVE advisory goes to VEX,
+    /// not the SBOM annotation, and is counted by the new identifier
+    /// fields while the CVE-only fields keep their meaning. Real entries:
+    /// nexus's two Sonatype ids at nixpkgs a799d3e3.
+    #[test]
+    fn a_non_cve_advisory_becomes_vex_and_the_cve_fields_keep_their_meaning() {
+        let mut comps = vec![component("nexus", "pkg:generic/nexus@3.0")];
+        let res: std::collections::BTreeMap<String, AttributeResolution> = [(
+            "nexus".to_string(),
+            confirmed(&["Sonatype-2015-0286", "Sonatype-2022-6438"]),
+        )]
+        .into_iter()
+        .collect();
+
+        assert_eq!(annotate_prose(&mut comps, &res), 0, "an advisory id is not prose");
+        assert!(!comps[0].extra_annotations.contains_key(ANN_NIXPKGS_DECLARATION));
+
+        let s = NixpkgsSecuritySummary::build_with_purls(&res, &|_| Some("pkg:generic/nexus@3.0".to_string()));
+        let ids: Vec<&str> = s.findings.iter().map(|f| f.vulnerability.as_str()).collect();
+        assert_eq!(ids, vec!["Sonatype-2015-0286", "Sonatype-2022-6438"]);
+        // CVE-only fields: unchanged meaning, so a consumer reading them sees
+        // what it saw before — two declarations naming no CVE.
+        assert_eq!(s.distinct_cves, 0);
+        assert_eq!(s.declarations_without_cve, 2);
+        // The new fields: both are identifiers, none remains prose.
+        assert_eq!(s.distinct_identifiers, 2);
+        assert_eq!(s.declarations_without_identifier, 0);
+        // They are VEX claims, so they carry the grade.
+        assert!(s.grade().is_some(), "a VEX claim of this grade exists");
+    }
+
     #[test]
     fn the_acceptance_record_claims_only_what_presence_supports() {
         // FR-016. Presence proves permission was granted, because Nix will
@@ -891,6 +940,8 @@ mod tests {
         assert_eq!(v["declarations"], 2);
         assert_eq!(v["declarations-without-cve"], 1);
         assert_eq!(v["distinct-cves"], 1);
+        assert_eq!(v["declarations-without-identifier"], 1);
+        assert_eq!(v["distinct-identifiers"], 1);
         assert_eq!(v["reconciliations-withheld"], 1);
         assert_eq!(v["accepted-insecure"], 1);
         assert!(v["confirmed-by-set"].is_object());
@@ -925,7 +976,7 @@ mod tests {
         assert!(s.acceptance().is_some(), "a prose declaration is still an exception");
         assert!(
             s.grade().is_none(),
-            "no CVE was recovered, so no grade is warranted"
+            "no identifier was recovered, so no grade is warranted"
         );
     }
 

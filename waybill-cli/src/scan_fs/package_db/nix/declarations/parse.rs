@@ -18,23 +18,30 @@ pub struct Declaration {
     /// gdal, and proj" says something no identifier could, and reducing it to
     /// a flag would discard exactly what makes it worth emitting.
     pub text: String,
-    /// Identifiers named by `text`. Usually one, often none, occasionally
+    /// Advisory identifiers named by `text`: CVE, GHSA, or a vendor's
+    /// `<Vendor>-YYYY-N` (#1051). Usually one, often none, occasionally
     /// several. Extraction does not consume the text.
-    pub cves: Vec<String>,
+    pub identifiers: Vec<String>,
 }
 
 impl Declaration {
     pub fn parse(text: &str) -> Self {
         Self {
             text: text.to_string(),
-            cves: cves_in(text),
+            identifiers: identifiers_in(text),
         }
     }
 
-    /// Whether this entry becomes VEX (it names something) or an annotation
-    /// (it does not).
-    pub fn names_a_cve(&self) -> bool {
-        !self.cves.is_empty()
+    /// Whether this entry becomes VEX (it names an advisory) or an
+    /// annotation (it does not).
+    pub fn names_an_identifier(&self) -> bool {
+        !self.identifiers.is_empty()
+    }
+
+    /// The CVE subset of [`Self::identifiers`]. Feeds C188's CVE-only
+    /// fields, which keep their meaning under #1051 (FR-011a).
+    pub fn cves(&self) -> impl Iterator<Item = &str> {
+        self.identifiers.iter().map(String::as_str).filter(|id| id.starts_with("CVE-"))
     }
 
     /// Whether this declaration's subject is a **party** rather than the
@@ -80,9 +87,24 @@ impl Declaration {
     }
 }
 
-fn cve_pattern() -> &'static Regex {
+/// The advisory-identifier shapes nixpkgs actually uses (#1051).
+///
+/// Chosen from a whole-tree census rather than from what might occur
+/// (`specs/1050-nixpkgs-security-vex/measurements/kv-identifier-census.py`,
+/// README Q5). At nixpkgs `a799d3e3`, across 159 entries: CVE, GHSA (three,
+/// in one entry) and `Sonatype-YYYY-NNNN` (two) cover every identifier, and
+/// no prose entry contains any other `<word>-<digits>` token. The vendor
+/// arm requires a capitalised name, a 19xx/20xx year and at least three
+/// digits, so a version string ("Electron 38.8.4") or a bare year cannot
+/// reach it.
+fn identifier_pattern() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| Regex::new(r"CVE-\d{4}-\d+").expect("static CVE pattern is valid"))
+    RE.get_or_init(|| {
+        Regex::new(
+            r"\bCVE-\d{4}-\d+\b|\bGHSA(?:-[23456789cfghjmpqrvwx]{4}){3}\b|\b[A-Z][A-Za-z]{1,15}-(?:19|20)\d{2}-\d{3,}\b",
+        )
+        .expect("static identifier pattern is valid")
+    })
 }
 
 /// Identifiers named anywhere in the text, deduplicated, in order of first
@@ -91,9 +113,9 @@ fn cve_pattern() -> &'static Regex {
 /// Most real entries embed the identifier in a sentence — "CVE-2019-9501:
 /// heap buffer overflow, potentially allowing remote code execution" — so
 /// this scans rather than anchoring, and the caller keeps the sentence.
-pub fn cves_in(text: &str) -> Vec<String> {
+pub fn identifiers_in(text: &str) -> Vec<String> {
     let mut seen = std::collections::BTreeSet::new();
-    cve_pattern()
+    identifier_pattern()
         .find_iter(text)
         .map(|m| m.as_str().to_string())
         .filter(|id| seen.insert(id.clone()))
@@ -156,13 +178,13 @@ mod tests {
             "CVE-2019-9501: heap buffer overflow, potentially allowing remote \
              code execution by sending specially-crafted WiFi packets",
         );
-        assert_eq!(d.cves, vec!["CVE-2019-9501"]);
+        assert_eq!(d.identifiers, vec!["CVE-2019-9501"]);
         assert!(
             d.text.contains("heap buffer overflow"),
             "the description was consumed by extraction: {:?}",
             d.text
         );
-        assert!(d.names_a_cve());
+        assert!(d.names_an_identifier());
     }
 
     #[test]
@@ -170,13 +192,55 @@ mod tests {
         // FR-004: each becomes its own statement, rather than one statement
         // carrying a concatenated subject.
         let d = Declaration::parse("fixed by CVE-2014-8139, CVE-2014-8140 and CVE-2014-8141");
-        assert_eq!(d.cves, vec!["CVE-2014-8139", "CVE-2014-8140", "CVE-2014-8141"]);
+        assert_eq!(d.identifiers, vec!["CVE-2014-8139", "CVE-2014-8140", "CVE-2014-8141"]);
+    }
+
+    /// #1051: the two non-CVE shapes the census found, from the real
+    /// entries. Both used to fall through to prose.
+    #[test]
+    fn vendor_and_ghsa_advisories_are_identifiers() {
+        assert_eq!(Declaration::parse("Sonatype-2015-0286").identifiers, vec!["Sonatype-2015-0286"]);
+        assert_eq!(Declaration::parse("Sonatype-2022-6438").identifiers, vec!["Sonatype-2022-6438"]);
+
+        // django-ckeditor at nixpkgs a799d3e3, abridged but with every token
+        // the pattern could plausibly catch: a repeated GHSA, a package name
+        // ending in a digit, a version suffix, a year.
+        let d = Declaration::parse(
+            "django-ckeditor bundles CKEditor 4.22.1 which isn't supported anmyore \
+             … such as CKEditor 5 (django-ckeditor-5) … LTS package until December \
+             2028. … List of vulnerabilites fixed in CKEditor 4.24.0-lts: \
+             * GHSA-fq6h-4g8v-qqvm * GHSA-fq6h-4g8v-qqvm * GHSA-mw2c-vx6j-mg76",
+        );
+        assert_eq!(d.identifiers, vec!["GHSA-fq6h-4g8v-qqvm", "GHSA-mw2c-vx6j-mg76"]);
+        assert!(d.names_an_identifier());
+        assert_eq!(d.cves().count(), 0, "no CVE, so the CVE-only C188 fields are unaffected");
+    }
+
+    #[test]
+    fn cves_is_the_cve_subset_of_identifiers() {
+        let d = Declaration::parse("CVE-2020-1234 and GHSA-fq6h-4g8v-qqvm and Sonatype-2015-0286");
+        assert_eq!(d.identifiers.len(), 3);
+        assert_eq!(d.cves().collect::<Vec<_>>(), vec!["CVE-2020-1234"]);
+    }
+
+    /// The false-positive surface the vendor arm must not reach. Lifecycle
+    /// prose with versions and years, as nixpkgs writes it.
+    #[test]
+    fn lifecycle_prose_with_versions_and_years_names_no_identifier() {
+        for text in [
+            "Electron version 38.8.4 is EOL",
+            "Uses Electron 37.6.0, EOL on October 4, 2025, Several CVEs known.",
+            "Garage version 2.92 is EOL",
+            "The Xen Project Hypervisor version 4.17 is no longer supported",
+        ] {
+            assert!(Declaration::parse(text).identifiers.is_empty(), "matched in {text:?}");
+        }
     }
 
     #[test]
     fn a_repeated_identifier_is_named_once() {
         let d = Declaration::parse("CVE-2021-4217 — see CVE-2021-4217 upstream");
-        assert_eq!(d.cves, vec!["CVE-2021-4217"]);
+        assert_eq!(d.identifiers, vec!["CVE-2021-4217"]);
     }
 
     #[test]
@@ -186,8 +250,8 @@ mod tests {
         let d = Declaration::parse(
             "Includes vulnerable versions of bundled libraries: openssl, ffmpeg, gdal, and proj.",
         );
-        assert!(d.cves.is_empty());
-        assert!(!d.names_a_cve());
+        assert!(d.identifiers.is_empty());
+        assert!(!d.names_an_identifier());
         assert!(d.text.contains("openssl"), "the text must survive verbatim");
     }
 
@@ -196,6 +260,6 @@ mod tests {
         // Real entries sit beside version literals ("2.92", "5.2.4"); the
         // pattern must not fire on them.
         let d = Declaration::parse("Garage version 2.92 is EOL");
-        assert!(d.cves.is_empty(), "matched: {:?}", d.cves);
+        assert!(d.identifiers.is_empty(), "matched: {:?}", d.identifiers);
     }
 }

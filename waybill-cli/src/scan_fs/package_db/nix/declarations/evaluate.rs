@@ -313,8 +313,8 @@ mod tests {
         let k = &m["known"][0];
         assert_eq!(k.source, DeclarationSource::Haskell);
         assert_eq!(k.declarations.len(), 2);
-        assert_eq!(k.declarations[0].cves, vec!["CVE-2020-1"]);
-        assert!(k.declarations[1].cves.is_empty(), "the prose entry names none");
+        assert_eq!(k.declarations[0].identifiers, vec!["CVE-2020-1"]);
+        assert!(k.declarations[1].identifiers.is_empty(), "the prose entry names none");
 
         // An empty list is a real answer -- "nixpkgs says nothing" -- and is
         // not the same as the name being absent.

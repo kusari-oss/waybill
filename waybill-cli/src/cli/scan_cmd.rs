@@ -4721,6 +4721,8 @@ pub async fn execute(
                         declarations = s.declarations_total,
                         without_cve = s.declarations_without_cve,
                         distinct_cves = s.distinct_cves,
+                        without_identifier = s.declarations_without_identifier,
+                        distinct_identifiers = s.distinct_identifiers,
                         withheld = s.reconciliations_withheld,
                         prose_components = stamped,
                         elapsed_ms = started.elapsed().as_millis(),
