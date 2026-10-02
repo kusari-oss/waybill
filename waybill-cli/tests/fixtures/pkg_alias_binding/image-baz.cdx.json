@@ -56,10 +56,6 @@
         {
           "name": "waybill:source-document-binding",
           "value": "{\"algo\":\"v1\",\"reason\":\"source-not-found-in-bind-target\",\"source_doc_id\":{\"iri\":\"<WORKSPACE>/waybill-cli/tests/fixtures/pkg_alias_binding/source-baz.cdx.json\",\"sha256\":\"3f68e0f5c94b6af774801bdb3d2f466d3b67b4649be44c08bd1a1b2ce35bac30\"},\"strength\":\"unknown\"}"
-        },
-        {
-          "name": "waybill:workspace-member",
-          "value": "[\"usr/local/bin\"]"
         }
       ],
       "purl": "pkg:generic/baz?file-sha256=446db4a0be0f85cb27407792fd4ff3de0a60a92b1055dc14ee810483df82b5c9",
@@ -172,10 +168,6 @@
       {
         "name": "waybill:graph-completeness-reason",
         "value": "transitive-edges-unresolvable: generic"
-      },
-      {
-        "name": "waybill:workspaces-detected",
-        "value": "[\"usr/local/bin\"]"
       },
       {
         "name": "waybill:unresolved-declared-dep-count",
