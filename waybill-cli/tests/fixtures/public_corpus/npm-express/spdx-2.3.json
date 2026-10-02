@@ -1202,7 +1202,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"path+file:///home/runner/.cache/waybill/corpus/f12f3d8cb55abc01/e99649895f714c9dc9b3538e2cb0f58954f0ecfa/repo\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\".\"]}"
         },
         {
           "annotationDate": "<masked>",

@@ -1804,7 +1804,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-AT74RHWIJIOMPWCG",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"path+file:///home/runner/.cache/waybill/corpus/f12f3d8cb55abc01/e99649895f714c9dc9b3538e2cb0f58954f0ecfa/repo\"]}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\".\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-NUED7H2R5TR7VKG5",
       "type": "Annotation"
     },

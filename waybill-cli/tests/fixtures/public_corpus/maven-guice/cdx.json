@@ -245,7 +245,7 @@
         },
         {
           "name": "waybill:source-files",
-          "value": "[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/examples/guice-demo\"]"
+          "value": "[\"examples/guice-demo\"]"
         },
         {
           "name": "waybill:sbom-tier",
@@ -762,7 +762,7 @@
         },
         {
           "name": "waybill:source-files",
-          "value": "[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/extensions\"]"
+          "value": "[\"extensions\"]"
         },
         {
           "name": "waybill:sbom-tier",
@@ -866,7 +866,7 @@
         },
         {
           "name": "waybill:source-files",
-          "value": "[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/extensions/dagger-adapter\"]"
+          "value": "[\"extensions/dagger-adapter\"]"
         },
         {
           "name": "waybill:sbom-tier",
@@ -913,7 +913,7 @@
         },
         {
           "name": "waybill:source-files",
-          "value": "[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/extensions/grapher\"]"
+          "value": "[\"extensions/grapher\"]"
         },
         {
           "name": "waybill:sbom-tier",
@@ -960,7 +960,7 @@
         },
         {
           "name": "waybill:source-files",
-          "value": "[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/extensions/jmx\"]"
+          "value": "[\"extensions/jmx\"]"
         },
         {
           "name": "waybill:sbom-tier",
@@ -1007,7 +1007,7 @@
         },
         {
           "name": "waybill:source-files",
-          "value": "[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/extensions/jndi\"]"
+          "value": "[\"extensions/jndi\"]"
         },
         {
           "name": "waybill:sbom-tier",
@@ -1054,7 +1054,7 @@
         },
         {
           "name": "waybill:source-files",
-          "value": "[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/extensions/persist\"]"
+          "value": "[\"extensions/persist\"]"
         },
         {
           "name": "waybill:sbom-tier",
@@ -1101,7 +1101,7 @@
         },
         {
           "name": "waybill:source-files",
-          "value": "[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/extensions/servlet\"]"
+          "value": "[\"extensions/servlet\"]"
         },
         {
           "name": "waybill:sbom-tier",
@@ -1201,7 +1201,7 @@
         },
         {
           "name": "waybill:source-files",
-          "value": "[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/extensions/spring\"]"
+          "value": "[\"extensions/spring\"]"
         },
         {
           "name": "waybill:sbom-tier",
@@ -1248,7 +1248,7 @@
         },
         {
           "name": "waybill:source-files",
-          "value": "[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/extensions/struts2\"]"
+          "value": "[\"extensions/struts2\"]"
         },
         {
           "name": "waybill:sbom-tier",
@@ -1353,7 +1353,7 @@
         },
         {
           "name": "waybill:source-files",
-          "value": "[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/extensions/testlib\"]"
+          "value": "[\"extensions/testlib\"]"
         },
         {
           "name": "waybill:sbom-tier",
@@ -1465,7 +1465,7 @@
         },
         {
           "name": "waybill:source-files",
-          "value": "[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/bom\"]"
+          "value": "[\"bom\"]"
         },
         {
           "name": "waybill:sbom-tier",
@@ -1520,7 +1520,7 @@
         },
         {
           "name": "waybill:source-files",
-          "value": "[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo\"]"
+          "value": "[\".\"]"
         },
         {
           "name": "waybill:sbom-tier",

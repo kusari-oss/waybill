@@ -2893,7 +2893,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"path+file:///home/runner/.cache/waybill/corpus/bb69cc12b4b06266/80be49be88b534d2a72ef6bf5ea4aabf89f3305b/repo/examples/celery\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"examples/celery\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3097,7 +3097,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"path+file:///home/runner/.cache/waybill/corpus/bb69cc12b4b06266/80be49be88b534d2a72ef6bf5ea4aabf89f3305b/repo/examples/tutorial\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"examples/tutorial\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -4433,7 +4433,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"path+file:///home/runner/.cache/waybill/corpus/bb69cc12b4b06266/80be49be88b534d2a72ef6bf5ea4aabf89f3305b/repo/examples/javascript\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"examples/javascript\"]}"
         },
         {
           "annotationDate": "<masked>",
