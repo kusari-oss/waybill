@@ -2708,29 +2708,35 @@ pub fn read(
         if linked {
             // Milestone 194 US1 (issue #571) — link the Go primary
             // main-module for THIS project_root to the emitted stdlib
-            // by appending "stdlib" to its `.depends` list. The
-            // existing name → PURL Relationship emitter at
-            // `scan_fs/mod.rs:756-772` picks up "stdlib" and produces
-            // a DependsOn edge to the corresponding
-            // `pkg:golang/stdlib@v<version>` component (registered in
-            // `name_to_purl` under `("golang", "stdlib")`).
+            // by appending `stdlib v<version>` to its `.depends` list.
+            // The name → PURL Relationship emitter in `scan_fs/mod.rs`
+            // resolves it through the m233 `<name> <version>` golang key
+            // to the matching `pkg:golang/stdlib@v<version>` component.
             //
             // Match the mainmod by (a) golang ecosystem, (b) the
-            // main-module role annotation, and (c) source_path in
-            // this project_root's directory tree (the mainmod's
-            // source_path is either `<project_root>/go.mod` or
-            // `<project_root>/go.sum`, so a starts_with check on the
-            // canonicalized project_root path is sufficient).
-            let project_root_str = project_root.to_string_lossy();
+            // main-module role annotation, and (c) source_path directly
+            // in this project_root (the mainmod's source_path is either
+            // `<project_root>/go.mod` or `<project_root>/go.sum`).
+            //
+            // #1068: (c) was a string `starts_with` on the root path,
+            // which also matched nested modules and siblings sharing a
+            // prefix (`a` vs `ab`). A bare `"stdlib"` dependency hid that,
+            // since the first link blocked the rest. The dependency now
+            // names its version — the bare name resolved through an
+            // `(ecosystem, name)` index holding one stdlib, so every
+            // module linked to whichever version was indexed last — and
+            // a prefix match would link a nested module to its parent's
+            // stdlib as well as its own.
+            let stdlib_dep = format!("stdlib v{bare}");
             for e in out.iter_mut() {
                 let is_go_mainmod = e.purl.as_str().starts_with("pkg:golang/")
                     && e.extra_annotations
                         .get("waybill:component-role")
                         .and_then(|v| v.as_str())
                         == Some("main-module")
-                    && e.source_path.starts_with(project_root_str.as_ref());
-                if is_go_mainmod && !e.depends.iter().any(|d| d == "stdlib") {
-                    e.depends.push("stdlib".to_string());
+                    && Path::new(&e.source_path).parent() == Some(project_root.as_path());
+                if is_go_mainmod && !e.depends.contains(&stdlib_dep) {
+                    e.depends.push(stdlib_dep.clone());
                 }
             }
         }
@@ -3822,7 +3828,7 @@ tool (
                 .find(|e| e.name == format!("example.com/{m}"))
                 .expect("main module emitted");
             assert!(
-                main.depends.iter().any(|d| d == "stdlib"),
+                main.depends.iter().any(|d| d == "stdlib v1.21"),
                 "example.com/{m} must depend on stdlib; depends = {:?}",
                 main.depends,
             );
