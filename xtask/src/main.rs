@@ -56,10 +56,23 @@ fn main() {
 fn build_ebpf() {
     let dir = concat!(env!("CARGO_MANIFEST_DIR"), "/../waybill-ebpf");
 
+    // #904: no `+nightly`. That override is rustup's highest-precedence
+    // selector and bypassed `waybill-ebpf/rust-toolchain.toml` entirely —
+    // channel AND its `components = ["rust-src"]` — so every build site had
+    // to install rust-src itself, and the one that forgot (the eBPF canary)
+    // failed for 35 nights reporting an upstream regression (#685).
+    //
+    // `RUSTUP_TOOLCHAIN` must go too. rustup exports it to every process it
+    // starts, and it outranks a toolchain file: this xtask runs under the
+    // workspace's pinned stable, so the child cargo would otherwise inherit
+    // that and build the eBPF crate with stable, where `-Z build-std` is
+    // rejected. Measured: as a child of the workspace's cargo, `rustc` in
+    // `waybill-ebpf/` reports the workspace pin; from a plain shell, the
+    // nightly the file declares.
     let status = Command::new("cargo")
         .current_dir(dir)
+        .env_remove("RUSTUP_TOOLCHAIN")
         .args([
-            "+nightly",
             "build",
             "--target=bpfel-unknown-none",
             "-Z",

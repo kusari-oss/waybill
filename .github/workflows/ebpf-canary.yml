@@ -153,8 +153,9 @@ jobs:
           toolchain: stable
 
       - name: Make stable the default toolchain
-        # `cargo run -p xtask` runs under stable; the nested `cargo +nightly
-        # build` inside xtask selects nightly for itself.
+        # `cargo run -p xtask` runs under stable; the nested `cargo build`
+        # inside xtask runs in waybill-ebpf/ with RUSTUP_TOOLCHAIN removed, so
+        # it resolves nightly from waybill-ebpf/rust-toolchain.toml (#904).
         run: rustup default stable
 
       # NOTE (measured, m896): listing `waybill-ebpf` here has a side effect.
@@ -165,11 +166,10 @@ jobs:
       # install) shows 3 components and no rust-src; probe B (before the build)
       # shows 4 including rust-src, and nothing between them asks for it.
       #
-      # This is why the explicit `components: rust-src` above is belt AND
-      # braces rather than redundant: the build itself uses `cargo +nightly`,
-      # which bypasses the toolchain file entirely, so it never triggers this.
-      # Relying on the side effect would make the canary depend on a cache
-      # step's incidental behaviour.
+      # Since #904 the build resolves through that toolchain file too, so
+      # rustup provisions rust-src for the build itself. The explicit
+      # `components: rust-src` above stays as the declaration the parity
+      # check reasons about, not as the thing the build depends on.
       - name: Cache cargo + build artifacts
         uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2.9.1
         with:
