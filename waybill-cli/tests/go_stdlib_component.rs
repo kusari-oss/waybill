@@ -89,3 +89,104 @@ fn go_source_scan_emits_stdlib_component_with_purl_and_cpe() {
         }
     }
 }
+
+/// #1068 — each module links to the stdlib of the `go` version it
+/// declares. With two versions in one tree, every module used to link to
+/// whichever stdlib was indexed last: the edge named bare `stdlib`, and
+/// the resolver's `(ecosystem, name)` index holds one entry per name.
+#[test]
+fn each_module_links_to_the_stdlib_of_its_own_go_version() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    for (m, go) in [("a", "1.21"), ("b", "1.23"), ("c", "1.21")] {
+        let root = dir.path().join(m);
+        std::fs::create_dir_all(&root).expect("mkdir");
+        std::fs::write(root.join("go.mod"), format!("module example.com/{m}\n\ngo {go}\n"))
+            .expect("write go.mod");
+        std::fs::write(root.join("go.sum"), "").expect("write go.sum");
+    }
+
+    let sbom = run_scan(dir.path());
+
+    let edges: Vec<(String, String)> = sbom["dependencies"]
+        .as_array()
+        .expect("dependencies")
+        .iter()
+        .flat_map(|d| {
+            let from = d["ref"].as_str().unwrap_or_default().to_string();
+            d["dependsOn"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter_map(|t| t.as_str())
+                .filter(|t| t.starts_with("pkg:golang/stdlib@"))
+                .map(move |t| (from.clone(), t.to_string()))
+                .collect::<Vec<_>>()
+        })
+        .collect();
+    let mut stdlib_edges: Vec<(&str, &str)> =
+        edges.iter().map(|(f, t)| (f.as_str(), t.as_str())).collect();
+    stdlib_edges.sort();
+    assert_eq!(
+        stdlib_edges,
+        vec![
+            ("pkg:golang/example.com/a@v0.0.0-unknown", "pkg:golang/stdlib@v1.21"),
+            ("pkg:golang/example.com/b@v0.0.0-unknown", "pkg:golang/stdlib@v1.23"),
+            ("pkg:golang/example.com/c@v0.0.0-unknown", "pkg:golang/stdlib@v1.21"),
+        ],
+    );
+}
+
+/// #1068 — a module links only to its own stdlib, not its parent's.
+/// The main-module match was a string prefix on the root path, so the
+/// root `.` reached the nested `sub/` module, and `a` reached its sibling
+/// `ab`. A bare `stdlib` dependency masked that; a versioned one would
+/// give the nested module both versions.
+#[test]
+fn a_nested_or_prefix_sharing_module_gets_only_its_own_stdlib() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    for (rel, m, go) in [(".", "root", "1.21"), ("sub", "sub", "1.23"), ("a", "a", "1.21"), ("ab", "ab", "1.22")] {
+        let root = dir.path().join(rel);
+        std::fs::create_dir_all(&root).expect("mkdir");
+        std::fs::write(root.join("go.mod"), format!("module example.com/{m}\n\ngo {go}\n"))
+            .expect("write go.mod");
+        std::fs::write(root.join("go.sum"), "").expect("write go.sum");
+    }
+
+    let sbom = run_scan(dir.path());
+
+    let mut stdlib_edges: Vec<(String, String)> = sbom["dependencies"]
+        .as_array()
+        .expect("dependencies")
+        .iter()
+        .flat_map(|d| {
+            let from = d["ref"].as_str().unwrap_or_default().to_string();
+            d["dependsOn"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter_map(|t| t.as_str())
+                .filter(|t| t.starts_with("pkg:golang/stdlib@"))
+                .map(move |t| (from.clone(), t.to_string()))
+                .collect::<Vec<_>>()
+        })
+        .collect();
+    stdlib_edges.sort();
+    // The root module is the document subject; match it by suffix.
+    let simplified: Vec<(String, &str)> = stdlib_edges
+        .iter()
+        .map(|(f, t)| {
+            let name = f.rsplit('/').next().unwrap_or(f).split('@').next().unwrap_or(f);
+            (name.to_string(), t.as_str())
+        })
+        .collect();
+    let mut expected = vec![
+        ("a".to_string(), "pkg:golang/stdlib@v1.21"),
+        ("ab".to_string(), "pkg:golang/stdlib@v1.22"),
+        ("root".to_string(), "pkg:golang/stdlib@v1.21"),
+        ("sub".to_string(), "pkg:golang/stdlib@v1.23"),
+    ];
+    expected.sort();
+    let mut got = simplified.clone();
+    got.sort();
+    assert_eq!(got, expected, "raw edges: {stdlib_edges:?}");
+}
