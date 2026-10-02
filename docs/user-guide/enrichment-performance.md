@@ -136,11 +136,29 @@ produces confident nonsense. waybill logs the phase directly:
 ```bash
 RUST_LOG=info waybill sbom scan --path ./repo --output /dev/null 2>&1 \
   | grep 'licence enrichment complete'
-# elapsed_ms=766 attempted=709 network_lookups=709 cache_hits=0 enriched=561
+# pass="initial" elapsed_ms=1040 attempted=373 cache_hits=0 network_lookups=373 unqueried_offline=0 matched=373 enriched=372
 ```
+
+(That line is from the 373-component `transitive_parity/npm` fixture,
+cold cache — not the 709-component repository the rest of this page
+measures.)
 
 `network_lookups` is the honest measure of cache effectiveness. Wall
 time cannot distinguish a cache that worked from a fast network.
+
+Each field describes one pass, and `attempted = cache_hits +
+network_lookups + unqueried_offline`. `network_lookups` counts only
+coordinates actually requested, so it is always 0 under `--offline`;
+the coordinates neither cache could serve are `unqueried_offline`.
+`matched` is how many lookups deps.dev returned a record for;
+`enriched` is how many components gained a licence. A component whose
+lockfile already declares its licence matches without being enriched,
+so `enriched` well below `matched` is normal.
+
+A second line with `pass="post-graph"` appears when the dep-graph pass
+added components. It re-visits every component so the new ones are
+licensed too; the ones the first pass already looked up show as
+`cache_hits`.
 
 **Control the cache state on both sides.** deps.dev serves a one-hour
 edge cache, so the same scan can be ~10× faster on its second run with

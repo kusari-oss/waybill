@@ -71,7 +71,51 @@ pub struct DepsDevSource {
     /// lookup, i.e. neither cache could serve them. This is the
     /// quantity SC-005 is about; wall time alone cannot distinguish a
     /// cache that worked from a fast network.
+    ///
+    /// #877: incremented only when a request is issued, so `--offline`
+    /// cannot report one. Cumulative across passes, like every counter
+    /// here; [`enrich_components`] reports the per-pass delta.
     network_lookups: AtomicUsize,
+    /// #877: coordinates served by the in-memory or disk cache.
+    cache_hits: AtomicUsize,
+    /// #877: coordinates neither cache could serve that `--offline`
+    /// left unqueried.
+    unqueried_offline: AtomicUsize,
+}
+
+/// #877 — which of the scan's two licence passes is running. The
+/// post-graph pass (m842) re-visits every component; without a label
+/// its summary line reads as an unexplained duplicate of the first.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum EnrichmentPass {
+    Initial,
+    PostGraph,
+}
+
+impl EnrichmentPass {
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::Initial => "initial",
+            Self::PostGraph => "post-graph",
+        }
+    }
+}
+
+/// #877 — one pass's lookups, as distinct from the source's cumulative
+/// counters. `attempted = cache_hits + network_lookups +
+/// unqueried_offline`.
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub struct PassStats {
+    pub attempted: usize,
+    pub cache_hits: usize,
+    pub network_lookups: usize,
+    pub unqueried_offline: usize,
+    /// Lookups deps.dev returned a record for, whether or not it added
+    /// anything. Separate from `enriched`: a component whose lockfile
+    /// already declared a licence matches without being enriched.
+    pub matched: usize,
+    /// Components that gained at least one licence.
+    pub enriched: usize,
 }
 
 /// Issue #927 (m923) — FR-007b. The operator-facing message emitted once
@@ -120,6 +164,8 @@ impl DepsDevSource {
             // exactly one site: the scan command.
             disk: super::deps_dev_disk_cache::DepsDevDiskCache::open(false, None),
             network_lookups: AtomicUsize::new(0),
+            cache_hits: AtomicUsize::new(0),
+            unqueried_offline: AtomicUsize::new(0),
         }
     }
 
@@ -268,17 +314,17 @@ impl DepsDevSource {
             }
             misses = still;
         }
-
-        self.network_lookups
-            .fetch_add(misses.len(), Ordering::Relaxed);
+        self.cache_hits.fetch_add(keys.len() - misses.len(), Ordering::Relaxed);
 
         // FR-015 / C-5.1: under `--offline` nothing is issued — not
         // batch, not per-component, not a revalidation. Whatever the
         // caches could serve has already been served above; the rest
         // stays unenriched rather than triggering a fetch (C-5.2).
         if self.offline {
+            self.unqueried_offline.fetch_add(misses.len(), Ordering::Relaxed);
             return out;
         }
+        self.network_lookups.fetch_add(misses.len(), Ordering::Relaxed);
 
         // FR-001: bulk path first when enabled. Chunks run
         // concurrently under the same ceiling; a chunk that fails
@@ -647,7 +693,8 @@ impl EnrichmentSource for DepsDevSource {
 pub async fn enrich_components(
     source: &DepsDevSource,
     components: &mut [ResolvedComponent],
-) -> (usize, LinkMappingSkips, DegradationRecord) {
+    pass: EnrichmentPass,
+) -> (usize, LinkMappingSkips, DegradationRecord, PassStats) {
     // Milestone 839 (C-5.2): offline no longer short-circuits the
     // whole phase. Reading a local cache file is not a network
     // request, and the `--offline` flag's own documentation names
@@ -657,7 +704,12 @@ pub async fn enrich_components(
     // unenriched.
     if source.offline && !source.disk.is_enabled() {
         debug!("deps.dev enrichment skipped — offline with no cache to serve from");
-        return (0, LinkMappingSkips::default(), DegradationRecord::new());
+        return (
+            0,
+            LinkMappingSkips::default(),
+            DegradationRecord::new(),
+            PassStats::default(),
+        );
     }
     let phase_start = Instant::now();
     let mut enriched_count = 0usize;
@@ -706,12 +758,19 @@ pub async fn enrich_components(
     // across an await, and mixing the two would serialise the fetches
     // back into the shape this is replacing.
     let keys: Vec<EnrichmentKey> = planned.iter().map(|(_, k)| k.clone()).collect();
+    let before = (
+        source.cache_hits.load(Ordering::Relaxed),
+        source.network_lookups.load(Ordering::Relaxed),
+        source.unqueried_offline.load(Ordering::Relaxed),
+    );
     let fetched = source.fetch_many(&keys, &mut progress).await;
+    let mut matched = 0usize;
 
     for ((idx, key), info) in planned.into_iter().zip(fetched) {
         let component = &mut components[idx];
         let licenses_before = component.licenses.len();
         if let Some(info) = info {
+            matched += 1;
             let (unmapped, malformed) =
                 DepsDevSource::apply_version_info(component, key.system, &info);
             unmapped_label_skips += unmapped;
@@ -734,13 +793,28 @@ pub async fn enrich_components(
     // subtraction-based measurement of this phase is unreliable by
     // construction. It is also what an operator wants to know when a
     // scan feels slow.
-    let network_lookups = source.network_lookups.load(Ordering::Relaxed);
-    info!(
-        elapsed_ms = phase_start.elapsed().as_millis() as u64,
+    //
+    // #877: the counters live on the source and accumulate across both
+    // passes, so report this pass's delta. Deriving `cache_hits` as
+    // `attempted - network_lookups` read the cumulative lookup count
+    // and went wrong on every second pass.
+    let stats = PassStats {
         attempted,
-        network_lookups,
-        cache_hits = attempted.saturating_sub(network_lookups),
-        enriched = enriched_count,
+        cache_hits: source.cache_hits.load(Ordering::Relaxed) - before.0,
+        network_lookups: source.network_lookups.load(Ordering::Relaxed) - before.1,
+        unqueried_offline: source.unqueried_offline.load(Ordering::Relaxed) - before.2,
+        matched,
+        enriched: enriched_count,
+    };
+    info!(
+        pass = pass.as_str(),
+        elapsed_ms = phase_start.elapsed().as_millis() as u64,
+        attempted = stats.attempted,
+        cache_hits = stats.cache_hits,
+        network_lookups = stats.network_lookups,
+        unqueried_offline = stats.unqueried_offline,
+        matched = stats.matched,
+        enriched = stats.enriched,
         "deps.dev licence enrichment complete",
     );
 
@@ -784,7 +858,7 @@ pub async fn enrich_components(
         unmapped_label: unmapped_label_skips,
         malformed_url: malformed_url_skips,
     };
-    (enriched_count, skips, degradation)
+    (enriched_count, skips, degradation, stats)
 }
 
 #[cfg(test)]
@@ -847,7 +921,8 @@ mod tests {
         let client = DepsDevClient::new(Duration::from_secs(1));
         let source = DepsDevSource::new(client, /*offline=*/ true);
         let mut components = vec![make_component("pkg:cargo/serde@1.0.197")];
-        let (n, skips, _deg) = enrich_components(&source, &mut components).await;
+        let (n, skips, _deg, _stats) =
+            enrich_components(&source, &mut components, EnrichmentPass::Initial).await;
         assert_eq!(n, 0);
         // m776: no links were consulted, so both skip counters stay 0.
         assert_eq!((skips.unmapped_label, skips.malformed_url), (0, 0));
@@ -863,7 +938,8 @@ mod tests {
             make_component("pkg:deb/debian/jq@1.6-2.1"),
             make_component("pkg:apk/alpine/musl@1.2.4-r2"),
         ];
-        let (n, skips, _deg) = enrich_components(&source, &mut components).await;
+        let (n, skips, _deg, _stats) =
+            enrich_components(&source, &mut components, EnrichmentPass::Initial).await;
         assert_eq!(n, 0);
         // m776: unsupported ecosystems are skipped before any link
         // handling, so neither counter moves.
@@ -1874,5 +1950,110 @@ mod throttle_tests {
             r.annotation_value().unwrap(),
             "batch-unavailable,throttled,wholly-unavailable;unenriched=0",
         );
+    }
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod pass_stats_tests {
+    use super::*;
+    use super::tests::make_component;
+    use wiremock::matchers::{method, path_regex};
+    use wiremock::{Mock, MockServer, ResponseTemplate};
+
+    async fn server_with_one_package() -> MockServer {
+        let server = MockServer::start().await;
+        // `fetched` resolves; anything unmocked 404s, standing in for a
+        // package deps.dev does not carry.
+        Mock::given(method("GET"))
+            .and(path_regex(r".*/packages/fetched/versions/.*"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "licenses": ["MIT"], "links": [],
+            })))
+            .mount(&server)
+            .await;
+        server
+    }
+
+    fn components() -> Vec<ResolvedComponent> {
+        vec![
+            make_component("pkg:cargo/fetched@1.0.0"),
+            make_component("pkg:cargo/absent@1.0.0"),
+        ]
+    }
+
+    /// #877 items 2 and 3. The second pass is served entirely from the
+    /// in-memory cache. Before, it reported the first pass's lookups
+    /// again (`network_lookups` was cumulative) and `cache_hits=0`
+    /// (derived from that cumulative figure).
+    #[tokio::test]
+    async fn each_pass_reports_its_own_lookups_and_hits() {
+        let server = server_with_one_package().await;
+        let client = DepsDevClient::new(std::time::Duration::from_secs(10))
+            .with_base_url(format!("{}/v3", server.uri()));
+        let source = DepsDevSource::new(client, false);
+        let mut comps = components();
+
+        let (_, _, _, first) =
+            enrich_components(&source, &mut comps, EnrichmentPass::Initial).await;
+        assert_eq!(
+            first,
+            PassStats {
+                attempted: 2,
+                cache_hits: 0,
+                network_lookups: 2,
+                unqueried_offline: 0,
+                matched: 1,
+                enriched: 1,
+            },
+        );
+
+        let (_, _, _, second) =
+            enrich_components(&source, &mut comps, EnrichmentPass::PostGraph).await;
+        assert_eq!(
+            second,
+            PassStats {
+                attempted: 2,
+                cache_hits: 2,
+                network_lookups: 0,
+                unqueried_offline: 0,
+                // Still matched — the cache holds the record — but
+                // nothing new to add.
+                matched: 1,
+                enriched: 0,
+            },
+        );
+        assert_eq!(server.received_requests().await.unwrap().len(), 2);
+    }
+
+    /// #877 item 2. Under `--offline` with a disk cache enabled, nothing
+    /// is requested, so nothing may be reported as a network lookup.
+    #[tokio::test]
+    async fn offline_reports_no_network_lookups() {
+        let server = server_with_one_package().await;
+        // An enabled disk cache is what keeps `--offline` from skipping
+        // the phase outright; pointed at an empty dir, it serves nothing.
+        let dir = tempfile::tempdir().unwrap();
+        std::env::set_var("WAYBILL_DEPS_DEV_CACHE_DIR", dir.path());
+        let client = DepsDevClient::new(std::time::Duration::from_secs(5))
+            .with_base_url(format!("{}/v3", server.uri()));
+        let source = DepsDevSource::new(client, true).with_disk_cache(true, None);
+        let mut comps = components();
+
+        let (_, _, _, stats) =
+            enrich_components(&source, &mut comps, EnrichmentPass::Initial).await;
+        std::env::remove_var("WAYBILL_DEPS_DEV_CACHE_DIR");
+        assert_eq!(
+            stats,
+            PassStats {
+                attempted: 2,
+                cache_hits: 0,
+                network_lookups: 0,
+                unqueried_offline: 2,
+                matched: 0,
+                enriched: 0,
+            },
+        );
+        assert_eq!(server.received_requests().await.unwrap().len(), 0);
     }
 }

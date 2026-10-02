@@ -11,7 +11,7 @@ use crate::enrich::clearly_defined_source::{
     enrich_components as cd_enrich_components, ClearlyDefinedSource,
 };
 use crate::enrich::deps_dev_client::DepsDevClient;
-use crate::enrich::depsdev_source::{enrich_components, DepsDevSource};
+use crate::enrich::depsdev_source::{enrich_components, DepsDevSource, EnrichmentPass};
 use crate::generate::{OutputConfig, ScanArtifacts, SerializerRegistry};
 use crate::scan_fs;
 
@@ -3834,8 +3834,8 @@ pub async fn execute(
     let deps_dev_source =
         build_deps_dev_source(deps_dev_client.clone(), offline, &args);
     if enrich_cfg.deps_dev {
-        let (enriched, skips, degradation) =
-            enrich_components(&deps_dev_source, &mut components).await;
+        let (enriched, skips, degradation, _stats) =
+            enrich_components(&deps_dev_source, &mut components, EnrichmentPass::Initial).await;
         // Milestone 839 (FR-017a): carried to the emitters so a
         // degraded run is distinguishable from a clean one by
         // inspecting the SBOM, not by comparing component counts
@@ -3875,6 +3875,10 @@ pub async fn execute(
     // "declared-not-cached"` on any coord not already observed
     // locally; local versions win when deps.dev reports a different
     // version for the same (group, artifact) pair.
+    // #877: the post-graph licence pass below exists for the components
+    // this pass adds. When it adds none, that pass re-visits only what
+    // the initial pass already enriched.
+    let pre_graph_count = components.len();
     if enrich_cfg.deps_dev_graph {
         let new_dep_graph_edges =
             crate::enrich::deps_dev_graph::enrich_dep_graph(
@@ -3907,6 +3911,7 @@ pub async fn execute(
     //
     // See `resolve/deduplicator.rs::fold_declared_not_cached` for the
     // full matching rule.
+    let graph_added = components.len().saturating_sub(pre_graph_count);
     let pre_fold_count = components.len();
     components = crate::resolve::deduplicator::deduplicate(components);
     let folded = pre_fold_count.saturating_sub(components.len());
@@ -3938,9 +3943,15 @@ pub async fn execute(
     // `apply_version_info` is idempotent (licences and external
     // references both dedupe), so re-visiting an enriched component is
     // a no-op rather than a duplicate.
-    if enrich_cfg.deps_dev && !components.is_empty() {
-        let (second_pass, second_skips, second_degradation) =
-            enrich_components(&deps_dev_source, &mut components).await;
+    //
+    // #877: skipped when the graph pass added nothing — `enrich_dep_graph`
+    // only appends, so the set is then the one the initial pass saw,
+    // minus whatever the dedup folded. Running anyway emitted a second
+    // summary line that read as a duplicate pass.
+    if enrich_cfg.deps_dev && graph_added > 0 && !components.is_empty() {
+        let (second_pass, second_skips, second_degradation, _stats) =
+            enrich_components(&deps_dev_source, &mut components, EnrichmentPass::PostGraph)
+                .await;
         if second_pass > 0 {
             tracing::info!(
                 count = second_pass,
