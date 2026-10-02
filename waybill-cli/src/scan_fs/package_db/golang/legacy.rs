@@ -1713,7 +1713,9 @@ pub fn read(
     precomputed_go_mod_paths: Option<Vec<PathBuf>>,
 ) -> (Vec<PackageDbEntry>, GoScanSignals) {
     let mut out: Vec<PackageDbEntry> = Vec::new();
-    let mut seen_purls: HashSet<String> = HashSet::new();
+    // PURL -> index into `out`, so a later project root's duplicate can
+    // add its path to the entry that was kept (#879).
+    let mut seen_purls: HashMap<String, usize> = HashMap::new();
     // Milestone 161 (T007): detect `go.work` at the scanned root.
     // Honor `GOWORK=off` env-var override per FR-006. Populates
     // `signals.workspace_mode` for the C112 doc-scope annotation.
@@ -2001,8 +2003,26 @@ pub fn read(
             stamp_go_transitive_annotations(&mut entry, &graph_map);
 
             let purl_key = entry.purl.as_str().to_string();
-            if seen_purls.insert(purl_key) {
-                out.push(entry);
+            match seen_purls.entry(purl_key) {
+                std::collections::hash_map::Entry::Vacant(slot) => {
+                    slot.insert(out.len());
+                    out.push(entry);
+                }
+                // #879: another project root already emitted this
+                // module version. Keep that entry's metadata — which
+                // root's `depends` and transitive annotations should win
+                // is undecided, and first-wins is the existing answer —
+                // but record that this root's go.sum declares it too.
+                // Dropping the entry whole lost the path, so a module
+                // required by 39 modules named one go.sum.
+                std::collections::hash_map::Entry::Occupied(slot) => {
+                    let kept = &mut out[*slot.get()];
+                    if kept.source_path != entry.source_path
+                        && !kept.extra_source_paths.contains(&entry.source_path)
+                    {
+                        kept.extra_source_paths.push(entry.source_path);
+                    }
+                }
             }
         }
         if filtered_count > 0 {
@@ -2281,7 +2301,8 @@ pub fn read(
             // `waybill:orphan-reason: flat-attached-fallback` annotation
             // no longer fires — there is nothing flat-attached to mark.
             let purl_key = main_entry.purl.as_str().to_string();
-            if seen_purls.insert(purl_key) {
+            if let std::collections::hash_map::Entry::Vacant(slot) = seen_purls.entry(purl_key) {
+                slot.insert(out.len());
                 out.push(main_entry);
                 main_module_emitted += 1;
             }
@@ -2641,7 +2662,11 @@ pub fn read(
     // emission shape so consumers can match either tool's stdlib CVEs
     // (e.g. CVE-2024-34156 big.Int overflow) against the CPE
     // `cpe:2.3:a:golang:go:<version>:*:*:*:*:*:*:*`.
-    let mut emitted_versions: HashSet<String> = HashSet::new();
+    // Version -> index of its stdlib entry in `out`. #879: a second
+    // root declaring the same version adds its path to that entry and
+    // still gets its main-module link; skipping the root outright, as
+    // this used to, dropped both.
+    let mut emitted_versions: HashMap<String, usize> = HashMap::new();
     for (project_root, doc, _sums) in &parsed_roots {
         let Some(go_version) = doc.go_version.as_deref() else {
             continue;
@@ -2650,7 +2675,7 @@ pub fn read(
             .trim()
             .trim_start_matches('v')
             .trim_start_matches("go");
-        if bare.is_empty() || !emitted_versions.insert(bare.to_string()) {
+        if bare.is_empty() {
             continue;
         }
         let go_sum_path = project_root.join("go.sum");
@@ -2661,8 +2686,26 @@ pub fn read(
         } else {
             project_root.join("go.mod").to_string_lossy().into_owned()
         };
-        if let Some(entry) = build_stdlib_entry(bare, &source_path_for_evidence) {
-            out.push(entry);
+        let linked = match emitted_versions.get(bare) {
+            Some(&i) => {
+                let kept = &mut out[i];
+                if kept.source_path != source_path_for_evidence
+                    && !kept.extra_source_paths.contains(&source_path_for_evidence)
+                {
+                    kept.extra_source_paths.push(source_path_for_evidence);
+                }
+                true
+            }
+            None => match build_stdlib_entry(bare, &source_path_for_evidence) {
+                Some(entry) => {
+                    emitted_versions.insert(bare.to_string(), out.len());
+                    out.push(entry);
+                    true
+                }
+                None => false,
+            },
+        };
+        if linked {
             // Milestone 194 US1 (issue #571) — link the Go primary
             // main-module for THIS project_root to the emitted stdlib
             // by appending "stdlib" to its `.depends` list. The
@@ -3714,6 +3757,76 @@ tool (
         let dir = tempfile::tempdir().unwrap();
         let (entries, _signals) = read(dir.path(), false, &Default::default(), None);
         assert!(entries.is_empty());
+    }
+
+    /// #879: a module version required by two Go modules in one tree is
+    /// one component, and it records both `go.sum` files. The second
+    /// root's entry used to be dropped whole, path included.
+    #[test]
+    fn read_records_every_go_sum_that_declares_a_shared_module() {
+        let dir = tempfile::tempdir().unwrap();
+        for m in ["a", "b"] {
+            let root = dir.path().join(m);
+            std::fs::create_dir_all(&root).unwrap();
+            std::fs::write(
+                root.join("go.mod"),
+                format!("module example.com/{m}\ngo 1.21\nrequire example.com/shared v1.2.3\n"),
+            )
+            .unwrap();
+            std::fs::write(root.join("go.sum"), "example.com/shared v1.2.3 h1:fake=\n").unwrap();
+        }
+
+        let (entries, _) = read(dir.path(), false, &Default::default(), None);
+
+        let shared: Vec<&PackageDbEntry> =
+            entries.iter().filter(|e| e.name == "example.com/shared").collect();
+        assert_eq!(shared.len(), 1, "one component per PURL");
+        let mut paths: Vec<String> = std::iter::once(&shared[0].source_path)
+            .chain(&shared[0].extra_source_paths)
+            .cloned()
+            .collect();
+        paths.sort();
+        let expected: Vec<String> = ["a", "b"]
+            .iter()
+            .map(|m| dir.path().join(m).join("go.sum").to_string_lossy().into_owned())
+            .collect();
+        assert_eq!(paths, expected);
+    }
+
+    /// #879: two modules declaring the same `go` version share one
+    /// stdlib component. Both go.sum files are recorded on it, and both
+    /// main modules depend on it — the second root's link used to be
+    /// skipped along with its duplicate stdlib entry.
+    #[test]
+    fn read_links_every_main_module_to_a_shared_stdlib() {
+        let dir = tempfile::tempdir().unwrap();
+        for m in ["a", "b"] {
+            let root = dir.path().join(m);
+            std::fs::create_dir_all(&root).unwrap();
+            std::fs::write(
+                root.join("go.mod"),
+                format!("module example.com/{m}\ngo 1.21\nrequire example.com/shared v1.2.3\n"),
+            )
+            .unwrap();
+            std::fs::write(root.join("go.sum"), "example.com/shared v1.2.3 h1:fake=\n").unwrap();
+        }
+
+        let (entries, _) = read(dir.path(), false, &Default::default(), None);
+
+        let stdlib: Vec<&PackageDbEntry> = entries.iter().filter(|e| e.name == "stdlib").collect();
+        assert_eq!(stdlib.len(), 1);
+        assert_eq!(stdlib[0].extra_source_paths.len(), 1, "both go.sum files recorded");
+        for m in ["a", "b"] {
+            let main = entries
+                .iter()
+                .find(|e| e.name == format!("example.com/{m}"))
+                .expect("main module emitted");
+            assert!(
+                main.depends.iter().any(|d| d == "stdlib"),
+                "example.com/{m} must depend on stdlib; depends = {:?}",
+                main.depends,
+            );
+        }
     }
 
     #[test]
