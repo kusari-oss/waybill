@@ -771,7 +771,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-plugin-api/hls-plugin-api.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1029,7 +1029,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-plugin-api/hls-plugin-api.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1119,7 +1119,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-graph/hls-graph.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-plugin-api/hls-plugin-api.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-test-utils/hls-test-utils.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"shake-bench/shake-bench.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1371,7 +1371,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1467,7 +1467,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-graph/hls-graph.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-test-utils/hls-test-utils.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1557,7 +1557,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-graph/hls-graph.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-plugin-api/hls-plugin-api.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-test-utils/hls-test-utils.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"shake-bench/shake-bench.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1737,7 +1737,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1821,7 +1821,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-graph/hls-graph.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-plugin-api/hls-plugin-api.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-test-utils/hls-test-utils.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"shake-bench/shake-bench.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2289,7 +2289,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-plugin-api/hls-plugin-api.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2373,7 +2373,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-graph/hls-graph.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-plugin-api/hls-plugin-api.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-test-utils/hls-test-utils.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2643,7 +2643,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-plugin-api/hls-plugin-api.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-test-utils/hls-test-utils.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2727,7 +2727,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-graph/hls-graph.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-plugin-api/hls-plugin-api.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2817,7 +2817,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-plugin-api/hls-plugin-api.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2907,7 +2907,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-plugin-api/hls-plugin-api.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2991,7 +2991,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-graph/hls-graph.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-test-utils/hls-test-utils.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"shake-bench/shake-bench.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3081,7 +3081,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-plugin-api/hls-plugin-api.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3249,7 +3249,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3333,7 +3333,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-graph/hls-graph.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3423,7 +3423,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-graph/hls-graph.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-plugin-api/hls-plugin-api.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-test-utils/hls-test-utils.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"shake-bench/shake-bench.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3597,7 +3597,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-graph/hls-graph.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-plugin-api/hls-plugin-api.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-test-utils/hls-test-utils.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"shake-bench/shake-bench.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3777,7 +3777,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-graph/hls-graph.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -4131,7 +4131,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-plugin-api/hls-plugin-api.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -4215,7 +4215,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -4299,7 +4299,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -5157,7 +5157,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-graph/hls-graph.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-plugin-api/hls-plugin-api.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -5325,7 +5325,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -5415,7 +5415,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -6099,7 +6099,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -6441,7 +6441,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-plugin-api/hls-plugin-api.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-test-utils/hls-test-utils.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"shake-bench/shake-bench.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -6525,7 +6525,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-plugin-api/hls-plugin-api.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"shake-bench/shake-bench.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -6609,7 +6609,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-graph/hls-graph.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -6699,7 +6699,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-plugin-api/hls-plugin-api.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-test-utils/hls-test-utils.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -6789,7 +6789,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-test-utils/hls-test-utils.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -6879,7 +6879,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-plugin-api/hls-plugin-api.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-test-utils/hls-test-utils.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -7059,7 +7059,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-plugin-api/hls-plugin-api.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -7233,7 +7233,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-plugin-api/hls-plugin-api.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"shake-bench/shake-bench.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -7419,7 +7419,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-plugin-api/hls-plugin-api.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -7503,7 +7503,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-plugin-api/hls-plugin-api.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -8037,7 +8037,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-plugin-api/hls-plugin-api.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -8289,7 +8289,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -8469,7 +8469,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-plugin-api/hls-plugin-api.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -8733,7 +8733,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-plugin-api/hls-plugin-api.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -8901,7 +8901,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-test-utils/hls-test-utils.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -9069,7 +9069,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"shake-bench/shake-bench.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -9309,7 +9309,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -9483,7 +9483,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-graph/hls-graph.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-plugin-api/hls-plugin-api.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -9573,7 +9573,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-graph/hls-graph.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -9837,7 +9837,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -10005,7 +10005,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-graph/hls-graph.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-plugin-api/hls-plugin-api.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-test-utils/hls-test-utils.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -10089,7 +10089,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-test-utils/hls-test-utils.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -10173,7 +10173,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"hls-plugin-api/hls-plugin-api.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"hls-plugin-api/hls-plugin-api.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-test-utils/hls-test-utils.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -10359,7 +10359,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-plugin-api/hls-plugin-api.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-test-utils/hls-test-utils.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -10449,7 +10449,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-plugin-api/hls-plugin-api.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -10533,7 +10533,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-graph/hls-graph.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-plugin-api/hls-plugin-api.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-test-utils/hls-test-utils.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -10617,7 +10617,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-graph/hls-graph.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -10707,7 +10707,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-test-utils/hls-test-utils.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -10791,7 +10791,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-graph/hls-graph.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-plugin-api/hls-plugin-api.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-test-utils/hls-test-utils.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"shake-bench/shake-bench.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -10881,7 +10881,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-test-utils/hls-test-utils.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -10965,7 +10965,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-graph/hls-graph.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-plugin-api/hls-plugin-api.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -11055,7 +11055,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-graph/hls-graph.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-plugin-api/hls-plugin-api.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -11229,7 +11229,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-plugin-api/hls-plugin-api.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -11325,7 +11325,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-graph/hls-graph.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-plugin-api/hls-plugin-api.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -11409,7 +11409,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -11499,7 +11499,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-graph/hls-graph.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"hls-plugin-api/hls-plugin-api.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -11583,7 +11583,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"ghcide/ghcide.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"haskell-language-server.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",

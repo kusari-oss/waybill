@@ -411,7 +411,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-core/hsec-core.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-core/hsec-core.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-tools/hsec-tools.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -501,7 +501,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-tools/hsec-tools.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-tools/hsec-tools.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/osv/osv.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/purl/purl.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -777,7 +777,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/cvss/cvss.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/cvss/cvss.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-core/hsec-core.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-sync/hsec-sync.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-tools/hsec-tools.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/osv/osv.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/purl/purl.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -873,7 +873,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-sync/hsec-sync.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-sync/hsec-sync.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-tools/hsec-tools.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1419,7 +1419,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/cvss/cvss.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/cvss/cvss.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-core/hsec-core.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-tools/hsec-tools.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/purl/purl.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1683,7 +1683,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-sync/hsec-sync.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-sync/hsec-sync.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-tools/hsec-tools.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1869,7 +1869,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-sync/hsec-sync.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-sync/hsec-sync.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-tools/hsec-tools.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2049,7 +2049,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-sync/hsec-sync.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-sync/hsec-sync.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-tools/hsec-tools.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2649,7 +2649,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-sync/hsec-sync.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-sync/hsec-sync.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-tools/hsec-tools.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2925,7 +2925,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-core/hsec-core.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-core/hsec-core.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-tools/hsec-tools.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3015,7 +3015,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-sync/hsec-sync.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-sync/hsec-sync.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-tools/hsec-tools.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3273,7 +3273,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-core/hsec-core.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-core/hsec-core.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-tools/hsec-tools.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3363,7 +3363,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-tools/hsec-tools.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-tools/hsec-tools.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/purl/purl.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -4275,7 +4275,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/cvss/cvss.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/cvss/cvss.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-core/hsec-core.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-sync/hsec-sync.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-tools/hsec-tools.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/osv/osv.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/purl/purl.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -4563,7 +4563,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/cvss/cvss.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/cvss/cvss.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-core/hsec-core.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-sync/hsec-sync.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/purl/purl.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -4929,7 +4929,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/cvss/cvss.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/cvss/cvss.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-core/hsec-core.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-sync/hsec-sync.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-tools/hsec-tools.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/osv/osv.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/purl/purl.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -5025,7 +5025,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-core/hsec-core.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-core/hsec-core.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-tools/hsec-tools.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/osv/osv.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
@@ -5211,7 +5211,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-sync/hsec-sync.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"code/hsec-sync/hsec-sync.cabal\",\"sha256\":\"<masked-sha256>\"},{\"location\":\"code/hsec-tools/hsec-tools.cabal\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
