@@ -212,6 +212,12 @@ pub(crate) fn walk_file_tier(
         exclude_set: cfg.exclude_set,
     };
 
+    // #958: paths are reported relative to the canonical rootfs, at the
+    // file's resolved location. See `resolved_rel_path`.
+    let canonical_rootfs =
+        std::fs::canonicalize(rootfs).unwrap_or_else(|_| rootfs.to_path_buf());
+    let mut parent_cache: Option<(PathBuf, PathBuf)> = None;
+
     crate::scan_fs::walk::safe_walk(rootfs, &walk_cfg, |abs_path| {
         // Milestone 174 FR-002: skip file-form VCS metadata (git
         // submodule pointer file — `.git` FILE contains a `gitdir:`
@@ -246,15 +252,13 @@ pub(crate) fn walk_file_tier(
             return;
         }
 
-        // Build the rootfs-relative path. `safe_walk` hands us the
-        // absolute path; strip the rootfs prefix and clear any
-        // leading `/`.
-        let Ok(rel_abs) = abs_path.strip_prefix(rootfs) else {
+        let Some(rel_path) =
+            resolved_rel_path(abs_path, rootfs, &canonical_rootfs, &mut parent_cache)
+        else {
             // Not under rootfs (shouldn't happen given safe_walk's
             // contract, but defense-in-depth).
             return;
         };
-        let rel_path: PathBuf = rel_abs.to_path_buf();
 
         // Read first 8 bytes for the magic-number probe. 8 covers
         // every magic we check (ELF=4, PE=2, Mach-O=4, shebang=2).
@@ -334,6 +338,45 @@ pub(crate) fn walk_file_tier(
     out.sort_by(|a, b| a.sha256_hex.cmp(&b.sha256_hex));
     stats.build_dir_skipped = build_dir_skipped.get();
     (out, stats)
+}
+
+/// The rootfs-relative path of a regular file at its resolved location,
+/// independent of the route `safe_walk` took to reach it (#958).
+///
+/// On a usrmerged rootfs `lib/` is a symlink to `usr/lib/`, so one file
+/// is reachable as both `lib/x` and `usr/lib/x`. `safe_walk` descends
+/// whichever `read_dir` yields first and its visited-set drops the
+/// other; `read_dir` order is unspecified, so the literal route flipped
+/// between runs of the same image.
+///
+/// Only the parent is canonicalized: the caller has already rejected
+/// symlinks, so the file's own name needs no resolution. `safe_walk`
+/// yields a directory's files between its subdirectory descents, so a
+/// one-entry cache resolves each directory a handful of times rather
+/// than once per file. If the parent cannot be resolved, the literal
+/// route is kept.
+fn resolved_rel_path(
+    abs_path: &Path,
+    rootfs: &Path,
+    canonical_rootfs: &Path,
+    cache: &mut Option<(PathBuf, PathBuf)>,
+) -> Option<PathBuf> {
+    let literal = || abs_path.strip_prefix(rootfs).ok().map(Path::to_path_buf);
+    let (Some(parent), Some(name)) = (abs_path.parent(), abs_path.file_name()) else {
+        return literal();
+    };
+    if cache.as_ref().is_none_or(|(p, _)| p != parent) {
+        let Ok(canonical) = std::fs::canonicalize(parent) else {
+            return literal();
+        };
+        *cache = Some((parent.to_path_buf(), canonical));
+    }
+    let (_, canonical_parent) = cache.as_ref()?;
+    canonical_parent
+        .join(name)
+        .strip_prefix(canonical_rootfs)
+        .ok()
+        .map(Path::to_path_buf)
 }
 
 /// FR-005 adjacent-lockfile probe for a candidate lone manifest.
@@ -1107,5 +1150,50 @@ mod tests {
         // gates on directory base names being one of `.git`/`.hg`/
         // `.svn`, and a bare repo's own root is not named that).
         let (_entries, _stats) = walk_file_tier(tmp.path(), &cfg);
+    }
+
+    // ---- #958: arrival-route independence ----
+
+    /// A usrmerged rootfs reaches `usr/lib/...` through both `lib/` and
+    /// `usr/lib/`; `safe_walk` descends whichever `read_dir` yields
+    /// first and its visited-set drops the other. The reported path
+    /// must be the file's resolved location, not the route taken.
+    ///
+    /// `read_dir` order is unspecified, so one alias is not enough to
+    /// make this fail before the fix: APFS's hash order lists `usr`
+    /// ahead of `lib`. Sixteen aliases, created before `usr/` exists,
+    /// put at least one ahead of `usr` under lexical order, creation
+    /// order, and APFS's hash order — so the walker reaches the file
+    /// through an alias, which is the case under test.
+    #[cfg(unix)]
+    #[test]
+    fn m958_path_is_reported_at_its_resolved_location() {
+        let tmp = TempDir::new().unwrap();
+        std::os::unix::fs::symlink("usr/lib", tmp.path().join("lib")).unwrap();
+        for i in 0..16 {
+            std::os::unix::fs::symlink("usr/lib", tmp.path().join(format!("alias{i:02}")))
+                .unwrap();
+        }
+        write_file(
+            tmp.path(),
+            "usr/lib/x86_64-linux-gnu/perl/Hostname.so",
+            b"\x7FELF\x02\x01\x01\x00hostname",
+        );
+        let g = make_globs();
+        let d = empty_dedupe();
+        let cfg = WalkerConfig {
+            size_limit_bytes: 100 * 1024 * 1024,
+            exclusion_globs: &g,
+            dedupe_index: &d,
+            exclude_set: &empty_exclude(),
+            skip_build_dirs: false,
+            source_tree_restriction: None,
+        };
+        let (entries, _stats) = walk_file_tier(tmp.path(), &cfg);
+        assert_eq!(entries.len(), 1);
+        assert_eq!(
+            entries[0].paths,
+            vec![PathBuf::from("usr/lib/x86_64-linux-gnu/perl/Hostname.so")],
+        );
     }
 }
