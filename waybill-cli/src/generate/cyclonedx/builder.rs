@@ -18,6 +18,8 @@ pub struct CycloneDxConfig {
     pub include_hashes: bool,
     /// Whether to include source file paths in evidence.
     pub include_source_files: bool,
+    /// #1084: see `ScanArtifacts::scan_roots`.
+    pub scan_roots: Vec<std::path::PathBuf>,
     /// How this SBOM was produced. Gets surfaced in the CycloneDX
     /// `waybill:generation-context` property so downstream consumers can
     /// distinguish a build-time trace from a post-hoc filesystem scan.
@@ -42,6 +44,7 @@ impl Default for CycloneDxConfig {
         Self {
             include_hashes: true,
             include_source_files: false,
+            scan_roots: Vec::new(),
             generation_context: GenerationContext::BuildTimeTrace,
             include_dev: false,
             sbom_version: None,
@@ -865,6 +868,7 @@ impl CycloneDxBuilder {
             },
             MetadataExtras {
                 components: effective_components,
+                scan_roots: &self.config.scan_roots,
                 nix_closure_summary: self.nix_closure_summary.as_ref(),
                 nixpkgs_security_summary: self.nixpkgs_security_summary.as_ref(),
                 os_release_missing_fields: &self.os_release_missing_fields,
@@ -1395,7 +1399,10 @@ impl CycloneDxBuilder {
             // already-clean `source_file_paths` Vec.
             if self.config.include_source_files {
                 if let Some(value) = crate::scan_fs::sbom_path::source_files_as_json_array(
-                    &component.evidence.source_file_paths,
+                    &crate::scan_fs::sbom_path::emitted_source_files(
+                        &component.evidence.source_file_paths,
+                        &self.config.scan_roots,
+                    ),
                 ) {
                     properties.push(json!({
                         "name": "waybill:source-files",
@@ -2202,6 +2209,7 @@ mod tests {
         let config = CycloneDxConfig {
             include_hashes: false,
             include_source_files: false,
+            scan_roots: Vec::new(),
             generation_context: GenerationContext::BuildTimeTrace,
             include_dev: false,
             // Milestone 221 US4 — test default preserves pre-m221 behavior.
@@ -2934,6 +2942,7 @@ mod tests {
         let builder = CycloneDxBuilder::new(CycloneDxConfig {
             include_hashes: true,
             include_source_files: false,
+            scan_roots: Vec::new(),
             generation_context: GenerationContext::BuildTimeTrace,
             include_dev: false,
             // Milestone 221 US4 — test default preserves pre-m221 behavior.

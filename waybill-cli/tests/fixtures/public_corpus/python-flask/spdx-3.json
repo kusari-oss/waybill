@@ -8944,7 +8944,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-3EDVKEIJOXZSZ4ZU",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"path+file:///home/runner/.cache/waybill/corpus/bb69cc12b4b06266/80be49be88b534d2a72ef6bf5ea4aabf89f3305b/repo/examples/javascript\"]}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"examples/javascript\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-B5EHXR7Q6P6G4JFC",
       "type": "Annotation"
     },
@@ -12016,7 +12016,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-KMTAJBAIWOGGSM7H",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"path+file:///home/runner/.cache/waybill/corpus/bb69cc12b4b06266/80be49be88b534d2a72ef6bf5ea4aabf89f3305b/repo/examples/tutorial\"]}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"examples/tutorial\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-TUBIOX2YDGDATG5V",
       "type": "Annotation"
     },
@@ -12968,7 +12968,7 @@
       "annotationType": "other",
       "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-PRUOT2LAWKRFRQO6",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"path+file:///home/runner/.cache/waybill/corpus/bb69cc12b4b06266/80be49be88b534d2a72ef6bf5ea4aabf89f3305b/repo/examples/celery\"]}",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"examples/celery\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-4NAE2LK4YBLHHTRB",
       "type": "Annotation"
     },

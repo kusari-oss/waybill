@@ -53,6 +53,7 @@ impl SbomSerializer for CycloneDxJsonSerializer {
         let cdx_config = CycloneDxConfig {
             include_hashes: scan.include_hashes,
             include_source_files: scan.include_source_files,
+            scan_roots: scan.scan_roots.clone(),
             generation_context: scan.generation_context.clone(),
             include_dev: scan.include_dev,
             // Milestone 221 US4 — propagate operator-supplied SBOM

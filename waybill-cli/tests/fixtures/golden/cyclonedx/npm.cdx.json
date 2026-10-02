@@ -225,7 +225,7 @@
         },
         {
           "name": "waybill:source-files",
-          "value": "[\"path+file://<WORKSPACE>/tests/fixtures/npm/node-modules-walk\"]"
+          "value": "[\".\"]"
         },
         {
           "name": "waybill:workspace-member",

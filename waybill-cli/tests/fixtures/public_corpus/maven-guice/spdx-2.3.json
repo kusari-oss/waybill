@@ -400,7 +400,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/examples/guice-demo\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"examples/guice-demo\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1036,7 +1036,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/extensions\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"extensions\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1168,7 +1168,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/extensions/dagger-adapter\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"extensions/dagger-adapter\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1228,7 +1228,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/extensions/grapher\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"extensions/grapher\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1288,7 +1288,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/extensions/jmx\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"extensions/jmx\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1348,7 +1348,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/extensions/jndi\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"extensions/jndi\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1408,7 +1408,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/extensions/persist\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"extensions/persist\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1468,7 +1468,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/extensions/servlet\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"extensions/servlet\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1594,7 +1594,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/extensions/spring\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"extensions/spring\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1654,7 +1654,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/extensions/struts2\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"extensions/struts2\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1786,7 +1786,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/extensions/testlib\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"extensions/testlib\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1918,7 +1918,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo/bom\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"bom\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1978,7 +1978,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"path+file:///home/runner/.cache/waybill/corpus/1cd15ec88351ac23/b0e1d0fab0167cd555ab8d262333c1a32db7d492/repo\"]}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\".\"]}"
         },
         {
           "annotationDate": "<masked>",

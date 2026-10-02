@@ -2413,7 +2413,7 @@
         },
         {
           "name": "waybill:source-files",
-          "value": "[\"path+file:///home/runner/.cache/waybill/corpus/bb69cc12b4b06266/80be49be88b534d2a72ef6bf5ea4aabf89f3305b/repo/examples/celery\"]"
+          "value": "[\"examples/celery\"]"
         },
         {
           "name": "waybill:sbom-tier",
@@ -2582,7 +2582,7 @@
         },
         {
           "name": "waybill:source-files",
-          "value": "[\"path+file:///home/runner/.cache/waybill/corpus/bb69cc12b4b06266/80be49be88b534d2a72ef6bf5ea4aabf89f3305b/repo/examples/tutorial\"]"
+          "value": "[\"examples/tutorial\"]"
         },
         {
           "name": "waybill:sbom-tier",
@@ -3717,7 +3717,7 @@
         },
         {
           "name": "waybill:source-files",
-          "value": "[\"path+file:///home/runner/.cache/waybill/corpus/bb69cc12b4b06266/80be49be88b534d2a72ef6bf5ea4aabf89f3305b/repo/examples/javascript\"]"
+          "value": "[\"examples/javascript\"]"
         },
         {
           "name": "waybill:sbom-tier",

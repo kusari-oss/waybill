@@ -88,6 +88,41 @@ pub fn normalize_sbom_path_relative(s: &str, rootfs_root: Option<&std::path::Pat
     out
 }
 
+/// Rewrite a `path+file://<absolute dir>` main-module marker to the
+/// directory's path relative to the scan root (`.` for the root itself).
+///
+/// The pip, npm, Maven, gem, cargo and NuGet readers record a main module's
+/// source as that marker, and it stays absolute in memory: workspace
+/// tagging, `--split` and root selection all read it, and root selection's
+/// repo-root tiebreak depends on the absolute form. So it is rewritten only
+/// where `waybill:source-files` is written into a document (#1084), via
+/// [`emitted_source_files`]. Emitted as-is it carried the scanning host's
+/// absolute path in every format.
+///
+/// `roots` are the spellings of the scan root to strip — canonical and as
+/// given, since they differ wherever a symlink sits above the root (macOS
+/// `/var` -> `/private/var`). A marker outside every root, or any other
+/// string, is returned unchanged.
+pub fn relativize_path_file_marker(s: &str, roots: &[std::path::PathBuf]) -> String {
+    let Some(abs) = s.strip_prefix("path+file://") else {
+        return s.to_string();
+    };
+    let abs = std::path::Path::new(abs);
+    for root in roots {
+        if let Ok(rel) = abs.strip_prefix(root) {
+            let rel = rel.to_string_lossy().replace('\\', "/");
+            return if rel.is_empty() { ".".to_string() } else { rel };
+        }
+    }
+    s.to_string()
+}
+
+/// The `waybill:source-files` value as written into a document: each
+/// `path+file://` marker made root-relative (#1084), every other path as is.
+pub fn emitted_source_files(paths: &[String], roots: &[std::path::PathBuf]) -> Vec<String> {
+    paths.iter().map(|p| relativize_path_file_marker(p, roots)).collect()
+}
+
 /// Serialize a `source_file_paths` Vec as a JSON-encoded array string for
 /// CycloneDX `waybill:source-files` property emission. Fixes milestone-133
 /// FR-012 Defect B (pre-133 emission was a comma-separated string).
@@ -108,6 +143,30 @@ pub fn source_files_as_json_array(paths: &[String]) -> Option<String> {
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
     use super::*;
+
+    /// #1084: a main-module marker loses the host path; anything else is
+    /// left alone.
+    #[test]
+    fn path_file_markers_become_root_relative() {
+        let roots = [
+            std::path::PathBuf::from("/private/var/scan/flask"),
+            std::path::PathBuf::from("/var/scan/flask"),
+        ];
+        assert_eq!(relativize_path_file_marker("path+file:///private/var/scan/flask", &roots), ".");
+        assert_eq!(
+            relativize_path_file_marker("path+file:///private/var/scan/flask/examples/celery", &roots),
+            "examples/celery"
+        );
+        // The non-canonical spelling of the same root.
+        assert_eq!(relativize_path_file_marker("path+file:///var/scan/flask/docs", &roots), "docs");
+        // Not under the root: unchanged, rather than guessed at.
+        assert_eq!(
+            relativize_path_file_marker("path+file:///elsewhere/x", &roots),
+            "path+file:///elsewhere/x"
+        );
+        // Not a marker.
+        assert_eq!(relativize_path_file_marker("examples/celery/pyproject.toml", &roots), "examples/celery/pyproject.toml");
+    }
     use std::path::PathBuf;
 
     #[test]

@@ -178,6 +178,7 @@ pub async fn execute(args: GenerateArgs, offline: bool) -> anyhow::Result<()> {
     let cdx_config = CycloneDxConfig {
         include_hashes: !args.no_hashes,
         include_source_files: matches!(args.scope, SbomScope::Source),
+        scan_roots: Vec::new(),
         generation_context: waybill_common::attestation::metadata::GenerationContext::BuildTimeTrace,
         // Trace-mode doesn't distinguish dev/prod at capture time.
         include_dev: false,

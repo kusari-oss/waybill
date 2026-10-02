@@ -9038,7 +9038,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"path+file:///home/runner/.cache/waybill/corpus/4e02caff677ff9c0/da76d5dbb407d82c136cfe8f18dc06f3c8a440e5/repo\"]"
+          "value": "[\".\"]"
         },
         {
           "name": "waybill:sbom-tier",
