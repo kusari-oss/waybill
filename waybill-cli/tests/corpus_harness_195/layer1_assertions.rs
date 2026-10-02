@@ -177,6 +177,112 @@ pub fn go_cobra_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
 }
 
 // -----------------------------------------------------------------------
+// go-opentelemetry (#879)
+// -----------------------------------------------------------------------
+
+/// `go.sum` locations in a component's `evidence.occurrences`.
+fn go_sum_occurrences(c: &serde_json::Value) -> usize {
+    c.pointer("/evidence/occurrences")
+        .and_then(|o| o.as_array())
+        .map(|os| {
+            os.iter()
+                .filter(|o| {
+                    o.get("location")
+                        .and_then(|l| l.as_str())
+                        .is_some_and(|l| l.ends_with("go.sum"))
+                })
+                .count()
+        })
+        .unwrap_or(0)
+}
+
+pub fn go_opentelemetry_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
+    let empty = Vec::new();
+    let components = sboms
+        .cdx
+        .get("components")
+        .and_then(|c| c.as_array())
+        .unwrap_or(&empty);
+
+    // The tree's Go modules. The harness's `--root-name` demotes each one,
+    // so they carry `waybill:demoted-from-main-module`. Counted from the
+    // document, not hardcoded — and from the modules rather than from
+    // distinct go.sum locations, which the #879 defect itself shrinks
+    // (8 instead of 29 before #1066).
+    let modules: Vec<&str> = components
+        .iter()
+        .filter(|c| {
+            c.get("purl").and_then(|p| p.as_str()).is_some_and(|p| p.starts_with("pkg:golang/"))
+                && c.get("properties").and_then(|p| p.as_array()).is_some_and(|ps| {
+                    ps.iter().any(|p| {
+                        p.get("name").and_then(|n| n.as_str())
+                            == Some("waybill:demoted-from-main-module")
+                    })
+                })
+        })
+        .filter_map(|c| c.get("bom-ref").and_then(|r| r.as_str()))
+        .collect();
+    if modules.len() < 2 {
+        return Err(AssertionFailure {
+            invariant_name: "multi-module-tree",
+            format: FailureFormat::Cdx,
+            observed: format!("{} Go module(s)", modules.len()),
+            expected: "at least 2 — the target exists to exercise several modules".to_string(),
+            suggested_action: "the scan no longer sees opentelemetry-go's nested modules — check Go project-root discovery before reading the assertions below as meaningful",
+        });
+    }
+
+    // Assertion 1 (#879): a dependency every module declares records every
+    // declaring go.sum. `testify` is required by all of opentelemetry-go's
+    // modules at the pinned SHA. Before #1066 only the first root's entry
+    // survived, so this was 1.
+    let widest = components
+        .iter()
+        .filter(|c| {
+            c.get("purl")
+                .and_then(|p| p.as_str())
+                .is_some_and(|p| p.starts_with("pkg:golang/") && !p.starts_with("pkg:golang/stdlib@"))
+        })
+        .map(go_sum_occurrences)
+        .max()
+        .unwrap_or(0);
+    if widest != modules.len() {
+        return Err(AssertionFailure {
+            invariant_name: "shared-module-records-every-go-sum",
+            format: FailureFormat::Cdx,
+            observed: format!("widest dependency records {widest} go.sum files"),
+            expected: format!("{} — testify is declared by every module", modules.len()),
+            suggested_action: "a later project root's entry is being dropped instead of adding its path — see golang/legacy.rs `seen_purls` and #879",
+        });
+    }
+
+    // Assertion 2 (#879): every module sharing the tree's `go` version links
+    // to stdlib. Before #1066, 2 of 29.
+    let unlinked: Vec<&str> = modules
+        .iter()
+        .copied()
+        .filter(|m| {
+            !cdx_has_edge(&sboms.cdx, |from| from == *m, |to| to.starts_with("pkg:golang/stdlib@"))
+        })
+        .collect();
+    if !unlinked.is_empty() {
+        return Err(AssertionFailure {
+            invariant_name: "every-module-links-stdlib",
+            format: FailureFormat::Cdx,
+            observed: format!(
+                "{} of {} modules lack a stdlib edge: {:?}",
+                unlinked.len(),
+                modules.len(),
+                unlinked.iter().take(5).collect::<Vec<_>>(),
+            ),
+            expected: "every module with an edge to pkg:golang/stdlib@v*".to_string(),
+            suggested_action: "a repeat `go` version is skipping its root before the stdlib link — see the stdlib loop in golang/legacy.rs and #879",
+        });
+    }
+    Ok(())
+}
+
+// -----------------------------------------------------------------------
 // rust-ripgrep (US2)
 // -----------------------------------------------------------------------
 
