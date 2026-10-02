@@ -209,6 +209,22 @@ fn walk_mask(v: &mut serde_json::Value) {
                 }
             }
 
+            // SPDX 2.3 `externalDocumentRefs[].checksum` is the SHA-256 of
+            // another document waybill wrote in the same run — today only
+            // the OpenVEX sidecar, which records its creation `timestamp` and
+            // waybill's version, so its hash rotates every run by
+            // construction. First seen on `nix-closure-moat`, the first
+            // target that emits a sidecar: two CI regenerations of one pinned
+            // tree differed in exactly this value. Scoped to this array so
+            // package and file checksums are still compared.
+            if let Some(refs) = map.get_mut("externalDocumentRefs").and_then(|v| v.as_array_mut()) {
+                for r in refs {
+                    if let Some(c) = r.pointer_mut("/checksum/checksumValue") {
+                        *c = serde_json::Value::String("<masked>".to_string());
+                    }
+                }
+            }
+
             // #918 — the TOOL's own version, and only the tool's.
             //
             // waybill's version is baked into every emitted document, so a
@@ -407,6 +423,26 @@ fn mask_doc_prefix(s: &str) -> String {
 mod m865_masking_tests {
     use super::*;
     use serde_json::json;
+
+    /// The sidecar's hash is masked; a package checksum is not.
+    #[test]
+    fn external_document_ref_checksums_are_masked_and_package_checksums_are_not() {
+        let doc = json!({
+            "externalDocumentRefs": [{
+                "externalDocumentId": "DocumentRef-OpenVEX",
+                "checksum": {"algorithm": "SHA256", "checksumValue": "dd6f3de3"},
+                "spdxDocument": "waybill.openvex.json"
+            }],
+            "packages": [{
+                "SPDXID": "SPDXRef-Package-x",
+                "checksums": [{"algorithm": "SHA256", "checksumValue": "abc123"}]
+            }]
+        });
+        let m = mask_nondeterministic(&doc);
+        assert_eq!(m["externalDocumentRefs"][0]["checksum"]["checksumValue"], "<masked>");
+        assert_eq!(m["externalDocumentRefs"][0]["spdxDocument"], "waybill.openvex.json");
+        assert_eq!(m["packages"][0]["checksums"][0]["checksumValue"], "abc123");
+    }
 
     /// #1067: outside regen mode a missing golden fails, and nothing is
     /// written. It used to be written from whatever machine ran the test,
