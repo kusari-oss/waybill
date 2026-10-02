@@ -78,6 +78,7 @@ pub(super) fn synthesize_workspace_root(
     );
 
     Some(PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         build_inclusion: None,
         purl,

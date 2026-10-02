@@ -526,6 +526,7 @@ fn read_one_project(scan_root: &Path, project_path: &Path) -> Vec<PackageDbEntry
             .unwrap_or_else(|| project_path.to_string_lossy().to_string());
 
         out.push(PackageDbEntry {
+            extra_source_paths: Vec::new(),
             depends_ecosystem: None,
             build_inclusion: None,
             purl,
@@ -788,6 +789,7 @@ fn build_nuget_main_module_entry(
         // PURL is already `pkg:nuget/...` so the recording is a no-op, and
         // making it conditional would mean the correctness of these edges
         // depended on whether a version happened to resolve.
+        extra_source_paths: Vec::new(),
         depends_ecosystem: Some("nuget".to_string()),
         build_inclusion: None,
         purl,

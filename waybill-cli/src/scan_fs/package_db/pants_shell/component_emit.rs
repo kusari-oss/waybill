@@ -120,6 +120,7 @@ pub(crate) fn script_to_package_db_entry(
     let hash = ContentHash::sha256(&sha256_full).ok()?;
 
     Some(PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         purl,
         name: basename.to_string(),
@@ -205,6 +206,7 @@ pub(crate) fn tool_to_package_db_entry(
     );
 
     Some(PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         purl,
         name: tool_name.to_string(),

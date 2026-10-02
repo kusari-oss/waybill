@@ -242,6 +242,7 @@ pub fn read(scan_root: &Path, _exclude_set: &ExclusionSet) -> Vec<PackageDbEntry
         json!("pants_go expected_version declared; no matching go corpus component"),
     );
     vec![PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         purl,
         name: "go".to_string(),

@@ -309,6 +309,7 @@ fn build_layer_root_entry(layer: &super::layer_conf::LayerConf) -> PackageDbEntr
     }
 
     PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         build_inclusion: None,
         purl,
@@ -799,6 +800,7 @@ fn process_recipe(
     }
 
     Some(PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         build_inclusion: None,
         purl,

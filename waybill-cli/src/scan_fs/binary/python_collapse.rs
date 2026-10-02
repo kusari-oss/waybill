@@ -122,15 +122,11 @@ impl PythonStdlibCollapser {
                     waybill_common::types::purl::encode_purl_segment(&version),
                 );
                 let purl = Purl::new(&purl_str).ok()?;
-                // Join paths with "| " — the scan_fs conversion uses
-                // source_path as evidence.source_file_paths[0] and we
-                // retain the full list as a single field for now.
-                let source_path = paths
-                    .iter()
-                    .map(|p| p.to_string_lossy().into_owned())
-                    .collect::<Vec<_>>()
-                    .join("; ");
+                // #1060: every interpreter is a separate source path.
+                let mut paths = paths.iter().map(|p| p.to_string_lossy().into_owned());
+                let source_path = paths.next().unwrap_or_default();
                 Some(PackageDbEntry {
+                    extra_source_paths: paths.collect(),
                     depends_ecosystem: None,
                     build_inclusion: None,
                     purl,

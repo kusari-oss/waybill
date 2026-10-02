@@ -1879,6 +1879,7 @@ fn build_freeze_component(entry: &CabalFreezeEntry) -> PackageDbEntry {
             let mut extra_annotations = base_annotations("hackage-freeze");
             apply_ghc_stdlib_annotation(&mut extra_annotations, name);
             PackageDbEntry {
+                extra_source_paths: Vec::new(),
                 depends_ecosystem: None,
                 purl,
                 name: name.clone(),
@@ -1941,6 +1942,7 @@ fn build_freeze_component(entry: &CabalFreezeEntry) -> PackageDbEntry {
                 serde_json::Value::String(REASON_FREEZE_RANGE_NOT_PIN.to_string()),
             );
             PackageDbEntry {
+                extra_source_paths: Vec::new(),
                 depends_ecosystem: None,
                 purl,
                 name: name.clone(),
@@ -1982,6 +1984,7 @@ fn build_stack_lock_component(entry: &StackLockEntry) -> PackageDbEntry {
     let mut extra_annotations = base_annotations("hackage-stack-lock");
     apply_ghc_stdlib_annotation(&mut extra_annotations, &entry.name);
     PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         purl,
         name: entry.name.clone(),
@@ -2049,6 +2052,7 @@ fn build_snapshot_placeholder(snapshot: &StackSnapshot) -> PackageDbEntry {
         "design"
     };
     PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         purl,
         name: snapshot.resolver.clone(),
@@ -2138,6 +2142,7 @@ fn build_main_module(
     let sbom_tier = if has_lockfile { "source" } else { "design" };
 
     Some(PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         purl,
         name,
@@ -2362,6 +2367,7 @@ fn build_design_tier_components(
             serde_json::Value::String(reason.to_string()),
         );
         out.push(PackageDbEntry {
+            extra_source_paths: Vec::new(),
             depends_ecosystem: None,
             purl,
             name: dep.name.clone(),

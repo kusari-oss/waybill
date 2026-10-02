@@ -680,6 +680,7 @@ fn append_synthetic_built_in_gems(
         }
 
         let entry = PackageDbEntry {
+            extra_source_paths: Vec::new(),
             depends_ecosystem: None,
             build_inclusion: None,
             purl,
@@ -741,6 +742,7 @@ fn spec_to_entry(
     // Extract `.name` for edge construction.
     let depends: Vec<String> = spec.depends.iter().map(|d| d.name.clone()).collect();
     Some(PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         build_inclusion: None,
         purl,
@@ -786,6 +788,7 @@ fn gemspec_to_entry(
 ) -> Option<PackageDbEntry> {
     let purl = build_gem_purl(name, version)?;
     Some(PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         build_inclusion: None,
         purl,
@@ -1507,6 +1510,7 @@ fn build_gem_main_module_entry(gemspec_path: &Path) -> Option<PackageDbEntry> {
     let groups = parse_gemspec_groups(gemspec_path);
     let depends: Vec<String> = groups.into_keys().collect();
     Some(PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         build_inclusion: None,
         purl,
@@ -1793,6 +1797,7 @@ fn build_gem_application_main_module_entry(
         // bundler-managed application is not a published gem; without the
         // recording the resolver looks for gem names in the `generic`
         // ecosystem and silently drops every one of them.
+        extra_source_paths: Vec::new(),
         depends_ecosystem: Some("gem".to_string()),
         build_inclusion: None,
         purl,
@@ -2894,6 +2899,7 @@ end
             serde_json::Value::String("main-module".to_string()),
         );
         PackageDbEntry {
+            extra_source_paths: Vec::new(),
             depends_ecosystem: None,
             build_inclusion: None,
             purl,

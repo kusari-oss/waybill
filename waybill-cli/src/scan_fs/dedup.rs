@@ -309,6 +309,7 @@ mod tests {
             canonical_purl: purl.to_string(),
             source_mechanism: sm,
             reader_output: PackageDbEntry {
+                extra_source_paths: Vec::new(),
                 depends_ecosystem: None,
                 build_inclusion: None,
                 purl: Purl::new(purl).unwrap(),

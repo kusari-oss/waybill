@@ -414,6 +414,7 @@ fn emit_main_module(
     };
 
     Some(PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         purl,
         name: pubspec_yaml.name.clone(),
@@ -505,6 +506,7 @@ fn emit_lockfile_entries(
         let extra_annotations = build_extra_annotations(entry, source_type_value);
 
         out.push(PackageDbEntry {
+            extra_source_paths: Vec::new(),
             depends_ecosystem: None,
             purl,
             name: name.clone(),
@@ -602,6 +604,7 @@ fn emit_design_tier_components(
         );
 
         out.push(PackageDbEntry {
+            extra_source_paths: Vec::new(),
             depends_ecosystem: None,
             purl,
             name: name.clone(),

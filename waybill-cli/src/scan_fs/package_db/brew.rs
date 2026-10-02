@@ -282,6 +282,7 @@ fn receipt_to_entry(
         .collect();
 
     Some(PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         purl,
         name: formula_name.to_string(),
@@ -326,6 +327,7 @@ fn cask_to_entry(
     let purl = build_brew_purl(&meta.token, &meta.version, None, BrewKind::Cask)?;
 
     Some(PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         purl,
         name: meta.token.clone(),

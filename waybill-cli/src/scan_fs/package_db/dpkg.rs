@@ -306,6 +306,7 @@ fn parse_stanza_inner(
         .filter(|s| !s.is_empty());
 
     Some(PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         build_inclusion: None,
         purl,

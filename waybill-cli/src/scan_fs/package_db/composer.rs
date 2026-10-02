@@ -578,6 +578,7 @@ fn emit_main_module(
     depends.extend(manifest.require_dev.keys().cloned());
 
     Some(PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         purl,
         name: name.to_string(),
@@ -744,6 +745,7 @@ fn build_entry_from_lockfile_package(
     };
 
     Some(PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         purl,
         name: pkg.name.clone(),
@@ -830,6 +832,7 @@ fn emit_design_tier_components(
         );
 
         out.push(PackageDbEntry {
+            extra_source_paths: Vec::new(),
             depends_ecosystem: None,
             purl,
             name: name.clone(),

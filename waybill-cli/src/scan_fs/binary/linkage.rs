@@ -147,18 +147,19 @@ impl LinkageAggregator {
 
         records
             .into_iter()
-            .map(|(soname, rec)| PackageDbEntry {
+            .map(|(soname, rec)| {
+                // #1060: every linking binary is a separate source path.
+                let mut parents = rec.parents.into_iter();
+                let source_path = parents.next().unwrap_or_default();
+                PackageDbEntry {
+                extra_source_paths: parents.collect(),
                 depends_ecosystem: None,
                 build_inclusion: None,
                 purl: rec.purl,
                 name: soname,
                 version: String::new(),
                 arch: None,
-                // Multiple occurrences land in source_path as semicolon-
-                // separated list. The scan_fs conversion turns the first
-                // entry into evidence.source_file_paths[0]; future work
-                // can split into a full occurrences array.
-                source_path: rec.parents.join("; "),
+                source_path,
                 depends: Vec::new(),
                 maintainer: None,
                 licenses: vec![],
@@ -182,6 +183,7 @@ impl LinkageAggregator {
                 hashes: Vec::new(),
                 extra_annotations: Default::default(),
                 binary_role: None,
+                }
             })
             .collect()
     }
@@ -233,10 +235,9 @@ mod tests {
         assert_eq!(libssl.purl.as_str(), "pkg:generic/libssl.so.3");
         assert_eq!(libssl.evidence_kind.as_deref(), Some("dynamic-linkage"));
         assert_eq!(libssl.sbom_tier.as_deref(), Some("analyzed"));
-        // All three parent paths preserved.
-        assert!(libssl.source_path.contains("/bin/app1"));
-        assert!(libssl.source_path.contains("/bin/app2"));
-        assert!(libssl.source_path.contains("/bin/app3"));
+        // All three parent paths preserved, each as its own path (#1060).
+        assert_eq!(libssl.source_path, "/bin/app1");
+        assert_eq!(libssl.extra_source_paths, vec!["/bin/app2", "/bin/app3"]);
     }
 
     #[test]
@@ -248,6 +249,7 @@ mod tests {
         assert_eq!(entries.len(), 1);
         // Single parent in source_path.
         assert_eq!(entries[0].source_path, "/bin/app");
+        assert!(entries[0].extra_source_paths.is_empty());
     }
 
     #[test]
