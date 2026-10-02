@@ -412,7 +412,7 @@ Auto-generated from all feature plans. Last updated: 2026-09-30
   from the dep graph and nightly + bpf-linker are not required. When on
   (Linux + `--features ebpf-tracing`), build the kernel-side artifact
   first via `cargo run -p xtask -- ebpf`, then test with
-  `cargo +stable test --workspace --features ebpf-tracing`. Local pre-PR
+  `cargo +stable test --workspace --no-fail-fast --features ebpf-tracing`. Local pre-PR
   opt-in: `WAYBILL_PREPR_EBPF=1 ./scripts/pre-pr.sh`. CI runs the
   feature-on path in the dedicated `lint-and-test-ebpf` job. See
   `specs/020-ebpf-feature-gate/contracts/feature-flag.md` for the full
@@ -473,7 +473,7 @@ Before opening any PR, BOTH of these MUST pass locally — not one, not
 a subset, BOTH:
 
 1. `cargo +stable clippy --workspace --all-targets` — zero errors
-2. `cargo +stable test --workspace` — every suite `ok. N passed; 0 failed`
+2. `cargo +stable test --workspace --no-fail-fast` — every suite `ok. N passed; 0 failed`
 
 `./scripts/pre-pr.sh` runs both in order and exits non-zero on the
 first failure — preferred over invoking them by hand so the flag

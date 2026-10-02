@@ -47,7 +47,7 @@ fi
 steps=(
     "python3 scripts/check-homoglyphs.py"
     "cargo +stable clippy --workspace --all-targets ${feature_args[*]:-} -- -D warnings"
-    "cargo +stable test --workspace ${feature_args[*]:-}"
+    "cargo +stable test --workspace --no-fail-fast ${feature_args[*]:-}"
 )
 
 for cmd in "${steps[@]}"; do
