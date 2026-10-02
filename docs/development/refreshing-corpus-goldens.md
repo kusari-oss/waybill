@@ -37,6 +37,11 @@ harness checks to write goldens instead of comparing them. Running the
 corpus tests locally *without* it only compares, and is fine. Building
 and running `xtask corpus-diff` locally is fine — steps below require it.
 
+That includes a target whose goldens do not exist yet: run locally, it
+fails with `layer2-golden-missing` once its Layer 0 and Layer 1 checks
+have passed, and writes nothing. Until #1067 it wrote the missing goldens
+from your machine and passed.
+
 This is not hypothetical:
 
 - **#818** — a perf baseline recorded on an arm64 macOS laptop and
