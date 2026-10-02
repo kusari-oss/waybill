@@ -590,3 +590,44 @@ fn t015b_sc004_single_project_byte_identity_gate_semantic() {
         "SC-008 single-project: single-workspace scan MUST emit C121 = [\".\"]; got {detected:?}"
     );
 }
+
+/// #759 — a binary found by walking is not a workspace member (FR-002).
+///
+/// Before the fix, every binary-tier component took the directory of
+/// the executable it was found in as its "workspace": a virtualenv's
+/// `bin/` reported `.lefthook-venvs/<hook>/bin` (and, through the
+/// joined linkage paths, `bin/python3`) as a declared workspace. Any
+/// real executable reproduces it; `/bin/ls` exists on every Unix CI
+/// host, whatever its format.
+#[cfg(unix)]
+#[test]
+fn t759_binary_tier_components_are_not_workspace_members() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    std::fs::write(dir.path().join("requirements.txt"), "requests==2.31.0\n").expect("write");
+    let bin_dir = dir.path().join(".lefthook-venvs/check-data-dependencies/bin");
+    std::fs::create_dir_all(&bin_dir).expect("mkdir");
+    std::fs::copy("/bin/ls", bin_dir.join("python3")).expect("copy executable");
+
+    let (sbom, stderr) = scan_cdx(dir.path());
+
+    let analyzed: Vec<&serde_json::Value> = sbom["components"]
+        .as_array()
+        .expect("components")
+        .iter()
+        .filter(|c| {
+            c["properties"].as_array().is_some_and(|ps| {
+                ps.iter().any(|p| p["name"] == "waybill:sbom-tier" && p["value"] == "analyzed")
+            })
+        })
+        .collect();
+    // The control: without a binary-tier component the assertions
+    // below would pass for the wrong reason.
+    assert!(!analyzed.is_empty(), "fixture must yield a binary-tier component; stderr={stderr}");
+    for c in &analyzed {
+        let tagged = c["properties"]
+            .as_array()
+            .is_some_and(|ps| ps.iter().any(|p| p["name"] == "waybill:workspace-member"));
+        assert!(!tagged, "binary-tier component carries workspace-member: {c}");
+    }
+    assert_eq!(doc_scope_workspaces_detected(&sbom), Some(vec![".".to_string()]));
+}
