@@ -56,6 +56,13 @@ pub(super) fn discover_binaries(
         },
         exclude_set,
     };
+    // #1056: report each binary at its resolved location under `root`,
+    // not the route the walk took — a usrmerged `lib/` alias would
+    // otherwise flip the recorded path between runs of one image. Joined
+    // back onto `root` (not canonicalized whole) so the later
+    // root-relative normalisation still strips the prefix the caller
+    // passed.
+    let mut resolved = crate::scan_fs::walk::ResolvedPaths::new(root);
     crate::scan_fs::walk::safe_walk(root, &cfg, |path| {
         // Fast-path skip: claimed by an OS-package reader ⇒ definitely
         // not an unattributed binary. Saves the file-open + magic-byte
@@ -64,7 +71,13 @@ pub(super) fn discover_binaries(
             return;
         }
         if path.is_file() && is_supported_binary(path) {
-            out.push(path.to_path_buf());
+            let reported = resolved
+                .relative(path)
+                .map(|rel| root.join(rel))
+                .unwrap_or_else(|| path.to_path_buf());
+            if !claimed_paths.contains(&reported) {
+                out.push(reported);
+            }
         }
     });
     out
@@ -143,5 +156,30 @@ mod tests {
             &crate::scan_fs::package_db::exclude_path::ExclusionSet::default(),
         );
         assert!(result.is_empty());
+    }
+
+    /// #1056: a binary reachable through a symlinked directory is
+    /// reported at its resolved location under the root, not via the
+    /// route `safe_walk` happened to take. Sixteen aliases so at least one
+    /// is listed ahead of `usr` under lexical, creation, and APFS hash
+    /// order (see `file_tier::walker::m958_path_is_reported_at_its_resolved_location`).
+    #[test]
+    fn binary_is_reported_at_its_resolved_location() {
+        let tmp = tempfile::tempdir().unwrap();
+        std::os::unix::fs::symlink("usr/lib", tmp.path().join("lib")).unwrap();
+        for i in 0..16 {
+            std::os::unix::fs::symlink("usr/lib", tmp.path().join(format!("alias{i:02}")))
+                .unwrap();
+        }
+        let real = tmp.path().join("usr/lib/app");
+        std::fs::create_dir_all(&real).unwrap();
+        std::fs::write(real.join("tool"), b"\x7FELF\x02\x01\x01\x00binary").unwrap();
+
+        let result = discover_binaries(
+            tmp.path(),
+            &std::collections::HashSet::new(),
+            &crate::scan_fs::package_db::exclude_path::ExclusionSet::default(),
+        );
+        assert_eq!(result, vec![tmp.path().join("usr/lib/app/tool")]);
     }
 }

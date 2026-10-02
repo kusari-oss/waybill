@@ -212,11 +212,9 @@ pub(crate) fn walk_file_tier(
         exclude_set: cfg.exclude_set,
     };
 
-    // #958: paths are reported relative to the canonical rootfs, at the
-    // file's resolved location. See `resolved_rel_path`.
-    let canonical_rootfs =
-        std::fs::canonicalize(rootfs).unwrap_or_else(|_| rootfs.to_path_buf());
-    let mut parent_cache: Option<(PathBuf, PathBuf)> = None;
+    // #958: paths are reported at the file's resolved location, not the
+    // route the walk took. See `walk::ResolvedPaths`.
+    let mut resolved = crate::scan_fs::walk::ResolvedPaths::new(rootfs);
 
     crate::scan_fs::walk::safe_walk(rootfs, &walk_cfg, |abs_path| {
         // Milestone 174 FR-002: skip file-form VCS metadata (git
@@ -252,9 +250,7 @@ pub(crate) fn walk_file_tier(
             return;
         }
 
-        let Some(rel_path) =
-            resolved_rel_path(abs_path, rootfs, &canonical_rootfs, &mut parent_cache)
-        else {
+        let Some(rel_path) = resolved.relative(abs_path) else {
             // Not under rootfs (shouldn't happen given safe_walk's
             // contract, but defense-in-depth).
             return;
@@ -338,45 +334,6 @@ pub(crate) fn walk_file_tier(
     out.sort_by(|a, b| a.sha256_hex.cmp(&b.sha256_hex));
     stats.build_dir_skipped = build_dir_skipped.get();
     (out, stats)
-}
-
-/// The rootfs-relative path of a regular file at its resolved location,
-/// independent of the route `safe_walk` took to reach it (#958).
-///
-/// On a usrmerged rootfs `lib/` is a symlink to `usr/lib/`, so one file
-/// is reachable as both `lib/x` and `usr/lib/x`. `safe_walk` descends
-/// whichever `read_dir` yields first and its visited-set drops the
-/// other; `read_dir` order is unspecified, so the literal route flipped
-/// between runs of the same image.
-///
-/// Only the parent is canonicalized: the caller has already rejected
-/// symlinks, so the file's own name needs no resolution. `safe_walk`
-/// yields a directory's files between its subdirectory descents, so a
-/// one-entry cache resolves each directory a handful of times rather
-/// than once per file. If the parent cannot be resolved, the literal
-/// route is kept.
-fn resolved_rel_path(
-    abs_path: &Path,
-    rootfs: &Path,
-    canonical_rootfs: &Path,
-    cache: &mut Option<(PathBuf, PathBuf)>,
-) -> Option<PathBuf> {
-    let literal = || abs_path.strip_prefix(rootfs).ok().map(Path::to_path_buf);
-    let (Some(parent), Some(name)) = (abs_path.parent(), abs_path.file_name()) else {
-        return literal();
-    };
-    if cache.as_ref().is_none_or(|(p, _)| p != parent) {
-        let Ok(canonical) = std::fs::canonicalize(parent) else {
-            return literal();
-        };
-        *cache = Some((parent.to_path_buf(), canonical));
-    }
-    let (_, canonical_parent) = cache.as_ref()?;
-    canonical_parent
-        .join(name)
-        .strip_prefix(canonical_rootfs)
-        .ok()
-        .map(Path::to_path_buf)
 }
 
 /// FR-005 adjacent-lockfile probe for a candidate lone manifest.

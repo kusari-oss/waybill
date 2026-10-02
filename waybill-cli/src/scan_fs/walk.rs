@@ -182,6 +182,58 @@ pub(crate) fn safe_walk<F: FnMut(&Path)>(rootfs: &Path, cfg: &WalkConfig, mut vi
     walk_inner(rootfs, rootfs, &canonical_rootfs, 0, cfg, &mut visit, &mut visited);
 }
 
+/// A walked file's root-relative path at its resolved location,
+/// independent of the route `safe_walk` took to reach it.
+///
+/// On a usrmerged rootfs `lib/` is a symlink to `usr/lib/`, so one file
+/// is reachable as both `lib/x` and `usr/lib/x`. `safe_walk` descends
+/// whichever `read_dir` yields first and its visited-set drops the
+/// other; `read_dir` order is unspecified, so a caller recording the
+/// literal route reported different paths for the same image (#958,
+/// #1056).
+///
+/// Only the parent is canonicalized, so a file that is itself a
+/// symlink keeps its own name. `safe_walk` yields a directory's files
+/// between its subdirectory descents, so the one-entry cache resolves
+/// each directory a handful of times rather than once per file. If the
+/// parent cannot be resolved, the literal route is kept.
+pub(crate) struct ResolvedPaths {
+    root: PathBuf,
+    canonical_root: PathBuf,
+    last_parent: Option<(PathBuf, PathBuf)>,
+}
+
+impl ResolvedPaths {
+    pub(crate) fn new(root: &Path) -> Self {
+        Self {
+            root: root.to_path_buf(),
+            canonical_root: std::fs::canonicalize(root).unwrap_or_else(|_| root.to_path_buf()),
+            last_parent: None,
+        }
+    }
+
+    /// `abs_path` relative to the root, at its resolved location.
+    /// `None` only when the path is not under the root at all.
+    pub(crate) fn relative(&mut self, abs_path: &Path) -> Option<PathBuf> {
+        let literal = || abs_path.strip_prefix(&self.root).ok().map(Path::to_path_buf);
+        let (Some(parent), Some(name)) = (abs_path.parent(), abs_path.file_name()) else {
+            return literal();
+        };
+        if self.last_parent.as_ref().is_none_or(|(p, _)| p != parent) {
+            let Ok(canonical) = std::fs::canonicalize(parent) else {
+                return literal();
+            };
+            self.last_parent = Some((parent.to_path_buf(), canonical));
+        }
+        let (_, canonical_parent) = self.last_parent.as_ref()?;
+        canonical_parent
+            .join(name)
+            .strip_prefix(&self.canonical_root)
+            .ok()
+            .map(Path::to_path_buf)
+    }
+}
+
 fn walk_inner<F: FnMut(&Path)>(
     dir: &Path,
     rootfs: &Path,
