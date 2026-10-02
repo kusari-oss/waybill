@@ -1582,6 +1582,16 @@ pub fn tag_components_with_workspace_member(
     scan_root_abs: &Path,
 ) {
     for c in components.iter_mut() {
+        // #759: a binary found by walking was not declared by any
+        // workspace's manifest, so it is not a member of one (m176
+        // FR-002). Its source path is the executable itself, and the
+        // executable's directory — a virtualenv's `bin/`, an image's
+        // `usr/local/bin` — is not a workspace. A component detected in
+        // both tiers survives dedup with the manifest tier, so it is
+        // still tagged.
+        if c.sbom_tier.as_deref() == Some("analyzed") {
+            continue;
+        }
         let workspaces: std::collections::BTreeSet<String> = c
             .evidence
             .source_file_paths
