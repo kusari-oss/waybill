@@ -703,6 +703,7 @@ where
             );
         }
         out.push(PackageDbEntry {
+            extra_source_paths: Vec::new(),
             depends_ecosystem: None,
             build_inclusion: None,
             purl,
@@ -756,6 +757,7 @@ fn build_stdlib_entry(
         Err(_) => return None,
     };
     Some(PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         build_inclusion: None,
         purl,
@@ -1052,6 +1054,7 @@ pub(crate) fn build_main_module_entry(
     let licenses = detect_main_module_license(project_root);
 
     Some(PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         build_inclusion: None,
         purl,
@@ -4483,6 +4486,7 @@ func TestX(t *testing.T) { _ = lib.X() }"#,
 
     fn make_go_entry_for_stamp(name: &str, version: &str) -> PackageDbEntry {
         PackageDbEntry {
+            extra_source_paths: Vec::new(),
             depends_ecosystem: None,
             build_inclusion: None,
             purl: waybill_common::types::purl::Purl::new(&format!(
@@ -4614,6 +4618,7 @@ func TestX(t *testing.T) { _ = lib.X() }"#,
         // SC-003 dual-side byte-identity guard: no annotation emission
         // on non-Go entries.
         let mut entry = PackageDbEntry {
+            extra_source_paths: Vec::new(),
             depends_ecosystem: None,
             build_inclusion: None,
             purl: waybill_common::types::purl::Purl::new(

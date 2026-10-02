@@ -1081,6 +1081,7 @@ fn emit_main_module(
     }
 
     Some(PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         purl,
         name: app_name,
@@ -1186,6 +1187,7 @@ fn emit_lockfile_components(
         };
 
         out.push(PackageDbEntry {
+            extra_source_paths: Vec::new(),
             depends_ecosystem: None,
             purl,
             name,
@@ -1328,6 +1330,7 @@ fn emit_design_tier_components(
         };
 
         out.push(PackageDbEntry {
+            extra_source_paths: Vec::new(),
             depends_ecosystem: None,
             purl,
             name: decl.name.clone(),

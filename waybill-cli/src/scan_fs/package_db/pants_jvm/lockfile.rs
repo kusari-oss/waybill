@@ -423,6 +423,7 @@ pub(crate) fn entry_to_package_db_entry(
     }
 
     Some(PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         purl,
         name: artifact.to_string(),

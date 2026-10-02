@@ -421,6 +421,7 @@ pub(crate) fn resolve_component_entry(
     );
 
     Some(PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: Some("pypi".to_string()),
         build_inclusion: None,
         purl,
@@ -596,6 +597,7 @@ pub(crate) fn locked_req_to_entry(
     }
 
     Some(PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         purl,
         name: req.project_name.clone(),

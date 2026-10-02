@@ -83,6 +83,14 @@ pub struct PackageDbEntry {
     pub version: String,
     pub arch: Option<String>,
     pub source_path: String,
+    /// #1060 — further files the same component was discovered from,
+    /// beyond `source_path`: every binary that dynamically links one
+    /// soname, every interpreter of one collapsed CPython / OpenJDK
+    /// version. Each is normalised and emitted like `source_path`.
+    /// They were previously `"; "`-joined into `source_path`, where only
+    /// the first was made rootfs-relative and the rest leaked the
+    /// scanning host's absolute paths.
+    pub extra_source_paths: Vec<String>,
     /// Raw dependency package names declared by this entry (dpkg's
     /// `Depends:` field, apk's `D:` field). Version constraints and
     /// alternative (`|`) separators are already tokenised into
@@ -3275,6 +3283,7 @@ Architecture: arm64
         sbom_tier: Option<&str>,
     ) -> PackageDbEntry {
         PackageDbEntry {
+            extra_source_paths: Vec::new(),
             depends_ecosystem: None,
             build_inclusion: None,
             purl: Purl::new(purl_str).expect("valid purl"),
@@ -4155,6 +4164,7 @@ Architecture: arm64
     fn make_pkg(purl_str: &str, evidence_kind: Option<&str>) -> PackageDbEntry {
         let purl = waybill_common::types::purl::Purl::new(purl_str).unwrap();
         PackageDbEntry {
+            extra_source_paths: Vec::new(),
             depends_ecosystem: None,
             build_inclusion: None,
             purl,

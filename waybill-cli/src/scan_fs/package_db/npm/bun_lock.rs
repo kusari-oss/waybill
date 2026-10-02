@@ -269,6 +269,7 @@ pub(crate) fn parse_bun_lock(
             );
 
             out.push(PackageDbEntry {
+                extra_source_paths: Vec::new(),
                 depends_ecosystem: None,
                 build_inclusion: None,
                 purl,
@@ -421,6 +422,7 @@ pub(crate) fn parse_bun_lock(
             };
 
             out.push(PackageDbEntry {
+                extra_source_paths: Vec::new(),
                 depends_ecosystem: None,
                 build_inclusion: None,
                 purl,

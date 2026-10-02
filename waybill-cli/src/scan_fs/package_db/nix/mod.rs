@@ -182,6 +182,7 @@ fn emit_for_lockfile(path: &Path, doc: &FlakeLockDocument) -> Vec<PackageDbEntry
         };
 
         out.push(PackageDbEntry {
+            extra_source_paths: Vec::new(),
             depends_ecosystem: None,
             purl: id.purl,
             name: id.name,

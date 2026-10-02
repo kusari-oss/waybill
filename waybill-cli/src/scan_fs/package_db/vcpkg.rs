@@ -201,6 +201,7 @@ fn build_vcpkg_purl(name: &str, version: &str) -> Option<Purl> {
 fn build_entry(name: &str, version: &str, source_path: &str) -> Option<PackageDbEntry> {
     let purl = build_vcpkg_purl(name, version)?;
     Some(PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         build_inclusion: None,
         purl,

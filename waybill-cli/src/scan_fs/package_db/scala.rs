@@ -1229,6 +1229,7 @@ fn build_lockfile_component(entry: &SbtLockEntry) -> PackageDbEntry {
     };
 
     PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         purl,
         name: entry.name.clone(),
@@ -1339,6 +1340,7 @@ fn build_main_module_component(
     }
 
     Some(PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         purl,
         name,
@@ -1443,6 +1445,7 @@ fn build_design_tier_component(
     };
 
     Some(PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         purl,
         name: dep.artifact.clone(),

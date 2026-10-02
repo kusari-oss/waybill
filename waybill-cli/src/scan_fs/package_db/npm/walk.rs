@@ -261,6 +261,7 @@ fn walk_node_modules(
             None
         };
         out.push(PackageDbEntry {
+            extra_source_paths: Vec::new(),
             depends_ecosystem: None,
             build_inclusion: None,
             purl,
@@ -435,6 +436,7 @@ pub(crate) fn parse_root_package_json(
                 ),
             );
             out.push(PackageDbEntry {
+                extra_source_paths: Vec::new(),
                 depends_ecosystem: None,
                 build_inclusion: None,
                 purl,
@@ -675,6 +677,7 @@ pub(crate) fn build_npm_main_module_entry(
         })
         .collect();
     Some(PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         build_inclusion: None,
         purl,
@@ -873,6 +876,7 @@ mod tests {
 
     fn make_pkg_entry(name: &str, version: &str, purl_str: &str) -> PackageDbEntry {
         PackageDbEntry {
+            extra_source_paths: Vec::new(),
             depends_ecosystem: None,
             build_inclusion: None,
             purl: make_purl(purl_str),

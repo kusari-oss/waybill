@@ -442,6 +442,7 @@ fn package_to_entry(pkg: &CargoPackage, source_path: &str) -> Option<PackageDbEn
         None
     };
     Some(PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         build_inclusion: None,
         purl,
@@ -779,6 +780,7 @@ fn build_cargo_main_module_entry(
 
     let source_path = format!("path+file://{}", manifest_dir.display());
     Some(PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         build_inclusion: None,
         purl,
@@ -3467,6 +3469,7 @@ version = "0.1.0"
             serde_json::Value::String("main-module".to_string()),
         );
         PackageDbEntry {
+            extra_source_paths: Vec::new(),
             depends_ecosystem: None,
             build_inclusion: None,
             purl,
@@ -3503,6 +3506,7 @@ version = "0.1.0"
     fn make_regular_entry(name: &str, version: &str) -> PackageDbEntry {
         let purl = build_cargo_purl(name, version).unwrap();
         PackageDbEntry {
+            extra_source_paths: Vec::new(),
             depends_ecosystem: None,
             build_inclusion: None,
             purl,

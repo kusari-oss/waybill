@@ -90,6 +90,7 @@ pub(super) fn symbol_match_to_entry(
         );
     }
     Some(PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         build_inclusion: None,
         purl,
@@ -168,6 +169,7 @@ pub(super) fn v2_match_to_entry(m: &MatchResult, path: &Path) -> PackageDbEntry 
         )),
     );
     PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         build_inclusion: None,
         purl,
@@ -222,6 +224,7 @@ pub(super) fn version_match_to_entry(
     );
     let purl = Purl::new(&purl_str).ok()?;
     Some(PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         build_inclusion: None,
         purl,
@@ -373,6 +376,7 @@ pub(super) fn cargo_auditable_packages_to_entries(
                 );
             }
             Some(PackageDbEntry {
+                extra_source_paths: Vec::new(),
                 depends_ecosystem: None,
                 build_inclusion: None,
                 purl,
@@ -609,6 +613,7 @@ pub(super) fn make_file_level_component(
     .to_string();
 
     PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         build_inclusion: None,
         purl,
@@ -975,6 +980,7 @@ pub(super) fn note_package_to_entry(
 
     let purl = Purl::new(&purl_str).ok()?;
     Some(PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         build_inclusion: None,
         purl,

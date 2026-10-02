@@ -936,8 +936,11 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
                 // FR-012). The SHA-256 anchors the occurrence to the
                 // exact manifest bytes we parsed — useful for cross-
                 // host SBOM diffing and supply-chain integrity.
-                let occs =
+                let mut occs =
                     manifest_occurrence(&entry.source_path, root, &mut manifest_sha_cache);
+                for extra in &entry.extra_source_paths {
+                    occs.extend(manifest_occurrence(extra, root, &mut manifest_sha_cache));
+                }
                 (occs, Vec::new())
             };
             // Thread manifest-provided hashes (npm integrity, cargo
@@ -975,10 +978,15 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
                     // NOTE (milestone 145 US3): canonical source for
                     // `waybill:source-files` emission — see also
                     // `root_selector::is_field_owned_annotation_key`.
-                    source_file_paths: vec![crate::scan_fs::sbom_path::normalize_sbom_path_relative(
-                        &entry.source_path,
-                        Some(root),
-                    )],
+                    //
+                    // #1060: plus every `extra_source_paths` entry, each
+                    // normalised on its own.
+                    source_file_paths: std::iter::once(&entry.source_path)
+                        .chain(&entry.extra_source_paths)
+                        .map(|p| {
+                            crate::scan_fs::sbom_path::normalize_sbom_path_relative(p, Some(root))
+                        })
+                        .collect(),
                     deps_dev_match: None,
                 },
                 licenses,

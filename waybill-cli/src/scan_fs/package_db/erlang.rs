@@ -1478,6 +1478,7 @@ fn build_main_module_component(
     }
 
     Some(PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         purl,
         name: manifest.app_name.clone(),
@@ -1606,6 +1607,7 @@ fn build_lock_entry_component(
     }
 
     PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         purl,
         name,
@@ -1672,6 +1674,7 @@ fn build_otp_runtime_placeholder(
     }
 
     Some(PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         purl,
         name: atom.to_string(),
@@ -1795,6 +1798,7 @@ fn build_design_tier_component(decl: &DeclaredDep, config_dir: &Path) -> Option<
     };
 
     Some(PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         purl,
         name: decl.name.clone(),

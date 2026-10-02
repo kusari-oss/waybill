@@ -255,6 +255,7 @@ fn parse_dep_token(
     ))
     .ok()?;
     Some(PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         build_inclusion: None,
         purl,

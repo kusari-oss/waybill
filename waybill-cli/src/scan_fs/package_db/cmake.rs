@@ -977,6 +977,7 @@ fn build_cmake_entry(
         .unwrap_or_default();
 
     PackageDbEntry {
+        extra_source_paths: Vec::new(),
         depends_ecosystem: None,
         build_inclusion: None,
         purl,
