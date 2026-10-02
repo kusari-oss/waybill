@@ -63,6 +63,7 @@ jobs:
               - 'waybill-cli/src/trace/**'
               - 'xtask/**'
               - 'Dockerfile.ebpf-test'
+              - 'scripts/ebpf-*.sh'
               - '.github/env/bpf-linker.env'
               - '.github/actions/install-bpf-linker/**'
               - '.github/workflows/ci.yml'
@@ -769,7 +770,7 @@ jobs:
       # kprobe_attach_failures[] disambiguation from Clarification Q3).
       # This is the SC-003 CI gate. --privileged + debugfs mount are
       # required for eBPF + tracepoint attach per m211 quickstart.
-      - name: Container harness (m212 ring_buffer_overflows verification)
+      - name: Container harness — build image (m212 ring_buffer_overflows verification)
         # Wrapped in nick-fields/retry after m663 experience: the
         # docker build step (which itself runs apt-get + cargo build
         # inside the Rust base image) can hang for 45+ minutes on
@@ -780,11 +781,18 @@ jobs:
         with:
           max_attempts: 2
           timeout_minutes: 20
-          command: |
-            docker build -f Dockerfile.ebpf-test -t waybill-ebpf-test .
-            docker run --rm --privileged \
-              -v /sys/kernel/debug:/sys/kernel/debug \
-              waybill-ebpf-test
+          command: docker build -f Dockerfile.ebpf-test -t waybill-ebpf-test .
+      - name: Container harness — run
+        # A separate step with its own deadline (#991): a run once printed
+        # PASSED and then the container did not exit, so the shared 20-minute
+        # wrapper burned 10 minutes with nothing in the log to say why. The
+        # script waits up to 12 minutes (a green run takes about 2) and dumps
+        # container state, D-state host processes and dmesg if it misses.
+        uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4.0.0
+        with:
+          max_attempts: 2
+          timeout_minutes: 15
+          command: bash scripts/ebpf-container-run.sh waybill-ebpf-test 720
 
   # Milestone 222 US2b — Sigstore keyless SBOM signing regression
   # tests. Isolated from the main lint+test lanes so keyless-specific

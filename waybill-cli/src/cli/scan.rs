@@ -415,12 +415,34 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
         n
     }
 
+    // #991 — the integration lane reaps a 0.2 s `cargo build` 2 to 17
+    // minutes after it finishes, with the same event counts either way.
+    // These say whether that time is spent draining, sleeping, or waiting
+    // on a child that has not exited yet. Measurement only; nothing below
+    // reads them.
+    let ringbuf_open = {
+        let t = Instant::now();
+        if let Some(map) = handle.bpf.map_mut("FILE_EVENTS") {
+            let _ = RingBuf::try_from(map);
+        }
+        t.elapsed()
+    };
+    let mut iterations: u64 = 0;
+    let mut drain_time = Duration::ZERO;
+    let mut max_iteration = Duration::ZERO;
+    let mut exit_observed: Option<Duration> = None;
+
     loop {
+        let iteration_start = Instant::now();
+        iterations += 1;
         let done = if let Some(ref mut c) = child {
             c.try_wait().ok().flatten().is_some()
         } else {
             !std::path::Path::new(&format!("/proc/{target_pid}")).exists()
         };
+        if done && exit_observed.is_none() {
+            exit_observed = Some(start.elapsed());
+        }
 
         // If filter_by_pid is off, pass an empty set so the drain functions
         // admit every event. Building the empty set once per iteration is
@@ -428,6 +450,7 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
         let empty: std::collections::HashSet<u32> = std::collections::HashSet::new();
         let active_filter = if filter_by_pid { &target_pids } else { &empty };
 
+        let drain_start = Instant::now();
         drain_network(&mut handle.bpf, &mut agg, &mut net_count, MAX_PER_ITER, active_filter);
         // Milestone 211 post-#611 follow-up: drain compiler exec events
         // BEFORE file events on each iteration. compiler exec/exit
@@ -444,6 +467,7 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
             MAX_PER_ITER,
         );
         drain_file(&mut handle.bpf, &mut agg, &mut compiler_agg, &mut file_count, MAX_PER_ITER, active_filter);
+        drain_time += drain_start.elapsed();
 
         if done {
             // Settling drain: pull remaining events with a hard deadline so
@@ -471,7 +495,18 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
         }
 
         tokio::time::sleep(Duration::from_millis(5)).await;
+        max_iteration = max_iteration.max(iteration_start.elapsed());
     }
+
+    tracing::info!(
+        iterations,
+        elapsed_ms = start.elapsed().as_millis() as u64,
+        drain_ms = drain_time.as_millis() as u64,
+        max_iteration_ms = max_iteration.as_millis() as u64,
+        exit_observed_ms = exit_observed.map(|d| d.as_millis() as u64),
+        file_ringbuf_open_us = ringbuf_open.as_micros() as u64,
+        "trace loop summary"
+    );
 
     if let Some(mut c) = child {
         let st = c.wait()?;
