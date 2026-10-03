@@ -33,7 +33,13 @@ const FIXTURE_SUBPATH: &str = "pip_poetry";
 //   policy reversal — the semantic signal is preserved via the
 //   emitted main-module component + separate design-tier components
 //   for Poetry-legacy declared deps.
-const EXPECTED_WAYBILL_EDGE_COUNT: usize = 63;
+//
+// 63 → 64: dependency names now match under full PEP 503, so keyring's
+// `"jaraco.classes" = "*"` resolves to the locked `jaraco-classes`
+// (`keyring → jaraco-classes`). Until then jaraco-classes looked orphaned
+// and was reached only through the root fallback (`poetry → jaraco-classes`,
+// which poetry does not declare), which this replaces in the CycloneDX graph.
+const EXPECTED_WAYBILL_EDGE_COUNT: usize = 64;
 
 const EXPECTED_REPRESENTATIVE_EDGES: &[(&str, &str)] = &[
     // build → packaging.

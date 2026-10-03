@@ -979,3 +979,48 @@ fn multi_resolve_map_central_directory_emits_all_resolves() {
         );
     }
 }
+
+/// Pex records a locked project under its normalized name
+/// (`pantsbuild-pants`) while requirements keep the spelling they were
+/// written with (`pantsbuild.pants==2.31.0`). PEP 503 makes `.`, `_` and `-`
+/// equivalent, so the dependency must still resolve. Measured on
+/// enragedginger/pants_backend_clojure, where both resolve anchors and
+/// `pantsbuild-pants-testutil` lost their edge to Pants itself.
+#[test]
+fn a_dotted_requirement_resolves_to_its_normalized_project() {
+    let tmp = tempfile::tempdir().unwrap();
+    let out = tmp.path().join("out.cdx.json");
+    let o = run_scan(&pants_fixture("dotted_requirement_name"), &out, &[]);
+    assert!(o.status.success(), "{}", String::from_utf8_lossy(&o.stderr));
+    let cdx = read_cdx(&out);
+
+    let comps = cdx["components"].as_array().unwrap();
+    let core = comps
+        .iter()
+        .find(|c| c["purl"].as_str().is_some_and(|p| p.starts_with("pkg:pypi/waybill-fixture-core@")))
+        .expect("core component");
+    let core_ref = core["bom-ref"].as_str().unwrap();
+    let plugin_ref = comps
+        .iter()
+        .find(|c| c["purl"].as_str().is_some_and(|p| p.starts_with("pkg:pypi/waybill-fixture-plugin@")))
+        .and_then(|c| c["bom-ref"].as_str())
+        .expect("plugin component");
+    let depends_on = |r: &str| -> Vec<String> {
+        cdx["dependencies"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|d| d["ref"].as_str() == Some(r))
+            .and_then(|d| d["dependsOn"].as_array())
+            .map(|a| a.iter().filter_map(|v| v.as_str().map(String::from)).collect())
+            .unwrap_or_default()
+    };
+    assert!(
+        depends_on(plugin_ref).iter().any(|t| t == core_ref),
+        "plugin requires `waybill.fixture.core`, which is the locked `waybill-fixture-core`"
+    );
+    assert!(
+        comps.iter().all(|c| get_property(c, "waybill:unresolved-declared-dep").is_none()),
+        "no declared dependency should be left unresolved"
+    );
+}
