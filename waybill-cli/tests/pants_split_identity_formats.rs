@@ -92,7 +92,7 @@ fn the_identity_decodes_identically_in_all_three_formats() {
     let dir = split_all_formats("pants_discovered_resolves");
 
     for (stem, expected) in [
-        ("default.generic", vec!["python:default".to_string()]),
+        ("app.generic", vec!["python:app".to_string()]),
         ("lint.generic", vec!["python:lint".to_string()]),
     ] {
         let cdx = decode_cdx(&read(&dir.join(format!("{stem}.cdx.json"))));
@@ -112,7 +112,7 @@ fn the_identity_decodes_identically_in_all_three_formats() {
 fn cyclonedx_carries_a_string_and_spdx_carries_an_array() {
     let dir = split_all_formats("pants_discovered_resolves");
 
-    let cdx = read(&dir.join("default.generic.cdx.json"));
+    let cdx = read(&dir.join("app.generic.cdx.json"));
     let raw = cdx["metadata"]["properties"]
         .as_array()
         .expect("properties")
@@ -122,7 +122,7 @@ fn cyclonedx_carries_a_string_and_spdx_carries_an_array() {
         .clone();
     assert!(raw.is_string(), "CycloneDX property values are strings");
 
-    let s23 = read(&dir.join("default.generic.spdx.json"));
+    let s23 = read(&dir.join("app.generic.spdx.json"));
     let env: serde_json::Value = s23["annotations"]
         .as_array()
         .expect("annotations")

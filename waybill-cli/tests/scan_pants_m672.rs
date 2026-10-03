@@ -538,7 +538,7 @@ custom-name = "3rdparty/python/generic-file.lock"
         .collect();
     assert_eq!(
         resolve_components,
-        vec!["pkg:generic/custom-name".to_string()],
+        vec!["pkg:generic/custom-name?pants-namespace=python".to_string()],
         "expected one resolve component named by the map key",
     );
 }

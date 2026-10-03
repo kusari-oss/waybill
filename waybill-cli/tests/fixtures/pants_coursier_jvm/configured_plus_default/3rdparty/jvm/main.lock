@@ -2,21 +2,22 @@
 # {
 #   "version": 1,
 #   "generated_with_requirements": [
-#     "dev.waybill.fixture:waybill-fixture-jvmside:1.0.0,url=not_provided,jar=not_provided,force_version=False"
+#     "dev.waybill.fixture:app:1.0.0,url=not_provided,jar=not_provided"
 #   ]
 # }
 # --- END PANTS LOCKFILE METADATA ---
 
 [[entries]]
+file_name = "dev.waybill.fixture_app_1.0.0.jar"
 directDependencies = []
 dependencies = []
-file_name = "waybill-fixture-jvmside-1.0.0.jar"
 
 [entries.coord]
 group = "dev.waybill.fixture"
-artifact = "waybill-fixture-jvmside"
+artifact = "app"
 version = "1.0.0"
-
+packaging = "jar"
 [entries.file_digest]
-fingerprint = "0000000000000000000000000000000000000000000000000000000000000099"
-serialized_bytes_length = 1234
+fingerprint = "00000000000000000000000000000000000000000000000000000000000000d1"
+serialized_bytes_length = 1
+

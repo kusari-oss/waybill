@@ -1,0 +1,7 @@
+# #924 / m1064 — no [jvm.resolves]: Pants's built-in default
+# {"jvm-default": "3rdparty/jvm/default.lock"} applies.
+[GLOBAL]
+pants_version = "2.31.0"
+
+[jvm]
+jdk = "temurin:1.17"

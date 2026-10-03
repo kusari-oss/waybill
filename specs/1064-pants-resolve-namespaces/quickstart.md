@@ -52,3 +52,20 @@ equal root out-edge counts in CycloneDX, SPDX 2.3 and SPDX 3.
 
 The read-only public-corpus run on the branch must show `no semantic change` for
 all 13 non-Pants targets (`xtask corpus-diff`).
+
+## Recorded results (T050, 2026-10-03, branch build)
+
+| Step | Expected | Observed |
+|---|---|---|
+| 1. statement | `{"declared":["jvm:default","python:default","python:lint"],…}` | identical, `weak_classification` 3 |
+| 1. anchors | three, two named `default` | `default?pants-namespace=jvm`, `default?pants-namespace=python`, `lint?pants-namespace=python` |
+| 1. root out-edges CDX / SPDX 2.3 / SPDX 3 | equal | 3 / 3 / 3 |
+| 2. `example-jvm` statement | `{"declared":["jvm:jvm-default"],…}` | identical, `weak_classification` 1 |
+| 2. membership | `["jvm-default"]` | `["jvm-default"]` |
+| 2. graph completeness | none unreachable | `complete`; anchor has 4 top-level edges |
+| 3. `pants_backend_clojure` @ `e068ffb`, local scan | equal root out-edges | 4 / 4 / 4 (each format: the four anchors); `complete` |
+| 4. non-Pants targets | `no semantic change` | pending the CI corpus run (T043) |
+
+Found while running step 1: dedup grouped components on
+`(ecosystem, name, version, parent_purl)`, so the two `default` anchors merged
+into one even though their PURLs differ. Fixed under T035.

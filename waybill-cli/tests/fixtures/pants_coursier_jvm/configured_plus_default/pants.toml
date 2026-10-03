@@ -1,0 +1,7 @@
+# m1064 US3 — [jvm.resolves] is configured, so Pants's built-in default does
+# not apply and the extra default.lock stays discovered by convention.
+[GLOBAL]
+pants_version = "2.31.0"
+
+[jvm.resolves]
+main = "3rdparty/jvm/main.lock"

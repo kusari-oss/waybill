@@ -1,0 +1,7 @@
+# m1064 edge case — a declared top-level requirement with no entry in its
+# own lockfile must be dropped and reported, never rewired.
+[GLOBAL]
+pants_version = "2.31.0"
+
+[jvm.resolves]
+main = "3rdparty/jvm/main.lock"

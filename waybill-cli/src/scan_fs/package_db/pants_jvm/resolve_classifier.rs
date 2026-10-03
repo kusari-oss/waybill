@@ -18,6 +18,8 @@
 
 use waybill_common::resolution::LifecycleScope;
 
+use super::super::pants::resolve_classifier::ClassificationSource;
+
 /// Allowlist of JVM resolve names that should tag as `Development`.
 /// Case-insensitive match against the lockfile filename stem
 /// (`3rdparty/jvm/junit.lock` → `junit`) OR the `[jvm.resolves]`
@@ -68,10 +70,36 @@ pub(crate) fn classify_resolve(resolve_name: &str) -> LifecycleScope {
     }
 }
 
+/// Milestone 1064 (#924, research R5) — a lockfile a JVM tool declares is
+/// that tool's, so `Development` on a declaration rather than on the name.
+/// Mirrors `pants::resolve_classifier::classify_resolve_with_source`.
+pub(crate) fn classify_resolve_with_source(
+    resolve_name: &str,
+    declared_by_tool: bool,
+) -> (LifecycleScope, ClassificationSource) {
+    if declared_by_tool {
+        (LifecycleScope::Development, ClassificationSource::Declared)
+    } else {
+        (classify_resolve(resolve_name), ClassificationSource::HeuristicOrDefault)
+    }
+}
+
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
     use super::*;
+
+    #[test]
+    fn tool_declaration_overrides_the_name() {
+        assert_eq!(
+            classify_resolve_with_source("main", true),
+            (LifecycleScope::Development, ClassificationSource::Declared)
+        );
+        assert_eq!(
+            classify_resolve_with_source("junit", false),
+            (LifecycleScope::Development, ClassificationSource::HeuristicOrDefault)
+        );
+    }
 
     #[test]
     fn default_resolve_tags_runtime() {

@@ -801,7 +801,7 @@ pub fn pants_clojure_polyglot_layer1(sboms: &EmittedSboms) -> Result<(), Asserti
             .and_then(|c| c.get("bom-ref").and_then(|r| r.as_str()))
             .map(str::to_string)
     };
-    let anchor = ref_of(&|p: &str| p == "pkg:generic/pants-2.31");
+    let anchor = ref_of(&|p: &str| p == "pkg:generic/pants-2.31?pants-namespace=python");
     let pants = ref_of(&|p: &str| p.starts_with("pkg:pypi/pantsbuild-pants@2.31"));
     let reaches = match (&anchor, &pants) {
         (Some(a), Some(t)) => sboms
@@ -820,11 +820,35 @@ pub fn pants_clojure_polyglot_layer1(sboms: &EmittedSboms) -> Result<(), Asserti
             invariant_name: "resolve-anchor-reaches-pants",
             format: FailureFormat::Cdx,
             observed: format!("anchor {anchor:?}, pantsbuild-pants {pants:?}, edge present: false"),
-            expected: "pkg:generic/pants-2.31 dependsOn pkg:pypi/pantsbuild-pants@2.31.0".to_string(),
+            expected: "pkg:generic/pants-2.31?pants-namespace=python dependsOn pkg:pypi/pantsbuild-pants@2.31.0".to_string(),
             suggested_action: "investigate pypi dependency-name matching (#1100) — the requirement is written `pantsbuild.pants`, the lock records `pantsbuild-pants`",
         });
     }
+
+    // Invariant 4 — ownership-covers-both-namespaces (m1064 SC-002).
+    let declared = cdx_resolve_ownership(&sboms.cdx).map(|o| o["declared"].clone());
+    let want = serde_json::json!(["jvm:java17", "jvm:java21", "python:pants-2.30", "python:pants-2.31"]);
+    if declared.as_ref() != Some(&want) {
+        return Err(AssertionFailure {
+            invariant_name: "ownership-covers-both-namespaces",
+            format: FailureFormat::Cdx,
+            observed: format!("waybill:resolve-ownership declared = {declared:?}"),
+            expected: format!("declared = {want}"),
+            suggested_action: "investigate the C161 merge (m1064) — both readers contribute namespace-qualified names to one statement",
+        });
+    }
     Ok(())
+}
+
+/// The document-scope `waybill:resolve-ownership` value (C161), parsed.
+fn cdx_resolve_ownership(cdx: &serde_json::Value) -> Option<serde_json::Value> {
+    cdx.get("metadata")?
+        .get("properties")?
+        .as_array()?
+        .iter()
+        .find(|p| p.get("name").and_then(|n| n.as_str()) == Some("waybill:resolve-ownership"))
+        .and_then(|p| p.get("value")?.as_str())
+        .and_then(|v| serde_json::from_str(v).ok())
 }
 
 // pants-example-jvm — feature 676 (issue #756 fix regression gate)
@@ -900,6 +924,27 @@ pub fn pants_example_jvm_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFai
             observed: "no component carries waybill:pants-resolve=<any>".to_string(),
             expected: "at least one component carries waybill:pants-resolve=<resolve-name> (m224 reuses m223 C143)".to_string(),
             suggested_action: "investigate m224 pants_jvm reader annotation emission — maven components MUST carry pants-resolve tagging",
+        });
+    }
+
+    // Invariant 5 — jvm-default-owned (m1064 SC-001). The repository has a
+    // pants.toml and no [jvm.resolves], so Pants itself declares `jvm-default`.
+    let ownership = cdx_resolve_ownership(&sboms.cdx);
+    let want = serde_json::json!({
+        "declared": ["jvm:jvm-default"],
+        "discovered": [],
+        "unanchored_lockfiles": 0,
+        "weak_classification": 1,
+    });
+    if ownership.as_ref() != Some(&want)
+        || !cdx_has_component_purl(&sboms.cdx, |p| p == "pkg:generic/jvm-default?pants-namespace=jvm")
+    {
+        return Err(AssertionFailure {
+            invariant_name: "jvm-default-owned",
+            format: FailureFormat::Cdx,
+            observed: format!("waybill:resolve-ownership = {ownership:?}"),
+            expected: format!("{want} and an owning component pkg:generic/jvm-default?pants-namespace=jvm"),
+            suggested_action: "investigate Pants built-in default naming (m1064 R2) and JVM anchors (R3)",
         });
     }
 

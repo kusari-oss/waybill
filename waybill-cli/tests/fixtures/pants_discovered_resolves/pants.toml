@@ -3,3 +3,7 @@ interpreter_constraints = [">=3.9"]
 # Deliberately NO [python.resolves]: these lockfiles are found by the
 # 3rdparty/python/*.lock convention, so their names are a filename stem
 # rather than a declaration of ownership.
+#
+# Neither may sit at 3rdparty/python/default.lock. With a pants.toml and no
+# [python.resolves], Pants itself declares that path as `python-default`
+# (m1064 research R2), which would make it declared, not discovered.

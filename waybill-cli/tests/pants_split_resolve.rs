@@ -197,7 +197,7 @@ fn a_repository_with_no_anchors_still_partitions() {
     let names: Vec<&str> = s.docs.iter().map(|(n, _)| n.as_str()).collect();
     assert_eq!(
         names,
-        vec!["default.generic.cdx.json", "lint.generic.cdx.json"],
+        vec!["app.generic.cdx.json", "lint.generic.cdx.json"],
         "a convention-only repository must still partition — the filter needs \
          no anchor to start from"
     );
@@ -219,7 +219,7 @@ fn the_manifest_identifies_each_document_by_resolve() {
         .iter()
         .filter_map(|e| e["root_purl"].as_str())
         .collect();
-    assert_eq!(ids, vec!["pkg:generic/default", "pkg:generic/lint"]);
+    assert_eq!(ids, vec!["pkg:generic/app", "pkg:generic/lint"]);
 }
 
 /// C-5b / FR-012 — a repository with no Pants resolves gets a stated outcome

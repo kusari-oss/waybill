@@ -1808,10 +1808,15 @@ pub fn read_all(
     // PURL-level dedup (lockfile-tier with hashes wins over
     // requirements.txt-tier without). Reader is a no-op (empty return,
     // no log) on repos without any Pex lockfiles per FR-007 / SC-003.
-    let (pants_components, pants_resolve_summary) = pants::read_with_summary(rootfs);
-    // Milestone 868 (#887): doc-scope resolve-ownership counts. Left `None`
-    // when no Pex lockfile was found, so non-Pants scans are unchanged.
-    diagnostics.pants_resolve_summary = pants_resolve_summary;
+    let (pants_components, python_resolve_part) = pants::read_with_summary(rootfs);
+    // Milestone 868 (#887) / 1064 (#924): one doc-scope resolve-ownership
+    // statement for the repository. Left `None` when no Pants lockfile was
+    // found in any namespace, so non-Pants scans are unchanged.
+    diagnostics.pants_resolve_summary = pants::PantsResolveSummary::merge(
+        python_resolve_part
+            .into_iter()
+            .chain(shared_pilot.pants_jvm_resolve_part.take()),
+    );
 
 
     out.extend(pants_components);
@@ -2462,6 +2467,9 @@ struct SharedPilotOutput {
     npm: Option<Result<Vec<PackageDbEntry>, npm::NpmError>>,
     nuget: Vec<PackageDbEntry>,
     pants_jvm: Vec<PackageDbEntry>,
+    /// Milestone 1064 (#924): the JVM namespace's part of the
+    /// repository-wide `waybill:resolve-ownership` statement.
+    pants_jvm_resolve_part: Option<pants::ResolveSummaryPart>,
     pants_shell: Vec<PackageDbEntry>,
     /// Milestone 664 US2 T047: BUILD file paths collected for
     /// `pants_go::enrich`. Not a component vector — this is post-
@@ -2823,7 +2831,7 @@ fn run_shared_walker_pilot(
     // Pants coursier-JVM — marker-detect only; finalize gates the
     // fixed-root read (3rdparty/jvm/*.lock + pants.toml) on the marker
     // flag plus a defensive fs-existence fallback.
-    let pants_jvm_entries = registry
+    let (pants_jvm_entries, pants_jvm_resolve_part) = registry
         .registrations()
         .iter()
         .find(|r| r.reader_id == ReaderId::PANTS_JVM)
@@ -3036,6 +3044,7 @@ fn run_shared_walker_pilot(
         npm: npm_output,
         nuget: nuget_entries,
         pants_jvm: pants_jvm_entries,
+        pants_jvm_resolve_part,
         pants_shell: pants_shell_entries,
         pants_go_build_files,
         cocoapods: cocoapods_entries,

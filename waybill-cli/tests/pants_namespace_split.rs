@@ -258,3 +258,113 @@ fn resolve_split_creates_a_missing_output_dir() {
     );
     assert!(out_dir.join("split-manifest.json").is_file());
 }
+
+// ---------------------------------------------------------------
+// Milestone 1064 (#924) US2 — same-named resolves stay distinct unsplit
+// ---------------------------------------------------------------
+
+const COLLISION_OWNERSHIP: &str = r#"{"declared":["jvm:default","python:default","python:lint"],"discovered":[],"unanchored_lockfiles":0,"weak_classification":3}"#;
+
+fn scan(name: &str) -> serde_json::Value {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let path = dir.path().join("o.cdx.json");
+    let out = Command::new(env!("CARGO_BIN_EXE_waybill"))
+        .args(["--offline", "sbom", "scan", "--no-deep-hash", "--path"])
+        .arg(fixture(name))
+        .args(["--format", "cyclonedx-json", "--output"])
+        .arg(format!("cyclonedx-json={}", path.display()))
+        .output()
+        .expect("run waybill");
+    assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
+    serde_json::from_slice(&std::fs::read(&path).expect("read")).expect("parse")
+}
+
+fn property<'a>(props: &'a serde_json::Value, name: &str) -> Option<&'a str> {
+    props
+        .as_array()?
+        .iter()
+        .find(|p| p["name"].as_str() == Some(name))
+        .and_then(|p| p["value"].as_str())
+}
+
+fn ownership(doc: &serde_json::Value) -> Option<serde_json::Value> {
+    property(&doc["metadata"]["properties"], "waybill:resolve-ownership")
+        .map(|v| serde_json::from_str(v).expect("ownership is JSON"))
+}
+
+/// Each anchor's direct dependencies, by anchor PURL.
+fn anchor_children(doc: &serde_json::Value) -> std::collections::BTreeMap<String, BTreeSet<String>> {
+    let anchors: BTreeSet<String> = doc["components"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter(|c| property(&c["properties"], "waybill:component-kind") == Some("lockfile-resolve"))
+        .filter_map(|c| c["purl"].as_str().map(str::to_string))
+        .collect();
+    anchors
+        .into_iter()
+        .map(|a| {
+            let children = doc["dependencies"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter(|d| d["ref"].as_str() == Some(a.as_str()))
+                .flat_map(|d| d["dependsOn"].as_array().cloned().unwrap_or_default())
+                .filter_map(|v| v.as_str().map(str::to_string))
+                .collect();
+            (a, children)
+        })
+        .collect()
+}
+
+#[test]
+fn same_named_resolves_get_distinct_anchors() {
+    let doc = scan("pants_namespace_collision");
+    let anchors = anchor_children(&doc);
+    assert_eq!(
+        anchors.keys().cloned().collect::<Vec<_>>(),
+        vec![
+            "pkg:generic/default?pants-namespace=jvm".to_string(),
+            "pkg:generic/default?pants-namespace=python".to_string(),
+            "pkg:generic/lint?pants-namespace=python".to_string(),
+        ],
+        "dedup must not merge two anchors that differ only by namespace"
+    );
+    for (anchor, children) in &anchors {
+        let want = if anchor.ends_with("=jvm") { "pkg:maven/" } else { "pkg:pypi/" };
+        assert!(
+            !children.is_empty() && children.iter().all(|c| c.starts_with(want)),
+            "{anchor} must own only its own namespace's packages: {children:?}"
+        );
+    }
+}
+
+#[test]
+fn ownership_statement_lists_both_defaults() {
+    let doc = scan("pants_namespace_collision");
+    assert_eq!(
+        ownership(&doc),
+        Some(serde_json::from_str(COLLISION_OWNERSHIP).expect("contract example"))
+    );
+}
+
+/// FR-010 + T009: each split document is rooted at its own namespace's anchor
+/// and carries the repository-wide statement, not a per-document one.
+#[test]
+fn split_documents_are_rooted_in_their_own_namespace() {
+    let s = split("pants_namespace_collision");
+    let want: serde_json::Value = serde_json::from_str(COLLISION_OWNERSHIP).expect("contract");
+    assert_eq!(s.docs.len(), 3, "{:?}", s.docs.iter().map(|(n, _)| n).collect::<Vec<_>>());
+    for (name, doc) in &s.docs {
+        assert_eq!(ownership(doc).as_ref(), Some(&want), "{name}: C161 is repository-wide");
+        let pkgs = purls(doc);
+        let ns = if pkgs.iter().any(|p| p.starts_with("pkg:maven/")) { "jvm" } else { "python" };
+        // The anchor is the document's main module (m922), not a listed
+        // component.
+        let root = doc["metadata"]["component"]["purl"].as_str().unwrap_or_default();
+        assert!(
+            root.starts_with("pkg:generic/") && root.ends_with(&format!("?pants-namespace={ns}")),
+            "{name} holds {ns} packages but is rooted at {root}"
+        );
+    }
+}

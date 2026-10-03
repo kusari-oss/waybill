@@ -765,3 +765,361 @@ fn each_resolve_keeps_its_own_version_of_a_shared_artifact() {
     .collect();
     assert_eq!(edges, want);
 }
+
+
+// ---------------------------------------------------------------
+// Milestone 1064 (#924) — resolve ownership across namespaces.
+// ---------------------------------------------------------------
+
+/// The document-scope `waybill:resolve-ownership` value (C161), parsed.
+fn ownership(cdx: &serde_json::Value) -> Option<serde_json::Value> {
+    cdx["metadata"]["properties"]
+        .as_array()?
+        .iter()
+        .find(|p| p["name"].as_str() == Some("waybill:resolve-ownership"))
+        .and_then(|p| p["value"].as_str())
+        .and_then(|v| serde_json::from_str(v).ok())
+}
+
+fn scan_fixture(name: &str) -> serde_json::Value {
+    let tmp = tempfile::tempdir().unwrap();
+    let out = tmp.path().join("out.cdx.json");
+    let o = run_scan(&fixture(name), &out, &[]);
+    assert!(o.status.success(), "{}", String::from_utf8_lossy(&o.stderr));
+    read_cdx(&out)
+}
+
+/// US3 — with no `[jvm.resolves]`, Pants's built-in default applies.
+#[test]
+fn unconfigured_jvm_default_is_named_jvm_default_and_declared() {
+    let cdx = scan_fixture("implicit_default");
+    for c in pants_jvm_components(&cdx) {
+        assert_eq!(resolve_name(c).as_deref(), Some("jvm-default"), "{}", c["purl"]);
+    }
+    let o = ownership(&cdx).expect("a JVM Pants repository carries a statement");
+    assert_eq!(o["declared"], serde_json::json!(["jvm:jvm-default"]));
+    assert_eq!(o["discovered"], serde_json::json!([]));
+}
+
+/// US3 — a configured `[jvm.resolves]` turns the built-in default off, so a
+/// stray `default.lock` is found by convention only.
+#[test]
+fn explicit_resolves_table_disables_the_builtin_default() {
+    let cdx = scan_fixture("configured_plus_default");
+    let o = ownership(&cdx).expect("statement present");
+    assert_eq!(o["declared"], serde_json::json!(["jvm:main"]));
+    assert_eq!(o["discovered"], serde_json::json!(["jvm:default"]));
+    assert_eq!(o["unanchored_lockfiles"], serde_json::json!(1));
+}
+
+
+// --- US1: JVM owning components ---------------------------------------
+
+/// Every component the scan marks as owning a resolve, as `purl`.
+fn anchors(cdx: &serde_json::Value) -> Vec<String> {
+    let mut out: Vec<String> = cdx["components"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter(|c| get_property(c, "waybill:component-kind") == Some("lockfile-resolve"))
+        .filter_map(|c| c["purl"].as_str().map(str::to_string))
+        .collect();
+    out.sort();
+    out
+}
+
+/// The `dependsOn` targets of the component whose PURL is `purl`.
+fn depends_of(cdx: &serde_json::Value, purl: &str) -> Vec<String> {
+    let bom_ref = cdx["components"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .find(|c| c["purl"].as_str() == Some(purl))
+        .and_then(|c| c["bom-ref"].as_str())
+        .unwrap_or_default()
+        .to_string();
+    let mut out: Vec<String> = cdx["dependencies"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter(|d| d["ref"].as_str() == Some(bom_ref.as_str()))
+        .flat_map(|d| d["dependsOn"].as_array().cloned().unwrap_or_default())
+        .filter_map(|v| v.as_str().map(str::to_string))
+        .collect();
+    out.sort();
+    out
+}
+
+#[test]
+fn jvm_declared_resolve_gets_an_anchor_wired_to_its_top_levels() {
+    let cdx = scan_fixture("two_versions_two_resolves");
+    assert_eq!(
+        anchors(&cdx),
+        vec![
+            "pkg:generic/java17?pants-namespace=jvm".to_string(),
+            "pkg:generic/java21?pants-namespace=jvm".to_string(),
+        ]
+    );
+    for (resolve, app) in [("java17", "1.0.0"), ("java21", "2.0.0")] {
+        assert_eq!(
+            depends_of(&cdx, &format!("pkg:generic/{resolve}?pants-namespace=jvm")),
+            vec![format!("pkg:maven/dev.waybill.fixture/app@{app}")],
+            "{resolve} owns exactly its own declared top-level"
+        );
+    }
+}
+
+#[test]
+fn jvm_only_repository_carries_an_ownership_statement() {
+    let cdx = scan_fixture("two_versions_two_resolves");
+    assert_eq!(
+        ownership(&cdx),
+        Some(serde_json::json!({
+            "declared": ["jvm:java17", "jvm:java21"],
+            "discovered": [],
+            "unanchored_lockfiles": 0,
+            "weak_classification": 2,
+        }))
+    );
+}
+
+#[test]
+fn jvm_root_edges_agree_across_formats() {
+    let tmp = tempfile::tempdir().unwrap();
+    let (c, a, g) = (
+        tmp.path().join("o.cdx.json"),
+        tmp.path().join("o.spdx.json"),
+        tmp.path().join("o.spdx3.json"),
+    );
+    let out = Command::new(bin())
+        .args(["--offline", "sbom", "scan", "--no-deep-hash", "--path"])
+        .arg(fixture("two_versions_two_resolves"))
+        .args(["--format", "cyclonedx-json", "--format", "spdx-2.3-json", "--format", "spdx-3-json"])
+        .arg("--output")
+        .arg(format!("cyclonedx-json={}", c.display()))
+        .arg("--output")
+        .arg(format!("spdx-2.3-json={}", a.display()))
+        .arg("--output")
+        .arg(format!("spdx-3-json={}", g.display()))
+        .output()
+        .expect("waybill invocation");
+    assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
+    let counts = (
+        cdx_root_out_edges(&read_cdx(&c)),
+        spdx23_root_out_edges(&read_cdx(&a)),
+        spdx3_root_out_edges(&read_cdx(&g)),
+    );
+    assert_eq!(counts.0, counts.1, "CycloneDX vs SPDX 2.3: {counts:?}");
+    assert_eq!(counts.0, counts.2, "CycloneDX vs SPDX 3: {counts:?}");
+}
+
+#[test]
+fn an_empty_top_level_list_still_gets_an_anchor() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    std::fs::create_dir_all(root.join("3rdparty/jvm")).unwrap();
+    std::fs::write(root.join("pants.toml"), "[jvm.resolves]\nmain = \"3rdparty/jvm/main.lock\"\n").unwrap();
+    let lock = std::fs::read_to_string(fixture("tool_lockfile/3rdparty/jvm/main.lock")).unwrap();
+    let emptied = lock.replace(
+        "#     \"dev.waybill.fixture:app:1.0.0,url=not_provided,jar=not_provided\"\n",
+        "",
+    );
+    assert_ne!(lock, emptied, "the fixture's requirement line was removed");
+    std::fs::write(root.join("3rdparty/jvm/main.lock"), emptied).unwrap();
+    let tmp = tempfile::tempdir().unwrap();
+    let out = tmp.path().join("o.cdx.json");
+    let o = run_scan(root, &out, &[]);
+    assert!(o.status.success(), "{}", String::from_utf8_lossy(&o.stderr));
+    let cdx = read_cdx(&out);
+    assert_eq!(anchors(&cdx), vec!["pkg:generic/main?pants-namespace=jvm".to_string()]);
+    assert!(depends_of(&cdx, "pkg:generic/main?pants-namespace=jvm").is_empty());
+    assert_eq!(ownership(&cdx).unwrap()["declared"], serde_json::json!(["jvm:main"]));
+}
+
+#[test]
+fn top_level_missing_from_its_lockfile_is_dropped_not_rewired() {
+    let cdx = scan_fixture("missing_top_level");
+    let anchor = "pkg:generic/main?pants-namespace=jvm";
+    assert_eq!(
+        depends_of(&cdx, anchor),
+        vec!["pkg:maven/dev.waybill.fixture/present@1.0.0".to_string()]
+    );
+    let unresolved = cdx["components"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| c["purl"].as_str() == Some(anchor))
+        .and_then(|c| get_property(c, "waybill:unresolved-declared-dep"))
+        .unwrap_or_default()
+        .to_string();
+    assert!(
+        unresolved.contains("dev.waybill.fixture:absent"),
+        "the dropped name is reported, got {unresolved:?}"
+    );
+}
+
+#[test]
+fn implicit_default_jvm_resolve_is_anchored() {
+    let cdx = scan_fixture("implicit_default");
+    let anchor = "pkg:generic/jvm-default?pants-namespace=jvm";
+    assert_eq!(anchors(&cdx), vec![anchor.to_string()]);
+    assert_eq!(
+        depends_of(&cdx, anchor),
+        vec!["pkg:maven/dev.waybill.fixture/app@1.0.0".to_string()]
+    );
+}
+
+// Root out-edge counters, as in corpus_harness_195::layer1_assertions.
+fn cdx_root_out_edges(cdx: &serde_json::Value) -> usize {
+    let root = cdx["metadata"]["component"]["bom-ref"].as_str().unwrap_or_default();
+    cdx["dependencies"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter(|e| e["ref"].as_str() == Some(root))
+        .map(|e| e["dependsOn"].as_array().map_or(0, |t| t.len()))
+        .sum()
+}
+
+fn spdx23_root_out_edges(spdx: &serde_json::Value) -> usize {
+    let roots: std::collections::HashSet<&str> = spdx["documentDescribes"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|v| v.as_str())
+        .collect();
+    const REVERSE: &[&str] = &[
+        "DEV_DEPENDENCY_OF", "TEST_DEPENDENCY_OF", "BUILD_DEPENDENCY_OF",
+        "OPTIONAL_DEPENDENCY_OF", "PROVIDED_DEPENDENCY_OF", "RUNTIME_DEPENDENCY_OF",
+    ];
+    spdx["relationships"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter(|r| match r["relationshipType"].as_str() {
+            Some("DEPENDS_ON") => r["spdxElementId"].as_str().is_some_and(|f| roots.contains(f)),
+            Some(t) if REVERSE.contains(&t) => {
+                r["relatedSpdxElement"].as_str().is_some_and(|t| roots.contains(t))
+            }
+            _ => false,
+        })
+        .count()
+}
+
+fn spdx3_root_out_edges(spdx3: &serde_json::Value) -> usize {
+    let graph = spdx3["@graph"].as_array().cloned().unwrap_or_default();
+    let roots: std::collections::HashSet<String> = graph
+        .iter()
+        .filter(|n| n["type"].as_str() == Some("SpdxDocument"))
+        .flat_map(|n| {
+            ["rootElement", "software_rootElement"]
+                .iter()
+                .flat_map(|k| n[*k].as_array().cloned().unwrap_or_default())
+                .collect::<Vec<_>>()
+        })
+        .filter_map(|v| v.as_str().map(str::to_string))
+        .collect();
+    graph
+        .iter()
+        .filter(|n| {
+            matches!(n["type"].as_str(), Some("Relationship") | Some("LifecycleScopedRelationship"))
+                && n["relationshipType"].as_str() == Some("dependsOn")
+                && n["from"].as_str().is_some_and(|f| roots.contains(f))
+        })
+        .map(|n| match &n["to"] {
+            serde_json::Value::Array(a) => a.len(),
+            serde_json::Value::String(_) => 1,
+            _ => 0,
+        })
+        .sum()
+}
+
+// m1064 US4 — JVM tool lockfiles (`[<scope>].lockfile`, research R5)
+
+/// `(pants-resolve, lifecycle-scope)` of every Maven package in `cdx`.
+fn maven_membership_and_scope(cdx: &serde_json::Value) -> Vec<(Option<String>, Option<String>)> {
+    cdx["components"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter(|c| c["purl"].as_str().is_some_and(|p| p.starts_with("pkg:maven/")))
+        .map(|c| (resolve_name(c), get_property(c, "waybill:lifecycle-scope").map(str::to_string)))
+        .collect()
+}
+
+fn property_of(cdx: &serde_json::Value, purl: &str, name: &str) -> Option<String> {
+    cdx["components"]
+        .as_array()?
+        .iter()
+        .find(|c| c["purl"].as_str() == Some(purl))
+        .and_then(|c| get_property(c, name))
+        .map(str::to_string)
+}
+
+#[test]
+fn tool_lockfile_is_declared_development_scope() {
+    let cdx = scan_fixture("tool_lockfile");
+    assert_eq!(
+        anchors(&cdx),
+        vec![
+            "pkg:generic/junit?pants-namespace=jvm".to_string(),
+            "pkg:generic/main?pants-namespace=jvm".to_string(),
+        ]
+    );
+    let junit = "pkg:generic/junit?pants-namespace=jvm";
+    assert_eq!(
+        property_of(&cdx, junit, "waybill:resolve-classification-source").as_deref(),
+        Some("declared")
+    );
+    let testing: Vec<_> = maven_membership_and_scope(&cdx)
+        .into_iter()
+        .filter(|(r, _)| r.as_deref() == Some("junit"))
+        .collect();
+    assert!(!testing.is_empty(), "testing.lock's packages carry membership [\"junit\"]");
+    for (_, scope) in &testing {
+        assert_eq!(scope.as_deref(), Some("development"));
+    }
+    assert_eq!(
+        ownership(&cdx),
+        Some(serde_json::json!({
+            "declared": ["jvm:junit", "jvm:main"],
+            "discovered": [],
+            "unanchored_lockfiles": 0,
+            "weak_classification": 1,
+        }))
+    );
+}
+
+#[test]
+fn configured_resolve_also_declared_by_a_tool_keeps_its_name() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    std::fs::create_dir_all(root.join("3rdparty/jvm")).unwrap();
+    std::fs::write(
+        root.join("pants.toml"),
+        "[jvm.resolves]\ntests = \"3rdparty/jvm/tests.lock\"\n\n[junit]\nlockfile = \"3rdparty/jvm/tests.lock\"\n",
+    )
+    .unwrap();
+    std::fs::copy(
+        fixture("tool_lockfile/3rdparty/jvm/testing.lock"),
+        root.join("3rdparty/jvm/tests.lock"),
+    )
+    .unwrap();
+    let tmp = tempfile::tempdir().unwrap();
+    let out = tmp.path().join("o.cdx.json");
+    let o = run_scan(root, &out, &[]);
+    assert!(o.status.success(), "{}", String::from_utf8_lossy(&o.stderr));
+    let cdx = read_cdx(&out);
+    let anchor = "pkg:generic/tests?pants-namespace=jvm";
+    assert_eq!(anchors(&cdx), vec![anchor.to_string()]);
+    assert_eq!(
+        property_of(&cdx, anchor, "waybill:resolve-classification-source").as_deref(),
+        Some("declared")
+    );
+    let packages = maven_membership_and_scope(&cdx);
+    assert!(!packages.is_empty());
+    for (resolve, scope) in packages {
+        assert_eq!(resolve.as_deref(), Some("tests"));
+        assert_eq!(scope.as_deref(), Some("development"));
+    }
+}

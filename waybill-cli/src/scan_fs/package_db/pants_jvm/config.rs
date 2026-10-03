@@ -51,10 +51,75 @@ pub(crate) fn parse(bytes: &[u8]) -> Option<PantsConfig> {
     toml::from_str::<PantsConfig>(text).ok()
 }
 
+/// Milestone 1064 (#924, research R5) — every `[<scope>].lockfile` path
+/// outside `[jvm]` and `[python]`, as `(scope, path)` sorted by scope.
+///
+/// Pants JVM tools declare their lockfile this way rather than as a
+/// `[jvm.resolves]` key. Matching is by path, so no scope list is kept here.
+/// `<default>` is Pants's built-in lockfile, which has no file in the
+/// repository. Unparseable input declares nothing (FR-004).
+pub(crate) fn tool_lockfiles(bytes: &[u8]) -> Vec<(String, String)> {
+    let Some(doc) = std::str::from_utf8(bytes)
+        .ok()
+        .and_then(|t| toml::from_str::<toml::Table>(t).ok())
+    else {
+        return Vec::new();
+    };
+    let mut out: Vec<(String, String)> = doc
+        .iter()
+        .filter(|(scope, _)| !matches!(scope.as_str(), "jvm" | "python"))
+        .filter_map(|(scope, section)| {
+            let path = section.get("lockfile")?.as_str()?;
+            (path != "<default>" && !path.trim().is_empty())
+                .then(|| (scope.clone(), path.to_string()))
+        })
+        .collect();
+    out.sort();
+    out
+}
+
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
     use super::*;
+
+    #[test]
+    fn tool_lockfiles_reads_every_other_tables_lockfile_path() {
+        let toml = br#"
+[jvm.resolves]
+main = "3rdparty/jvm/main.lock"
+
+[scalatest]
+lockfile = "3rdparty/jvm/scalatest.lock"
+
+[junit]
+lockfile = "3rdparty/jvm/testing.lock"
+
+[python]
+lockfile = "ignored.lock"
+
+[GLOBAL]
+pants_version = "2.31.0"
+"#;
+        assert_eq!(
+            tool_lockfiles(toml),
+            vec![
+                ("junit".to_string(), "3rdparty/jvm/testing.lock".to_string()),
+                ("scalatest".to_string(), "3rdparty/jvm/scalatest.lock".to_string()),
+            ]
+        );
+    }
+
+    #[test]
+    fn builtin_tool_lockfile_declares_nothing() {
+        assert!(tool_lockfiles(b"[junit]\nlockfile = \"<default>\"\n").is_empty());
+    }
+
+    #[test]
+    fn non_string_or_missing_lockfile_declares_nothing() {
+        assert!(tool_lockfiles(b"[junit]\nlockfile = 3\n[ktlint]\nversion = \"1\"\n").is_empty());
+        assert!(tool_lockfiles(b"not = valid = toml =").is_empty());
+    }
 
     #[test]
     fn parse_valid_jvm_section_with_default_resolve_and_resolves() {
