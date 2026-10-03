@@ -228,3 +228,33 @@ fn a_genuinely_single_resolve_repository_still_falls_back() {
         "the fallback emits a single unsplit SBOM, not split documents"
     );
 }
+
+/// `--output-dir` documents "Directory is created if missing". Resolve mode
+/// used to skip that step and fail with ENOENT on its first write; the
+/// tests above always pass a directory that already exists.
+#[test]
+fn resolve_split_creates_a_missing_output_dir() {
+    let parent = tempfile::tempdir().expect("tempdir");
+    let out_dir = parent.path().join("not-yet/created");
+    let out = Command::new(env!("CARGO_BIN_EXE_waybill"))
+        .args([
+            "sbom",
+            "scan",
+            "--path",
+            fixture("pants_namespace_collision").to_str().expect("fixture"),
+            "--offline",
+            "--format",
+            "cyclonedx-json",
+            "--split=resolve",
+            "--output-dir",
+            out_dir.to_str().expect("outdir"),
+        ])
+        .output()
+        .expect("run waybill");
+    assert!(
+        out.status.success(),
+        "scan failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    assert!(out_dir.join("split-manifest.json").is_file());
+}

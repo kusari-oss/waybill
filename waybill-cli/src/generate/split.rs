@@ -1070,13 +1070,6 @@ pub(crate) fn emit_split(
         return Ok(false);
     }
 
-    std::fs::create_dir_all(output_dir).map_err(|e| {
-        anyhow::anyhow!(
-            "failed to create --output-dir {}: {e}",
-            output_dir.display()
-        )
-    })?;
-
     let collision_map = build_collision_map(&roots);
 
     // Milestone 219 — group roots by SplitMode::group_key, then merge
@@ -1172,6 +1165,15 @@ fn emit_groups(
     mode: SplitMode,
     collision_map: &BTreeMap<String, Vec<PathBuf>>,
 ) -> anyhow::Result<bool> {
+    // Here, in the tail every mode shares, so no mode can skip it: resolve
+    // mode (#911) used to, and failed with ENOENT on a directory that did
+    // not exist yet although `--output-dir` documents creating it.
+    std::fs::create_dir_all(output_dir).map_err(|e| {
+        anyhow::anyhow!(
+            "failed to create --output-dir {}: {e}",
+            output_dir.display()
+        )
+    })?;
     let (total_unique, aggregate_shared) = compute_shared_deps_groups(groups);
 
     tracing::info!(
