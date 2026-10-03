@@ -1,6 +1,6 @@
 # waybill Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-09-30
+Auto-generated from all feature plans. Last updated: 2026-10-03
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -401,6 +401,8 @@ Auto-generated from all feature plans. Last updated: 2026-09-30
 - N/A — all state in-process per scan. The existing per-revision (1034-nix-eval-tier)
 - Rust stable, workspace toolchain pinned by + Existing only — `serde_json` (closure JSON is 5.7–7.4 (1035-nix-closure-sbom)
 - N/A — in-process per scan. The closure JSON is parsed and dropped; (1035-nix-closure-sbom)
+- Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. No nightly; `waybill-ebpf` untouched. + Existing only: `toml` (pants.toml), `serde`/`serde_json` (annotation values), `tracing`. **Zero new Cargo dependencies.** (1064-pants-resolve-namespaces)
+- N/A. All state is in-process per scan. (1064-pants-resolve-namespaces)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -580,9 +582,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 1064-pants-resolve-namespaces: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. No nightly; `waybill-ebpf` untouched. + Existing only: `toml` (pants.toml), `serde`/`serde_json` (annotation values), `tracing`. **Zero new Cargo dependencies.**
 - 1050-nixpkgs-security-vex: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
 - 1035-nix-closure-sbom: Added Rust stable, workspace toolchain pinned by + Existing only — `serde_json` (closure JSON is 5.7–7.4
-- 1034-nix-eval-tier: Added Rust stable, workspace toolchain pinned by + Existing only — `std::process::Command` +
 
 
 <!-- MANUAL ADDITIONS START -->
