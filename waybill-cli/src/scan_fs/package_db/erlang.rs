@@ -304,6 +304,12 @@ struct AppSrcManifest {
     required_apps: Vec<String>,
     included_apps: Vec<String>,
     optional_apps: Vec<String>,
+    /// Issue #954 — `{licenses, ["Apache-2.0"]}`. rebar3_hex publishes the
+    /// application's licenses from here; sampled across 11 rebar3 projects
+    /// (hackney, jsx, recon, lager, telemetry, jiffy, meck, certifi,
+    /// backoff, gproc, rebar3), the 10 with a plain `.app.src` all declare
+    /// it there and none in `rebar.config`.
+    licenses: Vec<String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1357,6 +1363,9 @@ fn parse_app_src(path: &Path) -> anyhow::Result<AppSrcManifest> {
     let required_apps = extract_atom_list_for_keyword(&stripped, "applications");
     let included_apps = extract_atom_list_for_keyword(&stripped, "included_applications");
     let optional_apps = extract_atom_list_for_keyword(&stripped, "optional_applications");
+    let licenses = extract_keyword_list_body(&stripped, "licenses")
+        .map(|body| crate::scan_fs::package_db::declared_license::extract_quoted_terms(&body))
+        .unwrap_or_default();
 
     Ok(AppSrcManifest {
         app_name,
@@ -1364,6 +1373,7 @@ fn parse_app_src(path: &Path) -> anyhow::Result<AppSrcManifest> {
         required_apps,
         included_apps,
         optional_apps,
+        licenses,
     })
 }
 
@@ -1487,7 +1497,14 @@ fn build_main_module_component(
         source_path: app_src_path.to_string_lossy().into_owned(),
         depends: depends.to_vec(),
         maintainer: None,
-        licenses: Vec::new(),
+        // Hex states no relationship between list entries, so the
+        // conjunctive fallback applies, as for elixir.
+        licenses: crate::scan_fs::package_db::declared_license::resolve_many(
+            &manifest.licenses,
+            crate::scan_fs::package_db::declared_license::LicenseJoin::Conjunction,
+            app_src_path,
+        )
+        .into_licenses(),
         lifecycle_scope: None,
         requirement_ranges: Vec::new(),
         source_type: Some("erlang-main-module".to_string()),
