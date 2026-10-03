@@ -1680,31 +1680,11 @@ pub fn layer0_document_integrity(
         spdx23_root_out_edges(&sboms.spdx_2_3),
         spdx3_root_out_edges(&sboms.spdx_3),
     );
-    // Targets whose SPDX 3 root-edge count is known to disagree, tracked in
-    // issue #1022. Listed rather than tolerated silently: the
-    // entry IS the acceptance test for the fix, and deleting it is how the
-    // fix proves itself.
-    //
-    // Both are Pants Python repos, and the shape is the same in each: the
-    // edges CycloneDX and SPDX 2.3 attach to the root, SPDX 3 attaches to
-    // the `pkg:generic/python-default` resolve anchor instead. Measured on
-    // the goldens at the time of writing — django 14/14/1 with 73/74/61
-    // total edges, python 2/2/1 with 15/15/14.
-    //
-    // m1064 (#924): `pants-clojure-polyglot` left the list (4/4/4 once its
-    // JVM resolves have owning components), and `pants-example-jvm` joined it
-    // at 2/2/1. The cause is shared. The CycloneDX and SPDX 2.3 root fallbacks
-    // ignore root -> owning-component edges when deciding whether the root
-    // already has edges; the SPDX 3 fallback counts them. Once `jvm-default`
-    // has an owning component, SPDX 3 skips its fallback, and the file-tier
-    // `get-pants.sh`, which nothing else reaches, loses its root edge.
-    const KNOWN_SPDX3_ROOT_EDGE_DIVERGENCE: &[&str] = &[
-        "pants-example-django",
-        "pants-example-python",
-        "pants-example-jvm",
-    ]; // issue #1022
-    let expect_spdx3 = !KNOWN_SPDX3_ROOT_EDGE_DIVERGENCE.contains(&target);
-    let disagrees = a != b || (expect_spdx3 && a != c);
+    // No target is exempt. Until #1022 / #1108 the SPDX 3 fallback counted
+    // root -> owning-component edges as "the root already has edges" and
+    // three Pants targets were listed here; aligning it with CycloneDX and
+    // SPDX 2.3 (milestone 894) emptied the list, and the list went with it.
+    let disagrees = a != b || a != c;
     if disagrees {
         return Err(AssertionFailure {
             invariant_name: "i3-root-out-edge-count-agrees-across-formats",
@@ -1869,19 +1849,6 @@ mod i3_tests {
     fn counters_agree_on_maven_and_haskell() {
         assert_eq!(counts("maven-guice"), (16, 16, 16));
         assert_eq!(counts("haskell-aeson"), (6, 6, 6));
-    }
-
-    /// Pins the divergence the I3 allowlist tolerates. When the SPDX 3
-    /// root-edge defect is fixed, this test fails — which is the prompt
-    /// to delete the allowlist entry. Debt that cannot rot quietly.
-    #[test]
-    fn known_spdx3_divergence_is_still_present() {
-        assert_eq!(counts("pants-example-django"), (14, 14, 1));
-        assert_eq!(counts("pants-example-python"), (2, 2, 1));
-        // m1064: root -> jvm-default in every format; root -> get-pants.sh
-        // (file tier) only in CDX / SPDX 2.3, whose fallback gate ignores
-        // owning-component edges.
-        assert_eq!(counts("pants-example-jvm"), (2, 2, 1));
     }
 
     #[test]

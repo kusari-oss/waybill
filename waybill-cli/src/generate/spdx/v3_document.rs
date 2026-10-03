@@ -712,9 +712,41 @@ pub fn build_document(
             // to the root — reintroducing the same unbacked-edge
             // falsehood one level up, in one format only, while the
             // same document reported them as unreachable orphans.
-            let synth_has_outgoing = all_relationships
+            //
+            // #1108 / #1022 — "has outgoing" means has DECLARED dependency
+            // edges, as in CDX since milestone 894. A root -> owning
+            // component edge (`waybill:component-kind = lockfile-resolve`) is
+            // synthetic ownership and must not switch the fallback off.
+            // Since m866 put that edge into the emit path, it did: once a
+            // repository had an owning component, SPDX 3 stopped attaching
+            // components nothing else reaches (the design-tier requirements
+            // of `pants-example-django`, the file-tier `get-pants.sh` of
+            // `pants-example-jvm`), while CDX and SPDX 2.3 kept them.
+            let resolve_iris: std::collections::BTreeSet<&str> = scan
+                .components
                 .iter()
-                .any(|r| r["from"].as_str() == Some(synth_iri.as_str()));
+                .filter(|c| {
+                    c.extra_annotations
+                        .get("waybill:component-kind")
+                        .and_then(|v| v.as_str())
+                        == Some("lockfile-resolve")
+                })
+                .filter_map(|c| package_iri_by_purl.get(c.purl.as_str()).map(String::as_str))
+                .collect();
+            let root_targets: std::collections::BTreeSet<String> = all_relationships
+                .iter()
+                .filter(|r| r["from"].as_str() == Some(synth_iri.as_str()))
+                .flat_map(|r| match &r["to"] {
+                    serde_json::Value::Array(a) => a
+                        .iter()
+                        .filter_map(|v| v.as_str().map(str::to_string))
+                        .collect::<Vec<_>>(),
+                    serde_json::Value::String(t) => vec![t.clone()],
+                    _ => Vec::new(),
+                })
+                .collect();
+            let synth_has_outgoing =
+                !root_targets.iter().all(|t| resolve_iris.contains(t.as_str()));
             if !synth_has_outgoing {
                 let depended_on: std::collections::BTreeSet<&str> = scan
                     .relationships
@@ -742,6 +774,10 @@ pub fn build_document(
                 // Deterministic emission order: lex by IRI.
                 graph_roots.sort_by(|a, b| a.0.cmp(b.0));
                 for (to_iri, scope) in graph_roots {
+                    // Already reached through the owning-component edge.
+                    if root_targets.contains(to_iri) {
+                        continue;
+                    }
                     let mut element = super::v3_relationships::build_relationship(
                         synth_iri.as_str(),
                         "dependsOn",
