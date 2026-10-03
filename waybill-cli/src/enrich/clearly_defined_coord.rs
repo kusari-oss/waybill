@@ -17,7 +17,7 @@
 //!
 //! | PURL ecosystem | CD type | CD provider | namespace | name | revision |
 //! |---|---|---|---|---|---|
-//! | npm  | npm    | npmjs        | `@scope` (no `@`) or `-` | name | version |
+//! | npm  | npm    | npmjs        | `@scope` or `-`          | name | version |
 //! | cargo | crate  | cratesio     | `-`                      | name | version |
 //! | gem  | gem    | rubygems     | `-`                      | name | version |
 //! | pypi | pypi   | pypi         | `-`                      | name (lowercased) | version |
@@ -69,7 +69,7 @@ pub fn cd_coord_for(component: &ResolvedComponent) -> Option<CdCoord> {
         "npm" => Some(CdCoord {
             cd_type: "npm".to_string(),
             provider: "npmjs".to_string(),
-            namespace: namespace_or_dash_strip_at(namespace),
+            namespace: npm_scope_or_dash(namespace),
             name: component.name.clone(),
             revision: component.version.clone(),
         }),
@@ -140,11 +140,14 @@ pub fn cd_coord_for(component: &ResolvedComponent) -> Option<CdCoord> {
     }
 }
 
-/// npm scopes are stored with the leading `@` in PURL namespace
-/// (`@angular`). CD strips the `@` and uses just `angular`.
-fn namespace_or_dash_strip_at(namespace: Option<&str>) -> String {
+/// CD keeps the `@` on an npm scope: `npm/npmjs/@angular/core/16.0.0`
+/// resolves, while `npm/npmjs/angular/core/16.0.0` is a package CD has no
+/// record of (measured on `@angular`, `@babel` and `@types`). A
+/// namespace written without the `@` gets one, so either PURL spelling
+/// reaches the same definition.
+fn npm_scope_or_dash(namespace: Option<&str>) -> String {
     match namespace {
-        Some(ns) if !ns.is_empty() => ns.trim_start_matches('@').to_string(),
+        Some(ns) if !ns.is_empty() => format!("@{}", ns.trim_start_matches('@')),
         _ => "-".to_string(),
     }
 }
@@ -234,11 +237,17 @@ mod tests {
     }
 
     #[test]
-    fn cd_coord_for_npm_scoped_strips_at_sign() {
+    fn cd_coord_for_npm_scoped_keeps_at_sign() {
         let c = make_component("pkg:npm/%40angular/core@16.0.0");
         let coord = cd_coord_for(&c).unwrap();
-        assert_eq!(coord.namespace, "angular");
-        assert_eq!(coord.url_path(), "npm/npmjs/angular/core/16.0.0");
+        assert_eq!(coord.namespace, "@angular");
+        assert_eq!(coord.url_path(), "npm/npmjs/@angular/core/16.0.0");
+    }
+
+    #[test]
+    fn cd_coord_for_npm_scope_without_at_sign_gains_one() {
+        let c = make_component("pkg:npm/angular/core@16.0.0");
+        assert_eq!(cd_coord_for(&c).unwrap().namespace, "@angular");
     }
 
     #[test]
