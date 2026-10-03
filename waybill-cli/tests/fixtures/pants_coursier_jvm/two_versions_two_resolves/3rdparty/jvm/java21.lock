@@ -1,7 +1,9 @@
 # --- BEGIN PANTS LOCKFILE METADATA: DO NOT EDIT OR REMOVE ---
 # {
 #   "version": 1,
-#   "generated_with_requirements": []
+#   "generated_with_requirements": [
+#     "dev.waybill.fixture:app:2.0.0,url=not_provided,jar=not_provided,force_version=False"
+#   ]
 # }
 # --- END PANTS LOCKFILE METADATA ---
 

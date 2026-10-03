@@ -1,0 +1,10 @@
+# m1064 US4 — a JVM tool declares its lockfile through `[<scope>].lockfile`
+# (Pants 2.31 JvmToolBase), under a name the heuristic does not match.
+[GLOBAL]
+pants_version = "2.31.0"
+
+[jvm.resolves]
+main = "3rdparty/jvm/main.lock"
+
+[junit]
+lockfile = "3rdparty/jvm/testing.lock"

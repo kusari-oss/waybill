@@ -17,6 +17,8 @@ pub mod coordinate;
 pub mod lockfile;
 pub mod resolve_classifier;
 
+use super::pants_resolve::{Declaration, LanguageNamespace};
+use super::pants::ResolveSummaryPart;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
@@ -35,6 +37,12 @@ use crate::scan_fs::walk_registry::{
 struct DiscoveredLockfile {
     path: PathBuf,
     resolve_name: String,
+    /// Milestone 1064 (#924) — how the repository establishes this resolve.
+    declaration: Declaration,
+    /// Milestone 1064 (#924, R5) — a tool's `[<scope>].lockfile` names this
+    /// path. Independent of `declaration`: a `[jvm.resolves]` key keeps its
+    /// name and `Configured` but is still classified as the tool's.
+    declared_by_tool: bool,
 }
 
 /// Enumerate lockfile candidates: default `3rdparty/jvm/*.lock` glob
@@ -58,6 +66,8 @@ fn discover_lockfiles(scan_root: &Path) -> Vec<DiscoveredLockfile> {
                 out.push(DiscoveredLockfile {
                     path,
                     resolve_name,
+                    declaration: Declaration::Discovered,
+                    declared_by_tool: false,
                 });
             }
         }
@@ -86,10 +96,14 @@ fn discover_lockfiles(scan_root: &Path) -> Vec<DiscoveredLockfile> {
                             out.iter_mut().find(|d| d.path == resolved)
                         {
                             existing.resolve_name = name.clone();
+                            existing.declaration =
+                                existing.declaration.stronger(Declaration::Configured);
                         } else {
                             out.push(DiscoveredLockfile {
                                 path: resolved,
                                 resolve_name: name.clone(),
+                                declaration: Declaration::Configured,
+                                declared_by_tool: false,
                             });
                         }
                     }
@@ -111,6 +125,45 @@ fn discover_lockfiles(scan_root: &Path) -> Vec<DiscoveredLockfile> {
         }
     }
 
+
+    // Milestone 1064 (#924, research R2): Pants's built-in default. With a
+    // `pants.toml` and no `[jvm.resolves]`, Pants itself declares
+    // `{"jvm-default": "3rdparty/jvm/default.lock"}`; name the resolve as
+    // Pants does and count it as declared.
+    if super::pants_resolve::builtin_default_applies(scan_root, LanguageNamespace::Jvm) {
+        let (name, rel) = super::pants_resolve::pants_builtin_default(LanguageNamespace::Jvm);
+        let default_path = scan_root.join(rel);
+        if let Some(d) = out.iter_mut().find(|d| d.path == default_path) {
+            d.resolve_name = name.to_string();
+            d.declaration = d.declaration.stronger(Declaration::PantsDefault);
+        }
+    }
+
+    // Milestone 1064 (#924, research R5): JVM tools declare their lockfile as
+    // `[<scope>].lockfile`. Only lockfiles already found are matched, by path;
+    // `<default>` and missing paths declare nothing. Scopes arrive sorted, so
+    // when two tools share one lockfile the first scope names it.
+    if let Ok(bytes) = std::fs::read(scan_root.join("pants.toml")) {
+        for (scope, rel_path) in config::tool_lockfiles(&bytes) {
+            let path = scan_root.join(&rel_path);
+            let Some(d) = out.iter_mut().find(|d| d.path == path) else {
+                tracing::debug!(
+                    scope = %scope,
+                    declared_path = %rel_path,
+                    "pants-coursier-jvm reader: tool lockfile not found among JVM lockfiles; ignored"
+                );
+                continue;
+            };
+            if d.declared_by_tool {
+                continue;
+            }
+            d.declared_by_tool = true;
+            if d.declaration != Declaration::Configured {
+                d.resolve_name = scope;
+                d.declaration = d.declaration.stronger(Declaration::ToolLockfile);
+            }
+        }
+    }
     out
 }
 
@@ -202,9 +255,9 @@ pub(crate) fn extract_marker(registration: &ReaderRegistration) -> PantsJvmMarke
 pub(crate) fn finalize(
     marker: PantsJvmMarkerState,
     scan_root: &Path,
-) -> Vec<PackageDbEntry> {
+) -> (Vec<PackageDbEntry>, Option<ResolveSummaryPart>) {
     if !marker.seen && !scan_root.join("3rdparty").join("jvm").is_dir() {
-        return Vec::new();
+        return (Vec::new(), None);
     }
     read(scan_root)
 }
@@ -213,11 +266,38 @@ pub(crate) fn finalize(
 /// emission. Returns `Vec::new()` when no lockfiles are found (and
 /// emits no log line — preserves byte-identity for non-Pants-JVM
 /// repos per FR-007 / SC-003).
-pub fn read(scan_root: &Path) -> Vec<PackageDbEntry> {
+///
+/// Milestone 1064 (#924): also returns this namespace's contribution to the
+/// repository-wide `waybill:resolve-ownership` statement, `None` when no
+/// lockfile was found.
+pub fn read(scan_root: &Path) -> (Vec<PackageDbEntry>, Option<ResolveSummaryPart>) {
     let candidates = discover_lockfiles(scan_root);
     if candidates.is_empty() {
-        return Vec::new();
+        return (Vec::new(), None);
     }
+    // Declared resolves are anchored; discovered ones are counted (m868
+    // FR-003). A declared resolve no tool claims is classified by the name
+    // heuristic, so it counts as weakly classified.
+    let mut declared: Vec<String> = Vec::new();
+    let mut discovered: Vec<String> = Vec::new();
+    let mut weak_classification: usize = 0;
+    for c in &candidates {
+        if c.declaration.is_declared() {
+            declared.push(c.resolve_name.clone());
+            if !c.declared_by_tool {
+                weak_classification += 1;
+            }
+        } else {
+            discovered.push(c.resolve_name.clone());
+        }
+    }
+    let summary = ResolveSummaryPart {
+        namespace: LanguageNamespace::Jvm,
+        weak_classification,
+        unanchored_lockfiles: discovered.len(),
+        declared,
+        discovered,
+    };
 
     let lockfiles_discovered = candidates.len();
     let mut lockfiles_parsed_ok: usize = 0;
@@ -268,11 +348,24 @@ pub fn read(scan_root: &Path) -> Vec<PackageDbEntry> {
             }
         };
         lockfiles_parsed_ok += 1;
+        // m1064 (#924): a declared resolve gets its owning component; a
+        // discovered one stays unanchored (m868 FR-003).
+        if candidate.declaration.is_declared() {
+            if let Some(anchor) = lockfile::resolve_component_entry(
+                &lock,
+                &candidate.path,
+                &candidate.resolve_name,
+                candidate.declared_by_tool,
+            ) {
+                components.push(anchor);
+            }
+        }
         for entry in &lock.entries {
             if let Some(pkg) = lockfile::entry_to_package_db_entry(
                 entry,
                 &candidate.path,
                 &candidate.resolve_name,
+                candidate.declared_by_tool,
             ) {
                 components.push(pkg);
             }
@@ -289,5 +382,5 @@ pub fn read(scan_root: &Path) -> Vec<PackageDbEntry> {
         "pants-coursier-jvm reader complete"
     );
 
-    components
+    (components, Some(summary))
 }

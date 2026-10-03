@@ -7,6 +7,38 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Changed: Pants resolves are owned and named in both language namespaces (#924)
+
+The JVM coursier reader now does what the Python reader has done since
+milestone 868. Four consumer-visible changes in any repository with Pants
+lockfiles:
+
+- **`waybill:resolve-ownership` (C161) names are namespace-qualified**, e.g.
+  `python:python-default` and `jvm:java17`, and one statement covers both
+  namespaces. A JVM-only repository now carries the statement; before, it had
+  none. A reader comparing v1 bare names gets a mismatch on the `:` rather than
+  a wrong value. This supersedes milestone 912 SC-006, under which a split
+  document's statement was unchanged from before that feature.
+- **Owning components carry the namespace in their identity**:
+  `pkg:generic/<resolve>?pants-namespace=<python|jvm>`. Without it, `default`
+  in `[python.resolves]` and `default` in `[jvm.resolves]` were one component.
+  `pants-namespace` is waybill's own qualifier, because no community convention
+  exists yet (#1106). The CycloneDX `bom-ref` and the SPDX identifiers of existing
+  Python owning components change with it.
+- **Declared JVM resolves get owning components**, wired to the top-level
+  requirements their lockfile records (`generated_with_requirements`). This
+  includes JVM tools' `[<scope>].lockfile` declarations, which are classified
+  as development scope on that declaration rather than by name. The scan root
+  now reaches every JVM resolve the same way in CycloneDX, SPDX 2.3 and SPDX 3.
+- **Unconfigured default resolves are named as Pants names them.** In a
+  repository with a `pants.toml` and no `[jvm.resolves]` / `[python.resolves]`,
+  `3rdparty/jvm/default.lock` is `jvm-default` and
+  `3rdparty/python/default.lock` is `python-default`. Both are declared rather
+  than discovered. The membership annotation (C143) changes from `default`
+  accordingly.
+
+Repositories without Pants lockfiles are unaffected.
+
 ### Changed: ClearlyDefined enrichment is opt-in (#930)
 
 `sbom scan` no longer queries ClearlyDefined unless `--clearly-defined` is

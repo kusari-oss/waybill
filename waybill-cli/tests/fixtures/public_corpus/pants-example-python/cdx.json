@@ -2,7 +2,7 @@
   "bomFormat": "CycloneDX",
   "components": [
     {
-      "bom-ref": "pkg:generic/python-default",
+      "bom-ref": "pkg:generic/python-default?pants-namespace=python",
       "evidence": {
         "identity": [
           {
@@ -54,7 +54,7 @@
           "value": "[\".\"]"
         }
       ],
-      "purl": "pkg:generic/python-default",
+      "purl": "pkg:generic/python-default?pants-namespace=python",
       "type": "library"
     },
     {
@@ -909,7 +909,7 @@
     {
       "dependsOn": [
         "pkg:generic/file-tier?content-sha256=9357a2fd2981defaed29192bf839515586fbeafa0205e2e7818a8068f7f2e359",
-        "pkg:generic/python-default"
+        "pkg:generic/python-default?pants-namespace=python"
       ],
       "ref": "pants-example-python@e8cfd79"
     },
@@ -924,7 +924,7 @@
         "pkg:pypi/setuptools@56.2.0",
         "pkg:pypi/types-setuptools@57.4.18"
       ],
-      "ref": "pkg:generic/python-default"
+      "ref": "pkg:generic/python-default?pants-namespace=python"
     },
     {
       "dependsOn": [],
@@ -1060,7 +1060,7 @@
       },
       {
         "name": "waybill:resolve-ownership",
-        "value": "{\"declared\":[\"python-default\"],\"discovered\":[],\"unanchored_lockfiles\":0,\"weak_classification\":1}"
+        "value": "{\"declared\":[\"python:python-default\"],\"discovered\":[],\"unanchored_lockfiles\":0,\"weak_classification\":1}"
       }
     ],
     "supplier": {

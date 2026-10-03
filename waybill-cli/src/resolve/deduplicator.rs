@@ -9,8 +9,11 @@ use std::collections::HashMap;
 
 use waybill_common::resolution::ResolvedComponent;
 
+/// `(ecosystem, name, version, parent_purl, pants-namespace qualifier)`.
+type DedupKey = (String, String, String, Option<String>, Option<String>);
+
 /// Deduplicate resolved components by
-/// `(ecosystem, name, version, parent_purl)`.
+/// `(ecosystem, name, version, parent_purl, pants-namespace qualifier)`.
 ///
 /// For each group of duplicates:
 /// - Keep the entry with the highest confidence score.
@@ -30,11 +33,13 @@ pub fn deduplicate(components: Vec<ResolvedComponent>) -> Vec<ResolvedComponent>
         return Vec::new();
     }
 
-    // Group by (ecosystem, name, version, parent_purl).
-    let mut groups: HashMap<
-        (String, String, String, Option<String>),
-        Vec<ResolvedComponent>,
-    > = HashMap::new();
+    // Group by (ecosystem, name, version, parent_purl, pants-namespace).
+    // Milestone 1064 (#924): two Pants resolves named `default`, one per
+    // language namespace, have owning components that differ only by that
+    // qualifier. Without it here they merge into one. Only that qualifier is
+    // added: keying on the whole PURL would also split qualifier-only
+    // variants elsewhere (e.g. deb `?arch=`) and change non-Pants output.
+    let mut groups: HashMap<DedupKey, Vec<ResolvedComponent>> = HashMap::new();
 
     for component in components {
         let key = (
@@ -42,6 +47,8 @@ pub fn deduplicate(components: Vec<ResolvedComponent>) -> Vec<ResolvedComponent>
             component.name.clone(),
             component.version.clone(),
             component.parent_purl.clone(),
+            crate::scan_fs::package_db::pants_resolve::anchor_namespace(&component.purl)
+                .map(str::to_string),
         );
         groups.entry(key).or_default().push(component);
     }

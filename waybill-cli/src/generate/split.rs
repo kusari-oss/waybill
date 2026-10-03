@@ -335,9 +335,17 @@ fn resolve_projections(
             // The promotion is projection-local. `members` here is already a
             // clone, so nothing reaches the unsplit document.
             let mut members = members;
-            let anchor_idx = members
-                .iter()
-                .position(|c| c.purl.name() == resolve && c.purl.ecosystem() == "generic");
+            // m1064 (#924): name, ecosystem AND namespace. Members are already
+            // grouped by qualified resolve, so this does not change today's
+            // result; it keeps the lookup correct without leaning on that
+            // (contracts/anchor-identity.md invariant 3).
+            let anchor_idx = members.iter().position(|c| {
+                c.purl.name() == resolve
+                    && c.purl.ecosystem() == "generic"
+                    && crate::scan_fs::package_db::pants_resolve::read_namespace(
+                        &c.extra_annotations,
+                    ) == Some(qualified.namespace)
+            });
             if let Some(i) = anchor_idx {
                 members[i].extra_annotations.insert(
                     COMPONENT_ROLE_KEY.to_string(),

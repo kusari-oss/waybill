@@ -393,7 +393,46 @@ pub struct PantsResolveSummary {
     pub discovered_resolves: Vec<String>,
 }
 
+/// Milestone 1064 (#924) — one reader's contribution to the repository-wide
+/// statement, with bare resolve names. [`PantsResolveSummary::merge`]
+/// qualifies them, so no reader has to know about the other namespace.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ResolveSummaryPart {
+    pub namespace: super::pants_resolve::LanguageNamespace,
+    pub declared: Vec<String>,
+    pub discovered: Vec<String>,
+    pub weak_classification: usize,
+    pub unanchored_lockfiles: usize,
+}
+
 impl PantsResolveSummary {
+    /// Milestone 1064 (#924) — one statement for the whole repository.
+    ///
+    /// Names become `<namespace>:<name>` (C163's form), both lists are
+    /// sorted and deduplicated over the qualified string, and counts are
+    /// summed. `None` when no reader found a lockfile, which is what keeps a
+    /// non-Pants scan byte-identical (FR-014).
+    pub fn merge(parts: impl IntoIterator<Item = ResolveSummaryPart>) -> Option<Self> {
+        let mut any = false;
+        let mut out = Self::default();
+        for part in parts {
+            any = true;
+            let q = |n: &String| super::pants_resolve::qualify(part.namespace, n);
+            out.declared_resolves.extend(part.declared.iter().map(q));
+            out.discovered_resolves.extend(part.discovered.iter().map(q));
+            out.weak_classification_count += part.weak_classification;
+            out.unanchored_lockfile_count += part.unanchored_lockfiles;
+        }
+        if !any {
+            return None;
+        }
+        out.declared_resolves.sort();
+        out.declared_resolves.dedup();
+        out.discovered_resolves.sort();
+        out.discovered_resolves.dedup();
+        Some(out)
+    }
+
     /// Wire form for the `waybill:resolve-ownership` annotation.
     ///
     /// Issue #911 replaced the `key=value;key=value` string with a JSON
@@ -425,7 +464,7 @@ impl PantsResolveSummary {
     }
 }
 
-pub fn read_with_summary(scan_root: &Path) -> (Vec<PackageDbEntry>, Option<PantsResolveSummary>) {
+pub fn read_with_summary(scan_root: &Path) -> (Vec<PackageDbEntry>, Option<ResolveSummaryPart>) {
     // Milestone 868 (#887) — read the configuration's own statements about
     // resolves once, up front.
     //
@@ -466,7 +505,30 @@ pub fn read_with_summary(scan_root: &Path) -> (Vec<PackageDbEntry>, Option<Pants
     let pants_signal_present =
         default_dir_exists || pants_toml_exists || lockfiles_dir_exists;
 
-    let candidates = discover_lockfiles(scan_root);
+    let mut candidates = discover_lockfiles(scan_root);
+    // Milestone 1064 (#924, research R2): Pants's built-in default. With a
+    // `pants.toml` and no `[python].resolves`, Pants itself declares
+    // `{"python-default": "3rdparty/python/default.lock"}`; name the resolve
+    // as Pants does and treat it as declared.
+    let mut builtin_default: Option<String> = None;
+    if super::pants_resolve::builtin_default_applies(
+        scan_root,
+        super::pants_resolve::LanguageNamespace::Python,
+    ) {
+        let (name, rel) = super::pants_resolve::pants_builtin_default(
+            super::pants_resolve::LanguageNamespace::Python,
+        );
+        // Candidates carry canonical paths (m672 FR-009), so the default
+        // path must be canonical too. Comparing the raw join missed whenever
+        // the scan root went through a symlink (macOS `/var` tempdirs) or
+        // on Windows, where canonical paths gain a `\\?\` prefix.
+        let joined = scan_root.join(rel);
+        let default_path = std::fs::canonicalize(&joined).unwrap_or(joined);
+        if let Some(c) = candidates.iter_mut().find(|c| c.path == default_path) {
+            c.resolve_name = name.to_string();
+            builtin_default = Some(name.to_string());
+        }
+    }
     if candidates.is_empty() {
         if pants_signal_present {
             tracing::info!(
@@ -568,7 +630,14 @@ pub fn read_with_summary(scan_root: &Path) -> (Vec<PackageDbEntry>, Option<Pants
         // lockfile found by glob carries a name derived from its filename
         // stem, which is a convention rather than a declaration of
         // ownership, so it stays unanchored and is counted (FR-003).
-        if declared_resolve_names.contains(&candidate.resolve_name) {
+        let declaration = if declared_resolve_names.contains(&candidate.resolve_name) {
+            super::pants_resolve::Declaration::Configured
+        } else if builtin_default.as_deref() == Some(candidate.resolve_name.as_str()) {
+            super::pants_resolve::Declaration::PantsDefault
+        } else {
+            super::pants_resolve::Declaration::Discovered
+        };
+        if declaration.is_declared() {
             declared_seen.push(candidate.resolve_name.clone());
             if let Some(entry) = lockfile::resolve_component_entry(
                 &lock,
@@ -617,11 +686,12 @@ pub fn read_with_summary(scan_root: &Path) -> (Vec<PackageDbEntry>, Option<Pants
     // `None` when no Pex lockfile was found at all — that is what keeps a
     // non-Pants scan byte-identical (contract A-7). Once one was found, both
     // counts are reported even at zero (FR-003c).
-    let summary = (lockfiles_discovered > 0).then_some(PantsResolveSummary {
-        weak_classification_count: weak_classification,
-        unanchored_lockfile_count: unanchored_lockfiles,
-        declared_resolves: declared_seen,
-        discovered_resolves: discovered_seen,
+    let summary = (lockfiles_discovered > 0).then_some(ResolveSummaryPart {
+        namespace: super::pants_resolve::LanguageNamespace::Python,
+        declared: declared_seen,
+        discovered: discovered_seen,
+        weak_classification,
+        unanchored_lockfiles,
     });
 
     (components, summary)
@@ -636,6 +706,54 @@ pub fn read_with_summary(scan_root: &Path) -> (Vec<PackageDbEntry>, Option<Pants
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
     use super::*;
+
+    // Milestone 1064 (#924) — the repository-wide statement.
+    fn part(
+        namespace: super::super::pants_resolve::LanguageNamespace,
+        declared: &[&str],
+        discovered: &[&str],
+        weak: usize,
+    ) -> ResolveSummaryPart {
+        ResolveSummaryPart {
+            namespace,
+            declared: declared.iter().map(|s| s.to_string()).collect(),
+            discovered: discovered.iter().map(|s| s.to_string()).collect(),
+            weak_classification: weak,
+            unanchored_lockfiles: discovered.len(),
+        }
+    }
+
+    #[test]
+    fn merge_of_nothing_is_absent() {
+        assert_eq!(PantsResolveSummary::merge(std::iter::empty()), None);
+    }
+
+    #[test]
+    fn merge_qualifies_sorts_and_sums_across_namespaces() {
+        use super::super::pants_resolve::LanguageNamespace::{Jvm, Python};
+        let merged = PantsResolveSummary::merge([
+            part(Python, &["lint", "default"], &["mypy"], 2),
+            part(Jvm, &["default"], &[], 1),
+        ])
+        .unwrap();
+        assert_eq!(
+            merged.as_wire_value(),
+            serde_json::json!({
+                "declared": ["jvm:default", "python:default", "python:lint"],
+                "discovered": ["python:mypy"],
+                "weak_classification": 3,
+                "unanchored_lockfiles": 1,
+            })
+        );
+    }
+
+    #[test]
+    fn merge_is_independent_of_part_order() {
+        use super::super::pants_resolve::LanguageNamespace::{Jvm, Python};
+        let a = PantsResolveSummary::merge([part(Python, &["x"], &[], 0), part(Jvm, &["x"], &[], 0)]);
+        let b = PantsResolveSummary::merge([part(Jvm, &["x"], &[], 0), part(Python, &["x"], &[], 0)]);
+        assert_eq!(a, b);
+    }
 
     #[test]
     fn legacy_shape_counter_starts_at_zero() {
@@ -781,11 +899,11 @@ lint-tools = "locks/stem-two.lock"
             resolves,
             vec![
                 (
-                    "pkg:generic/app-runtime".to_string(),
+                    "pkg:generic/app-runtime?pants-namespace=python".to_string(),
                     "app-runtime".to_string()
                 ),
                 (
-                    "pkg:generic/lint-tools".to_string(),
+                    "pkg:generic/lint-tools?pants-namespace=python".to_string(),
                     "lint-tools".to_string()
                 ),
             ],
@@ -834,7 +952,7 @@ app-runtime = "locks/app.lock"
         let entries = read_with_summary(root).0;
         let resolve = entries
             .iter()
-            .find(|e| e.purl.as_str() == "pkg:generic/app-runtime")
+            .find(|e| e.purl.as_str() == "pkg:generic/app-runtime?pants-namespace=python")
             .expect("resolve component must be emitted");
         assert_eq!(
             resolve.depends,
@@ -850,12 +968,16 @@ app-runtime = "locks/app.lock"
         // default glob with NO `[python.resolves]` naming it, yields the
         // same packages and NO resolve component. A filename stem is a
         // convention, not a declaration of ownership.
+        //
+        // Not at `3rdparty/python/default.lock`: with a pants.toml and no
+        // `[python.resolves]`, Pants itself declares that path as
+        // `python-default` (m1064 R2).
         let dir = tempfile::tempdir().unwrap();
         let root = dir.path();
         write(root, "pants.toml", b"[python]\n");
         write(
             root,
-            "3rdparty/python/default.lock",
+            "3rdparty/python/app.lock",
             &synth_lockfile(&[("waybill-fixture-alpha", "1.0.0")], &["waybill-fixture-alpha"]),
         );
 
@@ -874,6 +996,33 @@ app-runtime = "locks/app.lock"
                 .iter()
                 .any(|e| e.purl.as_str().starts_with("pkg:pypi/waybill-fixture-alpha")),
             "the packages themselves are unaffected",
+        );
+    }
+
+    /// m1064 R2 through a symlinked scan root. Candidate paths are
+    /// canonical, so a default path built from the raw root never matched
+    /// and the built-in default was silently lost (macOS tempdirs, Windows).
+    #[cfg(unix)]
+    #[test]
+    fn builtin_default_is_named_through_a_symlinked_root() {
+        let dir = tempfile::tempdir().unwrap();
+        let real = dir.path().join("real");
+        write(&real, "pants.toml", b"[python]\n");
+        write(
+            &real,
+            "3rdparty/python/default.lock",
+            &synth_lockfile(&[("waybill-fixture-alpha", "1.0.0")], &["waybill-fixture-alpha"]),
+        );
+        let link = dir.path().join("link");
+        std::os::unix::fs::symlink(&real, &link).unwrap();
+
+        let entries = read_with_summary(&link).0;
+        assert_eq!(
+            resolve_components(&entries),
+            vec![(
+                "pkg:generic/python-default?pants-namespace=python".to_string(),
+                "python-default".to_string()
+            )],
         );
     }
 }

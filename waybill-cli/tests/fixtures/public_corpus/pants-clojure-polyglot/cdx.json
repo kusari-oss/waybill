@@ -2,7 +2,119 @@
   "bomFormat": "CycloneDX",
   "components": [
     {
-      "bom-ref": "pkg:generic/pants-2.30",
+      "bom-ref": "pkg:generic/java17?pants-namespace=jvm",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "locks/jvm/java17.lock.jsonc"
+          }
+        ]
+      },
+      "name": "java17",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"locks/jvm/java17.lock.jsonc\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:component-kind",
+          "value": "lockfile-resolve"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"java17\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
+        },
+        {
+          "name": "waybill:resolve-classification-source",
+          "value": "heuristic-or-default"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"locks/jvm\"]"
+        }
+      ],
+      "purl": "pkg:generic/java17?pants-namespace=jvm",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:generic/java21?pants-namespace=jvm",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "locks/jvm/java21.lock.jsonc"
+          }
+        ]
+      },
+      "name": "java21",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"locks/jvm/java21.lock.jsonc\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:component-kind",
+          "value": "lockfile-resolve"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"java21\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
+        },
+        {
+          "name": "waybill:resolve-classification-source",
+          "value": "heuristic-or-default"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"locks/jvm\"]"
+        }
+      ],
+      "purl": "pkg:generic/java21?pants-namespace=jvm",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:generic/pants-2.30?pants-namespace=python",
       "evidence": {
         "identity": [
           {
@@ -54,11 +166,11 @@
           "value": "[\"3rdparty/python\"]"
         }
       ],
-      "purl": "pkg:generic/pants-2.30",
+      "purl": "pkg:generic/pants-2.30?pants-namespace=python",
       "type": "library"
     },
     {
-      "bom-ref": "pkg:generic/pants-2.31",
+      "bom-ref": "pkg:generic/pants-2.31?pants-namespace=python",
       "evidence": {
         "identity": [
           {
@@ -110,7 +222,7 @@
           "value": "[\"3rdparty/python\"]"
         }
       ],
-      "purl": "pkg:generic/pants-2.31",
+      "purl": "pkg:generic/pants-2.31?pants-namespace=python",
       "type": "library"
     },
     {
@@ -3970,10 +4082,7 @@
         "pkg:maven/org.clojure/spec.alpha@0.5.238",
         "pkg:maven/org.hamcrest/hamcrest-core@1.3",
         "pkg:maven/tigris/tigris@0.1.2"
-      ]
-    },
-    {
-      "aggregate": "unknown",
+      ],
       "dependencies": [
         "pkg:maven/cheshire/cheshire@5.13.0",
         "pkg:maven/com.fasterxml.jackson.core/jackson-core@2.17.0",
@@ -4015,14 +4124,30 @@
   "dependencies": [
     {
       "dependsOn": [
-        "pkg:generic/pants-2.30",
-        "pkg:generic/pants-2.31",
-        "pkg:maven/cheshire/cheshire@5.13.0",
-        "pkg:maven/com.google.guava/guava@31.1-jre",
-        "pkg:maven/com.google.guava/guava@33.0.0-jre",
-        "pkg:maven/junit/junit@4.13.2"
+        "pkg:generic/java17?pants-namespace=jvm",
+        "pkg:generic/java21?pants-namespace=jvm",
+        "pkg:generic/pants-2.30?pants-namespace=python",
+        "pkg:generic/pants-2.31?pants-namespace=python"
       ],
       "ref": "pants-clojure-polyglot@e068ffb"
+    },
+    {
+      "dependsOn": [
+        "pkg:maven/cheshire/cheshire@5.13.0",
+        "pkg:maven/com.google.guava/guava@31.1-jre",
+        "pkg:maven/junit/junit@4.13.2",
+        "pkg:maven/org.clojure/clojure@1.12.3"
+      ],
+      "ref": "pkg:generic/java17?pants-namespace=jvm"
+    },
+    {
+      "dependsOn": [
+        "pkg:maven/cheshire/cheshire@5.13.0",
+        "pkg:maven/com.google.guava/guava@33.0.0-jre",
+        "pkg:maven/junit/junit@4.13.2",
+        "pkg:maven/org.clojure/clojure@1.12.3"
+      ],
+      "ref": "pkg:generic/java21?pants-namespace=jvm"
     },
     {
       "dependsOn": [
@@ -4031,7 +4156,7 @@
         "pkg:pypi/pantsbuild-pants@2.30.0",
         "pkg:pypi/pytest@8.4.2"
       ],
-      "ref": "pkg:generic/pants-2.30"
+      "ref": "pkg:generic/pants-2.30?pants-namespace=python"
     },
     {
       "dependsOn": [
@@ -4040,7 +4165,7 @@
         "pkg:pypi/pantsbuild-pants@2.31.0",
         "pkg:pypi/pytest@8.4.2"
       ],
-      "ref": "pkg:generic/pants-2.31"
+      "ref": "pkg:generic/pants-2.31?pants-namespace=python"
     },
     {
       "dependsOn": [
@@ -4425,11 +4550,7 @@
       },
       {
         "name": "waybill:graph-completeness",
-        "value": "partial"
-      },
-      {
-        "name": "waybill:graph-completeness-reason",
-        "value": "orphaned-components-detected: 3 component(s) not reachable from root"
+        "value": "complete"
       },
       {
         "name": "waybill:workspaces-detected",
@@ -4441,7 +4562,7 @@
       },
       {
         "name": "waybill:resolve-ownership",
-        "value": "{\"declared\":[\"pants-2.30\",\"pants-2.31\"],\"discovered\":[],\"unanchored_lockfiles\":0,\"weak_classification\":2}"
+        "value": "{\"declared\":[\"jvm:java17\",\"jvm:java21\",\"python:pants-2.30\",\"python:pants-2.31\"],\"discovered\":[],\"unanchored_lockfiles\":0,\"weak_classification\":4}"
       }
     ],
     "supplier": {

@@ -363,11 +363,12 @@ pub(crate) fn resolve_component_entry(
     if resolve_name.trim().is_empty() {
         return None;
     }
-    let purl = Purl::new(&format!(
-        "pkg:generic/{}",
-        encode_purl_segment(resolve_name)
-    ))
-    .ok()?;
+    // m1064 (#924): qualified by namespace so a JVM resolve of the same name
+    // is a different component (contracts/anchor-identity.md).
+    let purl = super::super::pants_resolve::anchor_purl(
+        super::super::pants_resolve::LanguageNamespace::Python,
+        resolve_name,
+    )?;
 
     // One classification, used for both the scope and the recorded evidence
     // strength, so the two cannot disagree about the same resolve.

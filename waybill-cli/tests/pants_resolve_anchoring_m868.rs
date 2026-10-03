@@ -292,8 +292,8 @@ fn t009_each_resolves_requirements_are_reachable_from_the_document_root() {
     let reached = reachable_from_root(&doc);
 
     for purl in [
-        "pkg:generic/app-runtime",
-        "pkg:generic/lint-tools",
+        "pkg:generic/app-runtime?pants-namespace=python",
+        "pkg:generic/lint-tools?pants-namespace=python",
         "pkg:pypi/waybill-fixture-web@1.0.0",
         "pkg:pypi/waybill-fixture-linter@3.0.0",
     ] {
@@ -354,7 +354,7 @@ fn t017_a_package_in_two_resolves_is_reachable_via_each() {
     }
 
     // Reachability from each resolve component independently.
-    for resolve_purl in ["pkg:generic/app-runtime", "pkg:generic/lint-tools"] {
+    for resolve_purl in ["pkg:generic/app-runtime?pants-namespace=python", "pkg:generic/lint-tools?pants-namespace=python"] {
         let start = refs.get(resolve_purl).expect("resolve component").clone();
         let mut seen: HashSet<String> = HashSet::new();
         let mut queue = VecDeque::from(vec![start.clone()]);
@@ -507,8 +507,8 @@ fn t019_a_resolve_is_identifiable_as_a_resolve_in_every_format() {
     assert_eq!(
         cdx_marked_resolves(&cdx),
         vec![
-            "pkg:generic/app-runtime".to_string(),
-            "pkg:generic/lint-tools".to_string()
+            "pkg:generic/app-runtime?pants-namespace=python".to_string(),
+            "pkg:generic/lint-tools?pants-namespace=python".to_string()
         ],
         "CDX: exactly the resolve components carry the marker",
     );
@@ -681,7 +681,7 @@ install_from_resolve = "app-runtime"
     );
     let (cdx, spdx23, spdx3) = run_scan_all_formats(dir.path());
     let expected = Some(
-        r#"{"declared":["app-runtime"],"discovered":[],"unanchored_lockfiles":0,"weak_classification":0}"#
+        r#"{"declared":["python:app-runtime"],"discovered":[],"unanchored_lockfiles":0,"weak_classification":0}"#
             .to_string(),
     );
     assert_eq!(
@@ -741,7 +741,7 @@ fn t034_a_glob_discovered_lockfile_nobody_declares_is_counted_unanchored() {
     let (cdx, spdx23, spdx3) = run_scan_all_formats(dir.path());
 
     let expected = Some(
-        r#"{"declared":[],"discovered":["undeclared"],"unanchored_lockfiles":1,"weak_classification":0}"#
+        r#"{"declared":[],"discovered":["python:undeclared"],"unanchored_lockfiles":1,"weak_classification":0}"#
             .to_string(),
     );
     assert_eq!(
@@ -772,7 +772,7 @@ fn t030_undeclared_resolves_are_counted_as_weakly_classified() {
     two_resolve_repo(dir.path());
     let (cdx, spdx23, spdx3) = run_scan_all_formats(dir.path());
     let expected = Some(
-        r#"{"declared":["app-runtime","lint-tools"],"discovered":[],"unanchored_lockfiles":0,"weak_classification":2}"#
+        r#"{"declared":["python:app-runtime","python:lint-tools"],"discovered":[],"unanchored_lockfiles":0,"weak_classification":2}"#
             .to_string(),
     );
     assert_eq!(
@@ -843,7 +843,7 @@ app-runtime = "locks/app.lock"
     // it does not remove the feature.
     assert_eq!(
         cdx_marked_resolves(&doc),
-        vec!["pkg:generic/app-runtime".to_string()],
+        vec!["pkg:generic/app-runtime?pants-namespace=python".to_string()],
     );
 }
 
@@ -904,7 +904,7 @@ install_from_resolve = "python-default"
         .as_array()
         .into_iter()
         .flatten()
-        .find(|c| c["purl"].as_str() == Some("pkg:generic/python-default"))
+        .find(|c| c["purl"].as_str() == Some("pkg:generic/python-default?pants-namespace=python"))
         .expect("resolve component");
     let source = resolve["properties"]
         .as_array()

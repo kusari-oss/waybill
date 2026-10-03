@@ -130,13 +130,13 @@ pub(crate) fn union(a: &Value, b: &Value) -> Value {
 //   - C143 (`waybill:pants-resolve`) ships a bare-name array as of v0.9.0,
 //     and qualifying it in place would be a breaking value change, not the
 //     additive one the contract promises.
-//   - C161 (`waybill:resolve-ownership`) must stay byte-identical inside a
-//     split document (FR-007 / SC-006), and it is populated by the Python
-//     reader alone — teaching it about JVM resolves would change its value on
-//     every JVM repository.
+//   - C161 (`waybill:resolve-ownership`) had to stay byte-identical inside a
+//     split document (FR-007 / SC-006) while only the Python reader fed it.
 //
-// So the namespace rides alongside as an index, and the ONE thing that
-// reaches the wire is the document identity C163 derives from it.
+// So the namespace rode alongside as an index, and the one thing that reached
+// the wire was the document identity C163 derives from it. Milestone 1064
+// (#924) then deliberately qualified C161's names with `qualify` and let the
+// JVM reader feed it, superseding m912 SC-006's "unchanged" pin.
 
 /// The `pants.toml` section that declares a resolve.
 ///
@@ -198,6 +198,112 @@ impl std::fmt::Display for LanguageNamespace {
 /// and by the C163 document identity it feeds.
 pub fn qualify(namespace: LanguageNamespace, resolve: &str) -> String {
     format!("{}:{}", namespace.as_str(), resolve)
+}
+
+/// Milestone 1064 (#924) — Pants's built-in default for a language whose
+/// resolves the repository does not configure, as `(name, lockfile path)`.
+/// Pants 2.31: `jvm/subsystems.py:66-72`,
+/// `backend/python/subsystems/setup.py:187-237` (research R2).
+pub(crate) fn pants_builtin_default(namespace: LanguageNamespace) -> (&'static str, &'static str) {
+    match namespace {
+        LanguageNamespace::Python => ("python-default", "3rdparty/python/default.lock"),
+        LanguageNamespace::Jvm => ("jvm-default", "3rdparty/jvm/default.lock"),
+    }
+}
+
+/// Milestone 1064 (#924) — whether Pants's built-in default resolve applies:
+/// the repository has a readable `pants.toml` (it is a Pants repository) and
+/// that file has no `<language>.resolves` table. An explicit table, even an
+/// empty inline one, replaces the default, as it does in Pants.
+pub(crate) fn builtin_default_applies(scan_root: &std::path::Path, namespace: LanguageNamespace) -> bool {
+    let Ok(text) = std::fs::read_to_string(scan_root.join("pants.toml")) else {
+        return false;
+    };
+    let Ok(doc) = text.parse::<toml::Table>() else {
+        return false;
+    };
+    doc.get(namespace.as_str())
+        .and_then(|section| section.get("resolves"))
+        .is_none()
+}
+
+/// Milestone 1064 (#924) — the owning component's PURL:
+/// `pkg:generic/<resolve>?pants-namespace=<namespace>`.
+///
+/// The qualifier keeps two same-named resolves in different namespaces
+/// distinct (contracts/anchor-identity.md) while `purl.name()` stays the
+/// resolve's name, which split filenames derive from. `pants-namespace` is
+/// waybill's own qualifier key; there is no community convention yet (#1106).
+pub(crate) fn anchor_purl(
+    namespace: LanguageNamespace,
+    resolve: &str,
+) -> Option<waybill_common::types::purl::Purl> {
+    waybill_common::types::purl::Purl::new(&format!(
+        "pkg:generic/{}?pants-namespace={}",
+        waybill_common::types::purl::encode_purl_segment(resolve),
+        namespace.as_str()
+    ))
+    .ok()
+}
+
+/// The `pants-namespace` qualifier of an owning component's PURL; `None` for
+/// every other PURL. Identity that compares PURLs without qualifiers must add
+/// this, or same-named resolves in different namespaces merge.
+pub(crate) fn anchor_namespace(purl: &waybill_common::types::purl::Purl) -> Option<&str> {
+    if purl.ecosystem() != "generic" {
+        return None;
+    }
+    let (_, query) = purl.as_str().split_once('?')?;
+    let query = query.split('#').next().unwrap_or_default();
+    query
+        .split('&')
+        .find_map(|kv| kv.strip_prefix("pants-namespace="))
+}
+
+/// Milestone 1064 (#924) — how the repository establishes that a resolve
+/// exists. It decides whether the resolve gets an owning component and how
+/// strongly it is classified (data-model.md `Declaration`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Declaration {
+    /// Found by the lockfile-filename convention only. Not a declaration, so
+    /// not anchored (m868 FR-003).
+    Discovered,
+    /// Pants's built-in default (`jvm-default` / `python-default` at the
+    /// default lockfile path), applied when `pants.toml` exists and names no
+    /// resolves for the language. Pants declares it even though the file
+    /// does not spell it out.
+    PantsDefault,
+    /// JVM only: a `[<scope>].lockfile` path in any table other than `[jvm]`
+    /// and `[python]` (Pants `JvmToolBase`, research R5). Named after the
+    /// tool's scope.
+    ToolLockfile,
+    /// A key in `[<language>.resolves]`.
+    Configured,
+}
+
+impl Declaration {
+    /// Whether the resolve gets an owning component.
+    pub(crate) fn is_declared(self) -> bool {
+        !matches!(self, Self::Discovered)
+    }
+
+    /// The stronger of two declarations for the same lockfile:
+    /// `Configured > ToolLockfile > PantsDefault > Discovered`.
+    pub(crate) fn stronger(self, other: Self) -> Self {
+        fn rank(d: Declaration) -> u8 {
+            match d {
+                Declaration::Discovered => 0,
+                Declaration::PantsDefault => 1,
+                Declaration::ToolLockfile => 2,
+                Declaration::Configured => 3,
+            }
+        }
+        if rank(other) > rank(self) {
+            other
+        } else {
+            self
+        }
+    }
 }
 
 /// Per-component annotation key. Catalogue row C164.
@@ -317,6 +423,61 @@ mod tests {
             ),
             None
         );
+    }
+
+    #[test]
+    fn builtin_default_needs_pants_toml_and_no_resolves_table() {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path();
+        assert!(!builtin_default_applies(root, LanguageNamespace::Jvm), "no pants.toml");
+        std::fs::write(root.join("pants.toml"), "[jvm]\njdk = \"x\"\n").unwrap();
+        assert!(builtin_default_applies(root, LanguageNamespace::Jvm));
+        assert!(builtin_default_applies(root, LanguageNamespace::Python));
+        std::fs::write(root.join("pants.toml"), "[jvm.resolves]\nmain = \"m.lock\"\n").unwrap();
+        assert!(!builtin_default_applies(root, LanguageNamespace::Jvm));
+        assert!(builtin_default_applies(root, LanguageNamespace::Python));
+        std::fs::write(root.join("pants.toml"), "[python]\nresolves = {}\n").unwrap();
+        assert!(!builtin_default_applies(root, LanguageNamespace::Python), "an empty table still replaces the default");
+    }
+
+    #[test]
+    fn anchor_purl_carries_the_namespace_qualifier() {
+        let py = anchor_purl(LanguageNamespace::Python, "default").unwrap();
+        let jvm = anchor_purl(LanguageNamespace::Jvm, "default").unwrap();
+        assert_eq!(py.as_str(), "pkg:generic/default?pants-namespace=python");
+        assert_eq!(jvm.as_str(), "pkg:generic/default?pants-namespace=jvm");
+        assert_eq!(anchor_namespace(&py), Some("python"));
+        assert_eq!(anchor_namespace(&jvm), Some("jvm"));
+        for other in [
+            "pkg:generic/default",
+            "pkg:generic/x@1?download_url=https://e.example/a",
+            "pkg:deb/debian/libc6@2.36?arch=amd64",
+        ] {
+            let p = waybill_common::types::purl::Purl::new(other).unwrap();
+            assert_eq!(anchor_namespace(&p), None, "{other}");
+        }
+        assert_ne!(py.as_str(), jvm.as_str());
+        assert_eq!(py.name(), "default", "the name segment stays the resolve name");
+    }
+
+    #[test]
+    fn only_discovered_is_undeclared() {
+        assert!(!Declaration::Discovered.is_declared());
+        for d in [Declaration::PantsDefault, Declaration::Configured] {
+            assert!(d.is_declared(), "{d:?}");
+        }
+    }
+
+    #[test]
+    fn stronger_follows_the_precedence_in_either_order() {
+        use Declaration::*;
+        let order = [Discovered, PantsDefault, Configured];
+        for (i, a) in order.iter().enumerate() {
+            for (j, b) in order.iter().enumerate() {
+                let want = order[i.max(j)];
+                assert_eq!(a.stronger(*b), want, "{a:?} vs {b:?}");
+            }
+        }
     }
 
     #[test]

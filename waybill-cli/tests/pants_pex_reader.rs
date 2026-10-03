@@ -1024,3 +1024,58 @@ fn a_dotted_requirement_resolves_to_its_normalized_project() {
         "no declared dependency should be left unresolved"
     );
 }
+
+
+// ---------------------------------------------------------------
+// Milestone 1064 (#924) — Pants built-in default resolve naming.
+// ---------------------------------------------------------------
+
+fn ownership(cdx: &serde_json::Value) -> Option<serde_json::Value> {
+    cdx["metadata"]["properties"]
+        .as_array()?
+        .iter()
+        .find(|p| p["name"].as_str() == Some("waybill:resolve-ownership"))
+        .and_then(|p| p["value"].as_str())
+        .and_then(|v| serde_json::from_str(v).ok())
+}
+
+fn scan_pex_fixture(name: &str) -> serde_json::Value {
+    let tmp = tempfile::tempdir().unwrap();
+    let out = tmp.path().join("out.cdx.json");
+    let o = run_scan(&pants_fixture(name), &out, &[]);
+    assert!(o.status.success(), "{}", String::from_utf8_lossy(&o.stderr));
+    read_cdx(&out)
+}
+
+/// US3 — `[python]` with resolves enabled but no `resolves` key: Pants's
+/// built-in `{"python-default": "3rdparty/python/default.lock"}` applies.
+#[test]
+fn unconfigured_python_default_is_named_python_default_and_declared() {
+    let cdx = scan_pex_fixture("implicit_default_python");
+    let core = cdx["components"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| c["purl"].as_str().is_some_and(|p| p.starts_with("pkg:pypi/waybill-fixture-core@")))
+        .expect("locked package");
+    assert_eq!(resolve_name(core).as_deref(), Some("python-default"));
+    let o = ownership(&cdx).expect("statement present");
+    assert_eq!(o["declared"], serde_json::json!(["python:python-default"]));
+    assert!(
+        cdx["components"].as_array().unwrap().iter().any(|c| c["purl"].as_str()
+            == Some("pkg:generic/python-default?pants-namespace=python")),
+        "the built-in default is a declaration, so it is anchored"
+    );
+}
+
+/// US3 — no `pants.toml`, no Pants repository, no built-in default.
+#[test]
+fn no_pants_toml_keeps_stem_names() {
+    let cdx = scan_pex_fixture("multi_resolve");
+    let o = ownership(&cdx).expect("statement present");
+    assert_eq!(o["declared"], serde_json::json!([]));
+    assert_eq!(
+        o["discovered"],
+        serde_json::json!(["python:default", "python:mypy", "python:pytest"])
+    );
+}

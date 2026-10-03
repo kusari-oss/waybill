@@ -68,17 +68,28 @@ fn names(v: &serde_json::Value, key: &str) -> Vec<String> {
 }
 
 /// Every resolve named by any component's membership.
+/// Qualified `<namespace>:<name>` (m1064): membership (C143) stays bare and
+/// the namespace (C164) rides alongside, while the document-scope statement
+/// carries the qualified form.
 fn resolves_on_components(doc: &serde_json::Value) -> BTreeSet<String> {
     let mut out = BTreeSet::new();
     for c in doc["components"].as_array().into_iter().flatten() {
-        for p in c["properties"].as_array().into_iter().flatten() {
-            if p["name"].as_str() != Some("waybill:pants-resolve") {
-                continue;
-            }
-            let raw = p["value"].as_str().unwrap_or_default();
-            if let Ok(serde_json::Value::Array(items)) = serde_json::from_str(raw) {
-                out.extend(items.iter().filter_map(|x| x.as_str()).map(str::to_string));
-            }
+        let props = c["properties"].as_array().into_iter().flatten();
+        let prop = |name: &str| {
+            props
+                .clone()
+                .find(|p| p["name"].as_str() == Some(name))
+                .and_then(|p| p["value"].as_str())
+        };
+        let Some(raw) = prop("waybill:pants-resolve") else { continue };
+        let namespace = prop("waybill:pants-resolve-namespace").unwrap_or("?");
+        if let Ok(serde_json::Value::Array(items)) = serde_json::from_str(raw) {
+            out.extend(
+                items
+                    .iter()
+                    .filter_map(|x| x.as_str())
+                    .map(|n| format!("{namespace}:{n}")),
+            );
         }
     }
     out
@@ -88,7 +99,7 @@ fn resolves_on_components(doc: &serde_json::Value) -> BTreeSet<String> {
 #[test]
 fn a_declaring_repository_names_its_declared_resolves() {
     let o = ownership(&scan("pants_resolve_edges"));
-    assert_eq!(names(&o, "declared"), vec!["app", "tools"]);
+    assert_eq!(names(&o, "declared"), vec!["python:app", "python:tools"]);
     assert!(
         names(&o, "discovered").is_empty(),
         "nothing here was found by convention; got {o}"
@@ -101,7 +112,7 @@ fn a_declaring_repository_names_its_declared_resolves() {
 #[test]
 fn a_convention_only_repository_names_its_discovered_resolves() {
     let o = ownership(&scan("pants_discovered_resolves"));
-    assert_eq!(names(&o, "discovered"), vec!["default", "lint"]);
+    assert_eq!(names(&o, "discovered"), vec!["python:app", "python:lint"]);
     assert!(
         names(&o, "declared").is_empty(),
         "nothing here was declared; got {o}"
@@ -149,7 +160,7 @@ fn a_resolve_appears_in_exactly_one_category() {
 fn a_discovered_resolve_is_named_but_still_unanchored() {
     let doc = scan("pants_discovered_resolves");
     let o = ownership(&doc);
-    assert_eq!(names(&o, "discovered"), vec!["default", "lint"]);
+    assert_eq!(names(&o, "discovered"), vec!["python:app", "python:lint"]);
 
     let anchors: Vec<&str> = doc["components"]
         .as_array()

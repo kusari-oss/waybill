@@ -108,7 +108,7 @@ fn each_discovered_resolve_document_states_its_own_resolve() {
 
     let ids: Vec<Option<Vec<String>>> =
         s.docs.iter().map(|(_, d)| identity_cdx(d)).collect();
-    assert_eq!(ids[0].as_deref(), Some(&["python:default".to_string()][..]));
+    assert_eq!(ids[0].as_deref(), Some(&["python:app".to_string()][..]));
     assert_eq!(ids[1].as_deref(), Some(&["python:lint".to_string()][..]));
 
     // SC-002: and they differ, which is the whole complaint. Before m912 every
@@ -267,7 +267,7 @@ fn the_repository_wide_ownership_statement_stays_repository_wide() {
     let b = ownership_cdx(&s.docs[1].1).expect("ownership on doc 1");
     assert_eq!(a, b, "C161 must remain identical across split documents");
     assert!(
-        a.contains("\"discovered\"") && a.contains("default") && a.contains("lint"),
+        a.contains("\"discovered\"") && a.contains("app") && a.contains("lint"),
         "C161 must still name every resolve in the repository, got: {a}"
     );
 }
@@ -278,7 +278,7 @@ fn the_repository_wide_ownership_statement_stays_repository_wide() {
 /// The easy wrong implementation synthesises the anchor m868 refused, which
 /// would make the identity trivial to derive and would pass every other test
 /// in this file. Component counts are what catches it. Baseline measured
-/// pre-change: default=2, lint=1.
+/// pre-change: default=2, lint=1 (the `default` lockfile is now `app`, m1064).
 #[test]
 fn no_document_gains_a_component() {
     let s = split("pants_discovered_resolves");
@@ -299,7 +299,7 @@ fn no_document_gains_a_component() {
         for c in doc["components"].as_array().into_iter().flatten() {
             assert_ne!(
                 c["purl"].as_str(),
-                Some("pkg:generic/default"),
+                Some("pkg:generic/app"),
                 "{name}: a synthetic anchor appeared for a discovered resolve"
             );
         }
@@ -348,7 +348,7 @@ fn one_reading_procedure_answers_for_every_provenance() {
     // Discovered (no anchor), declared (anchor promoted to root), and JVM
     // (no anchoring mechanism at all — R3).
     let cases = [
-        ("pants_discovered_resolves", "python:default"),
+        ("pants_discovered_resolves", "python:app"),
         ("pants_resolve_edges", "python:app"),
         ("pants_coursier_jvm/multi_resolve", "jvm:default"),
     ];
