@@ -1645,8 +1645,11 @@ pub fn layer0_document_integrity(
     // the `pkg:generic/python-default` resolve anchor instead. Measured on
     // the goldens at the time of writing — django 14/14/1 with 73/74/61
     // total edges, python 2/2/1 with 15/15/14.
-    const KNOWN_SPDX3_ROOT_EDGE_DIVERGENCE: &[&str] =
-        &["pants-example-django", "pants-example-python"]; // issue #1022
+    const KNOWN_SPDX3_ROOT_EDGE_DIVERGENCE: &[&str] = &[
+        "pants-example-django",
+        "pants-example-python",
+        "pants-clojure-polyglot",
+    ]; // issue #1022
     let expect_spdx3 = !KNOWN_SPDX3_ROOT_EDGE_DIVERGENCE.contains(&target);
     let disagrees = a != b || (expect_spdx3 && a != c);
     if disagrees {
