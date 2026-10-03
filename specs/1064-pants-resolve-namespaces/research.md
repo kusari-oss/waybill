@@ -142,6 +142,26 @@ fallback no longer applies to them. **Verify** that the clojure target reaches
 root→anchor edge proves to be Python-specific, that finding goes back into this
 plan before implementation proceeds.
 
+**Finding at T043 (first CI corpus run, 2026-10-03)**: the "no emitter
+change" decision holds for every root edge an owning component creates (FR-013).
+The clojure target measured 4 / 4 / 4 in the emitted documents, and the
+collision fixture 3 / 3 / 3. But R6 measured the CycloneDX and SPDX 2.3
+fallbacks only. The SPDX 3 fallback (`v3_document.rs`, the issue-#236 block
+gated on `synth_has_outgoing`) counts root → owning-component edges when it
+decides whether the root already has edges; the other two formats ignore them.
+So once a repository has an owning component, SPDX 3 stops attaching components
+that nothing else reaches.
+
+`pants-example-jvm` shows it: root out-edges went from 4 / 4 / 4 (before: three
+JVM top-levels plus the file-tier `get-pants.sh`, all through the fallback) to
+2 / 2 / 1. `jvm-default` is reached in all three formats; `get-pants.sh` is
+reached only in CycloneDX and SPDX 2.3. This is the #1022 mechanism, and
+`pants-example-python` already sits at 2 / 2 / 1 for the same reason. Per
+FR-013 and the out-of-scope note, the fallback is not changed here.
+`pants-example-jvm` joins `KNOWN_SPDX3_ROOT_EDGE_DIVERGENCE`, and the
+mechanism is recorded on #1022. For a file-tier component the direction is
+not in doubt, because it has no other parent: SPDX 3 is dropping a real edge.
+
 ## R7 — Blast radius
 
 - **Public corpus**: `pants-example-python`, `pants-example-django`,
