@@ -668,6 +668,26 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
             if let Some(scope) =
                 package_db::pants_resolve::read_single(&e.extra_annotations)
             {
+                // Maven dependencies are `groupId:artifactId` (the coursier
+                // and pom readers both write that form) while `e.name` is the
+                // bare artifact, so the scoped index needs the same extra key
+                // the flat index carries below (m085). Without it every
+                // scoped maven lookup missed and fell back to the flat
+                // index, where one resolve's version of an artifact
+                // overwrites another's: a two-resolve repository wired one
+                // app to the other resolve's library, nondeterministically.
+                if ecosystem == "maven" {
+                    if let Some(group_id) = e.purl.namespace() {
+                        scoped_name_to_purl.insert(
+                            (
+                                ecosystem.clone(),
+                                scope.clone(),
+                                normalize_dep_name("maven", &format!("{}:{}", group_id, e.name)),
+                            ),
+                            e.purl.as_str().to_string(),
+                        );
+                    }
+                }
                 scoped_name_to_purl.insert(
                     (
                         ecosystem.clone(),
