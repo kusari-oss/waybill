@@ -180,12 +180,14 @@ fi
 
 # ---- Linux native path ----------------------------------------------------
 
-# Ensure nightly toolchain + rust-src are available.
-if ! rustup toolchain list | grep -q '^nightly'; then
-  echo "verify-ebpf: installing nightly toolchain (missing)..."
-  rustup toolchain install nightly --profile minimal
+# Ensure the pinned eBPF nightly + rust-src are available (#1089: the
+# channel lives in waybill-ebpf/rust-toolchain.toml).
+ebpf_toolchain=$(sed -n 's/^channel *= *"\(.*\)"/\1/p' "$repo_root/waybill-ebpf/rust-toolchain.toml")
+if ! rustup toolchain list | grep -q "^$ebpf_toolchain"; then
+  echo "verify-ebpf: installing $ebpf_toolchain (missing)..."
+  rustup toolchain install "$ebpf_toolchain" --profile minimal
 fi
-rustup component add rust-src --toolchain nightly >/dev/null 2>&1 || true
+rustup component add rust-src --toolchain "$ebpf_toolchain" >/dev/null 2>&1 || true
 
 # Install bpf-linker at target version — pre-built binary path.
 # Matches .github/actions/install-bpf-linker/action.yml default
