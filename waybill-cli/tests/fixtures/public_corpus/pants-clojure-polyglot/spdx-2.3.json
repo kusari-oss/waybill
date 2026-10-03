@@ -29,13 +29,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness\",\"value\":\"partial\"}"
-    },
-    {
-      "annotationDate": "<masked>",
-      "annotationType": "OTHER",
-      "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness-reason\",\"value\":\"orphaned-components-detected: 3 component(s) not reachable from root\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness\",\"value\":\"complete\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -53,7 +47,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:resolve-ownership\",\"value\":{\"declared\":[\"pants-2.30\",\"pants-2.31\"],\"discovered\":[],\"unanchored_lockfiles\":0,\"weak_classification\":2}}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:resolve-ownership\",\"value\":{\"declared\":[\"jvm:java17\",\"jvm:java21\",\"python:pants-2.30\",\"python:pants-2.31\"],\"discovered\":[],\"unanchored_lockfiles\":0,\"weak_classification\":4}}"
     },
     {
       "annotationDate": "<masked>",
@@ -117,7 +111,151 @@
       "versionInfo": "e068ffb"
     },
     {
-      "SPDXID": "SPDXRef-Package-3VA5WUB5TVP4O5SO",
+      "SPDXID": "SPDXRef-Package-N4EIKGKYSSP63JVH",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"locks/jvm/java17.lock.jsonc\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"locks/jvm/java17.lock.jsonc\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-kind\",\"value\":\"lockfile-resolve\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":[\"java17\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve-namespace\",\"value\":\"jvm\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:resolve-classification-source\",\"value\":\"heuristic-or-default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"locks/jvm\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:generic/java17?pants-namespace=jvm",
+          "referenceType": "purl"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "java17",
+      "versionInfo": "NOASSERTION"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-NKV3YHJ7GBD3COE6",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"locks/jvm/java21.lock.jsonc\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"locks/jvm/java21.lock.jsonc\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-kind\",\"value\":\"lockfile-resolve\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":[\"java21\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve-namespace\",\"value\":\"jvm\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:resolve-classification-source\",\"value\":\"heuristic-or-default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"locks/jvm\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:generic/java21?pants-namespace=jvm",
+          "referenceType": "purl"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "java21",
+      "versionInfo": "NOASSERTION"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-B46YCN4GJECDHCMD",
       "annotations": [
         {
           "annotationDate": "<masked>",
@@ -178,7 +316,7 @@
       "externalRefs": [
         {
           "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:generic/pants-2.30",
+          "referenceLocator": "pkg:generic/pants-2.30?pants-namespace=python",
           "referenceType": "purl"
         }
       ],
@@ -189,7 +327,7 @@
       "versionInfo": "NOASSERTION"
     },
     {
-      "SPDXID": "SPDXRef-Package-6C55FDZWI4KCM2N6",
+      "SPDXID": "SPDXRef-Package-L4W4SSLNGJM55LIR",
       "annotations": [
         {
           "annotationDate": "<masked>",
@@ -250,7 +388,7 @@
       "externalRefs": [
         {
           "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:generic/pants-2.31",
+          "referenceLocator": "pkg:generic/pants-2.31?pants-namespace=python",
           "referenceType": "purl"
         }
       ],
@@ -4730,54 +4868,24 @@
       "spdxElementId": "SPDXRef-DOCUMENT"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-3VA5WUB5TVP4O5SO",
+      "relatedSpdxElement": "SPDXRef-Package-B46YCN4GJECDHCMD",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-4I6R4XYPFJ3YZONA",
+      "relatedSpdxElement": "SPDXRef-Package-L4W4SSLNGJM55LIR",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-6C55FDZWI4KCM2N6",
+      "relatedSpdxElement": "SPDXRef-Package-N4EIKGKYSSP63JVH",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-B7B65U5T2YH5ZD5T",
+      "relatedSpdxElement": "SPDXRef-Package-NKV3YHJ7GBD3COE6",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-GEEHBXY5ZBVFWHLM",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-JEAGTFT7L4FGQURG",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-65E2RYPK6O4MXR6A",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-3VA5WUB5TVP4O5SO"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-74RW7RUENBLEQ2A5",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-3VA5WUB5TVP4O5SO"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-CBHMYQZVIKAPO245",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-3VA5WUB5TVP4O5SO"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-ZIBQF5WBZHCXASVC",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-3VA5WUB5TVP4O5SO"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-MAA4LGO6WC5SWWNR",
@@ -4935,26 +5043,6 @@
       "spdxElementId": "SPDXRef-Package-65E2RYPK6O4MXR6A"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-BE4PUYQBNDFNETXL",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-6C55FDZWI4KCM2N6"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-CBHMYQZVIKAPO245",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-6C55FDZWI4KCM2N6"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-DEE65ZEEC5YACHEQ",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-6C55FDZWI4KCM2N6"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-ZIBQF5WBZHCXASVC",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-6C55FDZWI4KCM2N6"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-G4KHG6DKX3S2YVRR",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-6XCX33PN3SREWU42"
@@ -4983,6 +5071,26 @@
       "relatedSpdxElement": "SPDXRef-Package-R2SPZPCDJA3LTXJQ",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-74RW7RUENBLEQ2A5"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-65E2RYPK6O4MXR6A",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-B46YCN4GJECDHCMD"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-74RW7RUENBLEQ2A5",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-B46YCN4GJECDHCMD"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-CBHMYQZVIKAPO245",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-B46YCN4GJECDHCMD"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ZIBQF5WBZHCXASVC",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-B46YCN4GJECDHCMD"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-VMWWDPKQSQZ55WVW",
@@ -5260,6 +5368,26 @@
       "spdxElementId": "SPDXRef-Package-JEAGTFT7L4FGQURG"
     },
     {
+      "relatedSpdxElement": "SPDXRef-Package-BE4PUYQBNDFNETXL",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-L4W4SSLNGJM55LIR"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-CBHMYQZVIKAPO245",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-L4W4SSLNGJM55LIR"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-DEE65ZEEC5YACHEQ",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-L4W4SSLNGJM55LIR"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ZIBQF5WBZHCXASVC",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-L4W4SSLNGJM55LIR"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-AIWE7CV4M5KVCUQC",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-LVIF722J3BLVSBQM"
@@ -5298,6 +5426,46 @@
       "relatedSpdxElement": "SPDXRef-Package-OWTG7YF22IKRJWRF",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-MAA4LGO6WC5SWWNR"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-47WABSDMBXQGVDRE",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-N4EIKGKYSSP63JVH"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-4I6R4XYPFJ3YZONA",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-N4EIKGKYSSP63JVH"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-B7B65U5T2YH5ZD5T",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-N4EIKGKYSSP63JVH"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-JEAGTFT7L4FGQURG",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-N4EIKGKYSSP63JVH"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-47WABSDMBXQGVDRE",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-NKV3YHJ7GBD3COE6"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-B7B65U5T2YH5ZD5T",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-NKV3YHJ7GBD3COE6"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-GEEHBXY5ZBVFWHLM",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-NKV3YHJ7GBD3COE6"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-JEAGTFT7L4FGQURG",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-NKV3YHJ7GBD3COE6"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-47WABSDMBXQGVDRE",

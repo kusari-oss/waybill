@@ -64,7 +64,7 @@ all 13 non-Pants targets (`xtask corpus-diff`).
 | 2. membership | `["jvm-default"]` | `["jvm-default"]` |
 | 2. graph completeness | none unreachable | `complete`; anchor has 4 top-level edges |
 | 3. `pants_backend_clojure` @ `e068ffb`, local scan | equal root out-edges | 4 / 4 / 4 (each format: the four anchors); `complete` |
-| 4. non-Pants targets | `no semantic change` | pending the CI corpus run (T043) |
+| 4. non-Pants targets | `no semantic change` | all 13 `no semantic change`; regen runs 37155977325 and 37156631100 byte-identical |
 
 Found while running step 1: dedup grouped components on
 `(ecosystem, name, version, parent_purl)`, so the two `default` anchors merged

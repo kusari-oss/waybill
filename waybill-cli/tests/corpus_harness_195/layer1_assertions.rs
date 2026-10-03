@@ -1878,6 +1878,10 @@ mod i3_tests {
     fn known_spdx3_divergence_is_still_present() {
         assert_eq!(counts("pants-example-django"), (14, 14, 1));
         assert_eq!(counts("pants-example-python"), (2, 2, 1));
+        // m1064: root -> jvm-default in every format; root -> get-pants.sh
+        // (file tier) only in CDX / SPDX 2.3, whose fallback gate ignores
+        // owning-component edges.
+        assert_eq!(counts("pants-example-jvm"), (2, 2, 1));
     }
 
     #[test]
