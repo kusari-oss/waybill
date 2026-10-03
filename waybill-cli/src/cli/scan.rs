@@ -181,7 +181,7 @@ fn default_collection_name(cmd: &str) -> String {
 async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
     use std::time::{Duration, Instant};
 
-    use aya::maps::RingBuf;
+    use aya::maps::{MapData, RingBuf};
 
     use crate::attestation::builder::{self, AttestationConfig};
     use crate::attestation::serializer;
@@ -297,17 +297,12 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
     let filter_by_pid = args.target_pid.is_some() && !args.trace_children;
 
     fn drain_network(
-        bpf: &mut aya::Ebpf,
+        rb: &mut RingBuf<MapData>,
         agg: &mut EventAggregator,
         count: &mut u64,
         max: usize,
         target_pids: &std::collections::HashSet<u32>,
     ) -> usize {
-        let map = bpf
-            .map_mut("NETWORK_EVENTS")
-            .expect("NETWORK_EVENTS ring buffer is statically declared in the eBPF object");
-        let mut rb = RingBuf::try_from(map)
-            .expect("NETWORK_EVENTS map shape is BPF_MAP_TYPE_RINGBUF by construction");
         let mut n = 0;
         while n < max {
             match rb.next() {
@@ -336,15 +331,12 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
     /// When the COMPILER_EXEC_EVENTS map is unavailable (older eBPF
     /// object, tracepoint attach failed), returns 0 no-op.
     fn drain_compiler(
-        bpf: &mut aya::Ebpf,
+        rb: Option<&mut RingBuf<MapData>>,
         compiler_agg: &mut CompilerPipelineAggregator,
         count: &mut u64,
         max: usize,
     ) -> usize {
-        let Some(map) = bpf.map_mut("COMPILER_EXEC_EVENTS") else {
-            return 0;
-        };
-        let Ok(mut rb) = RingBuf::try_from(map) else {
+        let Some(rb) = rb else {
             return 0;
         };
         let mut n = 0;
@@ -370,18 +362,13 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
     }
 
     fn drain_file(
-        bpf: &mut aya::Ebpf,
+        rb: &mut RingBuf<MapData>,
         agg: &mut EventAggregator,
         compiler_agg: &mut CompilerPipelineAggregator,
         count: &mut u64,
         max: usize,
         target_pids: &std::collections::HashSet<u32>,
     ) -> usize {
-        let map = bpf
-            .map_mut("FILE_EVENTS")
-            .expect("FILE_EVENTS ring buffer is statically declared in the eBPF object");
-        let mut rb = RingBuf::try_from(map)
-            .expect("FILE_EVENTS map shape is BPF_MAP_TYPE_RINGBUF by construction");
         let mut n = 0;
         while n < max {
             match rb.next() {
@@ -415,6 +402,32 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
         n
     }
 
+    // #991 — open each ring buffer once, for the whole loop. The drain
+    // helpers used to build a `RingBuf` on every call, three times per 5 ms
+    // iteration, and in CI that made reads cost ~7 ms per item (89.9 s for
+    // 12,290 network events). The loop only checks for child exit between
+    // drain rounds, so a 0.12 s traced `cargo build` took 80-121 s to reap.
+    // Held open: 159 ms, and ring_buffer_overflows went from 152-3379 to 0.
+    let mut network_rb = RingBuf::try_from(
+        handle
+            .bpf
+            .take_map("NETWORK_EVENTS")
+            .expect("NETWORK_EVENTS ring buffer is statically declared in the eBPF object"),
+    )
+    .expect("NETWORK_EVENTS map shape is BPF_MAP_TYPE_RINGBUF by construction");
+    let mut file_rb = RingBuf::try_from(
+        handle
+            .bpf
+            .take_map("FILE_EVENTS")
+            .expect("FILE_EVENTS ring buffer is statically declared in the eBPF object"),
+    )
+    .expect("FILE_EVENTS map shape is BPF_MAP_TYPE_RINGBUF by construction");
+    // Absent from older eBPF objects, or when the tracepoint attach failed.
+    let mut compiler_rb = handle
+        .bpf
+        .take_map("COMPILER_EXEC_EVENTS")
+        .and_then(|m| RingBuf::try_from(m).ok());
+
     loop {
         let done = if let Some(ref mut c) = child {
             c.try_wait().ok().flatten().is_some()
@@ -428,7 +441,7 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
         let empty: std::collections::HashSet<u32> = std::collections::HashSet::new();
         let active_filter = if filter_by_pid { &target_pids } else { &empty };
 
-        drain_network(&mut handle.bpf, &mut agg, &mut net_count, MAX_PER_ITER, active_filter);
+        drain_network(&mut network_rb, &mut agg, &mut net_count, MAX_PER_ITER, active_filter);
         // Milestone 211 post-#611 follow-up: drain compiler exec events
         // BEFORE file events on each iteration. compiler exec/exit
         // events populate `compiler_agg.pid_to_invocation_id` which the
@@ -438,26 +451,26 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
         // compiler_agg drops them silently → invocation buckets stay
         // empty even when both event streams are healthy.
         drain_compiler(
-            &mut handle.bpf,
+            compiler_rb.as_mut(),
             &mut compiler_agg,
             &mut compiler_count,
             MAX_PER_ITER,
         );
-        drain_file(&mut handle.bpf, &mut agg, &mut compiler_agg, &mut file_count, MAX_PER_ITER, active_filter);
+        drain_file(&mut file_rb, &mut agg, &mut compiler_agg, &mut file_count, MAX_PER_ITER, active_filter);
 
         if done {
             // Settling drain: pull remaining events with a hard deadline so
             // we never loop forever if probes keep firing from unrelated PIDs.
             let deadline = Instant::now() + Duration::from_millis(250);
             while Instant::now() < deadline {
-                let n = drain_network(&mut handle.bpf, &mut agg, &mut net_count, MAX_PER_ITER, active_filter)
+                let n = drain_network(&mut network_rb, &mut agg, &mut net_count, MAX_PER_ITER, active_filter)
                     + drain_compiler(
-                        &mut handle.bpf,
+                        compiler_rb.as_mut(),
                         &mut compiler_agg,
                         &mut compiler_count,
                         MAX_PER_ITER,
                     )
-                    + drain_file(&mut handle.bpf, &mut agg, &mut compiler_agg, &mut file_count, MAX_PER_ITER, active_filter);
+                    + drain_file(&mut file_rb, &mut agg, &mut compiler_agg, &mut file_count, MAX_PER_ITER, active_filter);
                 if n == 0 {
                     break;
                 }
