@@ -250,17 +250,26 @@ impl DepsDevClient {
     }
 
     /// Retrieve version metadata (licenses, advisories, links) for a package.
+    ///
+    /// `Ok((None, _))` is deps.dev answering that it has no such version
+    /// (HTTP 404). That is an answer, cacheable under the response's own
+    /// `max-age` (measured: a 404 carries `max-age=3600`, as a 200 does),
+    /// and not a transport failure. `Err` is reserved for failures that
+    /// said nothing about the package (#1094).
     pub async fn get_version(
         &self,
         system: &str,
         name: &str,
         version: &str,
-    ) -> anyhow::Result<(VersionInfo, Option<u64>)> {
+    ) -> anyhow::Result<(Option<VersionInfo>, Option<u64>)> {
         let url = self.version_url(system, name, version);
         tracing::debug!(url = %url, "querying deps.dev for version info");
 
         let response = self.http.get(&url).send().await?;
 
+        if response.status() == reqwest::StatusCode::NOT_FOUND {
+            return Ok((None, max_age_of(&response)));
+        }
         if !response.status().is_success() {
             let status = response.status();
             let body = response.text().await.unwrap_or_default();
@@ -280,7 +289,7 @@ impl DepsDevClient {
         // immutable but deps.dev's record about it is not.
         let max_age = max_age_of(&response);
         let info: VersionInfo = response.json().await?;
-        Ok((info, max_age))
+        Ok((Some(info), max_age))
     }
 }
 
