@@ -36,16 +36,22 @@ inherited from `[workspace.package]` — which simultaneously exercises extracti
 S=/tmp/self.cdx.json
 
 # FR-002 — declared, not concluded
-jq '[.components[]?.licenses[]?.license.acknowledgement] | group_by(.) |
-    map({ack: .[0], n: length})' $S
-# expect only "declared" on an --offline scan; "concluded" requires enrichment
+jq '[.components[]?.licenses[]? | (.license.acknowledgement // .acknowledgement)] |
+    group_by(.) | map({ack: .[0], n: length})' $S
+# expect only "declared" on an --offline scan; "concluded" requires enrichment.
+# Read both positions: an id/name entry nests `acknowledgement` under `license`,
+# an `expression` entry carries it at the top level. Reading only the nested
+# one reports every compound expression as null (T057 measured 37 of 179).
 
 # FR-012 — offline parity. Same command, same answer.
 jq '[.components[]? | select((.licenses//[])|length>0)] | length' $S
 
 # FR-016 — scan-root inherits only when exactly one main-module carries a license
 jq '.metadata.component | {purl, licenses}' $S
-# this repo has two main-modules, so expect NO scan-root license here
+# this repo has several main-modules and none at its root (the root Cargo.toml
+# is a virtual workspace), so expect a synthetic `pkg:generic/...` subject with
+# NO license. If the subject is a crate under waybill-cli/tests/fixtures/, root
+# selection is wrong and this check passes vacuously — see #1096.
 ```
 
 The last check matters: waybill's own workspace is a **negative** case for FR-016.
