@@ -38,6 +38,30 @@ Upstream docs-feedback issue tracking the switch:
 | `scripts/verify-ebpf.sh` | Contributor's un-pin readiness command. Runs the same build path release.yml uses; exits 0 iff the candidate version works. |
 | `.github/workflows/nightly.yml` | NOT a consumer — it dispatches `release.yml` and inherits the pin transitively. Guarded by `pin-consistency.yml`. |
 
+## The Rust nightly pin (#1089)
+
+The eBPF crate builds with a dated nightly named in
+`waybill-ebpf/rust-toolchain.toml` (`channel = "nightly-YYYY-MM-DD"`, with
+`components = ["rust-src"]`). Since #904 that file is what selects the
+toolchain: `xtask ebpf` runs `cargo build` inside `waybill-ebpf/` with no
+`+toolchain` override and with `RUSTUP_TOOLCHAIN` removed. Every site that
+installs the toolchain ahead of time reads the channel from the same file:
+
+| Site | How it reads the pin |
+|---|---|
+| `ci.yml` eBPF lane, `release.yml` `build-ebpf`, `ebpf-canary.yml` | A `Read the eBPF toolchain pin` step exports `steps.ebpf_toolchain.outputs.channel` and `$EBPF_TOOLCHAIN`; the `dtolnay/rust-toolchain` install, the canary's probes, parity check and `break_env` removal all use it |
+| `Dockerfile.ebpf-test` | Copies the file alone and installs that channel, so the layer rebuilds only when the pin moves |
+| `scripts/verify-ebpf.sh` | Installs that channel if missing |
+
+**Bumping it**: edit the channel, run `scripts/verify-ebpf.sh`, and open a
+PR. `waybill-ebpf/**` is in the eBPF lane's path filter, so the PR runs the
+lane. The canary keeps the nightly fixed and varies only `bpf-linker`, so a
+nightly regression surfaces at the bump, not before it.
+
+Rustup names a nightly by its publication date, one day after the commit
+date `rustc --version` prints: `nightly-2026-10-02` is
+`1.101.0-nightly (c36f14571 2026-10-01)`.
+
 ## How to bump the pin (upstream fix landed)
 
 Say upstream ships a fixed `bpf-linker@0.12.1`:

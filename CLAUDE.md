@@ -489,7 +489,8 @@ local `target/` ended up holding artifacts from both compilers and three
 doctest targets failed with `error[E0514]: found crate ... compiled by an
 incompatible version of rustc`; the tree had to be cleaned and rebuilt.
 Bumping the pin is a deliberate edit, and costs a full rebuild by design.
-`waybill-ebpf` keeps its own nightly pin — see #904.
+`waybill-ebpf` keeps its own dated nightly pin in `waybill-ebpf/rust-toolchain.toml`,
+read by every eBPF build site — see #904, #1089.
 `cargo test -p waybill` alone is insufficient: it does not run clippy,
 and clippy's `--all-targets` enforces `clippy::unwrap_used` inside
 `#[cfg(test)]` modules too (the `waybill-cli` crate root deny'ies it

@@ -65,6 +65,20 @@ jobs:
         with:
           ref: ${{ env.TAG_NAME }}
 
+      # #1089 — the eBPF crate's nightly is pinned in its own toolchain file,
+      # which is what the build resolves (#904). Every toolchain reference
+      # in this job reads it from there rather than naming a channel.
+      - name: Read the eBPF toolchain pin
+        id: ebpf_toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          channel=$(sed -n 's/^channel *= *"\(.*\)"/\1/p' waybill-ebpf/rust-toolchain.toml)
+          [ -n "$channel" ] || { echo "::error::no channel in waybill-ebpf/rust-toolchain.toml"; exit 1; }
+          echo "channel=$channel" >> "$GITHUB_OUTPUT"
+          echo "EBPF_TOOLCHAIN=$channel" >> "$GITHUB_ENV"
+          echo "eBPF toolchain: $channel"
+
       - name: Install eBPF build deps
         run: |
           sudo apt-get update
@@ -73,6 +87,7 @@ jobs:
       - name: Install nightly Rust with rust-src
         uses: dtolnay/rust-toolchain@5b842231ba77f5c045dba54ac5560fed2db780e2 # nightly (2026-04-25)
         with:
+          toolchain: ${{ steps.ebpf_toolchain.outputs.channel }}
           components: rust-src
 
       - name: Cache cargo + nightly build artifacts

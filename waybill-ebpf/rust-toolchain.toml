@@ -1,3 +1,7 @@
 [toolchain]
-channel = "nightly"
+# Pinned (#1089): this file selects the toolchain for every eBPF build
+# site, and a floating `nightly` meant two builds of one commit could use
+# different compilers. Bump deliberately; CI, release, the canary, the
+# test Dockerfile and scripts/verify-ebpf.sh all read the channel from here.
+channel = "nightly-2026-10-02"
 components = ["rust-src"]
