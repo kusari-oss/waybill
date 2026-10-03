@@ -7,6 +7,18 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Changed: ClearlyDefined enrichment is opt-in (#930)
+
+`sbom scan` no longer queries ClearlyDefined unless `--clearly-defined` is
+passed (or `clearly-defined` is listed in `--enrich-sources`). A default scan
+therefore carries no `concluded` licenses; declared licenses from manifests and
+deps.dev are unaffected. ClearlyDefined enriches components the scan already
+found rather than establishing what is in the project, and its requests often
+stall for seconds. On a cold cache it was 97–98% of a large scan's wall clock
+before #1093. `--no-clearly-defined` is still accepted as a no-op. The posture
+rule behind this (inventory sources on, enrichment sources off) is proposed for
+the whole CLI on #1042.
+
 ## [0.10.0-alpha.2] - 2026-09-27
 
 ### Added: a project's own declared license now reaches its SBOM (#954)

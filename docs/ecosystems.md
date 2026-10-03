@@ -28,7 +28,8 @@ diving into the [architecture docs](architecture/overview.md).
 
 "Enrichment" columns mark whether deps.dev version info and ClearlyDefined
 concluded licenses apply to the ecosystem. Both honour the global
-`--offline` flag.
+`--offline` flag; ClearlyDefined additionally runs only with
+`--clearly-defined` (off by default since #930).
 
 ---
 

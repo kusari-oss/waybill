@@ -76,7 +76,10 @@ Licenses can come from three places, at three phases of the pipeline:
    gemspec has no license).
 3. **ClearlyDefined enrichment** (`enrich/clearly_defined_source.rs`).
    Populates `concluded_licenses[]` from CD's `licensed.declared` field,
-   which is itself the output of CD's automated curation.
+   which is itself the output of CD's automated curation. **Opt-in**
+   (`--clearly-defined`) since #930: it enriches components already
+   found rather than establishing what is in the project, so a default
+   scan carries no concluded licenses.
 
 deps.dev and ClearlyDefined populate **different buckets**. They are not in
 tension — deps.dev is a stand-in for the author's declaration when the

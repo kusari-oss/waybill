@@ -1098,11 +1098,17 @@ pub struct ScanArgs {
     #[arg(long)]
     pub json: bool,
 
-    /// Skip ClearlyDefined enrichment (concluded licenses). Keeps
-    /// deps.dev license + dep-graph enrichment active. Use this when
-    /// ClearlyDefined is slow or unreachable but you still want
-    /// deps.dev data. Has no effect when `--offline` is set (all
-    /// enrichment is already disabled).
+    /// Enable ClearlyDefined enrichment (curated concluded licenses).
+    /// Off by default since #930: it enriches components already found
+    /// rather than establishing what is in the project, and it costs
+    /// network time against a service with frequent multi-second stalls.
+    /// Has no effect when `--offline` is set.
+    #[arg(long, conflicts_with = "no_clearly_defined")]
+    pub clearly_defined: bool,
+
+    /// Skip ClearlyDefined enrichment. This has been the default since
+    /// #930; the flag is still accepted so existing invocations keep
+    /// working.
     #[arg(long)]
     pub no_clearly_defined: bool,
 
@@ -1231,7 +1237,7 @@ pub struct ScanArgs {
     pub gradle: GradleCliFlags,
 
     /// Skip the deps.dev transitive dep-graph enrichment step ONLY.
-    /// Keeps deps.dev license enrichment and ClearlyDefined active.
+    /// Keeps deps.dev license enrichment active.
     ///
     /// Companion to `--no-deps-dev-license` (m207 #596) which does
     /// the reverse (skip license, keep graph). Use `--no-deps-dev`
@@ -2536,7 +2542,9 @@ fn resolve_enrich_sources(args: &ScanArgs) -> EnrichConfig {
         // `--no-deps-dev-graph` (graph only).
         EnrichConfig {
             deps_dev: !args.no_deps_dev && !args.no_deps_dev_license,
-            clearly_defined: !args.no_clearly_defined,
+            // #930: opt-in. `--no-clearly-defined` conflicts with
+            // `--clearly-defined` at parse time, so this is the flag alone.
+            clearly_defined: args.clearly_defined,
             deps_dev_graph: !args.no_deps_dev && !args.no_deps_dev_graph,
         }
     }
@@ -3865,7 +3873,9 @@ pub async fn execute(
             );
         }
     } else if !offline {
-        tracing::info!("ClearlyDefined enrichment skipped (disabled by flags)");
+        tracing::info!(
+            "ClearlyDefined enrichment skipped (off by default; pass --clearly-defined to enable)"
+        );
     }
 
     // deps.dev transitive dep-graph enrichment fills in edges the
@@ -6942,6 +6952,7 @@ mod tests {
             // restriction. `None` on the `Option<SourceShapeSet>` field.
             file_inventory_source_shapes: None,
             json: false,
+            clearly_defined: false,
             no_clearly_defined,
             no_deps_dev,
             no_deps_dev_graph,
@@ -7015,14 +7026,30 @@ mod tests {
     }
 
     #[test]
-    fn resolve_defaults_all_enabled() {
+    fn resolve_defaults_resolution_on_clearly_defined_off() {
+        // #930: ClearlyDefined is enrichment, so it is opt-in.
         let args = enrich_args(false, false, false, false, vec![]);
         let cfg = resolve_enrich_sources(&args);
         assert_eq!(cfg, EnrichConfig {
             deps_dev: true,
-            clearly_defined: true,
+            clearly_defined: false,
             deps_dev_graph: true,
         });
+    }
+
+    #[test]
+    fn resolve_clearly_defined_flag_opts_in() {
+        let mut args = enrich_args(false, false, false, false, vec![]);
+        args.clearly_defined = true;
+        assert!(resolve_enrich_sources(&args).clearly_defined);
+    }
+
+    #[test]
+    fn clearly_defined_and_its_negation_conflict() {
+        let parsed = <ScanArgsForTest as clap::Parser>::try_parse_from([
+            "scan", "--path", ".", "--clearly-defined", "--no-clearly-defined",
+        ]);
+        assert!(parsed.is_err());
     }
 
     #[test]
@@ -7040,7 +7067,10 @@ mod tests {
         // now an aggregate disable: BOTH the license AND dep-graph
         // paths turn off. Pre-m207 this test asserted deps_dev_graph
         // stayed true.
-        let args = enrich_args(true, false, false, false, vec![]);
+        let mut args = enrich_args(true, false, false, false, vec![]);
+        // #930: ClearlyDefined is opt-in; opt in so this still tests that
+        // the deps.dev flags leave it alone.
+        args.clearly_defined = true;
         let cfg = resolve_enrich_sources(&args);
         assert_eq!(
             cfg,
@@ -7057,7 +7087,10 @@ mod tests {
         // Milestone 207 (#596) US2 acceptance — new fine-grained
         // flag `--no-deps-dev-license` restores the pre-m207
         // `--no-deps-dev` semantic (license only).
-        let args = enrich_args(false, false, false, true, vec![]);
+        let mut args = enrich_args(false, false, false, true, vec![]);
+        // #930: ClearlyDefined is opt-in; opt in so this still tests that
+        // the deps.dev flags leave it alone.
+        args.clearly_defined = true;
         let cfg = resolve_enrich_sources(&args);
         assert_eq!(
             cfg,
@@ -7073,7 +7106,10 @@ mod tests {
     fn resolve_enrich_no_deps_dev_wins_over_no_deps_dev_graph_m207() {
         // Composition sanity — `--no-deps-dev` combined with
         // `--no-deps-dev-graph` produces the same aggregate result.
-        let args = enrich_args(true, false, true, false, vec![]);
+        let mut args = enrich_args(true, false, true, false, vec![]);
+        // #930: ClearlyDefined is opt-in; opt in so this still tests that
+        // the deps.dev flags leave it alone.
+        args.clearly_defined = true;
         let cfg = resolve_enrich_sources(&args);
         assert_eq!(
             cfg,
@@ -7089,7 +7125,10 @@ mod tests {
     fn resolve_enrich_no_deps_dev_license_and_graph_equals_aggregate_m207() {
         // Composition sanity — setting both fine-grained flags is
         // equivalent to setting the aggregate `--no-deps-dev`.
-        let args = enrich_args(false, false, true, true, vec![]);
+        let mut args = enrich_args(false, false, true, true, vec![]);
+        // #930: ClearlyDefined is opt-in; opt in so this still tests that
+        // the deps.dev flags leave it alone.
+        args.clearly_defined = true;
         let cfg = resolve_enrich_sources(&args);
         assert_eq!(
             cfg,
@@ -7117,7 +7156,10 @@ mod tests {
     fn resolve_enrich_no_clearly_defined_unaffected_by_no_deps_dev_m207() {
         // Regression guard — `--no-deps-dev` doesn't affect the
         // ClearlyDefined path.
-        let args = enrich_args(true, false, false, false, vec![]);
+        let mut args = enrich_args(true, false, false, false, vec![]);
+        // #930: ClearlyDefined is opt-in; opt in so this still tests that
+        // the deps.dev flags leave it alone.
+        args.clearly_defined = true;
         let cfg = resolve_enrich_sources(&args);
         assert!(cfg.clearly_defined);
     }
@@ -7149,7 +7191,10 @@ mod tests {
 
     #[test]
     fn resolve_no_deps_dev_graph_disables_graph() {
-        let args = enrich_args(false, false, true, false, vec![]);
+        let mut args = enrich_args(false, false, true, false, vec![]);
+        // #930: ClearlyDefined is opt-in; opt in so this still tests that
+        // the deps.dev flags leave it alone.
+        args.clearly_defined = true;
         let cfg = resolve_enrich_sources(&args);
         assert!(cfg.deps_dev);
         assert!(cfg.clearly_defined);

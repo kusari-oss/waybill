@@ -108,6 +108,10 @@ source.
 
 ### 3. ClearlyDefinedSource (`clearly_defined_source.rs`)
 
+Opt-in via `--clearly-defined` (or `--enrich-sources …,clearly-defined`)
+since #930. Default posture follows the rule proposed on #1042: sources
+that establish the inventory run by default, sources that enrich it do not.
+
 Calls ClearlyDefined's `/definitions/{type}/{provider}/{namespace}/{name}/{revision}`
 endpoint and pulls the curated `licensed.declared` expression into
 `component.concluded_licenses[]` (mapped to CycloneDX `acknowledgement:

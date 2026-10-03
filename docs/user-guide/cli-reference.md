@@ -734,10 +734,11 @@ Exactly one of `--path` or `--image` is required.
 | `--include-vendored` | bool | off | Emit CMake `add_subdirectory(third_party/\|vendor/...)` entries. |
 | `--no-deep-hash` | bool | off | Skip per-file SHA-256 of installed-package contents. |
 | `--json` | bool | off | Print a JSON summary to stdout. |
-| `--no-clearly-defined` | bool | off | Skip ClearlyDefined enrichment. |
+| `--clearly-defined` | bool | off | Enable ClearlyDefined concluded-license enrichment. Off by default since [#930](https://github.com/kusari-oss/waybill/issues/930). |
+| `--no-clearly-defined` | bool | off | No-op since #930 (ClearlyDefined is already off); still accepted. Conflicts with `--clearly-defined`. |
 | `--no-deps-dev` | bool | off | Skip deps.dev license enrichment. |
 | `--no-deps-dev-graph` | bool | off | Skip deps.dev transitive dep-graph enrichment. |
-| `--enrich-sources <SRC[,SRC...]>` | enum (`deps-dev`, `clearly-defined`, `deps-dev-graph`) | (all enabled) | Allowlist of enrichment sources. |
+| `--enrich-sources <SRC[,SRC...]>` | enum (`deps-dev`, `clearly-defined`, `deps-dev-graph`) | (deps.dev license + graph) | Allowlist of enrichment sources; when given, only these run. |
 | `--bind-to-source <PATH>` | path | (none) | Source-tier SBOM to bind emitted components against. |
 | `--repo <URL>` | URL | auto-detect | Attach a `repo:` identifier. |
 | `--git-ref <REVISION>` | string | auto-detect | Pair with `--repo` to upgrade to `git:<repo>#<ref>`. |
@@ -1116,22 +1117,29 @@ Print a JSON summary to stdout after writing the SBOM.
 waybill sbom scan --path . --output project.cdx.json --json
 ```
 
+### `--clearly-defined`
+
+Enable ClearlyDefined enrichment (curated concluded licenses). Off by default
+since [#930](https://github.com/kusari-oss/waybill/issues/930): it enriches
+components the scan already found rather than establishing what is in the
+project, and it costs network time against a service whose requests often
+stall for several seconds. No effect when `--offline` is set.
+
 ### `--no-clearly-defined`
 
-Skip ClearlyDefined enrichment (concluded licenses). Keeps deps.dev license +
-dep-graph enrichment active. Use this when ClearlyDefined is slow or
-unreachable but you still want deps.dev data. No effect when `--offline` is set.
+No-op since #930 — ClearlyDefined is already off unless `--clearly-defined` is
+given. Still accepted so existing invocations keep working; passing both is a
+usage error.
 
 ### `--no-deps-dev`
 
-Skip deps.dev license enrichment. Keeps ClearlyDefined and dep-graph enrichment
-active. The fastest enrichment source and rarely needs skipping.
+Skip deps.dev license enrichment. Keeps dep-graph enrichment active. The
+fastest enrichment source and rarely needs skipping.
 
 ### `--no-deps-dev-graph`
 
 Skip deps.dev transitive dep-graph enrichment. Keeps deps.dev license
-enrichment and ClearlyDefined active. Useful when the graph response is large
-or unneeded.
+enrichment active. Useful when the graph response is large or unneeded.
 
 ### `--enrich-sources <SRC[,SRC...]>`
 
