@@ -1487,31 +1487,52 @@ fn tag_main_modules_with_workspace_root(
             .and_then(|v| v.as_bool())
             .unwrap_or(false);
         let is_cargo_purl = c.purl.as_str().starts_with("pkg:cargo/");
+        let manifest_at_scan_root = match (manifest_path, canonical_root.as_ref()) {
+            (Some(p), Some(canon_root)) => {
+                // Milestone 133 US2.1 (FR-012): post-normalization, manifest
+                // paths in `evidence.source_file_paths` are rootfs-relative
+                // (e.g. `sub/go.mod`) rather than absolute. Re-join against
+                // `scan_root` so `canonicalize` resolves the right
+                // filesystem location. Absolute paths (legacy / annotation-
+                // sourced) join correctly because `Path::join` returns the
+                // absolute when given one.
+                //
+                // Several readers (npm, pip, gem, maven, nuget) record the
+                // project directory as a `path+file://<absolute dir>` marker
+                // rather than a manifest file. Joined as-is the marker never
+                // resolved, so every one of them read as "not at the scan
+                // root". The marker names the directory itself; any other
+                // path is located by its parent, as before.
+                let (abs_path, names_dir) = match p.strip_prefix("path+file://") {
+                    Some(dir) => (scan_root.join(dir), true),
+                    None => (scan_root.join(p), false),
+                };
+                let manifest_dir = if names_dir {
+                    Some(abs_path.as_path())
+                } else {
+                    abs_path.parent()
+                };
+                manifest_dir
+                    .and_then(|dir| std::fs::canonicalize(dir).ok())
+                    .map(|canon_manifest_dir| canon_manifest_dir == *canon_root)
+                    .unwrap_or(false)
+            }
+            _ => false,
+        };
         let is_workspace_root = if is_cargo_workspace_toplevel {
-            true
+            // The toplevel annotation says this crate owns its workspace, not
+            // that the workspace is at the scan root. A self-workspace crate
+            // nested in a monorepo (a test fixture, a vendored tool) would
+            // otherwise outrank the project actually at the root. Its
+            // lockfile sits beside its own Cargo.toml, so the location
+            // check is exact here — unlike for members, which share it.
+            manifest_at_scan_root
         } else if is_cargo_purl {
             // Cargo main-module without the toplevel annotation = workspace
             // member. Never a workspace root; skip filesystem check.
             false
         } else {
-            match (manifest_path, canonical_root.as_ref()) {
-                (Some(p), Some(canon_root)) => {
-                    // Milestone 133 US2.1 (FR-012): post-normalization, manifest
-                    // paths in `evidence.source_file_paths` are rootfs-relative
-                    // (e.g. `sub/go.mod`) rather than absolute. Re-join against
-                    // `scan_root` so `canonicalize` resolves the right
-                    // filesystem location. Absolute paths (legacy / annotation-
-                    // sourced) join correctly because `Path::join` returns the
-                    // absolute when given one.
-                    let abs_path = scan_root.join(p);
-                    let manifest_parent = abs_path.parent();
-                    manifest_parent
-                        .and_then(|parent| std::fs::canonicalize(parent).ok())
-                        .map(|canon_manifest_parent| canon_manifest_parent == *canon_root)
-                        .unwrap_or(false)
-                }
-                _ => false,
-            }
+            manifest_at_scan_root
         };
 
         c.extra_annotations.insert(

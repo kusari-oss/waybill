@@ -354,3 +354,44 @@ fn sc006_override_wins_over_heuristic() {
     );
 }
 
+
+/// A cargo crate that is its own workspace (`[package]` + `[workspace]`)
+/// marks itself a workspace root wherever it sits. Nested under a project
+/// whose manifest IS at the scan root, it must not outrank that project:
+/// "workspace root" means the manifest is at the scan root (m127 FR-001).
+#[test]
+fn nested_self_workspace_crate_does_not_outrank_the_scan_root_project() {
+    let fake_home = tempfile::tempdir().unwrap();
+    let dir = tempfile::tempdir().unwrap();
+    fs::write(
+        dir.path().join("package.json"),
+        r#"{"name": "waybill-fixture-rootapp", "version": "1.0.0"}"#,
+    )
+    .unwrap();
+    let nested = dir.path().join("tools/gen");
+    fs::create_dir_all(nested.join("src")).unwrap();
+    fs::write(
+        nested.join("Cargo.toml"),
+        "[package]\nname = \"waybill-fixture-gen\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[workspace]\n",
+    )
+    .unwrap();
+    fs::write(nested.join("src/main.rs"), "fn main() {}\n").unwrap();
+    fs::write(
+        nested.join("Cargo.lock"),
+        "version = 3\n\n[[package]]\nname = \"waybill-fixture-gen\"\nversion = \"0.1.0\"\n",
+    )
+    .unwrap();
+
+    let (json, _) = run_scan_returning_json(
+        fake_home.path(),
+        dir.path(),
+        &[],
+        "cyclonedx-json",
+        "out.cdx.json",
+    );
+    let root = cdx_root_purl(&json).unwrap_or_default();
+    assert!(
+        root.contains("waybill-fixture-rootapp"),
+        "the project at the scan root must be the root, not a nested crate; got {root}"
+    );
+}
