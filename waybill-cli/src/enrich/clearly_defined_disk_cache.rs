@@ -93,6 +93,24 @@ impl CdDiskCache {
         })
     }
 
+    /// A cache that never hits and never writes.
+    #[cfg(test)]
+    pub fn disabled() -> Arc<Self> {
+        Arc::new(Self {
+            root: None,
+            ttl: Duration::from_secs(DEFAULT_TTL_SECS),
+        })
+    }
+
+    /// A cache rooted at `root`, for tests that inspect what was persisted.
+    #[cfg(test)]
+    pub fn at(root: PathBuf) -> Arc<Self> {
+        Arc::new(Self {
+            root: Some(root),
+            ttl: Duration::from_secs(DEFAULT_TTL_SECS),
+        })
+    }
+
     /// Read the cached definition for a coord.
     ///
     /// Outer return: `None` ⇒ cache miss (either no entry, expired, or

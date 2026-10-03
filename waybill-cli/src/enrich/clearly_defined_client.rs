@@ -39,6 +39,11 @@ pub struct ClearlyDefinedClient {
 
 impl ClearlyDefinedClient {
     pub fn new(timeout: Duration) -> Self {
+        Self::with_base_url(timeout, DEFAULT_BASE_URL)
+    }
+
+    /// Same client against another host. Tests point it at a mock server.
+    pub fn with_base_url(timeout: Duration, base_url: &str) -> Self {
         let http = reqwest::Client::builder()
             .timeout(timeout)
             .user_agent(format!(
@@ -49,8 +54,51 @@ impl ClearlyDefinedClient {
             .unwrap_or_else(|_| reqwest::Client::new());
         Self {
             http,
-            base_url: DEFAULT_BASE_URL.to_string(),
+            base_url: base_url.trim_end_matches('/').to_string(),
         }
+    }
+
+    /// Fetch many definitions in one `POST /definitions` (#933).
+    ///
+    /// The body is a JSON array of coordinate strings in the form
+    /// `CdCoord::bulk_key` builds; the response is an object keyed by
+    /// exactly the strings sent. Measured 2026-10-02: every coordinate
+    /// comes back, including ones CD has no record of (sparse body, no
+    /// `licensed.declared`), so the parse is the one `get_definition` uses.
+    ///
+    /// `timeout` overrides the client's per-request timeout, which is
+    /// sized for a single coordinate.
+    pub async fn post_definitions(
+        &self,
+        coordinates: &[String],
+        timeout: Duration,
+    ) -> std::result::Result<std::collections::HashMap<String, CdDefinition>, BulkError> {
+        let url = format!("{}/definitions", self.base_url);
+        let resp = self
+            .http
+            .post(&url)
+            .timeout(timeout)
+            .json(coordinates)
+            .send()
+            .await
+            .map_err(|e| BulkError::Transient(format!("CD bulk request failed: {e}")))?;
+        let status = resp.status();
+        if status.is_client_error() {
+            return Err(BulkError::Rejected(status.as_u16()));
+        }
+        if !status.is_success() {
+            return Err(BulkError::Transient(format!(
+                "CD bulk returned non-success status {status}"
+            )));
+        }
+        let body: std::collections::HashMap<String, CdResponse> = resp
+            .json()
+            .await
+            .map_err(|e| BulkError::Transient(format!("CD bulk response JSON parse failed: {e}")))?;
+        Ok(body
+            .into_iter()
+            .map(|(k, v)| (k, v.into_definition()))
+            .collect())
     }
 
     /// Fetch the curated definition for one CD coord. Returns `Ok(None)`
@@ -84,6 +132,27 @@ impl ClearlyDefinedClient {
             .await
             .with_context(|| format!("CD response JSON parse failed: {url}"))?;
         Ok(Some(body.into_definition()))
+    }
+}
+
+/// Why a bulk request produced no definitions.
+#[derive(Debug)]
+pub enum BulkError {
+    /// Timeout, connection failure, 5xx or an unparseable body. Measured
+    /// against the live service these are per-batch and pass: a batch that
+    /// stalled or returned 502 answered in under a second minutes later.
+    Transient(String),
+    /// A 4xx. The request shape was refused, so every later batch would
+    /// be too (an oversized batch returns 400).
+    Rejected(u16),
+}
+
+impl std::fmt::Display for BulkError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Transient(m) => f.write_str(m),
+            Self::Rejected(code) => write!(f, "CD bulk endpoint rejected the request with HTTP {code}"),
+        }
     }
 }
 
