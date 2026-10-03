@@ -9,7 +9,7 @@ description: "Task list for 1064 — Pants resolves owned and named across both 
 
 **Tests**: Included. Every user story in the spec defines an independent test, and the success criteria (SC-001–SC-006) are verified by crate tests and corpus goldens.
 
-**Organization**: Grouped by user story. Anchor identity (R1) and the shared qualified-name merge are foundational: User Story 1's JVM anchors would merge with Python anchors in a collision repository without them (spec US2 rationale; plan "Delivery order").
+**Organization**: Grouped by user story, in the plan's delivery order: anchor identity first (Foundational), then naming (US3), then JVM anchors (US1). Naming precedes anchors because `pants-example-jvm`, the reference case in SC-001, configures no `[jvm.resolves]`. Without US3 its resolve is discovered rather than declared and gets no owning component.
 
 ## Format: `[ID] [P?] [Story] Description`
 
@@ -26,92 +26,97 @@ description: "Task list for 1064 — Pants resolves owned and named across both 
 - [ ] T001 [P] Create fixture `waybill-cli/tests/fixtures/pants_coursier_jvm/implicit_default/`: a `pants.toml` with a `[jvm]` table (no `[jvm.resolves]`), plus `3rdparty/jvm/default.lock` whose metadata header lists `dev.waybill.fixture:app:1.0.0` in `generated_with_requirements`, with entries for `app@1.0.0 → lib@1.0.0` and `lib@1.0.0` in the coursier coord-table shape used by `pants_coursier_jvm/two_versions_two_resolves/`
 - [ ] T002 [P] Create fixture `waybill-cli/tests/fixtures/pants_coursier_jvm/tool_lockfile/`: a `pants.toml` with `[jvm.resolves] main = "3rdparty/jvm/main.lock"` and `[junit] lockfile = "3rdparty/jvm/testing.lock"` (a name the heuristic does not match), plus both lockfiles with one `dev.waybill.fixture` entry each and `generated_with_requirements` naming it
 - [ ] T003 [P] Create fixture `waybill-cli/tests/fixtures/pants_pex/implicit_default_python/`: a `pants.toml` with `[python] enable_resolves = true` and no `resolves` key, plus `3rdparty/python/default.lock` (pex JSON with `requirements: ["waybill-fixture-core==1.0.0"]` and one locked requirement), modelled on `pants_pex/dotted_requirement_name/`
+- [ ] T004 [P] Create fixture `waybill-cli/tests/fixtures/pants_coursier_jvm/missing_top_level/`: `[jvm.resolves] main = "3rdparty/jvm/main.lock"`, with a lockfile whose `generated_with_requirements` names `dev.waybill.fixture:present:1.0.0` and `dev.waybill.fixture:absent:1.0.0`, where only `present` has an entry
 
 ---
 
 ## Phase 2: Foundational (Blocking Prerequisites)
 
-**Purpose**: Namespace-qualified anchor identity (R1) and the merged, qualified ownership statement (R4) that every story builds on.
+**Purpose**: Namespace-qualified anchor identity (R1), the merged qualified ownership statement (R4), and the declaration model both readers share (data-model `Declaration`).
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T004 Add `pub(crate) fn qualified_name(ns: LanguageNamespace, name: &str) -> String` returning `<namespace>:<name>` (the C163 form, reusing `write_namespace`'s wire strings) to `waybill-cli/src/scan_fs/package_db/pants_resolve.rs`, with unit tests for both namespaces
-- [ ] T005 Change the Python anchor PURL in `waybill-cli/src/scan_fs/package_db/pants/lockfile.rs::resolve_component_entry` from `pkg:generic/<name>` to `pkg:generic/<name>?pants-namespace=python` per `contracts/anchor-identity.md`; keep `name` and every annotation unchanged
-- [ ] T006 Make the resolve-mode anchor lookup in `waybill-cli/src/generate/split.rs` (around line 340, `c.purl.name() == resolve && c.purl.ecosystem() == "generic"`) also require the component's `waybill:pants-resolve-namespace` to equal the group's namespace (read through `pants_resolve::read_namespace`), per anchor-identity invariant 3
-- [ ] T007 Add a `PantsResolveSummary` merge in `waybill-cli/src/scan_fs/package_db/pants/mod.rs`: a constructor taking per-namespace parts (namespace, declared names, discovered names, weak count, unanchored count) that qualifies names with `qualified_name`, lexically sorts and deduplicates the lists, and sums the counts; `as_wire_value` keeps the four keys of `contracts/resolve-ownership.md`
-- [ ] T008 Route the Python reader's summary through the T007 merge at `waybill-cli/src/scan_fs/package_db/mod.rs:1811`, so that Python-only repositories emit qualified names (`python:<name>`) while the statement stays absent when no lockfile is found (FR-014)
-- [ ] T009 Update existing assertions on the Python anchor PURL and C161 value to the qualified forms in `waybill-cli/tests/pants_resolve_anchoring_m868.rs`, `waybill-cli/tests/pants_resolve_ownership.rs`, `waybill-cli/tests/pants_pex_reader.rs`, `waybill-cli/tests/pants_split_identity.rs`, `waybill-cli/tests/pants_split_identity_absence.rs` and `waybill-cli/tests/pants_split_resolve.rs`; every changed expectation must be the contract form, not whatever the code now prints
-- [ ] T010 Update the #925 layer-1 invariant `resolve-anchor-reaches-pants` in `waybill-cli/tests/corpus_harness_195/layer1_assertions.rs` to match `pkg:generic/pants-2.31?pants-namespace=python`
+- [ ] T005 Add `pub(crate) fn qualified_name(ns: LanguageNamespace, name: &str) -> String` returning `<namespace>:<name>` (the C163 form, reusing `write_namespace`'s wire strings) to `waybill-cli/src/scan_fs/package_db/pants_resolve.rs`, with unit tests for both namespaces
+- [ ] T006 Add a `Declaration` enum (`Configured`, `PantsDefault`, `ToolLockfile`, `Discovered`) with an `is_declared()` accessor to `waybill-cli/src/scan_fs/package_db/pants_resolve.rs`, per data-model.md, with the precedence `Configured > ToolLockfile > PantsDefault > Discovered` encoded in a `fn stronger(self, other)` helper and unit-tested
+- [ ] T007 Carry a `Declaration` on each discovered lockfile in both readers: `DiscoveredLockfile` in `waybill-cli/src/scan_fs/package_db/pants_jvm/mod.rs` and in `waybill-cli/src/scan_fs/package_db/pants/mod.rs`. Set `Configured` for `[<lang>.resolves]` keys and `Discovered` for glob-only finds; keep behaviour identical, with the Python reader still anchoring exactly its `Configured` set
+- [ ] T008 Change the Python anchor PURL in `waybill-cli/src/scan_fs/package_db/pants/lockfile.rs::resolve_component_entry` from `pkg:generic/<name>` to `pkg:generic/<name>?pants-namespace=python` per `contracts/anchor-identity.md`; keep `name` and every annotation unchanged
+- [ ] T009 Make the resolve-mode anchor lookup in `waybill-cli/src/generate/split.rs` (around line 340, `c.purl.name() == resolve && c.purl.ecosystem() == "generic"`) also require the component's `waybill:pants-resolve-namespace` to equal the group's namespace (read through `pants_resolve::read_namespace`), per anchor-identity invariant 3
+- [ ] T010 Add a `PantsResolveSummary` merge in `waybill-cli/src/scan_fs/package_db/pants/mod.rs`: a constructor taking per-namespace parts (namespace, declared names, discovered names, weak count, unanchored count) that qualifies names with `qualified_name`, lexically sorts and deduplicates the lists, and sums the counts; `as_wire_value` keeps the four keys of `contracts/resolve-ownership.md`
+- [ ] T011 Route the Python reader's summary through the T010 merge at `waybill-cli/src/scan_fs/package_db/mod.rs:1811`, so that Python-only repositories emit qualified names (`python:<name>`) while the statement stays absent when no lockfile is found (FR-014)
+- [ ] T012 Update existing assertions on the Python anchor PURL and C161 value to the qualified forms in `waybill-cli/tests/pants_resolve_anchoring_m868.rs`, `waybill-cli/tests/pants_resolve_ownership.rs`, `waybill-cli/tests/pants_pex_reader.rs`, `waybill-cli/tests/pants_split_identity.rs`, `waybill-cli/tests/pants_split_identity_absence.rs` and `waybill-cli/tests/pants_split_resolve.rs`; every changed expectation must be the contract form, not whatever the code now prints
+- [ ] T013 Update the #925 layer-1 invariant `resolve-anchor-reaches-pants` in `waybill-cli/tests/corpus_harness_195/layer1_assertions.rs` to match `pkg:generic/pants-2.31?pants-namespace=python`
 
 **Checkpoint**: Python behaviour is unchanged except identity and name qualification. `./scripts/pre-pr.sh` is green before Phase 3.
 
 ---
 
-## Phase 3: User Story 1 — A JVM Pants repository states and anchors its resolves (Priority: P1) 🎯 MVP
+## Phase 3: User Story 3 — Pants built-in defaults are named as Pants names them (Priority: P2)
 
-**Goal**: Declared JVM resolves get owning components wired to their declared top-level requirements, and JVM resolves contribute to the one repository-wide ownership statement.
+**Goal**: With `pants.toml` present and no `resolves` table for a language, the default-path lockfile is `jvm-default` / `python-default` with declaration `PantsDefault` (FR-007, R2). Done before US1 so that US1's anchors cover `pants-example-jvm` (SC-001).
 
-**Independent Test**: Scan a JVM-only repository with `[jvm.resolves]`. The statement is present with `jvm:` names, one anchor exists per declared resolve depending on exactly its `generated_with_requirements` packages, and the root's direct-dependency counts are equal across CycloneDX, SPDX 2.3 and SPDX 3.
+**Independent Test**: Scan `implicit_default` (T001) and `implicit_default_python` (T003). Membership reads `jvm-default` / `python-default`, the statement lists them under `declared`, and the Python one has an anchor (the JVM anchor follows in US1). Fixtures without `pants.toml` (`pants_pex/multi_resolve`) keep stem names.
 
-### Tests for User Story 1
+### Tests for User Story 3
 
-- [ ] T011 [P] [US1] Add test `jvm_declared_resolve_gets_an_anchor_wired_to_its_top_levels` in `waybill-cli/tests/pants_coursier_jvm_reader.rs` against fixture `two_versions_two_resolves`: two anchors `pkg:generic/java17?pants-namespace=jvm` and `pkg:generic/java21?pants-namespace=jvm`, each depending on exactly its own `app@N`
-- [ ] T012 [P] [US1] Add test `jvm_only_repository_carries_an_ownership_statement` in `waybill-cli/tests/pants_coursier_jvm_reader.rs`: C161 equals `{"declared":["jvm:java17","jvm:java21"],"discovered":[],"unanchored_lockfiles":0,"weak_classification":2}` in all three formats
-- [ ] T013 [P] [US1] Add test `jvm_root_edges_agree_across_formats` in `waybill-cli/tests/pants_coursier_jvm_reader.rs`, emitting all three formats and asserting equal root out-edge counts (FR-013) using the counting approach of `corpus_harness_195::layer1_assertions` (`cdx_root_out_edges` and its SPDX siblings)
-- [ ] T014 [P] [US1] Add a test in `waybill-cli/tests/pants_coursier_jvm_reader.rs` with a lockfile whose `generated_with_requirements` is empty: the anchor exists with no `depends`, and the resolve is still listed (spec edge case)
+- [ ] T014 [P] [US3] Add test `unconfigured_jvm_default_is_named_jvm_default_and_declared` in `waybill-cli/tests/pants_coursier_jvm_reader.rs` against fixture `implicit_default`: membership `["jvm-default"]`, and C161 lists `jvm:jvm-default` under `declared`
+- [ ] T015 [P] [US3] Add test `unconfigured_python_default_is_named_python_default_and_declared` in `waybill-cli/tests/pants_pex_reader.rs` against fixture `implicit_default_python`: membership `["python-default"]`, `declared` includes `python:python-default`, and the anchor `pkg:generic/python-default?pants-namespace=python` exists
+- [ ] T016 [P] [US3] Add test `no_pants_toml_keeps_stem_names` in `waybill-cli/tests/pants_pex_reader.rs`: `pants_pex/multi_resolve` still reports `{"declared":[],"discovered":["python:default","python:mypy","python:pytest"],…}`. Names are qualified per T011; nothing else changes
+- [ ] T017 [P] [US3] Add test `explicit_resolves_table_disables_the_builtin_default` in `waybill-cli/tests/pants_coursier_jvm_reader.rs`: with `[jvm.resolves]` configured and an extra `3rdparty/jvm/default.lock`, that lockfile stays `discovered` as `jvm:default`
 
-### Implementation for User Story 1
+### Implementation for User Story 3
 
-- [ ] T015 [US1] Stop discarding `PantsMetadata::generated_with_requirements` in `waybill-cli/src/scan_fs/package_db/pants_jvm/lockfile.rs` (the `let _ = …` at line 226); expose it on the parsed lockfile and add `fn top_level_coordinates(&self) -> Vec<String>` returning `group:artifact` (text before the first `,`, first two `:` fields), sorted and deduplicated, with unit tests including the `,url=…,jar=…` suffix form
-- [ ] T016 [US1] Add `pub(crate) fn resolve_component_entry` to `waybill-cli/src/scan_fs/package_db/pants_jvm/lockfile.rs`, mirroring `pants/lockfile.rs::resolve_component_entry`: PURL `pkg:generic/<name>?pants-namespace=jvm`, empty version, `depends` = `top_level_coordinates()`, `depends_ecosystem = Some("maven")`, annotations `waybill:component-kind = lockfile-resolve`, `waybill:pants-resolve = [<name>]`, `waybill:pants-resolve-namespace = jvm`, and `waybill:resolve-classification-source`, with `lifecycle_scope` from `pants_jvm::resolve_classifier`
-- [ ] T017 [US1] In `waybill-cli/src/scan_fs/package_db/pants_jvm/mod.rs`, record for each discovered lockfile whether `[jvm.resolves]` declared it (`DiscoveredLockfile` gains a declaration field per data-model `Declaration`); emit the T016 anchor only for declared resolves; build the JVM `PantsResolveSummary` part (declared/discovered names, weak count, unanchored count); change `read`/`finalize` to return `(Vec<PackageDbEntry>, Option<summary part>)`, with `None` when no lockfile was found
-- [ ] T018 [US1] Thread the JVM summary part from `pants_jvm::finalize` (`waybill-cli/src/scan_fs/package_db/mod.rs:2826-2832`, the shared-walker pilot) into the T007 merge alongside the Python part, so one statement covers both namespaces
-- [ ] T019 [US1] Verify research R6 on `waybill-cli/tests/fixtures/pants_namespace_collision/` and a local scan of `enragedginger/pants_backend_clojure` @ `e068ffb`: the root reaches every JVM anchor in all three formats with no change to the emitters. If it does not, stop and record the finding in `specs/1064-pants-resolve-namespaces/research.md` R6 before changing an emitter
+- [ ] T018 [P] [US3] Expose "language `resolves` table absent" from both config parsers: `waybill-cli/src/scan_fs/package_db/pants_jvm/config.rs` (distinguish an absent `[jvm.resolves]` from an empty one) and `waybill-cli/src/scan_fs/package_db/pants/config.rs` (the same for `[python].resolves`)
+- [ ] T019 [US3] Apply R2 in `waybill-cli/src/scan_fs/package_db/pants_jvm/mod.rs::discover_lockfiles`: when `pants.toml` exists and `[jvm.resolves]` is absent, `3rdparty/jvm/default.lock` gets the name `jvm-default` and declaration `PantsDefault`; build the JVM summary part from declarations (declared vs discovered names, counts) and merge it via T010 (statement only; anchors come in US1)
+- [ ] T020 [US3] Apply R2 in `waybill-cli/src/scan_fs/package_db/pants/mod.rs` (`discover_lockfiles` plus the `declared_resolve_names` computation near line 442): when `pants.toml` exists and `[python].resolves` is absent, `3rdparty/python/default.lock` gets the name `python-default` and declaration `PantsDefault`, is counted declared, and is anchored
+- [ ] T021 [US3] Thread the JVM summary part from `pants_jvm::finalize` (`waybill-cli/src/scan_fs/package_db/mod.rs:2826-2832`, the shared-walker pilot) into the T010 merge alongside the Python part; change `pants_jvm::read`/`finalize` to return `(Vec<PackageDbEntry>, Option<summary part>)` and update every caller (`grep -rn "pants_jvm::read\|pants_jvm::finalize" waybill-cli/`)
 
-**Checkpoint**: A JVM-only repository has a statement and owned packages. US1 is independently verifiable through T011–T014.
+**Checkpoint**: Default names are Pants-correct in both namespaces, and JVM resolves appear in C161.
 
 ---
 
-## Phase 4: User Story 2 — Polyglot statement covers both namespaces without ambiguity (Priority: P1)
+## Phase 4: User Story 1 — A JVM Pants repository states and anchors its resolves (Priority: P1) 🎯 MVP
 
-**Goal**: Same-named resolves across namespaces stay distinct everywhere: statement, anchors and split.
+**Goal**: Every declared JVM resolve (`Configured`, `PantsDefault`, and later `ToolLockfile`) gets an owning component wired to its declared top-level requirements.
+
+**Independent Test**: Scan a JVM-only repository. The statement is present with `jvm:` names, there is one anchor per declared resolve depending on exactly its `generated_with_requirements` packages, and the root's direct-dependency counts are equal across CycloneDX, SPDX 2.3 and SPDX 3.
+
+### Tests for User Story 1
+
+- [ ] T022 [P] [US1] Add test `jvm_declared_resolve_gets_an_anchor_wired_to_its_top_levels` in `waybill-cli/tests/pants_coursier_jvm_reader.rs` against fixture `two_versions_two_resolves`: two anchors `pkg:generic/java17?pants-namespace=jvm` and `pkg:generic/java21?pants-namespace=jvm`, each depending on exactly its own `app@N`
+- [ ] T023 [P] [US1] Add test `jvm_only_repository_carries_an_ownership_statement` in `waybill-cli/tests/pants_coursier_jvm_reader.rs`: C161 equals `{"declared":["jvm:java17","jvm:java21"],"discovered":[],"unanchored_lockfiles":0,"weak_classification":2}` in all three formats
+- [ ] T024 [P] [US1] Add test `jvm_root_edges_agree_across_formats` in `waybill-cli/tests/pants_coursier_jvm_reader.rs`, emitting all three formats and asserting equal root out-edge counts (FR-013) using the counting approach of `corpus_harness_195::layer1_assertions` (`cdx_root_out_edges` and its SPDX siblings)
+- [ ] T025 [P] [US1] Add a test in `waybill-cli/tests/pants_coursier_jvm_reader.rs` with a lockfile whose `generated_with_requirements` is empty: the anchor exists with no `depends`, and the resolve is still listed (spec edge case)
+- [ ] T026 [P] [US1] Add test `top_level_missing_from_its_lockfile_is_dropped_not_rewired` in `waybill-cli/tests/pants_coursier_jvm_reader.rs` against fixture `missing_top_level`: the anchor depends on `present` only, no edge reaches any other resolve's package, and `waybill:unresolved-declared-dep` on the anchor names `dev.waybill.fixture:absent` (spec edge case)
+- [ ] T027 [P] [US1] Add test `implicit_default_jvm_resolve_is_anchored` in `waybill-cli/tests/pants_coursier_jvm_reader.rs` against fixture `implicit_default`: anchor `pkg:generic/jvm-default?pants-namespace=jvm` depends on `app@1.0.0` (the SC-001 shape)
+
+### Implementation for User Story 1
+
+- [ ] T028 [US1] Stop discarding `PantsMetadata::generated_with_requirements` in `waybill-cli/src/scan_fs/package_db/pants_jvm/lockfile.rs` (the `let _ = …` at line 226); expose it on the parsed lockfile and add `fn top_level_coordinates(&self) -> Vec<String>` returning `group:artifact` (text before the first `,`, first two `:` fields), sorted and deduplicated, with unit tests including the `,url=…,jar=…` suffix form
+- [ ] T029 [US1] Add `pub(crate) fn resolve_component_entry` to `waybill-cli/src/scan_fs/package_db/pants_jvm/lockfile.rs`, mirroring `pants/lockfile.rs::resolve_component_entry`: PURL `pkg:generic/<name>?pants-namespace=jvm`, empty version, `depends` = `top_level_coordinates()`, `depends_ecosystem = Some("maven")`, annotations `waybill:component-kind = lockfile-resolve`, `waybill:pants-resolve = [<name>]`, `waybill:pants-resolve-namespace = jvm`, and `waybill:resolve-classification-source`, with `lifecycle_scope` from `pants_jvm::resolve_classifier`
+- [ ] T030 [US1] In `waybill-cli/src/scan_fs/package_db/pants_jvm/mod.rs::read`, emit the T029 anchor for every lockfile whose declaration `is_declared()`, and none for `Discovered`
+- [ ] T031 [US1] Verify research R6 on `waybill-cli/tests/fixtures/pants_namespace_collision/` and a local scan of `enragedginger/pants_backend_clojure` @ `e068ffb`: the root reaches every JVM anchor in all three formats with no change to the emitters. If it does not, stop and record the finding in `specs/1064-pants-resolve-namespaces/research.md` R6 before changing an emitter
+
+**Checkpoint**: Configured and Pants-default JVM resolves have a statement and owned packages. US1 is independently verifiable through T022–T027.
+
+---
+
+## Phase 5: User Story 2 — Polyglot statement covers both namespaces without ambiguity (Priority: P1)
+
+**Goal**: Same-named resolves across namespaces stay distinct everywhere: statement, anchors and split. Its test needs US1's JVM anchors.
 
 **Independent Test**: Scan `pants_namespace_collision`. There are three distinct anchors (two named `default`), the statement lists `jvm:default`, `python:default` and `python:lint`, and `--split=resolve` still produces one document per qualified resolve with each document's anchor in its own namespace.
 
 ### Tests for User Story 2
 
-- [ ] T020 [P] [US2] Add test `same_named_resolves_get_distinct_anchors` in `waybill-cli/tests/pants_namespace_split.rs`: unsplit scan of `pants_namespace_collision` has anchors `pkg:generic/default?pants-namespace=python`, `pkg:generic/default?pants-namespace=jvm` and `pkg:generic/lint?pants-namespace=python`, each owning only its own namespace's packages
-- [ ] T021 [P] [US2] Add test `ownership_statement_lists_both_defaults` in `waybill-cli/tests/pants_namespace_split.rs`: C161 equals the `pants_namespace_collision` example in `contracts/resolve-ownership.md`
-- [ ] T022 [P] [US2] Extend the existing split tests in `waybill-cli/tests/pants_namespace_split.rs` to assert that each `--split=resolve` document's main-module is the anchor of that document's namespace (exercises T006), that filenames are unchanged, and that every split document's C161 is the repository-wide value (FR-010)
+- [ ] T032 [P] [US2] Add test `same_named_resolves_get_distinct_anchors` in `waybill-cli/tests/pants_namespace_split.rs`: unsplit scan of `pants_namespace_collision` has anchors `pkg:generic/default?pants-namespace=python`, `pkg:generic/default?pants-namespace=jvm` and `pkg:generic/lint?pants-namespace=python`, each owning only its own namespace's packages
+- [ ] T033 [P] [US2] Add test `ownership_statement_lists_both_defaults` in `waybill-cli/tests/pants_namespace_split.rs`: C161 equals the `pants_namespace_collision` example in `contracts/resolve-ownership.md`
+- [ ] T034 [P] [US2] Extend the existing split tests in `waybill-cli/tests/pants_namespace_split.rs` to assert that each `--split=resolve` document's main-module is the anchor of that document's namespace (exercises T009), that filenames are unchanged, and that every split document's C161 is the repository-wide value (FR-010)
 
 ### Implementation for User Story 2
 
-- [ ] T023 [US2] Confirm that dedup (`waybill-cli/src/scan_fs/mod.rs`, the m922 namespace-aware merge) keeps the two `default` anchors apart now that their PURLs differ by qualifier; if any dedup key strips qualifiers, key it on the full PURL and add the case to T020
+- [ ] T035 [US2] Confirm that dedup keeps the two `default` anchors apart now that their PURLs differ by qualifier: find the dedup key in `waybill-cli/src/scan_fs/mod.rs` (`grep -n "fn dedup\|dedup_key\|pants-resolve-namespace" waybill-cli/src/scan_fs/mod.rs`, the m922 namespace-aware merge); if any key strips qualifiers, key it on the full PURL and add the case to T032
 
 **Checkpoint**: The collision fixture is correct in the unsplit and split outputs.
-
----
-
-## Phase 5: User Story 3 — Pants built-in defaults are named as Pants names them (Priority: P2)
-
-**Goal**: With `pants.toml` present and no `resolves` table for a language, the default-path lockfile is `jvm-default` / `python-default` and declared (R2).
-
-**Independent Test**: Scan `implicit_default` (T001) and `implicit_default_python` (T003). Membership reads `jvm-default` / `python-default`, the statement lists them under `declared`, and an anchor exists. Fixtures without `pants.toml` (`pants_pex/multi_resolve`) are byte-identical to before.
-
-### Tests for User Story 3
-
-- [ ] T024 [P] [US3] Add test `unconfigured_jvm_default_is_named_jvm_default_and_declared` in `waybill-cli/tests/pants_coursier_jvm_reader.rs` against fixture `implicit_default`
-- [ ] T025 [P] [US3] Add test `unconfigured_python_default_is_named_python_default_and_declared` in `waybill-cli/tests/pants_pex_reader.rs` against fixture `implicit_default_python`
-- [ ] T026 [P] [US3] Add test `no_pants_toml_keeps_stem_names` in `waybill-cli/tests/pants_pex_reader.rs`: `pants_pex/multi_resolve` still reports `{"declared":[],"discovered":["python:default","python:mypy","python:pytest"],…}`. Names are qualified per T008; nothing else changes
-- [ ] T027 [P] [US3] Add test `explicit_resolves_table_disables_the_builtin_default` in `waybill-cli/tests/pants_coursier_jvm_reader.rs`: with `[jvm.resolves]` configured and an extra `3rdparty/jvm/default.lock`, that lockfile stays `discovered` as `jvm:default`
-
-### Implementation for User Story 3
-
-- [ ] T028 [P] [US3] Expose "language `resolves` table absent" from both config parsers: `waybill-cli/src/scan_fs/package_db/pants_jvm/config.rs` (distinguish an absent `[jvm.resolves]` from an empty one) and `waybill-cli/src/scan_fs/package_db/pants/config.rs` (the same for `[python].resolves`)
-- [ ] T029 [US3] Apply R2 in `waybill-cli/src/scan_fs/package_db/pants_jvm/mod.rs::discover_lockfiles`: when `pants.toml` exists and `[jvm.resolves]` is absent, `3rdparty/jvm/default.lock` gets the name `jvm-default` and the `PantsDefault` declaration
-- [ ] T030 [US3] Apply R2 in `waybill-cli/src/scan_fs/package_db/pants/mod.rs` (`discover_lockfiles` plus the `declared_resolve_names` computation near line 442): when `pants.toml` exists and `[python].resolves` is absent, `3rdparty/python/default.lock` gets the name `python-default`, is added to the declared set, and is anchored
-
-**Checkpoint**: `pants-example-jvm`'s shape (no `[jvm.resolves]`) yields `jvm:jvm-default`, declared and anchored.
 
 ---
 
@@ -123,14 +128,15 @@ description: "Task list for 1064 — Pants resolves owned and named across both 
 
 ### Tests for User Story 4
 
-- [ ] T031 [P] [US4] Add test `tool_lockfile_is_declared_development_scope` in `waybill-cli/tests/pants_coursier_jvm_reader.rs` against fixture `tool_lockfile`: every `testing.lock` package has lifecycle scope development and membership `["junit"]`, the anchor `pkg:generic/junit?pants-namespace=jvm` exists, and C161 equals `{"declared":["jvm:junit","jvm:main"],"discovered":[],"unanchored_lockfiles":0,"weak_classification":1}`
-- [ ] T032 [P] [US4] Add unit tests in `waybill-cli/src/scan_fs/package_db/pants_jvm/config.rs` showing that a `lockfile = "<default>"` value and a path that doesn't exist both declare nothing
+- [ ] T036 [P] [US4] Add test `tool_lockfile_is_declared_development_scope` in `waybill-cli/tests/pants_coursier_jvm_reader.rs` against fixture `tool_lockfile`: every `testing.lock` package has lifecycle scope development and membership `["junit"]`, the anchor `pkg:generic/junit?pants-namespace=jvm` exists, and C161 equals `{"declared":["jvm:junit","jvm:main"],"discovered":[],"unanchored_lockfiles":0,"weak_classification":1}`
+- [ ] T037 [P] [US4] Add unit tests in `waybill-cli/src/scan_fs/package_db/pants_jvm/config.rs` showing that a `lockfile = "<default>"` value and a path that doesn't exist both declare nothing
 
 ### Implementation for User Story 4
 
-- [ ] T033 [US4] Parse every `pants.toml` table other than `jvm` and `python` for a string `lockfile` key in `waybill-cli/src/scan_fs/package_db/pants_jvm/config.rs`, returning `(scope, path)` pairs (keep the parser fail-open per FR-004)
-- [ ] T034 [US4] In `waybill-cli/src/scan_fs/package_db/pants_jvm/mod.rs`, match those paths against discovered lockfiles (resolved against `scan_root`, compared as paths). A match not already `Configured` takes the scope as its name and the `ToolLockfile` declaration; a `Configured` match keeps its name and gains declared-by-tool classification (data-model precedence)
-- [ ] T035 [US4] Add `classify_resolve_with_source(name, declared_by_tool)` to `waybill-cli/src/scan_fs/package_db/pants_jvm/resolve_classifier.rs`, returning `(Development, Declared)` when declared by a tool and `(classify_resolve(name), HeuristicOrDefault)` otherwise, mirroring `pants/resolve_classifier.rs:64-75`; use it for both package entries and anchors
+- [ ] T038 [US4] Parse every `pants.toml` table other than `jvm` and `python` for a string `lockfile` key in `waybill-cli/src/scan_fs/package_db/pants_jvm/config.rs`, returning `(scope, path)` pairs (keep the parser fail-open per FR-004)
+- [ ] T039 [US4] In `waybill-cli/src/scan_fs/package_db/pants_jvm/mod.rs`, match those paths against discovered lockfiles (resolved against `scan_root`, compared as paths) and combine declarations with T006's `stronger`. A `Discovered` or `PantsDefault` match takes the scope as its name and becomes `ToolLockfile`; a `Configured` match keeps its name and gains declared-by-tool classification
+- [ ] T040 [US4] Add `classify_resolve_with_source(name, declared_by_tool)` to `waybill-cli/src/scan_fs/package_db/pants_jvm/resolve_classifier.rs`, returning `(Development, Declared)` when declared by a tool and `(classify_resolve(name), HeuristicOrDefault)` otherwise, mirroring `pants/resolve_classifier.rs:64-75`; use it for both package entries and anchors
+- [ ] T041 [P] [US4] Add test `configured_resolve_also_declared_by_a_tool_keeps_its_name` in `waybill-cli/tests/pants_coursier_jvm_reader.rs`: `[jvm.resolves] tests = "3rdparty/jvm/tests.lock"` plus `[junit] lockfile = "3rdparty/jvm/tests.lock"` gives membership `["tests"]`, development scope, and classification source `declared` (spec edge case)
 
 **Checkpoint**: All four stories are functional and verified by their own tests.
 
@@ -138,14 +144,16 @@ description: "Task list for 1064 — Pants resolves owned and named across both 
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T036 Run `./scripts/pre-pr.sh`, save the log to a file, and confirm `EXIT=0`, the `>>> all pre-PR checks passed.` line, and zero non-`0 failed` result lines
-- [ ] T037 Regenerate public-corpus goldens per `docs/development/refreshing-corpus-goldens.md`: two `regen_goldens=true` runs on the branch, `diff -r` identical, then `xtask corpus-diff` against committed goldens. Expect changes only in `pants-example-python`, `pants-example-django`, `pants-example-jvm` and `pants-clojure-polyglot`, and attribute each category to R1–R5; the other 13 targets must show `no semantic change` (SC-004)
-- [ ] T038 Install the goldens (`rsync -a --delete`), then in `waybill-cli/tests/corpus_harness_195/layer1_assertions.rs` remove `pants-clojure-polyglot` from `KNOWN_SPDX3_ROOT_EDGE_DIVERGENCE` and its pin in `known_spdx3_divergence_is_still_present` if its counts now agree (SC-002); if they don't, record the measured counts and the reason in research.md R6
-- [ ] T039 [P] Run the in-repo golden regeneration sweep (`WAYBILL_UPDATE_CDX_GOLDENS=1 WAYBILL_UPDATE_SPDX_GOLDENS=1 WAYBILL_UPDATE_SPDX3_GOLDENS=1` over the six golden-writing suites) and confirm the rewritten files are byte-identical (R7)
-- [ ] T040 [P] Add an Unreleased entry to `CHANGELOG.md` describing the consumer-visible changes (FR-015): qualified C161 names, JVM statement and anchors, anchor PURL qualifier, `jvm-default` / `python-default` naming, and the supersession of m912 SC-006
-- [ ] T041 [P] Update the C161 description in the parity catalogue documentation (the file that documents catalogue rows, found via `grep -rn "C161" docs/`) to v2 per `contracts/resolve-ownership.md`, and the anchor description wherever `docs/` documents `lockfile-resolve` components
-- [ ] T042 Run `specs/1064-pants-resolve-namespaces/quickstart.md` end to end and record the actual outputs next to its expected ones
-- [ ] T043 Post on #1106 the final anchor-identity form as shipped, and close #924 by linking the merged PR
+- [ ] T042 Run `./scripts/pre-pr.sh`, save the log to a file, and confirm `EXIT=0`, the `>>> all pre-PR checks passed.` line, and zero non-`0 failed` result lines
+- [ ] T043 Regenerate public-corpus goldens per `docs/development/refreshing-corpus-goldens.md`: two `regen_goldens=true` runs on the branch, `diff -r` identical, then `xtask corpus-diff` against committed goldens. Expect changes only in `pants-example-python`, `pants-example-django`, `pants-example-jvm` and `pants-clojure-polyglot`, and attribute each category to R1–R5; the other 13 targets must show `no semantic change` (SC-004)
+- [ ] T044 Install the goldens (`rsync -a --delete`), then in `waybill-cli/tests/corpus_harness_195/layer1_assertions.rs` remove `pants-clojure-polyglot` from `KNOWN_SPDX3_ROOT_EDGE_DIVERGENCE` and its pin in `known_spdx3_divergence_is_still_present` if its counts now agree (SC-002, FR-013). `pants-example-python` and `pants-example-django` stay on the list (#1022). If the clojure counts don't agree, record the measured counts and the reason in research.md R6
+- [ ] T045 Add a layer-1 invariant for `pants-example-jvm` in `waybill-cli/tests/corpus_harness_195/layer1_assertions.rs` (`pants_example_jvm_layer1`): C161 equals `{"declared":["jvm:jvm-default"],"discovered":[],"unanchored_lockfiles":0,"weak_classification":1}`, and the anchor `pkg:generic/jvm-default?pants-namespace=jvm` exists (SC-001)
+- [ ] T046 Add a C161 invariant to `pants_clojure_polyglot_layer1` in `waybill-cli/tests/corpus_harness_195/layer1_assertions.rs`: `declared` equals `["jvm:java17","jvm:java21","python:pants-2.30","python:pants-2.31"]` (SC-002)
+- [ ] T047 [P] Run the in-repo golden regeneration sweep (`WAYBILL_UPDATE_CDX_GOLDENS=1 WAYBILL_UPDATE_SPDX_GOLDENS=1 WAYBILL_UPDATE_SPDX3_GOLDENS=1` over the six golden-writing suites) and confirm the rewritten files are byte-identical (R7)
+- [ ] T048 [P] Add an Unreleased entry to `CHANGELOG.md` describing the consumer-visible changes (FR-015): qualified C161 names, JVM statement and anchors, anchor PURL qualifier, `jvm-default` / `python-default` naming, and the supersession of m912 SC-006
+- [ ] T049 [P] Update the C161 description in the parity catalogue documentation (the file that documents catalogue rows, found via `grep -rn "C161" docs/`) to v2 per `contracts/resolve-ownership.md`, and the anchor description wherever `docs/` documents `lockfile-resolve` components
+- [ ] T050 Run `specs/1064-pants-resolve-namespaces/quickstart.md` end to end and record the actual outputs next to its expected ones
+- [ ] T051 Post on #1106 the final anchor-identity form as shipped, and close #924 by linking the merged PR
 
 ---
 
@@ -153,13 +161,13 @@ description: "Task list for 1064 — Pants resolves owned and named across both 
 
 ### Phase Dependencies
 
-- **Setup (Phase 1)**: none. T001–T003 are parallel.
-- **Foundational (Phase 2)**: depends on Setup only for fixture availability in later tests; T004 → T007 → T008; T005 → T006; T009–T010 after T005/T008. **Blocks all stories.**
-- **US1 (Phase 3)**: after Phase 2. T015 → T016 → T017 → T018 → T019.
-- **US2 (Phase 4)**: after Phase 2 and after T016/T017, because the collision fixture's JVM `default` needs a JVM anchor to test distinctness.
-- **US3 (Phase 5)**: after Phase 2 (T029 needs the T017 declaration field; T030 is independent of US1).
-- **US4 (Phase 6)**: after T017 (declaration field) and T016 (anchors).
-- **Polish (Phase 7)**: after every story targeted for this delivery.
+- **Setup (Phase 1)**: none. T001–T004 are parallel.
+- **Foundational (Phase 2)**: T005 → T006 → T007; T005 → T010 → T011; T008 → T009; T012–T013 after T008/T011. **Blocks all stories.**
+- **US3 (Phase 3)**: after Phase 2. T018 → T019 → T021; T018 → T020.
+- **US1 (Phase 4)**: after US3, since T030 anchors every `is_declared()` lockfile, including `PantsDefault` from T019. T028 → T029 → T030 → T031.
+- **US2 (Phase 5)**: after US1, because the collision fixture's JVM `default` needs a JVM anchor to test distinctness.
+- **US4 (Phase 6)**: after US1 (anchors) and T006 (precedence).
+- **Polish (Phase 7)**: after every story targeted for this delivery. T043 → T044 → T045, T046.
 
 ### Within Each User Story
 
@@ -167,37 +175,39 @@ Tests are written first and fail against the pre-change code, then the implement
 
 ### Parallel Opportunities
 
-- T001, T002 and T003 (fixtures in different directories).
-- Within US1: T011–T014 (same file, but independent test functions, so they can be drafted together and committed once).
-- T028's two config files.
-- T039, T040 and T041 in Polish.
+- T001–T004 (fixtures in different directories).
+- Within US3: T014–T017 drafted together; T018's two config files.
+- Within US1: T022–T027 (one file, independent test functions).
+- T047, T048 and T049 in Polish.
 
 ---
 
 ## Parallel Example: User Story 1
 
 ```bash
-# Draft all US1 tests together (they fail until T015–T018 land):
-Task: "T011 jvm_declared_resolve_gets_an_anchor_wired_to_its_top_levels in waybill-cli/tests/pants_coursier_jvm_reader.rs"
-Task: "T012 jvm_only_repository_carries_an_ownership_statement in waybill-cli/tests/pants_coursier_jvm_reader.rs"
-Task: "T013 jvm_root_edges_agree_across_formats in waybill-cli/tests/pants_coursier_jvm_reader.rs"
-Task: "T014 empty generated_with_requirements case in waybill-cli/tests/pants_coursier_jvm_reader.rs"
+# Draft all US1 tests together (they fail until T028–T030 land):
+Task: "T022 jvm_declared_resolve_gets_an_anchor_wired_to_its_top_levels"
+Task: "T023 jvm_only_repository_carries_an_ownership_statement"
+Task: "T024 jvm_root_edges_agree_across_formats"
+Task: "T025 empty generated_with_requirements"
+Task: "T026 top_level_missing_from_its_lockfile_is_dropped_not_rewired"
+Task: "T027 implicit_default_jvm_resolve_is_anchored"
 ```
 
 ---
 
 ## Implementation Strategy
 
-### MVP (Phases 1–3)
+### MVP (Phases 1–4)
 
-Setup → Foundational (identity plus qualified statement) → US1. That delivers the #924 core: JVM repositories get a statement and owned packages, and nothing collides because identity is already qualified. Validate with T011–T014 and the gate.
+Setup → Foundational (identity, qualified statement, declarations) → US3 (Pants default names) → US1 (JVM anchors). That delivers #924's core *including* the reference case: `pants-example-jvm` (no `[jvm.resolves]`) gets `jvm:jvm-default`, declared and anchored (SC-001). Identity is already qualified, so nothing collides. Validate with T014–T017, T022–T027, and the gate.
 
 ### Incremental Delivery
 
 1. Phases 1–2 as one PR. Python anchors qualify and C161 names qualify; corpus goldens change for the Python Pants targets only.
-2. US1 + US2 as one PR (JVM anchors and statement, collision verified).
-3. US3 as one PR (Pants default names).
+2. US3 + US1 as one PR. JVM statement, default names and JVM anchors land together, so `pants-example-jvm`'s goldens change once.
+3. US2 as one PR (collision verified, dedup confirmed).
 4. US4 as one PR (tool lockfiles).
-5. Polish runs inside each PR for its own corpus delta (regenerate twice, attribute), with T040–T043 in the last one.
+5. Polish runs inside each PR for its own corpus delta (regenerate twice, attribute), with T045–T046 in PR 2 and T048–T051 in the last one.
 
 Each PR regenerates goldens through the CI lane rather than locally (rule zero of the corpus guide).

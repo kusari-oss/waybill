@@ -108,8 +108,11 @@ and one split lookup. Emitters are untouched (R6).
 5. Corpus regeneration (twice, compared), CHANGELOG entry (FR-015), and the
    catalogue note superseding m912 SC-006.
 
-Steps 1–2 must land before 3: JVM anchors without qualified identity would merge
-in collision repositories (spec US2 rationale).
+Steps 1–2 must land before 3. Without qualified identity, JVM anchors would
+merge in collision repositories (spec US2 rationale). Without Pants-default
+naming, `pants-example-jvm` (no `[jvm.resolves]`) would stay *discovered* and
+get no anchor, so SC-001 needs step 2. tasks.md follows this order, and ships
+steps 2 and 3 in one PR so that `pants-example-jvm`'s goldens change once.
 
 ## Complexity Tracking
 
