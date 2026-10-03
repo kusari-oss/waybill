@@ -1,0 +1,6 @@
+# Two JVM resolves locking different versions of the same artifacts — the
+# shape of enragedginger/pants_backend_clojure (guava 31.1-jre in java17,
+# 33.0.0-jre in java21). Each app must depend on its own resolve's lib.
+[jvm.resolves]
+java17 = "3rdparty/jvm/java17.lock"
+java21 = "3rdparty/jvm/java21.lock"

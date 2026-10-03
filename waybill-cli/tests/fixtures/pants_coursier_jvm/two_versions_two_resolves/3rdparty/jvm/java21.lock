@@ -1,0 +1,43 @@
+# --- BEGIN PANTS LOCKFILE METADATA: DO NOT EDIT OR REMOVE ---
+# {
+#   "version": 1,
+#   "generated_with_requirements": []
+# }
+# --- END PANTS LOCKFILE METADATA ---
+
+[[entries]]
+file_name = "dev.waybill.fixture_app_2.0.0.jar"
+[[entries.directDependencies]]
+group = "dev.waybill.fixture"
+artifact = "lib"
+version = "2.0.0"
+packaging = "jar"
+
+[[entries.dependencies]]
+group = "dev.waybill.fixture"
+artifact = "lib"
+version = "2.0.0"
+packaging = "jar"
+
+[entries.coord]
+group = "dev.waybill.fixture"
+artifact = "app"
+version = "2.0.0"
+packaging = "jar"
+[entries.file_digest]
+fingerprint = "00000000000000000000000000000000000000000000000000000000000000a2"
+serialized_bytes_length = 1
+
+[[entries]]
+directDependencies = []
+dependencies = []
+file_name = "dev.waybill.fixture_lib_2.0.0.jar"
+
+[entries.coord]
+group = "dev.waybill.fixture"
+artifact = "lib"
+version = "2.0.0"
+packaging = "jar"
+[entries.file_digest]
+fingerprint = "00000000000000000000000000000000000000000000000000000000000000b2"
+serialized_bytes_length = 1

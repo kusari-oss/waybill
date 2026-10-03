@@ -726,3 +726,42 @@ fn us1_fr010_info_log_emits_all_five_structured_fields() {
         );
     }
 }
+
+/// Two resolves lock different versions of one artifact chain. Each app's
+/// edge must land on its own resolve's lib. Edges are keyed `group:artifact`,
+/// which the resolve-scoped index did not carry for maven, so lookup fell
+/// back to the flat index, where one version overwrites the other: one app
+/// always pointed at the wrong lib, and which one depended on read order.
+/// Found by the #925 corpus target's two-run reproducibility check.
+#[test]
+fn each_resolve_keeps_its_own_version_of_a_shared_artifact() {
+    let tmp = tempfile::tempdir().unwrap();
+    let out = tmp.path().join("out.cdx.json");
+    let o = run_scan(&fixture("two_versions_two_resolves"), &out, &[]);
+    assert!(o.status.success(), "{}", String::from_utf8_lossy(&o.stderr));
+    let cdx = read_cdx(&out);
+    let edges: std::collections::BTreeSet<(String, String)> = cdx["dependencies"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .flat_map(|d| {
+            let from = d["ref"].as_str().unwrap_or_default().to_string();
+            d["dependsOn"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter_map(|t| t.as_str())
+                .map(move |t| (from.clone(), t.to_string()))
+                .collect::<Vec<_>>()
+        })
+        .filter(|(f, _)| f.contains("dev.waybill.fixture/app@"))
+        .collect();
+    let want: std::collections::BTreeSet<(String, String)> = [
+        ("pkg:maven/dev.waybill.fixture/app@1.0.0", "pkg:maven/dev.waybill.fixture/lib@1.0.0"),
+        ("pkg:maven/dev.waybill.fixture/app@2.0.0", "pkg:maven/dev.waybill.fixture/lib@2.0.0"),
+    ]
+    .into_iter()
+    .map(|(a, b)| (a.to_string(), b.to_string()))
+    .collect();
+    assert_eq!(edges, want);
+}
