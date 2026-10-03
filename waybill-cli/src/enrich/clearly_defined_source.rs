@@ -37,13 +37,16 @@ const BULK_BATCH_SIZE: usize = 100;
 /// gain without opening seven connections to a service whose variance is
 /// the reason #930 exists.
 const BULK_CONCURRENCY: usize = 4;
-/// Per bulk request. Every batch that succeeded in the probes answered in
-/// 0.2–0.7 s; the failures ran to the 120 s client limit or came back 502
-/// after 31–112 s (specs/923-enrich-batch-default/measurements/
-/// clearly-defined-bulk/). The value is a choice, not a measurement: long
-/// enough for a slow warm batch, short enough that a stalled one costs
-/// seconds rather than minutes before it is retried.
-const BULK_TIMEOUT_SECS: u64 = 30;
+/// Per bulk request. Measured (specs/923-enrich-batch-default/measurements/
+/// clearly-defined-bulk/): every batch that succeeded answered in 0.18–0.71 s,
+/// cold or warm, and every failure ran 30 s or more (to the client limit, or
+/// a 502 after 31–112 s). A longer timeout buys no successes; it only sets
+/// what a stall costs. At 30 s, 4 of 20 scans of a one-batch project
+/// stalled, and one stalled on the retry too: 65 s, failing the Windows
+/// smoke test's 60 s limit. At 5 s, the same as a single-coordinate GET, a
+/// stall costs 5 s and a double stall 10 s. The retry stays: it answered in
+/// 3 of those 4 stalls.
+const BULK_TIMEOUT_SECS: u64 = 5;
 
 /// Owns the HTTP client + in-memory + disk caches + offline flag.
 /// Cheap to clone — the cache and disk cache are `Arc`-shared so

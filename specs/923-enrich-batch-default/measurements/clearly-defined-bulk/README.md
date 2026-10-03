@@ -83,3 +83,28 @@ per-coordinate path resolved. That is the literal-key finding above. After
 The bulk run is a strict superset. Its wall clock is slower in this pair: a
 stalled batch costs up to the 30 s bulk timeout before its retry. That is
 the tail this design accepts in exchange for the cold-case difference.
+
+## Bulk timeout: 30 s → 5 s (2026-10-03)
+
+The first bulk implementation used a 30 s per-request timeout. Its tail
+failed the Windows smoke test (60 s limit) on two PRs, so the tail was
+measured.
+
+**Stall tail, 20 scans of the one-batch `cargo/lockfile-v3` fixture**, both
+caches disabled. Wall clock per scan:
+
+| bulk timeout | clean (≈0.3 s) | one stall, retry answered | stall twice, then per-coordinate | worst |
+|---|---|---|---|---|
+| 30 s | 16 | 3 (≈30 s) | 1 | **65.1 s** |
+| 5 s | 13 | 3 (≈5.3 s) | 4 (10–15 s) | **15.1 s** |
+
+Stalls are per request and frequent (20–35% of single-batch scans across the
+two rounds); a retry sent at once answered in 3 of 4 cases in the first round
+and 3 of 7 in the second.
+
+**Successful batch latency on unseen coordinates** (`probe_latency.py`,
+`mastodon/mastodon` @ 79f21a2, 1,707 gem + npm components, 18 batches, 4 in
+flight): 17 answered in 0.18–0.60 s (p50 0.31 s); one returned 502 after
+75 s. Across every probe in this directory no successful batch took longer
+than 0.71 s, so a longer timeout buys no successes and only sets what a
+stall costs.
