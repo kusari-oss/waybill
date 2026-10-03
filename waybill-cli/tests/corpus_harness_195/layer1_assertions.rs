@@ -1825,6 +1825,11 @@ mod i3_tests {
     fn known_spdx3_divergence_is_still_present() {
         assert_eq!(counts("pants-example-django"), (14, 14, 1));
         assert_eq!(counts("pants-example-python"), (2, 2, 1));
+        // #925: the two python resolve anchors in every format; the four
+        // JVM top-level requirements (cheshire, both guavas, junit), which
+        // have no resolve anchor (#924), only through the CDX / SPDX 2.3
+        // root fallback.
+        assert_eq!(counts("pants-clojure-polyglot"), (6, 6, 2));
     }
 
     #[test]
