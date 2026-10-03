@@ -518,7 +518,12 @@ pub fn read_with_summary(scan_root: &Path) -> (Vec<PackageDbEntry>, Option<Resol
         let (name, rel) = super::pants_resolve::pants_builtin_default(
             super::pants_resolve::LanguageNamespace::Python,
         );
-        let default_path = scan_root.join(rel);
+        // Candidates carry canonical paths (m672 FR-009), so the default
+        // path must be canonical too. Comparing the raw join missed whenever
+        // the scan root went through a symlink (macOS `/var` tempdirs) or
+        // on Windows, where canonical paths gain a `\\?\` prefix.
+        let joined = scan_root.join(rel);
+        let default_path = std::fs::canonicalize(&joined).unwrap_or(joined);
         if let Some(c) = candidates.iter_mut().find(|c| c.path == default_path) {
             c.resolve_name = name.to_string();
             builtin_default = Some(name.to_string());
@@ -963,12 +968,16 @@ app-runtime = "locks/app.lock"
         // default glob with NO `[python.resolves]` naming it, yields the
         // same packages and NO resolve component. A filename stem is a
         // convention, not a declaration of ownership.
+        //
+        // Not at `3rdparty/python/default.lock`: with a pants.toml and no
+        // `[python.resolves]`, Pants itself declares that path as
+        // `python-default` (m1064 R2).
         let dir = tempfile::tempdir().unwrap();
         let root = dir.path();
         write(root, "pants.toml", b"[python]\n");
         write(
             root,
-            "3rdparty/python/default.lock",
+            "3rdparty/python/app.lock",
             &synth_lockfile(&[("waybill-fixture-alpha", "1.0.0")], &["waybill-fixture-alpha"]),
         );
 
@@ -987,6 +996,33 @@ app-runtime = "locks/app.lock"
                 .iter()
                 .any(|e| e.purl.as_str().starts_with("pkg:pypi/waybill-fixture-alpha")),
             "the packages themselves are unaffected",
+        );
+    }
+
+    /// m1064 R2 through a symlinked scan root. Candidate paths are
+    /// canonical, so a default path built from the raw root never matched
+    /// and the built-in default was silently lost (macOS tempdirs, Windows).
+    #[cfg(unix)]
+    #[test]
+    fn builtin_default_is_named_through_a_symlinked_root() {
+        let dir = tempfile::tempdir().unwrap();
+        let real = dir.path().join("real");
+        write(&real, "pants.toml", b"[python]\n");
+        write(
+            &real,
+            "3rdparty/python/default.lock",
+            &synth_lockfile(&[("waybill-fixture-alpha", "1.0.0")], &["waybill-fixture-alpha"]),
+        );
+        let link = dir.path().join("link");
+        std::os::unix::fs::symlink(&real, &link).unwrap();
+
+        let entries = read_with_summary(&link).0;
+        assert_eq!(
+            resolve_components(&entries),
+            vec![(
+                "pkg:generic/python-default?pants-namespace=python".to_string(),
+                "python-default".to_string()
+            )],
         );
     }
 }
