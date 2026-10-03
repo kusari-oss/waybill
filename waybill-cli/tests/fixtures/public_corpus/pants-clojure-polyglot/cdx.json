@@ -1,0 +1,4466 @@
+{
+  "bomFormat": "CycloneDX",
+  "components": [
+    {
+      "bom-ref": "pkg:generic/pants-2.30",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.30.lock"
+          }
+        ]
+      },
+      "name": "pants-2.30",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/python/pants-2.30.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:component-kind",
+          "value": "lockfile-resolve"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"pants-2.30\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
+        },
+        {
+          "name": "waybill:resolve-classification-source",
+          "value": "heuristic-or-default"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/python\"]"
+        }
+      ],
+      "purl": "pkg:generic/pants-2.30",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:generic/pants-2.31",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.31.lock"
+          }
+        ]
+      },
+      "name": "pants-2.31",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/python/pants-2.31.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:component-kind",
+          "value": "lockfile-resolve"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"pants-2.31\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
+        },
+        {
+          "name": "waybill:resolve-classification-source",
+          "value": "heuristic-or-default"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/python\"]"
+        }
+      ],
+      "purl": "pkg:generic/pants-2.31",
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:maven/cheshire/cheshire@5.13.0",
+      "cpe": "cpe:2.3:a:cheshire:cheshire:5.13.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "locks/jvm/java17.lock.jsonc"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "locks/jvm/java21.lock.jsonc"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "c009610160ca8a1d8a6dad5307d06d171d318cd426ec249990c17fe8e0b89aec"
+        }
+      ],
+      "name": "cheshire",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"locks/jvm/java17.lock.jsonc\",\"locks/jvm/java21.lock.jsonc\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"java17\",\"java21\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"locks/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/cheshire/cheshire@5.13.0",
+      "supplier": {
+        "name": "cheshire"
+      },
+      "type": "library",
+      "version": "5.13.0"
+    },
+    {
+      "bom-ref": "pkg:maven/com.fasterxml.jackson.core/jackson-core@2.17.0",
+      "cpe": "cpe:2.3:a:com.fasterxml.jackson.core:jackson-core:2.17.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "locks/jvm/java17.lock.jsonc"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "locks/jvm/java21.lock.jsonc"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "55be130f6a68038088a261856c4e383ce79957a0fc1a29ecb213a9efd6ef4389"
+        }
+      ],
+      "name": "jackson-core",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:com.fasterxml.jackson.core:jackson-core:2.17.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:core:jackson-core:2.17.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:jackson-core:jackson-core:2.17.0:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"locks/jvm/java17.lock.jsonc\",\"locks/jvm/java21.lock.jsonc\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"java17\",\"java21\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"locks/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.fasterxml.jackson.core/jackson-core@2.17.0",
+      "supplier": {
+        "name": "com.fasterxml.jackson.core"
+      },
+      "type": "library",
+      "version": "2.17.0"
+    },
+    {
+      "bom-ref": "pkg:maven/com.fasterxml.jackson.dataformat/jackson-dataformat-cbor@2.17.0",
+      "cpe": "cpe:2.3:a:com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.17.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "locks/jvm/java17.lock.jsonc"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "locks/jvm/java21.lock.jsonc"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "d7050cb5e622848d5be382848b1792e8244d529e24c84ba1cc27aabf2496fe3b"
+        }
+      ],
+      "name": "jackson-dataformat-cbor",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.17.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:dataformat:jackson-dataformat-cbor:2.17.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:jackson-dataformat-cbor:jackson-dataformat-cbor:2.17.0:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"locks/jvm/java17.lock.jsonc\",\"locks/jvm/java21.lock.jsonc\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"java17\",\"java21\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"locks/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.fasterxml.jackson.dataformat/jackson-dataformat-cbor@2.17.0",
+      "supplier": {
+        "name": "com.fasterxml.jackson.dataformat"
+      },
+      "type": "library",
+      "version": "2.17.0"
+    },
+    {
+      "bom-ref": "pkg:maven/com.fasterxml.jackson.dataformat/jackson-dataformat-smile@2.17.0",
+      "cpe": "cpe:2.3:a:com.fasterxml.jackson.dataformat:jackson-dataformat-smile:2.17.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "locks/jvm/java17.lock.jsonc"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "locks/jvm/java21.lock.jsonc"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "e6b2bf2a53d1f88ec02f1833da24c208aa299876e47d37f7920b1e83e214baab"
+        }
+      ],
+      "name": "jackson-dataformat-smile",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:com.fasterxml.jackson.dataformat:jackson-dataformat-smile:2.17.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:dataformat:jackson-dataformat-smile:2.17.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:jackson-dataformat-smile:jackson-dataformat-smile:2.17.0:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"locks/jvm/java17.lock.jsonc\",\"locks/jvm/java21.lock.jsonc\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"java17\",\"java21\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"locks/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.fasterxml.jackson.dataformat/jackson-dataformat-smile@2.17.0",
+      "supplier": {
+        "name": "com.fasterxml.jackson.dataformat"
+      },
+      "type": "library",
+      "version": "2.17.0"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.code.findbugs/jsr305@3.0.2",
+      "cpe": "cpe:2.3:a:com.google.code.findbugs:jsr305:3.0.2:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "locks/jvm/java17.lock.jsonc"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "locks/jvm/java21.lock.jsonc"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "766ad2a0783f2687962c8ad74ceecc38a28b9f72a2d085ee438b7813e928d0c7"
+        }
+      ],
+      "name": "jsr305",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:com.google.code.findbugs:jsr305:3.0.2:*:*:*:*:*:*:*\",\"cpe:2.3:a:findbugs:jsr305:3.0.2:*:*:*:*:*:*:*\",\"cpe:2.3:a:jsr305:jsr305:3.0.2:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"locks/jvm/java17.lock.jsonc\",\"locks/jvm/java21.lock.jsonc\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"java17\",\"java21\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"locks/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.code.findbugs/jsr305@3.0.2",
+      "supplier": {
+        "name": "com.google.code.findbugs"
+      },
+      "type": "library",
+      "version": "3.0.2"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.errorprone/error_prone_annotations@2.11.0",
+      "cpe": "cpe:2.3:a:com.google.errorprone:error_prone_annotations:2.11.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "locks/jvm/java17.lock.jsonc"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "721cb91842b46fa056847d104d5225c8b8e1e8b62263b993051e1e5a0137b7ec"
+        }
+      ],
+      "name": "error_prone_annotations",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:com.google.errorprone:error_prone_annotations:2.11.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:errorprone:error_prone_annotations:2.11.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:error_prone_annotations:error_prone_annotations:2.11.0:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"locks/jvm/java17.lock.jsonc\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"java17\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"locks/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.errorprone/error_prone_annotations@2.11.0",
+      "supplier": {
+        "name": "com.google.errorprone"
+      },
+      "type": "library",
+      "version": "2.11.0"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.errorprone/error_prone_annotations@2.23.0",
+      "cpe": "cpe:2.3:a:com.google.errorprone:error_prone_annotations:2.23.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "locks/jvm/java21.lock.jsonc"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "ec6f39f068b6ff9ac323c68e28b9299f8c0a80ca512dccb1d4a70f40ac3ec054"
+        }
+      ],
+      "name": "error_prone_annotations",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:com.google.errorprone:error_prone_annotations:2.23.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:errorprone:error_prone_annotations:2.23.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:error_prone_annotations:error_prone_annotations:2.23.0:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"locks/jvm/java21.lock.jsonc\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"java21\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"locks/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.errorprone/error_prone_annotations@2.23.0",
+      "supplier": {
+        "name": "com.google.errorprone"
+      },
+      "type": "library",
+      "version": "2.23.0"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.guava/failureaccess@1.0.1",
+      "cpe": "cpe:2.3:a:com.google.guava:failureaccess:1.0.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "locks/jvm/java17.lock.jsonc"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "a171ee4c734dd2da837e4b16be9df4661afab72a41adaf31eb84dfdaf936ca26"
+        }
+      ],
+      "name": "failureaccess",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:com.google.guava:failureaccess:1.0.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:guava:failureaccess:1.0.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:failureaccess:failureaccess:1.0.1:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"locks/jvm/java17.lock.jsonc\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"java17\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"locks/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.guava/failureaccess@1.0.1",
+      "supplier": {
+        "name": "com.google.guava"
+      },
+      "type": "library",
+      "version": "1.0.1"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.guava/failureaccess@1.0.2",
+      "cpe": "cpe:2.3:a:com.google.guava:failureaccess:1.0.2:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "locks/jvm/java21.lock.jsonc"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "8a8f81cf9b359e3f6dfa691a1e776985c061ef2f223c9b2c80753e1b458e8064"
+        }
+      ],
+      "name": "failureaccess",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:com.google.guava:failureaccess:1.0.2:*:*:*:*:*:*:*\",\"cpe:2.3:a:guava:failureaccess:1.0.2:*:*:*:*:*:*:*\",\"cpe:2.3:a:failureaccess:failureaccess:1.0.2:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"locks/jvm/java21.lock.jsonc\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"java21\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"locks/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.guava/failureaccess@1.0.2",
+      "supplier": {
+        "name": "com.google.guava"
+      },
+      "type": "library",
+      "version": "1.0.2"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.guava/guava@31.1-jre",
+      "cpe": "cpe:2.3:a:com.google.guava:guava:31.1-jre:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "locks/jvm/java17.lock.jsonc"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "a42edc9cab792e39fe39bb94f3fca655ed157ff87a8af78e1d6ba5b07c4a00ab"
+        }
+      ],
+      "name": "guava",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:com.google.guava:guava:31.1-jre:*:*:*:*:*:*:*\",\"cpe:2.3:a:guava:guava:31.1-jre:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"locks/jvm/java17.lock.jsonc\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"java17\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"locks/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.guava/guava@31.1-jre",
+      "supplier": {
+        "name": "com.google.guava"
+      },
+      "type": "library",
+      "version": "31.1-jre"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.guava/guava@33.0.0-jre",
+      "cpe": "cpe:2.3:a:com.google.guava:guava:33.0.0-jre:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "locks/jvm/java21.lock.jsonc"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "f4d85c3e4d411694337cb873abea09b242b664bb013320be6105327c45991537"
+        }
+      ],
+      "name": "guava",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:com.google.guava:guava:33.0.0-jre:*:*:*:*:*:*:*\",\"cpe:2.3:a:guava:guava:33.0.0-jre:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"locks/jvm/java21.lock.jsonc\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"java21\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"locks/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.guava/guava@33.0.0-jre",
+      "supplier": {
+        "name": "com.google.guava"
+      },
+      "type": "library",
+      "version": "33.0.0-jre"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.guava/listenablefuture@9999.0-empty-to-avoid-conflict-with-guava",
+      "cpe": "cpe:2.3:a:com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "locks/jvm/java17.lock.jsonc"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "locks/jvm/java21.lock.jsonc"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "b372a037d4230aa57fbeffdef30fd6123f9c0c2db85d0aced00c91b974f33f99"
+        }
+      ],
+      "name": "listenablefuture",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava:*:*:*:*:*:*:*\",\"cpe:2.3:a:guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava:*:*:*:*:*:*:*\",\"cpe:2.3:a:listenablefuture:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"locks/jvm/java17.lock.jsonc\",\"locks/jvm/java21.lock.jsonc\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"java17\",\"java21\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"locks/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.guava/listenablefuture@9999.0-empty-to-avoid-conflict-with-guava",
+      "supplier": {
+        "name": "com.google.guava"
+      },
+      "type": "library",
+      "version": "9999.0-empty-to-avoid-conflict-with-guava"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.j2objc/j2objc-annotations@1.3",
+      "cpe": "cpe:2.3:a:com.google.j2objc:j2objc-annotations:1.3:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "locks/jvm/java17.lock.jsonc"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "21af30c92267bd6122c0e0b4d20cccb6641a37eaf956c6540ec471d584e64a7b"
+        }
+      ],
+      "name": "j2objc-annotations",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:com.google.j2objc:j2objc-annotations:1.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:j2objc:j2objc-annotations:1.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:j2objc-annotations:j2objc-annotations:1.3:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"locks/jvm/java17.lock.jsonc\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"java17\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"locks/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.j2objc/j2objc-annotations@1.3",
+      "supplier": {
+        "name": "com.google.j2objc"
+      },
+      "type": "library",
+      "version": "1.3"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.j2objc/j2objc-annotations@2.8",
+      "cpe": "cpe:2.3:a:com.google.j2objc:j2objc-annotations:2.8:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "locks/jvm/java21.lock.jsonc"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "f02a95fa1a5e95edb3ed859fd0fb7df709d121a35290eff8b74dce2ab7f4d6ed"
+        }
+      ],
+      "name": "j2objc-annotations",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:com.google.j2objc:j2objc-annotations:2.8:*:*:*:*:*:*:*\",\"cpe:2.3:a:j2objc:j2objc-annotations:2.8:*:*:*:*:*:*:*\",\"cpe:2.3:a:j2objc-annotations:j2objc-annotations:2.8:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"locks/jvm/java21.lock.jsonc\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"java21\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"locks/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.j2objc/j2objc-annotations@2.8",
+      "supplier": {
+        "name": "com.google.j2objc"
+      },
+      "type": "library",
+      "version": "2.8"
+    },
+    {
+      "bom-ref": "pkg:maven/junit/junit@4.13.2",
+      "cpe": "cpe:2.3:a:junit:junit:4.13.2:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "locks/jvm/java17.lock.jsonc"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "locks/jvm/java21.lock.jsonc"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "8e495b634469d64fb8acfa3495a065cbacc8a0fff55ce1e31007be4c16dc57d3"
+        }
+      ],
+      "name": "junit",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"locks/jvm/java17.lock.jsonc\",\"locks/jvm/java21.lock.jsonc\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"java17\",\"java21\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"locks/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/junit/junit@4.13.2",
+      "supplier": {
+        "name": "junit"
+      },
+      "type": "library",
+      "version": "4.13.2"
+    },
+    {
+      "bom-ref": "pkg:maven/org.checkerframework/checker-qual@3.12.0",
+      "cpe": "cpe:2.3:a:org.checkerframework:checker-qual:3.12.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "locks/jvm/java17.lock.jsonc"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "ff10785ac2a357ec5de9c293cb982a2cbb605c0309ea4cc1cb9b9bc6dbe7f3cb"
+        }
+      ],
+      "name": "checker-qual",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:org.checkerframework:checker-qual:3.12.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:checkerframework:checker-qual:3.12.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:checker-qual:checker-qual:3.12.0:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"locks/jvm/java17.lock.jsonc\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"java17\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"locks/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/org.checkerframework/checker-qual@3.12.0",
+      "supplier": {
+        "name": "org.checkerframework"
+      },
+      "type": "library",
+      "version": "3.12.0"
+    },
+    {
+      "bom-ref": "pkg:maven/org.checkerframework/checker-qual@3.41.0",
+      "cpe": "cpe:2.3:a:org.checkerframework:checker-qual:3.41.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "locks/jvm/java21.lock.jsonc"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "2f9f245bf68e4259d610894f2406dc1f6363dc639302bd566e8272e4f4541172"
+        }
+      ],
+      "name": "checker-qual",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:org.checkerframework:checker-qual:3.41.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:checkerframework:checker-qual:3.41.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:checker-qual:checker-qual:3.41.0:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"locks/jvm/java21.lock.jsonc\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"java21\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"locks/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/org.checkerframework/checker-qual@3.41.0",
+      "supplier": {
+        "name": "org.checkerframework"
+      },
+      "type": "library",
+      "version": "3.41.0"
+    },
+    {
+      "bom-ref": "pkg:maven/org.clojure/clojure@1.12.3",
+      "cpe": "cpe:2.3:a:org.clojure:clojure:1.12.3:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "locks/jvm/java17.lock.jsonc"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "locks/jvm/java21.lock.jsonc"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "cb2a1a3db1c2cd76ef4fa4a545d5a65f10b1b48b7f7672f0a109f5476f057166"
+        }
+      ],
+      "name": "clojure",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:org.clojure:clojure:1.12.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:clojure:clojure:1.12.3:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"locks/jvm/java17.lock.jsonc\",\"locks/jvm/java21.lock.jsonc\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"java17\",\"java21\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"locks/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/org.clojure/clojure@1.12.3",
+      "supplier": {
+        "name": "org.clojure"
+      },
+      "type": "library",
+      "version": "1.12.3"
+    },
+    {
+      "bom-ref": "pkg:maven/org.clojure/core.specs.alpha@0.4.74",
+      "cpe": "cpe:2.3:a:org.clojure:core.specs.alpha:0.4.74:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "locks/jvm/java17.lock.jsonc"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "locks/jvm/java21.lock.jsonc"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "eb73ac08cf49ba840c88ba67beef11336ca554333d9408808d78946e0feb9ddb"
+        }
+      ],
+      "name": "core.specs.alpha",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:org.clojure:core.specs.alpha:0.4.74:*:*:*:*:*:*:*\",\"cpe:2.3:a:clojure:core.specs.alpha:0.4.74:*:*:*:*:*:*:*\",\"cpe:2.3:a:core.specs.alpha:core.specs.alpha:0.4.74:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"locks/jvm/java17.lock.jsonc\",\"locks/jvm/java21.lock.jsonc\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"java17\",\"java21\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"locks/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/org.clojure/core.specs.alpha@0.4.74",
+      "supplier": {
+        "name": "org.clojure"
+      },
+      "type": "library",
+      "version": "0.4.74"
+    },
+    {
+      "bom-ref": "pkg:maven/org.clojure/spec.alpha@0.5.238",
+      "cpe": "cpe:2.3:a:org.clojure:spec.alpha:0.5.238:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "locks/jvm/java17.lock.jsonc"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "locks/jvm/java21.lock.jsonc"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "94cd99b6ea639641f37af4860a643b6ed399ee5a8be5d717cff0b663c8d75077"
+        }
+      ],
+      "name": "spec.alpha",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:org.clojure:spec.alpha:0.5.238:*:*:*:*:*:*:*\",\"cpe:2.3:a:clojure:spec.alpha:0.5.238:*:*:*:*:*:*:*\",\"cpe:2.3:a:spec.alpha:spec.alpha:0.5.238:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"locks/jvm/java17.lock.jsonc\",\"locks/jvm/java21.lock.jsonc\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"java17\",\"java21\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"locks/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/org.clojure/spec.alpha@0.5.238",
+      "supplier": {
+        "name": "org.clojure"
+      },
+      "type": "library",
+      "version": "0.5.238"
+    },
+    {
+      "bom-ref": "pkg:maven/org.hamcrest/hamcrest-core@1.3",
+      "cpe": "cpe:2.3:a:org.hamcrest:hamcrest-core:1.3:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "locks/jvm/java17.lock.jsonc"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "locks/jvm/java21.lock.jsonc"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "66fdef91e9739348df7a096aa384a5685f4e875584cce89386a7a47251c4d8e9"
+        }
+      ],
+      "name": "hamcrest-core",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:org.hamcrest:hamcrest-core:1.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:hamcrest:hamcrest-core:1.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:hamcrest-core:hamcrest-core:1.3:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"locks/jvm/java17.lock.jsonc\",\"locks/jvm/java21.lock.jsonc\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"java17\",\"java21\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"locks/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/org.hamcrest/hamcrest-core@1.3",
+      "supplier": {
+        "name": "org.hamcrest"
+      },
+      "type": "library",
+      "version": "1.3"
+    },
+    {
+      "bom-ref": "pkg:maven/tigris/tigris@0.1.2",
+      "cpe": "cpe:2.3:a:tigris:tigris:0.1.2:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "locks/jvm/java17.lock.jsonc"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "locks/jvm/java21.lock.jsonc"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "49aa648edb6c14e57095a11b391eaee606578323fb79755f92331ac6300f97a0"
+        }
+      ],
+      "name": "tigris",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"locks/jvm/java17.lock.jsonc\",\"locks/jvm/java21.lock.jsonc\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"java17\",\"java21\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "jvm"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"locks/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/tigris/tigris@0.1.2",
+      "supplier": {
+        "name": "tigris"
+      },
+      "type": "library",
+      "version": "0.1.2"
+    },
+    {
+      "bom-ref": "pkg:pypi/ansicolors@1.1.8",
+      "cpe": "cpe:2.3:a:ansicolors:ansicolors:1.1.8:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.30.lock"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.31.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "00d2dde5a675579325902536738dd27e4fac1fd68f773fe36c21044eb559e187"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "99f94f5e3348a0bcd43c82e5fc4414013ccc19d70bd939ad71e0133ce9c372e0"
+        }
+      ],
+      "name": "ansicolors",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:ansicolors:ansicolors:1.1.8:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-ansicolors:ansicolors:1.1.8:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/python/pants-2.30.lock\",\"3rdparty/python/pants-2.31.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"pants-2.30\",\"pants-2.31\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/python\"]"
+        }
+      ],
+      "purl": "pkg:pypi/ansicolors@1.1.8",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.1.8"
+    },
+    {
+      "bom-ref": "pkg:pypi/chevron@0.14.0",
+      "cpe": "cpe:2.3:a:chevron:chevron:0.14.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.30.lock"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.31.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "fbf996a709f8da2e745ef763f482ce2d311aa817d287593a5b990d6d6e4f0443"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "87613aafdf6d77b6a90ff073165a61ae5086e21ad49057aa0e53681601800ebf"
+        }
+      ],
+      "name": "chevron",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:chevron:chevron:0.14.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-chevron:chevron:0.14.0:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/python/pants-2.30.lock\",\"3rdparty/python/pants-2.31.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"pants-2.30\",\"pants-2.31\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/python\"]"
+        }
+      ],
+      "purl": "pkg:pypi/chevron@0.14.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "0.14.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/fasteners@0.20",
+      "cpe": "cpe:2.3:a:fasteners:fasteners:0.20:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.30.lock"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.31.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "9422c40d1e350e4259f509fb2e608d6bc43c0136f79a00db1b49046029d0b3b7"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "55dce8792a41b56f727ba6e123fcaee77fd87e638a6863cec00007bfea84c8d8"
+        }
+      ],
+      "name": "fasteners",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:fasteners:fasteners:0.20:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-fasteners:fasteners:0.20:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/python/pants-2.30.lock\",\"3rdparty/python/pants-2.31.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"pants-2.30\",\"pants-2.31\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.6"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/python\"]"
+        }
+      ],
+      "purl": "pkg:pypi/fasteners@0.20",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "0.20"
+    },
+    {
+      "bom-ref": "pkg:pypi/hdrhistogram@0.10.3",
+      "cpe": "cpe:2.3:a:hdrhistogram:hdrhistogram:0.10.3:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.30.lock"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.31.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "bfd6ad77c1f7806aaeb6b340866a6bb38a1f0fe94d8f5a5f74372c33a094913f"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "d5748a22ec68a5390f9d493aca933a6871788e34df91da4cc0a6ee19e336dc6d"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "d814811d52e699426a8b54f2448ab5e49fee3519a200cd887fd3faaaa6f4a35d"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "f6d7e402365ced65309c3ffb060b6bcf7d1265bfba293509076f18b5d9ec260d"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "3f55fcbd39953b8989344cfb56cfa06094dbffc3fd4df1ff05d4b15658e1bf6d"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "f3890df0a6f3c582a0a8b2a49a568729cb319f1600683e4458cc98b68ca32841"
+        }
+      ],
+      "name": "hdrhistogram",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:hdrhistogram:hdrhistogram:0.10.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-hdrhistogram:hdrhistogram:0.10.3:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/python/pants-2.30.lock\",\"3rdparty/python/pants-2.31.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"pants-2.30\",\"pants-2.31\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/python\"]"
+        }
+      ],
+      "purl": "pkg:pypi/hdrhistogram@0.10.3",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "0.10.3"
+    },
+    {
+      "bom-ref": "pkg:pypi/ijson@3.4.0.post0",
+      "cpe": "cpe:2.3:a:ijson:ijson:3.4.0.post0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.30.lock"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.31.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "9c0886234d1fae15cf4581a430bdba03d79251c1ab3b07e30aa31b13ef28d01c"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "5a48b9486242d1295abe7fd0fbb6308867da5ca3f69b55c77922a93c2b6847aa"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "043f9b7cf9cc744263a78175e769947733710d2412d25180df44b1086b23ebd5"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "47352563e8c594360bacee2e0753e97025f0861234722d02faace62b1b6d2b2a"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "b55e49045f4c8031f3673f56662fd828dc9e8d65bd3b03a9420dda0d370e64ba"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "9aa02dc70bb245670a6ca7fba737b992aeeb4895360980622f7e568dbf23e41e"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "deda4cfcaafa72ca3fa845350045b1d0fef9364ec9f413241bb46988afbe6ee6"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "11f13b73194ea2a5a8b4a2863f25b0b4624311f10db3a75747b510c4958179b0"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "0b473112e72c0c506da425da3278367b6680f340ecc093084693a1e819d28435"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "659acb2843433e080c271ecedf7d19c71adde1ee5274fc7faa2fec0a793f9f1c"
+        }
+      ],
+      "name": "ijson",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:ijson:ijson:3.4.0.post0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-ijson:ijson:3.4.0.post0:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/python/pants-2.30.lock\",\"3rdparty/python/pants-2.31.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"pants-2.30\",\"pants-2.31\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.9"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/python\"]"
+        }
+      ],
+      "purl": "pkg:pypi/ijson@3.4.0.post0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "3.4.0.post0"
+    },
+    {
+      "bom-ref": "pkg:pypi/iniconfig@2.3.0",
+      "cpe": "cpe:2.3:a:iniconfig:iniconfig:2.3.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.30.lock"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.31.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "f631c04d2c48c52b84d0d0549c99ff3859c98df65b3101406327ecc7d53fbf12"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "c76315c77db068650d49c5b56314774a7804df16fee4402c1f19d6d15d8c4730"
+        }
+      ],
+      "name": "iniconfig",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:iniconfig:iniconfig:2.3.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-iniconfig:iniconfig:2.3.0:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/python/pants-2.30.lock\",\"3rdparty/python/pants-2.31.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"pants-2.30\",\"pants-2.31\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.10"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/python\"]"
+        }
+      ],
+      "purl": "pkg:pypi/iniconfig@2.3.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "2.3.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/libcst@1.8.5",
+      "cpe": "cpe:2.3:a:libcst:libcst:1.8.5:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.30.lock"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.31.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "a80e14836ecbdf5374c2c82cd5cd290abaa7290ecfafe9259d0615a1ebccb30c"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "4f43915cd523a6967ba1dfe137627ed3804892005330c3bf53674a2ab4ff3dad"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "26e9d5e756447873eeda78441fa7d1fe640c0b526e5be2b6b7ee0c8f03c4665f"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "b5b33ec61f62ff6122dc9c5bf1401bc8a9f9a2f0663ca15661d21d14d9dc4de0"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "e72e1816eed63f530668e93a4c22ff1cf8b91ddce0ec53e597d3f6c53e103ec7"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "9a756bd314b87b87dec9f0f900672c37719645b1c8bb2b53fe37b5b5fe7ee2c2"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "dd5a292ce2b6410bc100aeac2b18ba3554fd8a8f6aa0ee6a9238bb4031c521ca"
+        }
+      ],
+      "name": "libcst",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:libcst:libcst:1.8.5:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-libcst:libcst:1.8.5:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/python/pants-2.30.lock\",\"3rdparty/python/pants-2.31.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"pants-2.30\",\"pants-2.31\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.9"
+        },
+        {
+          "name": "waybill:unresolved-declared-dep",
+          "value": "pyyaml-ft"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/python\"]"
+        }
+      ],
+      "purl": "pkg:pypi/libcst@1.8.5",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.8.5"
+    },
+    {
+      "bom-ref": "pkg:pypi/node-semver@0.9.0",
+      "cpe": "cpe:2.3:a:node-semver:node-semver:0.9.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.30.lock"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.31.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "8153270903772b1e59500ced6f0aca0f7bdb021651c27584e9283b7077b4916b"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "04aa0b0016dbc06748d6378c42d8cf82a343415bd9fca6284f488041d08b33bb"
+        }
+      ],
+      "name": "node-semver",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:node-semver:node-semver:0.9.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-node-semver:node-semver:0.9.0:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/python/pants-2.30.lock\",\"3rdparty/python/pants-2.31.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"pants-2.30\",\"pants-2.31\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/python\"]"
+        }
+      ],
+      "purl": "pkg:pypi/node-semver@0.9.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "0.9.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/packaging@25.0",
+      "cpe": "cpe:2.3:a:packaging:packaging:25.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.30.lock"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.31.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "29572ef2b1f17581046b3a2227d5c611fb25ec70ca1ba8554b24b0e69331a484"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "d443872c98d677bf60f6a1f2f8c1cb748e8fe762d2bf9d3148b5599295b0fc4f"
+        }
+      ],
+      "name": "packaging",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:packaging:packaging:25.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-packaging:packaging:25.0:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/python/pants-2.30.lock\",\"3rdparty/python/pants-2.31.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"pants-2.30\",\"pants-2.31\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.8"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/python\"]"
+        }
+      ],
+      "purl": "pkg:pypi/packaging@25.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "25.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/pantsbuild-pants-testutil@2.30.0",
+      "cpe": "cpe:2.3:a:pantsbuild-pants-testutil:pantsbuild-pants-testutil:2.30.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.30.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "a661663716c2fbd145b773788a6b00f0d43d652fcea69361ade942d90f2e77d3"
+        }
+      ],
+      "name": "pantsbuild-pants-testutil",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:pantsbuild-pants-testutil:pantsbuild-pants-testutil:2.30.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-pantsbuild-pants-testutil:pantsbuild-pants-testutil:2.30.0:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/python/pants-2.30.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"pants-2.30\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": "==3.11.*"
+        },
+        {
+          "name": "waybill:source-url",
+          "value": "https://github.com/pantsbuild/pants/releases/download/release_2.30.0/pantsbuild_pants_testutil-2.30.0-py3-none-any.whl"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/python\"]"
+        }
+      ],
+      "purl": "pkg:pypi/pantsbuild-pants-testutil@2.30.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "2.30.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/pantsbuild-pants-testutil@2.31.0",
+      "cpe": "cpe:2.3:a:pantsbuild-pants-testutil:pantsbuild-pants-testutil:2.31.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.31.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "eec5b5d2212a0401fe8b24f580151f6e613205035a6c25dfd1ec4a77a2087f9f"
+        }
+      ],
+      "name": "pantsbuild-pants-testutil",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:pantsbuild-pants-testutil:pantsbuild-pants-testutil:2.31.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-pantsbuild-pants-testutil:pantsbuild-pants-testutil:2.31.0:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/python/pants-2.31.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"pants-2.31\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": "==3.11.*"
+        },
+        {
+          "name": "waybill:source-url",
+          "value": "https://github.com/pantsbuild/pants/releases/download/release_2.31.0/pantsbuild_pants_testutil-2.31.0-py3-none-any.whl"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/python\"]"
+        }
+      ],
+      "purl": "pkg:pypi/pantsbuild-pants-testutil@2.31.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "2.31.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/pantsbuild-pants@2.30.0",
+      "cpe": "cpe:2.3:a:pantsbuild-pants:pantsbuild-pants:2.30.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.30.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "c652b1b5f093db5190c7871298046999bb7e4acef05d0fe33c042279ade63a80"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "0f913a87e9e75480f5efa47d7ae461edf1551e54c19821e91093719797b569a4"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "7edd2a6eb2cb6a38e3dfc349b43946ca4d4a7c18bc2b7e0e7d5adea57fc130a6"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "1b2d66f2d5226dbb8a4d0b8db86098a6a56fa6e8a682d0f9f50537935bd89326"
+        }
+      ],
+      "name": "pantsbuild-pants",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:pantsbuild-pants:pantsbuild-pants:2.30.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-pantsbuild-pants:pantsbuild-pants:2.30.0:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/python/pants-2.30.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"pants-2.30\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": "==3.11.*"
+        },
+        {
+          "name": "waybill:source-url",
+          "value": "https://github.com/pantsbuild/pants/releases/download/release_2.30.0/pantsbuild_pants-2.30.0-cp311-cp311-manylinux2014_x86_64.whl"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/python\"]"
+        }
+      ],
+      "purl": "pkg:pypi/pantsbuild-pants@2.30.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "2.30.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/pantsbuild-pants@2.31.0",
+      "cpe": "cpe:2.3:a:pantsbuild-pants:pantsbuild-pants:2.31.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.31.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "c75288cb3fe7880b09ef1581f60e9f0ad9eb7358199a61f472daeca5c7ff8380"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "8fde4c6c9e202d425e882a612f04d300b344ef44979c4a635a188c64224fa4e7"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "81b378f59ef9b62a8c1a533b0d468b6f48b4436ab89e60993100d6c419587aec"
+        }
+      ],
+      "name": "pantsbuild-pants",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:pantsbuild-pants:pantsbuild-pants:2.31.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-pantsbuild-pants:pantsbuild-pants:2.31.0:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/python/pants-2.31.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"pants-2.31\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": "==3.11.*"
+        },
+        {
+          "name": "waybill:source-url",
+          "value": "https://github.com/pantsbuild/pants/releases/download/release_2.31.0/pantsbuild_pants-2.31.0-cp311-cp311-manylinux2014_x86_64.whl"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/python\"]"
+        }
+      ],
+      "purl": "pkg:pypi/pantsbuild-pants@2.31.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "2.31.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/pbr@7.0.3",
+      "cpe": "cpe:2.3:a:pbr:pbr:7.0.3:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.30.lock"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.31.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "ff223894eb1cd271a98076b13d3badff3bb36c424074d26334cd25aebeecea6b"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "b46004ec30a5324672683ec848aed9e8fc500b0d261d40a3229c2d2bbfcedc29"
+        }
+      ],
+      "name": "pbr",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:pbr:pbr:7.0.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-pbr:pbr:7.0.3:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/python/pants-2.30.lock\",\"3rdparty/python/pants-2.31.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"pants-2.30\",\"pants-2.31\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=2.6"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/python\"]"
+        }
+      ],
+      "purl": "pkg:pypi/pbr@7.0.3",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "7.0.3"
+    },
+    {
+      "bom-ref": "pkg:pypi/pluggy@1.6.0",
+      "cpe": "cpe:2.3:a:pluggy:pluggy:1.6.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.30.lock"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.31.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "e920276dd6813095e9377c0bc5566d94c932c33b27a3e3945d8389c374dd4746"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "7dcc130b76258d33b90f61b658791dede3486c3e6bfb003ee5c9bfb396dd22f3"
+        }
+      ],
+      "name": "pluggy",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:pluggy:pluggy:1.6.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-pluggy:pluggy:1.6.0:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/python/pants-2.30.lock\",\"3rdparty/python/pants-2.31.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"pants-2.30\",\"pants-2.31\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.9"
+        },
+        {
+          "name": "waybill:unresolved-declared-dep",
+          "value": "[\"coverage\",\"pre-commit\",\"pytest-benchmark\",\"tox\"]"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/python\"]"
+        }
+      ],
+      "purl": "pkg:pypi/pluggy@1.6.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.6.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/psutil@5.9.8",
+      "cpe": "cpe:2.3:a:psutil:psutil:5.9.8:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.30.lock"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.31.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "d16bbddf0693323b8c6123dd804100241da461e41d6e332fb0ba6058f630f8c8"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "6be126e3225486dff286a8fb9a06246a5253f4c7c53b475ea5f5ac934e64194c"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "8cb6403ce6d8e047495a701dc7c5bd788add903f8986d523e3e20b98b733e421"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "d06016f7f8625a1825ba3732081d77c94589dca78b7a3fc072194851e88461a4"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "aee678c8720623dc456fa20659af736241f575d79429a0e5e9cf88ae0605cc81"
+        }
+      ],
+      "name": "psutil",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:psutil:psutil:5.9.8:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-psutil:psutil:5.9.8:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/python/pants-2.30.lock\",\"3rdparty/python/pants-2.31.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"pants-2.30\",\"pants-2.31\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,>=2.7"
+        },
+        {
+          "name": "waybill:unresolved-declared-dep",
+          "value": "[\"enum34\",\"ipaddress\",\"mock\",\"pywin32\",\"wmi\"]"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/python\"]"
+        }
+      ],
+      "purl": "pkg:pypi/psutil@5.9.8",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "5.9.8"
+    },
+    {
+      "bom-ref": "pkg:pypi/pygments@2.19.2",
+      "cpe": "cpe:2.3:a:pygments:pygments:2.19.2:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.30.lock"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.31.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "86540386c03d588bb81d44bc3928634ff26449851e99741617ecb9037ee5ec0b"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "636cb2477cec7f8952536970bc533bc43743542f70392ae026374600add5b887"
+        }
+      ],
+      "name": "pygments",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:pygments:pygments:2.19.2:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-pygments:pygments:2.19.2:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/python/pants-2.30.lock\",\"3rdparty/python/pants-2.31.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"pants-2.30\",\"pants-2.31\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.8"
+        },
+        {
+          "name": "waybill:unresolved-declared-dep",
+          "value": "colorama"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/python\"]"
+        }
+      ],
+      "purl": "pkg:pypi/pygments@2.19.2",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "2.19.2"
+    },
+    {
+      "bom-ref": "pkg:pypi/pytest@8.4.2",
+      "cpe": "cpe:2.3:a:pytest:pytest:8.4.2:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.30.lock"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.31.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "872f880de3fc3a5bdc88a11b39c9710c3497a547cfa9320bc3c5e62fbf272e79"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "86c0d0b93306b961d58d62a4db4879f27fe25513d4b969df351abdddb3c30e01"
+        }
+      ],
+      "name": "pytest",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:pytest:pytest:8.4.2:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-pytest:pytest:8.4.2:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/python/pants-2.30.lock\",\"3rdparty/python/pants-2.31.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"pants-2.30\",\"pants-2.31\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.9"
+        },
+        {
+          "name": "waybill:unresolved-declared-dep",
+          "value": "[\"argcomplete\",\"attrs\",\"colorama\",\"exceptiongroup\",\"hypothesis\",\"mock\",\"requests\",\"tomli\",\"xmlschema\"]"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/python\"]"
+        }
+      ],
+      "purl": "pkg:pypi/pytest@8.4.2",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "8.4.2"
+    },
+    {
+      "bom-ref": "pkg:pypi/python-lsp-jsonrpc@1.1.2",
+      "cpe": "cpe:2.3:a:python-lsp-jsonrpc:python-lsp-jsonrpc:1.1.2:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.30.lock"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.31.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "7339c2e9630ae98903fdaea1ace8c47fba0484983794d6aafd0bd8989be2b03c"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "4688e453eef55cd952bff762c705cedefa12055c0aec17a06f595bcc002cc912"
+        }
+      ],
+      "name": "python-lsp-jsonrpc",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:python-lsp-jsonrpc:python-lsp-jsonrpc:1.1.2:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-python-lsp-jsonrpc:python-lsp-jsonrpc:1.1.2:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/python/pants-2.30.lock\",\"3rdparty/python/pants-2.31.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"pants-2.30\",\"pants-2.31\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.8"
+        },
+        {
+          "name": "waybill:unresolved-declared-dep",
+          "value": "[\"coverage\",\"pycodestyle\",\"pyflakes\",\"pylint\",\"pytest-cov\"]"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/python\"]"
+        }
+      ],
+      "purl": "pkg:pypi/python-lsp-jsonrpc@1.1.2",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.1.2"
+    },
+    {
+      "bom-ref": "pkg:pypi/pyyaml@6.0.3",
+      "cpe": "cpe:2.3:a:pyyaml:pyyaml:6.0.3:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.30.lock"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.31.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "37503bfbfc9d2c40b344d06b2199cf0e96e97957ab1c1b546fd4f87e53e5d3e4"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "d76623373421df22fb4cf8817020cbb7ef15c725b9d5e45f17e189bfc384190f"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "10892704fc220243f5305762e276552a0395f7beb4dbf9b14ec8fd43b57f126c"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "850774a7879607d3a6f50d36d04f00ee69e7fc816450e5f7e58d7f17f1ae5c00"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "652cb6edd41e718550aad172851962662ff2681490a8a711af6a4d288dd96824"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "44edc647873928551a01e7a563d7452ccdebee747728c1080d881d68af7b997e"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "b8bb0864c5a28024fac8a632c443c87c5aa6f215c0b126c449ae1a150412f31d"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "1d37d57ad971609cf3c53ba6a7e365e40660e3be0e5175fa9f2365a379d6095a"
+        }
+      ],
+      "name": "pyyaml",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:pyyaml:pyyaml:6.0.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-pyyaml:pyyaml:6.0.3:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/python/pants-2.30.lock\",\"3rdparty/python/pants-2.31.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"pants-2.30\",\"pants-2.31\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.8"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/python\"]"
+        }
+      ],
+      "purl": "pkg:pypi/pyyaml@6.0.3",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "6.0.3"
+    },
+    {
+      "bom-ref": "pkg:pypi/setproctitle@1.3.7",
+      "cpe": "cpe:2.3:a:setproctitle:setproctitle:1.3.7:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.30.lock"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.31.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "316664d8b24a5c91ee244460bdaf7a74a707adaa9e14fbe0dc0a53168bb9aba1"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "a600eeb4145fb0ee6c287cb82a2884bd4ec5bbb076921e287039dcc7b7cc6dd0"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "1607b963e7b53e24ec8a2cb4e0ab3ae591d7c6bf0a160feef0551da63452b37f"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "a20fb1a3974e2dab857870cf874b325b8705605cb7e7e8bcbb915bca896f52a9"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "db116850fcf7cca19492030f8d3b4b6e231278e8fe097a043957d22ce1bdf3ee"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "bc2bc917691c1537d5b9bca1468437176809c7e11e5694ca79a9ca12345dcb9e"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "97a090fed480471bb175689859532709e28c085087e344bca45cf318034f70c4"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "f8d961bba676e07d77665204f36cffaa260f526e7b32d07ab3df6a2c1dfb44ba"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "db0fd964fbd3a9f8999b502f65bd2e20883fdb5b1fae3a424e66db9a793ed307"
+        }
+      ],
+      "name": "setproctitle",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:setproctitle:setproctitle:1.3.7:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-setproctitle:setproctitle:1.3.7:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/python/pants-2.30.lock\",\"3rdparty/python/pants-2.31.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"pants-2.30\",\"pants-2.31\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.8"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/python\"]"
+        }
+      ],
+      "purl": "pkg:pypi/setproctitle@1.3.7",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.3.7"
+    },
+    {
+      "bom-ref": "pkg:pypi/setuptools@80.10.2",
+      "cpe": "cpe:2.3:a:setuptools:setuptools:80.10.2:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.30.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "95b30ddfb717250edb492926c92b5221f7ef3fbcc2b07579bcd4a27da21d0173"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "8b0e9d10c784bf7d262c4e5ec5d4ec94127ce206e8738f29a437945fbc219b70"
+        }
+      ],
+      "name": "setuptools",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:setuptools:setuptools:80.10.2:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-setuptools:setuptools:80.10.2:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/python/pants-2.30.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"pants-2.30\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.9"
+        },
+        {
+          "name": "waybill:unresolved-declared-dep",
+          "value": "[\"build\",\"filelock\",\"furo\",\"importlib-metadata\",\"ini2toml\",\"jaraco.develop\",\"jaraco.envs\",\"jaraco.functools\",\"jaraco.packaging\",\"jaraco.path\",\"jaraco.test\",\"jaraco.text\",\"jaraco.tidelift\",\"more-itertools\",\"mypy\",\"pip\",\"platformdirs\",\"pygments-github-lexers\",\"pyproject-hooks\",\"pytest-checkdocs\",\"pytest-cov\",\"pytest-enabler\",\"pytest-home\",\"pytest-mypy\",\"pytest-perf\",\"pytest-ruff\",\"pytest-subprocess\",\"pytest-timeout\",\"pytest-xdist\",\"rst.linker\",\"ruff\",\"sphinx\",\"sphinx-favicon\",\"sphinx-inline-tabs\",\"sphinx-lint\",\"sphinx-notfound-page\",\"sphinx-reredirects\",\"sphinxcontrib-towncrier\",\"tomli\",\"tomli-w\",\"towncrier\",\"virtualenv\",\"wheel\"]"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/python\"]"
+        }
+      ],
+      "purl": "pkg:pypi/setuptools@80.10.2",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "80.10.2"
+    },
+    {
+      "bom-ref": "pkg:pypi/setuptools@82.0.1",
+      "cpe": "cpe:2.3:a:setuptools:setuptools:82.0.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.31.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "a59e362652f08dcd477c78bb6e7bd9d80a7995bc73ce773050228a348ce2e5bb"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "7d872682c5d01cfde07da7bccc7b65469d3dca203318515ada1de5eda35efbf9"
+        }
+      ],
+      "name": "setuptools",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:setuptools:setuptools:82.0.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-setuptools:setuptools:82.0.1:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/python/pants-2.31.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"pants-2.31\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.9"
+        },
+        {
+          "name": "waybill:unresolved-declared-dep",
+          "value": "[\"build\",\"filelock\",\"furo\",\"importlib-metadata\",\"ini2toml\",\"jaraco.develop\",\"jaraco.envs\",\"jaraco.functools\",\"jaraco.packaging\",\"jaraco.path\",\"jaraco.test\",\"jaraco.text\",\"jaraco.tidelift\",\"more-itertools\",\"mypy\",\"pip\",\"pygments-github-lexers\",\"pyproject-hooks\",\"pytest-checkdocs\",\"pytest-cov\",\"pytest-enabler\",\"pytest-home\",\"pytest-mypy\",\"pytest-perf\",\"pytest-ruff\",\"pytest-subprocess\",\"pytest-timeout\",\"pytest-xdist\",\"rst.linker\",\"ruff\",\"sphinx\",\"sphinx-favicon\",\"sphinx-inline-tabs\",\"sphinx-lint\",\"sphinx-notfound-page\",\"sphinx-reredirects\",\"sphinxcontrib-towncrier\",\"tomli\",\"tomli-w\",\"towncrier\",\"virtualenv\",\"wheel\"]"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/python\"]"
+        }
+      ],
+      "purl": "pkg:pypi/setuptools@82.0.1",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "82.0.1"
+    },
+    {
+      "bom-ref": "pkg:pypi/toml@0.10.2",
+      "cpe": "cpe:2.3:a:toml:toml:0.10.2:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.30.lock"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.31.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f"
+        }
+      ],
+      "name": "toml",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:toml:toml:0.10.2:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-toml:toml:0.10.2:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/python/pants-2.30.lock\",\"3rdparty/python/pants-2.31.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"pants-2.30\",\"pants-2.31\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": "!=3.0.*,!=3.1.*,!=3.2.*,>=2.6"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/python\"]"
+        }
+      ],
+      "purl": "pkg:pypi/toml@0.10.2",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "0.10.2"
+    },
+    {
+      "bom-ref": "pkg:pypi/types-pyyaml@6.0.12.20250915",
+      "cpe": "cpe:2.3:a:types-pyyaml:types-pyyaml:6.0.12.20250915:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.30.lock"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.31.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "e7d4d9e064e89a3b3cae120b4990cd370874d2bf12fa5f46c97018dd5d3c9ab6"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "0f8b54a528c303f0e6f7165687dd33fafa81c807fcac23f632b63aa624ced1d3"
+        }
+      ],
+      "name": "types-pyyaml",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:types-pyyaml:types-pyyaml:6.0.12.20250915:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-types-pyyaml:types-pyyaml:6.0.12.20250915:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/python/pants-2.30.lock\",\"3rdparty/python/pants-2.31.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"pants-2.30\",\"pants-2.31\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.9"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/python\"]"
+        }
+      ],
+      "purl": "pkg:pypi/types-pyyaml@6.0.12.20250915",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "6.0.12.20250915"
+    },
+    {
+      "bom-ref": "pkg:pypi/types-setuptools@80.9.0.20250822",
+      "cpe": "cpe:2.3:a:types-setuptools:types-setuptools:80.9.0.20250822:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.30.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "53bf881cb9d7e46ed12c76ef76c0aaf28cfe6211d3fab12e0b83620b1a8642c3"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "070ea7716968ec67a84c7f7768d9952ff24d28b65b6594797a464f1b3066f965"
+        }
+      ],
+      "name": "types-setuptools",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:types-setuptools:types-setuptools:80.9.0.20250822:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-types-setuptools:types-setuptools:80.9.0.20250822:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/python/pants-2.30.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"pants-2.30\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.9"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/python\"]"
+        }
+      ],
+      "purl": "pkg:pypi/types-setuptools@80.9.0.20250822",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "80.9.0.20250822"
+    },
+    {
+      "bom-ref": "pkg:pypi/types-toml@0.10.8.20240310",
+      "cpe": "cpe:2.3:a:types-toml:types-toml:0.10.8.20240310:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.30.lock"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.31.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "627b47775d25fa29977d9c70dc0cbab3f314f32c8d8d0c012f2ef5de7aaec05d"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "3d41501302972436a6b8b239c850b26689657e25281b48ff0ec06345b8830331"
+        }
+      ],
+      "name": "types-toml",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:types-toml:types-toml:0.10.8.20240310:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-types-toml:types-toml:0.10.8.20240310:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/python/pants-2.30.lock\",\"3rdparty/python/pants-2.31.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"pants-2.30\",\"pants-2.31\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.8"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/python\"]"
+        }
+      ],
+      "purl": "pkg:pypi/types-toml@0.10.8.20240310",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "0.10.8.20240310"
+    },
+    {
+      "bom-ref": "pkg:pypi/typing-extensions@4.15.0",
+      "cpe": "cpe:2.3:a:typing-extensions:typing-extensions:4.15.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.30.lock"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.31.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "f0fa19c6845758ab08074a0cfa8b7aecb71c999ca73d62883bc25cc018c4e548"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "0cea48d173cc12fa28ecabc3b837ea3cf6f38c6d1136f85cbaaf598984861466"
+        }
+      ],
+      "name": "typing-extensions",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:typing-extensions:typing-extensions:4.15.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-typing-extensions:typing-extensions:4.15.0:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/python/pants-2.30.lock\",\"3rdparty/python/pants-2.31.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"pants-2.30\",\"pants-2.31\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.9"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/python\"]"
+        }
+      ],
+      "purl": "pkg:pypi/typing-extensions@4.15.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "4.15.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/ujson@5.12.0",
+      "cpe": "cpe:2.3:a:ujson:ujson:5.12.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.30.lock"
+          },
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/python/pants-2.31.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "a6ec5bf6bc361f2f0f9644907a36ce527715b488988a8df534120e5c34eeda94"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "0fe6b8b8968e11dd9b2348bd508f0f57cf49ab3512064b36bc4117328218718e"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "58a11cb49482f1a095a2bd9a1d81dd7c8fb5d2357f959ece85db4e46a825fd00"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "b62cb9a7501e1f5c9ffe190485501349c33e8862dde4377df774e40b8166871f"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "0727363b05ab05ee737a28f6200dc4078bce6b0508e10bd8aab507995a15df61"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "9b3cf13facf6f77c283af0e1713e5e8c47a0fe295af81326cb3cb4380212e797"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "14b2e1eb528d77bc0f4c5bd1a7ebc05e02b5b41beefb7e8567c9675b8b13bcf4"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "89e302abd3749f6d6699691747969a5d85f7c73081d5ed7e2624c7bd9721a2ab"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "fb94245a715b4d6e24689de12772b85329a1f9946cbf6187923a64ecdea39e65"
+        }
+      ],
+      "name": "ujson",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:ujson:ujson:5.12.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-ujson:ujson:5.12.0:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/python/pants-2.30.lock\",\"3rdparty/python/pants-2.31.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "[\"pants-2.30\",\"pants-2.31\"]"
+        },
+        {
+          "name": "waybill:pants-resolve-namespace",
+          "value": "python"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.10"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/python\"]"
+        }
+      ],
+      "purl": "pkg:pypi/ujson@5.12.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "5.12.0"
+    }
+  ],
+  "compositions": [
+    {
+      "aggregate": "complete",
+      "assemblies": [
+        "pkg:pypi/ansicolors@1.1.8",
+        "pkg:pypi/chevron@0.14.0",
+        "pkg:pypi/fasteners@0.20",
+        "pkg:pypi/hdrhistogram@0.10.3",
+        "pkg:pypi/ijson@3.4.0.post0",
+        "pkg:pypi/iniconfig@2.3.0",
+        "pkg:pypi/libcst@1.8.5",
+        "pkg:pypi/node-semver@0.9.0",
+        "pkg:pypi/packaging@25.0",
+        "pkg:pypi/pantsbuild-pants-testutil@2.30.0",
+        "pkg:pypi/pantsbuild-pants-testutil@2.31.0",
+        "pkg:pypi/pantsbuild-pants@2.30.0",
+        "pkg:pypi/pantsbuild-pants@2.31.0",
+        "pkg:pypi/pbr@7.0.3",
+        "pkg:pypi/pluggy@1.6.0",
+        "pkg:pypi/psutil@5.9.8",
+        "pkg:pypi/pygments@2.19.2",
+        "pkg:pypi/pytest@8.4.2",
+        "pkg:pypi/python-lsp-jsonrpc@1.1.2",
+        "pkg:pypi/pyyaml@6.0.3",
+        "pkg:pypi/setproctitle@1.3.7",
+        "pkg:pypi/setuptools@80.10.2",
+        "pkg:pypi/setuptools@82.0.1",
+        "pkg:pypi/toml@0.10.2",
+        "pkg:pypi/types-pyyaml@6.0.12.20250915",
+        "pkg:pypi/types-setuptools@80.9.0.20250822",
+        "pkg:pypi/types-toml@0.10.8.20240310",
+        "pkg:pypi/typing-extensions@4.15.0",
+        "pkg:pypi/ujson@5.12.0"
+      ],
+      "dependencies": [
+        "pkg:pypi/ansicolors@1.1.8",
+        "pkg:pypi/chevron@0.14.0",
+        "pkg:pypi/fasteners@0.20",
+        "pkg:pypi/hdrhistogram@0.10.3",
+        "pkg:pypi/ijson@3.4.0.post0",
+        "pkg:pypi/iniconfig@2.3.0",
+        "pkg:pypi/libcst@1.8.5",
+        "pkg:pypi/node-semver@0.9.0",
+        "pkg:pypi/packaging@25.0",
+        "pkg:pypi/pantsbuild-pants-testutil@2.30.0",
+        "pkg:pypi/pantsbuild-pants-testutil@2.31.0",
+        "pkg:pypi/pantsbuild-pants@2.30.0",
+        "pkg:pypi/pantsbuild-pants@2.31.0",
+        "pkg:pypi/pbr@7.0.3",
+        "pkg:pypi/pluggy@1.6.0",
+        "pkg:pypi/psutil@5.9.8",
+        "pkg:pypi/pygments@2.19.2",
+        "pkg:pypi/pytest@8.4.2",
+        "pkg:pypi/python-lsp-jsonrpc@1.1.2",
+        "pkg:pypi/pyyaml@6.0.3",
+        "pkg:pypi/setproctitle@1.3.7",
+        "pkg:pypi/setuptools@80.10.2",
+        "pkg:pypi/setuptools@82.0.1",
+        "pkg:pypi/toml@0.10.2",
+        "pkg:pypi/types-pyyaml@6.0.12.20250915",
+        "pkg:pypi/types-setuptools@80.9.0.20250822",
+        "pkg:pypi/types-toml@0.10.8.20240310",
+        "pkg:pypi/typing-extensions@4.15.0",
+        "pkg:pypi/ujson@5.12.0"
+      ]
+    },
+    {
+      "aggregate": "complete",
+      "assemblies": [
+        "pkg:maven/cheshire/cheshire@5.13.0",
+        "pkg:maven/com.fasterxml.jackson.core/jackson-core@2.17.0",
+        "pkg:maven/com.fasterxml.jackson.dataformat/jackson-dataformat-cbor@2.17.0",
+        "pkg:maven/com.fasterxml.jackson.dataformat/jackson-dataformat-smile@2.17.0",
+        "pkg:maven/com.google.code.findbugs/jsr305@3.0.2",
+        "pkg:maven/com.google.errorprone/error_prone_annotations@2.11.0",
+        "pkg:maven/com.google.errorprone/error_prone_annotations@2.23.0",
+        "pkg:maven/com.google.guava/failureaccess@1.0.1",
+        "pkg:maven/com.google.guava/failureaccess@1.0.2",
+        "pkg:maven/com.google.guava/guava@31.1-jre",
+        "pkg:maven/com.google.guava/guava@33.0.0-jre",
+        "pkg:maven/com.google.guava/listenablefuture@9999.0-empty-to-avoid-conflict-with-guava",
+        "pkg:maven/com.google.j2objc/j2objc-annotations@1.3",
+        "pkg:maven/com.google.j2objc/j2objc-annotations@2.8",
+        "pkg:maven/junit/junit@4.13.2",
+        "pkg:maven/org.checkerframework/checker-qual@3.12.0",
+        "pkg:maven/org.checkerframework/checker-qual@3.41.0",
+        "pkg:maven/org.clojure/clojure@1.12.3",
+        "pkg:maven/org.clojure/core.specs.alpha@0.4.74",
+        "pkg:maven/org.clojure/spec.alpha@0.5.238",
+        "pkg:maven/org.hamcrest/hamcrest-core@1.3",
+        "pkg:maven/tigris/tigris@0.1.2"
+      ]
+    },
+    {
+      "aggregate": "unknown",
+      "dependencies": [
+        "pkg:maven/cheshire/cheshire@5.13.0",
+        "pkg:maven/com.fasterxml.jackson.core/jackson-core@2.17.0",
+        "pkg:maven/com.fasterxml.jackson.dataformat/jackson-dataformat-cbor@2.17.0",
+        "pkg:maven/com.fasterxml.jackson.dataformat/jackson-dataformat-smile@2.17.0",
+        "pkg:maven/com.google.code.findbugs/jsr305@3.0.2",
+        "pkg:maven/com.google.errorprone/error_prone_annotations@2.11.0",
+        "pkg:maven/com.google.errorprone/error_prone_annotations@2.23.0",
+        "pkg:maven/com.google.guava/failureaccess@1.0.1",
+        "pkg:maven/com.google.guava/failureaccess@1.0.2",
+        "pkg:maven/com.google.guava/guava@31.1-jre",
+        "pkg:maven/com.google.guava/guava@33.0.0-jre",
+        "pkg:maven/com.google.guava/listenablefuture@9999.0-empty-to-avoid-conflict-with-guava",
+        "pkg:maven/com.google.j2objc/j2objc-annotations@1.3",
+        "pkg:maven/com.google.j2objc/j2objc-annotations@2.8",
+        "pkg:maven/junit/junit@4.13.2",
+        "pkg:maven/org.checkerframework/checker-qual@3.12.0",
+        "pkg:maven/org.checkerframework/checker-qual@3.41.0",
+        "pkg:maven/org.clojure/clojure@1.12.3",
+        "pkg:maven/org.clojure/core.specs.alpha@0.4.74",
+        "pkg:maven/org.clojure/spec.alpha@0.5.238",
+        "pkg:maven/org.hamcrest/hamcrest-core@1.3",
+        "pkg:maven/tigris/tigris@0.1.2"
+      ]
+    },
+    {
+      "aggregate": "incomplete_first_party_only",
+      "assemblies": [
+        "pants-clojure-polyglot@e068ffb"
+      ]
+    },
+    {
+      "aggregate": "complete",
+      "dependencies": [
+        "pants-clojure-polyglot@e068ffb"
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "dependsOn": [
+        "pkg:generic/pants-2.30",
+        "pkg:generic/pants-2.31",
+        "pkg:maven/cheshire/cheshire@5.13.0",
+        "pkg:maven/com.google.guava/guava@31.1-jre",
+        "pkg:maven/com.google.guava/guava@33.0.0-jre",
+        "pkg:maven/junit/junit@4.13.2"
+      ],
+      "ref": "pants-clojure-polyglot@e068ffb"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/packaging@25.0",
+        "pkg:pypi/pantsbuild-pants-testutil@2.30.0",
+        "pkg:pypi/pantsbuild-pants@2.30.0",
+        "pkg:pypi/pytest@8.4.2"
+      ],
+      "ref": "pkg:generic/pants-2.30"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/packaging@25.0",
+        "pkg:pypi/pantsbuild-pants-testutil@2.31.0",
+        "pkg:pypi/pantsbuild-pants@2.31.0",
+        "pkg:pypi/pytest@8.4.2"
+      ],
+      "ref": "pkg:generic/pants-2.31"
+    },
+    {
+      "dependsOn": [
+        "pkg:maven/com.fasterxml.jackson.core/jackson-core@2.17.0",
+        "pkg:maven/com.fasterxml.jackson.dataformat/jackson-dataformat-cbor@2.17.0",
+        "pkg:maven/com.fasterxml.jackson.dataformat/jackson-dataformat-smile@2.17.0",
+        "pkg:maven/tigris/tigris@0.1.2"
+      ],
+      "ref": "pkg:maven/cheshire/cheshire@5.13.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/com.fasterxml.jackson.core/jackson-core@2.17.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:maven/com.fasterxml.jackson.core/jackson-core@2.17.0"
+      ],
+      "ref": "pkg:maven/com.fasterxml.jackson.dataformat/jackson-dataformat-cbor@2.17.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:maven/com.fasterxml.jackson.core/jackson-core@2.17.0"
+      ],
+      "ref": "pkg:maven/com.fasterxml.jackson.dataformat/jackson-dataformat-smile@2.17.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/com.google.code.findbugs/jsr305@3.0.2"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/com.google.errorprone/error_prone_annotations@2.11.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/com.google.errorprone/error_prone_annotations@2.23.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/com.google.guava/failureaccess@1.0.1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/com.google.guava/failureaccess@1.0.2"
+    },
+    {
+      "dependsOn": [
+        "pkg:maven/com.google.code.findbugs/jsr305@3.0.2",
+        "pkg:maven/com.google.errorprone/error_prone_annotations@2.11.0",
+        "pkg:maven/com.google.guava/failureaccess@1.0.1",
+        "pkg:maven/com.google.guava/listenablefuture@9999.0-empty-to-avoid-conflict-with-guava",
+        "pkg:maven/com.google.j2objc/j2objc-annotations@1.3",
+        "pkg:maven/org.checkerframework/checker-qual@3.12.0"
+      ],
+      "ref": "pkg:maven/com.google.guava/guava@31.1-jre"
+    },
+    {
+      "dependsOn": [
+        "pkg:maven/com.google.code.findbugs/jsr305@3.0.2",
+        "pkg:maven/com.google.errorprone/error_prone_annotations@2.23.0",
+        "pkg:maven/com.google.guava/failureaccess@1.0.2",
+        "pkg:maven/com.google.guava/listenablefuture@9999.0-empty-to-avoid-conflict-with-guava",
+        "pkg:maven/com.google.j2objc/j2objc-annotations@2.8",
+        "pkg:maven/org.checkerframework/checker-qual@3.41.0"
+      ],
+      "ref": "pkg:maven/com.google.guava/guava@33.0.0-jre"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/com.google.guava/listenablefuture@9999.0-empty-to-avoid-conflict-with-guava"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/com.google.j2objc/j2objc-annotations@1.3"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/com.google.j2objc/j2objc-annotations@2.8"
+    },
+    {
+      "dependsOn": [
+        "pkg:maven/org.hamcrest/hamcrest-core@1.3"
+      ],
+      "ref": "pkg:maven/junit/junit@4.13.2"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/org.checkerframework/checker-qual@3.12.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/org.checkerframework/checker-qual@3.41.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:maven/org.clojure/core.specs.alpha@0.4.74",
+        "pkg:maven/org.clojure/spec.alpha@0.5.238"
+      ],
+      "ref": "pkg:maven/org.clojure/clojure@1.12.3"
+    },
+    {
+      "dependsOn": [
+        "pkg:maven/org.clojure/clojure@1.12.3",
+        "pkg:maven/org.clojure/spec.alpha@0.5.238"
+      ],
+      "ref": "pkg:maven/org.clojure/core.specs.alpha@0.4.74"
+    },
+    {
+      "dependsOn": [
+        "pkg:maven/org.clojure/clojure@1.12.3",
+        "pkg:maven/org.clojure/core.specs.alpha@0.4.74"
+      ],
+      "ref": "pkg:maven/org.clojure/spec.alpha@0.5.238"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/org.hamcrest/hamcrest-core@1.3"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/tigris/tigris@0.1.2"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/ansicolors@1.1.8"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/chevron@0.14.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/fasteners@0.20"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/pbr@7.0.3"
+      ],
+      "ref": "pkg:pypi/hdrhistogram@0.10.3"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/ijson@3.4.0.post0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/iniconfig@2.3.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/pyyaml@6.0.3",
+        "pkg:pypi/typing-extensions@4.15.0"
+      ],
+      "ref": "pkg:pypi/libcst@1.8.5"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/pytest@8.4.2"
+      ],
+      "ref": "pkg:pypi/node-semver@0.9.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/packaging@25.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/pantsbuild-pants@2.30.0",
+        "pkg:pypi/pytest@8.4.2",
+        "pkg:pypi/toml@0.10.2",
+        "pkg:pypi/types-toml@0.10.8.20240310"
+      ],
+      "ref": "pkg:pypi/pantsbuild-pants-testutil@2.30.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/pantsbuild-pants@2.31.0",
+        "pkg:pypi/pytest@8.4.2",
+        "pkg:pypi/toml@0.10.2",
+        "pkg:pypi/types-toml@0.10.8.20240310"
+      ],
+      "ref": "pkg:pypi/pantsbuild-pants-testutil@2.31.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/ansicolors@1.1.8",
+        "pkg:pypi/chevron@0.14.0",
+        "pkg:pypi/fasteners@0.20",
+        "pkg:pypi/hdrhistogram@0.10.3",
+        "pkg:pypi/ijson@3.4.0.post0",
+        "pkg:pypi/libcst@1.8.5",
+        "pkg:pypi/node-semver@0.9.0",
+        "pkg:pypi/packaging@25.0",
+        "pkg:pypi/psutil@5.9.8",
+        "pkg:pypi/python-lsp-jsonrpc@1.1.2",
+        "pkg:pypi/pyyaml@6.0.3",
+        "pkg:pypi/setproctitle@1.3.7",
+        "pkg:pypi/setuptools@80.10.2",
+        "pkg:pypi/toml@0.10.2",
+        "pkg:pypi/types-pyyaml@6.0.12.20250915",
+        "pkg:pypi/types-setuptools@80.9.0.20250822",
+        "pkg:pypi/types-toml@0.10.8.20240310",
+        "pkg:pypi/typing-extensions@4.15.0"
+      ],
+      "ref": "pkg:pypi/pantsbuild-pants@2.30.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/ansicolors@1.1.8",
+        "pkg:pypi/chevron@0.14.0",
+        "pkg:pypi/fasteners@0.20",
+        "pkg:pypi/hdrhistogram@0.10.3",
+        "pkg:pypi/ijson@3.4.0.post0",
+        "pkg:pypi/libcst@1.8.5",
+        "pkg:pypi/node-semver@0.9.0",
+        "pkg:pypi/packaging@25.0",
+        "pkg:pypi/psutil@5.9.8",
+        "pkg:pypi/python-lsp-jsonrpc@1.1.2",
+        "pkg:pypi/pyyaml@6.0.3",
+        "pkg:pypi/setproctitle@1.3.7",
+        "pkg:pypi/toml@0.10.2",
+        "pkg:pypi/types-pyyaml@6.0.12.20250915",
+        "pkg:pypi/types-toml@0.10.8.20240310",
+        "pkg:pypi/typing-extensions@4.15.0"
+      ],
+      "ref": "pkg:pypi/pantsbuild-pants@2.31.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/setuptools@80.10.2",
+        "pkg:pypi/setuptools@82.0.1"
+      ],
+      "ref": "pkg:pypi/pbr@7.0.3"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/pytest@8.4.2"
+      ],
+      "ref": "pkg:pypi/pluggy@1.6.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/psutil@5.9.8"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/pygments@2.19.2"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/iniconfig@2.3.0",
+        "pkg:pypi/packaging@25.0",
+        "pkg:pypi/pluggy@1.6.0",
+        "pkg:pypi/pygments@2.19.2",
+        "pkg:pypi/setuptools@80.10.2",
+        "pkg:pypi/setuptools@82.0.1"
+      ],
+      "ref": "pkg:pypi/pytest@8.4.2"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/pytest@8.4.2",
+        "pkg:pypi/ujson@5.12.0"
+      ],
+      "ref": "pkg:pypi/python-lsp-jsonrpc@1.1.2"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/pyyaml@6.0.3"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/pytest@8.4.2"
+      ],
+      "ref": "pkg:pypi/setproctitle@1.3.7"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/packaging@25.0",
+        "pkg:pypi/pytest@8.4.2"
+      ],
+      "ref": "pkg:pypi/setuptools@80.10.2"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/packaging@25.0",
+        "pkg:pypi/pytest@8.4.2"
+      ],
+      "ref": "pkg:pypi/setuptools@82.0.1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/toml@0.10.2"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/types-pyyaml@6.0.12.20250915"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/types-setuptools@80.9.0.20250822"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/types-toml@0.10.8.20240310"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/typing-extensions@4.15.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/ujson@5.12.0"
+    }
+  ],
+  "metadata": {
+    "authors": [
+      {
+        "name": "waybill"
+      }
+    ],
+    "component": {
+      "bom-ref": "pants-clojure-polyglot@e068ffb",
+      "cpe": "cpe:2.3:a:waybill:pants-clojure-polyglot:e068ffb:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "comment": "auto-detected from git remote `origin`",
+          "type": "vcs",
+          "url": "https://github.com/enragedginger/pants_backend_clojure"
+        }
+      ],
+      "name": "pants-clojure-polyglot",
+      "purl": "pkg:generic/pants-clojure-polyglot@e068ffb",
+      "type": "application",
+      "version": "e068ffb"
+    },
+    "licenses": [
+      {
+        "license": {
+          "id": "CC0-1.0"
+        }
+      }
+    ],
+    "lifecycles": [
+      {
+        "phase": "pre-build"
+      }
+    ],
+    "properties": [
+      {
+        "name": "waybill:generation-context",
+        "value": "filesystem-scan"
+      },
+      {
+        "name": "waybill:cisa-2026-lifecycle",
+        "value": "after-build"
+      },
+      {
+        "name": "waybill:file-inventory-skipped-build-dirs",
+        "value": "2"
+      },
+      {
+        "name": "waybill:os-release-missing-fields",
+        "value": "[\"ID\",\"VERSION_ID\"]"
+      },
+      {
+        "name": "waybill:trace-integrity-ring-buffer-overflows",
+        "value": "0"
+      },
+      {
+        "name": "waybill:trace-integrity-events-dropped",
+        "value": "0"
+      },
+      {
+        "name": "waybill:trace-integrity-uprobe-attach-failures",
+        "value": "[]"
+      },
+      {
+        "name": "waybill:trace-integrity-kprobe-attach-failures",
+        "value": "[]"
+      },
+      {
+        "name": "waybill:graph-completeness",
+        "value": "partial"
+      },
+      {
+        "name": "waybill:graph-completeness-reason",
+        "value": "orphaned-components-detected: 3 component(s) not reachable from root"
+      },
+      {
+        "name": "waybill:workspaces-detected",
+        "value": "[\"3rdparty/python\",\"locks/jvm\"]"
+      },
+      {
+        "name": "waybill:unresolved-declared-dep-count",
+        "value": "145"
+      },
+      {
+        "name": "waybill:resolve-ownership",
+        "value": "{\"declared\":[\"pants-2.30\",\"pants-2.31\"],\"discovered\":[],\"unanchored_lockfiles\":0,\"weak_classification\":2}"
+      }
+    ],
+    "supplier": {
+      "name": "waybill contributors"
+    },
+    "timestamp": "<masked>",
+    "tools": {
+      "components": [
+        {
+          "name": "waybill",
+          "publisher": "waybill contributors",
+          "type": "application",
+          "version": "<masked-tool-version>"
+        }
+      ]
+    }
+  },
+  "serialNumber": "<masked>",
+  "specVersion": "1.6",
+  "version": 1,
+  "vulnerabilities": []
+}

@@ -176,6 +176,12 @@ fn corpus_pants_example_jvm() {
     run_target("pants-example-jvm");
 }
 
+#[test]
+#[ignore = "public-corpus target: needs WAYBILL_RUN_PUBLIC_CORPUS=1 and a populated corpus cache. Ignored rather than silently early-returning: a gated test that prints `skipping` and reports `ok` is indistinguishable from one that compared goldens, and a green local run then implies corpus coverage it does not have. CI passes --include-ignored. See #918."]
+fn corpus_pants_clojure_polyglot() {
+    run_target("pants-clojure-polyglot");
+}
+
 // pants-example-jvm intentionally omitted — see manifest.rs comment.
 
 #[test]
