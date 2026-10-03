@@ -54,6 +54,23 @@ impl CdCoord {
             url_encode(&self.revision),
         )
     }
+
+    /// The coordinate as `POST /definitions` keys it (#933).
+    ///
+    /// Not the `GET` path. The `GET` path is URL-decoded by the server, but
+    /// the bulk endpoint matches coordinate strings literally: measured
+    /// 2026-10-02, `go/golang/github.com%2Fyudai/pp/v2.0.1+incompatible`
+    /// returns `MIT` while the same coordinate with `%2Bincompatible`
+    /// matches nothing, and `%40types` misses where `@types` hits. The one
+    /// escape it needs is `/` inside a segment (a Go module prefix), which
+    /// CD stores as `%2F`.
+    pub fn bulk_key(&self) -> String {
+        [&self.cd_type, &self.provider, &self.namespace, &self.name, &self.revision]
+            .iter()
+            .map(|seg| seg.replace('/', "%2F"))
+            .collect::<Vec<_>>()
+            .join("/")
+    }
 }
 
 /// Compute the ClearlyDefined coord for a `ResolvedComponent`. Returns
@@ -242,6 +259,23 @@ mod tests {
         let coord = cd_coord_for(&c).unwrap();
         assert_eq!(coord.namespace, "@angular");
         assert_eq!(coord.url_path(), "npm/npmjs/@angular/core/16.0.0");
+    }
+
+    #[test]
+    fn bulk_key_escapes_only_slashes_inside_a_segment() {
+        let c = make_component("pkg:golang/github.com/yudai/pp@v2.0.1+incompatible");
+        let coord = cd_coord_for(&c).unwrap();
+        assert_eq!(
+            coord.bulk_key(),
+            "go/golang/github.com%2Fyudai/pp/v2.0.1+incompatible"
+        );
+        assert_eq!(
+            coord.url_path(),
+            "go/golang/github.com%2Fyudai/pp/v2.0.1%2Bincompatible",
+            "the GET path keeps percent-encoding; the server decodes it"
+        );
+        let scoped = cd_coord_for(&make_component("pkg:npm/%40types/node@18.0.0")).unwrap();
+        assert_eq!(scoped.bulk_key(), "npm/npmjs/@types/node/18.0.0");
     }
 
     #[test]
