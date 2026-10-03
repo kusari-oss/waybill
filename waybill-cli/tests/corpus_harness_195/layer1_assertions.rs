@@ -722,6 +722,111 @@ pub fn pants_example_golang_layer1(sboms: &EmittedSboms) -> Result<(), Assertion
 }
 
 // -----------------------------------------------------------------------
+// pants-clojure-polyglot — #925
+//
+// The first corpus target with Python and JVM resolves in one pants.toml.
+// Three invariants:
+//   1. `both-pants-namespaces-present` — components carry
+//      waybill:pants-resolve-namespace `python` AND `jvm`.
+//   2. `all-four-resolves-present` — pants-2.30, pants-2.31 (python) and
+//      java17, java21 (jvm) each own at least one component.
+//   3. `resolve-anchor-reaches-pants` — the pants-2.31 anchor depends on
+//      pkg:pypi/pantsbuild-pants. Its requirement is written
+//      `pantsbuild.pants`; without PEP 503 matching (#1100) the edge is lost.
+// -----------------------------------------------------------------------
+
+pub fn pants_clojure_polyglot_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
+    let components: Vec<&serde_json::Value> = sboms
+        .cdx
+        .get("components")
+        .and_then(|c| c.as_array())
+        .map(|a| a.iter().collect())
+        .unwrap_or_default();
+    let prop = |c: &serde_json::Value, name: &str| -> Option<String> {
+        c.get("properties")?
+            .as_array()?
+            .iter()
+            .find(|p| p.get("name").and_then(|n| n.as_str()) == Some(name))
+            .and_then(|p| p.get("value"))
+            .and_then(|v| v.as_str())
+            .map(str::to_string)
+    };
+
+    // Invariant 1 — both-pants-namespaces-present.
+    let namespaces: std::collections::BTreeSet<String> = components
+        .iter()
+        .filter_map(|c| prop(c, "waybill:pants-resolve-namespace"))
+        .collect();
+    if !(namespaces.contains("python") && namespaces.contains("jvm")) {
+        return Err(AssertionFailure {
+            invariant_name: "both-pants-namespaces-present",
+            format: FailureFormat::Cdx,
+            observed: format!("namespaces {namespaces:?}"),
+            expected: "components in both the python and jvm Pants namespaces".to_string(),
+            suggested_action: "investigate Pants resolve membership (m868) — pants.toml declares [python.resolves] and [jvm.resolves]",
+        });
+    }
+
+    // Invariant 2 — all-four-resolves-present.
+    let mut resolves: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
+    for c in &components {
+        if let Some(v) = prop(c, "waybill:pants-resolve") {
+            match serde_json::from_str::<Vec<String>>(&v) {
+                Ok(list) => resolves.extend(list),
+                Err(_) => {
+                    resolves.insert(v);
+                }
+            }
+        }
+    }
+    let missing: Vec<&str> = ["pants-2.30", "pants-2.31", "java17", "java21"]
+        .into_iter()
+        .filter(|r| !resolves.contains(*r))
+        .collect();
+    if !missing.is_empty() {
+        return Err(AssertionFailure {
+            invariant_name: "all-four-resolves-present",
+            format: FailureFormat::Cdx,
+            observed: format!("resolves {resolves:?}"),
+            expected: format!("pants-2.30, pants-2.31, java17 and java21 (missing {missing:?})"),
+            suggested_action: "investigate the pex (m223) or coursier (m224) reader — each resolve's lockfile is committed at the pinned SHA",
+        });
+    }
+
+    // Invariant 3 — resolve-anchor-reaches-pants.
+    let ref_of = |pred: &dyn Fn(&str) -> bool| -> Option<String> {
+        components
+            .iter()
+            .find(|c| c.get("purl").and_then(|p| p.as_str()).is_some_and(pred))
+            .and_then(|c| c.get("bom-ref").and_then(|r| r.as_str()))
+            .map(str::to_string)
+    };
+    let anchor = ref_of(&|p: &str| p == "pkg:generic/pants-2.31");
+    let pants = ref_of(&|p: &str| p.starts_with("pkg:pypi/pantsbuild-pants@2.31"));
+    let reaches = match (&anchor, &pants) {
+        (Some(a), Some(t)) => sboms
+            .cdx
+            .get("dependencies")
+            .and_then(|d| d.as_array())
+            .into_iter()
+            .flatten()
+            .filter(|d| d.get("ref").and_then(|r| r.as_str()) == Some(a.as_str()))
+            .flat_map(|d| d.get("dependsOn").and_then(|x| x.as_array()).into_iter().flatten())
+            .any(|x| x.as_str() == Some(t.as_str())),
+        _ => false,
+    };
+    if !reaches {
+        return Err(AssertionFailure {
+            invariant_name: "resolve-anchor-reaches-pants",
+            format: FailureFormat::Cdx,
+            observed: format!("anchor {anchor:?}, pantsbuild-pants {pants:?}, edge present: false"),
+            expected: "pkg:generic/pants-2.31 dependsOn pkg:pypi/pantsbuild-pants@2.31.0".to_string(),
+            suggested_action: "investigate pypi dependency-name matching (#1100) — the requirement is written `pantsbuild.pants`, the lock records `pantsbuild-pants`",
+        });
+    }
+    Ok(())
+}
+
 // pants-example-jvm — feature 676 (issue #756 fix regression gate)
 //
 // Locks in the coursier-JVM reader's ability to parse real-world Pants

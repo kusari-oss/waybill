@@ -266,6 +266,26 @@ pub const TARGETS: &[CorpusTarget] = &[
         layer1: super::layer1_assertions::pants_example_jvm_layer1,
         scan_mode: ScanMode::Offline,
     },
+    // #925 — the first polyglot Pants target: `[python.resolves]` and
+    // `[jvm.resolves]` in one pants.toml. The pantsbuild/example-* repos are
+    // single-language by design. Pinned upstream; no changes were needed.
+    // Scanning it found #1099 (--split=resolve and a missing --output-dir)
+    // and #1100 (pypi names not matched under full PEP 503).
+    CorpusTarget {
+        name: "pants-clojure-polyglot",
+        source: SourceKind::Git {
+            clone_url: "https://github.com/enragedginger/pants_backend_clojure",
+        },
+        pinned: PinnedRef::Sha {
+            // HEAD as of 2026-10-03 — `git ls-remote <url> HEAD`
+            hex: "e068ffbaa61c83973ddad5c65a2002fde3025dfe",
+        },
+        ecosystem: Ecosystem::Python,
+        exercises: "m223 Pants pex reader + m224 coursier-JVM reader in one repo; \
+                    resolve membership across both namespaces (m868/#919)",
+        layer1: super::layer1_assertions::pants_clojure_polyglot_layer1,
+        scan_mode: ScanMode::Offline,
+    },
     CorpusTarget {
         name: "pants-example-golang",
         source: SourceKind::Git {
