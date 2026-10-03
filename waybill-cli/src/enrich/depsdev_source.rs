@@ -484,8 +484,8 @@ impl DepsDevSource {
         while let Some(joined) = set.join_next().await {
             match joined {
                 Ok((i, k, result)) => {
-                    let (info, max_age) = match result {
-                        Ok((info, max_age)) => (Some(info), max_age),
+                    let (info, max_age, answered) = match result {
+                        Ok((info, max_age)) => (info, max_age, true),
                         Err(e) => {
                             self.transport_errors.fetch_add(1, Ordering::Relaxed);
                             if super::deps_dev_client::is_throttled(&e) {
@@ -496,13 +496,19 @@ impl DepsDevSource {
                                 name = %k.name,
                                 version = %k.version,
                                 error = %e,
-                                "deps.dev get_version failed — caching as miss"
+                                "deps.dev get_version failed — not cached across scans"
                             );
-                            (None, None)
+                            (None, None, false)
                         }
                     };
-                    self.disk
-                        .put(&k, &info, self.disk.effective_max_age(max_age));
+                    // #1094: only an answer reaches the disk cache. A timeout
+                    // or 5xx said nothing about the package; persisting it
+                    // would report the package as unknown to deps.dev for
+                    // every scan within the default max-age.
+                    if answered {
+                        self.disk
+                            .put(&k, &info, self.disk.effective_max_age(max_age));
+                    }
                     self.cache
                         .lock()
                         .expect("deps.dev cache mutex poisoned")
@@ -1767,6 +1773,79 @@ mod batch_tests {
         }
     }
 
+}
+
+/// #1094 — what the per-component path persists, and what it counts as a
+/// transport failure.
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod persistence_tests {
+    use super::*;
+    use wiremock::matchers::{method, path_regex};
+    use wiremock::{Mock, MockServer, ResponseTemplate};
+
+    fn key(name: &str) -> EnrichmentKey {
+        EnrichmentKey::from_purl_parts("cargo", None, name, "1.0.0").unwrap()
+    }
+
+    async fn mount(server: &MockServer, name: &str, response: ResponseTemplate) {
+        Mock::given(method("GET"))
+            .and(path_regex(format!(r"/packages/{name}/versions/")))
+            .respond_with(response)
+            .mount(server)
+            .await;
+    }
+
+    async fn source(server: &MockServer, disk_root: &std::path::Path) -> DepsDevSource {
+        let client = DepsDevClient::new(std::time::Duration::from_secs(5))
+            .with_base_url(format!("{}/v3", server.uri()));
+        let mut source = DepsDevSource::new(client, false).with_batch(false);
+        source.disk = super::super::deps_dev_disk_cache::DepsDevDiskCache::at(disk_root.to_path_buf());
+        source
+    }
+
+    #[tokio::test]
+    async fn only_answers_reach_the_disk_cache() {
+        let server = MockServer::start().await;
+        mount(&server, "known", ResponseTemplate::new(200)
+            .set_body_json(serde_json::json!({ "licenses": ["MIT"], "links": [] }))).await;
+        mount(&server, "absent", ResponseTemplate::new(404)).await;
+        mount(&server, "flaky", ResponseTemplate::new(503)).await;
+        let dir = tempfile::tempdir().unwrap();
+        let source = source(&server, dir.path()).await;
+
+        let keys = vec![key("known"), key("absent"), key("flaky")];
+        let mut p = ProgressReporter::new(keys.len());
+        source.fetch_many(&keys, &mut p).await;
+
+        assert!(matches!(source.disk.get(&key("known")), Some(Some(_))));
+        assert!(
+            matches!(source.disk.get(&key("absent")), Some(None)),
+            "a 404 is deps.dev saying it has no such version: an answer, cached as an absence"
+        );
+        assert!(
+            source.disk.get(&key("flaky")).is_none(),
+            "a 503 said nothing about the package and must not be cached as an absence"
+        );
+    }
+
+    #[tokio::test]
+    async fn an_unknown_package_is_not_a_transport_failure() {
+        // Counted as one, a scan of packages deps.dev does not carry would
+        // be recorded as `wholly-unavailable`.
+        let server = MockServer::start().await;
+        mount(&server, "private-a", ResponseTemplate::new(404)).await;
+        mount(&server, "private-b", ResponseTemplate::new(404)).await;
+        let dir = tempfile::tempdir().unwrap();
+        let source = source(&server, dir.path()).await;
+
+        let keys = vec![key("private-a"), key("private-b")];
+        let mut p = ProgressReporter::new(keys.len());
+        let got = source.fetch_many(&keys, &mut p).await;
+
+        assert!(got.iter().all(Option::is_none));
+        assert_eq!(source.transport_errors.load(Ordering::Relaxed), 0);
+    }
 }
 
 #[cfg(test)]

@@ -84,6 +84,16 @@ impl DepsDevDiskCache {
         })
     }
 
+    /// A cache rooted at `root`, for tests that inspect what was persisted
+    /// without touching the developer's real cache or the process env.
+    #[cfg(test)]
+    pub fn at(root: PathBuf) -> Arc<Self> {
+        Arc::new(Self {
+            root: Some(root),
+            override_max_age: None,
+        })
+    }
+
     /// The bound to write into a new entry, given what the response
     /// asked for.
     pub fn effective_max_age(&self, response_max_age: Option<u64>) -> u64 {
