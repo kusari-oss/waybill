@@ -628,6 +628,58 @@ end
     assert_eq!(got.cdx, vec!["Apache-2.0".to_string()]);
 }
 
+/// An OTP application descriptor in the shape every sampled rebar3 project
+/// uses: `{licenses, [...]}` inside the `.app.src`.
+fn erlang_app(root: &Path, licenses: &str) {
+    write(
+        &root.join("src/waybill_fixture_erllic.app.src"),
+        &format!(
+            r#"%% comment lines must not confuse the parser: {{licenses, ["GPL-3.0"]}}
+{{application, waybill_fixture_erllic,
+ [{{description, "fixture"}},
+  {{vsn, "1.0.0"}},
+  {{applications, [kernel, stdlib]}},
+  {{licenses, [{licenses}]}},
+  {{links, [{{"GitHub", "https://example.invalid"}}]}}
+ ]}}.
+"#
+        ),
+    );
+    write(&root.join("rebar.config"), "{deps, []}.\n");
+}
+
+#[test]
+fn m954_erlang_reads_app_src_licenses() {
+    let tmp = tempfile::tempdir().expect("tempdir");
+    erlang_app(tmp.path(), r#""Apache-2.0""#);
+    let got = scan(tmp.path());
+    assert_eq!(got.cdx, vec!["Apache-2.0".to_string()]);
+}
+
+#[test]
+fn m954_erlang_license_list_joins_with_and() {
+    // jiffy declares `{licenses, ["MIT", "BSD-3-Clause"]}`. Hex states no
+    // relationship between entries, so the conjunctive fallback applies.
+    let tmp = tempfile::tempdir().expect("tempdir");
+    erlang_app(tmp.path(), r#""MIT", "BSD-3-Clause""#);
+    let got = scan(tmp.path());
+    assert_eq!(got.spdx23, vec!["MIT AND BSD-3-Clause".to_string()]);
+}
+
+#[test]
+fn m954_erlang_free_form_name_is_preserved_as_a_license_ref() {
+    // lager declares `{licenses, ["Apache 2"]}`, which is not an SPDX id.
+    let tmp = tempfile::tempdir().expect("tempdir");
+    erlang_app(tmp.path(), r#""Apache 2""#);
+    let got = scan(tmp.path());
+    assert!(!got.cdx.is_empty(), "a free-form name must be preserved, not dropped");
+    assert!(
+        got.spdx23.iter().all(|v| v.starts_with("LicenseRef-")),
+        "it must be a non-listed reference, got {:?}",
+        got.spdx23
+    );
+}
+
 #[test]
 fn m954_scala_free_form_name_is_preserved_as_a_license_ref() {
     // sbt names are free-form: its own documented example is "Apache 2", not

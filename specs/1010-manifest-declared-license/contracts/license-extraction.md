@@ -21,10 +21,10 @@ main-module site.
 ## Per-ecosystem contract
 
 **Evidence column** states whether the field and semantics were verified, and
-against what. Every row was verified during Phase 1 (T001–T006) except **erlang**,
-marked *partial*: erlang publishes to Hex so the Hex contract applies, but the
-rebar3 configuration reference documents no `licenses` key, so the exact key
-location must be confirmed when that reader is written.
+against what. Every row was verified during Phase 1 (T001–T006) except **erlang**:
+it publishes to Hex so the Hex contract applies, but the rebar3 configuration
+reference documents no `licenses` key. T033 settled the key location by sampling
+real projects instead, which the row records.
 
 Two rows changed materially once checked, and neither change was predictable from
 the field name:
@@ -45,7 +45,7 @@ the field name:
 | maven | `pom.xml` | `<licenses><license><name>` | **Yes** | **AND** (fallback — POM reference specifies nothing) | inherited from parent POM | **verified** (Maven POM reference) |
 | composer | `composer.json` | `license` (string or array) | **Yes** | **OR** — array is documented as disjunctive | none defined | **verified** (Composer schema) |
 | elixir | `mix.exs` | package metadata `licenses` | **Yes** — "a list of licenses the project is licensed under. This attribute is required" | **AND** (fallback — Hex does not state the relationship) | none defined | **verified** ([Hex publish](https://hex.pm/docs/publish)). Hex explicitly supports `LicenseRef-<idstring>` for custom licenses, which matches FR-004 |
-| erlang **(deferred)** | `.app.src` / `rebar.config` | `licenses` | **Yes** | **AND** (fallback) | none defined | **unverified — not implemented.** Sources tried without success: `hexdocs.pm/rebar3_hex` (301 chain), `rebar3-hex.hexdocs.pm/readme.html` (documents `{hex, [...]}` for doc providers, says nothing about `licenses`), `hex.pm/docs/rebar3_publish` (404). Next step is the `rebar3_hex` publish-provider source or real `rebar.config` files, treating convention across samples as the measurement — erlang publishes to Hex, so the Hex contract above applies (required list, `LicenseRef-` supported, relationship unstated). The rebar3 configuration reference documents no `licenses` key, so the exact key location must be confirmed when the reader is written |
+| erlang | `*.app.src` | `{licenses, [...]}` | **Yes** | **AND** (fallback) | none defined | **verified by sampling (#954, T033)**: 11 rebar3 projects (hackney, jsx, recon, lager, telemetry, jiffy, meck, certifi, backoff, gproc, rebar3). The 10 with a plain `.app.src` declare `{licenses, [...]}` there; none in `rebar.config`; rebar3's own uses an `.app.src.script`, which the reader does not evaluate. Observed values include a list of two (jiffy: `"MIT", "BSD-3-Clause"`) and a free-form name (lager: `"Apache 2"`). Hex contract applies otherwise |
 | scala | `build.sbt` | `licenses` | **Yes** — a `Seq` of `(name, URL)` tuples | **AND** (fallback — sbt states nothing) | none defined | **verified** ([sbt](https://www.scala-sbt.org/1.x/docs/Using-Sonatype.html)). **Names are free-form, not SPDX**: the documented example is `"Apache 2"`, not `Apache-2.0`, so scala will hit the FR-004 preservation path frequently |
 | ~~cocoapods~~ | — | **no license source at this site** | — | n/a | none defined | **verified** ([podspec](https://guides.cocoapods.org/syntax/podspec.html)). Three forms: a String (`'MIT'`), or a Hash with `:type` plus `:file` or `:text`. Read `:type` from the hash; `:file` and `:text` are out of scope per FR-011 |
 | nuget | `.csproj` | `PackageLicenseExpression` | No — "an SPDX license identifier or expression". **"Only one of `PackageLicenseExpression`, `PackageLicenseFile`, and `PackageLicenseUrl` can be specified at a time"** | n/a | via ordinary MSBuild property inheritance (`Directory.Build.props`), not a license-specific rule | **verified** ([MSBuild pack targets](https://learn.microsoft.com/en-us/nuget/reference/msbuild-targets)). `PackageLicenseFile` is out of scope per FR-011; `PackageLicenseUrl` is deprecated |
