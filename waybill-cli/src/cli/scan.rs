@@ -181,7 +181,7 @@ fn default_collection_name(cmd: &str) -> String {
 async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
     use std::time::{Duration, Instant};
 
-    use aya::maps::RingBuf;
+    use aya::maps::{MapData, RingBuf};
 
     use crate::attestation::builder::{self, AttestationConfig};
     use crate::attestation::serializer;
@@ -318,20 +318,14 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
     let mut file_timing = DrainTiming::default();
 
     fn drain_network(
-        bpf: &mut aya::Ebpf,
+        rb: &mut RingBuf<MapData>,
         agg: &mut EventAggregator,
         count: &mut u64,
         max: usize,
         target_pids: &std::collections::HashSet<u32>,
         timing: &mut DrainTiming,
     ) -> usize {
-        let t_open = Instant::now();
-        let map = bpf
-            .map_mut("NETWORK_EVENTS")
-            .expect("NETWORK_EVENTS ring buffer is statically declared in the eBPF object");
-        let mut rb = RingBuf::try_from(map)
-            .expect("NETWORK_EVENTS map shape is BPF_MAP_TYPE_RINGBUF by construction");
-        let open = t_open.elapsed();
+        let open = Duration::ZERO;
         let t_read = Instant::now();
         let mut n = 0;
         while n < max {
@@ -352,7 +346,6 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
                 None => break,
             }
         }
-        drop(rb);
         timing.add(open, t_read.elapsed(), n);
         n
     }
@@ -363,20 +356,16 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
     /// When the COMPILER_EXEC_EVENTS map is unavailable (older eBPF
     /// object, tracepoint attach failed), returns 0 no-op.
     fn drain_compiler(
-        bpf: &mut aya::Ebpf,
+        rb: Option<&mut RingBuf<MapData>>,
         compiler_agg: &mut CompilerPipelineAggregator,
         count: &mut u64,
         max: usize,
         timing: &mut DrainTiming,
     ) -> usize {
-        let t_open = Instant::now();
-        let Some(map) = bpf.map_mut("COMPILER_EXEC_EVENTS") else {
+        let Some(rb) = rb else {
             return 0;
         };
-        let Ok(mut rb) = RingBuf::try_from(map) else {
-            return 0;
-        };
-        let open = t_open.elapsed();
+        let open = Duration::ZERO;
         let t_read = Instant::now();
         let mut n = 0;
         while n < max {
@@ -397,13 +386,12 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
                 None => break,
             }
         }
-        drop(rb);
         timing.add(open, t_read.elapsed(), n);
         n
     }
 
     fn drain_file(
-        bpf: &mut aya::Ebpf,
+        rb: &mut RingBuf<MapData>,
         agg: &mut EventAggregator,
         compiler_agg: &mut CompilerPipelineAggregator,
         count: &mut u64,
@@ -411,13 +399,7 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
         target_pids: &std::collections::HashSet<u32>,
         timing: &mut DrainTiming,
     ) -> usize {
-        let t_open = Instant::now();
-        let map = bpf
-            .map_mut("FILE_EVENTS")
-            .expect("FILE_EVENTS ring buffer is statically declared in the eBPF object");
-        let mut rb = RingBuf::try_from(map)
-            .expect("FILE_EVENTS map shape is BPF_MAP_TYPE_RINGBUF by construction");
-        let open = t_open.elapsed();
+        let open = Duration::ZERO;
         let t_read = Instant::now();
         let mut n = 0;
         while n < max {
@@ -449,7 +431,6 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
                 None => break,
             }
         }
-        drop(rb);
         timing.add(open, t_read.elapsed(), n);
         n
     }
@@ -459,13 +440,30 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
     // These say whether that time is spent draining, sleeping, or waiting
     // on a child that has not exited yet. Measurement only; nothing below
     // reads them.
-    let ringbuf_open = {
-        let t = Instant::now();
-        if let Some(map) = handle.bpf.map_mut("FILE_EVENTS") {
-            let _ = RingBuf::try_from(map);
-        }
-        t.elapsed()
-    };
+    // #991 — open each ring buffer once. `RingBuf::try_from` maps the whole
+    // ring, and the drain helpers used to do that on every call, three
+    // times per 5 ms iteration.
+    let ringbuf_open_start = Instant::now();
+    let mut network_rb = RingBuf::try_from(
+        handle
+            .bpf
+            .take_map("NETWORK_EVENTS")
+            .expect("NETWORK_EVENTS ring buffer is statically declared in the eBPF object"),
+    )
+    .expect("NETWORK_EVENTS map shape is BPF_MAP_TYPE_RINGBUF by construction");
+    let mut file_rb = RingBuf::try_from(
+        handle
+            .bpf
+            .take_map("FILE_EVENTS")
+            .expect("FILE_EVENTS ring buffer is statically declared in the eBPF object"),
+    )
+    .expect("FILE_EVENTS map shape is BPF_MAP_TYPE_RINGBUF by construction");
+    // Absent from older eBPF objects, or when the tracepoint attach failed.
+    let mut compiler_rb = handle
+        .bpf
+        .take_map("COMPILER_EXEC_EVENTS")
+        .and_then(|m| RingBuf::try_from(m).ok());
+    let ringbuf_open = ringbuf_open_start.elapsed();
     let mut iterations: u64 = 0;
     let mut drain_time = Duration::ZERO;
     let mut max_iteration = Duration::ZERO;
@@ -490,7 +488,7 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
         let active_filter = if filter_by_pid { &target_pids } else { &empty };
 
         let drain_start = Instant::now();
-        drain_network(&mut handle.bpf, &mut agg, &mut net_count, MAX_PER_ITER, active_filter, &mut net_timing);
+        drain_network(&mut network_rb, &mut agg, &mut net_count, MAX_PER_ITER, active_filter, &mut net_timing);
         // Milestone 211 post-#611 follow-up: drain compiler exec events
         // BEFORE file events on each iteration. compiler exec/exit
         // events populate `compiler_agg.pid_to_invocation_id` which the
@@ -500,13 +498,13 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
         // compiler_agg drops them silently → invocation buckets stay
         // empty even when both event streams are healthy.
         drain_compiler(
-            &mut handle.bpf,
+            compiler_rb.as_mut(),
             &mut compiler_agg,
             &mut compiler_count,
             MAX_PER_ITER,
             &mut compiler_timing,
         );
-        drain_file(&mut handle.bpf, &mut agg, &mut compiler_agg, &mut file_count, MAX_PER_ITER, active_filter, &mut file_timing);
+        drain_file(&mut file_rb, &mut agg, &mut compiler_agg, &mut file_count, MAX_PER_ITER, active_filter, &mut file_timing);
         drain_time += drain_start.elapsed();
 
         if done {
@@ -514,15 +512,15 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
             // we never loop forever if probes keep firing from unrelated PIDs.
             let deadline = Instant::now() + Duration::from_millis(250);
             while Instant::now() < deadline {
-                let n = drain_network(&mut handle.bpf, &mut agg, &mut net_count, MAX_PER_ITER, active_filter, &mut net_timing)
+                let n = drain_network(&mut network_rb, &mut agg, &mut net_count, MAX_PER_ITER, active_filter, &mut net_timing)
                     + drain_compiler(
-                        &mut handle.bpf,
+                        compiler_rb.as_mut(),
                         &mut compiler_agg,
                         &mut compiler_count,
                         MAX_PER_ITER,
                         &mut compiler_timing,
                     )
-                    + drain_file(&mut handle.bpf, &mut agg, &mut compiler_agg, &mut file_count, MAX_PER_ITER, active_filter, &mut file_timing);
+                    + drain_file(&mut file_rb, &mut agg, &mut compiler_agg, &mut file_count, MAX_PER_ITER, active_filter, &mut file_timing);
                 if n == 0 {
                     break;
                 }
@@ -545,7 +543,7 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
         drain_ms = drain_time.as_millis() as u64,
         max_iteration_ms = max_iteration.as_millis() as u64,
         exit_observed_ms = exit_observed.map(|d| d.as_millis() as u64),
-        file_ringbuf_open_us = ringbuf_open.as_micros() as u64,
+        ringbuf_open_us = ringbuf_open.as_micros() as u64,
         "trace loop summary"
     );
     for (ring, t) in [("network", &net_timing), ("compiler", &compiler_timing), ("file", &file_timing)] {
