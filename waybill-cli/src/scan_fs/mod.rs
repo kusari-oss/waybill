@@ -1789,9 +1789,13 @@ fn maybe_suppress_scan_target_coord(
 /// both the index side and the lookup side on this function guarantees
 /// they stay in sync.
 ///
-/// - **pypi** — case-insensitive, `_` ≡ `-` per PEP 503. Both
-///   `Name: Requests` and `Requires-Dist: requests` must hit the same
-///   bucket. Mirrors `pip::normalize_pypi_name_for_purl`.
+/// - **pypi** — PEP 503: case-insensitive, and any run of `-`, `_` and
+///   `.` is one `-`. Both `Name: Requests` and `Requires-Dist: requests`
+///   must hit the same bucket, and so must `pantsbuild.pants` (how a
+///   requirement is written) and `pantsbuild-pants` (how pex locks it).
+///   Deliberately stricter than `pip::normalize_pypi_name_for_purl`,
+///   which keeps dots to match packageurl-python: this is a matching
+///   key, never emitted.
 /// - **npm** — lowercase (registry is case-insensitive). Scoped
 ///   `@scope/name` kept intact; only the case is normalised.
 /// - **deb / apk / everything else** — lowercase. Debian and Alpine
@@ -1988,7 +1992,22 @@ pub(crate) fn dep_lookup_ecosystem<'a>(
 
 pub(crate) fn normalize_dep_name(ecosystem: &str, name: &str) -> String {
     match ecosystem {
-        "pypi" => name.replace('_', "-").to_lowercase(),
+        "pypi" => {
+            let mut out = String::with_capacity(name.len());
+            let mut in_separator_run = false;
+            for c in name.chars() {
+                if matches!(c, '-' | '_' | '.') {
+                    if !in_separator_run {
+                        out.push('-');
+                    }
+                    in_separator_run = true;
+                } else {
+                    out.extend(c.to_lowercase());
+                    in_separator_run = false;
+                }
+            }
+            out
+        }
         _ => name.to_lowercase(),
     }
 }
@@ -3021,6 +3040,9 @@ Architecture: amd64
         // The pre-867 path would have normalised under "generic", which
         // lowercases but does not map the underscore:
         assert_eq!(normalize_dep_name("generic", "Some_Package"), "some_package");
+        // PEP 503 runs: the written and the locked spelling of one project.
+        assert_eq!(normalize_dep_name("pypi", "pantsbuild.pants"), "pantsbuild-pants");
+        assert_eq!(normalize_dep_name("pypi", "Zope__.Interface"), "zope-interface");
     }
 
 
