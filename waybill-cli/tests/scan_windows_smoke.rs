@@ -19,12 +19,12 @@
 #![cfg(windows)]
 #![allow(clippy::unwrap_used)]
 
+use std::io::BufRead;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::time::{Duration, Instant};
 
 const SCAN_TIMEOUT_SECS: u64 = 60;
-const TIMEOUT_DETECTION_THRESHOLD_SECS: u64 = 58;
 
 /// Canonical list of path-shaped property/field names emitted by
 /// milestone-100's normalization chokepoint + the 3 defensive
@@ -39,8 +39,14 @@ const PATH_FIELD_NAMES: &[&str] = &[
 ];
 
 /// Run waybill.exe sbom scan with a hard 60-second timeout. Returns
-/// (exit_status, elapsed). On timeout, kills the subprocess and
-/// panics with a clear hang-regression message.
+/// (exit_status, elapsed). On timeout, kills the subprocess and panics with
+/// the tail of its stderr, so the log says where the scan was (#1098: a
+/// timeout that reported only "likely hang regression" could not be told
+/// apart from slow network enrichment).
+///
+/// Polls rather than sleeping out the full timeout: the previous helper
+/// joined a 60 s sleeper thread, so every case took a minute however fast
+/// the scan was.
 fn run_scan_with_timeout(
     input_path: &Path,
     output_path: &Path,
@@ -60,30 +66,49 @@ fn run_scan_with_timeout(
         .spawn()
         .expect("spawn waybill.exe");
 
-    let child_id = child.id();
-    let timeout_handle = std::thread::spawn(move || {
-        std::thread::sleep(Duration::from_secs(SCAN_TIMEOUT_SECS));
-        // Best-effort kill. If the main thread already wait()ed,
-        // this taskkill becomes a no-op (PID gone).
-        let _ = Command::new("taskkill")
-            .args(["/F", "/PID", &child_id.to_string()])
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .status();
+    // Drained on its own thread so a chatty scan can never block on a full
+    // pipe while this thread waits for it to exit.
+    // Collected line by line rather than read to EOF: a subprocess the scan
+    // spawned (git, go) can outlive a killed scan while holding the inherited
+    // stderr, so EOF may never come, and what was written before the timeout
+    // is exactly the part worth printing.
+    let stderr = child.stderr.take().expect("stderr is piped");
+    let log = std::sync::Arc::new(std::sync::Mutex::new(Vec::<String>::new()));
+    let sink = std::sync::Arc::clone(&log);
+    std::thread::spawn(move || {
+        for line in std::io::BufReader::new(stderr).lines().map_while(Result::ok) {
+            sink.lock().unwrap().push(line);
+        }
     });
 
     let start = Instant::now();
-    let status = child.wait().expect("wait waybill.exe");
+    let deadline = Duration::from_secs(SCAN_TIMEOUT_SECS);
+    let status = loop {
+        if let Some(status) = child.try_wait().expect("try_wait waybill.exe") {
+            break Some(status);
+        }
+        if start.elapsed() >= deadline {
+            let _ = child.kill();
+            let _ = child.wait();
+            break None;
+        }
+        std::thread::sleep(Duration::from_millis(100));
+    };
     let elapsed = start.elapsed();
-    let _ = timeout_handle.join();
 
-    if elapsed > Duration::from_secs(TIMEOUT_DETECTION_THRESHOLD_SECS) {
+    let Some(status) = status else {
+        // Give the reader a moment to take lines already in the pipe.
+        std::thread::sleep(Duration::from_millis(500));
+        let lines = log.lock().unwrap().clone();
+        let tail = &lines[lines.len().saturating_sub(40)..];
         panic!(
             "waybill.exe sbom scan timed out — likely hang regression \
-             (elapsed: {elapsed:?}, fixture: {})",
-            input_path.display()
+             (elapsed: {elapsed:?}, fixture: {})\n--- last {} stderr lines ---\n{}",
+            input_path.display(),
+            tail.len(),
+            tail.join("\n")
         );
-    }
+    };
     (status, elapsed)
 }
 
