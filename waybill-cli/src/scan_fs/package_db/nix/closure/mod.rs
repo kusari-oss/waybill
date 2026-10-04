@@ -26,7 +26,7 @@ pub(crate) mod summary;
 use std::path::Path;
 use std::time::Duration;
 
-use super::eval::invoke::{argv_is_safe, is_safe_attribute_name, run_bounded};
+use super::eval::invoke::{argv_is_safe, is_safe_attribute_name, run_bounded, verify_ifd_refusal};
 use super::eval::preflight::IFD_SETTING;
 use super::eval::reason::DegradationReason;
 use super::eval::result::NixSystem;
@@ -280,6 +280,12 @@ pub(crate) fn resolve(
     system: &NixSystem,
     cfg: &ClosureConfig,
 ) -> Result<ClassifiedClosure, DegradationReason> {
+    // #1114 — safety first, before anything the scanned repository controls
+    // is listed or evaluated, exactly as the m1034 tier gates. Requesting
+    // `allow-import-from-derivation false` is not evidence it applied: a nix
+    // without the setting accepts the option, ignores it and exits 0.
+    verify_ifd_refusal(cfg.budget)?;
+
     let root = project.display().to_string();
     let (attribute, flakeref) = match &cfg.attribute {
         AttrRequest::PackageName(n) => package_target(&root, system, n, cfg)?,

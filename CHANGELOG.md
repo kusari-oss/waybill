@@ -7,6 +7,19 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Fixed: `--nix-closure` now verifies the import-from-derivation refusal it promised (#1114)
+
+The `--nix-closure` help listed "import-from-derivation refused and the refusal
+verified" among its defences, but the closure tier only *requested* the
+refusal. A `nix` that does not support `allow-import-from-derivation` accepts
+the option, ignores it and exits 0, so it would have evaluated the scanned
+flake with import-from-derivation enabled.
+
+The tier now runs the same check as the `nix eval` tier before it lists or
+evaluates anything in the flake. If the check fails, no closure is taken, and
+the document records `waybill:nix-closure-degraded = ifd-refusal-unverified`.
+A supported `nix` is unaffected.
+
 ### Added: closure SBOMs for Nix system-configuration flakes (#1052)
 
 `--nix-closure` previously looked only under `packages.<system>`, so a flake
