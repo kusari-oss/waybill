@@ -41,7 +41,7 @@ Paths are relative to the repository root. `golang/` means `waybill-cli/src/scan
 - [ ] T007 [P] [US1] Unit tests in `golang/graph_resolver.rs` (test module guarded with `#[cfg_attr(test, allow(clippy::unwrap_used))]`). Each drives `parallel_fetch` through the resolver with a `ProxyChain` and a small `GraphResolverConfig`.
   - **(a) Closed port:** bind a `TcpListener` to `127.0.0.1:0`, take the port, drop it. With 64 targets, the entry trips, `affected == 64`, and fewer than 64 connection attempts are made. Count attempts via a test-visible counter on `ProxyFetchBounds`.
   - **(b) Hang:** a listener that accepts and never writes, with `fetch_total_timeout = 300ms` and 48 targets. Elapsed time is under 2 × 300 ms plus slack, not 3 × 300 ms.
-  - **(c) A 404 keeps the entry reachable:** a wiremock server answering 404 to everything never trips the breaker, and every module is attempted.
+  - **(c) Any response keeps the entry reachable:** a wiremock server answering 404 to everything never trips the breaker, and every module is attempted. Repeat with 503 for the 5xx edge case.
   - **(d) Mixed:** wiremock answers the first request with 200 and then delays past the timeout. It never trips (`responded == true`).
 - [ ] T008 [P] [US1] Unit test in `golang/graph_resolver.rs` for a `|` chain: the first entry is a closed port, the second is wiremock returning valid `.mod` bodies. The first trips, every module resolves via the second entry, and no C111 fragment names the second. For a `,` chain with the same entries, the trip ends fetching and modules fall to go.sum (FR-002).
 - [ ] T009 [P] [US1] Unit test in `golang/graph_resolver.rs`: a two-workspace scan through one `GraphResolver`. Workspace 1 has 20 modules against a closed port and trips; workspace 2 has 30 modules and makes zero connection attempts. `affected == 50` (spec edge case: per scan, not per workspace).
@@ -49,7 +49,8 @@ Paths are relative to the repository root. `golang/` means `waybill-cli/src/scan
   - **(a)** the scan succeeds;
   - **(b)** CycloneDX, SPDX 2.3 and SPDX 3 all carry C110 `unknown` and C111 equal to `proxy-unreachable: http://127.0.0.1:<port> failed at the network level (connection); 40 modules resolved from go.sum only`;
   - **(c)** all 40 modules are components with `waybill:go-transitive-source = go-sum-fallback`;
-  - **(d)** no new per-component annotation exists (FR-006a): the property-name set on Go components matches a no-proxy (`GOPROXY=off`) scan of the same repo.
+  - **(d)** no new per-component annotation exists (FR-005): the property-name set on Go components matches a no-proxy (`GOPROXY=off`) scan of the same repo;
+  - **(e) no credentials:** a second run with `GOPROXY=http://user:secret@127.0.0.1:<closed-port>`. `secret` and `user` appear in neither stderr nor any of the three documents, and C111 names `http://127.0.0.1:<port>` (FR-006, FR-008).
 
 ### Implementation for User Story 1
 
@@ -57,7 +58,9 @@ Paths are relative to the repository root. `golang/` means `waybill-cli/src/scan
   - **Before each `ProxyEntry::Url` request:** if the entry at this index is tripped, skip sending and treat it as a network failure of its `tripped` class, then follow the existing fall-through rules (`|` continues, `,` returns `Failed`). Increment `affected`.
   - **After a response (any status):** set `responded = true`.
   - **After a network-level error** (`Connection | Timeout | Dns | Tls` from `classify_reqwest_error`): if the entry has not responded, increment `consecutive_network_failures`, add 1 to `affected`, and trip when the count reaches `fetch_concurrency` (R2).
-- [ ] T012 [US1] Thread the bounds through the ladder in `golang/graph_resolver.rs`: `step3_proxy_fetch` → `parallel_fetch` → workers, each worker cloning the `Arc`. When an entry trips, emit the FR-008 warning exactly once per entry: `tracing::warn!(proxy = %label, class, "Go module proxy unreachable; skipping it for the rest of the scan")`. Emit the module count once, at the end of `resolve` for the last workspace, or in legacy.rs after the loop. Use the label only, never the URL.
+- [ ] T012 [US1] Thread the bounds through the ladder in `golang/graph_resolver.rs`: `step3_proxy_fetch` → `parallel_fetch` → workers, each worker cloning the `Arc`.
+  - **At trip time:** emit only `tracing::debug!`.
+  - **FR-008 warning:** in `golang/legacy.rs` after the workspace loop (T006's site), emit one warning per tripped entry from `bound_outcome()`: `tracing::warn!(proxy = %label, class, modules = affected, "Go module proxy unreachable; skipped it for the rest of the scan and used go.sum for these modules")`. Use the label only, never the URL (FR-006, FR-008).
 - [ ] T013 [US1] Run T007–T010 until green. Then run quickstart §1 and §2 with `measurements/probe_e2e.sh` against `10.255.255.1` and the hang server. Record the 16-vs-64 wall times in `measurements/after.txt` and check them against SC-001/SC-002 (ratio ≤ 1.5).
 
 **Checkpoint**: US1 complete; a dead proxy costs one batch.
@@ -84,23 +87,27 @@ Paths are relative to the repository root. `golang/` means `waybill-cli/src/scan
   - set `budget.started` if it is `None`;
   - if the elapsed time is at or past the budget, mark `exhausted`, increment `not_attempted`, and return the module as a failed fetch without sending. It then falls to go.sum like any failure (FR-005);
   - never interrupt requests already in flight (FR-003).
-- [ ] T018 [US2] Emit one `tracing::warn!` when the budget is first exhausted (`budget_secs`). Emit the not-attempted count with the end-of-scan summary in legacy.rs (T012's site).
+- [ ] T018 [US2] In `golang/legacy.rs` at T012's site, emit the FR-008 budget warning once: `tracing::warn!(budget_secs, modules = not_attempted, "Go proxy-fetch budget exhausted; remaining modules used go.sum")`.
 - [ ] T019 [US2] Run T014–T016 until green. Run quickstart §3 and record the result in `measurements/after.txt` (SC-003).
 
 ## Phase 5: User Story 3 — Healthy scans unchanged (P1)
 
 **Goal**: byte-identity when nothing trips (FR-009, SC-005).
 
-- [ ] T020 [P] [US3] Unit test in `golang/graph_resolver.rs`: wiremock serves valid `.mod` for every target. No trip, `bound_outcome().coverage()` is `None`, and the resolved map is equal to the map from a run with `ProxyFetchBounds` freshly constructed and never consulted.
-- [ ] T021 [US3] Run quickstart §4 (`measurements/probe_healthy_real.sh`). Expect `failed-fetches=0`, `proxy-fetch=197` and no C111. Record in `measurements/after.txt`.
+- [ ] T020 [P] [US3] Unit test in `golang/graph_resolver.rs`: wiremock serves a valid `.mod` (one `require` each) for every target. Assert:
+  - `bound_outcome().coverage()` is `None`;
+  - every module's entry has `source = Proxy` and exactly the `require` its body declared, compared against an expected map built from the bodies.
+- [ ] T021 [US3] Binary-level test in `waybill-cli/tests/go_proxy_fetch_bounds.rs` for FR-010. A local server answers 404 to every module (no delay), with 40 modules and the default budget. Assert C110 `complete`, `waybill:go-transitive-fallback-count = 40`, and no C111, in all three formats. This is today's behaviour, kept.
+- [ ] T022 [US3] Binary-level test in `waybill-cli/tests/go_proxy_fetch_bounds.rs`: `--no-go-proxy-fetch` with `GOPROXY` at a closed port gives no C111 and no breaker warning on stderr. The bounds only govern fetches that would happen (spec edge case).
+- [ ] T023 [US3] Run quickstart §4 (`measurements/probe_healthy_real.sh`). Expect `failed-fetches=0`, `proxy-fetch=197` and no C111. Record in `measurements/after.txt`.
 
 ## Phase 6: Polish & Cross-Cutting
 
-- [ ] T022 Update C111's row in `docs/reference/sbom-format-mapping.md`: add `proxy-unreachable` and `proxy-fetch-budget-exhausted` to the code vocabulary with their C110 values (contract), and note that entry labels never include credentials. Reference m1065 (#853).
-- [ ] T023 [P] Add an Unreleased entry to `CHANGELOG.md`. Cover the breaker, the 60 s budget, the two C111 codes, and the end of a dead proxy reporting `complete`. Note the test-only env var is not an operator setting.
-- [ ] T024 Run `./scripts/pre-pr.sh > /tmp/prepr.log 2>&1; echo EXIT=$?`. Require `EXIT=0`, the `>>> all pre-PR checks passed.` line, and no `test result` line without ` 0 failed`.
-- [ ] T025 Push. Dispatch a read-only public-corpus run (`gh workflow run "Public corpus regression" -f branch=1065-go-proxy-fetch-bounds`). Watch it **by run ID**, since dispatched runs are recorded under `main`. Expect every target to pass with no golden change (SC-005, R7). If any golden changes, stop and attribute it before regenerating.
-- [ ] T026 Open the PR (closes #853; references #1110). After merge, run `cargo clean`.
+- [ ] T024 Update C111's row in `docs/reference/sbom-format-mapping.md`: add `proxy-unreachable` and `proxy-fetch-budget-exhausted` to the code vocabulary with their C110 values (contract), and note that entry labels never include credentials. Reference m1065 (#853).
+- [ ] T025 [P] Add an Unreleased entry to `CHANGELOG.md`. Cover the breaker, the 60 s budget, the two C111 codes, and the end of a dead proxy reporting `complete`. Note the test-only env var is not an operator setting.
+- [ ] T026 Run `./scripts/pre-pr.sh > /tmp/prepr.log 2>&1; echo EXIT=$?`. Require `EXIT=0`, the `>>> all pre-PR checks passed.` line, and no `test result` line without ` 0 failed`.
+- [ ] T027 Push. Dispatch a read-only public-corpus run (`gh workflow run "Public corpus regression" -f branch=1065-go-proxy-fetch-bounds`). Watch it **by run ID**, since dispatched runs are recorded under `main`. Expect every target to pass with no golden change (SC-005, R7). If any golden changes, stop and attribute it before regenerating.
+- [ ] T028 Open the PR (closes #853; references #1110). After merge, run `cargo clean`.
 
 ## Dependencies & Execution Order
 
@@ -114,7 +121,7 @@ Paths are relative to the repository root. `golang/` means `waybill-cli/src/scan
 - **Phase 2:** T002 (`proxy_fetch.rs`) ∥ T003–T005 (`graph_resolver.rs`); T006 after T005.
 - **US1:** T007, T008 and T009 are separate test functions in one file. Write them together, then T010 in its own file.
 - **US2:** T014 ∥ T015; T016 in the separate integration file.
-- **Polish:** T022 ∥ T023.
+- **Polish:** T024 ∥ T025.
 
 ## Implementation Strategy
 

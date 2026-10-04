@@ -91,7 +91,9 @@ A healthy proxy that serves everything, or a scan that finishes within the budge
 
 **Circuit breaker:**
 
-- **FR-001**: When every attempt in the first full batch against a proxy chain entry fails at the network level (connection refused or unreachable, timeout, DNS failure, TLS failure), waybill MUST stop sending requests to that entry for the rest of the scan. Any HTTP response from the entry, whatever its status, MUST keep it in use.
+- **FR-001**: When a proxy chain entry has failed at the network level (connection refused or unreachable, timeout, DNS failure, TLS failure) for as many consecutive attempts as the fetch concurrency (16), and has never returned an HTTP response in this scan, waybill MUST stop sending requests to that entry for the rest of the scan.
+  - An entry that has returned any HTTP response, whatever its status, MUST never trip.
+  - A trip is final for the scan. A response arriving afterwards from a request already in flight is used for its own module but does not reverse the trip.
 - **FR-002**: A tripped entry MUST be treated as if it had failed for every module not yet attempted, following the chain's existing fall-through rules (`|` falls through, `,` does not).
 
 **Time budget:**
@@ -101,14 +103,18 @@ A healthy proxy that serves everything, or a scan that finishes within the budge
 
 **Outcome and reporting:**
 
-- **FR-005**: Modules not fetched because of either bound MUST still be resolved by the go.sum fallback exactly as a failed fetch is today, and MUST appear in the document with their go.sum edges. No Go component may be lost.
+- **FR-005**: Modules not fetched because of either bound MUST still be resolved by the go.sum fallback exactly as a failed fetch is today. They MUST appear in the document with their go.sum edges and with the same per-component annotations a failed fetch gets (C108 `go-sum-fallback`). No Go component may be lost, and this feature MUST NOT add a per-component annotation.
 - **FR-006**: When either bound trips:
   - `waybill:go-transitive-coverage` (C110) MUST be `unknown` after a breaker trip (waybill could not ask the proxy, as with `--offline`). It MUST be `partial` after budget exhaustion alone (waybill asked and ran out of time). If both trip, `unknown` wins;
   - `waybill:go-transitive-coverage-reason` (C111) MUST name the cause, by extending C111's closed-but-extensible code vocabulary with one code per bound;
-  - the reason MUST state the number of modules the bound covered.
-- **FR-006a**: Modules skipped by a bound MUST carry the same per-component annotations as a module whose fetch failed today (C108 `go-sum-fallback`). This feature MUST NOT add a per-component annotation.
+  - the reason MUST state the number of modules the bound covered;
+  - a proxy entry MUST be named as `scheme://host[:port]` only. Userinfo (credentials), path and query MUST NOT appear in C111.
 - **FR-007**: The C111 reason MUST be identical across CycloneDX, SPDX 2.3 and SPDX 3 (existing parity row).
-- **FR-008**: A scan that trips the breaker MUST emit one warning naming the proxy entry, the failure class and the number of modules handed to the go.sum fallback.
+- **FR-008**: Warnings, emitted once per scan after every workspace has been resolved:
+  - one per tripped entry, naming the entry, the failure class and the number of modules handed to the go.sum fallback;
+  - one if the budget was exhausted, naming the budget and the number of modules not attempted.
+
+  Entries are named as in FR-006, never with credentials, path or query.
 - **FR-009**: A scan in which no bound trips MUST produce byte-identical output to the output before this feature (US3).
 - **FR-010**: This feature MUST NOT change how ordinary per-module failures (404/410, 4xx, 5xx) are reported when no bound trips. Today such scans report `complete` with a fallback count; that stays as it is (see Assumptions).
 
@@ -133,7 +139,8 @@ A healthy proxy that serves everything, or a scan that finishes within the budge
 
 - **Scope:** only the proxy-fetch step changes. `go mod graph`, the module-cache walk, the go.sum fallback itself, and per-module 404 handling are unchanged.
 - **Accepted inaccuracy left alone:** today a scan where every module 404s individually reports `complete` coverage. Correcting that is a separate decision about what `complete` means when topology came from go.sum. This feature only stops the *new* cut-short case from also hiding behind `complete`.
-- **Breaker trip threshold:** the first full batch, matching the existing 16-way concurrency. The plan may adjust this from measurement (FR-004 applies by analogy).
+- **Breaker trip threshold:** consecutive network-level failures equal to the existing fetch concurrency (16), from an entry that has never responded (FR-001). The first 16 requests start together, so this costs one timeout and no more.
+- **Test-only budget override:** `WAYBILL_GO_PROXY_FETCH_BUDGET_MS`, following m771's `WAYBILL_GO_MOD_WHY_BUDGET_MS`, so budget tests don't take a minute. It is undocumented in `--help` and the CLI reference, and unsupported as an operator setting. This is consistent with Q2.
 - **No operator control of the budget** (clarification Q2). If one is needed later, it belongs in #1042's flag rethink.
 - **Default budget:** chosen in the plan from measurement. The spec fixes the method, not the number, per the repository rule that numbers describing external behaviour must trace to observation.
 - **Mechanism:** reuse the existing shared-budget pattern from the `go mod why` step (m771) rather than inventing one. This is a plan concern; noted so the plan looks there first.

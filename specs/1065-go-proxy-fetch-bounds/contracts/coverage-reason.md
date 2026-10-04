@@ -49,4 +49,4 @@ waybill:go-transitive-coverage-reason = proxy-unreachable: https://corp-proxy.ex
 
 1. No bound tripped means both annotations are byte-identical to the output before this feature (FR-009).
 2. Identical decoded value in CycloneDX, SPDX 2.3 and SPDX 3 (FR-007, existing parity row).
-3. Every module in go.sum is still a component with `waybill:go-transitive-source = go-sum-fallback` (FR-005, FR-006a). No per-component annotation is added.
+3. Every module in go.sum is still a component with `waybill:go-transitive-source = go-sum-fallback` (FR-005). No per-component annotation is added.
