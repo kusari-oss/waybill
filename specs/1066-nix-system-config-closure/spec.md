@@ -88,7 +88,7 @@ A flake with a `packages.<system>.default` (with or without system configuration
 
 **Selecting what to evaluate:**
 
-- **FR-001**: `--nix-closure-attr` MUST accept a full flake output path. A value whose first segment is a top-level flake output name (`packages`, `legacyPackages`, `darwinConfigurations`, `nixosConfigurations`, `homeConfigurations`, or any other top-level output the flake defines) is a full path; any other value keeps today's meaning, a name under `packages.<system>`.
+- **FR-001**: `--nix-closure-attr` MUST accept a full flake output path. A value is a full path when it contains a `.` and its first segment is one of the standard flake output names listed in `contracts/attribute-selection.md` (including `packages`, `legacyPackages`, `darwinConfigurations`, `nixosConfigurations` and `homeConfigurations`). Any other value keeps today's meaning, a name under `packages.<system>`. (Narrowed during planning: a flake's own top-level outputs cannot be listed in pure mode; research R1.)
 - **FR-002**: With no `--nix-closure-attr`, the tier MUST use `packages.<system>.default` when it exists (unchanged). Only when it does not, the tier MUST count the system configurations the flake defines under `darwinConfigurations` and `nixosConfigurations` together:
   - exactly one → evaluate its system output: `darwinConfigurations.<name>.system` or `nixosConfigurations.<name>.config.system.build.toplevel`;
   - none → degrade with `no-evaluable-attribute`, as today;
