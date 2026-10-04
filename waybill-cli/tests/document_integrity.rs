@@ -220,6 +220,19 @@ fn i2_spdx_23_relationship_endpoints_all_exist() {
     }
 }
 
+/// SPDX 3.0.1's own individuals, which the JSON-LD context defines (and
+/// expands to `https://spdx.org/rdf/3.0.1/terms/Core/<name>`): a reference to
+/// one names the vocabulary, not an element the document must contain.
+/// m1069 (#878) depends on `NoAssertionElement` for components whose
+/// dependencies could not be determined.
+fn is_spdx_individual(iri: &str) -> bool {
+    const INDIVIDUALS: [&str; 2] = ["NoAssertionElement", "NoneElement"];
+    let name = iri
+        .strip_prefix("https://spdx.org/rdf/3.0.1/terms/Core/")
+        .unwrap_or(iri);
+    INDIVIDUALS.contains(&name)
+}
+
 /// Invariant I2 in SPDX 3: a relationship `to`/`from` naming no element.
 #[test]
 fn i2_spdx_3_relationship_endpoints_all_exist() {
@@ -241,7 +254,7 @@ fn i2_spdx_3_relationship_endpoints_all_exist() {
             }
             for t in e["to"].as_array().into_iter().flatten() {
                 if let Some(t) = t.as_str() {
-                    if !ids.contains(t) {
+                    if !ids.contains(t) && !is_spdx_individual(t) {
                         bad.push(format!("to={t}"));
                     }
                 }
