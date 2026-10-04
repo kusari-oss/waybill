@@ -275,6 +275,39 @@ this document describes, with the component named as a subcomponent. Both
 carry the evidence grade. A lone `not_affected` would let a consumer
 suppress a real finding on the weaker half of the evidence.
 
+### Where the VEX appears
+
+The same statements reach both output families (milestone 1068):
+
+- **CycloneDX**: natively, in `vulnerabilities[]`, whether or not SPDX is
+  also requested.
+  - **Version statement.** `affected` becomes `analysis.state: exploitable`, with the
+    component's `bom-ref` in `affects[]`.
+  - **Build statement.** `not_affected` becomes `not_affected` / `code_not_present`,
+    with the document root in `affects[]` and the component named in a
+    `waybill:vex-subcomponent` property. Reading the subcomponent as the
+    affected party would turn "this build is not affected" into "this version
+    is not affected", which is the claim the pair exists to keep apart.
+  - **Evidence grade.** `analysis.detail` carries it. No statement is mapped to
+    `resolved_with_pedigree`: a filename-graded patch is not verifiable
+    remediation.
+- **SPDX 2.3 and SPDX 3**: in the OpenVEX sidecar the SPDX document
+  references.
+
+A document that does not contain a statement's component (a `--split`
+document, `--tier`, a root override) does not carry that claim, and counts
+it in `waybill:vex-claims-omitted`. The sidecar still names it by PURL.
+
+```sh
+jq -c '.vulnerabilities[] | {id, state: .analysis.state, affects: [.affects[].ref],
+       sub: [.properties[]? | select(.name=="waybill:vex-subcomponent") | .value]}' out.cdx.json
+```
+
+**An empty `vulnerabilities[]` is not a claim that nothing is vulnerable.**
+It holds only what waybill could observe at scan time. waybill does not match
+components against advisory databases; run a vulnerability scanner over the
+SBOM for that, and use these statements to filter its findings.
+
 ### Coverage, and its limit
 
 The CVE is read out of the patch filename. That is evidence the maintainers

@@ -1,17 +1,19 @@
 //! OpenVEX 0.2.0 JSON sidecar emitter (milestone 010).
 //!
-//! Emitted next to the SPDX 2.3 file when a scan produces VEX
-//! statements. Cross-referenced from the SPDX document via
-//! `externalDocumentRefs` with `SHA256`. Not emitted when the scan
-//! produces no VEX statements (FR-016a).
+//! Emitted next to the SPDX file when a scan produces VEX statements.
+//! Cross-referenced from the SPDX document via `externalDocumentRefs` with
+//! `SHA256`. Not emitted when the scan produces no VEX statements (FR-016a).
 //!
-//! Current status: waybill's scan pipeline doesn't yet populate
-//! `ResolvedComponent.advisories` anywhere — AdvisoryRef exists as
-//! a data-model placeholder only. This emitter is therefore
-//! scaffolding that fires a no-op for every present-day scan. The
-//! moment a future milestone wires advisory discovery (OSV lookup,
-//! NVD feed, etc.), the sidecar starts emitting without any change
-//! to the SPDX serializer or the CLI surface.
+//! Statements come from evidence observed at scan time:
+//! - graded nixpkgs backports (milestone 1035): `affected` for the
+//!   component version, `not_affected` for this build;
+//! - nixpkgs' own security declarations (milestone 1050).
+//!
+//! [`vex_statements`] is the single source for this sidecar and for
+//! CycloneDX `vulnerabilities[]` (milestone 1068). waybill does not match
+//! components against advisory databases (`docs/architecture/enrichment.md`).
+//! `ResolvedComponent.advisories` has no producer; it is read here only so a
+//! future producer flows through both carriers unchanged.
 //!
 //! See [`statements`] for the typed model.
 
@@ -368,11 +370,9 @@ pub(crate) fn vex_statements(artifacts: &ScanArtifacts<'_>) -> Vec<OpenVexStatem
             .collect()
     };
 
-    // One statement per advisory id, products[] deduped within.
-    // `under_investigation` is the status waybill can honestly
-    // emit today — the scanner has discovered the advisory but
-    // hasn't produced an impact analysis. A future milestone's VEX
-    // enrichment pass will widen the status mapping.
+    // One statement per advisory id, products[] deduped within, at
+    // `under_investigation`: an advisory attached to a component says it
+    // may apply, not that it does. Nothing attaches advisories today.
     let statements: Vec<OpenVexStatement> = products_by_advisory
         .into_iter()
         .map(|(id, mut products)| {

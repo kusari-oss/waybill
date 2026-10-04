@@ -196,6 +196,29 @@ methods). Async sources (deps.dev, ClearlyDefined) are called from
 - **Offline mode**: all three network sources short-circuit. Guard rail is
   unaffected; it works off the local component set regardless.
 
+## Vulnerability data
+
+**Decision (milestone 1068, #1039): waybill emits VEX derived from evidence it
+observed at scan time, and does not match components against advisory
+databases.**
+
+**What is emitted:**
+- graded nixpkgs backports (`affected` for the version, `not_affected` for the
+  build);
+- nixpkgs' own security declarations.
+
+Both come from one function (`generate/openvex::vex_statements`) and reach CycloneDX `vulnerabilities[]` and the OpenVEX sidecar alike. Each statement carries the grade of the evidence it rests on.
+
+**Why no matching.** An SBOM is a composition snapshot. A match is a query result against an advisory feed that changes daily. Baked into the document, it is wrong within days, with no way for a reader to tell a stale claim from a current one (the position milestone 1050 took). A VEX statement waybill makes describes the build itself (what was patched, what nixpkgs declared), so it does not go stale when the feed moves.
+
+**Constitution:**
+- **Principle XI** asks for VEX as enrichment "when vulnerability context is available". This is that.
+- **Principle XII** says vulnerability databases MAY be used. This decision declines that MAY; it does not contradict a MUST.
+
+**Consequence for readers.** An empty `vulnerabilities[]` means waybill observed nothing to say, not that nothing applies. Run a vulnerability scanner over the SBOM, and use waybill's statements to filter its findings.
+
+**Revisiting it.** An opt-in advisory source would need its own specification. That specification must start by measuring the source (coverage, identity matching, staleness), per the project's measurement rule. It would also carry the same degradation annotation and offline behaviour as the other network sources here.
+
 ## Provenance
 
 Every enrichment-derived relationship carries an `EnrichmentProvenance`
