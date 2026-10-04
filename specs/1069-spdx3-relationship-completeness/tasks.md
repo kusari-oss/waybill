@@ -111,7 +111,7 @@
   - SPDX 3 consumers counting relationships as edges should count targets;
   - CycloneDX and SPDX 2.3 unchanged.
 - [X] T014 Run `./scripts/pre-pr.sh > /tmp/prepr.log 2>&1; echo EXIT=$?`. Require `EXIT=0`, the walker-audit OK line, the passed line, and no failing `test result`.
-- [ ] T015 Push. Regenerate corpus goldens with two `regen_goldens=true` dispatches (run IDs from the dispatch output).
+- [X] T015 Push. Regenerate corpus goldens with two `regen_goldens=true` dispatches (run IDs from the dispatch output).
   - **Determinism:** `diff -r` the two artifacts.
   - **Scope:** for every target, only `spdx-3.json` may differ. `cdx.json` and `spdx-2.3.json` must be byte-identical.
   - **Allowed changes:** check each `spdx-3.json` with `xtask corpus-diff` and the T010 script.
