@@ -34,11 +34,11 @@ The m1035 closure tier will also evaluate system configurations:
 | III. Fail Closed | ➖ Trace-mode principle (#987). Scan-mode degradations stay as today. |
 | VII. Test isolation | ✅ Fixture flakes have no inputs and need no network; tests skip without `nix`. |
 | IX. Accuracy | ✅ No guessing: a configuration is chosen only when it is the only one, and the hostname is never read (FR-003). |
-| X. Transparency | ⚠️ Degradations stay log-only, a pre-existing gap. Decided in clarification Q3 and tracked in #1115, not widened here. |
+| X / XII.3 Transparency | ✅ Every closure degradation, the new reason included, is recorded in the document as C190 (FR-012). This closes the pre-existing log-only gap (#1115), which analysis found the new reason would otherwise have widened. |
 | XII. External data sources | ✅ Evaluate-only, IFD refused (verification of that refusal is #1114). |
 | Measurement rule (CLAUDE.md) | ✅ Every cost figure is measured (`measurements/`); cold cost included. |
 
-No violations requiring justification. The ⚠️ is a recorded, separately tracked decision.
+No violations.
 
 ## Project Structure
 
@@ -63,8 +63,10 @@ waybill-cli/src/scan_fs/package_db/nix/
 ├── closure/mod.rs     # AttrRequest, classify_attr (R1), select (R2),
 │                      # SystemConfiguration::system_path, resolve() branches
 └── eval/reason.rs     # DegradationReason::AmbiguousSystemConfiguration
-waybill-cli/src/cli/scan_cmd.rs                       # ClosureConfig::from_flags(Option); flag help (FR-007)
-docs/reference/sbom-format-mapping.md                 # C184 attribute text (FR-006/007)
+waybill-cli/src/cli/scan_cmd.rs                       # ClosureConfig::from_flags(Option); flag help (FR-007); C190 value (FR-012)
+waybill-cli/src/generate/                             # carry C190 to the three emitters, as C180
+waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3,mod}.rs  # C190 extractor row
+docs/reference/sbom-format-mapping.md                 # C184 attribute text (FR-006/007); new C190 row (FR-012)
 CHANGELOG.md
 waybill-cli/tests/fixtures/nix_config_closure/{one_darwin,two_configs,package_and_config}/flake.nix
 waybill-cli/tests/nix_config_closure.rs

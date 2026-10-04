@@ -20,8 +20,8 @@ Paths: `closure/` = `waybill-cli/src/scan_fs/package_db/nix/closure/`, `eval/` =
   - `"darwinConfigurations.laptop.system"`, `"nixosConfigurations.web01.config.system.build.toplevel"`, `"packages.x86_64-linux.hello"`, `"homeConfigurations.me.activationPackage"` → `FullPath`;
   - `"darwinConfigurations"` (no `.`) → `PackageName`;
   - `"nixosConfigurations.a b"` and `"packages.x#y"` → `FullPath`, later refused by safety (T004).
-- [ ] T003 [P] Unit tests in `closure/mod.rs` for `select(package_default_present, darwin: Option<Vec<String>>, nixos: Option<Vec<String>>) -> Selection` (contract auto-selection table):
-  - the default is present → `PackageDefault` even with configurations;
+- [ ] T003 [P] Unit tests in `closure/mod.rs` for `select(packages_output_present, darwin: Option<Vec<String>>, nixos: Option<Vec<String>>) -> Selection` (contract auto-selection table; analysis I1):
+  - a `packages` output exists for **any** platform → `PackageDefault` even with configurations, so today's path runs;
   - one darwin → `Configuration(Darwin, n)` with `system_path() == "darwinConfigurations.n.system"`;
   - one nixos → `…config.system.build.toplevel`;
   - one in each → `Degrade(AmbiguousSystemConfiguration)` listing `darwinConfigurations.<a>`, `nixosConfigurations.<b>` sorted;
@@ -42,10 +42,10 @@ Paths: `closure/` = `waybill-cli/src/scan_fs/package_db/nix/closure/`, `eval/` =
 ### Tests for User Story 1
 
 - [ ] T007 [P] [US1] New test file `waybill-cli/tests/nix_config_closure.rs`, gated `#![cfg(unix)]` for the whole file per the repository's memory note on unix-only helpers. Use the stub-`nix` harness pattern from `nix_eval_tier.rs::scan_with_stub_nix`, so it runs in CI without Nix:
-  - the stub logs each argv to a file;
+  - the stub logs each argv to a file. **Any argv it does not recognise exits 1 with a fixed stderr line** (analysis U2), so other tiers' `nix` calls (host detection, the 1050 declarations pass) fail cleanly, and the tests assert only on closure-tier argv;
   - it answers `config show` the way `nix_eval_tier.rs`'s passing stub does (the IFD pre-flight, if reached);
   - `eval --raw --expr builtins.currentSystem` → `aarch64-darwin`;
-  - `eval … --apply builtins.attrNames <root>#packages.aarch64-darwin` → exit 1, "does not provide attribute";
+  - `eval … --apply builtins.attrNames <root>#packages` → exit 1 with the measured message `error: flake '…' does not provide attribute … 'packages'`;
   - `… <root>#darwinConfigurations` → `["laptop"]`;
   - `… <root>#nixosConfigurations` → exit 1;
   - `derivation show -r … <root>#darwinConfigurations.laptop.system` → a minimal one-derivation JSON, copied from an existing closure unit-test fixture.
@@ -62,7 +62,7 @@ Paths: `closure/` = `waybill-cli/src/scan_fs/package_db/nix/closure/`, `eval/` =
 - [ ] T009 [US1] In `closure::resolve` (`closure/mod.rs`), branch on `cfg.attribute`:
   - **`PackageName(n)`:** today's code, unchanged.
   - **`Auto`:**
-    - list `packages.<system>` (today's call). If the call succeeds and the listing contains `default`, take the package path as today, recording `attribute = "default"`.
+    - list `<root>#packages` with `attributes_argv`. If it succeeds (a `packages` output exists for any platform), run today's package path unchanged with `default`, including today's degradation when the host platform lacks it (I1).
     - Otherwise list `<root>#darwinConfigurations` and `<root>#nixosConfigurations` with `attributes_argv`. A failed call counts as `None`; log the stderr head at debug.
     - Call `select`. On `Configuration(c)`, evaluate `format!("{root}#{}", c.system_path())` with `closure_argv` (no `<system>` inserted; R3) and record `attribute = c.system_path()`. On `Degrade(r)`, return `Err(r)`.
   - **`FullPath(p)`:** handled in T013 (US2).
@@ -83,7 +83,7 @@ Paths: `closure/` = `waybill-cli/src/scan_fs/package_db/nix/closure/`, `eval/` =
 - [ ] T011 [P] [US2] In `waybill-cli/tests/nix_config_closure.rs` (stub `nix`):
   - **(a) Several, no path:** two configurations, no path. The scan succeeds; stderr contains `several-system-configurations`, `darwinConfigurations.laptop` and `nixosConfigurations.web01` in that order, and `--nix-closure-attr`. The argv log contains **no** `derivation show`. The document has no C184.
   - **(b) Full path:** `--nix-closure-attr nixosConfigurations.web01.config.system.build.toplevel`. The argv log shows `derivation show` for exactly `…#nixosConfigurations.web01.config.system.build.toplevel` and **no** `packages.<system>` listing. C184 `attribute` is the full path.
-  - **(c) Absent full path:** `--nix-closure-attr darwinConfigurations.nope.system` with the stub failing that path. Degrades `no-evaluable-attribute`.
+  - **(c) Absent full path:** `--nix-closure-attr darwinConfigurations.nope.system`, with the stub failing that path using the measured text `error: flake '…' does not provide attribute 'darwinConfigurations.nope.system'`. Degrades `no-evaluable-attribute`, not `evaluation-failed` (analysis U1).
   - **(d) Unsafe full path:** `--nix-closure-attr "nixosConfigurations.web01#evil"`. No `derivation show` is issued at all, and the scan degrades `no-evaluable-attribute`, with a log line saying the path was refused (R6).
 - [ ] T012 [P] [US2] Real `nix` (skip if absent). Fixture `waybill-cli/tests/fixtures/nix_config_closure/two_configs/flake.nix`: the `one_darwin` shape plus `nixosConfigurations.web01.config.system.build.toplevel = derivation { …; system = "x86_64-linux"; }`. Assert:
   - with no path, the scan degrades with both names listed;
@@ -94,7 +94,7 @@ Paths: `closure/` = `waybill-cli/src/scan_fs/package_db/nix/closure/`, `eval/` =
 - [ ] T013 [US2] `FullPath(p)` branch in `closure::resolve`:
   - if `!is_safe_attribute_name(&p)`, log `nix-closure: refusing unsafe attribute path` and return `Err(NoEvaluableAttribute)`;
   - otherwise evaluate `format!("{root}#{p}")` with `closure_argv` (no listing, no `<system>`);
-  - a failed evaluation whose stderr reports a missing attribute → `NoEvaluableAttribute`; other failures → today's `EvaluationFailed`;
+  - a failed evaluation whose stderr contains `does not provide attribute` (measured Nix 2.34 wording; the existing `attribute`+`missing` check in `eval/invoke.rs:449` does not match it) or the existing pattern → `NoEvaluableAttribute`; other failures → today's `EvaluationFailed`;
   - record `attribute = p`.
 - [ ] T014 [US2] Make sure the degradation log line at `scan_cmd.rs` (around 4636) prints the new reason's detail, so the names reach the operator (FR-008). If it already prints `reason.detail()` (or equivalent), no change. Run T011/T012 to green; show T011(a) fails with `select` changed to pick the first configuration (local edit, reverted).
 
@@ -102,9 +102,27 @@ Paths: `closure/` = `waybill-cli/src/scan_fs/package_db/nix/closure/`, `eval/` =
 
 - [ ] T015 [P] [US3] Stub test in `waybill-cli/tests/nix_config_closure.rs`: `packages.aarch64-darwin` lists `["default","other"]` and a darwin configuration also exists. With no path, the argv log shows `derivation show` for `…#packages.aarch64-darwin.default` and **no** configuration listing. C184 `attribute` is `default`.
 - [ ] T016 [P] [US3] Stub test: an explicit `--nix-closure-attr default` where `packages.<system>` lacks `default` but a configuration exists. It degrades `no-evaluable-attribute` exactly as today and does **not** auto-select (FR-009, R2).
+- [ ] T017a [P] [US3] Stub test for host independence (FR-003, SC-004; analysis C2). Run the one-configuration and the two-configuration stubs twice, with `builtins.currentSystem` answered as `aarch64-darwin` and then `x86_64-linux`. The closure-tier argv (or the degradation) must be identical across the two hosts. Also run the "Linux-only packages plus a darwin configuration" shape (`<root>#packages` → `["x86_64-linux"]`): on both hosts no configuration is listed or selected.
 - [ ] T017 [US3] Real `nix` (skip if absent). Fixture `waybill-cli/tests/fixtures/nix_config_closure/package_and_config/flake.nix` with `packages.<each system>.default` plus one configuration. C184 `attribute` is `default`.
 
-## Phase 6: Polish & Cross-Cutting
+## Phase 6: Transparency — C190 `waybill:nix-closure-degraded` (FR-012; analysis C1, absorbs #1115)
+
+**Goal**: a requested closure that is not recorded leaves a document-scope reason in all three formats, for every reason.
+
+- [ ] T017b [P] Tests in `waybill-cli/tests/nix_config_closure.rs` (stub `nix`; all three formats via `--format cyclonedx-json --format spdx-2.3-json --format spdx-3-json`):
+  - **(a)** several configurations → C190 = `several-system-configurations`, identical in all three formats;
+  - **(b)** no `packages` and no configurations → C190 = `no-evaluable-attribute`;
+  - **(c)** `--offline --nix-closure` → C190 = `offline-requested`;
+  - **(d)** a successful closure (one configuration) → no C190;
+  - **(e)** no `--nix-closure` → no C190.
+- [ ] T017c Thread the value like C180:
+  - compute `nix_closure_degraded: Option<&'static str>` in `waybill-cli/src/cli/scan_cmd.rs` from the closure result (`Some(reason.wire())` iff requested and `Err`), next to `nix_eval_degraded` (around `scan_cmd.rs:4948`);
+  - carry it through the generate context (`waybill-cli/src/generate/mod.rs`, where C180/C184 are carried);
+  - emit it as a document-scope property / annotation in the CycloneDX, SPDX 2.3 and SPDX 3 emitters, exactly where C180 is emitted.
+- [ ] T017d Add parity extractors: `c190_cdx` / `c190_spdx23` / `c190_spdx3` in `waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3}.rs` (the `cdx_anno!`/`spdx23_anno!`/`spdx3_anno!` macros, `document` scope), and the `ParityExtractor { row_id: "C190", label: "waybill:nix-closure-degraded", …, Directionality::SymmetricEqual, order_sensitive: false }` entry in `mod.rs`, next to C180.
+- [ ] T017e Add the C190 row to `docs/reference/sbom-format-mapping.md`, modelled on C180's row and **on one line**. List the closed reason set, and say it is emitted only when `--nix-closure` was requested and no closure was recorded. Check `every_catalog_row_has_an_extractor` and `every_mikebom_emitted_field_has_a_map_row` pass. Run T017b to green.
+
+## Phase 7: Polish & Cross-Cutting
 
 - [ ] T018 [P] Update the `--nix-closure` and `--nix-closure-attr` help text in `waybill-cli/src/cli/scan_cmd.rs` (FR-007):
   - full output paths, the auto-selection rule, and the degradation when several configurations exist;
@@ -112,15 +130,15 @@ Paths: `closure/` = `waybill-cli/src/scan_fs/package_db/nix/closure/`, `eval/` =
 
   Do not change the IFD wording here (#1114 owns it).
 - [ ] T019 [P] Update the C184 row in `docs/reference/sbom-format-mapping.md`: `attribute` may be a full output path, plus the built-from note. Keep the row on **one line**; line breaks inside a table row broke the parity parser in #1111.
-- [ ] T020 [P] Add an Unreleased entry to `CHANGELOG.md`: system-configuration closures, auto-selection, full paths, the new log-only reason, and the narrowed FR-001 rule (the standard output names).
+- [ ] T020 [P] Add an Unreleased entry to `CHANGELOG.md`: system-configuration closures, auto-selection (only for flakes with no `packages` output), full paths, the new reason, C190 for every closure degradation (#1115), and the narrowed FR-001 rule (the standard output names).
 - [ ] T021 Run `./scripts/pre-pr.sh > /tmp/prepr.log 2>&1; echo EXIT=$?`. Require `EXIT=0`, `Walker-audit allow-list check: OK`, the passed line, and no failing `test result`.
 - [ ] T022 Push. Dispatch the read-only public-corpus run. Take the run ID from the dispatch output (`gh workflow run … 2>&1 | grep -o 'runs/[0-9]*'`), never from a branch filter. Expect no golden change, including `nix-closure-moat` (SC-005).
 - [ ] T023 Run quickstart §1–§3 with real `nix`, and §4 (`measurements/probe_config_closure.sh`) once to confirm SC-002 end to end with the built binary. Append the results to `measurements/README.md`.
-- [ ] T024 Open the PR (closes #1052; references #1114, #1115), merge when green, then run `cargo clean`.
+- [ ] T024 Open the PR (closes #1052 and #1115; references #1114). The PR checklist notes FR-010: no new flag. Merge when green, then run `cargo clean`.
 
 ## Dependencies & Execution Order
 
-- **Phase order:** Phase 1 → Phase 2 (T002–T006) → US1 (T007–T010) → US2 (T011–T014) → US3 (T015–T017) → Polish.
+- **Phase order:** Phase 1 → Phase 2 (T002–T006) → US1 (T007–T010) → US2 (T011–T014) → US3 (T015–T017a) → Transparency (T017b–T017e) → Polish.
 - **Shared code:** US1 and US2 both edit `closure::resolve`, so they run sequentially. US3 adds tests only, plus verification of the unchanged path.
 - **Within each story:** tests first, failing; then the implementation.
 

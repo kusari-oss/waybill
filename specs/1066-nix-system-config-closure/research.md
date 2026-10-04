@@ -24,7 +24,11 @@ Any other value keeps today's meaning, a name under `packages.<system>`.
 
 ## R2 — Counting configurations (FR-002)
 
-**Decision:** only when no `--nix-closure-attr` was given, and the existing `packages.<system>` listing failed or lacks `default`, run:
+**Analysis correction (I1):** gating on "`packages.<system>.default` absent" made the package-or-configuration choice depend on the host's platform. A flake with Linux-only packages plus a darwin configuration chose differently on Linux and on a Mac, which contradicts FR-003.
+
+**Measured:** `nix eval --json --apply builtins.attrNames <root>#packages` returns the flake's platforms (`["x86_64-linux"]` on an `aarch64-darwin` host) and fails when the output is absent.
+
+**Decision:** only when no `--nix-closure-attr` was given **and the flake has no `packages` output for any platform**, run:
 
 ```
 nix eval --json --option allow-import-from-derivation false --apply builtins.attrNames <root>#darwinConfigurations
@@ -60,7 +64,17 @@ nix eval --json --option allow-import-from-derivation false --apply builtins.att
 **Decision:**
 - A new `DegradationReason::AmbiguousSystemConfiguration(Vec<String>)`, with wire code `several-system-configurations`.
 - Its log message lists qualified names sorted (`darwinConfigurations.laptop`, `nixosConfigurations.web01`) and how to choose one: `--nix-closure-attr nixosConfigurations.web01.config.system.build.toplevel`.
-- Log-only, like every closure degradation (Q3; #1115).
+- Logged, and recorded in the document as C190 (FR-012; Q3 reversed during analysis, absorbing #1115).
+
+## R9 — Document-level degradation (FR-012, C190)
+
+**Decision:**
+- A new document-scope `waybill:nix-closure-degraded`, catalogue row C190, value `DegradationReason::wire()`. Same shape and plumbing as C180 `waybill:nix-eval-degraded`: computed in `scan_cmd.rs` from the closure result and passed through the generate context to the three emitters, with a parity extractor row (`SymmetricEqual`).
+- Emitted iff `--nix-closure` was requested and the result is a degradation, including `offline-requested` from admission.
+- **Unaffected by construction:**
+  - scans without the flag get no annotation;
+  - successful closures are unchanged;
+  - the corpus target `nix-closure-moat` succeeds, so its goldens are unchanged.
 
 ## R6 — Safety of a full path
 

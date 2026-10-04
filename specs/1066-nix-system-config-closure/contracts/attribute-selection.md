@@ -14,8 +14,8 @@ Standard output names: `packages`, `legacyPackages`, `checks`, `devShells`, `app
 
 ## Auto-selection (no `--nix-closure-attr`)
 
-1. `packages.<system>` lists `default` → evaluate `packages.<system>.default`. Unchanged.
-2. Otherwise, list `darwinConfigurations` and `nixosConfigurations`. An absent output counts as zero entries. Names failing the safety rule are dropped, with a log line.
+1. The flake has a `packages` output for any platform (`nix eval --apply builtins.attrNames <root>#packages` succeeds) → today's path, unchanged: `packages.<system>.default`, degrading as today when the host's platform lacks it. Host-independent: the listing returns the flake's platforms, not the host's (measured).
+2. Otherwise (no `packages` output at all), list `darwinConfigurations` and `nixosConfigurations`. An absent output counts as zero entries. Names failing the safety rule are dropped, with a log line.
 3. Count the names across both:
 
 | count | outcome |
@@ -33,7 +33,7 @@ No host property (hostname, user, platform) takes part in the choice.
 - **C184 `attribute`:**
   - the bare name for package closures selected by name (unchanged; `default` when auto-selected);
   - the full path otherwise (`darwinConfigurations.laptop.system`, …).
-- **Degradations stay log-only** (#1115).
+- **Degradations:** logged, and recorded in the document as C190 `waybill:nix-closure-degraded` (value: the reason code) whenever `--nix-closure` was requested and no closure was recorded (FR-012).
 
 ## Examples
 

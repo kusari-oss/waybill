@@ -24,7 +24,7 @@ The build closure is about 4× milestone 1035's largest measured package closure
 
 - Q: How should waybill pick which system configuration to scan when a flake defines several? → A: `--nix-closure-attr` accepts a full output path (e.g. `darwinConfigurations.laptop.system`). When no path is given and the flake defines exactly one system configuration, it is selected automatically. With several and no path, the tier degrades with a reason listing their names. No new flag; the machine's hostname is never consulted.
 - Q: Which closure should a system-configuration scan describe? → A: The build closure, by the same evaluate-only approach as package closures (nothing is built, so it works on any machine and in CI). It is labelled as what it is: a build-closure inventory of the configuration, not a list of what is installed on a running machine.
-- Q: Should the several-configurations degradation be visible in the SBOM itself? → A: No, log only, like every other closure-tier degradation today. Document-level visibility for all closure degradations is tracked separately in #1115.
+- Q: Should the several-configurations degradation be visible in the SBOM itself? → A: First answered "log only" (deferring to #1115). **Reversed during analysis (2026-10-04)**: Constitution XII.3 requires transparency annotations noting missing enrichment when an external source degrades, so a new log-only case would add a violation. This feature therefore takes over #1115: a document-scope annotation records why a requested closure was not taken, for every reason, including the new one.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -89,7 +89,7 @@ A flake with a `packages.<system>.default` (with or without system configuration
 **Selecting what to evaluate:**
 
 - **FR-001**: `--nix-closure-attr` MUST accept a full flake output path. A value is a full path when it contains a `.` and its first segment is one of the standard flake output names listed in `contracts/attribute-selection.md` (including `packages`, `legacyPackages`, `darwinConfigurations`, `nixosConfigurations` and `homeConfigurations`). Any other value keeps today's meaning, a name under `packages.<system>`. (Narrowed during planning: a flake's own top-level outputs cannot be listed in pure mode; research R1.)
-- **FR-002**: With no `--nix-closure-attr`, the tier MUST use `packages.<system>.default` when it exists (unchanged). Only when it does not, the tier MUST count the system configurations the flake defines under `darwinConfigurations` and `nixosConfigurations` together:
+- **FR-002**: With no `--nix-closure-attr`, a flake that defines a `packages` output for **any** platform MUST be handled exactly as today (`packages.<system>.default`, degrading as today when the host's platform has none). Only a flake with **no `packages` output at all** MUST have its system configurations counted, across `darwinConfigurations` and `nixosConfigurations` together. The rule is decided from the flake's own outputs, not the host's platform, so the package-or-configuration choice is the same on every machine (FR-003):
   - exactly one → evaluate its system output: `darwinConfigurations.<name>.system` or `nixosConfigurations.<name>.config.system.build.toplevel`;
   - none → degrade with `no-evaluable-attribute`, as today;
   - more than one → degrade, naming every configuration and how to choose one with `--nix-closure-attr`.
@@ -104,11 +104,19 @@ A flake with a `packages.<system>.default` (with or without system configuration
 
 **Degradation:**
 
-- **FR-008**: The several-configurations degradation MUST use a reason distinct from `no-evaluable-attribute`, because the remedy differs: name one versus fix the flake. Its message MUST list the configuration names in a stable (sorted) order. Like every closure-tier degradation today, it is reported in the log only; it adds nothing to the document (#1115 tracks document-level visibility for all reasons).
+- **FR-008**: The several-configurations degradation MUST use a reason distinct from `no-evaluable-attribute`, because the remedy differs: name one versus fix the flake. Its message MUST list the configuration names in a stable (sorted) order. It is reported in the log and in the document (FR-012).
+
+**Safety:**
+
+- **FR-011**: A full path from `--nix-closure-attr`, and every configuration name read from the flake, MUST consist only of ASCII letters, digits, `.`, `_` and `-` before it reaches `nix`. An unsafe full path MUST degrade as `no-evaluable-attribute`, with a log line saying it was refused. Unsafe configuration names MUST be dropped from the count, with a log line.
+
+**Transparency (Constitution XII.3, X):**
+
+- **FR-012**: Whenever `--nix-closure` was requested and no closure was recorded, the document MUST carry a document-scope `waybill:nix-closure-degraded` annotation (catalogue row C190) whose value is the degradation reason code. That covers every reason, including the new `several-system-configurations`. The annotation MUST be absent when the flag was not given or a closure was recorded, and identical in CycloneDX, SPDX 2.3 and SPDX 3. It mirrors C180 `waybill:nix-eval-degraded`. (Absorbs #1115.)
 
 **Unchanged:**
 
-- **FR-009**: Every scan that evaluated a package closure before this feature MUST produce byte-identical output, and every scan that degraded for a reason other than "no packages output" MUST degrade identically.
+- **FR-009**: Every scan that evaluated a package closure before this feature MUST produce byte-identical output. Every scan that did not request `--nix-closure` MUST be byte-identical. A scan that requested it and degraded MUST differ only by gaining C190 (FR-012).
 - **FR-010**: No new command-line flag.
 
 ### Key Entities
@@ -124,7 +132,8 @@ A flake with a `packages.<system>.default` (with or without system configuration
 - **SC-002**: On a real nix-darwin system flake, the closure is recorded within the tier's existing budget. The measured build closure of 5,325 derivations enumerated in 1.24 s warm; the end-to-end scan is reported as a measurement in the plan, not predicted here.
 - **SC-003**: For a flake with several configurations, 100% of runs without a path degrade with a message naming every configuration. 0% pick one.
 - **SC-004**: The same flake and flags select the same configuration on two machines with different hostnames (verified by a test that varies the host's reported name, or by construction where no host property is read).
-- **SC-005**: All existing closure tests, in-repo goldens and public-corpus goldens are byte-identical (FR-009).
+- **SC-005**: All existing closure tests, in-repo goldens and public-corpus goldens are byte-identical (FR-009): none of them records a degraded closure.
+- **SC-006**: In 100% of scans where `--nix-closure` was requested and no closure was recorded, all three formats carry C190 with the same reason code; in 0% of other scans does C190 appear.
 
 ## Assumptions
 
@@ -133,5 +142,4 @@ A flake with a `packages.<system>.default` (with or without system configuration
 - **Root component**: unchanged. As today, closure components supplement the manifest-derived set; this feature does not create a "machine" root component.
 - **Runtime closure is out of scope** (clarification Q2). It requires the system to be realised, which this tier never does.
 - **IFD verification** for this tier is tracked separately in #1114. This feature relies on whatever that issue settles and does not change it.
-- **Closure-tier degradations stay log-only** in this feature (clarification Q3; #1115).
 - **Cold-store cost** is not yet measured. The plan measures it on a fresh store before committing any number to a test.
