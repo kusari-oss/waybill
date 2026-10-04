@@ -99,7 +99,7 @@
   - **Review** the `git diff` on `waybill-cli/tests/fixtures/golden/spdx-3/`, checked by a small script: `jq` over old and new with `dependsOn` relationships and the document namespace removed must be identical.
   - **Allowed changes:** dependency relationships regrouped, `completeness` added, `NoAssertionElement` relationships added, and the document namespace/IRI hash if it covers element ids.
   - **Unchanged:** CycloneDX and SPDX 2.3 goldens (`cdx_regression`, `spdx_regression` pass untouched).
-- [ ] T011 [US3] Fix tests that assumed one relationship per edge: those indexing `to[0]` or counting `dependsOn` relationships as edges (candidates from research R7: `tests/document_integrity.rs`, `tests/identifiers_root_component_override.rs`, `tests/ipk_m190_parity.rs`, `tests/supplement_cdx_integration.rs`, `tests/pants_coursier_jvm_reader.rs`, `tests/corpus_harness_195/*`). Change only the counting, so each still checks the same edges. Found by running the full suite.
+- [X] T011 [US3] Fix tests that assumed one relationship per edge: those indexing `to[0]` or counting `dependsOn` relationships as edges (candidates from research R7: `tests/document_integrity.rs`, `tests/identifiers_root_component_override.rs`, `tests/ipk_m190_parity.rs`, `tests/supplement_cdx_integration.rs`, `tests/pants_coursier_jvm_reader.rs`, `tests/corpus_harness_195/*`). Change only the counting, so each still checks the same edges. Found by running the full suite.
 
 ## Phase 6: Polish & Cross-Cutting
 
@@ -110,7 +110,7 @@
   - `NoAssertionElement` for unknown dependencies;
   - SPDX 3 consumers counting relationships as edges should count targets;
   - CycloneDX and SPDX 2.3 unchanged.
-- [ ] T014 Run `./scripts/pre-pr.sh > /tmp/prepr.log 2>&1; echo EXIT=$?`. Require `EXIT=0`, the walker-audit OK line, the passed line, and no failing `test result`.
+- [X] T014 Run `./scripts/pre-pr.sh > /tmp/prepr.log 2>&1; echo EXIT=$?`. Require `EXIT=0`, the walker-audit OK line, the passed line, and no failing `test result`.
 - [ ] T015 Push. Regenerate corpus goldens with two `regen_goldens=true` dispatches (run IDs from the dispatch output).
   - **Determinism:** `diff -r` the two artifacts.
   - **Scope:** for every target, only `spdx-3.json` may differ. `cdx.json` and `spdx-2.3.json` must be byte-identical.
