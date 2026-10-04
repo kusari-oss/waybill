@@ -1,21 +1,24 @@
 //! OpenVEX 0.2.0 JSON sidecar emitter (milestone 010).
 //!
-//! Emitted next to the SPDX 2.3 file when a scan produces VEX
-//! statements. Cross-referenced from the SPDX document via
-//! `externalDocumentRefs` with `SHA256`. Not emitted when the scan
-//! produces no VEX statements (FR-016a).
+//! Emitted next to the SPDX file when a scan produces VEX statements.
+//! Cross-referenced from the SPDX document via `externalDocumentRefs` with
+//! `SHA256`. Not emitted when the scan produces no VEX statements (FR-016a).
 //!
-//! Current status: waybill's scan pipeline doesn't yet populate
-//! `ResolvedComponent.advisories` anywhere — AdvisoryRef exists as
-//! a data-model placeholder only. This emitter is therefore
-//! scaffolding that fires a no-op for every present-day scan. The
-//! moment a future milestone wires advisory discovery (OSV lookup,
-//! NVD feed, etc.), the sidecar starts emitting without any change
-//! to the SPDX serializer or the CLI surface.
+//! Statements come from evidence observed at scan time:
+//! - graded nixpkgs backports (milestone 1035): `affected` for the
+//!   component version, `not_affected` for this build;
+//! - nixpkgs' own security declarations (milestone 1050).
+//!
+//! [`vex_statements`] is the single source for this sidecar and for
+//! CycloneDX `vulnerabilities[]` (milestone 1068). waybill does not match
+//! components against advisory databases (`docs/architecture/enrichment.md`).
+//! `ResolvedComponent.advisories` has no producer; it is read here only so a
+//! future producer flows through both carriers unchanged.
 //!
 //! See [`statements`] for the typed model.
 
 pub mod statements;
+pub(crate) mod claims;
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;
@@ -265,16 +268,15 @@ fn backport_statements(artifacts: &ScanArtifacts<'_>) -> Vec<OpenVexStatement> {
     out
 }
 
-/// Build the OpenVEX sidecar for a scan. Returns `Ok(None)` when the
-/// scan has zero advisories across every component — no file is
-/// then written and the SPDX serializer skips the
-/// `externalDocumentRefs` entry.
 use crate::scan_fs::package_db::nix::declarations::ANN_NIXPKGS_DECLARATION;
 
-pub fn serialize_openvex(
-    artifacts: &ScanArtifacts<'_>,
-    cfg: &OutputConfig,
-) -> anyhow::Result<Option<EmittedArtifact>> {
+/// Every VEX statement waybill makes about a scan, in emission order.
+///
+/// Milestone 1068 (#1039): the single source for both carriers — the OpenVEX
+/// sidecar beside SPDX, and CycloneDX `vulnerabilities[]`. Built once per
+/// document from that document's artifacts, so the two formats cannot
+/// disagree about which statements exist.
+pub(crate) fn vex_statements(artifacts: &ScanArtifacts<'_>) -> Vec<OpenVexStatement> {
     // Group advisories by id so one CVE that affects three
     // components emits one statement with three products[] — the
     // OpenVEX idiom, not three separate statements.
@@ -368,15 +370,9 @@ pub fn serialize_openvex(
             .collect()
     };
 
-    if products_by_advisory.is_empty() && backport.is_empty() && declared.is_empty() {
-        return Ok(None);
-    }
-
-    // One statement per advisory id, products[] deduped within.
-    // `under_investigation` is the status waybill can honestly
-    // emit today — the scanner has discovered the advisory but
-    // hasn't produced an impact analysis. A future milestone's VEX
-    // enrichment pass will widen the status mapping.
+    // One statement per advisory id, products[] deduped within, at
+    // `under_investigation`: an advisory attached to a component says it
+    // may apply, not that it does. Nothing attaches advisories today.
     let statements: Vec<OpenVexStatement> = products_by_advisory
         .into_iter()
         .map(|(id, mut products)| {
@@ -396,8 +392,20 @@ pub fn serialize_openvex(
             }
         })
         .collect();
-    let statements: Vec<OpenVexStatement> =
-        statements.into_iter().chain(backport).chain(declared).collect();
+    statements.into_iter().chain(backport).chain(declared).collect()
+}
+
+/// Build the OpenVEX sidecar for a scan. Returns `Ok(None)` when the scan
+/// makes no VEX statement — no file is then written and the SPDX serializer
+/// skips the `externalDocumentRefs` entry.
+pub fn serialize_openvex(
+    artifacts: &ScanArtifacts<'_>,
+    cfg: &OutputConfig,
+) -> anyhow::Result<Option<EmittedArtifact>> {
+    let statements = vex_statements(artifacts);
+    if statements.is_empty() {
+        return Ok(None);
+    }
 
     let author = format!("waybill-{}", cfg.mikebom_version);
     let timestamp = cfg
@@ -450,7 +458,7 @@ fn derive_openvex_id(artifacts: &ScanArtifacts<'_>, mikebom_version: &str) -> St
 
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
-mod tests {
+pub(crate) mod tests {
     use super::*;
     use waybill_common::attestation::integrity::TraceIntegrity;
     use waybill_common::attestation::metadata::GenerationContext;
@@ -459,7 +467,7 @@ mod tests {
     };
     use waybill_common::types::purl::Purl;
 
-    fn mk_component(purl: &str) -> ResolvedComponent {
+    pub(crate) fn mk_component(purl: &str) -> ResolvedComponent {
         ResolvedComponent {
             build_inclusion: None,
             purl: Purl::new(purl).unwrap(),
@@ -502,7 +510,7 @@ mod tests {
         }
     }
 
-    fn empty_integrity() -> TraceIntegrity {
+    pub(crate) fn empty_integrity() -> TraceIntegrity {
         TraceIntegrity {
             ring_buffer_overflows: 0,
             events_dropped: 0,
@@ -515,7 +523,7 @@ mod tests {
         }
     }
 
-    fn mk_cfg() -> OutputConfig {
+    pub(crate) fn mk_cfg() -> OutputConfig {
         OutputConfig {
             mikebom_version: "0.0.0-test",
             created: chrono::DateTime::parse_from_rfc3339("2026-01-01T00:00:00Z")
@@ -525,7 +533,7 @@ mod tests {
         }
     }
 
-    fn mk_artifacts<'a>(
+    pub(crate) fn mk_artifacts<'a>(
         comps: &'a [ResolvedComponent],
         integ: &'a TraceIntegrity,
     ) -> ScanArtifacts<'a> {
@@ -606,7 +614,7 @@ mod tests {
 
     /// A closure-derived component applying one CVE-named patch, plus the
     /// root the `not_affected` half is about.
-    fn backport_scan() -> Vec<ResolvedComponent> {
+    pub(crate) fn backport_scan() -> Vec<ResolvedComponent> {
         let mut patched = mk_component("pkg:generic/unzip@6.0");
         patched.extra_annotations.insert(
             crate::scan_fs::package_db::nix::closure::emit::ANN_CLOSURE_PATCHES
@@ -642,7 +650,7 @@ mod tests {
     /// resolves declarations against plain nixpkgs, so a fixture's own
     /// packages resolve to nothing and could not exercise this at all
     /// (research R8). The shapes below are what the spec constrains.
-    fn declared_summary(
+    pub(crate) fn declared_summary(
         findings: &[(&str, &str, &str)],
     ) -> crate::scan_fs::package_db::nix::declarations::NixpkgsSecuritySummary {
         use crate::scan_fs::package_db::nix::declarations::{
@@ -767,7 +775,7 @@ mod tests {
 
     /// A component both patched and declared. Carries the milestone-1035
     /// patch annotation *and* appears in the declaration findings.
-    fn contested_scan() -> (Vec<ResolvedComponent>, crate::scan_fs::package_db::nix::declarations::NixpkgsSecuritySummary) {
+    pub(crate) fn contested_scan() -> (Vec<ResolvedComponent>, crate::scan_fs::package_db::nix::declarations::NixpkgsSecuritySummary) {
         use crate::scan_fs::package_db::nix::closure::emit::ANN_CLOSURE_PATCHES;
         let mut patched = mk_component("pkg:generic/unzip@6.0");
         patched.extra_annotations.insert(

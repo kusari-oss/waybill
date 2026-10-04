@@ -560,6 +560,16 @@ fn push_document_fields(
     }
 
     // C192 (m1067, #1058) — counted over the packages this document emits.
+    // C193 (m1068, #1039) — VEX claims whose component is not in this
+    // document. The sidecar still names them by PURL.
+    let omitted = crate::generate::openvex::claims::omitted_claims(
+        &crate::generate::openvex::vex_statements(scan),
+        scan.components,
+    );
+    if omitted > 0 {
+        push(out, "waybill:vex-claims-omitted", json!(omitted.to_string()));
+    }
+
     if scan.deps_dev_online {
         if let Some(v) = crate::enrich::deps_dev_outcome::document_value(scan.components) {
             push(out, "waybill:deps-dev-outcomes", json!(v));

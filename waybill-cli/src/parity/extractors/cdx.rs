@@ -985,6 +985,7 @@ cdx_anno!(c188_cdx, "waybill:nixpkgs-security", document);
 cdx_anno!(c189_cdx, "waybill:nixpkgs-declaration-grade", document);
 cdx_anno!(c191_cdx, "waybill:deps-dev-outcome", component);
 cdx_anno!(c192_cdx, "waybill:deps-dev-outcomes", document);
+cdx_anno!(c193_cdx, "waybill:vex-claims-omitted", document);
 
 /// C185 — the patches a closure member applies.
 ///
@@ -1183,11 +1184,21 @@ pub(super) fn e1_cdx(doc: &Value) -> BTreeSet<String> {
 // Section F — VEX (F1)
 // ============================================================
 
+/// m1068 (#1039): presence, as the SPDX side can only observe presence — a
+/// parity extractor sees one document, and the SPDX statements live in the
+/// sidecar. Present when the document carries an entry, or counted a VEX
+/// claim it could not carry (C193). Statement-level equality between the two
+/// carriers is enforced by `generate::cyclonedx::vex` tests.
 pub(super) fn f1_cdx(doc: &Value) -> BTreeSet<String> {
-    doc.get("vulnerabilities")
+    let carries = doc
+        .get("vulnerabilities")
         .and_then(|v| v.as_array())
-        .map(|arr| arr.iter().filter_map(|v| v.get("id")).filter_map(|v| v.as_str()).map(String::from).collect())
-        .unwrap_or_default()
+        .is_some_and(|arr| !arr.is_empty());
+    if carries || !c193_cdx(doc).is_empty() {
+        BTreeSet::from([super::VEX_PRESENT.to_string()])
+    } else {
+        BTreeSet::new()
+    }
 }
 
 // ============================================================
