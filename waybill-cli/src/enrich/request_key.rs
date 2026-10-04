@@ -19,10 +19,9 @@ use super::deps_dev_system::{deps_dev_package_name, deps_dev_system_for};
 /// Milestone 1067 (#1058, US2) — a version string waybill synthesises when
 /// it has none, which no registry publishes.
 ///
-/// Its own set, not the distribution-URL guard's in `scan_fs`: that one
-/// guards derived URLs, a different output, and moving it would move
-/// goldens this feature must not touch. `0.0.0` is excluded because it
-/// is a real published version of some packages (npm).
+/// Used both to skip deps.dev lookups and, since #1119, by the
+/// distribution-URL guard in `scan_fs`. `0.0.0` is excluded because it is
+/// a real published version of some packages (npm).
 pub(crate) fn is_placeholder_version(v: &str) -> bool {
     const PLACEHOLDERS: [&str; 7] = [
         "",

@@ -879,6 +879,13 @@ pub async fn enrich_components(
     );
     let fetched = source.fetch_results(&keys, &mut progress).await;
     let mut matched = 0usize;
+    // #1118: this pass's failed lookups, for the wholly-unavailable check.
+    // The source's transport-error counter is cumulative across passes,
+    // and a failure the in-memory cache replays never increments it.
+    let failed = fetched
+        .iter()
+        .filter(|r| matches!(r, LookupResult::Failed))
+        .count();
 
     for ((idx, key), result) in planned.into_iter().zip(fetched) {
         let component = &mut components[idx];
@@ -953,7 +960,6 @@ pub async fn enrich_components(
     // deliberately not invented. Surfaced in the log for now; the
     // document-scope SBOM annotation lands with T008, which needs the
     // record threaded through the emission pipeline.
-    let transport_errors = source.transport_errors.load(Ordering::Relaxed);
     let mut degradation = DegradationRecord::new();
     if source.batch_fallbacks.load(Ordering::Relaxed) > 0 {
         degradation.record(DegradationMode::BatchUnavailable);
@@ -965,7 +971,7 @@ pub async fn enrich_components(
     if source.throttle_errors.load(Ordering::Relaxed) > 0 {
         degradation.record(DegradationMode::Throttled);
     }
-    if attempted > 0 && transport_errors >= attempted {
+    if attempted > 0 && failed == attempted {
         degradation.record(DegradationMode::WhollyUnavailable);
         degradation.add_unenriched(attempted);
     }
@@ -974,9 +980,9 @@ pub async fn enrich_components(
             degradation = %value,
             "deps.dev enrichment degraded — SBOM emitted with reduced enrichment"
         );
-    } else if transport_errors > 0 {
+    } else if failed > 0 {
         debug!(
-            transport_errors,
+            failed,
             attempted,
             "deps.dev enrichment saw transport errors but completed",
         );
@@ -2601,6 +2607,38 @@ mod outcome_tests {
             .collect();
         assert_eq!(paths.len(), 1, "only 0.0.0 was queried: {paths:?}");
         assert!(paths[0].ends_with("/versions/0.0.0"), "{paths:?}");
+    }
+
+    /// #1118: "wholly unavailable" describes one pass. Failures in the
+    /// initial pass must not make a healthy post-graph pass look down.
+    #[tokio::test]
+    async fn wholly_unavailable_is_judged_per_pass() {
+        let wholly = |d: &DegradationRecord| {
+            d.annotation_value().is_some_and(|v| v.contains("wholly-unavailable"))
+        };
+        let server = MockServer::start().await;
+        get(&server, "a", 500, &[]).await;
+        get(&server, "b", 500, &[]).await;
+        get(&server, "c", 200, &["MIT"]).await;
+        get(&server, "d", 500, &[]).await;
+        let s = source(&server, false, false);
+
+        let mut first = vec![make_component("pkg:cargo/a@1.0.0"), make_component("pkg:cargo/b@1.0.0")];
+        let (_, _, d, _) = enrich_components(&s, &mut first, EnrichmentPass::Initial).await;
+        assert!(wholly(&d), "control: every initial lookup failed");
+
+        let mut healthy = vec![make_component("pkg:cargo/c@1.0.0")];
+        let (_, _, d, _) = enrich_components(&s, &mut healthy, EnrichmentPass::PostGraph).await;
+        assert!(!wholly(&d), "the post-graph pass succeeded: {:?}", d.annotation_value());
+
+        // Controls: a pass whose own lookups all fail is still reported,
+        // including failures replayed from the in-memory cache, which do
+        // not touch the transport-error counter.
+        let mut down = vec![make_component("pkg:cargo/d@1.0.0")];
+        let (_, _, d, _) = enrich_components(&s, &mut down, EnrichmentPass::PostGraph).await;
+        assert!(wholly(&d), "every lookup in this pass failed");
+        let (_, _, d, _) = enrich_components(&s, &mut first, EnrichmentPass::PostGraph).await;
+        assert!(wholly(&d), "replayed failures are still failures");
     }
 
     /// T008: offline, with or without a disk cache, records nothing (FR-007).

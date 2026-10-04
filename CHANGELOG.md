@@ -7,6 +7,20 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Fixed: a healthy second deps.dev pass reported as wholly unavailable (#1118)
+
+The `wholly-unavailable` mode of `waybill:enrichment-degraded` compared the
+scan's total transport errors with one pass's lookups. Errors in the initial
+pass could therefore mark a post-graph pass that succeeded as wholly
+unavailable. The check now asks whether every lookup in that pass failed.
+
+### Fixed: no download URL derived from a `0.0.0-unknown` version (#1119)
+
+The guard that stops waybill deriving distribution URLs from placeholder
+versions missed `0.0.0-unknown`, the form twelve readers synthesise. A
+component at that version could get a link to an artifact that does not
+exist. The guard now uses the same placeholder list as deps.dev enrichment.
+
 ### Added: the SBOM says why deps.dev did not enrich a component (#1058)
 
 A component deps.dev did not enrich used to look the same whatever the reason.
