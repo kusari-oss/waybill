@@ -23,6 +23,8 @@ A missing module (HTTP 404/410) is the proxy answering a question about one modu
 
 - Q: Which bounds does this feature ship: a proxy circuit breaker (stop using a proxy that fails at the network level), a time budget for the whole fetch step, or both? → A: Both. The breaker caps a dead or hanging proxy at about one batch regardless of module count. The budget caps the slow many-404 case. Neither alone covers both failure shapes.
 - Q: Can an operator change the time budget? → A: No. The budget is a fixed default with no new flag. `--no-go-proxy-fetch` already gives operators a full opt-out, and adding flags waits on the CLI rethink (#1042).
+- Q: What does `waybill:go-transitive-coverage` (C110) say when a bound trips? → A: Breaker trip → `unknown`; budget exhausted → `partial`. If both trip, `unknown` wins, matching C110's existing priority order (could-not-measure before ran-but-incomplete).
+- Q: Do modules skipped by a bound get a per-component marker? → A: No. The document-level C110/C111 reason and count, plus the existing per-component `go-sum-fallback` source (C108), carry it. No new catalogue row; one can be added later without breaking anything.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -101,9 +103,10 @@ A healthy proxy that serves everything, or a scan that finishes within the budge
 
 - **FR-005**: Modules not fetched because of either bound MUST still be resolved by the go.sum fallback exactly as a failed fetch is today, and MUST appear in the document with their go.sum edges. No Go component may be lost.
 - **FR-006**: When either bound trips:
-  - `waybill:go-transitive-coverage` (C110) MUST NOT be `complete`;
+  - `waybill:go-transitive-coverage` (C110) MUST be `unknown` after a breaker trip (waybill could not ask the proxy, as with `--offline`). It MUST be `partial` after budget exhaustion alone (waybill asked and ran out of time). If both trip, `unknown` wins;
   - `waybill:go-transitive-coverage-reason` (C111) MUST name the cause, by extending C111's closed-but-extensible code vocabulary with one code per bound;
   - the reason MUST state the number of modules the bound covered.
+- **FR-006a**: Modules skipped by a bound MUST carry the same per-component annotations as a module whose fetch failed today (C108 `go-sum-fallback`). This feature MUST NOT add a per-component annotation.
 - **FR-007**: The C111 reason MUST be identical across CycloneDX, SPDX 2.3 and SPDX 3 (existing parity row).
 - **FR-008**: A scan that trips the breaker MUST emit one warning naming the proxy entry, the failure class and the number of modules handed to the go.sum fallback.
 - **FR-009**: A scan in which no bound trips MUST produce byte-identical output to the output before this feature (US3).
