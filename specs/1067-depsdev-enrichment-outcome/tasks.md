@@ -13,25 +13,25 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Baseline: run `cargo test -p waybill --bin waybill enrich::` and `cargo test -p waybill --lib parity`, and record them green.
+- [X] T001 Baseline: run `cargo test -p waybill --bin waybill enrich::` and `cargo test -p waybill --lib parity`, and record them green.
 
 ## Phase 2: Foundational — truthful absence (FR-010) and a three-way result
 
 **Purpose**: today two batch-path defects record present components as absent (research R2). Every outcome below depends on "absent" being true.
 
-- [ ] T002 [P] In `E/depsdev_source.rs::batch_tests`, test **unanswered slot**: the mock batch response echoes only one of two requested keys. The unechoed key must not be cached as absent: after the call, the disk cache (`WAYBILL_DEPS_DEV_CACHE_DIR` set to a tempdir; see `persistence_tests` for the pattern) holds no `record: null` entry for it, and its result is not `Absent`.
-- [ ] T003 [P] In `batch_tests`, test **duplicate coordinate**: one chunk requests `serde@1.0.0` twice, and the mock answers it once with a licence. Both positions get the record, the request body holds the coordinate once, and no `null` is cached for it.
-- [ ] T003a [P] In `batch_tests`, test **merged spelling**: the mock batch answers `Flask` but not `flask` (the measured deps.dev behaviour). The `flask` position is retried with one per-key GET (mock `expect(1)`), and is never cached as absent.
-- [ ] T004 In `E/depsdev_source.rs`, introduce `enum LookupResult { Found(VersionInfo), Absent, Failed }` and make `fetch_many` return `Vec<LookupResult>`:
+- [X] T002 [P] In `E/depsdev_source.rs::batch_tests`, test **unanswered slot**: the mock batch response echoes only one of two requested keys. The unechoed key must not be cached as absent: after the call, the disk cache (`WAYBILL_DEPS_DEV_CACHE_DIR` set to a tempdir; see `persistence_tests` for the pattern) holds no `record: null` entry for it, and its result is not `Absent`.
+- [X] T003 [P] In `batch_tests`, test **duplicate coordinate**: one chunk requests `serde@1.0.0` twice, and the mock answers it once with a licence. Both positions get the record, the request body holds the coordinate once, and no `null` is cached for it.
+- [X] T003a [P] In `batch_tests`, test **merged spelling**: the mock batch answers `Flask` but not `flask` (the measured deps.dev behaviour). The `flask` position is retried with one per-key GET (mock `expect(1)`), and is never cached as absent.
+- [X] T004 In `E/depsdev_source.rs`, introduce `enum LookupResult { Found(VersionInfo), Absent, Failed }` and make `fetch_many` return `Vec<LookupResult>`:
   - **per-key:** `Ok(Some)` → `Found`, `Ok(None)` (404) → `Absent`, `Err` → `Failed`;
   - **batch:** in `fetch_chunk_batched`, track one slot per *distinct* coordinate (`HashMap<key, Vec<usize>>`, never last-write-wins), and send each distinct coordinate once.
     - An echoed item with `version` → `Found`.
     - An echoed item without `version` → `Absent`.
     - An unanswered slot → retried with the per-key GET. This needs a per-slot fallback, not only today's per-chunk one. Measured rare: 0 of 925 corpus keys. It arises only from two spellings deps.dev merges, research R2. A failure of that GET → `Failed`.
-  - **cache writes:** only `Found` and `Absent` reach the in-memory and disk caches (disk format unchanged, research R4).
+  - **cache writes:** only `Found` and `Absent` reach the disk cache (disk format unchanged, research R4). The in-memory cache also keeps `Failed`, so a failure is neither re-fetched nor replayed as `Absent` later in the same scan (the pre-m1067 request count is preserved). `--offline` misses are `Unqueried`.
   - **callers:** adapt every caller (`enrich_components` and tests); content behaviour for `Found` is unchanged.
   - Run T002/T003 to green, plus all existing `enrich::` tests.
-- [ ] T005 [P] Add `pub(crate) fn is_placeholder_version(v: &str) -> bool` in `E/request_key.rs`: case-insensitive membership in `""`, `unknown`, `0.0.0-unknown`, `v0.0.0-unknown`, `noassertion`, `none`, `latest`. Add unit tests for every member, plus `0.0.0` → false.
+- [X] T005 [P] Add `pub(crate) fn is_placeholder_version(v: &str) -> bool` in `E/request_key.rs`: case-insensitive membership in `""`, `unknown`, `0.0.0-unknown`, `v0.0.0-unknown`, `noassertion`, `none`, `latest`. Add unit tests for every member, plus `0.0.0` → false.
   - **Do not** change the distribution-URL guard in `waybill-cli/src/scan_fs/mod.rs:2199` (analysis R1; its gap is filed separately).
 
 **Checkpoint**: everything compiles, existing tests green, and absences are now only real.
