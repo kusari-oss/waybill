@@ -135,7 +135,7 @@ CycloneDX and SPDX 2.3 output is byte-identical for every scan. SPDX 3 output ch
 - **SC-001**: On spf13/cobra scanned offline, the components CycloneDX lists under `aggregate: unknown` are exactly the components SPDX 3 marks `incomplete` or `noAssertion`: 100% agreement, both ways.
 - **SC-002**: Across the public corpus, every component's SPDX 3 completeness agrees with its CycloneDX aggregate.
 - **SC-003**: Zero SPDX 3 relationships claim `complete` for a component whose dependency set they do not fully contain.
-- **SC-004**: CycloneDX and SPDX 2.3 goldens are byte-identical. Every SPDX 3 golden passes the conformance validator.
+- **SC-004**: CycloneDX and SPDX 2.3 goldens are byte-identical. Every SPDX 3 document waybill emits for a corpus target passes the conformance validator. The committed goldens cannot be validated directly, because they mask document IRIs and timestamps (measured); the unmasked documents the CI corpus run emits are what is validated.
 - **SC-005**: The completeness annotations' values are unchanged for every corpus target.
 
 ## Assumptions

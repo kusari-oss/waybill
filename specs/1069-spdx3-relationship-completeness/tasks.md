@@ -55,13 +55,21 @@
     - unclaimed → no `completeness` and nothing added;
     - complete leaf → nothing added.
 - [ ] T005 [P] [US1] In `G/spdx/mod.rs::tests`, a cross-format agreement test (SC-002).
-  - **Setup:** build artifacts with `complete_ecosystems` set and components spanning the four cases. Use `mk_artifacts` and set the fields `compositions` reads; give the unknown ecosystem an unreachable component so it lands in `unknown`.
+  - **Setup:** build artifacts with `mk_artifacts`, setting `complete_ecosystems` (for example `["cargo", "npm"]`) and components spanning the four cases:
+    - **complete:** a cargo component reached from the root;
+    - **unknown:** an npm component with no incoming edge, which makes npm unreachable and so `unknown`, plus one npm leaf;
+    - **unclaimed:** a pypi component, since pypi is not in `complete_ecosystems`;
+    - **root:** the main module.
+
+    Degradation by reason code is exercised in T003 only.
   - **Serialize:** to CycloneDX and SPDX 3.
   - **Map both to component PURLs:** CycloneDX `compositions[].dependencies` by aggregate; SPDX 3 `completeness` per `from`.
   - **Assert the FR-003 table:**
     - every CycloneDX `unknown` component is `incomplete` or `noAssertion` in SPDX 3;
     - every CycloneDX `complete` component with a relationship is `complete`;
     - everything else is unqualified.
+  - **Root override:** repeat with `arts.root_override` set, so the main module is dropped. The root relationship's completeness still follows `root_complete`.
+  - **Same reachable set (analysis I1):** assert that the `reachable_set` SPDX 3 computes equals the one CycloneDX computes, for these artifacts and for the root-override case. Agreement by construction holds only if both formats run the shared predicate on the same reachability.
   - Show it fails with T008's pass disabled (local edit, reverted).
 - [ ] T006 [P] [US1] Conformance: extend the existing SPDX 3 conformance test path (the milestone-078 `spdx3-validate` integration) so a document carrying grouped relationships, all three `completeness` values and a `NoAssertionElement` relationship is validated, using the T005 artifacts written to a tempdir.
   - If that suite only validates fixture scans, add one in-crate-built document to it. If no harness accepts an in-memory document, run `measurements/probe_validator.py` on a regenerated document in T017 instead, and note it here.
@@ -71,6 +79,7 @@
 - [ ] T007 [US1] In `G/spdx/v3_document.rs`, move `compute_graph_completeness` (~864) above the relationship build (~673). Its inputs, `scan.components` and `m194_classifier_relationships`, already exist there.
   - Derive `degraded_ecosystems(...)` and `dependency_claims(...)` with the same arguments CycloneDX uses: `scan.complete_ecosystems`, `Some(&gc.reachable_set)`, `scan.integrity`.
   - Keep passing the same `GraphCompletenessResult` to `build_document_annotations`, so the annotations are unchanged (FR-004).
+  - **If the reachable sets differ** (T005's equality assertion): SPDX 3 runs reachability over a different graph than CycloneDX (`metadata_relationships_augmented` vs `m194_classifier_relationships`). Reconcile the inputs here, not in the predicate. Do not paper over it by recomputing claims per format.
 - [ ] T008 [US1] In `G/spdx/v3_relationships.rs`, implement `group_dependency_relationships` per `contracts/spdx3-completeness.md` and research R6.
   - **Where:** call it in `G/spdx/v3_document.rs` on `all_relationships` after every producer has pushed (dependency builder, #236 fallback, #1009 supplement anchor) and before sorting.
   - **IRI:** `hash_prefix` over `from|dependsOn|<scope or "">|<sorted targets joined ",">`, 16 characters.
@@ -81,7 +90,7 @@
 
 ## Phase 4: User Story 2 — the annotations stay (Priority: P1)
 
-- [ ] T009 [P] [US2] In the T005 test, also assert that `waybill:graph-completeness`, `waybill:graph-completeness-reason` and each `waybill:orphan-reason` are emitted with the same values as with the grouping pass disabled. Capture both documents in the test and compare the annotation sets (FR-004, SC-005).
+- [ ] T009 [P] [US2] In the T005 test, assert that `waybill:graph-completeness`, `waybill:graph-completeness-reason` and each `waybill:orphan-reason` have the same values in SPDX 3 as in the same artifacts' SPDX 2.3 document (byte-unchanged by FR-005), via the parity extractors for those rows. On real output, T015's corpus diff must show no change to these annotations in any `spdx-3.json` (FR-004, SC-005).
 
 ## Phase 5: User Story 3 — changes only where specified (Priority: P1)
 
@@ -106,7 +115,10 @@
   - **Scope:** for every target, only `spdx-3.json` may differ. `cdx.json` and `spdx-2.3.json` must be byte-identical.
   - **Allowed changes:** check each `spdx-3.json` with `xtask corpus-diff` and the T010 script.
   - **Install:** `rsync`, commit, and re-run read-only.
-- [ ] T016 Agreement on real output (SC-001, SC-002). For every regenerated corpus target, run quickstart §1 (CycloneDX `unknown` set vs SPDX 3 `incomplete`/`noAssertion` set; CycloneDX `complete` vs SPDX 3 `complete`) and record the results in `measurements/agreement.txt`. go-cobra (cold) must show its 8 unknown components marked in SPDX 3.
+- [ ] T016 Real output, per corpus target, recorded in `measurements/agreement.txt`. Use the unmasked SBOMs the CI corpus run uploads (`corpus-emitted-sboms` artifact) where IRIs and timestamps matter.
+  - **Agreement (SC-001, SC-002):** quickstart §1. The CycloneDX `unknown` set must equal the SPDX 3 `incomplete`/`noAssertion` set, and CycloneDX `complete` must equal SPDX 3 `complete`. go-cobra (cold) must show its 8 unknown components marked in SPDX 3.
+  - **Shape (SC-003):** quickstart §2. At most one `dependsOn` relationship per `(from, type, scope)`.
+  - **Conformance (SC-004):** `spdx3-validate` passes on every unmasked emitted SPDX 3 document.
 - [ ] T017 Re-run `measurements/probe_validator.py` on a regenerated real SPDX 3 document, since it now carries the shapes natively, and append to `measurements/README.md`.
 - [ ] T018 Open the PR (closes #878), merge when green, then run `cargo clean`.
 
