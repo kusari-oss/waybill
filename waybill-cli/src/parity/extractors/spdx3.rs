@@ -746,6 +746,7 @@ spdx3_anno!(c188_spdx3, "waybill:nixpkgs-security", document);
 spdx3_anno!(c189_spdx3, "waybill:nixpkgs-declaration-grade", document);
 spdx3_anno!(c191_spdx3, "waybill:deps-dev-outcome", component);
 spdx3_anno!(c192_spdx3, "waybill:deps-dev-outcomes", document);
+spdx3_anno!(c193_spdx3, "waybill:vex-claims-omitted", document);
 spdx3_anno!(c163_spdx3, "waybill:document-resolve",                     document);
 spdx3_anno!(c162_spdx3, "waybill:cabal-entries-skipped",                 document);
 
@@ -896,7 +897,7 @@ pub(super) fn f1_spdx3(doc: &Value) -> BTreeSet<String> {
                 .unwrap_or(false)
         });
     if has_ref {
-        BTreeSet::from(["__openvex_sidecar_present__".to_string()])
+        BTreeSet::from([super::VEX_PRESENT.to_string()])
     } else {
         BTreeSet::new()
     }

@@ -198,6 +198,9 @@ pub struct CycloneDxBuilder {
     nix_closure_degraded: Option<String>,
     /// C192 (m1067) — the deps.dev pass ran online.
     deps_dev_online: bool,
+    /// m1068 (#1039) — the scan's VEX statements, the same ones the OpenVEX
+    /// sidecar carries.
+    vex_statements: Vec<crate::generate::openvex::statements::OpenVexStatement>,
     nix_eval_system: Option<String>,
     /// Milestone 985 (#962, C175) — the closure's record, pre-rendered JSON.
     nixpkgs_haskell_closure: Option<String>,
@@ -271,6 +274,7 @@ impl CycloneDxBuilder {
             nix_eval_degraded: None,
             nix_closure_degraded: None,
             deps_dev_online: false,
+            vex_statements: Vec::new(),
             nix_eval_system: None,
             nixpkgs_haskell_closure: None,
             file_inventory_mode: None,
@@ -357,6 +361,15 @@ impl CycloneDxBuilder {
     /// C192 (m1067) — the deps.dev pass ran online.
     pub fn with_deps_dev_online(mut self, online: bool) -> Self {
         self.deps_dev_online = online;
+        self
+    }
+
+    /// m1068 (#1039) — the VEX statements to carry in `vulnerabilities[]`.
+    pub fn with_vex_statements(
+        mut self,
+        statements: Vec<crate::generate::openvex::statements::OpenVexStatement>,
+    ) -> Self {
+        self.vex_statements = statements;
         self
     }
 
@@ -875,6 +888,13 @@ impl CycloneDxBuilder {
 
         // C192 (m1067) — counted over the components this document emits,
         // as the SPDX emitters do, so all three formats agree.
+        // C193 (m1068) — VEX claims this document cannot carry. Counted over
+        // the components it emits, as the SPDX emitters count theirs.
+        let vex_claims_omitted: Option<String> = Some(
+            crate::generate::openvex::claims::omitted_claims(&self.vex_statements, effective_components),
+        )
+        .filter(|n| *n > 0)
+        .map(|n| n.to_string());
         let deps_dev_outcomes: Option<String> = if self.deps_dev_online {
             crate::enrich::deps_dev_outcome::document_value(effective_components)
         } else {
@@ -931,6 +951,7 @@ impl CycloneDxBuilder {
                 nix_eval_degraded: self.nix_eval_degraded.as_deref(),
                 nix_closure_degraded: self.nix_closure_degraded.as_deref(),
                 deps_dev_outcomes: deps_dev_outcomes.as_deref(),
+                vex_claims_omitted: vex_claims_omitted.as_deref(),
                 nix_eval_system: self.nix_eval_system.as_deref(),
                 nixpkgs_haskell_closure: self.nixpkgs_haskell_closure.as_deref(),
             },
@@ -1056,7 +1077,30 @@ impl CycloneDxBuilder {
             .as_deref()
             .unwrap_or(effective_relationships_base);
         let deps = build_dependencies(effective_components, effective_relationships, &target_ref, self.cross_ecosystem_edges_report.as_ref());
-        let vulnerabilities = build_vulnerabilities(effective_components);
+        // m1068 (#1039): the scan's VEX, against this document's `bom-ref`s.
+        let mut vex_refs = super::vex::BomRefIndex::new(
+            metadata
+                .get("component")
+                .and_then(|c| c.get("bom-ref"))
+                .and_then(|v| v.as_str())
+                .unwrap_or(target_ref.as_str())
+                .to_string(),
+        );
+        vex_refs.add_components(cdx_components.as_array().map(Vec::as_slice).unwrap_or(&[]));
+        for purl in &retained_main_module_purls {
+            vex_refs.alias_root(purl);
+        }
+        let (vulnerabilities, vex_carried_omitted) =
+            build_vulnerabilities(&self.vex_statements, &vex_refs);
+        if vex_carried_omitted
+            != vex_claims_omitted.as_deref().and_then(|v| v.parse().ok()).unwrap_or(0)
+        {
+            tracing::warn!(
+                carried_omitted = vex_carried_omitted,
+                counted_omitted = ?vex_claims_omitted,
+                "VEX claims omitted from vulnerabilities[] differ from the C193 count",
+            );
+        }
 
         // Milestone 080 — build CDX 1.6 `bom.annotations[]` for the
         // user-supplied --metadata-comment, --annotator + --annotation-

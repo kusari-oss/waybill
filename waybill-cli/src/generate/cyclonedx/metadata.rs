@@ -223,6 +223,8 @@ pub struct MetadataExtras<'a> {
     pub nix_closure_degraded: Option<&'a str>,
     /// C192 (m1067) — deps.dev outcome counts, pre-rendered JSON.
     pub deps_dev_outcomes: Option<&'a str>,
+    /// C193 (m1068) — VEX claims this document cannot carry.
+    pub vex_claims_omitted: Option<&'a str>,
     /// C179 — the platform the evaluated results describe.
     pub nix_eval_system: Option<&'a str>,
     // Milestone 985 (#962, C175) — the transitive runtime closure's record.
@@ -294,6 +296,7 @@ pub fn build_metadata(
         nix_eval_degraded,
         nix_closure_degraded,
         deps_dev_outcomes,
+        vex_claims_omitted,
         nix_eval_system,
         nixpkgs_haskell_closure,
     } = extras;
@@ -386,6 +389,15 @@ pub fn build_metadata(
         properties.push(json!({
             "name": "waybill:deps-dev-outcomes",
             "value": v,
+        }));
+    }
+
+    // C193 (m1068, #1039) — VEX claims whose component is not in this
+    // document. Present only when a claim was dropped.
+    if let Some(n) = vex_claims_omitted {
+        properties.push(json!({
+            "name": "waybill:vex-claims-omitted",
+            "value": n,
         }));
     }
 

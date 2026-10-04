@@ -458,7 +458,7 @@ fn derive_openvex_id(artifacts: &ScanArtifacts<'_>, mikebom_version: &str) -> St
 
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
-mod tests {
+pub(crate) mod tests {
     use super::*;
     use waybill_common::attestation::integrity::TraceIntegrity;
     use waybill_common::attestation::metadata::GenerationContext;
@@ -467,7 +467,7 @@ mod tests {
     };
     use waybill_common::types::purl::Purl;
 
-    fn mk_component(purl: &str) -> ResolvedComponent {
+    pub(crate) fn mk_component(purl: &str) -> ResolvedComponent {
         ResolvedComponent {
             build_inclusion: None,
             purl: Purl::new(purl).unwrap(),
@@ -510,7 +510,7 @@ mod tests {
         }
     }
 
-    fn empty_integrity() -> TraceIntegrity {
+    pub(crate) fn empty_integrity() -> TraceIntegrity {
         TraceIntegrity {
             ring_buffer_overflows: 0,
             events_dropped: 0,
@@ -523,7 +523,7 @@ mod tests {
         }
     }
 
-    fn mk_cfg() -> OutputConfig {
+    pub(crate) fn mk_cfg() -> OutputConfig {
         OutputConfig {
             mikebom_version: "0.0.0-test",
             created: chrono::DateTime::parse_from_rfc3339("2026-01-01T00:00:00Z")
@@ -533,7 +533,7 @@ mod tests {
         }
     }
 
-    fn mk_artifacts<'a>(
+    pub(crate) fn mk_artifacts<'a>(
         comps: &'a [ResolvedComponent],
         integ: &'a TraceIntegrity,
     ) -> ScanArtifacts<'a> {
@@ -614,7 +614,7 @@ mod tests {
 
     /// A closure-derived component applying one CVE-named patch, plus the
     /// root the `not_affected` half is about.
-    fn backport_scan() -> Vec<ResolvedComponent> {
+    pub(crate) fn backport_scan() -> Vec<ResolvedComponent> {
         let mut patched = mk_component("pkg:generic/unzip@6.0");
         patched.extra_annotations.insert(
             crate::scan_fs::package_db::nix::closure::emit::ANN_CLOSURE_PATCHES
@@ -650,7 +650,7 @@ mod tests {
     /// resolves declarations against plain nixpkgs, so a fixture's own
     /// packages resolve to nothing and could not exercise this at all
     /// (research R8). The shapes below are what the spec constrains.
-    fn declared_summary(
+    pub(crate) fn declared_summary(
         findings: &[(&str, &str, &str)],
     ) -> crate::scan_fs::package_db::nix::declarations::NixpkgsSecuritySummary {
         use crate::scan_fs::package_db::nix::declarations::{
@@ -775,7 +775,7 @@ mod tests {
 
     /// A component both patched and declared. Carries the milestone-1035
     /// patch annotation *and* appears in the declaration findings.
-    fn contested_scan() -> (Vec<ResolvedComponent>, crate::scan_fs::package_db::nix::declarations::NixpkgsSecuritySummary) {
+    pub(crate) fn contested_scan() -> (Vec<ResolvedComponent>, crate::scan_fs::package_db::nix::declarations::NixpkgsSecuritySummary) {
         use crate::scan_fs::package_db::nix::closure::emit::ANN_CLOSURE_PATCHES;
         let mut patched = mk_component("pkg:generic/unzip@6.0");
         patched.extra_annotations.insert(
