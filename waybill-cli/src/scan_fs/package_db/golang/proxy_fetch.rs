@@ -115,7 +115,7 @@ pub fn fetch_module_mod(
 ) -> StepResult<String> {
     let mut network_failed: Vec<usize> = Vec::new();
     let mut skipped_only = true;
-    let r = walk_chain(
+    let r = try_chain(
         client,
         proxy_chain,
         target,
@@ -135,7 +135,7 @@ pub fn fetch_module_mod(
     r
 }
 
-fn walk_chain(
+fn try_chain(
     client: &reqwest::blocking::Client,
     proxy_chain: &ProxyChain,
     target: &ModuleId,
