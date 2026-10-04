@@ -704,7 +704,7 @@ mod tests {
                 BTreeSet::from(["noAssertion".to_string()]),
                 "{ctx}: an unknown leaf gets NoAssertionElement",
             );
-            assert!(spdx.get("pkg:pypi/p@1.0.0").is_none(), "{ctx}: an unclaimed leaf gains nothing");
+            assert!(!spdx.contains_key("pkg:pypi/p@1.0.0"), "{ctx}: an unclaimed leaf gains nothing");
 
             // T009: the waybill completeness annotations are the SPDX 2.3 values.
             let spdx23: serde_json::Value = serde_json::from_slice(
