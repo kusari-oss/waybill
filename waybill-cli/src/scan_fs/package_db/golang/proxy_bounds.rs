@@ -42,6 +42,20 @@ pub fn entry_label(url: &reqwest::Url) -> String {
     }
 }
 
+/// A raw `GOPROXY` token that may not parse as a URL, with any userinfo
+/// (`user:token@`) between `://` and the host removed. Used where the input
+/// itself must be shown, e.g. a parse error (#1110).
+pub fn redact_userinfo(raw: &str) -> String {
+    let Some((scheme, rest)) = raw.split_once("://") else {
+        return raw.to_string();
+    };
+    let authority_end = rest.find(['/', '?', '#']).unwrap_or(rest.len());
+    match rest[..authority_end].rfind('@') {
+        Some(at) => format!("{scheme}://{}", &rest[at + 1..]),
+        None => raw.to_string(),
+    }
+}
+
 /// Failures that say the proxy itself is unusable, as opposed to an answer
 /// about one module.
 pub fn is_network_level(class: ErrorClass) -> bool {
@@ -317,6 +331,15 @@ mod tests {
         let l = entry_label(&url("https://user:secret@corp.example:8443/p"));
         assert_eq!(l, "https://corp.example:8443");
         assert!(!l.contains("secret") && !l.contains("user"));
+    }
+
+    #[test]
+    fn redact_userinfo_drops_credentials_only() {
+        assert_eq!(redact_userinfo("https://u:s3cret@corp.example/p"), "https://corp.example/p");
+        assert_eq!(redact_userinfo("https://corp.example/p@v1"), "https://corp.example/p@v1");
+        assert_eq!(redact_userinfo("https://u:p@w@h:8080/"), "https://h:8080/");
+        assert_eq!(redact_userinfo("not a url"), "not a url");
+        assert_eq!(redact_userinfo("https://u:s3cret@[bad"), "https://[bad");
     }
 
     #[test]

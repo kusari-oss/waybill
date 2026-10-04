@@ -206,19 +206,15 @@ fn t010e_credentials_never_appear() {
     let r = repo(20);
     let port = closed_port();
     let s = scan(r.path(), &format!("http://user1065:secret1065@{port}"), &[], &[]);
-    // This feature's outputs only: the documents and its own warning.
-    // Pre-existing log lines that print the raw GOPROXY URL are #1110.
-    let own_warnings: Vec<&str> = s
-        .stderr
-        .lines()
-        .filter(|l| l.contains("Go module proxy unreachable"))
-        .collect();
-    assert!(!own_warnings.is_empty(), "FR-008 warning missing");
+    // #1110: nowhere — not the documents, not any log line. This run
+    // reaches the per-module fetch-failure log, the cleartext-http warning
+    // and the m1065 breaker warning, which all name the proxy.
+    assert!(s.stderr.contains("Go module proxy unreachable"), "FR-008 warning missing");
+    assert!(s.stderr.contains("cleartext"), "cleartext-http warning not exercised");
+    assert!(s.stderr.contains("go-mod proxy fetch failed"), "per-module log not exercised");
     for needle in ["secret1065", "user1065"] {
+        assert!(!s.stderr.contains(needle), "{needle} in stderr");
         assert!(!s.raw.contains(needle), "{needle} in an emitted document");
-        for l in &own_warnings {
-            assert!(!l.contains(needle), "{needle} in the FR-008 warning: {l}");
-        }
     }
     assert!(all_three(&s, REASON).unwrap().starts_with(&format!(
         "proxy-unreachable: http://{port} failed"
@@ -268,3 +264,14 @@ fn t022_bounds_stay_out_of_disabled_fetching() {
     assert!(!s.stderr.contains("Go module proxy unreachable"));
 }
 
+/// #1110: a GOPROXY that does not parse is reported with its credentials
+/// removed.
+#[test]
+fn unparseable_goproxy_is_reported_without_credentials() {
+    let r = repo(5);
+    let s = scan(r.path(), "https://user1110:secret1110@[not-a-host", &[], &[]);
+    assert!(s.stderr.contains("failed to parse $GOPROXY"), "parse error not exercised");
+    for needle in ["secret1110", "user1110"] {
+        assert!(!s.stderr.contains(needle), "{needle} in stderr");
+    }
+}
