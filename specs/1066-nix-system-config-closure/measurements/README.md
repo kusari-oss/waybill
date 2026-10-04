@@ -27,3 +27,15 @@ Locking the inputs (nixpkgs 25.05 and nix-darwin 25.05) took 12.0 s on the netwo
 - **Configurations are listed:** `nix eval --json --apply builtins.attrNames .#darwinConfigurations` returns `["laptop"]`. An absent output fails with `does not provide attribute ...`.
 - **Top-level outputs are not listable:** `nix eval ... .#` does not list them; it resolves to the default package. So top-level output names cannot be enumerated cheaply through the installable syntax (research R1).
 - **Shell note:** in zsh, an unquoted `$OPT` holding several words is passed as one argument. The probe spells `--option` arguments out.
+
+## 4. End to end with the built binary (T023)
+
+`waybill sbom scan --nix-closure` on the §2 flake (one NixOS and one nix-darwin configuration), debug build at `c5531aab`, warm store:
+
+```
+auto(2 configs) wall=  0.4s  closure: -  degraded: several-system-configurations
+nixos path     wall=  4.6s  closure: nixosConfigurations.web01.config.system.build.toplevel drv=2444 emitted=712  degraded: -
+darwin path    wall=  1.7s  closure: darwinConfigurations.laptop.system drv=2135 emitted=691  degraded: -
+```
+
+Without a path, the two configurations degrade, and C190 records why. Each full path records its configuration's closure in a few seconds (SC-002).

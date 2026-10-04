@@ -143,7 +143,7 @@ Paths: `closure/` = `waybill-cli/src/scan_fs/package_db/nix/closure/`, `eval/` =
 - [X] T020 [P] Add an Unreleased entry to `CHANGELOG.md`: system-configuration closures, auto-selection (only for flakes with no `packages` output), full paths, the new reason, C190 for every closure degradation (#1115), and the narrowed FR-001 rule (the standard output names).
 - [X] T021 Run `./scripts/pre-pr.sh > /tmp/prepr.log 2>&1; echo EXIT=$?`. Require `EXIT=0`, `Walker-audit allow-list check: OK`, the passed line, and no failing `test result`.
 - [ ] T022 Push. Dispatch the read-only public-corpus run. Take the run ID from the dispatch output (`gh workflow run … 2>&1 | grep -o 'runs/[0-9]*'`), never from a branch filter. Expect no golden change, including `nix-closure-moat` (SC-005).
-- [ ] T023 Run quickstart §1–§3 with real `nix`, and §4 (`measurements/probe_config_closure.sh`) once to confirm SC-002 end to end with the built binary. Append the results to `measurements/README.md`.
+- [X] T023 Run quickstart §1–§3 with real `nix`, and §4 (`measurements/probe_config_closure.sh`) once to confirm SC-002 end to end with the built binary. Append the results to `measurements/README.md`.
 - [ ] T024 Open the PR (closes #1052 and #1115; references #1114). The PR checklist notes FR-010: no new flag. Merge when green, then run `cargo clean`.
 
 ## Dependencies & Execution Order
