@@ -125,6 +125,10 @@ and `diff`s the result against the committed allow-list at
 drift (new walker without an allow-list entry, OR stale entry pointing
 at deleted code) fails the build.
 
+The check lives in `scripts/check-walker-audit.sh`. CI calls it, and so does
+`./scripts/pre-pr.sh`, so a local pre-PR run catches it before CI does. To run
+it alone: `bash scripts/check-walker-audit.sh`.
+
 ### What to do when your PR turns red on `Walker-audit allow-list check`
 
 The CI log shows you a unified-diff hunk. Two paths from there:

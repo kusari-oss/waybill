@@ -39,13 +39,15 @@ fi
 # running a single check — on the default, non-eBPF path, on every Mac.
 # Bash 4.4+ (every Linux CI runner) is unaffected, which is why CI never
 # caught it. See https://github.com/kusari-oss/waybill — reported 2026-09-04.
-# The homoglyph gate runs FIRST: it takes about a second, needs no
-# toolchain, and a Cyrillic `a` in a fixture is not something the compiler
-# or clippy can see. Kept here as well as in CI deliberately — the
-# walker-audit gate lives only in CI, and that gap has cost round-trips
-# where local pre-PR was green and CI was not.
+# The homoglyph and walker-audit gates run FIRST: each takes about a second,
+# needs no toolchain, and catches something the compiler and clippy cannot
+# see (a Cyrillic `a` in a fixture; a new `fn walk_*` missing from the
+# allow-list). The walker audit is the same script CI runs, so local and CI
+# cannot drift; before it was shared it lived only in CI, and a local-green
+# PR still failed it (#1111).
 steps=(
     "python3 scripts/check-homoglyphs.py"
+    "bash scripts/check-walker-audit.sh"
     "cargo +stable clippy --workspace --all-targets ${feature_args[*]:-} -- -D warnings"
     "cargo +stable test --workspace --no-fail-fast ${feature_args[*]:-}"
 )
