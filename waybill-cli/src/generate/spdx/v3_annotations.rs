@@ -559,6 +559,13 @@ fn push_document_fields(
         push(out, "waybill:enrichment-degraded", json!(d));
     }
 
+    // C192 (m1067, #1058) — counted over the packages this document emits.
+    if scan.deps_dev_online {
+        if let Some(v) = crate::enrich::deps_dev_outcome::document_value(scan.components) {
+            push(out, "waybill:deps-dev-outcomes", json!(v));
+        }
+    }
+
     // Milestone 133 US4 (Constitution Strict Boundary §5):
     // `--file-inventory=full` opt-in marker.
     if let Some("full") = scan.file_inventory_mode {

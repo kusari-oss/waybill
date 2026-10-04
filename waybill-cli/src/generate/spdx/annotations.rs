@@ -542,6 +542,13 @@ pub fn annotate_document(
         push(&mut out, "waybill:enrichment-degraded", json!(d));
     }
 
+    // C192 (m1067, #1058) — counted over the packages this document emits.
+    if artifacts.deps_dev_online {
+        if let Some(v) = crate::enrich::deps_dev_outcome::document_value(artifacts.components) {
+            push(&mut out, "waybill:deps-dev-outcomes", json!(v));
+        }
+    }
+
     // Milestone 133 US4 (Constitution Strict Boundary §5):
     // `--file-inventory=full` opt-in marker. CDX + SPDX 3 twins.
     if let Some("full") = artifacts.file_inventory_mode {

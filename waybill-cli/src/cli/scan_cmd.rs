@@ -4979,6 +4979,8 @@ pub async fn execute(
         nix_eval_system,
         nix_eval_degraded,
         nix_closure_degraded,
+        // C192 (m1067): answers served from the disk cache count as online.
+        deps_dev_online: enrich_cfg.deps_dev && !offline,
         nixpkgs_haskell_degraded,
         nixpkgs_haskell_resolution: nixpkgs_haskell_resolution_json.as_deref(),
         nixpkgs_haskell_closure: nixpkgs_haskell_closure_json.as_deref(),

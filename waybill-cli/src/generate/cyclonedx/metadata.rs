@@ -221,6 +221,8 @@ pub struct MetadataExtras<'a> {
     pub nix_eval_degraded: Option<&'a str>,
     /// C190 (m1066) — why a requested `--nix-closure` recorded no closure.
     pub nix_closure_degraded: Option<&'a str>,
+    /// C192 (m1067) — deps.dev outcome counts, pre-rendered JSON.
+    pub deps_dev_outcomes: Option<&'a str>,
     /// C179 — the platform the evaluated results describe.
     pub nix_eval_system: Option<&'a str>,
     // Milestone 985 (#962, C175) — the transitive runtime closure's record.
@@ -291,6 +293,7 @@ pub fn build_metadata(
         nix_eval_tier,
         nix_eval_degraded,
         nix_closure_degraded,
+        deps_dev_outcomes,
         nix_eval_system,
         nixpkgs_haskell_closure,
     } = extras;
@@ -374,6 +377,15 @@ pub fn build_metadata(
         properties.push(json!({
             "name": "waybill:enrichment-degraded",
             "value": d,
+        }));
+    }
+
+    // C192 (m1067, #1058) — why deps.dev enriched what it did not. Online
+    // scans only, so offline output is byte-identical.
+    if let Some(v) = deps_dev_outcomes {
+        properties.push(json!({
+            "name": "waybill:deps-dev-outcomes",
+            "value": v,
         }));
     }
 

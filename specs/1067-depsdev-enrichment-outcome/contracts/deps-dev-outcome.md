@@ -21,7 +21,7 @@ CycloneDX: `components[].properties[]` entry `{"name":"waybill:deps-dev-outcome"
 
 ## C192 `waybill:deps-dev-outcomes` (document scope)
 
-A canonical JSON object, carried as a string in CycloneDX and as an object in the SPDX envelopes. Keys are outcome values, plus `not-queried:unsupported-ecosystem`; values are component counts. Keys are sorted, and only non-zero counts are included. It is emitted iff at least one count is non-zero.
+A canonical JSON object, pre-rendered and carried as a string in all three formats (the C174/C178 precedent). Keys are outcome values, plus `not-queried:unsupported-ecosystem`; values are component counts. Keys are sorted, and only non-zero counts are included. It is emitted iff at least one count is non-zero.
 
 ```json
 {"absent":2,"not-queried:incomplete-coordinate":28,"not-queried:unsupported-ecosystem":1}

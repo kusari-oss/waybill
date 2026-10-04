@@ -427,6 +427,7 @@ mod tests {
             nix_eval_tier: None,
             nix_eval_degraded: None,
             nix_closure_degraded: None,
+            deps_dev_online: false,
             nix_eval_system: None,
             nixpkgs_haskell_resolution: None,
             nixpkgs_haskell_closure: None,
@@ -541,6 +542,129 @@ mod tests {
     /// goldens are scan-mode and only ever carry empty lists, so
     /// without this the information-losing shape could return on the
     /// SPDX 3 path unnoticed.
+    /// Every value of the annotation `field`, in any of the three formats:
+    /// CycloneDX `properties[]` entries, and the SPDX 2.3 / SPDX 3
+    /// `MikebomAnnotationCommentV1` envelopes in `comment` / `statement`.
+    fn annotation_values(doc: &serde_json::Value, field: &str) -> Vec<String> {
+        fn walk(v: &serde_json::Value, field: &str, out: &mut Vec<String>) {
+            match v {
+                serde_json::Value::Object(m) => {
+                    if m.get("name").and_then(|n| n.as_str()) == Some(field) {
+                        if let Some(s) = m.get("value").and_then(|v| v.as_str()) {
+                            out.push(s.to_string());
+                        }
+                    }
+                    for key in ["comment", "statement"] {
+                        let env = m
+                            .get(key)
+                            .and_then(|c| c.as_str())
+                            .and_then(|c| serde_json::from_str::<serde_json::Value>(c).ok());
+                        if let Some(env) = env {
+                            if env.get("field").and_then(|f| f.as_str()) == Some(field) {
+                                if let Some(s) = env.get("value").and_then(|v| v.as_str()) {
+                                    out.push(s.to_string());
+                                }
+                            }
+                        }
+                    }
+                    m.values().for_each(|c| walk(c, field, out));
+                }
+                serde_json::Value::Array(a) => a.iter().for_each(|c| walk(c, field, out)),
+                _ => {}
+            }
+        }
+        let mut out = Vec::new();
+        walk(doc, field, &mut out);
+        out.sort();
+        out
+    }
+
+    /// Milestone 1067 (T009, T017) — C191 per component and C192 at document
+    /// scope, identical in all three formats, and C192's counts equal the
+    /// C191 tallies (SC-005).
+    #[test]
+    fn deps_dev_outcomes_are_emitted_in_all_three_formats() {
+        use crate::enrich::deps_dev_outcome::{record, Outcome};
+        let integ = empty_integrity();
+        let with = |purl: &str, o: Option<Outcome>| {
+            let mut c = mk_component(purl, vec![]);
+            record(&mut c, o);
+            c
+        };
+        let comps = [
+            with("pkg:cargo/absent@1.0.0", Some(Outcome::Absent)),
+            with("pkg:npm/declined@1.0.0", Some(Outcome::DeclinedInvalidLicense)),
+            with("pkg:pypi/broken@1.0.0", Some(Outcome::TransportFailure)),
+            with("pkg:cargo/matched@1.0.0", None),
+            with("pkg:deb/debian/zlib@1.0.0", None),
+        ];
+        let expected =
+            r#"{"absent":1,"declined-invalid-license":1,"not-queried:unsupported-ecosystem":1,"transport-failure":1}"#;
+        let docs = |online: bool| -> Vec<serde_json::Value> {
+            let mut arts = mk_artifacts(&comps, &integ);
+            arts.deps_dev_online = online;
+            let cfg = mk_cfg();
+            [
+                crate::generate::cyclonedx::CycloneDxJsonSerializer.serialize(&arts, &cfg),
+                Spdx2_3JsonSerializer.serialize(&arts, &cfg),
+                Spdx3JsonSerializer.serialize(&arts, &cfg),
+            ]
+            .into_iter()
+            .map(|r| serde_json::from_slice(&r.unwrap()[0].bytes).unwrap())
+            .collect()
+        };
+
+        // The parity rows read what waybill writes, in all three formats.
+        let online = docs(true);
+        for row in ["C191", "C192"] {
+            let e = waybill::parity::extractors::EXTRACTORS
+                .iter()
+                .find(|e| e.row_id == row)
+                .unwrap();
+            let (a, b, c) = ((e.cdx)(&online[0]), (e.spdx23)(&online[1]), (e.spdx3)(&online[2]));
+            assert!(!a.is_empty(), "{row}: CDX extractor found nothing");
+            assert_eq!(a, b, "{row}: CDX vs SPDX 2.3");
+            assert_eq!(a, c, "{row}: CDX vs SPDX 3");
+        }
+        for doc in online {
+            let per_component = annotation_values(&doc, "waybill:deps-dev-outcome");
+            assert_eq!(
+                per_component,
+                vec!["absent", "declined-invalid-license", "transport-failure"],
+            );
+            let counts = annotation_values(&doc, "waybill:deps-dev-outcomes");
+            assert_eq!(counts, vec![expected.to_string()]);
+            // SC-005: every C191 value's tally is its C192 count.
+            let parsed: std::collections::BTreeMap<String, usize> =
+                serde_json::from_str(&counts[0]).unwrap();
+            for (k, n) in parsed.iter().filter(|(k, _)| *k != "not-queried:unsupported-ecosystem") {
+                assert_eq!(per_component.iter().filter(|v| *v == k).count(), *n, "{k}");
+            }
+        }
+        for doc in docs(false) {
+            assert!(annotation_values(&doc, "waybill:deps-dev-outcomes").is_empty());
+        }
+    }
+
+    /// Milestone 1067 (T017) — a fully matched online scan adds nothing.
+    #[test]
+    fn a_fully_matched_scan_has_no_deps_dev_outcomes() {
+        let integ = empty_integrity();
+        let comps = [mk_component("pkg:cargo/a@1.0.0", vec![])];
+        let mut arts = mk_artifacts(&comps, &integ);
+        arts.deps_dev_online = true;
+        let cfg = mk_cfg();
+        for r in [
+            crate::generate::cyclonedx::CycloneDxJsonSerializer.serialize(&arts, &cfg),
+            Spdx2_3JsonSerializer.serialize(&arts, &cfg),
+            Spdx3JsonSerializer.serialize(&arts, &cfg),
+        ] {
+            let doc: serde_json::Value = serde_json::from_slice(&r.unwrap()[0].bytes).unwrap();
+            assert!(annotation_values(&doc, "waybill:deps-dev-outcome").is_empty());
+            assert!(annotation_values(&doc, "waybill:deps-dev-outcomes").is_empty());
+        }
+    }
+
     #[test]
     fn spdx3_trace_integrity_attach_failures_carry_names_not_counts() {
         let integ = TraceIntegrity {

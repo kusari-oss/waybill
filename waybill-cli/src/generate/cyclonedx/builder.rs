@@ -196,6 +196,8 @@ pub struct CycloneDxBuilder {
     nix_eval_tier: Option<String>,
     nix_eval_degraded: Option<String>,
     nix_closure_degraded: Option<String>,
+    /// C192 (m1067) — the deps.dev pass ran online.
+    deps_dev_online: bool,
     nix_eval_system: Option<String>,
     /// Milestone 985 (#962, C175) — the closure's record, pre-rendered JSON.
     nixpkgs_haskell_closure: Option<String>,
@@ -268,6 +270,7 @@ impl CycloneDxBuilder {
             nix_eval_tier: None,
             nix_eval_degraded: None,
             nix_closure_degraded: None,
+            deps_dev_online: false,
             nix_eval_system: None,
             nixpkgs_haskell_closure: None,
             file_inventory_mode: None,
@@ -348,6 +351,12 @@ impl CycloneDxBuilder {
     /// C190 (m1066) — why a requested `--nix-closure` recorded no closure.
     pub fn with_nix_closure_degraded(mut self, value: Option<String>) -> Self {
         self.nix_closure_degraded = value;
+        self
+    }
+
+    /// C192 (m1067) — the deps.dev pass ran online.
+    pub fn with_deps_dev_online(mut self, online: bool) -> Self {
+        self.deps_dev_online = online;
         self
     }
 
@@ -864,6 +873,13 @@ impl CycloneDxBuilder {
             "graph completeness computed"
         );
 
+        // C192 (m1067) — counted over the components this document emits,
+        // as the SPDX emitters do, so all three formats agree.
+        let deps_dev_outcomes: Option<String> = if self.deps_dev_online {
+            crate::enrich::deps_dev_outcome::document_value(effective_components)
+        } else {
+            None
+        };
         let metadata = build_metadata(
             MetadataSubject {
                 target_name,
@@ -914,6 +930,7 @@ impl CycloneDxBuilder {
                 nix_eval_tier: self.nix_eval_tier.as_deref(),
                 nix_eval_degraded: self.nix_eval_degraded.as_deref(),
                 nix_closure_degraded: self.nix_closure_degraded.as_deref(),
+                deps_dev_outcomes: deps_dev_outcomes.as_deref(),
                 nix_eval_system: self.nix_eval_system.as_deref(),
                 nixpkgs_haskell_closure: self.nixpkgs_haskell_closure.as_deref(),
             },

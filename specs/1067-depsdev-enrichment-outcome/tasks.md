@@ -44,16 +44,16 @@
 
 ### Tests for User Story 1
 
-- [ ] T006 [P] [US1] In a new test module `E/depsdev_source.rs::outcome_tests`, with the mock server, both `batch = true` and `batch = false`, run `enrich_components` over components and assert `extra_annotations["waybill:deps-dev-outcome"]`:
+- [X] T006 [P] [US1] In a new test module `E/depsdev_source.rs::outcome_tests`, with the mock server, both `batch = true` and `batch = false`, run `enrich_components` over components and assert `extra_annotations["waybill:deps-dev-outcome"]`:
   - `cargo` found with `MIT` → none;
   - found with `licenses: []` → none (matched; FR-003);
   - 404 / batch item without version → `absent`;
   - `licenses: ["non-standard"]` → `declined-invalid-license`, and the string `non-standard` appears in no annotation value. Repeat for a component that already carries a lockfile licence: still `declined-invalid-license` (analysis U2);
   - transport error (mock 500 on GET; batch failure falling back to a GET 500) → `transport-failure`;
   - `pkg:deb/...` → none (FR-002a).
-- [ ] T007 [P] [US1] Same module: a component looked up in two passes keeps only the final outcome. Simulate an initial pass absent, then a post-graph pass found → no annotation.
-- [ ] T008 [P] [US1] Same module: with `DepsDevSource::new(client, /* offline */ true)` and with enrichment disabled, no component gets C191 (FR-007).
-- [ ] T009 [P] [US1] Generate-layer test (new file `waybill-cli/tests/deps_dev_outcome_emission.rs`, or a unit test beside the C158 emission). A scan context with components carrying C191 plus one deb component, on an online run, must give:
+- [X] T007 [P] [US1] Same module: a component looked up in two passes keeps only the final outcome. Simulate an initial pass absent, then a post-graph pass found → no annotation.
+- [X] T008 [P] [US1] Same module: with `DepsDevSource::new(client, /* offline */ true)` and with enrichment disabled, no component gets C191 (FR-007).
+- [X] T009 [P] [US1] Generate-layer test (new file `waybill-cli/tests/deps_dev_outcome_emission.rs`, or a unit test beside the C158 emission). A scan context with components carrying C191 plus one deb component, on an online run, must give:
   - **CycloneDX:** C191 on the right components, and C192 equal to `{"absent":1,"declined-invalid-license":1,"not-queried:unsupported-ecosystem":1,"transport-failure":1}` (keys sorted);
   - **SPDX 2.3 and SPDX 3:** the same values;
   - **offline or disabled:** neither C191 nor C192;
@@ -61,22 +61,22 @@
 
 ### Implementation for User Story 1
 
-- [ ] T010 [US1] In `E/depsdev_source.rs::enrich_components` / `apply_version_info`, classify each looked-up component:
+- [X] T010 [US1] In `E/depsdev_source.rs::enrich_components` / `apply_version_info`, classify each looked-up component:
   - `Found` with ≥1 licence string, all failing `SpdxExpression::try_canonical` → `declined-invalid-license`. Log the rejected strings at debug only.
   - Any other `Found` → matched: remove `waybill:deps-dev-outcome`.
   - `Absent` → `absent`.
   - `Failed` → `transport-failure`.
 
   Write the value into `extra_annotations` per pass, and only when the source is online (FR-007). Keep `matched`/`enriched` counters and the log line unchanged (FR-008).
-- [ ] T011 [US1] Carry an "online deps.dev pass ran" flag to generate, mirroring how `enrichment_degraded` (C158) reaches it (`cli/scan_cmd.rs` around 3843/5009 → `generate/mod.rs:94`).
-- [ ] T012 [US1] Compute and emit C192 `waybill:deps-dev-outcomes` at document scope in the three emitters, next to C158 (`generate/cyclonedx/metadata.rs` ~371, `generate/spdx/annotations.rs` ~538, `generate/spdx/v3_annotations.rs` ~556):
+- [X] T011 [US1] Carry an "online deps.dev pass ran" flag to generate, mirroring how `enrichment_degraded` (C158) reaches it (`cli/scan_cmd.rs` around 3843/5009 → `generate/mod.rs:94`).
+- [X] T012 [US1] Compute and emit C192 `waybill:deps-dev-outcomes` at document scope in the three emitters, next to C158 (`generate/cyclonedx/metadata.rs` ~371, `generate/spdx/annotations.rs` ~538, `generate/spdx/v3_annotations.rs` ~556):
   - count C191 values over the final components, plus components whose PURL type is outside the six ecosystems as `not-queried:unsupported-ecosystem`;
   - include non-zero counts only; serialise as canonical JSON with sorted keys;
   - emit only when the flag from T011 is set and at least one count exists.
-- [ ] T013 [US1] Parity rows in `waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3,mod}.rs`: **C191** at component scope (the macro pattern of an existing per-component annotation row) and **C192** at document scope, both `SymmetricEqual`.
+- [X] T013 [US1] Parity rows in `waybill-cli/src/parity/extractors/{cdx,spdx2,spdx3,mod}.rs`: **C191** at component scope (the macro pattern of an existing per-component annotation row) and **C192** at document scope, both `SymmetricEqual`.
   - Add the new extractor functions to the explicit `use` lists in `mod.rs`.
   - Keep the extractor table sorted by `row_id` (the parity test enforces it).
-- [ ] T014 [US1] Add C191 and C192 rows to `docs/reference/sbom-format-mapping.md`, **one line each**, after C190, from `contracts/deps-dev-outcome.md`. Run `cargo test -p waybill --lib parity` and `--test sbom_format_mapping_coverage`. Run T006–T009 to green; show T006 fails with T010's classification removed (local edit, reverted).
+- [X] T014 [US1] Add C191 and C192 rows to `docs/reference/sbom-format-mapping.md`, **one line each**, after C190, from `contracts/deps-dev-outcome.md`. Run `cargo test -p waybill --lib parity` and `--test sbom_format_mapping_coverage`. Run T006–T009 to green; show T006 fails with T010's classification removed (local edit, reverted).
 
 **Checkpoint**: US1 complete.
 

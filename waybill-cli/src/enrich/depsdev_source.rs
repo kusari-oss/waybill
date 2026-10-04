@@ -26,6 +26,7 @@ use super::degradation::{DegradationMode, DegradationRecord};
 use super::deps_dev_graph::CONCURRENT_REQUESTS;
 use super::progress::ProgressReporter;
 use super::request_key::EnrichmentKey;
+use super::deps_dev_outcome::{self, Outcome};
 use std::time::Instant;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use super::source::EnrichmentSource;
@@ -671,6 +672,19 @@ impl DepsDevSource {
     /// a rising unmapped count means the upstream vocabulary moved and
     /// a label should be mapped; a rising malformed count means
     /// upstream data quality degraded and it should not.
+    /// Milestone 1067 (FR-004): deps.dev returned at least one licence
+    /// string and [`Self::apply_version_info`] would accept none of them.
+    /// A record with no strings at all is a match with nothing to add.
+    fn licences_declined(info: &VersionInfo) -> bool {
+        let mut offered = info.licenses.iter().map(|l| l.trim()).filter(|l| !l.is_empty());
+        let mut any = false;
+        let all_rejected = offered.all(|l| {
+            any = true;
+            SpdxExpression::try_canonical(l).is_err()
+        });
+        any && all_rejected
+    }
+
     fn apply_version_info(
         component: &mut ResolvedComponent,
         system: &str,
@@ -861,6 +875,20 @@ pub async fn enrich_components(
     for ((idx, key), result) in planned.into_iter().zip(fetched) {
         let component = &mut components[idx];
         let licenses_before = component.licenses.len();
+        // Milestone 1067 (#1058): why this component was not enriched.
+        // Offline scans record nothing (FR-007), so they stay byte-identical.
+        let outcome = match &result {
+            LookupResult::Found(info) if DepsDevSource::licences_declined(info) => {
+                Some(Outcome::DeclinedInvalidLicense)
+            }
+            LookupResult::Found(_) => None,
+            LookupResult::Absent => Some(Outcome::Absent),
+            LookupResult::Failed => Some(Outcome::TransportFailure),
+            LookupResult::Unqueried => None,
+        };
+        if !source.offline {
+            deps_dev_outcome::record(component, outcome);
+        }
         if let LookupResult::Found(info) = result {
             matched += 1;
             let (unmapped, malformed) =
@@ -955,13 +983,13 @@ pub async fn enrich_components(
 
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
-mod tests {
+pub(crate) mod tests {
     use super::*;
     use waybill_common::resolution::{ResolutionEvidence, ResolutionTechnique};
     use waybill_common::types::purl::Purl;
     use std::time::Duration;
 
-    pub(super) fn make_component(purl_str: &str) -> ResolvedComponent {
+    pub(crate) fn make_component(purl_str: &str) -> ResolvedComponent {
         let purl = Purl::new(purl_str).expect("valid purl");
         ResolvedComponent {
             build_inclusion: None,
@@ -2377,5 +2405,166 @@ mod m1067_absence_tests {
 
         assert!(matches!(&got[1], LookupResult::Found(v) if v.licenses == vec!["Apache-2.0"]), "{got:?}");
         assert!(!matches!(s.disk.get(&key("b")), Some(None)), "never cached as absent");
+    }
+}
+
+// Milestone 1067 (#1058) US1 — each looked-up component carries the reason
+// deps.dev did not enrich it (C191), and nothing when it matched.
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod outcome_tests {
+    use super::tests::make_component;
+    use super::*;
+    use crate::enrich::deps_dev_outcome::OUTCOME_ANNOTATION;
+    use wiremock::matchers::{method, path, path_regex};
+    use wiremock::{Mock, MockServer, ResponseTemplate};
+
+    fn outcome(c: &ResolvedComponent) -> Option<&str> {
+        c.extra_annotations.get(OUTCOME_ANNOTATION).and_then(|v| v.as_str())
+    }
+    fn item(name: &str, licences: Option<&[&str]>) -> serde_json::Value {
+        let mut e = serde_json::json!({
+            "request": {"versionKey": {"system": "CARGO", "name": name, "version": "1.0.0"}}
+        });
+        if let Some(l) = licences {
+            e["version"] = serde_json::json!({"licenses": l, "links": []});
+        }
+        e
+    }
+    async fn get(server: &MockServer, name: &str, status: u16, licences: &[&str]) {
+        Mock::given(method("GET"))
+            .and(path_regex(format!(r"/packages/{name}/versions/")))
+            .respond_with(
+                ResponseTemplate::new(status)
+                    .set_body_json(serde_json::json!({"licenses": licences, "links": []})),
+            )
+            .mount(server)
+            .await;
+    }
+    fn source(server: &MockServer, offline: bool, batch: bool) -> DepsDevSource {
+        let client = DepsDevClient::new(std::time::Duration::from_secs(5))
+            .with_base_url(format!("{}/v3", server.uri()));
+        DepsDevSource::new(client, offline).with_batch(batch)
+    }
+    fn components() -> Vec<ResolvedComponent> {
+        let mut declined_with_lockfile_licence = make_component("pkg:cargo/declined2@1.0.0");
+        declined_with_lockfile_licence
+            .licenses
+            .push(SpdxExpression::try_canonical("MIT").unwrap());
+        vec![
+            make_component("pkg:cargo/found@1.0.0"),
+            make_component("pkg:cargo/empty@1.0.0"),
+            make_component("pkg:cargo/absent@1.0.0"),
+            make_component("pkg:cargo/declined@1.0.0"),
+            declined_with_lockfile_licence,
+            make_component("pkg:cargo/broken@1.0.0"),
+            make_component("pkg:deb/debian/zlib@1.0.0"),
+        ]
+    }
+    const EXPECTED: [Option<&str>; 7] = [
+        None,
+        None, // matched with nothing to add (FR-003)
+        Some("absent"),
+        Some("declined-invalid-license"),
+        Some("declined-invalid-license"), // already licensed (analysis U2)
+        Some("transport-failure"),
+        None, // unsupported ecosystem: C192 only (FR-002a)
+    ];
+
+    fn assert_outcomes(cs: &[ResolvedComponent]) {
+        let got: Vec<Option<&str>> = cs.iter().map(outcome).collect();
+        assert_eq!(got, EXPECTED);
+        for c in cs {
+            let all = serde_json::to_string(&c.extra_annotations).unwrap();
+            assert!(!all.contains("non-standard"), "upstream text leaked: {all}");
+        }
+    }
+
+    /// T006, per-key path.
+    #[tokio::test]
+    async fn per_key_outcomes() {
+        let server = MockServer::start().await;
+        get(&server, "found", 200, &["MIT"]).await;
+        get(&server, "empty", 200, &[]).await;
+        get(&server, "declined", 200, &["non-standard"]).await;
+        get(&server, "declined2", 200, &["non-standard"]).await;
+        get(&server, "broken", 500, &[]).await;
+        // `absent` is unmocked: wiremock answers 404.
+        let mut cs = components();
+        enrich_components(&source(&server, false, false), &mut cs, EnrichmentPass::Initial).await;
+        assert_outcomes(&cs);
+    }
+
+    /// T006, batch path: an item without `version` is absent, and a slot
+    /// the batch never answered falls back to a GET that fails.
+    #[tokio::test]
+    async fn batch_outcomes() {
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/v3alpha/versionbatch"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "responses": [
+                    item("found", Some(&["MIT"])),
+                    item("empty", Some(&[])),
+                    item("absent", None),
+                    item("declined", Some(&["non-standard"])),
+                    item("declined2", Some(&["non-standard"])),
+                ],
+                "nextPageToken": "",
+            })))
+            .mount(&server)
+            .await;
+        get(&server, "broken", 500, &[]).await;
+        let mut cs = components();
+        enrich_components(&source(&server, false, true), &mut cs, EnrichmentPass::Initial).await;
+        assert_outcomes(&cs);
+    }
+
+    /// T006, batch endpoint down: every key falls back per key.
+    #[tokio::test]
+    async fn batch_failure_falls_back_with_the_same_outcomes() {
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/v3alpha/versionbatch"))
+            .respond_with(ResponseTemplate::new(500))
+            .mount(&server)
+            .await;
+        get(&server, "found", 200, &["MIT"]).await;
+        get(&server, "empty", 200, &[]).await;
+        get(&server, "declined", 200, &["non-standard"]).await;
+        get(&server, "declined2", 200, &["non-standard"]).await;
+        get(&server, "broken", 500, &[]).await;
+        let mut cs = components();
+        enrich_components(&source(&server, false, true), &mut cs, EnrichmentPass::Initial).await;
+        assert_outcomes(&cs);
+    }
+
+    /// T007: the final pass's outcome is the one kept.
+    #[tokio::test]
+    async fn a_later_match_clears_an_earlier_outcome() {
+        let first = MockServer::start().await; // 404s everything
+        let second = MockServer::start().await;
+        get(&second, "x", 200, &["MIT"]).await;
+        let mut cs = vec![make_component("pkg:cargo/x@1.0.0")];
+        enrich_components(&source(&first, false, false), &mut cs, EnrichmentPass::Initial).await;
+        assert_eq!(outcome(&cs[0]), Some("absent"));
+        enrich_components(&source(&second, false, false), &mut cs, EnrichmentPass::PostGraph).await;
+        assert_eq!(outcome(&cs[0]), None);
+    }
+
+    /// T008: offline, with or without a disk cache, records nothing (FR-007).
+    #[tokio::test]
+    async fn offline_records_nothing() {
+        let server = MockServer::start().await;
+        let dir = tempfile::tempdir().unwrap();
+        let mut with_disk = source(&server, true, false);
+        with_disk.disk =
+            super::super::deps_dev_disk_cache::DepsDevDiskCache::at(dir.path().to_path_buf());
+        for s in [source(&server, true, false), with_disk] {
+            let mut cs = components();
+            enrich_components(&s, &mut cs, EnrichmentPass::Initial).await;
+            assert!(cs.iter().all(|c| outcome(c).is_none()));
+        }
+        assert!(server.received_requests().await.unwrap().is_empty());
     }
 }

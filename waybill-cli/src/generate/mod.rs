@@ -142,6 +142,12 @@ pub struct ScanArtifacts<'a> {
     /// recorded. Constitution XII.3: degraded enrichment is disclosed in the
     /// document, not only logged.
     pub nix_closure_degraded: Option<&'a str>,
+    /// Milestone 1067 (#1058; C192) — the deps.dev enrichment pass ran
+    /// online. Gates the document-scope outcome counts, which are computed
+    /// in each emitter from the components it emits so they always agree
+    /// with the per-component C191 values. `false` keeps offline and
+    /// deps.dev-disabled scans byte-identical (FR-007).
+    pub deps_dev_online: bool,
     /// Milestone 1034 (#971 part A, C179) — the Nix platform the evaluated
     /// results describe.
     ///

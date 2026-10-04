@@ -983,6 +983,8 @@ cdx_anno!(c186_cdx, "waybill:nixpkgs-declaration", component);
 cdx_anno!(c187_cdx, "waybill:nixpkgs-accepted-insecure", document);
 cdx_anno!(c188_cdx, "waybill:nixpkgs-security", document);
 cdx_anno!(c189_cdx, "waybill:nixpkgs-declaration-grade", document);
+cdx_anno!(c191_cdx, "waybill:deps-dev-outcome", component);
+cdx_anno!(c192_cdx, "waybill:deps-dev-outcomes", document);
 
 /// C185 — the patches a closure member applies.
 ///
