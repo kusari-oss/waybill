@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [x] No [NEEDS CLARIFICATION] markers remain
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -31,5 +31,5 @@
 
 ## Notes
 
-- Three clarifications are open: relationship shape, leaf components with unknown dependencies, claim strength.
+- Clarified 2026-10-04: group per kind; NoAssertionElement for unknown leaves; `complete` only where a relationship exists.
 - Format names (SPDX 3, CycloneDX) and their field names appear because they are the product's output contract, as in every waybill spec.

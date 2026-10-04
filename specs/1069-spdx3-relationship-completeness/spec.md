@@ -28,11 +28,24 @@ SPDX 3 is the one format with a native carrier that waybill leaves unused (Const
 
 So the native field can carry this signal only if a component's dependencies are expressed so that one relationship holds the set the qualifier describes.
 
-[NEEDS CLARIFICATION: Relationship shape. (A) Group each component's dependencies of one kind into a single relationship whose targets are the whole set, so `completeness` describes that set. Every SPDX 3 golden with dependencies changes shape. (B) Keep one relationship per edge, and set only `incomplete` on edges from components whose resolution did not complete; never claim `complete`. (C) Keep one relationship per edge and set `complete` or `incomplete` per the same predicate CycloneDX uses, accepting that a per-edge `complete` overstates.]
+**Decisions (clarified 2026-10-04)**:
+- **Shape:** each component's dependencies of one kind become one relationship whose targets are the whole set.
+- **Unknown leaves:** a component whose dependencies are unknown, and that has no outgoing relationship, gets a dependency relationship to `NoAssertionElement` marked `noAssertion`.
+- **Claim strength:** `complete` is asserted on resolved components that have a relationship. Resolved components with no dependencies get no added relationship, since an absent qualifier claims nothing.
 
-[NEEDS CLARIFICATION: Components whose dependencies are unknown and that have no outgoing relationship at all (an offline Go leaf, for example). SPDX 3 requires at least one target, and provides `NoAssertionElement` for "unknown". (A) Emit a dependency relationship to `NoAssertionElement` marked `noAssertion`, so the gap is native. (B) Emit nothing for them; the gap stays in the waybill annotations only.]
+## Clarifications
 
-[NEEDS CLARIFICATION: Claim strength. (A) Mirror CycloneDX exactly: `complete` where CycloneDX lists the component under `aggregate: complete`, `incomplete` where it lists it under `unknown`. (B) Only ever mark `incomplete` or `noAssertion`; leave `complete` unset, since absence of the field already means no assertion.]
+### Session 2026-10-04
+
+- Q: Relationship shape? → A: **Group** each component's dependencies of one kind into a single relationship whose targets are the whole set, so `completeness` describes that set. Every SPDX 3 golden with dependencies changes shape.
+- Q: Components whose dependencies are unknown and that have no outgoing relationship? → A: Emit a dependency relationship to **`NoAssertionElement`** marked `noAssertion`.
+- Q: Claim strength? → A: **`complete` on resolved components that have a relationship; nothing added for resolved leaves.** `incomplete` / `noAssertion` wherever CycloneDX says `unknown`.
+
+## Out of Scope
+
+- Relationships for resolved components with no dependencies (`NoneElement`). Not added: an absent qualifier claims nothing.
+- Changes to CycloneDX or SPDX 2.3 output.
+- Changes to the milestone-866 completeness predicate itself.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -80,7 +93,7 @@ CycloneDX and SPDX 2.3 output is byte-identical for every scan. SPDX 3 output ch
 
 ### Edge Cases
 
-- **Mixed lifecycle scopes.** A component with runtime and development dependencies has relationships of different kinds (dependency, and lifecycle-scoped). Completeness describes each kind's set separately.
+- **Mixed lifecycle scopes.** A component with runtime and development dependencies has relationships of different kinds (dependency, and lifecycle-scoped per scope). Each kind is grouped and qualified separately; the component's completeness applies to each.
 - **A component in a complete ecosystem that the dependency walk did not reach.** It is treated as not complete, exactly as milestone 866 treats it for CycloneDX.
 - **Workspace and main-module edges** that waybill synthesizes are ordinary dependency relationships and follow the same rule.
 - **Root-override and split documents.** Completeness is computed over the components and relationships of the document being written.
@@ -89,9 +102,17 @@ CycloneDX and SPDX 2.3 output is byte-identical for every scan. SPDX 3 output ch
 
 ### Functional Requirements
 
-- **FR-001**: SPDX 3 dependency relationships MUST carry `completeness` where waybill knows a component's dependency set is not complete, using the same predicate milestone 866 applies to CycloneDX `compositions[]`. The two formats then agree by construction.
+- **FR-001**: A component's SPDX 3 dependencies of one kind MUST be emitted as one relationship whose targets are the whole set of that kind.
+- **FR-001a**: That relationship MUST carry `completeness` from the same predicate milestone 866 applies to CycloneDX `compositions[]`, so the two formats agree by construction:
+  - `complete` when CycloneDX lists the component under `aggregate: complete`;
+  - `incomplete` when CycloneDX lists it under `aggregate: unknown`.
+- **FR-001b**: A component CycloneDX lists under `aggregate: unknown` that has no outgoing dependency MUST get one dependency relationship to `NoAssertionElement`, marked `noAssertion`.
+- **FR-001c**: A resolved component with no dependencies MUST NOT gain a relationship.
 - **FR-002**: A completeness value MUST NOT claim more than waybill knows. A relationship MUST NOT be marked `complete` unless its targets are the component's whole dependency set of that kind.
-- **FR-003**: For every component, the completeness SPDX 3 expresses MUST agree with the CycloneDX aggregate (`complete` / `unknown`) the same scan emits.
+- **FR-003**: For every component, the completeness SPDX 3 expresses MUST agree with the CycloneDX aggregate the same scan emits:
+  - every CycloneDX `unknown` component is marked `incomplete` or `noAssertion`;
+  - every CycloneDX `complete` component that has a dependency relationship is marked `complete`;
+  - no other combination occurs.
 - **FR-004**: The waybill completeness annotations (`waybill:graph-completeness`, `waybill:graph-completeness-reason`, `waybill:orphan-reason`) MUST remain in all three formats, with unchanged values.
 - **FR-005**: CycloneDX and SPDX 2.3 output MUST be byte-identical to the output before this feature.
 - **FR-006**: Every SPDX 3 document waybill emits MUST pass the pinned SPDX 3 conformance validator.
@@ -106,7 +127,7 @@ CycloneDX and SPDX 2.3 output is byte-identical for every scan. SPDX 3 output ch
 
 ### Measurable Outcomes
 
-- **SC-001**: On spf13/cobra scanned offline, the components CycloneDX lists under `aggregate: unknown` are exactly the components SPDX 3 marks as not complete: 100% agreement, both ways.
+- **SC-001**: On spf13/cobra scanned offline, the components CycloneDX lists under `aggregate: unknown` are exactly the components SPDX 3 marks `incomplete` or `noAssertion`: 100% agreement, both ways.
 - **SC-002**: Across the public corpus, every component's SPDX 3 completeness agrees with its CycloneDX aggregate.
 - **SC-003**: Zero SPDX 3 relationships claim `complete` for a component whose dependency set they do not fully contain.
 - **SC-004**: CycloneDX and SPDX 2.3 goldens are byte-identical. Every SPDX 3 golden passes the conformance validator.
