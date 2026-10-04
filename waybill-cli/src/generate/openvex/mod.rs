@@ -16,6 +16,7 @@
 //! See [`statements`] for the typed model.
 
 pub mod statements;
+pub(crate) mod claims;
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;
@@ -265,16 +266,15 @@ fn backport_statements(artifacts: &ScanArtifacts<'_>) -> Vec<OpenVexStatement> {
     out
 }
 
-/// Build the OpenVEX sidecar for a scan. Returns `Ok(None)` when the
-/// scan has zero advisories across every component — no file is
-/// then written and the SPDX serializer skips the
-/// `externalDocumentRefs` entry.
 use crate::scan_fs::package_db::nix::declarations::ANN_NIXPKGS_DECLARATION;
 
-pub fn serialize_openvex(
-    artifacts: &ScanArtifacts<'_>,
-    cfg: &OutputConfig,
-) -> anyhow::Result<Option<EmittedArtifact>> {
+/// Every VEX statement waybill makes about a scan, in emission order.
+///
+/// Milestone 1068 (#1039): the single source for both carriers — the OpenVEX
+/// sidecar beside SPDX, and CycloneDX `vulnerabilities[]`. Built once per
+/// document from that document's artifacts, so the two formats cannot
+/// disagree about which statements exist.
+pub(crate) fn vex_statements(artifacts: &ScanArtifacts<'_>) -> Vec<OpenVexStatement> {
     // Group advisories by id so one CVE that affects three
     // components emits one statement with three products[] — the
     // OpenVEX idiom, not three separate statements.
@@ -368,10 +368,6 @@ pub fn serialize_openvex(
             .collect()
     };
 
-    if products_by_advisory.is_empty() && backport.is_empty() && declared.is_empty() {
-        return Ok(None);
-    }
-
     // One statement per advisory id, products[] deduped within.
     // `under_investigation` is the status waybill can honestly
     // emit today — the scanner has discovered the advisory but
@@ -396,8 +392,20 @@ pub fn serialize_openvex(
             }
         })
         .collect();
-    let statements: Vec<OpenVexStatement> =
-        statements.into_iter().chain(backport).chain(declared).collect();
+    statements.into_iter().chain(backport).chain(declared).collect()
+}
+
+/// Build the OpenVEX sidecar for a scan. Returns `Ok(None)` when the scan
+/// makes no VEX statement — no file is then written and the SPDX serializer
+/// skips the `externalDocumentRefs` entry.
+pub fn serialize_openvex(
+    artifacts: &ScanArtifacts<'_>,
+    cfg: &OutputConfig,
+) -> anyhow::Result<Option<EmittedArtifact>> {
+    let statements = vex_statements(artifacts);
+    if statements.is_empty() {
+        return Ok(None);
+    }
 
     let author = format!("waybill-{}", cfg.mikebom_version);
     let timestamp = cfg
