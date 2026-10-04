@@ -77,7 +77,7 @@ A scan where deps.dev matched every queried component and no other component is 
 
 ### Edge Cases
 
-- **Already licensed from the lockfile, so not queried** (the likely guice case, to be confirmed in the plan): recorded as `not-needed`, not as a gap. Not having asked is fine when the licence is already known.
+- **Already licensed from the lockfile:** not a skip. waybill asks deps.dev regardless (plan research R1 found no such rule). guice's 63 never-queried components in the initial pass are queried by the post-graph pass.
 - **Matched, but nothing new added** (express: 369 matched, 4 enriched): not a gap. The record was used and confirmed nothing, so there is no per-component reason.
 - **Cache hits:** a cached positive is `matched`. A cached negative from an earlier 404 is `absent`, the same as live.
 - **Both passes:** if the initial and post-graph passes reach different outcomes for one component, the later pass's outcome wins. A component is never recorded twice.
@@ -88,7 +88,7 @@ A scan where deps.dev matched every queried component and no other component is 
 ### Functional Requirements
 
 - **FR-001**: For each component the deps.dev pass considered and did not enrich, waybill MUST classify the outcome into a closed set:
-  - `not-queried`, with a reason: `unsupported-ecosystem`, `incomplete-coordinate` or `not-needed`;
+  - `not-queried`, with a reason: `unsupported-ecosystem` or `incomplete-coordinate`;
   - `absent`;
   - `declined`;
   - `transport-failure`.
@@ -102,14 +102,15 @@ A scan where deps.dev matched every queried component and no other component is 
 - **FR-004**: waybill MUST NOT send a deps.dev request for a coordinate whose version is a known placeholder (at least `v0.0.0-unknown`; the plan enumerates the set). Such a component's outcome is `not-queried` / `incomplete-coordinate`.
 - **FR-005**: A deps.dev 404 MUST be distinguished from a transport failure, as the ClearlyDefined path already does. The two MUST NOT share an outcome.
 - **FR-006**: `declined` MUST be recorded as a reason code from a closed set (at least `declined-invalid-license`). No deps.dev content may be copied into the document. The rejected value MAY appear in the log.
-- **FR-007**: When the deps.dev pass made no network request for the scan (`--offline`, or deps.dev disabled), no component MAY carry a per-component outcome and no document-level count is emitted. Existing document-level signals already describe that mode.
+- **FR-007**: When the scan ran deps.dev enrichment offline (`--offline`) or not at all (deps.dev disabled), no component MAY carry a per-component outcome and no document-level count is emitted. Existing document-level signals already describe those modes. An online scan whose answers came from the disk cache is online: cached answers produce outcomes exactly as live ones do.
 - **FR-008**: The existing document-level degradation record (C158) and the per-pass log line MUST keep their current meaning and values.
+- **FR-010**: An outcome of `absent` MUST mean deps.dev said so: a 404, or a batch item returned without a version. A coordinate the batch response did not answer, or a later duplicate of one coordinate in a single batch request, MUST NOT be recorded or cached as absent. Today both are (plan research R2), which would make the new signal report present components as absent.
 - **FR-009**: Scans in which no component is left un-enriched (FR-003), and all offline or deps.dev-disabled scans (FR-007), MUST produce byte-identical output to the output before this feature. FR-004's skipped request changes no output by itself.
 
 ### Key Entities
 
 - **Enrichment outcome**: per component and per scan. Its states are `matched`, `not-queried{reason}`, `absent`, `declined` and `transport-failure`; only the non-matched states are emitted.
-- **Placeholder version**: a version string that denotes "unknown" rather than a release, such as `v0.0.0-unknown`.
+- **Placeholder version**: a version string that denotes "unknown" rather than a release. The set is `""`, `unknown`, `0.0.0-unknown`, `v0.0.0-unknown`, `noassertion`, `none` and `latest`, compared case-insensitively. `0.0.0` is not in the set, because it is a real version of some packages.
 
 ## Success Criteria *(mandatory)*
 
@@ -124,5 +125,5 @@ A scan where deps.dev matched every queried component and no other component is 
 ## Assumptions
 
 - **Scope:** deps.dev only. ClearlyDefined is opt-in since #930 and already separates 404 from transport failure; extending this signal to it is a follow-up.
-- **Cache record format:** the disk cache may need to store a negative (404) result to answer "absent" from cache. That is a plan concern; a format change must stay readable for existing caches, which are treated as misses.
-- **`not-needed` reason:** the exact skip rule behind guice's never-queried maven components is to be confirmed by plan research. The spec only requires that a skip by design is not reported as a gap.
+- **Cache record format:** unchanged. The disk cache already stores a 404 as `record: null` (research R4); FR-010 only stops it recording absences deps.dev did not report.
+- **Two passes:** the initial pass runs before graph expansion and the post-graph pass re-visits the whole set (research R5). The outcome recorded is the final one.

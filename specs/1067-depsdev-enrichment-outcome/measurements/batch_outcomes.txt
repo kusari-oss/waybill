@@ -1,0 +1,14 @@
+batch HTTP 200, 2959 bytes
+  [0] NPM/express@4.18.2: keys=['request', 'version'] -> version present, licenses=['MIT']
+  [1] NPM/express@999.0.0: keys=['request'] -> version=null/absent
+  [2] NPM/waybill-probe-1058-nonexistent@1.0.0: keys=['request'] -> version=null/absent
+  [3] GO/go.opentelemetry.io/otel/bridge/opencensus@v0.0.0-unknown: keys=['request'] -> version=null/absent
+  [4] MAVEN/guava@33.0.0-jre: keys=['request'] -> version=null/absent
+  [5] MAVEN/com.google.guava:guava@33.0.0-jre: keys=['request', 'version'] -> version present, licenses=['Apache-2.0']
+nextPageToken: ''
+GET NPM/express@4.18.2: HTTP 200 b'{"versionKey":{"system":"NPM", "name":"express", "version":"4.18.2"}, "published'
+GET NPM/express@999.0.0: HTTP 404 b'version not found'
+GET NPM/waybill-probe-1058-nonexistent@1.0.0: HTTP 404 b'version not found'
+GET GO/go.opentelemetry.io/otel/bridge/opencensus@v0.0.0-unknown: HTTP 404 b'version not found'
+GET MAVEN/guava@33.0.0-jre: HTTP 404 b'version not found'
+GET MAVEN/com.google.guava:guava@33.0.0-jre: HTTP 200 b'{"versionKey":{"system":"MAVEN", "name":"com.google.guava:guava", "version":"33.'
