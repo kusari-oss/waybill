@@ -135,45 +135,29 @@
       "type": "software_Package"
     },
     {
+      "completeness": "complete",
+      "creationInfo": "_:creation-info",
+      "from": "https://waybill.kusari.dev/spdx3/doc-ZGBXGIVULI2U3AU2PIZNDQE2/pkg-root-JRDK72P47VQ5ATJ4",
+      "relationshipType": "dependsOn",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-ZGBXGIVULI2U3AU2PIZNDQE2/rel-IXNWZA43LFR6PJTB",
+      "to": [
+        "https://waybill.kusari.dev/spdx3/doc-ZGBXGIVULI2U3AU2PIZNDQE2/pkg-NDJKRQLKYSDRTD3Q",
+        "https://waybill.kusari.dev/spdx3/doc-ZGBXGIVULI2U3AU2PIZNDQE2/pkg-QUIZBKSWTOAVWLHQ",
+        "https://waybill.kusari.dev/spdx3/doc-ZGBXGIVULI2U3AU2PIZNDQE2/pkg-SFZ6ZH3BHKUFYZNC"
+      ],
+      "type": "Relationship"
+    },
+    {
+      "completeness": "complete",
       "creationInfo": "_:creation-info",
       "from": "https://waybill.kusari.dev/spdx3/doc-ZGBXGIVULI2U3AU2PIZNDQE2/pkg-root-JRDK72P47VQ5ATJ4",
       "relationshipType": "dependsOn",
       "scope": "development",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-ZGBXGIVULI2U3AU2PIZNDQE2/rel-72UXWBQ5KOFWTM32",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-ZGBXGIVULI2U3AU2PIZNDQE2/rel-QOPOT4PP4NA4KWIU",
       "to": [
         "https://waybill.kusari.dev/spdx3/doc-ZGBXGIVULI2U3AU2PIZNDQE2/pkg-LM6FBYXSKLDBXQVU"
       ],
       "type": "LifecycleScopedRelationship"
-    },
-    {
-      "creationInfo": "_:creation-info",
-      "from": "https://waybill.kusari.dev/spdx3/doc-ZGBXGIVULI2U3AU2PIZNDQE2/pkg-root-JRDK72P47VQ5ATJ4",
-      "relationshipType": "dependsOn",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-ZGBXGIVULI2U3AU2PIZNDQE2/rel-CDNFQMYN7OYISFHG",
-      "to": [
-        "https://waybill.kusari.dev/spdx3/doc-ZGBXGIVULI2U3AU2PIZNDQE2/pkg-NDJKRQLKYSDRTD3Q"
-      ],
-      "type": "Relationship"
-    },
-    {
-      "creationInfo": "_:creation-info",
-      "from": "https://waybill.kusari.dev/spdx3/doc-ZGBXGIVULI2U3AU2PIZNDQE2/pkg-root-JRDK72P47VQ5ATJ4",
-      "relationshipType": "dependsOn",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-ZGBXGIVULI2U3AU2PIZNDQE2/rel-QCUBFVFPLYRK4QJL",
-      "to": [
-        "https://waybill.kusari.dev/spdx3/doc-ZGBXGIVULI2U3AU2PIZNDQE2/pkg-QUIZBKSWTOAVWLHQ"
-      ],
-      "type": "Relationship"
-    },
-    {
-      "creationInfo": "_:creation-info",
-      "from": "https://waybill.kusari.dev/spdx3/doc-ZGBXGIVULI2U3AU2PIZNDQE2/pkg-root-JRDK72P47VQ5ATJ4",
-      "relationshipType": "dependsOn",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-ZGBXGIVULI2U3AU2PIZNDQE2/rel-QIWPTOFALB5PCGFX",
-      "to": [
-        "https://waybill.kusari.dev/spdx3/doc-ZGBXGIVULI2U3AU2PIZNDQE2/pkg-SFZ6ZH3BHKUFYZNC"
-      ],
-      "type": "Relationship"
     },
     {
       "annotationType": "other",

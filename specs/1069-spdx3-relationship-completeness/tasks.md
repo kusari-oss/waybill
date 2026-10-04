@@ -42,7 +42,7 @@
 
 ### Tests for User Story 1
 
-- [ ] T004 [P] [US1] In `G/spdx/v3_relationships.rs::tests`, grouping-pass unit tests for `group_dependency_relationships(rels, &claims, root_iri, purl_by_iri)`:
+- [X] T004 [P] [US1] In `G/spdx/v3_relationships.rs::tests`, grouping-pass unit tests for `group_dependency_relationships(rels, &claims, root_iri, purl_by_iri)`:
   - three per-edge `dependsOn` from one component → one relationship, `to` sorted and deduplicated;
   - a `LifecycleScopedRelationship` (`scope: development`) from the same component stays a separate grouped relationship;
   - non-`dependsOn` relationships (`contains`, `describes`) are untouched;
@@ -54,7 +54,7 @@
     - root with `root_complete` → `complete`, and unqualified when false;
     - unclaimed → no `completeness` and nothing added;
     - complete leaf → nothing added.
-- [ ] T005 [P] [US1] In `G/spdx/mod.rs::tests`, a cross-format agreement test (SC-002).
+- [X] T005 [P] [US1] In `G/spdx/mod.rs::tests`, a cross-format agreement test (SC-002).
   - **Setup:** build artifacts with `mk_artifacts`, setting `complete_ecosystems` (for example `["cargo", "npm"]`) and components spanning the four cases:
     - **complete:** a cargo component reached from the root;
     - **unknown:** an npm component with no incoming edge, which makes npm unreachable and so `unknown`, plus one npm leaf;
@@ -71,16 +71,17 @@
   - **Root override:** repeat with `arts.root_override` set, so the main module is dropped. The root relationship's completeness still follows `root_complete`.
   - **Same reachable set (analysis I1):** assert that the `reachable_set` SPDX 3 computes equals the one CycloneDX computes, for these artifacts and for the root-override case. Agreement by construction holds only if both formats run the shared predicate on the same reachability.
   - Show it fails with T008's pass disabled (local edit, reverted).
-- [ ] T006 [P] [US1] Conformance: extend the existing SPDX 3 conformance test path (the milestone-078 `spdx3-validate` integration) so a document carrying grouped relationships, all three `completeness` values and a `NoAssertionElement` relationship is validated, using the T005 artifacts written to a tempdir.
+- [X] T006 [P] [US1] Conformance: extend the existing SPDX 3 conformance test path (the milestone-078 `spdx3-validate` integration) so a document carrying grouped relationships, all three `completeness` values and a `NoAssertionElement` relationship is validated, using the T005 artifacts written to a tempdir.
+  - **Done via the existing gate:** `spdx3_conformance::every_existing_golden_passes_validator` validates every in-repo SPDX 3 golden. After T010 they carry `complete` (cargo, gem and others), `incomplete` and `noAssertion` plus `NoAssertionElement` (golang), so no new harness was needed. It passed 17/17 with `WAYBILL_REQUIRE_SPDX3_VALIDATOR=1`.
   - If that suite only validates fixture scans, add one in-crate-built document to it. If no harness accepts an in-memory document, run `measurements/probe_validator.py` on a regenerated document in T017 instead, and note it here.
 
 ### Implementation for User Story 1
 
-- [ ] T007 [US1] In `G/spdx/v3_document.rs`, move `compute_graph_completeness` (~864) above the relationship build (~673). Its inputs, `scan.components` and `m194_classifier_relationships`, already exist there.
+- [X] T007 [US1] In `G/spdx/v3_document.rs`, move `compute_graph_completeness` (~864) above the relationship build (~673). Its inputs, `scan.components` and `m194_classifier_relationships`, already exist there.
   - Derive `degraded_ecosystems(...)` and `dependency_claims(...)` with the same arguments CycloneDX uses: `scan.complete_ecosystems`, `Some(&gc.reachable_set)`, `scan.integrity`.
   - Keep passing the same `GraphCompletenessResult` to `build_document_annotations`, so the annotations are unchanged (FR-004).
   - **If the reachable sets differ** (T005's equality assertion): SPDX 3 runs reachability over a different graph than CycloneDX (`metadata_relationships_augmented` vs `m194_classifier_relationships`). Reconcile the inputs here, not in the predicate. Do not paper over it by recomputing claims per format.
-- [ ] T008 [US1] In `G/spdx/v3_relationships.rs`, implement `group_dependency_relationships` per `contracts/spdx3-completeness.md` and research R6.
+- [X] T008 [US1] In `G/spdx/v3_relationships.rs`, implement `group_dependency_relationships` per `contracts/spdx3-completeness.md` and research R6.
   - **Where:** call it in `G/spdx/v3_document.rs` on `all_relationships` after every producer has pushed (dependency builder, #236 fallback, #1009 supplement anchor) and before sorting.
   - **IRI:** `hash_prefix` over `from|dependsOn|<scope or "">|<sorted targets joined ",">`, 16 characters.
   - **Completeness:** maps from `from`'s PURL (reverse of `package_iri_by_purl`) and the root IRI.
@@ -90,11 +91,11 @@
 
 ## Phase 4: User Story 2 — the annotations stay (Priority: P1)
 
-- [ ] T009 [P] [US2] In the T005 test, assert that `waybill:graph-completeness`, `waybill:graph-completeness-reason` and each `waybill:orphan-reason` have the same values in SPDX 3 as in the same artifacts' SPDX 2.3 document (byte-unchanged by FR-005), via the parity extractors for those rows. On real output, T015's corpus diff must show no change to these annotations in any `spdx-3.json` (FR-004, SC-005).
+- [X] T009 [P] [US2] In the T005 test, assert that `waybill:graph-completeness`, `waybill:graph-completeness-reason` and each `waybill:orphan-reason` have the same values in SPDX 3 as in the same artifacts' SPDX 2.3 document (byte-unchanged by FR-005), via the parity extractors for those rows. On real output, T015's corpus diff must show no change to these annotations in any `spdx-3.json` (FR-004, SC-005).
 
 ## Phase 5: User Story 3 — changes only where specified (Priority: P1)
 
-- [ ] T010 [US3] Regenerate in-repo SPDX 3 goldens: `WAYBILL_UPDATE_SPDX3_GOLDENS=1 cargo test -p waybill --test spdx3_regression`.
+- [X] T010 [US3] Regenerate in-repo SPDX 3 goldens: `WAYBILL_UPDATE_SPDX3_GOLDENS=1 cargo test -p waybill --test spdx3_regression`.
   - **Review** the `git diff` on `waybill-cli/tests/fixtures/golden/spdx-3/`, checked by a small script: `jq` over old and new with `dependsOn` relationships and the document namespace removed must be identical.
   - **Allowed changes:** dependency relationships regrouped, `completeness` added, `NoAssertionElement` relationships added, and the document namespace/IRI hash if it covers element ids.
   - **Unchanged:** CycloneDX and SPDX 2.3 goldens (`cdx_regression`, `spdx_regression` pass untouched).

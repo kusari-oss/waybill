@@ -133,21 +133,13 @@
       "type": "Organization"
     },
     {
+      "completeness": "complete",
       "creationInfo": "_:creation-info",
       "from": "https://waybill.kusari.dev/spdx3/doc-4N5CVJREWYZY5OYJYBFVZIOO/pkg-root-PEPQMV5CGEDHQJI2",
       "relationshipType": "dependsOn",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-4N5CVJREWYZY5OYJYBFVZIOO/rel-O2CLD52GTUCHVUGN",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-4N5CVJREWYZY5OYJYBFVZIOO/rel-QQGBBKBURQWU43HK",
       "to": [
-        "https://waybill.kusari.dev/spdx3/doc-4N5CVJREWYZY5OYJYBFVZIOO/pkg-DHDBA3PTGCIRJAUV"
-      ],
-      "type": "Relationship"
-    },
-    {
-      "creationInfo": "_:creation-info",
-      "from": "https://waybill.kusari.dev/spdx3/doc-4N5CVJREWYZY5OYJYBFVZIOO/pkg-root-PEPQMV5CGEDHQJI2",
-      "relationshipType": "dependsOn",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-4N5CVJREWYZY5OYJYBFVZIOO/rel-Z6TPMUKIN4FS2FYS",
-      "to": [
+        "https://waybill.kusari.dev/spdx3/doc-4N5CVJREWYZY5OYJYBFVZIOO/pkg-DHDBA3PTGCIRJAUV",
         "https://waybill.kusari.dev/spdx3/doc-4N5CVJREWYZY5OYJYBFVZIOO/pkg-NJ6CH7QTZDKJ74FQ"
       ],
       "type": "Relationship"
