@@ -7,6 +7,36 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Fixed: a dead or slow Go module proxy no longer stalls a scan, and no longer reports complete coverage (#853)
+
+Each Go module not in the local cache costs one proxy request, 16 at a time,
+with a 10 s connect and 30 s total timeout. Measured: a proxy that is down
+cost 10 s per batch of 16 and one that hangs cost 30 s. At 500 modules that
+predicts about 5 and 16 minutes, with nothing to say why. A scan in which
+every fetch failed still reported `waybill:go-transitive-coverage = complete`.
+
+- **A proxy that never answers is cut off after one batch.** After 16
+  consecutive connection failures, timeouts, DNS or TLS failures from a proxy
+  that has never returned an HTTP response, the scan stops asking it. 64
+  modules now take 10.3 s against an unreachable proxy and 30.3 s against a
+  hanging one, the same as 16. Any HTTP response, including 404 and 5xx,
+  keeps a proxy in use. With a `|`-separated `GOPROXY`, the next entry is
+  still tried.
+- **The proxy step has a 60 s budget per scan.** After that, no new request
+  starts. 60 s covers about 685 genuinely missing modules at the measured
+  ~1.4 s per batch, and is over 100× what a healthy proxy took for
+  kubernetes' 197 modules. There is no flag; `--no-go-proxy-fetch` remains
+  the way to skip the step entirely.
+- **The document says when either bound cut the step short.**
+  `waybill:go-transitive-coverage` becomes `unknown` (proxy unreachable) or
+  `partial` (budget), and `waybill:go-transitive-coverage-reason` gains the
+  codes `proxy-unreachable` and `proxy-fetch-budget-exhausted`, with module
+  counts. Proxies are named by scheme, host and port only. Every module
+  still appears, with its edges from go.sum.
+
+Scans where neither bound trips produce the same output as before, including
+scans where modules fail one by one with 404s.
+
 ### Fixed: SPDX 3 roots reach the same components as CycloneDX and SPDX 2.3 (#1108, #1022)
 
 In a repository with a Pants owning component, SPDX 3 attached fewer

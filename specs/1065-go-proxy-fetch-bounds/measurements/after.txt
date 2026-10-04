@@ -1,0 +1,8 @@
+# after m1065 (debug build; half-open hold added after the first measurement showed two waves)
+unreachable    N=16   rc=0 wall=  10.3s failed_fetch_logs=16 
+unreachable    N=64   rc=0 wall=  10.3s failed_fetch_logs=16 
+hanging        N=16   rc=0 wall=  30.4s failed_fetch_logs=16 
+hanging        N=64   rc=0 wall=  30.3s failed_fetch_logs=16 
+budget-3s      N=256  rc=0 wall=   4.2s failed_fetch_logs=48 
+healthy-404    N=64   rc=0 wall=   6.0s failed_fetch_logs=64 
+kubernetes v1.31.0 go.sum-modules=788 wall=0.5s failed-fetches=0 sources=proxy-fetch=197

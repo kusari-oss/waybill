@@ -1,0 +1,8 @@
+repeat 1 404 1.266268
+repeat 2 404 0.055864
+repeat 3 404 0.050188
+repeat 4 404 0.053595
+repeat 5 404 0.052287
+  16 404  N=16 wall=1.4s  per-wave(16)=1.36s
+  64 404  N=64 wall=5.9s  per-wave(16)=1.48s
+ 256 404  N=256 wall=21.9s  per-wave(16)=1.37s

@@ -30,6 +30,7 @@ pub mod graph_resolver;
 pub mod go_mod_graph;
 pub mod mod_why;
 pub mod proxy_fetch;
+pub mod proxy_bounds;
 pub mod goprivate;
 // Milestone 161 (T001): go.work parser + workspace-mode types +
 // Q1 hybrid edge-disposition classifier.

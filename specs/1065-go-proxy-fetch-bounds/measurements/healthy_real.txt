@@ -1,0 +1,2 @@
+kubernetes v1.31.0 go.sum-modules=788 wall=0.5s failed-fetches=0 sources=proxy-fetch=197
+kubernetes v1.31.0 go.sum-modules=788 wall=0.4s failed-fetches=0 sources=proxy-fetch=197
