@@ -34,6 +34,7 @@ In opentelemetry-go, **28 of the 30 misses are the project's own modules at the 
 - Q: Where does the per-component reason live? → A: Both. A per-component annotation goes on each component deps.dev did not enrich, and a document-level count per reason covers the scan. Enriched and matched components carry nothing, so a fully enriched scan is unchanged.
 - Q: For "declined", does the document name what was rejected? → A: The reason code only (e.g. `declined-invalid-license`). No deps.dev content is copied into the document; the rejected value goes to the log.
 - Q: Do offline scans, or scans with deps.dev turned off, carry per-component reasons? → A: No. When the deps.dev pass did not query the network, components carry nothing, and existing document-level signals say enrichment was offline or off. Offline goldens stay byte-identical.
+- Q: Do components in ecosystems deps.dev does not index each get a per-component outcome? → A: No. Per-component outcomes are only for components in deps.dev's six ecosystems (cargo, npm, pypi, go, maven, nuget), the ones it could have answered. Unsupported ecosystems are counted at document level only, because the PURL type alone determines that outcome.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -49,7 +50,7 @@ A security engineer reviewing an SBOM finds a component with no licence. Today t
 
 1. **Given** a component deps.dev returns 404 for, **When** scanned online, **Then** the document records `absent` for it.
 2. **Given** a component whose deps.dev record's only licence is `non-standard`, **When** scanned, **Then** the document records `declined-invalid-license`, and the value `non-standard` appears nowhere in the document.
-3. **Given** a component in an ecosystem deps.dev does not index, **When** scanned, **Then** it is recorded as not queried, with that reason.
+3. **Given** a component in an ecosystem deps.dev does not index (e.g. a deb package), **When** scanned online, **Then** it carries no per-component outcome and is counted under `not-queried:unsupported-ecosystem` at document level (FR-002a).
 4. **Given** a transport failure for a component, **When** scanned, **Then** it is recorded as `transport-failure`, and the existing document-level degradation record (C158) is unchanged.
 
 ---
@@ -96,6 +97,7 @@ A scan where deps.dev matched every queried component and no other component is 
   - a document-level count per outcome, emitted iff at least one component has one.
 
   Both MUST be identical in CycloneDX, SPDX 2.3 and SPDX 3, and parity-catalogued as new rows. Components that are enriched or matched carry nothing (FR-003).
+- **FR-002a**: The per-component annotation MUST only appear on components in deps.dev's six ecosystems (cargo, npm, pypi, go, maven, nuget). Components in other ecosystems MUST NOT carry it; they appear only in the document-level count as `not-queried:unsupported-ecosystem`.
 - **FR-003**: A component deps.dev enriched, or matched without adding anything, MUST carry no per-component outcome.
 - **FR-004**: waybill MUST NOT send a deps.dev request for a coordinate whose version is a known placeholder (at least `v0.0.0-unknown`; the plan enumerates the set). Such a component's outcome is `not-queried` / `incomplete-coordinate`.
 - **FR-005**: A deps.dev 404 MUST be distinguished from a transport failure, as the ClearlyDefined path already does. The two MUST NOT share an outcome.
