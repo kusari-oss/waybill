@@ -2755,6 +2755,17 @@ fn resolve_dispatch(
     Ok(DispatchPlan { formats, overrides })
 }
 
+/// #1122 — where the OpenVEX sidecar is written: the `--output openvex=`
+/// path when given, else beside the SPDX document that references it (the
+/// document resolves its relative reference against its own directory).
+fn openvex_sidecar_target(override_path: Option<&PathBuf>, spdx_dir: Option<&Path>) -> PathBuf {
+    override_path.cloned().unwrap_or_else(|| {
+        spdx_dir
+            .unwrap_or(Path::new(""))
+            .join(crate::generate::openvex::OPENVEX_DEFAULT_FILENAME)
+    })
+}
+
 /// The SPDX 3 deprecation-alias format id (milestone 011 US3).
 /// Kept as a named constant so the notice-emission path in
 /// `execute()` and the help-list labeling in [`format_help_list`]
@@ -5280,6 +5291,8 @@ pub async fn execute(
             .get(fmt)
             .expect("format id validated by resolve_dispatch");
         let emitted = serializer.serialize(&artifacts, &output_cfg)?;
+        // The primary artifact comes first; a sidecar lands in its directory.
+        let mut primary_dir: Option<PathBuf> = None;
         for artifact in emitted {
             // The primary artifact (first returned by the serializer)
             // honors the per-format --output override; side artifacts
@@ -5297,19 +5310,22 @@ pub async fn execute(
             let target = if artifact.relative_path
                 == Path::new(serializer.default_filename())
             {
-                plan.overrides
+                let t = plan
+                    .overrides
                     .get(fmt)
                     .cloned()
-                    .unwrap_or_else(|| artifact.relative_path.clone())
+                    .unwrap_or_else(|| artifact.relative_path.clone());
+                primary_dir = t.parent().map(Path::to_path_buf);
+                t
             } else if artifact.relative_path
                 == Path::new(
                     crate::generate::openvex::OPENVEX_DEFAULT_FILENAME,
                 )
             {
-                plan.overrides
-                    .get(OPENVEX_PSEUDO_FORMAT)
-                    .cloned()
-                    .unwrap_or_else(|| artifact.relative_path.clone())
+                openvex_sidecar_target(
+                    plan.overrides.get(OPENVEX_PSEUDO_FORMAT),
+                    primary_dir.as_deref(),
+                )
             } else {
                 artifact.relative_path.clone()
             };
@@ -6453,6 +6469,61 @@ mod tests {
             plan.overrides.get("cyclonedx-json"),
             Some(&PathBuf::from("custom.cdx.json"))
         );
+    }
+
+    /// #1122: the reference an SPDX document carries, resolved against the
+    /// document's directory as a relative reference is, names the file the
+    /// sidecar is written to. Before the fix the sidecar landed in the working
+    /// directory, so an SPDX file written elsewhere referenced nothing.
+    #[test]
+    fn the_sidecar_reference_resolves_to_where_the_sidecar_is_written() {
+        use std::collections::BTreeMap;
+        let norm = |p: PathBuf| -> PathBuf {
+            let mut out = PathBuf::new();
+            for c in std::path::absolute(p).unwrap().components() {
+                match c {
+                    std::path::Component::ParentDir => {
+                        out.pop();
+                    }
+                    std::path::Component::CurDir => {}
+                    other => out.push(other.as_os_str()),
+                }
+            }
+            out
+        };
+        // (SPDX --output, openvex --output)
+        let cases: [(Option<&str>, Option<&str>); 6] = [
+            (None, None),
+            (Some("out/sbom.spdx.json"), None),
+            (Some("out/sbom.spdx.json"), Some("out/vex.json")),
+            (Some("out/sbom.spdx.json"), Some("vex/vex.json")),
+            (Some("a/b/sbom.spdx.json"), Some("vex.json")),
+            (None, Some("elsewhere/vex.json")),
+        ];
+        for (spdx, vex) in cases {
+            let mut overrides: BTreeMap<String, PathBuf> = BTreeMap::new();
+            if let Some(s) = spdx {
+                overrides.insert("spdx-2.3-json".into(), PathBuf::from(s));
+            }
+            if let Some(v) = vex {
+                overrides.insert("openvex".into(), PathBuf::from(v));
+            }
+            let doc = PathBuf::from(spdx.unwrap_or("waybill.spdx.json"));
+            let doc_dir = doc.parent().map(Path::to_path_buf).unwrap_or_default();
+            let reference = crate::generate::openvex::sidecar_reference(
+                &overrides,
+                &["spdx-2.3-json"],
+                "waybill.spdx.json",
+            );
+            assert!(!Path::new(&reference).is_absolute(), "{spdx:?} {vex:?}: {reference}");
+            let written = openvex_sidecar_target(overrides.get("openvex"), Some(&doc_dir));
+            assert_eq!(
+                norm(doc_dir.join(&reference)),
+                norm(written.clone()),
+                "{spdx:?} {vex:?}: reference {reference} vs written {}",
+                written.display(),
+            );
+        }
     }
 
     #[test]

@@ -670,9 +670,27 @@ tolerated" posture):
 When the binding IS `verified`, the `waybill:vex-binding-status`
 field is omitted entirely (clean post-072 output).
 
-The caveat ALSO appears on the CDX `vulnerabilities[].affects[]`
-entry as a sibling field, so consumers reading the CDX SBOM (not
-the OpenVEX sidecar) see the same signal.
+The caveat ALSO appears in the CycloneDX SBOM, so consumers reading it
+(not the OpenVEX sidecar) see the same signal: a `properties[]` entry on
+the `vulnerabilities[]` item, named `waybill:vex-binding-status`, whose
+value is a JSON string naming the `affects[].ref` it qualifies:
+
+```json
+{
+  "id": "CVE-2024-12345",
+  "analysis": { "state": "not_affected", "justification": "code_not_present" },
+  "affects": [ { "ref": "pkg:golang/golang.org/x/net@v0.28.0?bomref=image-instance-3" } ],
+  "properties": [ {
+    "name": "waybill:vex-binding-status",
+    "value": "{\"reason\":\"binding-strength-weak: …\",\"ref\":\"pkg:golang/golang.org/x/net@v0.28.0?bomref=image-instance-3\",\"status\":\"unverified\"}"
+  } ]
+}
+```
+
+One property per caveated `ref`. Before #1123 the caveat was a sibling
+field inside the `affects[]` entry, which the CycloneDX 1.6 schema forbids
+(`affects[]` items allow only `ref` and `versions`), so those documents
+failed validation.
 
 ### 5.3 Strict-mode refusal annotations
 

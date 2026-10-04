@@ -7,6 +7,20 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Fixed: the OpenVEX sidecar is written beside the SPDX file that references it (#1122)
+
+The sidecar was written to the working directory, while the SPDX document referenced it by a path its readers resolve against the document's own directory. A scan with `--output spdx-2.3-json=out/sbom.spdx.json` left the reference dangling and wrote `waybill.openvex.json` into the tree being scanned.
+
+- **Default:** the sidecar now goes beside the SPDX file.
+- **`--output openvex=<path>`:** the reference is that path, relative to the SPDX file.
+- **`--split`:** documents now reference the `<subproject>.waybill.openvex.json` they are written beside. They used to name a file no split writes.
+
+### Changed: `sbom enrich` carries binding caveats as vulnerability properties (#1123)
+
+`waybill:vex-binding-status` was written inside CycloneDX `vulnerabilities[].affects[]` entries, which the CycloneDX 1.6 schema forbids (`affects[]` items allow only `ref` and `versions`), so caveated documents failed validation.
+
+It is now a `properties[]` entry on the vulnerability. Its value is a JSON string naming the `ref` it qualifies, plus the same `status` and `reason`. Consumers reading the caveat from `affects[]` must read it from `properties[]` instead. The OpenVEX side is unchanged.
+
 ### Added: VEX in CycloneDX `vulnerabilities[]` (#1039)
 
 waybill's VEX statements reached only the OpenVEX sidecar written beside SPDX

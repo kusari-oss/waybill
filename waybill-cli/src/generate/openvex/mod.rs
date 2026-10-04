@@ -433,6 +433,60 @@ pub fn serialize_openvex(
     }))
 }
 
+/// #1122 — how an SPDX document refers to its OpenVEX sidecar.
+///
+/// A relative reference in a document is resolved against the document's own
+/// directory, so the reference is the sidecar's path relative to the SPDX
+/// file. By default the sidecar is written beside the SPDX file and the
+/// reference is its bare filename. With `--output openvex=<path>` the
+/// reference is that path made relative to the SPDX file's directory.
+///
+/// `doc_formats` are the format ids whose `--output` override places this
+/// SPDX document, tried in order (the deprecated SPDX 3 alias shares the
+/// serializer); `doc_default` is where it lands without one.
+pub(crate) fn sidecar_reference(
+    overrides: &BTreeMap<String, PathBuf>,
+    doc_formats: &[&str],
+    doc_default: &str,
+) -> String {
+    let Some(sidecar) = overrides.get("openvex") else {
+        return OPENVEX_DEFAULT_FILENAME.to_string();
+    };
+    let doc = doc_formats
+        .iter()
+        .find_map(|f| overrides.get(*f))
+        .cloned()
+        .unwrap_or_else(|| PathBuf::from(doc_default));
+    let (Ok(sidecar_abs), Ok(doc_abs)) = (std::path::absolute(sidecar), std::path::absolute(&doc))
+    else {
+        return sidecar.to_string_lossy().into_owned();
+    };
+    let doc_dir = doc_abs.parent().unwrap_or(&doc_abs);
+    relative_path(&sidecar_abs, doc_dir)
+        .map(|p| p.to_string_lossy().replace('\\', "/"))
+        .unwrap_or_else(|| sidecar_abs.to_string_lossy().into_owned())
+}
+
+/// `target` relative to the directory `from`, both absolute. `None` when they
+/// share no root (another Windows drive), where only an absolute path works.
+fn relative_path(target: &std::path::Path, from: &std::path::Path) -> Option<PathBuf> {
+    use std::path::Component;
+    let t: Vec<Component<'_>> = target.components().collect();
+    let f: Vec<Component<'_>> = from.components().collect();
+    if t.first() != f.first() {
+        return None;
+    }
+    let common = t.iter().zip(&f).take_while(|(a, b)| a == b).count();
+    let mut out = PathBuf::new();
+    for _ in common..f.len() {
+        out.push("..");
+    }
+    for c in &t[common..] {
+        out.push(c.as_os_str());
+    }
+    Some(out)
+}
+
 /// Derive a stable `@id` URI from the same inputs the SPDX
 /// `documentNamespace` uses — target name + waybill version + sorted
 /// component PURLs — plus a salt so the two IDs never collide.
@@ -593,6 +647,25 @@ pub(crate) mod tests {
             compiler_pipeline: None,
             project_discovery_mode: None,
         }
+    }
+
+    /// #1122 — a split document names its namespaced sidecar, which split
+    /// writes beside it; any of a document's format ids may place it.
+    #[test]
+    fn sidecar_reference_follows_split_naming_and_every_format_id() {
+        let mut o = std::collections::BTreeMap::new();
+        assert_eq!(sidecar_reference(&o, &["spdx-2.3-json"], "waybill.spdx.json"), OPENVEX_DEFAULT_FILENAME);
+        o.insert("openvex".to_string(), PathBuf::from("app.waybill.openvex.json"));
+        assert_eq!(
+            sidecar_reference(&o, &["spdx-2.3-json"], "waybill.spdx.json"),
+            "app.waybill.openvex.json",
+        );
+        o.insert("openvex".to_string(), PathBuf::from("out/vex.json"));
+        o.insert("second-id".to_string(), PathBuf::from("out/doc.spdx3.json"));
+        assert_eq!(
+            sidecar_reference(&o, &["spdx-3-json", "second-id"], "waybill.spdx3.json"),
+            "vex.json",
+        );
     }
 
     #[test]

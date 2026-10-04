@@ -94,11 +94,13 @@ impl SbomSerializer for Spdx3JsonSerializer {
         // / clarification Q1).
         let openvex_artifact = crate::generate::openvex::serialize_openvex(scan, cfg)
             .context("building OpenVEX sidecar")?;
-        let sidecar_locator: Option<String> = openvex_artifact.as_ref().map(|a| {
-            cfg.overrides
-                .get("openvex")
-                .map(|p| p.to_string_lossy().into_owned())
-                .unwrap_or_else(|| a.relative_path.to_string_lossy().into_owned())
+        // #1122: relative to this document, where the sidecar is written.
+        let sidecar_locator: Option<String> = openvex_artifact.as_ref().map(|_| {
+            crate::generate::openvex::sidecar_reference(
+                &cfg.overrides,
+                &["spdx-3-json", "spdx-3-json-experimental"],
+                self.default_filename(),
+            )
         });
 
         let doc = v3_document::build_document(scan, cfg, sidecar_locator.as_deref())?;
@@ -207,13 +209,13 @@ impl SbomSerializer for Spdx2_3JsonSerializer {
             // the sidecar there — cfg.overrides carries that path
             // through so the SPDX document and the filesystem
             // agree on one string.
-            let sidecar_path = cfg
-                .overrides
-                .get("openvex")
-                .map(|p| p.to_string_lossy().into_owned())
-                .unwrap_or_else(|| {
-                    artifact.relative_path.to_string_lossy().into_owned()
-                });
+            // #1122: relative to this document, where the sidecar is
+            // written (beside it by default).
+            let sidecar_path = crate::generate::openvex::sidecar_reference(
+                &cfg.overrides,
+                &[self.id()],
+                self.default_filename(),
+            );
             doc.external_document_refs.push(
                 document::SpdxExternalDocumentRef {
                     id: "DocumentRef-OpenVEX".to_string(),
@@ -808,7 +810,9 @@ mod tests {
         let spdx_doc = find_spdx3_document(&spdx3);
         assert_eq!(
             spdx_doc["externalRef"][0]["locator"],
-            serde_json::json!(["./vex/out.json"]),
+            // #1122: relative to the document (here in the working
+            // directory), so the user's `./` prefix is normalized away.
+            serde_json::json!(["vex/out.json"]),
             "user override path must appear in the SPDX 3 ExternalRef locator"
         );
     }
@@ -862,7 +866,8 @@ mod tests {
         );
         assert_eq!(
             spdx["externalDocumentRefs"][0]["spdxDocument"],
-            "./vex/out.json",
+            // #1122: relative to the document, `./` normalized away.
+            "vex/out.json",
             "user override path must appear in the SPDX cross-reference"
         );
     }
