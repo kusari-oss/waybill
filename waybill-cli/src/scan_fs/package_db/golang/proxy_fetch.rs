@@ -230,8 +230,10 @@ fn try_chain(
                             };
                             last_error = Some(StepError {
                                 class,
+                                // #1110: the label, never the URL, which may
+                                // carry GOPROXY credentials.
                                 detail: format!(
-                                    "{target} from {url}: HTTP {status}"
+                                    "{target} from {label}: HTTP {status}"
                                 ),
                             });
                             // Fall-through rules: comma → only on 404/410;
@@ -255,7 +257,9 @@ fn try_chain(
                         }
                         last_error = Some(StepError {
                             class,
-                            detail: format!("{target} from {url}: {e}"),
+                            // #1110: a reqwest error's Display includes the
+                            // request URL, credentials and all.
+                            detail: format!("{target} from {label}: {}", e.without_url()),
                         });
                         // Comma-separator: do NOT fall through on
                         // network errors (only 404). Pipe-separator: do.

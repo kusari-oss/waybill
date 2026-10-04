@@ -7,6 +7,20 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Security: `GOPROXY` credentials no longer appear in logs (#1110)
+
+`GOPROXY` entries may carry credentials as URL userinfo
+(`https://user:token@proxy.corp/`). Three log paths printed them verbatim:
+- the per-module "go-mod proxy fetch failed" warning, once per failed module;
+  through both its proxy URL and the underlying HTTP error, which repeats the
+  request URL;
+- the "entry uses http://" cleartext warning;
+- the "failed to parse $GOPROXY" warning.
+
+Proxies are now named by scheme, host and port only, and an unparseable entry
+has its userinfo removed. SBOM output never carried them. If your CI logs
+include waybill output from an authenticated `GOPROXY`, rotate the token.
+
 ### Fixed: a dead or slow Go module proxy no longer stalls a scan, and no longer reports complete coverage (#853)
 
 Each Go module not in the local cache costs one proxy request, 16 at a time,

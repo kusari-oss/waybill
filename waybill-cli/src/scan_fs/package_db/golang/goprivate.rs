@@ -160,13 +160,15 @@ fn push_token(
             Ok(())
         }
         _ => {
+            // #1110: GOPROXY entries may carry credentials as userinfo.
+            // Neither the parse error nor the warning may show them.
             let url = Url::parse(token).map_err(|e| ProxyParseError::InvalidUrl {
-                url: token.to_string(),
+                url: crate::scan_fs::package_db::golang::proxy_bounds::redact_userinfo(token),
                 detail: e.to_string(),
             })?;
             if url.scheme() == "http" {
                 tracing::warn!(
-                    proxy_url = %url,
+                    proxy_url = %crate::scan_fs::package_db::golang::proxy_bounds::entry_label(&url),
                     "$GOPROXY entry uses http://; module list is sent to the proxy in cleartext"
                 );
             }
