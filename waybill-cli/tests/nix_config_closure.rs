@@ -30,6 +30,9 @@ fn fixture(name: &str) -> PathBuf {
 #[derive(Clone)]
 struct Stub {
     host_system: &'static str,
+    /// Whether `nix config show` reports the import-from-derivation refusal,
+    /// as a nix that supports the setting does (#1114).
+    ifd_supported: bool,
     /// `<root>#packages`: the flake's platforms, as a JSON array.
     packages: Option<&'static str>,
     /// `<root>#packages.<host>`: names under the host's platform.
@@ -52,9 +55,14 @@ impl Stub {
             None => format!("  *\"#{suffix}\") {} ;;\n", fail(suffix)),
         };
         let mut s = format!(
-            "#!/bin/sh\necho \"$*\" >> '{}'\ncase \"$*\" in\n  *builtins.currentSystem*) printf '%s' '{}' ;;\n",
+            "#!/bin/sh\necho \"$*\" >> '{}'\ncase \"$*\" in\n  *builtins.currentSystem*) printf '%s' '{}' ;;\n  \"config show\"*) echo 'allow-dirty = true'; {} ;;\n",
             log.display(),
-            self.host_system
+            self.host_system,
+            if self.ifd_supported {
+                "echo 'allow-import-from-derivation = false'"
+            } else {
+                ":"
+            }
         );
         for c in &self.closures {
             s.push_str(&format!("  \"derivation show\"*\"#{c}\") echo '{CLOSURE_JSON}' ;;\n"));
@@ -190,6 +198,7 @@ fn nix_on_path() -> bool {
 fn one_darwin() -> Stub {
     Stub {
         host_system: "aarch64-darwin",
+        ifd_supported: true,
         packages: None,
         packages_host: None,
         darwin: Some(r#"["laptop"]"#),
@@ -439,4 +448,29 @@ fn t017b_no_c190_when_a_closure_was_recorded_or_not_requested() {
     // (e) flag absent
     let s = run_args(root.path(), Some(&one_darwin()), &[]);
     assert_eq!(c190(&s), None);
+}
+
+// ---------------------------------------------------------------
+// #1114 — the closure tier verifies the import-from-derivation refusal
+// ---------------------------------------------------------------
+
+#[test]
+fn an_unverifiable_ifd_refusal_stops_the_tier_before_the_flake_is_touched() {
+    let root = flake_root();
+    let stub = Stub {
+        ifd_supported: false,
+        ..one_darwin()
+    };
+    let s = run(root.path(), Some(&stub), &[]);
+    assert!(
+        s.argv.iter().any(|a| a.starts_with("config show")),
+        "the refusal must be checked: {:?}",
+        s.argv
+    );
+    assert!(
+        !s.argv.iter().any(|a| a.contains('#')),
+        "nothing in the flake may be listed or evaluated: {:?}",
+        s.argv
+    );
+    assert_eq!(c190(&s).as_deref(), Some("ifd-refusal-unverified"));
 }
