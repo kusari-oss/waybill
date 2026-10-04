@@ -2196,10 +2196,11 @@ fn external_refs_from_purl(
     // caught emitting `.../aopalliance/unknown/aopalliance-unknown.jar`,
     // a live 404, during T032's spot-check. A dead link is worse than
     // an absent one (Principle IX).
-    let version_is_placeholder = matches!(
-        version.to_ascii_lowercase().as_str(),
-        "" | "unknown" | "noassertion" | "v0.0.0-unknown" | "none" | "latest"
-    );
+    //
+    // #1119: shared with deps.dev enrichment, so the two cannot drift. A
+    // private list here once missed `0.0.0-unknown`, the form twelve
+    // readers synthesise.
+    let version_is_placeholder = crate::enrich::request_key::is_placeholder_version(version);
     // A derived distribution URL asserts "this artifact is published at
     // this public registry path". Two cases make that assertion false
     // no matter how well-formed the URL is, and both were caught by
@@ -3378,6 +3379,10 @@ mod m776_distribution_tests {
             "pkg:cargo/serde@unknown",
             "pkg:npm/lodash@NOASSERTION",
             "pkg:nuget/Newtonsoft.Json@latest",
+            // #1119: the form twelve readers synthesise.
+            "pkg:cargo/serde@0.0.0-unknown",
+            "pkg:npm/lodash@0.0.0-unknown",
+            "pkg:nuget/Newtonsoft.Json@0.0.0-unknown",
         ] {
             assert!(
                 dist_urls(purl).is_empty(),
