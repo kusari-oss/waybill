@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [x] No [NEEDS CLARIFICATION] markers remain
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -31,5 +31,5 @@
 
 ## Notes
 
-- Three clarification markers are open (Q1 placement, Q2 declined detail, Q3 offline). They are the issue's own open questions, sharpened by measurement.
+- Clarifications resolved 2026-10-04: per-component plus document counts (Q1); reason code only (Q2); nothing when offline or disabled (Q3).
 - deps.dev, HTTP 404 and the C158 row are named because they are the external contract and the existing consumer-visible signal, following earlier specs.
