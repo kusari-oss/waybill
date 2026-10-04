@@ -1851,6 +1851,18 @@ mod i3_tests {
         assert_eq!(counts("haskell-aeson"), (6, 6, 6));
     }
 
+    /// #1022 / #1108: the Pants targets that used to sit on the SPDX 3
+    /// divergence allowlist now agree. Each count is the root's owning
+    /// component(s) plus whatever only the root fallback reaches: django's
+    /// 12 unversioned requirements and a file-tier `get-pants.sh`.
+    #[test]
+    fn pants_targets_agree_across_formats() {
+        assert_eq!(counts("pants-example-django"), (14, 14, 14));
+        assert_eq!(counts("pants-example-python"), (2, 2, 2));
+        assert_eq!(counts("pants-example-jvm"), (2, 2, 2));
+        assert_eq!(counts("pants-clojure-polyglot"), (4, 4, 4));
+    }
+
     #[test]
     fn i3_fires_when_cdx_and_spdx23_disagree() {
         let sboms = EmittedSboms {
