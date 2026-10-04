@@ -90,10 +90,12 @@ A scan where deps.dev matched every queried component and no other component is 
 - **FR-001**: For each component the deps.dev pass considered and did not enrich, waybill MUST classify the outcome into a closed set:
   - `not-queried`, with a reason: `unsupported-ecosystem` or `incomplete-coordinate`;
   - `absent`;
-  - `declined`;
+  - `declined-invalid-license`: deps.dev returned licence strings and every one was rejected. This applies whether or not the component already had a licence from elsewhere, because it describes deps.dev's answer, not the component (analysis U2);
   - `transport-failure`.
+
+  The emitted per-component values are exactly those in `contracts/deps-dev-outcome.md`.
 - **FR-002**: The classification MUST appear in the document in two forms:
-  - a per-component annotation on every component with a non-matched outcome, whose value is the outcome, e.g. `absent` or `not-queried:unsupported-ecosystem`;
+  - a per-component annotation on every component with a non-matched outcome, whose value is the outcome, e.g. `absent` or `not-queried:incomplete-coordinate`;
   - a document-level count per outcome, emitted iff at least one component has one.
 
   Both MUST be identical in CycloneDX, SPDX 2.3 and SPDX 3, and parity-catalogued as new rows. Components that are enriched or matched carry nothing (FR-003).
@@ -104,8 +106,8 @@ A scan where deps.dev matched every queried component and no other component is 
 - **FR-006**: `declined` MUST be recorded as a reason code from a closed set (at least `declined-invalid-license`). No deps.dev content may be copied into the document. The rejected value MAY appear in the log.
 - **FR-007**: When the scan ran deps.dev enrichment offline (`--offline`) or not at all (deps.dev disabled), no component MAY carry a per-component outcome and no document-level count is emitted. Existing document-level signals already describe those modes. An online scan whose answers came from the disk cache is online: cached answers produce outcomes exactly as live ones do.
 - **FR-008**: The existing document-level degradation record (C158) and the per-pass log line MUST keep their current meaning and values.
-- **FR-010**: An outcome of `absent` MUST mean deps.dev said so: a 404, or a batch item returned without a version. A coordinate the batch response did not answer, or a later duplicate of one coordinate in a single batch request, MUST NOT be recorded or cached as absent. Today both are (plan research R2), which would make the new signal report present components as absent.
 - **FR-009**: Scans in which no component is left un-enriched (FR-003), and all offline or deps.dev-disabled scans (FR-007), MUST produce byte-identical output to the output before this feature. FR-004's skipped request changes no output by itself.
+- **FR-010**: An outcome of `absent` MUST mean deps.dev said so: a 404, or a batch item returned without a version. A coordinate the batch response did not answer, or a later duplicate of one coordinate in a single batch request, MUST NOT be recorded or cached as absent. Today both are (plan research R2), which would make the new signal report present components as absent.
 
 ### Key Entities
 

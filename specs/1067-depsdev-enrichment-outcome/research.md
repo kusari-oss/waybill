@@ -33,6 +33,12 @@ So "absent" is decidable per item, and a malformed query is indistinguishable fr
 1. **Unanswered slots become absences.** Every slot starts as `None`, and a slot the response never echoes stays `None`. Both caches then store it as a confirmed absence.
 2. **Duplicate coordinates.** `index.insert` maps a coordinate to its **last** position, so an earlier duplicate in the same chunk keeps `None`, and that `None` is written to the cache.
 
+**Measured (analysis U1)**, two probes:
+- **Corpus run** (`measurements/echo_mismatch_corpus.txt`): the six corpus repositories, fresh cache, debug logging. **0** "entry that was not requested" echoes across **925** batched keys.
+- **Echo probe** (`measurements/batch_echo.txt`): deps.dev echoes every key **exactly as sent** when it is the only spelling of its package in the request, in all ecosystems tried. When one request holds two spellings deps.dev treats as one package, it merges them and echoes one spelling for both, leaving the other request unanswered. Examples: pypi `Flask`/`flask` and `typing_extensions`/`typing-extensions`, nuget `Newtonsoft.Json`/`newtonsoft.json`, cargo `serde`/`Serde`, or an exact duplicate.
+
+So unanswered slots come only from duplicates or spelling variants within one chunk. Coalescing exact duplicates removes the first. The per-key fallback for anything left unanswered costs nothing measurable (0 of 925). Today each such slot is silently cached as an absence.
+
 **Decision**: track answered slots explicitly.
 - A slot is `absent` only when an echoed item without `version` matched it.
 - Duplicate coordinates are coalesced to one request, with the answer fanned out to every position.
@@ -71,9 +77,8 @@ So "absent" is decidable per item, and a malformed query is indistinguishable fr
 An existing placeholder test (`scan_fs/mod.rs:2199-2202`, unexported) covers `""`, `unknown`, `noassertion`, `v0.0.0-unknown`, `none` and `latest`, but **misses `0.0.0-unknown`**.
 
 **Decision**:
-- **Shared predicate:** promote that predicate to a shared `is_placeholder_version`, add `0.0.0-unknown`, and use it in `EnrichmentKey::from_purl_parts`, which yields `not-queried:incomplete-coordinate` instead of a request.
+- **Separate predicate (analysis R1):** enrichment gets its own `is_placeholder_version` in `E/request_key.rs`: the existing set plus `0.0.0-unknown`. It is used in `EnrichmentKey::from_purl_parts`, which yields `not-queried:incomplete-coordinate` instead of a request. The distribution-URL guard in `scan_fs/mod.rs:2199` guards a different output (derived URLs) and is left untouched, so this feature cannot move its goldens. That guard missing `0.0.0-unknown` is filed separately.
 - **`0.0.0` excluded:** it is a real version of some packages (npm publishes `0.0.0`), so treating it as a placeholder would suppress real lookups. The readers that synthesise `0.0.0` stay queried, which costs a 404 each and is recorded honestly as `absent`.
-- **Existing caller:** `scan_fs/mod.rs`, which owns the predicate today, now uses the shared one. The added `0.0.0-unknown` must not change that caller's output; T-task verifies this with the goldens.
 
 ## R7 — Emission and catalogue
 

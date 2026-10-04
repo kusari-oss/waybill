@@ -38,4 +38,4 @@ Emitted only if the scan's deps.dev pass ran online.
 
 ## Placeholder predicate
 
-`is_placeholder_version(v)`: case-insensitive `v` ∈ {`""`, `unknown`, `0.0.0-unknown`, `v0.0.0-unknown`, `noassertion`, `none`, `latest`}.
+`is_placeholder_version(v)` in `E/request_key.rs` (enrichment only; the distribution-URL guard keeps its own set): case-insensitive `v` ∈ {`""`, `unknown`, `0.0.0-unknown`, `v0.0.0-unknown`, `noassertion`, `none`, `latest`}.

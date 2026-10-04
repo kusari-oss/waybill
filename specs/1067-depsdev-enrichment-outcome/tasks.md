@@ -20,15 +20,19 @@
 **Purpose**: today two batch-path defects record present components as absent (research R2). Every outcome below depends on "absent" being true.
 
 - [ ] T002 [P] In `E/depsdev_source.rs::batch_tests`, test **unanswered slot**: the mock batch response echoes only one of two requested keys. The unechoed key must not be cached as absent: after the call, the disk cache (`WAYBILL_DEPS_DEV_CACHE_DIR` set to a tempdir; see `persistence_tests` for the pattern) holds no `record: null` entry for it, and its result is not `Absent`.
-- [ ] T003 [P] In `batch_tests`, test **duplicate coordinate**: one chunk requests `serde@1.0.0` twice, and the mock answers it once with a licence. Both positions get the record, and no `null` is cached for it.
+- [ ] T003 [P] In `batch_tests`, test **duplicate coordinate**: one chunk requests `serde@1.0.0` twice, and the mock answers it once with a licence. Both positions get the record, the request body holds the coordinate once, and no `null` is cached for it.
+- [ ] T003a [P] In `batch_tests`, test **merged spelling**: the mock batch answers `Flask` but not `flask` (the measured deps.dev behaviour). The `flask` position is retried with one per-key GET (mock `expect(1)`), and is never cached as absent.
 - [ ] T004 In `E/depsdev_source.rs`, introduce `enum LookupResult { Found(VersionInfo), Absent, Failed }` and make `fetch_many` return `Vec<LookupResult>`:
   - **per-key:** `Ok(Some)` → `Found`, `Ok(None)` (404) → `Absent`, `Err` → `Failed`;
-  - **batch:** in `fetch_chunk_batched`, track one slot per *distinct* coordinate (`HashMap<key, Vec<usize>>`, never last-write-wins). An echoed item with `version` → `Found`; an echoed item without `version` → `Absent`; an unanswered slot → `Failed`, which goes through the existing per-key fallback.
+  - **batch:** in `fetch_chunk_batched`, track one slot per *distinct* coordinate (`HashMap<key, Vec<usize>>`, never last-write-wins), and send each distinct coordinate once.
+    - An echoed item with `version` → `Found`.
+    - An echoed item without `version` → `Absent`.
+    - An unanswered slot → retried with the per-key GET. This needs a per-slot fallback, not only today's per-chunk one. Measured rare: 0 of 925 corpus keys. It arises only from two spellings deps.dev merges, research R2. A failure of that GET → `Failed`.
   - **cache writes:** only `Found` and `Absent` reach the in-memory and disk caches (disk format unchanged, research R4).
   - **callers:** adapt every caller (`enrich_components` and tests); content behaviour for `Found` is unchanged.
   - Run T002/T003 to green, plus all existing `enrich::` tests.
-- [ ] T005 [P] Move the placeholder predicate out of `waybill-cli/src/scan_fs/mod.rs` (around lines 2199–2202) into a shared `pub(crate) fn is_placeholder_version(v: &str) -> bool`, case-insensitive. Add `0.0.0-unknown` (research R6) and unit tests for every member, plus `0.0.0` → false. The existing caller in `scan_fs/mod.rs` uses the shared function.
-  - Verify the in-repo goldens are unchanged: `cargo test -p waybill --test cdx_regression --test spdx_regression --test spdx3_regression`.
+- [ ] T005 [P] Add `pub(crate) fn is_placeholder_version(v: &str) -> bool` in `E/request_key.rs`: case-insensitive membership in `""`, `unknown`, `0.0.0-unknown`, `v0.0.0-unknown`, `noassertion`, `none`, `latest`. Add unit tests for every member, plus `0.0.0` → false.
+  - **Do not** change the distribution-URL guard in `waybill-cli/src/scan_fs/mod.rs:2199` (analysis R1; its gap is filed separately).
 
 **Checkpoint**: everything compiles, existing tests green, and absences are now only real.
 
@@ -44,7 +48,7 @@
   - `cargo` found with `MIT` → none;
   - found with `licenses: []` → none (matched; FR-003);
   - 404 / batch item without version → `absent`;
-  - `licenses: ["non-standard"]` → `declined-invalid-license`, and the string `non-standard` appears in no annotation value;
+  - `licenses: ["non-standard"]` → `declined-invalid-license`, and the string `non-standard` appears in no annotation value. Repeat for a component that already carries a lockfile licence: still `declined-invalid-license` (analysis U2);
   - transport error (mock 500 on GET; batch failure falling back to a GET 500) → `transport-failure`;
   - `pkg:deb/...` → none (FR-002a).
 - [ ] T007 [P] [US1] Same module: a component looked up in two passes keeps only the final outcome. Simulate an initial pass absent, then a post-graph pass found → no annotation.
@@ -52,7 +56,8 @@
 - [ ] T009 [P] [US1] Generate-layer test (new file `waybill-cli/tests/deps_dev_outcome_emission.rs`, or a unit test beside the C158 emission). A scan context with components carrying C191 plus one deb component, on an online run, must give:
   - **CycloneDX:** C191 on the right components, and C192 equal to `{"absent":1,"declined-invalid-license":1,"not-queried:unsupported-ecosystem":1,"transport-failure":1}` (keys sorted);
   - **SPDX 2.3 and SPDX 3:** the same values;
-  - **offline or disabled:** neither C191 nor C192.
+  - **offline or disabled:** neither C191 nor C192;
+  - **the SC-005 invariant:** for every key except `not-queried:unsupported-ecosystem`, the C192 count equals the number of components carrying that C191 value (analysis C1).
 
 ### Implementation for User Story 1
 
@@ -104,6 +109,7 @@
 ## Dependencies & Execution Order
 
 - **Phase order:** Phase 1 → Phase 2 (T002–T005) → US1 (T006–T014) → US2 (T015–T016) → US3 (T017–T018) → Polish.
+- **Measurements behind Phase 2:** the batch fallback design rests on two committed probes: `measurements/batch_echo.txt` and `echo_mismatch_corpus.txt` (analysis U1).
 - **Why Phase 2 is first:** T004 changes `fetch_many`'s return type, which every later task builds on. T005 is independent of T004.
 - **Story order:** US2 depends on US1's annotation plumbing (T010). US3 is verification only.
 
