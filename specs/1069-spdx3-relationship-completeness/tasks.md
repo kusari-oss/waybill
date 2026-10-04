@@ -116,11 +116,11 @@
   - **Scope:** for every target, only `spdx-3.json` may differ. `cdx.json` and `spdx-2.3.json` must be byte-identical.
   - **Allowed changes:** check each `spdx-3.json` with `xtask corpus-diff` and the T010 script.
   - **Install:** `rsync`, commit, and re-run read-only.
-- [ ] T016 Real output, per corpus target, recorded in `measurements/agreement.txt`. Use the unmasked SBOMs the CI corpus run uploads (`corpus-emitted-sboms` artifact) where IRIs and timestamps matter.
+- [X] T016 Real output, per corpus target, recorded in `measurements/agreement.txt`. Use the unmasked SBOMs the CI corpus run uploads (`corpus-emitted-sboms` artifact) where IRIs and timestamps matter.
   - **Agreement (SC-001, SC-002):** quickstart §1. The CycloneDX `unknown` set must equal the SPDX 3 `incomplete`/`noAssertion` set, and CycloneDX `complete` must equal SPDX 3 `complete`. go-cobra (cold) must show its 8 unknown components marked in SPDX 3.
   - **Shape (SC-003):** quickstart §2. At most one `dependsOn` relationship per `(from, type, scope)`.
   - **Conformance (SC-004):** `spdx3-validate` passes on every unmasked emitted SPDX 3 document.
-- [ ] T017 Re-run `measurements/probe_validator.py` on a regenerated real SPDX 3 document, since it now carries the shapes natively, and append to `measurements/README.md`.
+- [X] T017 Re-run `measurements/probe_validator.py` on a regenerated real SPDX 3 document, since it now carries the shapes natively, and append to `measurements/README.md`.
 - [ ] T018 Open the PR (closes #878), merge when green, then run `cargo clean`.
 
 ## Dependencies & Execution Order

@@ -1,0 +1,17 @@
+OK  go-cobra: cdx unknown=8 complete=1 | spdx3 dependsOn=9 {'complete': 1, 'incomplete': 1, 'noAssertion': 7} NoAssertionElement=7
+OK  go-opentelemetry: cdx unknown=333 complete=1 | spdx3 dependsOn=343 {'complete': 1, 'incomplete': 38, 'noAssertion': 304} NoAssertionElement=304
+OK  haskell-aeson: cdx unknown=0 complete=1 | spdx3 dependsOn=12 {'-': 11, 'complete': 1} NoAssertionElement=0
+OK  haskell-language-server: cdx unknown=0 complete=1 | spdx3 dependsOn=332 {'-': 331, 'complete': 1} NoAssertionElement=0
+OK  haskell-security-advisories: cdx unknown=0 complete=1 | spdx3 dependsOn=228 {'-': 227, 'complete': 1} NoAssertionElement=0
+OK  image-postgres16: cdx unknown=2 complete=143 | spdx3 dependsOn=116 {'complete': 114, 'noAssertion': 2} NoAssertionElement=2
+OK  maven-guice: cdx unknown=46 complete=1 | spdx3 dependsOn=57 {'complete': 1, 'incomplete': 23, 'noAssertion': 33} NoAssertionElement=33
+OK  nix-closure-moat: cdx unknown=0 complete=1 | spdx3 dependsOn=37 {'-': 36, 'complete': 1} NoAssertionElement=0
+OK  npm-express: cdx unknown=44 complete=1 | spdx3 dependsOn=46 {'complete': 1, 'incomplete': 2, 'noAssertion': 43} NoAssertionElement=43
+OK  pants-clojure-polyglot: cdx unknown=0 complete=52 | spdx3 dependsOn=28 {'-': 4, 'complete': 24} NoAssertionElement=0
+OK  pants-example-django: cdx unknown=0 complete=46 | spdx3 dependsOn=17 {'-': 1, 'complete': 16} NoAssertionElement=0
+OK  pants-example-golang: cdx unknown=4 complete=1 | spdx3 dependsOn=5 {'complete': 1, 'incomplete': 1, 'noAssertion': 3} NoAssertionElement=3
+OK  pants-example-javascript: cdx unknown=0 complete=304 | spdx3 dependsOn=162 {'complete': 162} NoAssertionElement=0
+OK  pants-example-jvm: cdx unknown=0 complete=28 | spdx3 dependsOn=20 {'-': 1, 'complete': 19} NoAssertionElement=0
+OK  pants-example-python: cdx unknown=0 complete=11 | spdx3 dependsOn=6 {'-': 1, 'complete': 5} NoAssertionElement=0
+OK  python-flask: cdx unknown=108 complete=1 | spdx3 dependsOn=109 {'complete': 1, 'incomplete': 38, 'noAssertion': 70} NoAssertionElement=70
+OK  rust-ripgrep: cdx unknown=0 complete=62 | spdx3 dependsOn=39 {'complete': 39} NoAssertionElement=0

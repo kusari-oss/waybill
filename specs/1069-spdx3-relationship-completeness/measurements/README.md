@@ -33,3 +33,22 @@ Per corpus target, the `compositions[]` records carrying `dependencies` (the tra
 - unclaimed ecosystems: the haskell targets and nix-closure-moat carry only the root record.
 
 A local `--offline` scan of cobra resolves fully (warm Go module cache): `complete` 8, no `unknown`. The cold CI golden is the degraded case the issue describes: `unknown` 8.
+
+## After implementation (2026-10-04)
+
+**Corpus goldens.** Regen runs 37242509788 and 37242512051 are byte-identical.
+- All 17 `spdx-3.json` changed; every `cdx.json` and `spdx-2.3.json` is unchanged.
+- `check_spdx3_diff.sh` → `corpus_diffcheck.txt`: each changed file is identical to its old golden once `dependsOn` relationships are removed.
+- The read-only run (37243187352) passed 52/52.
+
+**Agreement and shape** (`check_agreement.py` → `agreement.txt`): all 17 targets OK.
+- Every CycloneDX `unknown` component is `incomplete` or `noAssertion` in SPDX 3.
+- Every SPDX 3 `complete` component is CycloneDX-`complete`.
+- Nothing unqualified is claimed by CycloneDX.
+- At most one relationship exists per `(from, type, scope)`.
+
+The issue's case, go-cobra (cold): CycloneDX `unknown` 8 → SPDX 3 `incomplete` 1 + `noAssertion` 7 (`NoAssertionElement` leaves).
+
+**Conformance** (`conformance_local.txt`): pinned `spdx3-validate` 0.0.5 on unmasked documents from offline scans of the 13 corpus repositories cached on this host. All pass (exit 0), covering `complete`, `incomplete`, `noAssertion` with `NoAssertionElement`, and unqualified relationships. The four uncached targets are covered by the in-repo conformance suite and the agreement check above.
+
+Note on method: the validator prints spinner frames, so its last output line says nothing. Pass/fail is read from its exit code, as `probe_validator.py` does.
