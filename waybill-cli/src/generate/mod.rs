@@ -137,6 +137,11 @@ pub struct ScanArtifacts<'a> {
     /// itself separate from `enrichment_degraded`: one slot cannot say which
     /// of several independent mechanisms degraded, and more than one can.
     pub nix_eval_degraded: Option<&'a str>,
+    /// Milestone 1066 (#1052, #1115; C190) — why a requested `--nix-closure`
+    /// recorded no closure. `None` when the flag was absent or a closure was
+    /// recorded. Constitution XII.3: degraded enrichment is disclosed in the
+    /// document, not only logged.
+    pub nix_closure_degraded: Option<&'a str>,
     /// Milestone 1034 (#971 part A, C179) — the Nix platform the evaluated
     /// results describe.
     ///

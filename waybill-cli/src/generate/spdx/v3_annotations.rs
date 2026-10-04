@@ -615,6 +615,14 @@ fn push_document_fields(
         );
     }
 
+    // C190 (m1066, #1115) — a requested `--nix-closure` recorded no closure.
+    if let Some(reason) = scan.nix_closure_degraded {
+        push(out,
+            "waybill:nix-closure-degraded",
+            json!(reason),
+        );
+    }
+
     // C178 (#971 part A) — what the tier did. Present whenever it ran,
     // degradation included: "ran and got nothing" and "never ran" are
     // different facts, and only this tells them apart.

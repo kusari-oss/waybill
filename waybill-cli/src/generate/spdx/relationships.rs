@@ -580,6 +580,7 @@ mod tests {
             nixpkgs_haskell_degraded: None,
             nix_eval_tier: None,
             nix_eval_degraded: None,
+            nix_closure_degraded: None,
             nix_eval_system: None,
             nixpkgs_haskell_resolution: None,
             nixpkgs_haskell_closure: None,

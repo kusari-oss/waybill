@@ -219,6 +219,8 @@ pub struct MetadataExtras<'a> {
     pub nix_eval_tier: Option<&'a str>,
     /// C180 — why the `nix eval` tier degraded, when it did.
     pub nix_eval_degraded: Option<&'a str>,
+    /// C190 (m1066) — why a requested `--nix-closure` recorded no closure.
+    pub nix_closure_degraded: Option<&'a str>,
     /// C179 — the platform the evaluated results describe.
     pub nix_eval_system: Option<&'a str>,
     // Milestone 985 (#962, C175) — the transitive runtime closure's record.
@@ -288,6 +290,7 @@ pub fn build_metadata(
         nixpkgs_haskell_resolution,
         nix_eval_tier,
         nix_eval_degraded,
+        nix_closure_degraded,
         nix_eval_system,
         nixpkgs_haskell_closure,
     } = extras;
@@ -403,6 +406,15 @@ pub fn build_metadata(
     if let Some(reason) = nix_eval_degraded {
         properties.push(json!({
             "name": "waybill:nix-eval-degraded",
+            "value": reason,
+        }));
+    }
+
+    // C190 (m1066, #1115) — a requested `--nix-closure` recorded no closure.
+    // Constitution XII.3: degraded enrichment is disclosed in the document.
+    if let Some(reason) = nix_closure_degraded {
+        properties.push(json!({
+            "name": "waybill:nix-closure-degraded",
             "value": reason,
         }));
     }

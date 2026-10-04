@@ -61,6 +61,21 @@ pub(crate) enum DegradationReason {
     #[error("no evaluable attribute path in the flake")]
     NoEvaluableAttribute,
 
+    /// Milestone 1066 (#1052): the flake has no `packages` output and
+    /// defines more than one system configuration. waybill does not pick one:
+    /// choosing by hostname or by order would make the same command describe
+    /// different machines on different hosts.
+    #[error(
+        "several system configurations ({names}); choose one with \
+         --nix-closure-attr, e.g. --nix-closure-attr {example}"
+    )]
+    AmbiguousSystemConfiguration {
+        /// Qualified names (`<kind>.<name>`), sorted, joined with `, `.
+        names: String,
+        /// One full system output path the operator could pass.
+        example: String,
+    },
+
     /// `nix` ran and exited non-zero.
     #[error("`nix eval` failed: {0}")]
     EvaluationFailed(String),
@@ -89,6 +104,7 @@ impl DegradationReason {
             Self::IfdRefusalUnverified(_) => "ifd-refusal-unverified",
             Self::RevisionUnfetchable { .. } => "revision-unfetchable",
             Self::NoEvaluableAttribute => "no-evaluable-attribute",
+            Self::AmbiguousSystemConfiguration { .. } => "several-system-configurations",
             Self::EvaluationFailed(_) => "evaluation-failed",
             Self::BudgetExceeded { .. } => "budget-exceeded",
         }
@@ -112,16 +128,21 @@ mod tests {
                 detail: "x".into(),
             },
             DegradationReason::NoEvaluableAttribute,
+            DegradationReason::AmbiguousSystemConfiguration {
+                names: "a".into(),
+                example: "b".into(),
+            },
             DegradationReason::EvaluationFailed("x".into()),
             DegradationReason::BudgetExceeded { budget_secs: 1 },
         ];
         let wires: Vec<_> = all.iter().map(|r| r.wire()).collect();
-        assert_eq!(wires.len(), 8, "FR-013 enumerates exactly eight reasons");
+        // m1034 FR-013's eight, plus m1066's `several-system-configurations`.
+        assert_eq!(wires.len(), 9, "the closed set has exactly nine reasons");
 
         let mut sorted = wires.clone();
         sorted.sort_unstable();
         sorted.dedup();
-        assert_eq!(sorted.len(), 8, "wire forms must be distinct: {wires:?}");
+        assert_eq!(sorted.len(), 9, "wire forms must be distinct: {wires:?}");
 
         for w in &wires {
             assert!(
@@ -139,5 +160,17 @@ mod tests {
         let b = DegradationReason::ToolUnusable("store read-only".into());
         assert_eq!(a.wire(), b.wire());
         assert_ne!(a.to_string(), b.to_string(), "detail belongs in Display");
+    }
+
+    #[test]
+    fn several_configurations_names_them_and_how_to_choose() {
+        let r = DegradationReason::AmbiguousSystemConfiguration {
+            names: "darwinConfigurations.laptop, nixosConfigurations.web01".into(),
+            example: "darwinConfigurations.laptop.system".into(),
+        };
+        assert_eq!(r.wire(), "several-system-configurations");
+        let msg = r.to_string();
+        assert!(msg.contains("darwinConfigurations.laptop, nixosConfigurations.web01"), "{msg}");
+        assert!(msg.contains("--nix-closure-attr darwinConfigurations.laptop.system"), "{msg}");
     }
 }

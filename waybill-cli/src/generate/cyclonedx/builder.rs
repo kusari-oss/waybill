@@ -195,6 +195,7 @@ pub struct CycloneDxBuilder {
     nixpkgs_haskell_resolution: Option<String>,
     nix_eval_tier: Option<String>,
     nix_eval_degraded: Option<String>,
+    nix_closure_degraded: Option<String>,
     nix_eval_system: Option<String>,
     /// Milestone 985 (#962, C175) — the closure's record, pre-rendered JSON.
     nixpkgs_haskell_closure: Option<String>,
@@ -266,6 +267,7 @@ impl CycloneDxBuilder {
             nixpkgs_haskell_resolution: None,
             nix_eval_tier: None,
             nix_eval_degraded: None,
+            nix_closure_degraded: None,
             nix_eval_system: None,
             nixpkgs_haskell_closure: None,
             file_inventory_mode: None,
@@ -340,6 +342,12 @@ impl CycloneDxBuilder {
     /// C180 — why the `nix eval` tier degraded.
     pub fn with_nix_eval_degraded(mut self, value: Option<String>) -> Self {
         self.nix_eval_degraded = value;
+        self
+    }
+
+    /// C190 (m1066) — why a requested `--nix-closure` recorded no closure.
+    pub fn with_nix_closure_degraded(mut self, value: Option<String>) -> Self {
+        self.nix_closure_degraded = value;
         self
     }
 
@@ -905,6 +913,7 @@ impl CycloneDxBuilder {
                 nixpkgs_haskell_resolution: self.nixpkgs_haskell_resolution.as_deref(),
                 nix_eval_tier: self.nix_eval_tier.as_deref(),
                 nix_eval_degraded: self.nix_eval_degraded.as_deref(),
+                nix_closure_degraded: self.nix_closure_degraded.as_deref(),
                 nix_eval_system: self.nix_eval_system.as_deref(),
                 nixpkgs_haskell_closure: self.nixpkgs_haskell_closure.as_deref(),
             },

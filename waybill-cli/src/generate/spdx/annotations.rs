@@ -598,6 +598,14 @@ pub fn annotate_document(
         );
     }
 
+    // C190 (m1066, #1115) — a requested `--nix-closure` recorded no closure.
+    if let Some(reason) = artifacts.nix_closure_degraded {
+        push(&mut out,
+            "waybill:nix-closure-degraded",
+            json!(reason),
+        );
+    }
+
     // C178 (#971 part A) — what the tier did. Present whenever it ran,
     // degradation included: "ran and got nothing" and "never ran" are
     // different facts, and only this tells them apart.
