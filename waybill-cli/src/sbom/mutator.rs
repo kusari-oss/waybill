@@ -290,9 +290,10 @@ fn product_per_instance_id(product: &Value) -> Option<String> {
 
 /// Build the propagated CDX `vulnerabilities[]` entry for a (vuln,
 /// matched-instances) tuple. Per T022, each `affects[]` entry binds
-/// to a specific bom-ref; the `waybill:vex-binding-status` field is
-/// a sibling on each `affects` entry per
-/// `contracts/openvex-instance-identifiers.md` C-5.
+/// to a specific bom-ref. A caveated instance gets a
+/// `waybill:vex-binding-status` property on the vulnerability naming that
+/// `ref` (#1123; originally a sibling on the `affects` entry, which the
+/// CycloneDX schema forbids).
 fn build_vulnerability_entry(
     vuln_name: &str,
     status: &str,
@@ -300,6 +301,7 @@ fn build_vulnerability_entry(
     rows: &[(TargetInstance, PropagationOutcome)],
 ) -> Value {
     let mut affects = Vec::with_capacity(rows.len());
+    let mut caveats: Vec<Value> = Vec::new();
     for (inst, outcome) in rows {
         // Skip refused rows — those don't appear in `affects[]`.
         if matches!(outcome, PropagationOutcome::Refused { .. }) {
@@ -309,20 +311,22 @@ fn build_vulnerability_entry(
             .bom_ref
             .clone()
             .unwrap_or_else(|| inst.purl.clone());
+        // #1123: CycloneDX `affects[]` items allow only `ref` and `versions`
+        // (`additionalProperties: false`), so the caveat is a property on the
+        // vulnerability naming the `ref` it qualifies, not a sibling here.
+        if let PropagationOutcome::Caveated { reason } = outcome {
+            let caveat = serde_json::json!({
+                "ref": ref_value,
+                "status": "unverified",
+                "reason": reason,
+            });
+            caveats.push(serde_json::json!({
+                "name": "waybill:vex-binding-status",
+                "value": caveat.to_string(),
+            }));
+        }
         let mut entry = serde_json::Map::new();
         entry.insert("ref".to_string(), Value::String(ref_value));
-        if let PropagationOutcome::Caveated { reason } = outcome {
-            let mut caveat = serde_json::Map::new();
-            caveat.insert(
-                "status".to_string(),
-                Value::String("unverified".to_string()),
-            );
-            caveat.insert("reason".to_string(), Value::String(reason.clone()));
-            entry.insert(
-                "waybill:vex-binding-status".to_string(),
-                Value::Object(caveat),
-            );
-        }
         affects.push(Value::Object(entry));
     }
 
@@ -336,6 +340,9 @@ fn build_vulnerability_entry(
     vuln_obj.insert("id".to_string(), Value::String(vuln_name.to_string()));
     vuln_obj.insert("analysis".to_string(), Value::Object(analysis));
     vuln_obj.insert("affects".to_string(), Value::Array(affects));
+    if !caveats.is_empty() {
+        vuln_obj.insert("properties".to_string(), Value::Array(caveats));
+    }
     Value::Object(vuln_obj)
 }
 
@@ -502,9 +509,9 @@ fn caveat_reason(binding: &Option<SourceDocumentBinding>) -> String {
 ///
 /// Then aggregate per-instance outcomes into one `vulnerabilities[]`
 /// entry per (vuln, matched-instances) tuple. Per T022, each
-/// `affects[].ref` is a specific bom-ref; the
-/// `waybill:vex-binding-status` field is a sibling on each
-/// `affects` entry.
+/// `affects[].ref` is a specific bom-ref; a caveat is a
+/// `waybill:vex-binding-status` property on the vulnerability naming the
+/// `ref` it qualifies (#1123).
 pub fn propagate_vex_with_binding(
     mode: VexPropagationMode,
     source_vex: &Value,
@@ -669,6 +676,18 @@ pub(crate) fn product_identifiers_for_target(
 mod tests {
     use super::*;
     use serde_json::json;
+
+    /// #1123: a caveat is a vulnerability-level property naming the
+    /// `affects[]` ref it qualifies.
+    fn caveat_of(vuln: &Value, affect: &Value) -> Option<Value> {
+        let r = affect["ref"].as_str()?;
+        vuln["properties"]
+            .as_array()?
+            .iter()
+            .filter(|p| p["name"] == "waybill:vex-binding-status")
+            .filter_map(|p| serde_json::from_str::<Value>(p["value"].as_str()?).ok())
+            .find(|v| v["ref"] == r)
+    }
 
     fn sample_sbom() -> Value {
         json!({
@@ -947,7 +966,7 @@ mod tests {
         assert_eq!(affects.len(), 1);
         assert_eq!(affects[0]["ref"], "a-bom-1");
         // Permissive mode → no caveat sibling.
-        assert!(affects[0].get("waybill:vex-binding-status").is_none());
+        assert!(caveat_of(&target["vulnerabilities"][0], &affects[0]).is_none());
     }
 
     /// Caveated mode + verified binding → propagate clean.
@@ -970,7 +989,7 @@ mod tests {
         assert_eq!(report.statements_caveated, 0);
 
         let affects = target["vulnerabilities"][0]["affects"].as_array().unwrap();
-        assert!(affects[0].get("waybill:vex-binding-status").is_none());
+        assert!(caveat_of(&target["vulnerabilities"][0], &affects[0]).is_none());
     }
 
     /// Caveated mode + weak binding → propagate WITH caveat.
@@ -992,11 +1011,16 @@ mod tests {
         assert_eq!(report.statements_propagated, 0);
 
         let affects = target["vulnerabilities"][0]["affects"].as_array().unwrap();
-        let caveat = affects[0]["waybill:vex-binding-status"].as_object().unwrap();
+        let caveat = caveat_of(&target["vulnerabilities"][0], &affects[0]).unwrap();
         assert_eq!(caveat["status"], "unverified");
         let reason = caveat["reason"].as_str().unwrap();
         assert!(reason.contains("binding-strength-weak"));
         assert!(reason.contains("no-vcs-commit"));
+        // #1123: CycloneDX `affects[]` items allow only `ref` and `versions`.
+        for a in affects {
+            let keys: Vec<&String> = a.as_object().unwrap().keys().collect();
+            assert_eq!(keys, vec!["ref"], "schema-invalid affects entry: {a}");
+        }
     }
 
     /// Strict mode + non-verified binding → REFUSED, exit non-zero,
@@ -1052,7 +1076,7 @@ mod tests {
         assert!(report.is_clean());
         assert_eq!(report.statements_propagated, 1);
         let affects = target["vulnerabilities"][0]["affects"].as_array().unwrap();
-        assert!(affects[0].get("waybill:vex-binding-status").is_none());
+        assert!(caveat_of(&target["vulnerabilities"][0], &affects[0]).is_none());
     }
 
     /// Worked-example case (US2 AS#4 / SC-003): two instances of the
@@ -1104,12 +1128,10 @@ mod tests {
             .find(|a| a["ref"] == "baselayer-net-instance")
             .unwrap();
         assert!(
-            foo_entry.get("waybill:vex-binding-status").is_none(),
+            caveat_of(&target["vulnerabilities"][0], foo_entry).is_none(),
             "verified-bound instance must not carry caveat"
         );
-        let caveat = baselayer_entry["waybill:vex-binding-status"]
-            .as_object()
-            .unwrap();
+        let caveat = caveat_of(&target["vulnerabilities"][0], baselayer_entry).unwrap();
         assert_eq!(caveat["status"], "unverified");
     }
 
@@ -1161,7 +1183,7 @@ mod tests {
 
         assert_eq!(report.statements_caveated, 1);
         let affects = target["vulnerabilities"][0]["affects"].as_array().unwrap();
-        let caveat = affects[0]["waybill:vex-binding-status"].as_object().unwrap();
+        let caveat = caveat_of(&target["vulnerabilities"][0], &affects[0]).unwrap();
         assert_eq!(caveat["status"], "unverified");
         assert!(caveat["reason"]
             .as_str()
