@@ -186,18 +186,33 @@ fn caveated_propagation_handles_per_instance_binding_correctly() {
         .find(|a| a["ref"] == "baselayer-net-instance")
         .expect("instance B (unverified) present in affects[]");
 
+    // #1123: a caveat is a vulnerability-level property naming the
+    // `affects[]` ref it qualifies; `affects[]` items allow only `ref`.
+    let caveat_of = |entry: &serde_json::Value| -> Option<serde_json::Value> {
+        let r = entry["ref"].as_str()?;
+        vulns[0]["properties"]
+            .as_array()?
+            .iter()
+            .filter(|p| p["name"] == "waybill:vex-binding-status")
+            .filter_map(|p| serde_json::from_str::<serde_json::Value>(p["value"].as_str()?).ok())
+            .find(|v| v["ref"] == r)
+    };
+
     // (a) Instance A — verified-bound → no caveat.
     assert!(
-        foo_entry.get("waybill:vex-binding-status").is_none(),
+        caveat_of(foo_entry).is_none(),
         "verified-bound instance must NOT carry waybill:vex-binding-status \
          caveat: {}",
         serde_json::to_string_pretty(foo_entry).unwrap_or_default(),
     );
 
     // (b) Instance B — unverified-bound → caveat present.
-    let caveat = baselayer_entry["waybill:vex-binding-status"]
-        .as_object()
-        .expect("unverified instance must carry caveat sibling");
+    let caveat = caveat_of(baselayer_entry)
+        .expect("unverified instance must carry a waybill:vex-binding-status property");
+    assert!(
+        baselayer_entry.get("waybill:vex-binding-status").is_none(),
+        "the caveat must not be a sibling inside affects[] (schema-invalid)",
+    );
     assert_eq!(caveat["status"], "unverified");
     let reason = caveat["reason"].as_str().unwrap();
     assert!(
@@ -222,7 +237,7 @@ fn caveated_propagation_handles_per_instance_binding_correctly() {
     // side computation per C-3.
     let unverified_count = affects
         .iter()
-        .filter(|a| a.get("waybill:vex-binding-status").is_some())
+        .filter(|a| caveat_of(a).is_some())
         .count();
     assert_eq!(
         unverified_count, 1,
@@ -231,7 +246,7 @@ fn caveated_propagation_handles_per_instance_binding_correctly() {
     );
     let verified_count = affects
         .iter()
-        .filter(|a| a.get("waybill:vex-binding-status").is_none())
+        .filter(|a| caveat_of(a).is_none())
         .count();
     assert_eq!(
         verified_count, 1,

@@ -650,10 +650,9 @@ pub(crate) mod tests {
     }
 
     /// #1122 — a split document names its namespaced sidecar, which split
-    /// writes beside it; the deprecated SPDX 3 alias's `--output` places the
-    /// document like the canonical id does.
+    /// writes beside it; any of a document's format ids may place it.
     #[test]
-    fn sidecar_reference_follows_split_naming_and_the_spdx3_alias() {
+    fn sidecar_reference_follows_split_naming_and_every_format_id() {
         let mut o = std::collections::BTreeMap::new();
         assert_eq!(sidecar_reference(&o, &["spdx-2.3-json"], "waybill.spdx.json"), OPENVEX_DEFAULT_FILENAME);
         o.insert("openvex".to_string(), PathBuf::from("app.waybill.openvex.json"));
@@ -662,9 +661,9 @@ pub(crate) mod tests {
             "app.waybill.openvex.json",
         );
         o.insert("openvex".to_string(), PathBuf::from("out/vex.json"));
-        o.insert("spdx-3-json-experimental".to_string(), PathBuf::from("out/doc.spdx3.json"));
+        o.insert("second-id".to_string(), PathBuf::from("out/doc.spdx3.json"));
         assert_eq!(
-            sidecar_reference(&o, &["spdx-3-json", "spdx-3-json-experimental"], "waybill.spdx3.json"),
+            sidecar_reference(&o, &["spdx-3-json", "second-id"], "waybill.spdx3.json"),
             "vex.json",
         );
     }

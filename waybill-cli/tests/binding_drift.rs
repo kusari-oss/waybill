@@ -213,6 +213,12 @@ fn strict_mode_with_verified_binding_succeeds() {
     let affects = vulns[0]["affects"].as_array().unwrap();
     assert_eq!(affects.len(), 1);
     assert_eq!(affects[0]["ref"], "x-bom-1");
-    // Verified → no caveat sibling.
+    // Verified → no caveat (#1123: carried as a vulnerability property).
     assert!(affects[0].get("waybill:vex-binding-status").is_none());
+    assert!(
+        vulns[0]["properties"]
+            .as_array()
+            .is_none_or(|ps| ps.iter().all(|p| p["name"] != "waybill:vex-binding-status")),
+        "a verified binding must carry no caveat",
+    );
 }

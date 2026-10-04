@@ -810,7 +810,9 @@ mod tests {
         let spdx_doc = find_spdx3_document(&spdx3);
         assert_eq!(
             spdx_doc["externalRef"][0]["locator"],
-            serde_json::json!(["./vex/out.json"]),
+            // #1122: relative to the document (here in the working
+            // directory), so the user's `./` prefix is normalized away.
+            serde_json::json!(["vex/out.json"]),
             "user override path must appear in the SPDX 3 ExternalRef locator"
         );
     }
@@ -864,7 +866,8 @@ mod tests {
         );
         assert_eq!(
             spdx["externalDocumentRefs"][0]["spdxDocument"],
-            "./vex/out.json",
+            // #1122: relative to the document, `./` normalized away.
+            "vex/out.json",
             "user override path must appear in the SPDX cross-reference"
         );
     }
