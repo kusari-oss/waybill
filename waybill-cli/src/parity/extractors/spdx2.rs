@@ -684,6 +684,8 @@ spdx23_anno!(c186_spdx23, "waybill:nixpkgs-declaration", component);
 spdx23_anno!(c187_spdx23, "waybill:nixpkgs-accepted-insecure", document);
 spdx23_anno!(c188_spdx23, "waybill:nixpkgs-security", document);
 spdx23_anno!(c189_spdx23, "waybill:nixpkgs-declaration-grade", document);
+spdx23_anno!(c191_spdx23, "waybill:deps-dev-outcome", component);
+spdx23_anno!(c192_spdx23, "waybill:deps-dev-outcomes", document);
 spdx23_anno!(c163_spdx23, "waybill:document-resolve",                     document);
 spdx23_anno!(c162_spdx23, "waybill:cabal-entries-skipped",                 document);
 

@@ -7,6 +7,45 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Added: the SBOM says why deps.dev did not enrich a component (#1058)
+
+A component deps.dev did not enrich used to look the same whatever the reason.
+On an online scan, each component in deps.dev's six ecosystems (cargo, npm,
+pypi, go, maven, nuget) that it did not enrich now carries
+`waybill:deps-dev-outcome` (catalogue C191), with one of these values:
+
+- `absent`: deps.dev has no such version;
+- `declined-invalid-license`: deps.dev's licence strings were all invalid SPDX
+  (the strings are not copied into the SBOM);
+- `transport-failure`: the request failed;
+- `not-queried:incomplete-coordinate`: the version was empty or a placeholder.
+
+The document carries `waybill:deps-dev-outcomes` (C192), the counts of each
+value plus components in ecosystems deps.dev does not index. Offline,
+deps.dev-disabled and fully matched scans are byte-identical.
+
+### Changed: placeholder versions are no longer sent to deps.dev
+
+Versions waybill synthesises when it has none (`unknown`, `0.0.0-unknown`,
+`v0.0.0-unknown`, `noassertion`, `none`, `latest`) are no longer looked up.
+Each was a guaranteed 404: 28 of 30 misses on opentelemetry-go. `0.0.0` is
+still queried, since some packages publish it.
+
+### Fixed: present components cached as absent by the batched deps.dev path
+
+Two defects in the batched path recorded a component as unknown to deps.dev
+when it was not, and cached that result:
+
+- **Unanswered slots.** deps.dev merges two spellings of one package sent in
+  the same request (for example `Flask` and `flask`) and answers only one. The
+  other was recorded as absent. It is now retried on its own.
+- **Repeated coordinates.** The same coordinate twice in one batch left the
+  first copy recorded as absent. Each coordinate is now sent once and its
+  answer applied to every copy.
+
+Absences already in a disk cache from older versions expire with the cache's
+max-age, one hour by default.
+
 ### Fixed: `--nix-closure` now verifies the import-from-derivation refusal it promised (#1114)
 
 The `--nix-closure` help listed "import-from-derivation refused and the refusal

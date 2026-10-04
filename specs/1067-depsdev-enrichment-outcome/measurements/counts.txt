@@ -1,0 +1,6 @@
+express comps=369 [npm=368] attempted=369 cache_hits=0 network_lookups=369 unqueried_offline=0 matched=369 enriched=4 
+flask comps=108 [pypi=108] attempted=108 cache_hits=0 network_lookups=108 unqueried_offline=0 matched=105 enriched=74 
+cobra comps=7 [golang=7] attempted=8 cache_hits=0 network_lookups=8 unqueried_offline=0 matched=7 enriched=7 
+otel-go comps=334 [golang=332,pypi=1] attempted=333 cache_hits=3 network_lookups=330 unqueried_offline=0 matched=303 enriched=302 
+ripgrep comps=68 [cargo=61] attempted=61 cache_hits=0 network_lookups=61 unqueried_offline=0 matched=61 enriched=61 
+guice comps=109 [bazel=2,maven=94] attempted=46 cache_hits=0 network_lookups=46 unqueried_offline=0 matched=43 enriched=35 

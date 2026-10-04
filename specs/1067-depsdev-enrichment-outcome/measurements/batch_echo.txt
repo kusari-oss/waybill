@@ -1,0 +1,31 @@
+HTTP 200: 14 requested, 14 response items, nextPageToken=''
+  PYPI  Flask@3.0.0        exact-echo=yes found=True
+  PYPI  flask@3.0.0        exact-echo=NO found=-
+  PYPI  typing_extensions@4.9.0        exact-echo=yes found=True
+  PYPI  typing-extensions@4.9.0        exact-echo=NO found=-
+  NUGET Newtonsoft.Json@13.0.3       exact-echo=yes found=True
+  NUGET newtonsoft.json@13.0.3       exact-echo=NO found=-
+  NPM   @types/node@20.10.0      exact-echo=yes found=True
+  NPM   Express@4.18.2       exact-echo=yes found=False
+  MAVEN com.google.guava:guava@33.0.0-jre   exact-echo=yes found=True
+  GO    github.com/BurntSushi/toml@v1.3.2       exact-echo=yes found=True
+  GO    github.com/burntsushi/toml@v1.3.2       exact-echo=yes found=False
+  CARGO serde@1.0.197      exact-echo=yes found=True
+  CARGO Serde@1.0.197      exact-echo=NO found=-
+  PYPI  flask@3.0.0        exact-echo=NO found=-
+echoes matching no request: none
+
+-- each key alone --
+  PYPI  sent='Flask'                      echoed='Flask'                      same=True found=True
+  PYPI  sent='flask'                      echoed='flask'                      same=True found=True
+  PYPI  sent='typing_extensions'          echoed='typing_extensions'          same=True found=True
+  PYPI  sent='typing-extensions'          echoed='typing-extensions'          same=True found=True
+  NUGET sent='Newtonsoft.Json'            echoed='Newtonsoft.Json'            same=True found=True
+  NUGET sent='newtonsoft.json'            echoed='newtonsoft.json'            same=True found=True
+  NPM   sent='@types/node'                echoed='@types/node'                same=True found=True
+  NPM   sent='Express'                    echoed='Express'                    same=True found=False
+  MAVEN sent='com.google.guava:guava'     echoed='com.google.guava:guava'     same=True found=True
+  GO    sent='github.com/BurntSushi/toml' echoed='github.com/BurntSushi/toml' same=True found=True
+  GO    sent='github.com/burntsushi/toml' echoed='github.com/burntsushi/toml' same=True found=False
+  CARGO sent='serde'                      echoed='serde'                      same=True found=True
+  CARGO sent='Serde'                      echoed='Serde'                      same=True found=True

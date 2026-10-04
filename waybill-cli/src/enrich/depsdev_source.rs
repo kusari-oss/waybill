@@ -26,13 +26,53 @@ use super::degradation::{DegradationMode, DegradationRecord};
 use super::deps_dev_graph::CONCURRENT_REQUESTS;
 use super::progress::ProgressReporter;
 use super::request_key::EnrichmentKey;
+use super::deps_dev_outcome::{self, Outcome};
 use std::time::Instant;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use super::source::EnrichmentSource;
 
 /// One batch chunk's outcome: the per-key results in request order, and
 /// the response's cache max-age. `None` when the chunk failed.
-type ChunkResult = Option<(Vec<Option<VersionInfo>>, Option<u64>)>;
+///
+/// Milestone 1067 (FR-010): a slot is `None` when the response never
+/// answered it, and `Some(None)` only when deps.dev echoed it without a
+/// `version`. The two used to share one value, so an unanswered slot was
+/// recorded and cached as an absence.
+type ChunkResult = Option<(Vec<Option<Option<VersionInfo>>>, Option<u64>)>;
+
+/// Milestone 1067 (#1058) — what one lookup learnt.
+///
+/// The fetch path used to return `Option<VersionInfo>`, which made
+/// "deps.dev has no record" and "the request failed" the same value. The
+/// outcome annotation needs them apart, and so does the cache: only an
+/// answer may be persisted.
+#[derive(Debug, Clone)]
+pub(crate) enum LookupResult {
+    Found(VersionInfo),
+    /// deps.dev answered and holds no record: a 404, or a batch item
+    /// echoed without `version`.
+    Absent,
+    /// Nothing was learnt: a transport error, or an unanswered batch slot
+    /// whose per-key retry also failed.
+    Failed,
+    /// `--offline`, and neither cache held it.
+    Unqueried,
+}
+
+impl LookupResult {
+    fn from_answer(info: Option<VersionInfo>) -> Self {
+        info.map_or(Self::Absent, Self::Found)
+    }
+
+    /// The disk-cache form, for an answer only.
+    fn answer(&self) -> Option<Option<VersionInfo>> {
+        match self {
+            Self::Found(v) => Some(Some(v.clone())),
+            Self::Absent => Some(None),
+            Self::Failed | Self::Unqueried => None,
+        }
+    }
+}
 
 /// An enrichment source backed by the deps.dev v3 API.
 ///
@@ -47,10 +87,10 @@ type ChunkResult = Option<(Vec<Option<VersionInfo>>, Option<u64>)>;
 pub struct DepsDevSource {
     client: DepsDevClient,
     offline: bool,
-    /// In-memory cache keyed by (system, name, version). `None` caches
-    /// the "API returned 404 / error" result so we don't re-hit the
-    /// same miss for every duplicate component in a single scan.
-    cache: Mutex<HashMap<(String, String, String), Option<VersionInfo>>>,
+    /// In-memory cache keyed by (system, name, version), so a miss is not
+    /// re-fetched for every duplicate component in a single scan. A
+    /// failure is kept as `Failed`, never replayed as `Absent` (m1067).
+    cache: Mutex<HashMap<(String, String, String), LookupResult>>,
     /// Milestone 839 (FR-017a): transport failures, counted apart from
     /// genuine 404s. The fetch path collapses both into `None` so
     /// callers can treat them uniformly — which is exactly why a
@@ -212,18 +252,27 @@ impl DepsDevSource {
         // Match by the echoed request, never by position (C-3.1).
         // The echo is uncanonicalized, and deps.dev normalises names
         // per ecosystem, so the index is built from what we SENT.
-        let mut index: HashMap<(String, String, String), usize> = HashMap::new();
+        //
+        // Milestone 1067 (FR-010): one entry per distinct coordinate,
+        // holding every position that asked for it, and each coordinate
+        // sent once. A position-per-key map kept only the last duplicate,
+        // and the earlier one was cached as absent.
+        let mut index: HashMap<(String, String, String), Vec<usize>> = HashMap::new();
+        let mut distinct: Vec<EnrichmentKey> = Vec::new();
         for (i, k) in chunk.iter().enumerate() {
-            index.insert(
-                (k.system.to_uppercase(), k.name.clone(), k.version.clone()),
-                i,
-            );
+            let slots = index
+                .entry((k.system.to_uppercase(), k.name.clone(), k.version.clone()))
+                .or_default();
+            if slots.is_empty() {
+                distinct.push(k.clone());
+            }
+            slots.push(i);
         }
-        let mut out: Vec<Option<VersionInfo>> = vec![None; chunk.len()];
+        let mut out: Vec<Option<Option<VersionInfo>>> = vec![None; chunk.len()];
         let mut token: Option<String> = None;
         let mut max_age: Option<u64> = None;
         loop {
-            let (page, page_max_age) = match client.get_version_batch(chunk, token.clone()).await {
+            let (page, page_max_age) = match client.get_version_batch(&distinct, token.clone()).await {
                 Ok(p) => p,
                 Err(e) => {
                     warn!(error = %e, "deps.dev batch request failed — falling back");
@@ -242,7 +291,11 @@ impl DepsDevSource {
                     vk.version.clone(),
                 );
                 match index.get(&probe) {
-                    Some(&i) => out[i] = entry.version.clone(),
+                    Some(slots) => {
+                        for &i in slots {
+                            out[i] = Some(entry.version.clone());
+                        }
+                    }
                     // An entry we did not ask for. Dropping it is
                     // right; treating it as positional would corrupt
                     // a neighbour.
@@ -276,12 +329,14 @@ impl DepsDevSource {
     /// limit and no documented throttling semantics, so the bound is
     /// chosen conservatively rather than tuned up against an
     /// advertised allowance (FR-003b).
-    async fn fetch_many(
+    async fn fetch_results(
         &self,
         keys: &[EnrichmentKey],
         progress: &mut ProgressReporter,
-    ) -> Vec<Option<VersionInfo>> {
-        let mut out: Vec<Option<VersionInfo>> = vec![None; keys.len()];
+    ) -> Vec<LookupResult> {
+        // `Failed` until something is learnt, so a panicked worker reads
+        // as the failed lookup it is.
+        let mut out: Vec<LookupResult> = vec![LookupResult::Failed; keys.len()];
         let mut misses: Vec<usize> = Vec::new();
         {
             let cache = self.cache.lock().expect("deps.dev cache mutex poisoned");
@@ -303,15 +358,16 @@ impl DepsDevSource {
             for i in misses {
                 match self.disk.get(&keys[i]) {
                     Some(record) => {
+                        let result = LookupResult::from_answer(record);
                         cache.insert(
                             (
                                 keys[i].system.to_string(),
                                 keys[i].name.clone(),
                                 keys[i].version.clone(),
                             ),
-                            record.clone(),
+                            result.clone(),
                         );
-                        out[i] = record;
+                        out[i] = result;
                     }
                     None => still.push(i),
                 }
@@ -326,6 +382,9 @@ impl DepsDevSource {
         // stays unenriched rather than triggering a fetch (C-5.2).
         if self.offline {
             self.unqueried_offline.fetch_add(misses.len(), Ordering::Relaxed);
+            for i in misses {
+                out[i] = LookupResult::Unqueried;
+            }
             return out;
         }
         self.network_lookups.fetch_add(misses.len(), Ordering::Relaxed);
@@ -398,19 +457,29 @@ impl DepsDevSource {
                             let mut cache =
                                 self.cache.lock().expect("deps.dev cache mutex poisoned");
                             for (&i, v) in idxs.iter().zip(vals) {
+                                // FR-010: a slot the response never answered
+                                // learnt nothing. It is retried per key below,
+                                // not recorded as absent. Measured rare (0 of
+                                // 925 corpus keys): deps.dev leaves one unanswered
+                                // only when it merges two spellings sent together.
+                                let Some(v) = v else {
+                                    still_missing.push(i);
+                                    continue;
+                                };
+                                let result = LookupResult::from_answer(v.clone());
                                 cache.insert(
                                     (
                                         keys[i].system.to_string(),
                                         keys[i].name.clone(),
                                         keys[i].version.clone(),
                                     ),
-                                    v.clone(),
+                                    result.clone(),
                                 );
                                 self.disk.put(&keys[i], &v, bound);
-                                out[i] = v;
+                                out[i] = result;
+                                batched_ok += 1;
+                                done += 1;
                             }
-                            batched_ok += idxs.len();
-                            done += idxs.len();
                         }
                         None => {
                             self.batch_fallbacks.fetch_add(1, Ordering::Relaxed);
@@ -484,8 +553,8 @@ impl DepsDevSource {
         while let Some(joined) = set.join_next().await {
             match joined {
                 Ok((i, k, result)) => {
-                    let (info, max_age, answered) = match result {
-                        Ok((info, max_age)) => (info, max_age, true),
+                    let (result, max_age) = match result {
+                        Ok((info, max_age)) => (LookupResult::from_answer(info), max_age),
                         Err(e) => {
                             self.transport_errors.fetch_add(1, Ordering::Relaxed);
                             if super::deps_dev_client::is_throttled(&e) {
@@ -498,25 +567,25 @@ impl DepsDevSource {
                                 error = %e,
                                 "deps.dev get_version failed — not cached across scans"
                             );
-                            (None, None, false)
+                            (LookupResult::Failed, None)
                         }
                     };
                     // #1094: only an answer reaches the disk cache. A timeout
                     // or 5xx said nothing about the package; persisting it
                     // would report the package as unknown to deps.dev for
                     // every scan within the default max-age.
-                    if answered {
+                    if let Some(answer) = result.answer() {
                         self.disk
-                            .put(&k, &info, self.disk.effective_max_age(max_age));
+                            .put(&k, &answer, self.disk.effective_max_age(max_age));
                     }
                     self.cache
                         .lock()
                         .expect("deps.dev cache mutex poisoned")
                         .insert(
                             (k.system.to_string(), k.name.clone(), k.version.clone()),
-                            info.clone(),
+                            result.clone(),
                         );
-                    out[i] = info;
+                    out[i] = result;
                 }
                 // A panicked worker costs one lookup, not the scan.
                 Err(e) => warn!(error = %e, "deps.dev licence worker task panicked"),
@@ -528,6 +597,24 @@ impl DepsDevSource {
             }
         }
         out
+    }
+
+    /// The pre-m1067 shape, kept for tests that only distinguish found
+    /// from not found.
+    #[cfg(test)]
+    async fn fetch_many(
+        &self,
+        keys: &[EnrichmentKey],
+        progress: &mut ProgressReporter,
+    ) -> Vec<Option<VersionInfo>> {
+        self.fetch_results(keys, progress)
+            .await
+            .into_iter()
+            .map(|r| match r {
+                LookupResult::Found(v) => Some(v),
+                _ => None,
+            })
+            .collect()
     }
 
     /// Milestone 776 (FR-004) — accept a URL only if it is a
@@ -585,6 +672,19 @@ impl DepsDevSource {
     /// a rising unmapped count means the upstream vocabulary moved and
     /// a label should be mapped; a rising malformed count means
     /// upstream data quality degraded and it should not.
+    /// Milestone 1067 (FR-004): deps.dev returned at least one licence
+    /// string and [`Self::apply_version_info`] would accept none of them.
+    /// A record with no strings at all is a match with nothing to add.
+    fn licences_declined(info: &VersionInfo) -> bool {
+        let mut offered = info.licenses.iter().map(|l| l.trim()).filter(|l| !l.is_empty());
+        let mut any = false;
+        let all_rejected = offered.all(|l| {
+            any = true;
+            SpdxExpression::try_canonical(l).is_err()
+        });
+        any && all_rejected
+    }
+
     fn apply_version_info(
         component: &mut ResolvedComponent,
         system: &str,
@@ -743,19 +843,27 @@ pub async fn enrich_components(
     // that silently splits — one path writing entries another never
     // finds. `from_purl_parts` also absorbs the ecosystem-unsupported
     // and incomplete-coordinate skips that used to sit inline.
-    let planned: Vec<(usize, EnrichmentKey)> = components
-        .iter()
-        .enumerate()
-        .filter_map(|(idx, c)| {
-            EnrichmentKey::from_purl_parts(
-                c.purl.ecosystem(),
-                c.purl.namespace(),
-                &c.name,
-                &c.version,
-            )
-            .map(|k| (idx, k))
-        })
-        .collect();
+    let mut planned: Vec<(usize, EnrichmentKey)> = Vec::new();
+    for (idx, c) in components.iter_mut().enumerate() {
+        match EnrichmentKey::from_purl_parts(
+            c.purl.ecosystem(),
+            c.purl.namespace(),
+            &c.name,
+            &c.version,
+        ) {
+            Some(k) => planned.push((idx, k)),
+            // Milestone 1067 (US2): an ecosystem deps.dev indexes, but no
+            // usable coordinate. Nothing is sent, and the component says so.
+            // Unsupported ecosystems are counted at emission instead (C192).
+            None if !source.offline
+                && super::deps_dev_system::deps_dev_system_for(c.purl.ecosystem())
+                    .is_some() =>
+            {
+                deps_dev_outcome::record(c, Some(Outcome::IncompleteCoordinate));
+            }
+            None => {}
+        }
+    }
     let attempted = planned.len();
     let mut progress = ProgressReporter::new(attempted);
 
@@ -769,13 +877,27 @@ pub async fn enrich_components(
         source.network_lookups.load(Ordering::Relaxed),
         source.unqueried_offline.load(Ordering::Relaxed),
     );
-    let fetched = source.fetch_many(&keys, &mut progress).await;
+    let fetched = source.fetch_results(&keys, &mut progress).await;
     let mut matched = 0usize;
 
-    for ((idx, key), info) in planned.into_iter().zip(fetched) {
+    for ((idx, key), result) in planned.into_iter().zip(fetched) {
         let component = &mut components[idx];
         let licenses_before = component.licenses.len();
-        if let Some(info) = info {
+        // Milestone 1067 (#1058): why this component was not enriched.
+        // Offline scans record nothing (FR-007), so they stay byte-identical.
+        let outcome = match &result {
+            LookupResult::Found(info) if DepsDevSource::licences_declined(info) => {
+                Some(Outcome::DeclinedInvalidLicense)
+            }
+            LookupResult::Found(_) => None,
+            LookupResult::Absent => Some(Outcome::Absent),
+            LookupResult::Failed => Some(Outcome::TransportFailure),
+            LookupResult::Unqueried => None,
+        };
+        if !source.offline {
+            deps_dev_outcome::record(component, outcome);
+        }
+        if let LookupResult::Found(info) = result {
             matched += 1;
             let (unmapped, malformed) =
                 DepsDevSource::apply_version_info(component, key.system, &info);
@@ -869,13 +991,13 @@ pub async fn enrich_components(
 
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
-mod tests {
+pub(crate) mod tests {
     use super::*;
     use waybill_common::resolution::{ResolutionEvidence, ResolutionTechnique};
     use waybill_common::types::purl::Purl;
     use std::time::Duration;
 
-    pub(super) fn make_component(purl_str: &str) -> ResolvedComponent {
+    pub(crate) fn make_component(purl_str: &str) -> ResolvedComponent {
         let purl = Purl::new(purl_str).expect("valid purl");
         ResolvedComponent {
             build_inclusion: None,
@@ -1239,7 +1361,7 @@ mod concurrency_tests {
 
         source.cache.lock().unwrap().insert(
             ("cargo".to_string(), "cached".to_string(), "1.0.0".to_string()),
-            Some(VersionInfo { licenses: vec!["Apache-2.0".into()], links: vec![] }),
+            LookupResult::Found(VersionInfo { licenses: vec!["Apache-2.0".into()], links: vec![] }),
         );
 
         let mut progress = ProgressReporter::new(keys.len());
@@ -2175,5 +2297,325 @@ mod pass_stats_tests {
             },
         );
         assert_eq!(server.received_requests().await.unwrap().len(), 0);
+    }
+}
+
+// Milestone 1067 (#1058), FR-010: an outcome of "absent" must mean deps.dev
+// said so. Batch slots the response did not answer, and repeated coordinates
+// in one chunk, used to be recorded and cached as absences.
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod m1067_absence_tests {
+    use super::*;
+    use wiremock::matchers::{method, path, path_regex};
+    use wiremock::{Mock, MockServer, ResponseTemplate};
+
+    fn key(name: &str) -> EnrichmentKey {
+        EnrichmentKey::from_purl_parts("cargo", None, name, "1.0.0").unwrap()
+    }
+    fn entry(name: &str, licence: Option<&str>) -> serde_json::Value {
+        let mut e = serde_json::json!({
+            "request": {"versionKey": {"system": "CARGO", "name": name, "version": "1.0.0"}}
+        });
+        if let Some(l) = licence {
+            e["version"] = serde_json::json!({"licenses": [l], "links": []});
+        }
+        e
+    }
+    fn batched_source(server: &MockServer, disk_root: &std::path::Path) -> DepsDevSource {
+        let client = DepsDevClient::new(std::time::Duration::from_secs(5))
+            .with_base_url(format!("{}/v3", server.uri()));
+        let mut source = DepsDevSource::new(client, false).with_batch(true);
+        source.disk =
+            super::super::deps_dev_disk_cache::DepsDevDiskCache::at(disk_root.to_path_buf());
+        source
+    }
+    async fn batch_answers(server: &MockServer, entries: Vec<serde_json::Value>) {
+        Mock::given(method("POST"))
+            .and(path("/v3alpha/versionbatch"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "responses": entries,
+                "nextPageToken": "",
+            })))
+            .mount(server)
+            .await;
+    }
+
+    /// T002: a slot the batch response never answered is not an absence.
+    #[tokio::test]
+    async fn an_unanswered_slot_is_not_cached_as_absent() {
+        let server = MockServer::start().await;
+        batch_answers(&server, vec![entry("x", Some("MIT"))]).await;
+        Mock::given(method("GET"))
+            .and(path_regex(r"/packages/y/versions/"))
+            .respond_with(ResponseTemplate::new(503))
+            .mount(&server)
+            .await;
+        let dir = tempfile::tempdir().unwrap();
+        let s = batched_source(&server, dir.path());
+        let k = vec![key("x"), key("y")];
+        let mut p = ProgressReporter::new(k.len());
+        let got = s.fetch_results(&k, &mut p).await;
+
+        assert!(matches!(got[0], LookupResult::Found(_)), "{:?}", got[0]);
+        assert!(matches!(got[1], LookupResult::Failed), "{:?}", got[1]);
+        assert!(
+            s.disk.get(&key("y")).is_none(),
+            "nothing was learnt about y, so nothing may be cached"
+        );
+    }
+
+    /// T003: a coordinate requested twice in one chunk is sent once and both
+    /// positions get the answer.
+    #[tokio::test]
+    async fn a_duplicate_coordinate_is_sent_once_and_answered_twice() {
+        let server = MockServer::start().await;
+        batch_answers(&server, vec![entry("serde", Some("MIT"))]).await;
+        let dir = tempfile::tempdir().unwrap();
+        let s = batched_source(&server, dir.path());
+        let k = vec![key("serde"), key("serde")];
+        let mut p = ProgressReporter::new(k.len());
+        let got = s.fetch_results(&k, &mut p).await;
+
+        assert!(got.iter().all(|r| matches!(r, LookupResult::Found(_))), "{got:?}");
+        let sent: Vec<String> = server
+            .received_requests()
+            .await
+            .unwrap()
+            .iter()
+            .filter(|r| r.url.path().ends_with("/versionbatch"))
+            .map(|r| String::from_utf8_lossy(&r.body).into_owned())
+            .collect();
+        assert_eq!(sent.len(), 1);
+        assert_eq!(sent[0].matches("\"serde\"").count(), 1, "sent once: {}", sent[0]);
+        assert!(matches!(s.disk.get(&key("serde")), Some(Some(_))));
+    }
+
+    /// T003a: deps.dev merges two spellings of one package sent together and
+    /// answers only one (measured). The other is retried per key, once.
+    #[tokio::test]
+    async fn a_merged_spelling_is_retried_per_key() {
+        let server = MockServer::start().await;
+        batch_answers(&server, vec![entry("a", Some("MIT"))]).await;
+        Mock::given(method("GET"))
+            .and(path_regex(r"/packages/b/versions/"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(
+                serde_json::json!({ "licenses": ["Apache-2.0"], "links": [] }),
+            ))
+            .expect(1)
+            .mount(&server)
+            .await;
+        let dir = tempfile::tempdir().unwrap();
+        let s = batched_source(&server, dir.path());
+        let k = vec![key("a"), key("b")];
+        let mut p = ProgressReporter::new(k.len());
+        let got = s.fetch_results(&k, &mut p).await;
+
+        assert!(matches!(&got[1], LookupResult::Found(v) if v.licenses == vec!["Apache-2.0"]), "{got:?}");
+        assert!(!matches!(s.disk.get(&key("b")), Some(None)), "never cached as absent");
+    }
+}
+
+// Milestone 1067 (#1058) US1 — each looked-up component carries the reason
+// deps.dev did not enrich it (C191), and nothing when it matched.
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod outcome_tests {
+    use super::tests::make_component;
+    use super::*;
+    use crate::enrich::deps_dev_outcome::OUTCOME_ANNOTATION;
+    use wiremock::matchers::{method, path, path_regex};
+    use wiremock::{Mock, MockServer, ResponseTemplate};
+
+    fn outcome(c: &ResolvedComponent) -> Option<&str> {
+        c.extra_annotations.get(OUTCOME_ANNOTATION).and_then(|v| v.as_str())
+    }
+    fn item(name: &str, licences: Option<&[&str]>) -> serde_json::Value {
+        let mut e = serde_json::json!({
+            "request": {"versionKey": {"system": "CARGO", "name": name, "version": "1.0.0"}}
+        });
+        if let Some(l) = licences {
+            e["version"] = serde_json::json!({"licenses": l, "links": []});
+        }
+        e
+    }
+    async fn get(server: &MockServer, name: &str, status: u16, licences: &[&str]) {
+        Mock::given(method("GET"))
+            .and(path_regex(format!(r"/packages/{name}/versions/")))
+            .respond_with(
+                ResponseTemplate::new(status)
+                    .set_body_json(serde_json::json!({"licenses": licences, "links": []})),
+            )
+            .mount(server)
+            .await;
+    }
+    fn source(server: &MockServer, offline: bool, batch: bool) -> DepsDevSource {
+        let client = DepsDevClient::new(std::time::Duration::from_secs(5))
+            .with_base_url(format!("{}/v3", server.uri()));
+        DepsDevSource::new(client, offline).with_batch(batch)
+    }
+    fn components() -> Vec<ResolvedComponent> {
+        let mut declined_with_lockfile_licence = make_component("pkg:cargo/declined2@1.0.0");
+        declined_with_lockfile_licence
+            .licenses
+            .push(SpdxExpression::try_canonical("MIT").unwrap());
+        vec![
+            make_component("pkg:cargo/found@1.0.0"),
+            make_component("pkg:cargo/empty@1.0.0"),
+            make_component("pkg:cargo/absent@1.0.0"),
+            make_component("pkg:cargo/declined@1.0.0"),
+            declined_with_lockfile_licence,
+            make_component("pkg:cargo/broken@1.0.0"),
+            make_component("pkg:deb/debian/zlib@1.0.0"),
+        ]
+    }
+    const EXPECTED: [Option<&str>; 7] = [
+        None,
+        None, // matched with nothing to add (FR-003)
+        Some("absent"),
+        Some("declined-invalid-license"),
+        Some("declined-invalid-license"), // already licensed (analysis U2)
+        Some("transport-failure"),
+        None, // unsupported ecosystem: C192 only (FR-002a)
+    ];
+
+    fn assert_outcomes(cs: &[ResolvedComponent]) {
+        let got: Vec<Option<&str>> = cs.iter().map(outcome).collect();
+        assert_eq!(got, EXPECTED);
+        for c in cs {
+            let all = serde_json::to_string(&c.extra_annotations).unwrap();
+            assert!(!all.contains("non-standard"), "upstream text leaked: {all}");
+        }
+    }
+
+    /// T006, per-key path.
+    #[tokio::test]
+    async fn per_key_outcomes() {
+        let server = MockServer::start().await;
+        get(&server, "found", 200, &["MIT"]).await;
+        get(&server, "empty", 200, &[]).await;
+        get(&server, "declined", 200, &["non-standard"]).await;
+        get(&server, "declined2", 200, &["non-standard"]).await;
+        get(&server, "broken", 500, &[]).await;
+        // `absent` is unmocked: wiremock answers 404.
+        let mut cs = components();
+        enrich_components(&source(&server, false, false), &mut cs, EnrichmentPass::Initial).await;
+        assert_outcomes(&cs);
+    }
+
+    /// T006, batch path: an item without `version` is absent, and a slot
+    /// the batch never answered falls back to a GET that fails.
+    #[tokio::test]
+    async fn batch_outcomes() {
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/v3alpha/versionbatch"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "responses": [
+                    item("found", Some(&["MIT"])),
+                    item("empty", Some(&[])),
+                    item("absent", None),
+                    item("declined", Some(&["non-standard"])),
+                    item("declined2", Some(&["non-standard"])),
+                ],
+                "nextPageToken": "",
+            })))
+            .mount(&server)
+            .await;
+        get(&server, "broken", 500, &[]).await;
+        let mut cs = components();
+        enrich_components(&source(&server, false, true), &mut cs, EnrichmentPass::Initial).await;
+        assert_outcomes(&cs);
+    }
+
+    /// T006, batch endpoint down: every key falls back per key.
+    #[tokio::test]
+    async fn batch_failure_falls_back_with_the_same_outcomes() {
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/v3alpha/versionbatch"))
+            .respond_with(ResponseTemplate::new(500))
+            .mount(&server)
+            .await;
+        get(&server, "found", 200, &["MIT"]).await;
+        get(&server, "empty", 200, &[]).await;
+        get(&server, "declined", 200, &["non-standard"]).await;
+        get(&server, "declined2", 200, &["non-standard"]).await;
+        get(&server, "broken", 500, &[]).await;
+        let mut cs = components();
+        enrich_components(&source(&server, false, true), &mut cs, EnrichmentPass::Initial).await;
+        assert_outcomes(&cs);
+    }
+
+    /// T007: the final pass's outcome is the one kept.
+    #[tokio::test]
+    async fn a_later_match_clears_an_earlier_outcome() {
+        let first = MockServer::start().await; // 404s everything
+        let second = MockServer::start().await;
+        get(&second, "x", 200, &["MIT"]).await;
+        let mut cs = vec![make_component("pkg:cargo/x@1.0.0")];
+        enrich_components(&source(&first, false, false), &mut cs, EnrichmentPass::Initial).await;
+        assert_eq!(outcome(&cs[0]), Some("absent"));
+        enrich_components(&source(&second, false, false), &mut cs, EnrichmentPass::PostGraph).await;
+        assert_eq!(outcome(&cs[0]), None);
+    }
+
+    /// T015 (US2): a placeholder version is never sent, and says so. A
+    /// `0.0.0` is a real version and is still queried.
+    #[tokio::test]
+    async fn placeholder_versions_are_not_queried() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path_regex(r"/versions/(v?0\.0\.0-unknown|unknown|)$"))
+            .respond_with(ResponseTemplate::new(404))
+            .expect(0)
+            .mount(&server)
+            .await;
+        let mut empty = make_component("pkg:cargo/empty@1.0.0");
+        empty.version = String::new();
+        let mut cs = vec![
+            make_component("pkg:golang/example.com/m@v0.0.0-unknown"),
+            make_component("pkg:cargo/c@0.0.0-unknown"),
+            make_component("pkg:maven/g/a@unknown"),
+            empty,
+            make_component("pkg:npm/zero@0.0.0"),
+        ];
+        enrich_components(&source(&server, false, false), &mut cs, EnrichmentPass::Initial).await;
+        let got: Vec<Option<&str>> = cs.iter().map(outcome).collect();
+        assert_eq!(
+            got,
+            vec![
+                Some("not-queried:incomplete-coordinate"),
+                Some("not-queried:incomplete-coordinate"),
+                Some("not-queried:incomplete-coordinate"),
+                Some("not-queried:incomplete-coordinate"),
+                Some("absent"), // queried; the mock 404s it
+            ],
+        );
+        let paths: Vec<String> = server
+            .received_requests()
+            .await
+            .unwrap()
+            .iter()
+            .map(|r| r.url.path().to_string())
+            .collect();
+        assert_eq!(paths.len(), 1, "only 0.0.0 was queried: {paths:?}");
+        assert!(paths[0].ends_with("/versions/0.0.0"), "{paths:?}");
+    }
+
+    /// T008: offline, with or without a disk cache, records nothing (FR-007).
+    #[tokio::test]
+    async fn offline_records_nothing() {
+        let server = MockServer::start().await;
+        let dir = tempfile::tempdir().unwrap();
+        let mut with_disk = source(&server, true, false);
+        with_disk.disk =
+            super::super::deps_dev_disk_cache::DepsDevDiskCache::at(dir.path().to_path_buf());
+        for s in [source(&server, true, false), with_disk] {
+            let mut cs = components();
+            enrich_components(&s, &mut cs, EnrichmentPass::Initial).await;
+            assert!(cs.iter().all(|c| outcome(c).is_none()));
+        }
+        assert!(server.received_requests().await.unwrap().is_empty());
     }
 }

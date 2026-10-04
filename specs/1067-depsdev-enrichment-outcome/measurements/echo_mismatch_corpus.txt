@@ -1,0 +1,6 @@
+express: unrequested-echoes=0 [] bulk enrichment complete batched=369 fell_back=0
+flask: unrequested-echoes=0 [] bulk enrichment complete batched=108 fell_back=0
+cobra: unrequested-echoes=0 [] bulk enrichment complete batched=8 fell_back=0
+otel-go: unrequested-echoes=0 [] bulk enrichment complete batched=333 fell_back=0
+ripgrep: unrequested-echoes=0 [] bulk enrichment complete batched=61 fell_back=0
+guice: unrequested-echoes=0 [] bulk enrichment complete batched=46 fell_back=0

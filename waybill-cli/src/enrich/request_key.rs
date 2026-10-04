@@ -16,6 +16,26 @@
 
 use super::deps_dev_system::{deps_dev_package_name, deps_dev_system_for};
 
+/// Milestone 1067 (#1058, US2) — a version string waybill synthesises when
+/// it has none, which no registry publishes.
+///
+/// Its own set, not the distribution-URL guard's in `scan_fs`: that one
+/// guards derived URLs, a different output, and moving it would move
+/// goldens this feature must not touch. `0.0.0` is excluded because it
+/// is a real published version of some packages (npm).
+pub(crate) fn is_placeholder_version(v: &str) -> bool {
+    const PLACEHOLDERS: [&str; 7] = [
+        "",
+        "unknown",
+        "0.0.0-unknown",
+        "v0.0.0-unknown",
+        "noassertion",
+        "none",
+        "latest",
+    ];
+    PLACEHOLDERS.iter().any(|p| p.eq_ignore_ascii_case(v))
+}
+
 /// One package version to look up: the deps.dev system, the package
 /// name as deps.dev expects it for that ecosystem, and the version.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -27,7 +47,8 @@ pub struct EnrichmentKey {
 
 impl EnrichmentKey {
     /// Build a key from PURL parts, or `None` when deps.dev does not
-    /// index the ecosystem or the coordinates are incomplete.
+    /// index the ecosystem or the coordinates are incomplete: an empty
+    /// name, or an empty or placeholder version (m1067, US2).
     ///
     /// Returning `None` rather than a key that cannot succeed keeps
     /// doomed requests out of every path at once — including out of
@@ -40,7 +61,7 @@ impl EnrichmentKey {
         name: &str,
         version: &str,
     ) -> Option<Self> {
-        if name.is_empty() || version.is_empty() {
+        if name.is_empty() || is_placeholder_version(version) {
             return None;
         }
         let system = deps_dev_system_for(ecosystem)?;
@@ -115,6 +136,32 @@ mod tests {
     }
 
 
+
+    #[test]
+    fn placeholder_versions_yield_no_key() {
+        for v in ["unknown", "0.0.0-unknown", "v0.0.0-unknown", "LATEST"] {
+            assert!(EnrichmentKey::from_purl_parts("cargo", None, "serde", v).is_none(), "{v}");
+        }
+        assert!(EnrichmentKey::from_purl_parts("npm", None, "zero", "0.0.0").is_some());
+    }
+
+    #[test]
+    fn placeholder_versions_are_recognised_in_any_case() {
+        for v in [
+            "", "unknown", "UNKNOWN", "0.0.0-unknown", "v0.0.0-unknown",
+            "NOASSERTION", "none", "latest", "Latest",
+        ] {
+            assert!(is_placeholder_version(v), "{v:?} is a placeholder");
+        }
+    }
+
+    #[test]
+    fn real_versions_are_not_placeholders() {
+        // `0.0.0` is published by real npm packages.
+        for v in ["0.0.0", "1.0.0", "v1.9.3", "0.0.0-20240101-abcdef"] {
+            assert!(!is_placeholder_version(v), "{v:?} is a real version");
+        }
+    }
 
     #[test]
     fn cache_key_separates_fields_that_share_an_alphabet() {

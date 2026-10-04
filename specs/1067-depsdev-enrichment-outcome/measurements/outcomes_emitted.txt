@@ -1,0 +1,6 @@
+otel-go attempted=305 network_lookups=305 matched=303 
+  C192 {"absent":2,"not-queried:incomplete-coordinate":28,"not-queried:unsupported-ecosystem":1}
+  C191 {"absent":2,"not-queried:incomplete-coordinate":28}
+express attempted=369 network_lookups=369 matched=369 
+  C192 {"not-queried:unsupported-ecosystem":1}
+  C191 {}

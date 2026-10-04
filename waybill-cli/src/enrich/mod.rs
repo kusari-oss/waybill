@@ -1,6 +1,7 @@
 pub mod source;
 pub mod lockfile_source;
 pub mod depsdev_source;
+pub mod deps_dev_outcome;
 pub mod deps_dev_graph;
 pub mod pipeline;
 pub mod deps_dev_client;
