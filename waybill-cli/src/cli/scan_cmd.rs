@@ -6471,7 +6471,6 @@ mod tests {
         );
     }
 
-    #[test]
     /// #1122: the reference an SPDX document carries, resolved against the
     /// document's directory as a relative reference is, names the file the
     /// sidecar is written to. Before the fix the sidecar landed in the working
