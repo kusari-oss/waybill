@@ -1279,10 +1279,21 @@ fn emit_groups(
             } else {
                 filename_for(&group.members[0], fmt, collision_map)
             };
+            // #1122: a split writes its sidecar as `<subproject>.<name>` beside
+            // the document, so the document's reference must say so. Without
+            // this it named the bare default, which no split writes.
+            let sidecar_name = format!(
+                "{}.{}",
+                group_subproject_id,
+                crate::generate::openvex::OPENVEX_DEFAULT_FILENAME,
+            );
             let sub_output_cfg = OutputConfig {
                 mikebom_version: env_pkg_version(),
                 created,
-                overrides: BTreeMap::new(),
+                overrides: BTreeMap::from([(
+                    "openvex".to_string(),
+                    std::path::PathBuf::from(&sidecar_name),
+                )]),
             };
             let emitted = serializer.serialize(&sub_artifacts, &sub_output_cfg)?;
             for (i, artifact) in emitted.into_iter().enumerate() {
@@ -1295,6 +1306,11 @@ fn emit_groups(
                         .map(|s| s.to_string_lossy().to_string())
                         .unwrap_or_else(|| format!("sidecar-{i}"));
                     let ns_name = format!("{}.{}", group_subproject_id, sidecar_base);
+                    debug_assert!(
+                        sidecar_base != crate::generate::openvex::OPENVEX_DEFAULT_FILENAME
+                            || ns_name == sidecar_name,
+                        "the written sidecar name must match the document's reference",
+                    );
                     output_dir.join(ns_name)
                 };
                 std::fs::write(&target, &artifact.bytes).map_err(|e| {
