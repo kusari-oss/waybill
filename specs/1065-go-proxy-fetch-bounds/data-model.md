@@ -8,6 +8,7 @@ All state is in-process for one scan. Nothing is persisted.
 |---|---|
 | `responded` | set once any HTTP response (any status) arrives from this entry |
 | `consecutive_network_failures` | count of `Connection`/`Timeout`/`Dns`/`Tls` failures since the last response; reset never needed (a response sets `responded` permanently) |
+| `in_flight` | requests sent and not yet finished. While `!responded && failures > 0 && in_flight > 0`, new requests wait (half-open hold, research R2 correction) |
 | `tripped` | set when `!responded && consecutive_network_failures >= fetch_concurrency` |
 | `trip_class` | the failure class of the attempt that tripped it (for FR-008 / C111 detail) |
 | `affected` | modules whose outcome came from this tripped entry: the failures that tripped it plus every later skip |

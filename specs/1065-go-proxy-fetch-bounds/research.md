@@ -33,6 +33,11 @@ Every number here is measured. Raw data and the probes that produced it are in
 - **Under 16 modules** the breaker never trips. That costs at most one batch, the same bound.
 - **Why 'never responded':** an intermittent proxy (some responses, some timeouts) is reachable, so tripping it would discard answers it can give. The budget covers it (spec edge case).
 
+**Correction found by measurement (implementation, `measurements/after.txt`):** counting to 16 was not enough on its own.
+- **What happened:** the 16 failures arrive within milliseconds, and the worker that fails first takes its next module while the count is still 1. So ~15 second-wave requests started, and a dead proxy cost 20.3 s for 64 modules instead of 10 s (31 requests sent).
+- **Added: a half-open hold.** While an entry has never answered and has at least one network failure, no new request to it starts until those in flight finish. Then it has either answered (reachable, no more holding) or tripped.
+- **Result:** 10.3 s for both 16 and 64 modules, with 16 requests sent. A proxy that has answered is never held.
+
 **Alternatives considered:**
 - Trip on a failure *ratio*: needs a window and a tuning knob, and gains nothing here because the measured cases are all-or-nothing.
 - Trip per module host: Go proxies are single hosts per entry, so per-entry is the right grain.

@@ -29,6 +29,9 @@ use crate::scan_fs::package_db::golang::graph_resolver::{
     ErrorClass, GraphResolverConfig, StepError, StepResult,
 };
 use crate::scan_fs::package_db::golang::module_id::ModuleId;
+use crate::scan_fs::package_db::golang::proxy_bounds::{
+    entry_label, is_network_level, EntryGate, ProxyFetchBounds,
+};
 
 // --------------------------------------------------------------------
 // Errors
@@ -108,6 +111,37 @@ pub fn fetch_module_mod(
     client: &reqwest::blocking::Client,
     proxy_chain: &ProxyChain,
     target: &ModuleId,
+    bounds: &ProxyFetchBounds,
+) -> StepResult<String> {
+    let mut network_failed: Vec<usize> = Vec::new();
+    let mut skipped_only = true;
+    let r = walk_chain(
+        client,
+        proxy_chain,
+        target,
+        bounds,
+        &mut network_failed,
+        &mut skipped_only,
+    );
+    if !matches!(r, StepResult::Ok(_)) && !network_failed.is_empty() {
+        bounds.record_unresolved(&network_failed);
+    }
+    // m1065: a module refused only by tripped entries was never asked
+    // about; its outcome is reported once per scan (FR-008), not as one
+    // failed-fetch warning per module.
+    if skipped_only && matches!(r, StepResult::Failed(_)) {
+        return StepResult::Unavailable;
+    }
+    r
+}
+
+fn walk_chain(
+    client: &reqwest::blocking::Client,
+    proxy_chain: &ProxyChain,
+    target: &ModuleId,
+    bounds: &ProxyFetchBounds,
+    network_failed: &mut Vec<usize>,
+    skipped_only: &mut bool,
 ) -> StepResult<String> {
     if proxy_chain.is_empty() || proxy_chain.is_off() {
         return StepResult::Unavailable;
@@ -115,7 +149,7 @@ pub fn fetch_module_mod(
 
     let mut last_error: Option<StepError> = None;
 
-    for entry in proxy_chain.iter() {
+    for (idx, entry) in proxy_chain.iter().enumerate() {
         match entry {
             ProxyEntry::Off => return StepResult::Unavailable,
             ProxyEntry::Direct => {
@@ -131,6 +165,9 @@ pub fn fetch_module_mod(
                 url,
                 fall_through_on_404_only,
             } => {
+                let label = entry_label(url);
+                // Built before the gate: an escape error between `Send` and
+                // the request would leave the entry's in-flight count up.
                 let target_url = match build_proxy_url(url, target) {
                     Ok(u) => u,
                     Err(e) => {
@@ -140,9 +177,27 @@ pub fn fetch_module_mod(
                         });
                     }
                 };
+                // m1065 (#853): an entry that never answered and failed
+                // `fetch_concurrency` times at the network level is not
+                // asked again this scan (FR-001). Treat it as the network
+                // failure it would have been, under the chain's existing
+                // fall-through rules (FR-002).
+                if let EntryGate::Skip(class) = bounds.gate(idx, &label) {
+                    network_failed.push(idx);
+                    last_error = Some(StepError {
+                        class,
+                        detail: format!("{target} not requested from {label}: unreachable earlier in this scan"),
+                    });
+                    if *fall_through_on_404_only {
+                        return StepResult::Failed(last_error.expect("just set"));
+                    }
+                    continue;
+                }
+                *skipped_only = false;
 
                 match client.get(target_url.clone()).send() {
                     Ok(resp) => {
+                        bounds.record_response(idx, &label);
                         let status = resp.status();
                         if status.is_success() {
                             match resp.text() {
@@ -192,6 +247,12 @@ pub fn fetch_module_mod(
                     }
                     Err(e) => {
                         let class = classify_reqwest_error(&e);
+                        if is_network_level(class) {
+                            bounds.record_network_failure(idx, &label, class);
+                            network_failed.push(idx);
+                        } else {
+                            bounds.record_other_failure(idx, &label);
+                        }
                         last_error = Some(StepError {
                             class,
                             detail: format!("{target} from {url}: {e}"),
@@ -253,6 +314,10 @@ pub fn build_http_client(
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
     use super::*;
+
+    fn test_bounds() -> ProxyFetchBounds {
+        ProxyFetchBounds::new(16, crate::scan_fs::package_db::golang::proxy_bounds::DEFAULT_PROXY_FETCH_BUDGET)
+    }
 
     // --- escape_module_path (T011 / T015) ---
 
@@ -357,7 +422,7 @@ mod tests {
         };
         let client = reqwest::blocking::Client::new();
         let target = ModuleId::new("github.com/foo/bar", "v1.0.0");
-        let r = fetch_module_mod(&client, &chain, &target);
+        let r = fetch_module_mod(&client, &chain, &target, &test_bounds());
         assert!(matches!(r, StepResult::Unavailable));
     }
 
@@ -368,7 +433,7 @@ mod tests {
         };
         let client = reqwest::blocking::Client::new();
         let target = ModuleId::new("github.com/foo/bar", "v1.0.0");
-        let r = fetch_module_mod(&client, &chain, &target);
+        let r = fetch_module_mod(&client, &chain, &target, &test_bounds());
         assert!(matches!(r, StepResult::Unavailable));
     }
 
@@ -377,7 +442,7 @@ mod tests {
         let chain = ProxyChain { entries: vec![] };
         let client = reqwest::blocking::Client::new();
         let target = ModuleId::new("github.com/foo/bar", "v1.0.0");
-        let r = fetch_module_mod(&client, &chain, &target);
+        let r = fetch_module_mod(&client, &chain, &target, &test_bounds());
         assert!(matches!(r, StepResult::Unavailable));
     }
 }

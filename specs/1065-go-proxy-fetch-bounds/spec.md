@@ -104,7 +104,7 @@ A healthy proxy that serves everything, or a scan that finishes within the budge
 **Outcome and reporting:**
 
 - **FR-005**: Modules not fetched because of either bound MUST still be resolved by the go.sum fallback exactly as a failed fetch is today. They MUST appear in the document with their go.sum edges and with the same per-component annotations a failed fetch gets (C108 `go-sum-fallback`). No Go component may be lost, and this feature MUST NOT add a per-component annotation.
-- **FR-006**: When either bound trips:
+- **FR-006**: When either bound trips and leaves at least one module to the go.sum fallback (a tripped `|` entry whose modules all resolved through a later entry lost nothing and reports nothing):
   - `waybill:go-transitive-coverage` (C110) MUST be `unknown` after a breaker trip (waybill could not ask the proxy, as with `--offline`). It MUST be `partial` after budget exhaustion alone (waybill asked and ran out of time). If both trip, `unknown` wins;
   - `waybill:go-transitive-coverage-reason` (C111) MUST name the cause, by extending C111's closed-but-extensible code vocabulary with one code per bound;
   - the reason MUST state the number of modules the bound covered;

@@ -27,7 +27,7 @@ C110 value: `partial`, or `unknown` if another reason is present.
 proxy-fetch-budget-exhausted: <secs>s spent; <n> modules not attempted, resolved from go.sum only
 ```
 
-- `<secs>`: the budget, in whole seconds (`60` by default).
+- `<secs>`: the budget, as `<n>s` when it is whole seconds (`60s` by default), otherwise `<n>ms` (test overrides).
 - `<n>`: modules a worker declined to start.
 
 ## Examples

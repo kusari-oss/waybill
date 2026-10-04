@@ -52,6 +52,7 @@ use crate::scan_fs::package_db::golang::legacy::{
     parse_go_mod, GoModCache, GoModDocument, GoSumEntry, GoSumKind,
 };
 use crate::scan_fs::package_db::golang::module_id::ModuleId;
+use crate::scan_fs::package_db::golang::proxy_bounds::{BoundOutcome, ProxyFetchBounds};
 use crate::scan_fs::package_db::golang::proxy_fetch::{build_http_client, fetch_module_mod};
 
 // --------------------------------------------------------------------
@@ -561,6 +562,10 @@ pub struct GraphResolverConfig {
     /// this exists for — it costs nothing and saves a round-trip per
     /// module.
     pub skip_proxy_fetch: bool,
+    /// Milestone 1065 (#853) — per-scan time budget for step 3. Once
+    /// spent, no new proxy request starts and the remaining modules fall
+    /// to the go.sum fallback (research R3).
+    pub proxy_fetch_budget: Duration,
 }
 
 impl Default for GraphResolverConfig {
@@ -571,6 +576,7 @@ impl Default for GraphResolverConfig {
             fetch_total_timeout: Duration::from_secs(30),  // FR-008
             fetch_concurrency: 16,                          // FR-008a
             skip_proxy_fetch: false,                        // m850: opt-in
+            proxy_fetch_budget: crate::scan_fs::package_db::golang::proxy_bounds::budget_from_env(),
         }
     }
 }
@@ -635,11 +641,23 @@ pub fn compute_coverage(
 /// implemented incrementally by tasks T021–T024 (US1) and T031–T033 (US2).
 pub struct GraphResolver {
     config: GraphResolverConfig,
+    /// Milestone 1065 (#853) — breaker and budget state for the whole
+    /// scan: one resolver serves every workspace (research R4).
+    bounds: Arc<ProxyFetchBounds>,
 }
 
 impl GraphResolver {
     pub fn new(config: GraphResolverConfig) -> Self {
-        Self { config }
+        let bounds = Arc::new(ProxyFetchBounds::new(
+            config.fetch_concurrency,
+            config.proxy_fetch_budget,
+        ));
+        Self { config, bounds }
+    }
+
+    /// Milestone 1065 (#853) — what the proxy-fetch bounds did this scan.
+    pub fn bound_outcome(&self) -> BoundOutcome {
+        self.bounds.outcome()
     }
 
     pub fn config(&self) -> &GraphResolverConfig {
@@ -867,6 +885,7 @@ impl GraphResolver {
         let config = self.config.clone();
         let proxy_chain = ctx.goproxy.clone();
         let concurrency = self.config.fetch_concurrency;
+        let bounds = Arc::clone(&self.bounds);
         let results = std::thread::spawn(move || {
             let client = match build_http_client(&config) {
                 Ok(c) => c,
@@ -878,7 +897,7 @@ impl GraphResolver {
                     return Vec::new();
                 }
             };
-            parallel_fetch(&client, &proxy_chain, &to_fetch, concurrency)
+            parallel_fetch(&client, &proxy_chain, &to_fetch, concurrency, &bounds)
         })
         .join()
         .unwrap_or_default();
@@ -1056,6 +1075,7 @@ fn parallel_fetch(
     chain: &ProxyChain,
     targets: &[ModuleId],
     concurrency: usize,
+    bounds: &Arc<ProxyFetchBounds>,
 ) -> Vec<(ModuleId, StepResult<String>)> {
     if targets.is_empty() {
         return Vec::new();
@@ -1075,6 +1095,7 @@ fn parallel_fetch(
         let result_tx = result_tx.clone();
         let client = client.clone();
         let chain = chain.clone();
+        let bounds = Arc::clone(bounds);
         let h = std::thread::spawn(move || loop {
             let job = {
                 let rx = match job_rx.lock() {
@@ -1086,7 +1107,13 @@ fn parallel_fetch(
                     Err(_) => break, // channel closed → no more work
                 }
             };
-            let r = fetch_module_mod(&client, &chain, &job);
+            // m1065: no new request once the budget is spent (FR-003);
+            // the module falls to the go.sum fallback like any failure.
+            let r = if bounds.admit() {
+                fetch_module_mod(&client, &chain, &job, &bounds)
+            } else {
+                StepResult::Unavailable
+            };
             if result_tx.send((job, r)).is_err() {
                 break; // collector dropped
             }
@@ -1270,6 +1297,8 @@ mod tests {
         assert_eq!(cfg.fetch_connect_timeout, Duration::from_secs(10));
         assert_eq!(cfg.fetch_total_timeout, Duration::from_secs(30));
         assert_eq!(cfg.fetch_concurrency, 16);
+        // m1065 research R3.
+        assert_eq!(cfg.proxy_fetch_budget, std::time::Duration::from_secs(60));
     }
 
     #[test]
@@ -2300,5 +2329,260 @@ mod m850_skip_proxy_tests {
             GraphResolverConfig::default().fetch_concurrency,
             "setting the flag must not disturb unrelated resolver config",
         );
+    }
+}
+
+// Milestone 1065 (#853) — proxy-fetch bounds, driven through the real
+// worker pool against local servers. Never the live proxy (Principle VII).
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod m1065_bounds_tests {
+    use super::*;
+    use crate::scan_fs::package_db::golang::goprivate::ProxyEntry;
+    use std::io::{Read, Write};
+    use std::net::TcpListener;
+    use std::time::Instant;
+
+    fn targets(n: usize, tag: &str) -> Vec<ModuleId> {
+        (0..n)
+            .map(|i| ModuleId::new(format!("example.com/{tag}/m{i}"), "v1.0.0".to_string()))
+            .collect()
+    }
+
+    fn url(addr: &str) -> reqwest::Url {
+        reqwest::Url::parse(&format!("http://{addr}/")).unwrap()
+    }
+
+    fn chain(entries: Vec<(reqwest::Url, bool)>) -> ProxyChain {
+        ProxyChain {
+            entries: entries
+                .into_iter()
+                .map(|(url, fall_through_on_404_only)| ProxyEntry::Url {
+                    url,
+                    fall_through_on_404_only,
+                })
+                .collect(),
+        }
+    }
+
+    /// An address nothing listens on: connection refused, instantly.
+    fn closed_port() -> String {
+        let l = TcpListener::bind("127.0.0.1:0").unwrap();
+        let a = l.local_addr().unwrap().to_string();
+        drop(l);
+        a
+    }
+
+    /// Accepts and never answers (the measured "hanging proxy").
+    fn hanging_server() -> String {
+        let l = TcpListener::bind("127.0.0.1:0").unwrap();
+        let a = l.local_addr().unwrap().to_string();
+        std::thread::spawn(move || {
+            let mut held = Vec::new();
+            for s in l.incoming().flatten() {
+                held.push(s);
+            }
+        });
+        a
+    }
+
+    /// Answers every request with `status`; `mod_body` when 200. When
+    /// `hang_after_first` is set, only the first connection is answered.
+    fn http_server(status: &'static str, hang_after_first: bool) -> String {
+        let l = TcpListener::bind("127.0.0.1:0").unwrap();
+        let a = l.local_addr().unwrap().to_string();
+        std::thread::spawn(move || {
+            let mut held = Vec::new();
+            let mut first = true;
+            for mut s in l.incoming().flatten() {
+                if hang_after_first && !first {
+                    held.push(s);
+                    continue;
+                }
+                first = false;
+                std::thread::spawn(move || {
+                    let mut buf = [0u8; 4096];
+                    let _ = s.read(&mut buf);
+                    let body = if status.starts_with("200") { "module x\n" } else { "" };
+                    let _ = write!(
+                        s,
+                        "HTTP/1.1 {status}\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+                        body.len()
+                    );
+                });
+            }
+        });
+        a
+    }
+
+    /// Answers 404 after `delay`: the measured cold-proxy missing module.
+    fn slow_404_server(delay: Duration) -> String {
+        let l = TcpListener::bind("127.0.0.1:0").unwrap();
+        let a = l.local_addr().unwrap().to_string();
+        std::thread::spawn(move || {
+            for mut s in l.incoming().flatten() {
+                std::thread::spawn(move || {
+                    let mut buf = [0u8; 4096];
+                    let _ = s.read(&mut buf);
+                    std::thread::sleep(delay);
+                    let _ = s.write_all(
+                        b"HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n",
+                    );
+                });
+            }
+        });
+        a
+    }
+
+    fn client(total: Duration) -> reqwest::blocking::Client {
+        build_http_client(&GraphResolverConfig {
+            fetch_connect_timeout: Duration::from_secs(5),
+            fetch_total_timeout: total,
+            ..GraphResolverConfig::default()
+        })
+        .unwrap()
+    }
+
+    fn run(
+        c: &ProxyChain,
+        t: &[ModuleId],
+        total: Duration,
+        bounds: &Arc<ProxyFetchBounds>,
+    ) -> Vec<(ModuleId, StepResult<String>)> {
+        let (c, t, b) = (c.clone(), t.to_vec(), Arc::clone(bounds));
+        std::thread::spawn(move || parallel_fetch(&client(total), &c, &t, 16, &b))
+            .join()
+            .unwrap()
+    }
+
+    fn bounds() -> Arc<ProxyFetchBounds> {
+        Arc::new(ProxyFetchBounds::new(16, Duration::from_secs(60)))
+    }
+
+    #[test]
+    fn t007a_unreachable_entry_trips_after_one_batch() {
+        let b = bounds();
+        let c = chain(vec![(url(&closed_port()), true)]);
+        let r = run(&c, &targets(64, "a"), Duration::from_secs(5), &b);
+        assert_eq!(r.len(), 64);
+        let out = b.outcome();
+        assert_eq!(out.breaker.len(), 1, "{out:?}");
+        assert_eq!(out.breaker[0].1, ErrorClass::Connection);
+        assert_eq!(out.breaker[0].2, 64, "every module resolved from go.sum only");
+        assert!(b.attempts() < 64, "attempts {} — the breaker never engaged", b.attempts());
+    }
+
+    #[test]
+    fn t007b_hanging_entry_costs_about_one_timeout() {
+        let b = bounds();
+        let c = chain(vec![(url(&hanging_server()), true)]);
+        let start = Instant::now();
+        run(&c, &targets(64, "b"), Duration::from_millis(500), &b);
+        let elapsed = start.elapsed();
+        // Unbounded: 4 batches x 500 ms = 2 s. One batch is the bound
+        // (SC-002 ratio <= 1.5); a second wave would be 1 s.
+        assert!(elapsed < Duration::from_millis(750), "took {elapsed:?}");
+        assert!(b.attempts() <= 16, "{} requests: a second wave started", b.attempts());
+        assert_eq!(b.outcome().breaker[0].1, ErrorClass::Timeout);
+    }
+
+    #[test]
+    fn t007c_any_response_keeps_the_entry_in_use() {
+        for status in ["404 Not Found", "503 Service Unavailable"] {
+            let b = bounds();
+            let c = chain(vec![(url(&http_server(status, false)), true)]);
+            run(&c, &targets(40, "c"), Duration::from_secs(5), &b);
+            assert!(b.outcome().breaker.is_empty(), "{status} tripped the breaker");
+            assert_eq!(b.attempts(), 40, "{status}: every module must be asked");
+            assert_eq!(b.outcome().coverage(), None);
+        }
+    }
+
+    #[test]
+    fn t007d_an_entry_that_answered_once_never_trips() {
+        let b = bounds();
+        let c = chain(vec![(url(&http_server("200 OK", true)), true)]);
+        run(&c, &targets(32, "d"), Duration::from_millis(300), &b);
+        assert!(b.outcome().breaker.is_empty(), "{:?}", b.outcome());
+    }
+
+    #[test]
+    fn t008_pipe_chain_falls_through_a_tripped_entry() {
+        let b = bounds();
+        let c = chain(vec![
+            (url(&closed_port()), false),
+            (url(&http_server("200 OK", false)), true),
+        ]);
+        let r = run(&c, &targets(40, "p"), Duration::from_secs(5), &b);
+        assert!(r.iter().all(|(_, s)| matches!(s, StepResult::Ok(_))));
+        let out = b.outcome();
+        assert_eq!(out.breaker.len(), 1);
+        assert_eq!(out.breaker[0].2, 0, "nothing was lost to go.sum");
+        assert_eq!(out.coverage(), None, "a tripped entry that cost nothing reports nothing");
+    }
+
+    #[test]
+    fn t008_comma_chain_stops_at_a_tripped_entry() {
+        let b = bounds();
+        let c = chain(vec![
+            (url(&closed_port()), true),
+            (url(&http_server("200 OK", false)), true),
+        ]);
+        let r = run(&c, &targets(40, "q"), Duration::from_secs(5), &b);
+        assert!(r.iter().all(|(_, s)| !matches!(s, StepResult::Ok(_))));
+        assert_eq!(b.outcome().breaker[0].2, 40);
+    }
+
+    #[test]
+    fn t009_a_dead_proxy_is_not_retried_in_the_next_workspace() {
+        let b = bounds();
+        let c = chain(vec![(url(&closed_port()), true)]);
+        run(&c, &targets(20, "w1"), Duration::from_secs(5), &b);
+        let after_first = b.attempts();
+        assert!(!b.outcome().breaker.is_empty(), "workspace 1 should trip");
+        run(&c, &targets(30, "w2"), Duration::from_secs(5), &b);
+        assert_eq!(b.attempts(), after_first, "workspace 2 sent requests to a tripped entry");
+        assert_eq!(b.outcome().breaker[0].2, 50);
+    }
+
+    #[test]
+    fn t014_budget_stops_new_requests() {
+        let b = Arc::new(ProxyFetchBounds::new(16, Duration::from_millis(500)));
+        let c = chain(vec![(url(&slow_404_server(Duration::from_millis(200))), true)]);
+        let start = Instant::now();
+        run(&c, &targets(160, "s"), Duration::from_secs(5), &b);
+        let elapsed = start.elapsed();
+        let out = b.outcome();
+        assert!(out.breaker.is_empty(), "a 404 is an answer: {out:?}");
+        let (_, not_attempted) = out.budget.expect("budget exhausted");
+        assert!(not_attempted > 0 && b.attempts() < 160, "{out:?}");
+        assert_eq!(not_attempted + b.attempts(), 160);
+        // Unbounded: 10 batches x 200 ms = 2 s. Bounded: budget + one request.
+        assert!(elapsed < Duration::from_millis(500 + 200 + 400), "took {elapsed:?}");
+        match out.coverage() {
+            Some(GoTransitiveCoverage::Partial(r)) => assert!(
+                r.starts_with("proxy-fetch-budget-exhausted: 500ms spent; "),
+                "{r}"
+            ),
+            other => panic!("expected Partial, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn t015_both_bounds_report_unknown_breaker_first() {
+        let b = Arc::new(ProxyFetchBounds::new(16, Duration::from_millis(500)));
+        let c = chain(vec![
+            (url(&closed_port()), false),
+            (url(&slow_404_server(Duration::from_millis(200))), true),
+        ]);
+        run(&c, &targets(160, "x"), Duration::from_secs(5), &b);
+        match b.outcome().coverage() {
+            Some(GoTransitiveCoverage::Unknown(r)) => {
+                let breaker = r.find("proxy-unreachable: http://127.0.0.1:").expect(&r);
+                let budget = r.find("proxy-fetch-budget-exhausted: ").expect(&r);
+                assert!(breaker < budget, "breaker fragment first: {r}");
+            }
+            other => panic!("expected Unknown, got {other:?}"),
+        }
     }
 }

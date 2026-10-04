@@ -2339,6 +2339,34 @@ pub fn read(
         // `specs/774-parallel-source-imports/`.
     }
 
+    // Milestone 1065 (#853): the proxy-fetch bounds are per scan, so their
+    // outcome joins the aggregate once, after every workspace has used the
+    // shared resolver. Merged with the same Unknown > Partial > Complete
+    // precedence as the per-workspace values (research R5); `None` when no
+    // bound left a module to the go.sum fallback (FR-009).
+    let bound_outcome = resolver.bound_outcome();
+    for (label, class, modules) in &bound_outcome.breaker {
+        tracing::warn!(
+            proxy = %label,
+            class = class.as_str(),
+            modules,
+            "Go module proxy unreachable; skipped it for the rest of the scan and used go.sum for these modules"
+        );
+    }
+    if let Some((budget, modules)) = bound_outcome.budget {
+        tracing::warn!(
+            budget_ms = budget.as_millis() as u64,
+            modules,
+            "Go proxy-fetch budget exhausted; remaining modules used go.sum"
+        );
+    }
+    if let Some(cov) = bound_outcome.coverage() {
+        signals.go_transitive_coverage = Some(match signals.go_transitive_coverage.take() {
+            None => cov,
+            Some(existing) => merge_coverage(existing, cov),
+        });
+    }
+
     // ============================================================
     // Milestone 774: parallel source-import collection phase.
     //
