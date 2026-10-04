@@ -24,6 +24,7 @@ The build closure is about 4× milestone 1035's largest measured package closure
 
 - Q: How should waybill pick which system configuration to scan when a flake defines several? → A: `--nix-closure-attr` accepts a full output path (e.g. `darwinConfigurations.laptop.system`). When no path is given and the flake defines exactly one system configuration, it is selected automatically. With several and no path, the tier degrades with a reason listing their names. No new flag; the machine's hostname is never consulted.
 - Q: Which closure should a system-configuration scan describe? → A: The build closure, by the same evaluate-only approach as package closures (nothing is built, so it works on any machine and in CI). It is labelled as what it is: a build-closure inventory of the configuration, not a list of what is installed on a running machine.
+- Q: Should the several-configurations degradation be visible in the SBOM itself? → A: No, log only, like every other closure-tier degradation today. Document-level visibility for all closure degradations is tracked separately in #1115.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -103,7 +104,7 @@ A flake with a `packages.<system>.default` (with or without system configuration
 
 **Degradation:**
 
-- **FR-008**: The several-configurations degradation MUST use a reason distinct from `no-evaluable-attribute`, because the remedy differs: name one versus fix the flake. Its message MUST list the configuration names in a stable (sorted) order.
+- **FR-008**: The several-configurations degradation MUST use a reason distinct from `no-evaluable-attribute`, because the remedy differs: name one versus fix the flake. Its message MUST list the configuration names in a stable (sorted) order. Like every closure-tier degradation today, it is reported in the log only; it adds nothing to the document (#1115 tracks document-level visibility for all reasons).
 
 **Unchanged:**
 
@@ -132,4 +133,5 @@ A flake with a `packages.<system>.default` (with or without system configuration
 - **Root component**: unchanged. As today, closure components supplement the manifest-derived set; this feature does not create a "machine" root component.
 - **Runtime closure is out of scope** (clarification Q2). It requires the system to be realised, which this tier never does.
 - **IFD verification** for this tier is tracked separately in #1114. This feature relies on whatever that issue settles and does not change it.
+- **Closure-tier degradations stay log-only** in this feature (clarification Q3; #1115).
 - **Cold-store cost** is not yet measured. The plan measures it on a fresh store before committing any number to a test.
