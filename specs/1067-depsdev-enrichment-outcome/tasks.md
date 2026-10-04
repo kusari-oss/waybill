@@ -100,7 +100,7 @@
   - the two batch-path defects that cached present components as absent (anyone with an older disk cache: stale absences expire by `max_age`, default 1 hour);
   - offline scans unchanged.
 - [X] T020 Run `./scripts/pre-pr.sh > /tmp/prepr.log 2>&1; echo EXIT=$?`. Require `EXIT=0`, `Walker-audit allow-list check: OK`, the passed line, and no failing `test result`.
-- [ ] T021 Push, then dispatch the read-only public-corpus run (run ID from the dispatch output). Expect no golden change (SC-004).
+- [X] T021 Push, then dispatch the read-only public-corpus run (run ID from the dispatch output). Expect no golden change (SC-004).
 - [X] T022 Live checks with the built binary:
   - run `measurements/probe_outcomes.sh` on opentelemetry-go and express, plus quickstart §1–§2;
   - append to `measurements/README.md`: placeholder requests 28 → 0 (SC-002), C192 counts equal the C191 tallies (SC-005), express has no C191.
