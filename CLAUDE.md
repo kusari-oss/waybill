@@ -1,6 +1,6 @@
 # waybill Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-10-03
+Auto-generated from all feature plans. Last updated: 2026-10-04
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -405,6 +405,7 @@ Auto-generated from all feature plans. Last updated: 2026-10-03
 - N/A. All state is in-process per scan. (1064-pants-resolve-namespaces)
 - Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. No nightly; `waybill-ebpf` untouched. + Existing only: `reqwest` (blocking client, unchanged), `std::sync::{Arc, Mutex, atomic}`, `std::time::Instant`, `tracing`. Dev: existing `wiremock = "0.6"` and `tempfile`. **Zero new Cargo dependencies.** (1065-go-proxy-fetch-bounds)
 - N/A. All state is in-process per scan (data-model.md). (1065-go-proxy-fetch-bounds)
+- Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. No nightly; `waybill-ebpf` untouched. + Existing only: `serde_json` (listings), `tracing`, and the m1034/m1035 `eval::invoke` helpers (`run_bounded`, `argv_is_safe`, `is_safe_attribute_name`). External: the host's `nix`, already required by the tier. **Zero new Cargo dependencies.** (1066-nix-system-config-closure)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -584,9 +585,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 1066-nix-system-config-closure: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. No nightly; `waybill-ebpf` untouched. + Existing only: `serde_json` (listings), `tracing`, and the m1034/m1035 `eval::invoke` helpers (`run_bounded`, `argv_is_safe`, `is_safe_attribute_name`). External: the host's `nix`, already required by the tier. **Zero new Cargo dependencies.**
 - 1065-go-proxy-fetch-bounds: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. No nightly; `waybill-ebpf` untouched. + Existing only: `reqwest` (blocking client, unchanged), `std::sync::{Arc, Mutex, atomic}`, `std::time::Instant`, `tracing`. Dev: existing `wiremock = "0.6"` and `tempfile`. **Zero new Cargo dependencies.**
 - 1064-pants-resolve-namespaces: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. No nightly; `waybill-ebpf` untouched. + Existing only: `toml` (pants.toml), `serde`/`serde_json` (annotation values), `tracing`. **Zero new Cargo dependencies.**
-- 1050-nixpkgs-security-vex: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
 
 
 <!-- MANUAL ADDITIONS START -->

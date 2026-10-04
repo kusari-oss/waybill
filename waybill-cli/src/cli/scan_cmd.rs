@@ -690,11 +690,24 @@ pub struct ScanArgs {
     /// verified, no `--accept-flake-config`, and a wall-clock budget.
     ///
     /// Default (flag omitted): no `nix` process is started at all.
+    ///
+    /// System configurations (milestone 1066): a flake with no `packages`
+    /// output and exactly one `darwinConfigurations` or `nixosConfigurations`
+    /// entry has that configuration's system closure taken. With several,
+    /// nothing is chosen and the scan says why; name one with
+    /// `--nix-closure-attr`. A configuration's closure is what the machine is
+    /// *built from*, not what is installed on it. Whenever a requested
+    /// closure is not recorded, the document says why
+    /// (`waybill:nix-closure-degraded`).
     #[arg(long = "nix-closure", default_value_t = false)]
     pub nix_closure: bool,
 
-    /// The flake attribute whose closure to take, under
-    /// `packages.<system>`. Defaults to `default`.
+    /// The flake attribute whose closure to take: a name under
+    /// `packages.<system>` (defaults to `default`), or a full output path
+    /// whose first segment is a standard flake output, e.g.
+    /// `darwinConfigurations.laptop.system` or
+    /// `nixosConfigurations.web01.config.system.build.toplevel`. A full path
+    /// is evaluated for its own platform.
     ///
     /// Attributes are never merged: a project exposing `default`,
     /// `pkg-ghc910`, `pkg-ghc94` and `pkg-ghc96` builds the same library
@@ -4945,6 +4958,12 @@ pub async fn execute(
             })
             .to_string()
         });
+    // C190 (m1066, #1115): requested and no closure recorded, for any reason,
+    // including the offline refusal before any nix process starts.
+    let nix_closure_degraded: Option<&'static str> = match &nix_closure {
+        Some(Err(reason)) => Some(reason.wire()),
+        _ => None,
+    };
     let nix_eval_degraded: Option<&str> = nixpkgs_haskell_summary
         .as_ref()
         .and_then(|s| s.nix_eval.as_ref())
@@ -4959,6 +4978,7 @@ pub async fn execute(
         nix_eval_tier: nix_eval_tier_json.as_deref(),
         nix_eval_system,
         nix_eval_degraded,
+        nix_closure_degraded,
         nixpkgs_haskell_degraded,
         nixpkgs_haskell_resolution: nixpkgs_haskell_resolution_json.as_deref(),
         nixpkgs_haskell_closure: nixpkgs_haskell_closure_json.as_deref(),

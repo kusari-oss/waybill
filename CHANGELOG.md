@@ -7,6 +7,39 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Added: closure SBOMs for Nix system-configuration flakes (#1052)
+
+`--nix-closure` previously looked only under `packages.<system>`, so a flake
+describing a whole machine (a nix-darwin or NixOS configuration) got no closure.
+
+- **One configuration, no flags.** A flake with no `packages` output and
+  exactly one `darwinConfigurations` or `nixosConfigurations` entry now has
+  that configuration's system closure taken. Measured on a real nix-darwin
+  system, that is 5,325 derivations in 1.24 s.
+- **Several configurations.** Nothing is chosen, and the scan says why,
+  listing the configurations. The hostname is never consulted, so the same
+  flake gives the same result on every machine.
+- **Full output paths.** `--nix-closure-attr` accepts one, for example
+  `nixosConfigurations.web01.config.system.build.toplevel`. A value whose first
+  segment is a standard flake output name is a path; anything else keeps its
+  old meaning, a name under `packages.<system>`.
+- **Other platforms.** A configuration is evaluated for its own platform, so a
+  Linux NixOS configuration can be scanned from a Mac.
+- **What the closure is.** It is what the configuration is *built from* (the
+  same evaluate-only approach as package closures), not what is installed on
+  a running machine.
+
+Flakes with a `packages` output behave exactly as before.
+
+### Added: `waybill:nix-closure-degraded` (#1115)
+
+When `--nix-closure` was requested and no closure was recorded, the document
+now says why (catalogue row C190, all three formats). This covers every reason:
+`offline-requested`, `no-evaluable-attribute`, `several-system-configurations`
+and the rest. Previously these were only logged, so a consumer reading the SBOM
+could not tell "no closure was requested" from "a closure was requested and
+could not be taken".
+
 ### Security: `GOPROXY` credentials no longer appear in logs (#1110)
 
 `GOPROXY` entries may carry credentials as URL userinfo
