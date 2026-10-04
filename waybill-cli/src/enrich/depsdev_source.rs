@@ -843,19 +843,27 @@ pub async fn enrich_components(
     // that silently splits — one path writing entries another never
     // finds. `from_purl_parts` also absorbs the ecosystem-unsupported
     // and incomplete-coordinate skips that used to sit inline.
-    let planned: Vec<(usize, EnrichmentKey)> = components
-        .iter()
-        .enumerate()
-        .filter_map(|(idx, c)| {
-            EnrichmentKey::from_purl_parts(
-                c.purl.ecosystem(),
-                c.purl.namespace(),
-                &c.name,
-                &c.version,
-            )
-            .map(|k| (idx, k))
-        })
-        .collect();
+    let mut planned: Vec<(usize, EnrichmentKey)> = Vec::new();
+    for (idx, c) in components.iter_mut().enumerate() {
+        match EnrichmentKey::from_purl_parts(
+            c.purl.ecosystem(),
+            c.purl.namespace(),
+            &c.name,
+            &c.version,
+        ) {
+            Some(k) => planned.push((idx, k)),
+            // Milestone 1067 (US2): an ecosystem deps.dev indexes, but no
+            // usable coordinate. Nothing is sent, and the component says so.
+            // Unsupported ecosystems are counted at emission instead (C192).
+            None if !source.offline
+                && super::deps_dev_system::deps_dev_system_for(c.purl.ecosystem())
+                    .is_some() =>
+            {
+                deps_dev_outcome::record(c, Some(Outcome::IncompleteCoordinate));
+            }
+            None => {}
+        }
+    }
     let attempted = planned.len();
     let mut progress = ProgressReporter::new(attempted);
 
@@ -2550,6 +2558,49 @@ mod outcome_tests {
         assert_eq!(outcome(&cs[0]), Some("absent"));
         enrich_components(&source(&second, false, false), &mut cs, EnrichmentPass::PostGraph).await;
         assert_eq!(outcome(&cs[0]), None);
+    }
+
+    /// T015 (US2): a placeholder version is never sent, and says so. A
+    /// `0.0.0` is a real version and is still queried.
+    #[tokio::test]
+    async fn placeholder_versions_are_not_queried() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path_regex(r"/versions/(v?0\.0\.0-unknown|unknown|)$"))
+            .respond_with(ResponseTemplate::new(404))
+            .expect(0)
+            .mount(&server)
+            .await;
+        let mut empty = make_component("pkg:cargo/empty@1.0.0");
+        empty.version = String::new();
+        let mut cs = vec![
+            make_component("pkg:golang/example.com/m@v0.0.0-unknown"),
+            make_component("pkg:cargo/c@0.0.0-unknown"),
+            make_component("pkg:maven/g/a@unknown"),
+            empty,
+            make_component("pkg:npm/zero@0.0.0"),
+        ];
+        enrich_components(&source(&server, false, false), &mut cs, EnrichmentPass::Initial).await;
+        let got: Vec<Option<&str>> = cs.iter().map(outcome).collect();
+        assert_eq!(
+            got,
+            vec![
+                Some("not-queried:incomplete-coordinate"),
+                Some("not-queried:incomplete-coordinate"),
+                Some("not-queried:incomplete-coordinate"),
+                Some("not-queried:incomplete-coordinate"),
+                Some("absent"), // queried; the mock 404s it
+            ],
+        );
+        let paths: Vec<String> = server
+            .received_requests()
+            .await
+            .unwrap()
+            .iter()
+            .map(|r| r.url.path().to_string())
+            .collect();
+        assert_eq!(paths.len(), 1, "only 0.0.0 was queried: {paths:?}");
+        assert!(paths[0].ends_with("/versions/0.0.0"), "{paths:?}");
     }
 
     /// T008: offline, with or without a disk cache, records nothing (FR-007).

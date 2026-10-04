@@ -84,17 +84,17 @@
 
 **Goal**: placeholder versions are not sent to deps.dev, and are recorded as `not-queried:incomplete-coordinate`.
 
-- [ ] T015 [P] [US2] Test in `outcome_tests`: components at `v0.0.0-unknown` (golang), `0.0.0-unknown` (cargo), `unknown` (maven) and `` (empty). The mock server receives **no** request for them (`expect(0)` on matching mocks), and each carries `not-queried:incomplete-coordinate`. A `0.0.0` component **is** queried.
-- [ ] T016 [US2] In `E/request_key.rs::EnrichmentKey::from_purl_parts`, or at its call site in `enrich_components` (around `E/depsdev_source.rs:746-758`): when the ecosystem is one of the six and `is_placeholder_version(version)`, create no key and record `not-queried:incomplete-coordinate` on the component (online only). Keep the existing `None` for unsupported ecosystems. Run T015 to green.
+- [X] T015 [P] [US2] Test in `outcome_tests`: components at `v0.0.0-unknown` (golang), `0.0.0-unknown` (cargo), `unknown` (maven) and `` (empty). The mock server receives **no** request for them (`expect(0)` on matching mocks), and each carries `not-queried:incomplete-coordinate`. A `0.0.0` component **is** queried.
+- [X] T016 [US2] In `E/request_key.rs::EnrichmentKey::from_purl_parts`, or at its call site in `enrich_components` (around `E/depsdev_source.rs:746-758`): when the ecosystem is one of the six and `is_placeholder_version(version)`, create no key and record `not-queried:incomplete-coordinate` on the component (online only). Keep the existing `None` for unsupported ecosystems. Run T015 to green.
 
 ## Phase 5: User Story 3 — unchanged when nothing is missing (P1)
 
-- [ ] T017 [P] [US3] Test in `outcome_tests`: every component found (some with no new licence) → no C191, and the generate test from T009's harness shows no C192.
+- [X] T017 [P] [US3] Test in `outcome_tests`: every component found (some with no new licence) → no C191, and the generate test from T009's harness shows no C192.
 - [ ] T018 [US3] Verify byte-identity: the in-repo golden suites and `cargo test -p waybill --test public_corpus` pass unchanged locally. The goldens are offline, so FR-007 makes this hold by construction.
 
 ## Phase 6: Polish & Cross-Cutting
 
-- [ ] T019 [P] Add an Unreleased entry to `CHANGELOG.md` covering:
+- [X] T019 [P] Add an Unreleased entry to `CHANGELOG.md` covering:
   - C191/C192 and the outcome values;
   - placeholder versions no longer sent to deps.dev;
   - the two batch-path defects that cached present components as absent (anyone with an older disk cache: stale absences expire by `max_age`, default 1 hour);
