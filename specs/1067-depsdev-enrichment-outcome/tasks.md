@@ -90,7 +90,7 @@
 ## Phase 5: User Story 3 — unchanged when nothing is missing (P1)
 
 - [X] T017 [P] [US3] Test in `outcome_tests`: every component found (some with no new licence) → no C191, and the generate test from T009's harness shows no C192.
-- [ ] T018 [US3] Verify byte-identity: the in-repo golden suites and `cargo test -p waybill --test public_corpus` pass unchanged locally. The goldens are offline, so FR-007 makes this hold by construction.
+- [X] T018 [US3] Verify byte-identity: the in-repo golden suites and `cargo test -p waybill --test public_corpus` pass unchanged locally. The goldens are offline, so FR-007 makes this hold by construction.
 
 ## Phase 6: Polish & Cross-Cutting
 
@@ -99,9 +99,9 @@
   - placeholder versions no longer sent to deps.dev;
   - the two batch-path defects that cached present components as absent (anyone with an older disk cache: stale absences expire by `max_age`, default 1 hour);
   - offline scans unchanged.
-- [ ] T020 Run `./scripts/pre-pr.sh > /tmp/prepr.log 2>&1; echo EXIT=$?`. Require `EXIT=0`, `Walker-audit allow-list check: OK`, the passed line, and no failing `test result`.
+- [X] T020 Run `./scripts/pre-pr.sh > /tmp/prepr.log 2>&1; echo EXIT=$?`. Require `EXIT=0`, `Walker-audit allow-list check: OK`, the passed line, and no failing `test result`.
 - [ ] T021 Push, then dispatch the read-only public-corpus run (run ID from the dispatch output). Expect no golden change (SC-004).
-- [ ] T022 Live checks with the built binary:
+- [X] T022 Live checks with the built binary:
   - run `measurements/probe_outcomes.sh` on opentelemetry-go and express, plus quickstart §1–§2;
   - append to `measurements/README.md`: placeholder requests 28 → 0 (SC-002), C192 counts equal the C191 tallies (SC-005), express has no C191.
 - [ ] T023 Open the PR (closes #1058; references #1118), merge when green, then run `cargo clean`.
