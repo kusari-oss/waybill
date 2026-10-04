@@ -1,0 +1,17 @@
+go-cobra: dependsOn=6 froms=2 froms-with-several=1 max-to-len=1 with-completeness=0
+go-opentelemetry: dependsOn=280 froms=30 froms-with-several=30 max-to-len=1 with-completeness=0
+haskell-aeson: dependsOn=110 froms=7 froms-with-several=7 max-to-len=1 with-completeness=0
+haskell-language-server: dependsOn=2410 froms=327 froms-with-several=285 max-to-len=1 with-completeness=0
+haskell-security-advisories: dependsOn=1572 froms=222 froms-with-several=203 max-to-len=1 with-completeness=0
+image-postgres16: dependsOn=512 froms=114 froms-with-several=71 max-to-len=1 with-completeness=0
+maven-guice: dependsOn=63 froms=14 froms-with-several=11 max-to-len=1 with-completeness=0
+nix-closure-moat: dependsOn=163 froms=35 froms-with-several=32 max-to-len=1 with-completeness=0
+npm-express: dependsOn=44 froms=2 froms-with-several=1 max-to-len=1 with-completeness=0
+pants-clojure-polyglot: dependsOn=134 froms=28 froms-with-several=28 max-to-len=1 with-completeness=0
+pants-example-django: dependsOn=74 froms=17 froms-with-several=15 max-to-len=1 with-completeness=0
+pants-example-golang: dependsOn=4 froms=2 froms-with-several=1 max-to-len=1 with-completeness=0
+pants-example-javascript: dependsOn=641 froms=162 froms-with-several=106 max-to-len=1 with-completeness=0
+pants-example-jvm: dependsOn=113 froms=20 froms-with-several=18 max-to-len=1 with-completeness=0
+pants-example-python: dependsOn=15 froms=6 froms-with-several=3 max-to-len=1 with-completeness=0
+python-flask: dependsOn=188 froms=39 froms-with-several=29 max-to-len=1 with-completeness=0
+rust-ripgrep: dependsOn=141 froms=39 froms-with-several=25 max-to-len=1 with-completeness=0
