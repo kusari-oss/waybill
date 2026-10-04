@@ -513,6 +513,25 @@ mod m1068_tests {
         assert_eq!(property(&doc, "waybill:vex-claims-omitted").as_deref(), Some("1"));
     }
 
+    /// T017 (US3, FR-010) — a scan with no statements is unchanged: an empty
+    /// `vulnerabilities[]`, no C193 in any format, no sidecar.
+    #[test]
+    fn a_scan_without_statements_is_unchanged() {
+        let comps = with_root(vec![mk_component("pkg:cargo/serde@1.0.0")]);
+        let integ = empty_integrity();
+        let arts = mk_artifacts(&comps, &integ);
+        let doc = cdx(&arts);
+        assert_eq!(doc["vulnerabilities"], json!([]));
+        assert_eq!(property(&doc, "waybill:vex-claims-omitted"), None);
+        for spdx in [
+            serialize(&crate::generate::spdx::Spdx2_3JsonSerializer, &arts),
+            serialize(&crate::generate::spdx::Spdx3JsonSerializer, &arts),
+        ] {
+            assert!(!spdx.to_string().contains("waybill:vex-claims-omitted"));
+        }
+        assert!(crate::generate::openvex::serialize_openvex(&arts, &mk_cfg()).unwrap().is_none());
+    }
+
     /// T008 (SC-003) — a statement-bearing document is valid CycloneDX 1.6.
     #[test]
     fn a_statement_bearing_document_is_valid_cyclonedx() {

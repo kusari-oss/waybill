@@ -7,6 +7,32 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Added: VEX in CycloneDX `vulnerabilities[]` (#1039)
+
+waybill's VEX statements reached only the OpenVEX sidecar written beside SPDX
+output, so CycloneDX `vulnerabilities[]` was always empty. Measured on a Nix
+project, the sidecar held 36 statements for 18 CVEs and the CycloneDX document
+none, whether or not SPDX was also requested.
+
+The same statements now appear in CycloneDX natively:
+- **Backports.** The version statement is `exploitable` on the component. The
+  build statement is `not_affected` / `code_not_present` on the document root,
+  naming the component in a `waybill:vex-subcomponent` property, so the two
+  claims stay distinct.
+- **Evidence.** The evidence grade is in `analysis.detail`.
+- **No stronger claims.** No mapping strengthens a claim:
+  `resolved_with_pedigree` is never emitted.
+- **Omissions are counted.** A document that cannot carry a claim, because the
+  component is in another `--split` document or removed by `--tier` or a root
+  override, counts it in the new `waybill:vex-claims-omitted` (C193), in all
+  three formats.
+
+The OpenVEX sidecar is unchanged. Parity row F1 now checks that VEX is
+present on both sides; it used to pass only because both were empty.
+`docs/architecture/enrichment.md` records that waybill does not match
+components against advisory databases, so an empty `vulnerabilities[]` is
+not a claim that nothing is vulnerable.
+
 ### Fixed: a healthy second deps.dev pass reported as wholly unavailable (#1118)
 
 The `wholly-unavailable` mode of `waybill:enrichment-degraded` compared the
