@@ -103,8 +103,8 @@
 
 ## Phase 6: Polish & Cross-Cutting
 
-- [ ] T012 [P] In `docs/reference/sbom-format-mapping.md`, update the dependency-edge row's SPDX 3 column, **on one line**: grouped per `(from, type, scope)`; `completeness` from the same predicate as CycloneDX `compositions[]`; `NoAssertionElement` for unknown leaves (FR-007). Run `cargo test -p waybill --lib parity` and `--test sbom_format_mapping_coverage`.
-- [ ] T013 [P] Add an Unreleased entry to `CHANGELOG.md` covering:
+- [X] T012 [P] In `docs/reference/sbom-format-mapping.md`, update the dependency-edge row's SPDX 3 column, **on one line**: grouped per `(from, type, scope)`; `completeness` from the same predicate as CycloneDX `compositions[]`; `NoAssertionElement` for unknown leaves (FR-007). Run `cargo test -p waybill --lib parity` and `--test sbom_format_mapping_coverage`.
+- [X] T013 [P] Add an Unreleased entry to `CHANGELOG.md` covering:
   - SPDX 3 dependency relationships are grouped per component and kind;
   - native `completeness`, agreeing with CycloneDX `compositions[]`;
   - `NoAssertionElement` for unknown dependencies;
