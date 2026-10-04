@@ -410,6 +410,8 @@ Auto-generated from all feature plans. Last updated: 2026-10-04
 - deps.dev disk cache, format unchanged (R4). (1067-depsdev-enrichment-outcome)
 - Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. No nightly; `waybill-ebpf` untouched. + Existing only: `serde`/`serde_json`, `tracing`. Dev: existing `jsonschema` 0.46 via the shared CycloneDX validator (`tests/common/cdx_schema.rs`). **Zero new Cargo dependencies.** (1068-vulnerability-output)
 - N/A, all in-process per scan. (1068-vulnerability-output)
+- Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. No nightly; `waybill-ebpf` untouched. + Existing only: `serde_json`, `tracing`; the existing `hash_prefix` helper for deterministic IRIs. CI/test: the existing `spdx3-validate` 0.0.5 (milestone 078). **Zero new Cargo dependencies.** (1069-spdx3-relationship-completeness)
+- N/A, in-process per scan. (1069-spdx3-relationship-completeness)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -589,9 +591,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 1069-spdx3-relationship-completeness: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. No nightly; `waybill-ebpf` untouched. + Existing only: `serde_json`, `tracing`; the existing `hash_prefix` helper for deterministic IRIs. CI/test: the existing `spdx3-validate` 0.0.5 (milestone 078). **Zero new Cargo dependencies.**
 - 1068-vulnerability-output: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. No nightly; `waybill-ebpf` untouched. + Existing only: `serde`/`serde_json`, `tracing`. Dev: existing `jsonschema` 0.46 via the shared CycloneDX validator (`tests/common/cdx_schema.rs`). **Zero new Cargo dependencies.**
 - 1067-depsdev-enrichment-outcome: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. No nightly; `waybill-ebpf` untouched. + Existing only: `reqwest`, `serde`/`serde_json`, `spdx` (via `SpdxExpression::try_canonical`), `tracing`; dev: existing mock HTTP server used by `depsdev_source.rs` tests. **Zero new Cargo dependencies.**
-- 1066-nix-system-config-closure: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. No nightly; `waybill-ebpf` untouched. + Existing only: `serde_json` (listings), `tracing`, and the m1034/m1035 `eval::invoke` helpers (`run_bounded`, `argv_is_safe`, `is_safe_attribute_name`). External: the host's `nix`, already required by the tier. **Zero new Cargo dependencies.**
 
 
 <!-- MANUAL ADDITIONS START -->

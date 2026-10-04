@@ -141,5 +141,5 @@ CycloneDX and SPDX 2.3 output is byte-identical for every scan. SPDX 3 output ch
 ## Assumptions
 
 - The milestone-866 predicate (ecosystem resolution outcome, plus reachability) is the source of truth. This feature changes how SPDX 3 carries it, not what it decides.
-- An absent `completeness` claims nothing about the relationship. To be confirmed against the SPDX 3.0.1 model text in planning; if the model says otherwise, FR-002 governs.
-- The pinned conformance validator (`spdx3-validate`, milestone 078) accepts `completeness` and `NoAssertionElement`. This is to be confirmed in planning by validating a sample document.
+- An absent `completeness` claims nothing about the relationship. Checked in planning: the SPDX 3.0.1 model defines the three values and no default, so this rests on RDF's open-world reading rather than explicit text (research R3).
+- The pinned conformance validator (`spdx3-validate` 0.0.5, milestone 078) accepts grouped targets, all three `completeness` values and `NoAssertionElement`, and rejects an invalid value. Measured in planning (research R1).
