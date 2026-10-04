@@ -1,0 +1,8 @@
+baseline golden: exit=0 ✔ Checking SHACL for /var/folders/dz/l36x69hs28l50_whrqsz2dvh0000gn/T/tmp3j2al7ew.json
+grouped, no completeness: exit=0 ✔ Checking SHACL for /var/folders/dz/l36x69hs28l50_whrqsz2dvh0000gn/T/tmpjhjtx0dn.json
+grouped, completeness=complete: exit=0 ✔ Checking SHACL for /var/folders/dz/l36x69hs28l50_whrqsz2dvh0000gn/T/tmp19acbi06.json
+grouped, completeness=incomplete: exit=0 ✔ Checking SHACL for /var/folders/dz/l36x69hs28l50_whrqsz2dvh0000gn/T/tmpo33chnp3.json
+grouped, completeness=noAssertion: exit=0 ✔ Checking SHACL for /var/folders/dz/l36x69hs28l50_whrqsz2dvh0000gn/T/tmp4lgbqjph.json
+grouped, completeness=bogus (control: must fail): exit=1 	Message: Value <https://spdx.org/rdf/3.0.1/terms/Core/RelationshipCompleteness/bogus> not in list ['<https://spdx.org/rdf/3.0.1/terms/Core/RelationshipComplete
+dependsOn -> NoAssertionElement: exit=0 ✔ Checking SHACL for /var/folders/dz/l36x69hs28l50_whrqsz2dvh0000gn/T/tmpjgrpntkl.json
+dependsOn -> https://spdx.org/rdf/3.0.1/terms/Core/NoAssertionElement: exit=0 ✔ Checking SHACL for /var/folders/dz/l36x69hs28l50_whrqsz2dvh0000gn/T/tmplfujj155.json
