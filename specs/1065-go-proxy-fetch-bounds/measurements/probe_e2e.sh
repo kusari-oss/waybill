@@ -16,7 +16,7 @@ done > "$W/go.sum"
 printf 'package main\nfunc main() {}\n' > "$W/main.go"
 mkdir -p "$W/.modcache"
 start=$(python3 -c 'import time;print(time.time())')
-env -i HOME="$HOME" PATH="/usr/bin:/bin" GOPROXY="$PROXY" GOMODCACHE="$W/.modcache" GOFLAGS= \
+env -i HOME="$HOME" PATH="/usr/bin:/bin" GOPROXY="$PROXY" GOMODCACHE="$W/.modcache" GOFLAGS= ${WAYBILL_GO_PROXY_FETCH_BUDGET_MS:+WAYBILL_GO_PROXY_FETCH_BUDGET_MS=$WAYBILL_GO_PROXY_FETCH_BUDGET_MS} \
   "$BIN" sbom scan --path "$W" --no-deep-hash --no-deps-dev --no-go-mod-why --format cyclonedx-json \
   --output cyclonedx-json="$W/out.cdx.json" > "$W/log.txt" 2>&1
 rc=$?
