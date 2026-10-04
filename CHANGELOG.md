@@ -7,6 +7,23 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Fixed: SPDX 3 roots reach the same components as CycloneDX and SPDX 2.3 (#1108, #1022)
+
+In a repository with a Pants owning component, SPDX 3 attached fewer
+components to the document root than the other two formats. All three formats
+attach components that nothing else reaches to the root. CycloneDX and SPDX
+2.3 do this even when the root's only edge goes to an owning component
+(milestone 894). SPDX 3 treated that one edge as "the root already has
+dependencies" and attached nothing. The components it dropped have no other
+parent, so in SPDX 3 they were reachable from nothing:
+- the unversioned requirements of `pants-example-django` (12);
+- the file-tier `get-pants.sh` of `pants-example-jvm` and
+  `pants-example-python`.
+
+Root out-edges now agree on every Pants corpus target. For example, django is
+14 / 14 / 14 where it was 14 / 14 / 1. Repositories without owning components
+are unaffected.
+
 ### Changed: Pants resolves are owned and named in both language namespaces (#924)
 
 The JVM coursier reader now does what the Python reader has done since

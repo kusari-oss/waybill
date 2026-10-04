@@ -1202,6 +1202,16 @@
     },
     {
       "creationInfo": "<masked>",
+      "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-root-ILXAHBXGCVK7VOJM",
+      "relationshipType": "dependsOn",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-24OMZONP4J3AZCFL",
+      "to": [
+        "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-CZPDKXG3L7MLDPWR"
+      ],
+      "type": "Relationship"
+    },
+    {
+      "creationInfo": "<masked>",
       "from": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-7NUEQZ6ZZD35HJ7X",
       "relationshipType": "dependsOn",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/rel-2NGVPCEZXXOLQGVO",

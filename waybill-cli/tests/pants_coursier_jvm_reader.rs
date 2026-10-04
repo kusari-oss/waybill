@@ -1123,3 +1123,70 @@ fn configured_resolve_also_declared_by_a_tool_keeps_its_name() {
         assert_eq!(scope.as_deref(), Some("development"));
     }
 }
+
+/// #1108 / #1022 — an owning component's root edge must not switch off the
+/// root fallback in one format only. `waybill-fixture-unpinned` is a
+/// design-tier requirement nothing else reaches, the shape of
+/// `pants-example-django`'s requirements and `pants-example-jvm`'s file-tier
+/// `get-pants.sh`. SPDX 3 used to count root -> `jvm-default` as "the root
+/// already has edges" and drop it; CycloneDX and SPDX 2.3 never did (m894).
+#[test]
+fn an_unowned_component_reaches_the_root_in_every_format() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    std::fs::create_dir_all(root.join("3rdparty/jvm")).unwrap();
+    for f in ["pants.toml", "3rdparty/jvm/default.lock"] {
+        std::fs::copy(fixture(&format!("implicit_default/{f}")), root.join(f)).unwrap();
+    }
+    std::fs::write(root.join("requirements.txt"), "waybill-fixture-unpinned\n").unwrap();
+
+    let tmp = tempfile::tempdir().unwrap();
+    let (c, a, g) = (
+        tmp.path().join("o.cdx.json"),
+        tmp.path().join("o.spdx.json"),
+        tmp.path().join("o.spdx3.json"),
+    );
+    let out = Command::new(bin())
+        .args(["--offline", "sbom", "scan", "--no-deep-hash", "--path"])
+        .arg(root)
+        .args(["--format", "cyclonedx-json", "--format", "spdx-2.3-json", "--format", "spdx-3-json"])
+        .arg("--output")
+        .arg(format!("cyclonedx-json={}", c.display()))
+        .arg("--output")
+        .arg(format!("spdx-2.3-json={}", a.display()))
+        .arg("--output")
+        .arg(format!("spdx-3-json={}", g.display()))
+        .output()
+        .expect("waybill invocation");
+    assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
+
+    let cdx = read_cdx(&c);
+    let root_ref = cdx["metadata"]["component"]["bom-ref"].as_str().unwrap().to_string();
+    assert_eq!(
+        depends_of_ref(&cdx, &root_ref),
+        vec![
+            "pkg:generic/jvm-default?pants-namespace=jvm".to_string(),
+            "pkg:pypi/waybill-fixture-unpinned".to_string(),
+        ],
+        "precondition: CycloneDX reaches the owning component and the unowned requirement"
+    );
+    let counts = (
+        cdx_root_out_edges(&cdx),
+        spdx23_root_out_edges(&read_cdx(&a)),
+        spdx3_root_out_edges(&read_cdx(&g)),
+    );
+    assert_eq!(counts, (2, 2, 2), "root out-edges CycloneDX / SPDX 2.3 / SPDX 3");
+}
+
+fn depends_of_ref(cdx: &serde_json::Value, bom_ref: &str) -> Vec<String> {
+    let mut out: Vec<String> = cdx["dependencies"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter(|d| d["ref"].as_str() == Some(bom_ref))
+        .flat_map(|d| d["dependsOn"].as_array().cloned().unwrap_or_default())
+        .filter_map(|v| v.as_str().map(str::to_string))
+        .collect();
+    out.sort();
+    out
+}
