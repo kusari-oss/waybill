@@ -985,22 +985,8 @@ impl CycloneDxBuilder {
         // CycloneDX field and `waybill:graph-completeness` cannot
         // disagree: whatever made the document `partial` also withholds
         // the per-ecosystem `dependencies` claim below.
-        let degraded_ecosystems: std::collections::HashSet<String> = {
-            use crate::generate::graph_completeness::ReasonCode;
-            let mut degraded = std::collections::HashSet::new();
-            for code in &graph_completeness.reason_codes {
-                match code {
-                    ReasonCode::TransitiveEdgesUnresolvable { ecosystems } => {
-                        degraded.extend(ecosystems.iter().cloned());
-                    }
-                    ReasonCode::GoTransitiveCoverageDegraded { .. } => {
-                        degraded.insert("golang".to_string());
-                    }
-                    _ => {}
-                }
-            }
-            degraded
-        };
+        let degraded_ecosystems: std::collections::HashSet<String> =
+            super::compositions::degraded_ecosystems(&graph_completeness);
         let compositions = build_compositions(
             integrity,
             &target_ref,

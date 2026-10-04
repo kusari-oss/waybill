@@ -14,18 +14,18 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Baseline: run `cargo test -p waybill --bin waybill generate::cyclonedx`, `cargo test -p waybill --bin waybill generate::spdx`, `cargo test -p waybill --lib parity`, and `cargo test -p waybill --test spdx3_regression --test cdx_regression --test spdx_regression`. Record them green.
+- [X] T001 Baseline: run `cargo test -p waybill --bin waybill generate::cyclonedx`, `cargo test -p waybill --bin waybill generate::spdx`, `cargo test -p waybill --lib parity`, and `cargo test -p waybill --test spdx3_regression --test cdx_regression --test spdx_regression`. Record them green.
 
 ## Phase 2: Foundational — one predicate for both formats (research R4)
 
-- [ ] T002 In `G/cyclonedx/compositions.rs`, extract `pub(crate) struct DependencyClaims { complete: HashSet<String>, unknown: HashSet<String>, root_complete: bool }` and `pub(crate) fn dependency_claims(components, complete_ecosystems, reachable_set: Option<&HashSet<String>>, degraded_ecosystems, integrity) -> DependencyClaims`. Rules:
+- [X] T002 In `G/cyclonedx/compositions.rs`, extract `pub(crate) struct DependencyClaims { complete: HashSet<String>, unknown: HashSet<String>, root_complete: bool }` and `pub(crate) fn dependency_claims(components, complete_ecosystems, reachable_set: Option<&HashSet<String>>, degraded_ecosystems, integrity) -> DependencyClaims`. Rules:
   - **all-or-nothing per ecosystem:** an ecosystem in `complete_ecosystems` is resolved iff all its components are reachable and it is not degraded;
   - **unclaimed:** components outside those ecosystems are in neither set;
   - **root:** `root_complete = target_aggregate(integrity) == "incomplete_first_party_only" && !components.is_empty()`.
 
   Also move the degraded-ecosystem derivation from `G/cyclonedx/builder.rs` (~983–1003) into a `pub(crate) fn degraded_ecosystems(&GraphCompletenessResult) -> HashSet<String>` beside it.
   - **`build_compositions`:** rewrite it to consume `DependencyClaims`. Its output is byte-identical: `cargo test -p waybill --test cdx_regression` and the CycloneDX tests pass with no golden change.
-- [ ] T003 [P] Unit tests for `dependency_claims` in `G/cyclonedx/compositions.rs::tests`:
+- [X] T003 [P] Unit tests for `dependency_claims` in `G/cyclonedx/compositions.rs::tests`:
   - an ecosystem fully reachable and not degraded → all `complete`;
   - one unreachable component → the whole ecosystem `unknown`;
   - a degraded ecosystem (`GoTransitiveCoverageDegraded`) → `unknown` even though reachable;
