@@ -121,7 +121,7 @@
   - **Shape (SC-003):** quickstart §2. At most one `dependsOn` relationship per `(from, type, scope)`.
   - **Conformance (SC-004):** `spdx3-validate` passes on every unmasked emitted SPDX 3 document.
 - [X] T017 Re-run `measurements/probe_validator.py` on a regenerated real SPDX 3 document, since it now carries the shapes natively, and append to `measurements/README.md`.
-- [ ] T018 Open the PR (closes #878), merge when green, then run `cargo clean`.
+- [X] T018 Open the PR (closes #878), merge when green, then run `cargo clean`.
 
 ## Dependencies & Execution Order
 
