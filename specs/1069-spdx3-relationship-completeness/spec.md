@@ -40,6 +40,8 @@ So the native field can carry this signal only if a component's dependencies are
 - Q: Relationship shape? → A: **Group** each component's dependencies of one kind into a single relationship whose targets are the whole set, so `completeness` describes that set. Every SPDX 3 golden with dependencies changes shape.
 - Q: Components whose dependencies are unknown and that have no outgoing relationship? → A: Emit a dependency relationship to **`NoAssertionElement`** marked `noAssertion`.
 - Q: Claim strength? → A: **`complete` on resolved components that have a relationship; nothing added for resolved leaves.** `incomplete` / `noAssertion` wherever CycloneDX says `unknown`.
+- Q: Components CycloneDX makes no dependency claim about (their ecosystem is not one waybill enumerates completely)? → A: **No qualifier and no added relationship**, mirroring CycloneDX's silence.
+- Q: The scan root, which CycloneDX lists under `aggregate: complete` when trace integrity is clean? → A: **Mirror it**: the root's grouped dependency relationship is `complete` exactly when CycloneDX emits that record, and unqualified otherwise.
 
 ## Out of Scope
 
@@ -108,10 +110,13 @@ CycloneDX and SPDX 2.3 output is byte-identical for every scan. SPDX 3 output ch
   - `incomplete` when CycloneDX lists it under `aggregate: unknown`.
 - **FR-001b**: A component CycloneDX lists under `aggregate: unknown` that has no outgoing dependency MUST get one dependency relationship to `NoAssertionElement`, marked `noAssertion`.
 - **FR-001c**: A resolved component with no dependencies MUST NOT gain a relationship.
+- **FR-001d**: A component CycloneDX makes no dependency claim about (its ecosystem is not among those enumerated completely) MUST get no `completeness` on its relationships and no added relationship.
+- **FR-001e**: The scan root's grouped dependency relationship MUST be `complete` exactly when CycloneDX lists the root under `aggregate: complete` (trace integrity clean), and unqualified otherwise.
 - **FR-002**: A completeness value MUST NOT claim more than waybill knows. A relationship MUST NOT be marked `complete` unless its targets are the component's whole dependency set of that kind.
 - **FR-003**: For every component, the completeness SPDX 3 expresses MUST agree with the CycloneDX aggregate the same scan emits:
   - every CycloneDX `unknown` component is marked `incomplete` or `noAssertion`;
   - every CycloneDX `complete` component that has a dependency relationship is marked `complete`;
+  - every component CycloneDX lists under neither aggregate carries no `completeness`;
   - no other combination occurs.
 - **FR-004**: The waybill completeness annotations (`waybill:graph-completeness`, `waybill:graph-completeness-reason`, `waybill:orphan-reason`) MUST remain in all three formats, with unchanged values.
 - **FR-005**: CycloneDX and SPDX 2.3 output MUST be byte-identical to the output before this feature.
