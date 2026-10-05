@@ -7,6 +7,8 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-10-05
+
 ### Changed: SPDX 3 dependency relationships carry native completeness (#878)
 
 Whether a component's dependencies were fully resolved was visible in SPDX 3 only through waybill's own annotations. SPDX 3 dependency relationships now say so in the standard field, agreeing with CycloneDX `compositions[]`:
