@@ -2,6 +2,73 @@
   ============================================================
   SYNC IMPACT REPORT
   ============================================================
+  Version change: 3.0.0 → 4.0.0
+  Bump rationale: MAJOR — Principles II, III and XII and Strict
+  Boundary 1 are REDEFINED: they now apply to trace mode only.
+  The Governance section names "Principle removed, redefined, or
+  made incompatible with prior interpretation" as a MAJOR
+  trigger. Conduct v3.0.0 forbade without exception —
+  discovering components from manifests and lockfiles — is
+  permitted in scan mode.
+
+  Why (issue #987): `waybill sbom scan` has discovered components
+  from manifests, lockfiles and package databases since milestone
+  002. The constitution was written end to end around the trace,
+  with no scan-mode carve-out, so the product's main mode
+  contradicted two MUSTs for ~130 milestones. Milestone 985's
+  Constitution Check surfaced it, and `/speckit.analyze` correctly
+  flagged it CRITICAL. The trace-first reasoning is sound and is
+  kept in full for trace mode: a lockfile must not be able to
+  inflate a build observation with packages the build never
+  fetched.
+
+  Modified principles:
+    - II. eBPF-Only Observation → scoped to trace mode; scan-mode
+      paragraph added.
+    - III. Fail Closed → scoped to trace mode; a failed trace
+      MUST NOT degrade into a scan; scan-mode analogue (report,
+      never pad) added.
+    - XII. External Data Source Enrichment → constraints 1 and 4
+      scoped to trace mode; scan-mode resolution of declared
+      dependencies through external sources permitted, subject to
+      the unchanged provenance constraint 2.
+    - Strict Boundaries preamble → a mode named inside a boundary
+      is part of the boundary, not a circumvention of it.
+    - Strict Boundary 1 → "No lockfile-based dependency discovery
+      in trace mode". Boundary numbering unchanged.
+    - VIII. Completeness → unchanged; applies to both modes.
+
+  Added sections:
+    - Operating Modes (before Core Principles): the two modes,
+      their trust roots, the requirement that every document
+      state its mode (C21 `waybill:generation-context`, already
+      emitted in all three formats), and no silent crossover.
+
+  Removed sections: none.
+
+  Templates requiring updates:
+    - .specify/templates/plan-template.md        ✅ no update needed
+    - .specify/templates/spec-template.md         ✅ no update needed
+    - .specify/templates/tasks-template.md        ✅ no update needed
+    - .specify/templates/agent-file-template.md   ✅ no update needed
+    - .specify/templates/checklist-template.md    ✅ no update needed
+    - docs/architecture/attestations.md           ✅ cites Principle II
+      for the trace path, still accurate
+    - docs/ecosystems.md                          ✅ cites Strict
+      Boundary 3, numbering unchanged
+
+  Follow-up TODOs:
+    - Close #987 on merge.
+    - specs/985-nix-haskell-runtime-closure: its CRITICAL
+      Constitution Check finding is resolved by this amendment
+      (scan mode, declared closure resolved through nixpkgs, with
+      provenance annotations).
+  ============================================================
+-->
+<!--
+  ============================================================
+  SYNC IMPACT REPORT
+  ============================================================
   Version change: 2.1.0 → 3.0.0
   Bump rationale: MAJOR — Principle I is REDEFINED, which the
   Governance section names explicitly as a MAJOR trigger
@@ -327,6 +394,37 @@
 
 > **Waybill was previously known as Mikebom.** Historical spec docs at `specs/001-*/`..`specs/213-*/` retain the original `mikebom` terminology as authorship artifacts; that pre-rename vocabulary in past artifacts is preserved by convention, but every functional identifier in current source + emitted output uses the new `waybill` name (m214 rename, v0.1.0-alpha.66+).
 
+## Operating Modes
+
+Waybill produces SBOMs in two modes, distinguished by their trust root.
+Every principle applies to both unless it names a mode.
+
+- **Trace mode** (`waybill trace`, and `waybill sbom generate` from its
+  attestation) records what a build did. Its trust root is the eBPF
+  trace. Manifests and lockfiles MAY only correlate or enrich what the
+  trace observed (Principles II, III, XII; Strict Boundary 1).
+- **Scan mode** (`waybill sbom scan`, over a source tree, filesystem or
+  container image) describes what sources and artifacts declare: design,
+  source and analyzed SBOMs. Its trust root is the evidence it reads —
+  manifests, lockfiles, package databases and binaries.
+
+Requirements:
+
+1. Every document MUST state which mode produced it. The carrier is C21
+   `waybill:generation-context`, emitted in all three formats:
+   `build-time-trace` for trace mode; `filesystem-scan` or
+   `container-image-scan` for scan mode.
+2. No silent crossover. A trace that fails to attach, loses events or
+   observes nothing fails closed (Principle III); it MUST NOT fall back
+   to scanning, and scan output MUST NOT be labelled as a trace.
+
+**Rationale**: The trace-first constraints exist so a lockfile cannot
+inflate a build observation with packages the build never fetched. That
+reasoning is about trace mode. In scan mode there is no trace: the
+declared and detected evidence is what the SBOM describes, and
+forbidding it would forbid the product. Labelling every document with
+its mode keeps the two trust models from being confused downstream.
+
 ## Core Principles
 
 ### I. Pure Rust, Statically Linked
@@ -396,7 +494,9 @@ element) to avoid a penalty that measurement showed does not exist.
 
 ### II. eBPF-Only Observation
 
-All dependency **discovery** MUST occur through eBPF tracing
+*Applies to trace mode (see Operating Modes).*
+
+In trace mode, all dependency **discovery** MUST occur through eBPF tracing
 of live build processes. Network interception uses `uprobes`
 attached to TLS libraries (OpenSSL, GoTLS) to capture
 plaintext before encryption. File operations are traced via
@@ -411,6 +511,10 @@ or vulnerability context — per Principle XII. A component
 that appears only in an external source but was NOT observed
 in the eBPF trace MUST NOT be added to the SBOM.
 
+In scan mode there is no trace. Manifests, lockfiles, package databases
+and binaries are the dependency source, and each component's evidence
+MUST record which of them it came from (Principle X).
+
 **Rationale**: Observing the actual build eliminates the gap
 between what a manifest declares and what a build actually
 fetches. Enrichment from external sources adds value without
@@ -419,11 +523,16 @@ distinction between "observed" and "enriched" is maintained.
 
 ### III. Fail Closed
 
+*Applies to trace mode (see Operating Modes).*
+
 If the eBPF trace fails to attach, loses events, or observes
 zero dependency activity, waybill MUST report the failure
 transparently and exit with a non-zero status. The tool MUST
 NOT fall back to static analysis, lockfile parsing, or any
-heuristic gap-filling.
+heuristic gap-filling, and MUST NOT degrade into a scan.
+
+In scan mode, Principle X governs: evidence that could not be read
+is reported, never filled in by guesswork.
 
 **Rationale**: An SBOM that silently omits dependencies is
 worse than no SBOM. Failing closed forces operators to
@@ -659,8 +768,9 @@ utility as a single source of truth.
 
 External data sources — including lockfiles, package
 registries, hash-to-package databases, and vulnerability
-databases — MAY be used to **enrich** eBPF-traced
-dependencies with supplementary data. Permitted enrichment
+databases — MAY be used to **enrich** discovered
+dependencies with supplementary data: eBPF-traced dependencies in
+trace mode, declared or detected ones in scan mode. Permitted enrichment
 includes:
 
 - **Dependency relationships** — lockfiles (Cargo.lock,
@@ -676,18 +786,24 @@ includes:
 
 The following constraints apply:
 
-1. External sources MUST NOT introduce new components. A
-   package that appears in a lockfile but was NOT observed
-   in the eBPF trace MUST NOT be added to the SBOM.
+1. In trace mode, external sources MUST NOT introduce new
+   components. A package that appears in a lockfile but was
+   NOT observed in the eBPF trace MUST NOT be added to the
+   SBOM. In scan mode, an external source MAY resolve what the
+   scanned evidence declares (for example, a registry's
+   dependency graph for a declared dependency, or a pinned
+   package set's closure), and constraint 2 applies to every
+   component it adds.
 2. Data from external sources MUST be annotated with its
    provenance (e.g., "relationship from Cargo.lock",
    "license from deps.dev") per Principle X (Transparency).
 3. External source unavailability MUST NOT prevent SBOM
    generation. The tool MUST degrade gracefully with
    transparency annotations noting missing enrichment.
-4. The eBPF trace remains the authoritative source for
-   dependency discovery. External sources provide context,
-   not authority.
+4. In trace mode, the eBPF trace remains the authoritative
+   source for dependency discovery; in scan mode, the scanned
+   evidence is. External sources provide context or resolve
+   what that evidence declares; they are not authority.
 
 **Rationale**: The eBPF trace tells us *what was fetched*.
 Lockfiles and databases tell us *how those fetches relate to
@@ -702,15 +818,21 @@ of build-time observation.
 
 These constraints are non-negotiable and MUST NOT be
 circumvented by feature flags, configuration options, or
-optional modes:
+optional modes. A boundary that names the mode it governs
+(Operating Modes) states its own scope; that scope is part of
+the boundary, not an exemption from it:
 
-1. **No lockfile-based dependency discovery.** Lockfiles and
-   manifests MUST NOT be used as a source of dependency
-   discovery. If the eBPF trace produces no data, the tool
-   fails closed (Principle III). Lockfiles MAY be read for
-   enrichment purposes only (dependency relationships,
-   metadata) per Principle XII — but MUST NOT introduce
-   components not observed in the trace.
+1. **No lockfile-based dependency discovery in trace mode.**
+   A trace-mode SBOM MUST NOT use lockfiles or manifests as a
+   source of dependency discovery. If the eBPF trace produces
+   no data, the tool fails closed (Principle III) and MUST NOT
+   degrade into a scan. Lockfiles MAY be read for correlation
+   or enrichment only (dependency relationships, metadata) per
+   Principle XII — but MUST NOT introduce components not
+   observed in the trace. Scan mode reads manifests and
+   lockfiles as its evidence; its documents MUST be labelled as
+   scans (Operating Modes) and never presented as build
+   observations. Scoped to trace mode in 4.0.0.
 
 2. **No MITM proxy.** All network observation MUST remain in
    eBPF `uprobes`. Certificate injection, proxy servers, and
@@ -833,4 +955,4 @@ changes do not violate any principle. Violations require
 either a code fix or a constitution amendment — never silent
 deviation.
 
-**Version**: 3.0.0 | **Ratified**: 2026-04-15 | **Last Amended**: 2026-09-10
+**Version**: 4.0.0 | **Ratified**: 2026-04-15 | **Last Amended**: 2026-10-04
