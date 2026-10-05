@@ -7,6 +7,19 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Changed: SPDX 3 dependency relationships carry native completeness (#878)
+
+Whether a component's dependencies were fully resolved was visible in SPDX 3 only through waybill's own annotations. SPDX 3 dependency relationships now say so in the standard field, agreeing with CycloneDX `compositions[]`:
+
+- **Grouped.** One relationship per component and dependency kind, with every target in `to`. Previously one relationship per edge, so `completeness` could not describe the set. Consumers that counted SPDX 3 relationships as edges should count targets.
+- **`completeness`.**
+  - `complete` where CycloneDX lists the component under `aggregate: complete`;
+  - `incomplete` where it lists it under `aggregate: unknown`;
+  - absent where CycloneDX makes no claim.
+- **Unknown dependencies.** A component whose dependencies could not be determined and that has none recorded gets a `dependsOn` to SPDX's `NoAssertionElement`, marked `noAssertion`.
+
+The `waybill:graph-completeness` and `waybill:orphan-reason` annotations are unchanged in all three formats. CycloneDX and SPDX 2.3 output is unchanged.
+
 ### Fixed: the OpenVEX sidecar is written beside the SPDX file that references it (#1122)
 
 The sidecar was written to the working directory, while the SPDX document referenced it by a path its readers resolve against the document's own directory. A scan with `--output spdx-2.3-json=out/sbom.spdx.json` left the reference dangling and wrote `waybill.openvex.json` into the tree being scanned.

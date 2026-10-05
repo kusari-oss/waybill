@@ -139,41 +139,15 @@
       "type": "software_Package"
     },
     {
+      "completeness": "complete",
       "creationInfo": "_:creation-info",
       "from": "https://waybill.kusari.dev/spdx3/doc-FWQNV647OGEHKFRRTXQ7L623/pkg-root-JTCRM6TWPTUATH5X",
       "relationshipType": "dependsOn",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-FWQNV647OGEHKFRRTXQ7L623/rel-45UIRHOK5ZZRNFYY",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-FWQNV647OGEHKFRRTXQ7L623/rel-DBYBFALESWLHJSN5",
       "to": [
-        "https://waybill.kusari.dev/spdx3/doc-FWQNV647OGEHKFRRTXQ7L623/pkg-6JWGJCRVPGZ5RSBG"
-      ],
-      "type": "Relationship"
-    },
-    {
-      "creationInfo": "_:creation-info",
-      "from": "https://waybill.kusari.dev/spdx3/doc-FWQNV647OGEHKFRRTXQ7L623/pkg-root-JTCRM6TWPTUATH5X",
-      "relationshipType": "dependsOn",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-FWQNV647OGEHKFRRTXQ7L623/rel-B6W6F4SXXQWBJBIP",
-      "to": [
-        "https://waybill.kusari.dev/spdx3/doc-FWQNV647OGEHKFRRTXQ7L623/pkg-JCUJXG5KKFFE45OL"
-      ],
-      "type": "Relationship"
-    },
-    {
-      "creationInfo": "_:creation-info",
-      "from": "https://waybill.kusari.dev/spdx3/doc-FWQNV647OGEHKFRRTXQ7L623/pkg-root-JTCRM6TWPTUATH5X",
-      "relationshipType": "dependsOn",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-FWQNV647OGEHKFRRTXQ7L623/rel-GCBRV4NHTYS7M32S",
-      "to": [
-        "https://waybill.kusari.dev/spdx3/doc-FWQNV647OGEHKFRRTXQ7L623/pkg-3ECZZDDDHD3O6FKS"
-      ],
-      "type": "Relationship"
-    },
-    {
-      "creationInfo": "_:creation-info",
-      "from": "https://waybill.kusari.dev/spdx3/doc-FWQNV647OGEHKFRRTXQ7L623/pkg-root-JTCRM6TWPTUATH5X",
-      "relationshipType": "dependsOn",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-FWQNV647OGEHKFRRTXQ7L623/rel-HZBMJSYOJWC6M66K",
-      "to": [
+        "https://waybill.kusari.dev/spdx3/doc-FWQNV647OGEHKFRRTXQ7L623/pkg-3ECZZDDDHD3O6FKS",
+        "https://waybill.kusari.dev/spdx3/doc-FWQNV647OGEHKFRRTXQ7L623/pkg-6JWGJCRVPGZ5RSBG",
+        "https://waybill.kusari.dev/spdx3/doc-FWQNV647OGEHKFRRTXQ7L623/pkg-JCUJXG5KKFFE45OL",
         "https://waybill.kusari.dev/spdx3/doc-FWQNV647OGEHKFRRTXQ7L623/pkg-LXTPKDHC3UVRRT5J"
       ],
       "type": "Relationship"

@@ -666,6 +666,26 @@ pub fn build_document(
     let m194_classifier_relationships: Vec<waybill_common::resolution::Relationship> =
         m158_augmented_relationships.clone();
 
+    // Milestone 158 US2 — the multi-root BFS reachability pass on the
+    // AUGMENTED SPDX 3 graph, feeding the two document-scope annotations.
+    // Milestone 1069 (#878): computed here, before the relationships, because
+    // it also decides their native `completeness` through the predicate
+    // CycloneDX `compositions[]` uses.
+    let m158_graph_completeness =
+        crate::generate::graph_completeness::compute_graph_completeness(
+            scan.components,
+            &m194_classifier_relationships,
+            &m158_selection,
+            &m158_target_ref,
+        );
+    let m1069_claims = crate::generate::cyclonedx::compositions::dependency_claims(
+        scan.components,
+        scan.complete_ecosystems,
+        Some(&m158_graph_completeness.reachable_set),
+        &crate::generate::cyclonedx::compositions::degraded_ecosystems(&m158_graph_completeness),
+        scan.integrity,
+    );
+
     // 7. Relationship elements — dependency edges, containment edges,
     //    license/agent edges, document-describes edge. Combined into
     //    one bucket so they sort together by spdxId.
@@ -834,6 +854,16 @@ pub fn build_document(
     if let Some(rel) = built_from_rel {
         all_relationships.push(rel);
     }
+    // Milestone 1069 (#878): every producer has pushed. Group dependency
+    // relationships per component and kind, and qualify them.
+    let mut all_relationships = super::v3_relationships::group_dependency_relationships(
+        all_relationships,
+        &m1069_claims,
+        root_iris.first().map(String::as_str),
+        &package_iri_by_purl,
+        &doc_iri,
+        CREATION_INFO_ID,
+    );
     all_relationships.sort_by(|a, b| {
         let key = |v: &Value| v["spdxId"].as_str().unwrap_or("").to_string();
         key(a).cmp(&key(b))
@@ -855,18 +885,6 @@ pub fn build_document(
             &scan.scan_roots,
             scan.compiler_pipeline,
             scan.cross_ecosystem_edges_report,
-        );
-    // Milestone 158 US2 — compute the multi-root BFS reachability
-    // pass on the AUGMENTED SPDX 3 graph and pass into
-    // `build_document_annotations` for the two document-scope
-    // annotations. `m158_target_ref` was computed earlier (moved up
-    // for m194 US4 to feed the m192 pre-rewrite before augmentation).
-    let m158_graph_completeness =
-        crate::generate::graph_completeness::compute_graph_completeness(
-            scan.components,
-            &m194_classifier_relationships,
-            &m158_selection,
-            &m158_target_ref,
         );
     annotations.extend(super::v3_annotations::build_document_annotations(
         scan,

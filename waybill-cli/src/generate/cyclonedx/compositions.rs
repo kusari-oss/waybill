@@ -45,6 +45,82 @@ pub fn has_complete_record(
             && !components.is_empty())
 }
 
+/// Milestone 1069 (#878) — which components carry a dependency-graph claim.
+///
+/// The one predicate behind both CycloneDX `compositions[].dependencies` and
+/// SPDX 3 relationship `completeness`, so the two formats agree by
+/// construction rather than by two copies of the same rule.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub(crate) struct DependencyClaims {
+    /// Components whose ecosystem is enumerated completely and whose graph
+    /// was resolved.
+    pub complete: std::collections::HashSet<String>,
+    /// Components in an enumerated ecosystem whose graph was not resolved.
+    pub unknown: std::collections::HashSet<String>,
+    /// The scan root's own dependency claim: trace integrity is clean and
+    /// there are components.
+    pub root_complete: bool,
+}
+
+/// Decide [`DependencyClaims`]. Components outside `complete_ecosystems`
+/// are in neither set: waybill makes no claim about them.
+///
+/// The claim is all-or-nothing per ecosystem (milestone 866): an ecosystem
+/// resolved iff every component in it was reached and it is not degraded.
+pub(crate) fn dependency_claims(
+    components: &[ResolvedComponent],
+    complete_ecosystems: &[String],
+    reachable_set: Option<&std::collections::HashSet<String>>,
+    degraded_ecosystems: &std::collections::HashSet<String>,
+    integrity: &TraceIntegrity,
+) -> DependencyClaims {
+    let mut claims = DependencyClaims {
+        root_complete: target_aggregate(integrity) == "incomplete_first_party_only"
+            && !components.is_empty(),
+        ..Default::default()
+    };
+    for eco in complete_ecosystems {
+        let refs: Vec<String> = components
+            .iter()
+            .filter(|c| c.purl.ecosystem() == eco.as_str())
+            .map(|c| c.purl.as_str().to_string())
+            .collect();
+        let all_reachable = match reachable_set {
+            Some(set) => refs.iter().all(|r| set.contains(r.as_str())),
+            None => true,
+        };
+        let resolved = all_reachable && !degraded_ecosystems.contains(eco.as_str());
+        if resolved {
+            claims.complete.extend(refs);
+        } else {
+            claims.unknown.extend(refs);
+        }
+    }
+    claims
+}
+
+/// Milestone 866 (#871) — ecosystems whose resolution did not actually
+/// complete, derived from the completeness reason codes so the native fields
+/// and `waybill:graph-completeness` cannot disagree.
+pub(crate) fn degraded_ecosystems(
+    gc: &crate::generate::graph_completeness::GraphCompletenessResult,
+) -> std::collections::HashSet<String> {
+    use crate::generate::graph_completeness::ReasonCode;
+    let mut degraded = std::collections::HashSet::new();
+    for code in &gc.reason_codes {
+        match code {
+            ReasonCode::TransitiveEdgesUnresolvable { ecosystems } => {
+                degraded.extend(ecosystems.iter().cloned());
+            }
+            ReasonCode::GoTransitiveCoverageDegraded { .. } => {
+                degraded.insert("golang".to_string());
+            }
+            _ => {}
+        }
+    }
+    degraded
+}
+
 /// Build the CycloneDX `compositions[]` section.
 ///
 /// Emits:
@@ -87,6 +163,13 @@ pub fn build_compositions(
     degraded_ecosystems: &std::collections::HashSet<String>,
 ) -> serde_json::Value {
     let target_aggregate = target_aggregate(integrity);
+    let claims = dependency_claims(
+        components,
+        complete_ecosystems,
+        reachable_set,
+        degraded_ecosystems,
+        integrity,
+    );
 
     let mut out: Vec<serde_json::Value> = Vec::new();
 
@@ -137,31 +220,18 @@ pub fn build_compositions(
                 continue;
             }
 
-            // The `dependencies` claim is all-or-nothing per ecosystem.
+            // The `dependencies` claim is all-or-nothing per ecosystem, and
+            // decided once in [`dependency_claims`] so SPDX 3 reads the same
+            // answer (m1069).
             //
             // Per-component reachability is too weak a test: a component
             // can be reachable (something points AT it) while its own
             // outgoing edges were never resolved. Measured on `go-cobra`
             // cold, `go-md2man` is reachable and has no emitted edges —
-            // but a warm scan proves it depends on `blackfriday`. Calling
-            // its graph complete because it was reachable would restate
-            // the same overclaim one level down.
-            //
-            // If any component in the ecosystem is unreachable, the
-            // resolution for that ecosystem demonstrably did not
-            // complete, and no component in it may carry the claim.
-            // go.sum enumerates modules but carries no parent-child
-            // topology at all, so cold Go always lands here — which is
-            // the correct answer, not a limitation.
-            let all_reachable = match reachable_set {
-                Some(set) => refs.iter().all(|r| set.contains(r.as_str())),
-                None => true,
-            };
-            // Both conditions must hold. Reachability says every
-            // component is attached to something; the degraded list says
-            // whether the resolution that produced those attachments
-            // actually completed.
-            let graph_resolved = all_reachable && !degraded_ecosystems.contains(eco.as_str());
+            // but a warm scan proves it depends on `blackfriday`. If any
+            // component in the ecosystem is unreachable, or the ecosystem is
+            // degraded, the resolution demonstrably did not complete.
+            let graph_resolved = refs.first().is_some_and(|r| claims.complete.contains(r));
 
             let mut record = json!({
                 "aggregate": "complete",
@@ -279,6 +349,61 @@ mod tests {
             extra_annotations: Default::default(),
             binary_role: None,
         }
+    }
+
+    // ── m1069 (#878): the shared dependency-claims predicate ──
+
+    fn set(items: &[&str]) -> std::collections::HashSet<String> {
+        items.iter().map(|s| s.to_string()).collect()
+    }
+
+    #[test]
+    fn a_resolved_ecosystem_is_complete() {
+        let cs = [make_component("pkg:cargo/a@1"), make_component("pkg:cargo/b@1")];
+        let reach = set(&["pkg:cargo/a@1", "pkg:cargo/b@1"]);
+        let c = dependency_claims(&cs, &["cargo".into()], Some(&reach), &set(&[]), &clean_integrity());
+        assert_eq!(c.complete, set(&["pkg:cargo/a@1", "pkg:cargo/b@1"]));
+        assert!(c.unknown.is_empty());
+    }
+
+    #[test]
+    fn one_unreachable_component_makes_the_whole_ecosystem_unknown() {
+        let cs = [make_component("pkg:cargo/a@1"), make_component("pkg:cargo/b@1")];
+        let reach = set(&["pkg:cargo/a@1"]);
+        let c = dependency_claims(&cs, &["cargo".into()], Some(&reach), &set(&[]), &clean_integrity());
+        assert!(c.complete.is_empty());
+        assert_eq!(c.unknown, set(&["pkg:cargo/a@1", "pkg:cargo/b@1"]));
+    }
+
+    #[test]
+    fn a_degraded_ecosystem_is_unknown_even_when_reachable() {
+        use crate::generate::graph_completeness::{GraphCompletenessResult, ReasonCode};
+        let cs = [make_component("pkg:golang/example.com/m@v1.0.0")];
+        let reach = set(&["pkg:golang/example.com/m@v1.0.0"]);
+        let mut gc = GraphCompletenessResult::trivially_complete();
+        gc.reason_codes.push(ReasonCode::GoTransitiveCoverageDegraded { missing_count: 1 });
+        let degraded = degraded_ecosystems(&gc);
+        assert_eq!(degraded, set(&["golang"]));
+        let c = dependency_claims(&cs, &["golang".into()], Some(&reach), &degraded, &clean_integrity());
+        assert!(c.complete.is_empty());
+        assert_eq!(c.unknown.len(), 1);
+    }
+
+    #[test]
+    fn an_ecosystem_not_enumerated_completely_carries_no_claim() {
+        let cs = [make_component("pkg:pypi/requests@2.0.0")];
+        let c = dependency_claims(&cs, &["cargo".into()], None, &set(&[]), &clean_integrity());
+        assert!(c.complete.is_empty() && c.unknown.is_empty());
+    }
+
+    #[test]
+    fn the_root_claim_follows_trace_integrity_and_needs_components() {
+        let cs = [make_component("pkg:cargo/a@1")];
+        assert!(dependency_claims(&cs, &[], None, &set(&[]), &clean_integrity()).root_complete);
+        assert!(!dependency_claims(&[], &[], None, &set(&[]), &clean_integrity()).root_complete);
+        let mut failed = clean_integrity();
+        failed.uprobe_attach_failures.push("libssl.so:SSL_write".to_string());
+        assert!(!dependency_claims(&cs, &[], None, &set(&[]), &failed).root_complete);
     }
 
     #[test]

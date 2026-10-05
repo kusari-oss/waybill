@@ -1,0 +1,17 @@
+OK  go-cobra/spdx-3.json: only dependsOn relationships differ
+OK  go-opentelemetry/spdx-3.json: only dependsOn relationships differ
+OK  haskell-aeson/spdx-3.json: only dependsOn relationships differ
+OK  haskell-language-server/spdx-3.json: only dependsOn relationships differ
+OK  haskell-security-advisories/spdx-3.json: only dependsOn relationships differ
+OK  image-postgres16/spdx-3.json: only dependsOn relationships differ
+OK  maven-guice/spdx-3.json: only dependsOn relationships differ
+OK  nix-closure-moat/spdx-3.json: only dependsOn relationships differ
+OK  npm-express/spdx-3.json: only dependsOn relationships differ
+OK  pants-clojure-polyglot/spdx-3.json: only dependsOn relationships differ
+OK  pants-example-django/spdx-3.json: only dependsOn relationships differ
+OK  pants-example-golang/spdx-3.json: only dependsOn relationships differ
+OK  pants-example-javascript/spdx-3.json: only dependsOn relationships differ
+OK  pants-example-jvm/spdx-3.json: only dependsOn relationships differ
+OK  pants-example-python/spdx-3.json: only dependsOn relationships differ
+OK  python-flask/spdx-3.json: only dependsOn relationships differ
+OK  rust-ripgrep/spdx-3.json: only dependsOn relationships differ

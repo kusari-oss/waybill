@@ -581,6 +581,147 @@ mod tests {
         out
     }
 
+    /// Milestone 1069 (#878, T005, T009) — SPDX 3 dependency completeness
+    /// agrees with CycloneDX `compositions[]` for every component, with and
+    /// without a root override, and the waybill completeness annotations are
+    /// unchanged.
+    #[test]
+    fn spdx3_completeness_agrees_with_cyclonedx_compositions() {
+        use std::collections::{BTreeMap, BTreeSet};
+        use waybill_common::resolution::{EnrichmentProvenance, Relationship, RelationshipType};
+        let integ = empty_integrity();
+        let mut app = mk_component("pkg:cargo/app@1.0.0", vec![]);
+        app.extra_annotations.insert(
+            "waybill:component-role".to_string(),
+            serde_json::Value::String("main-module".to_string()),
+        );
+        let comps = [
+            app,
+            mk_component("pkg:cargo/a@1.0.0", vec![]), // complete
+            mk_component("pkg:npm/x@1.0.0", vec![]),   // unknown: nothing reaches it
+            mk_component("pkg:npm/leaf@1.0.0", vec![]), // unknown, and a leaf
+            mk_component("pkg:pypi/p@1.0.0", vec![]),  // unclaimed: pypi not enumerated
+        ];
+        let edge = |f: &str, t: &str| Relationship {
+            from: f.to_string(),
+            to: t.to_string(),
+            relationship_type: RelationshipType::DependsOn,
+            provenance: EnrichmentProvenance {
+                source: "test".to_string(),
+                data_type: "relationship".to_string(),
+            },
+        };
+        let rels = [
+            edge("pkg:cargo/app@1.0.0", "pkg:cargo/a@1.0.0"),
+            edge("pkg:cargo/app@1.0.0", "pkg:pypi/p@1.0.0"),
+            edge("pkg:npm/x@1.0.0", "pkg:npm/leaf@1.0.0"),
+        ];
+        let ecosystems = ["cargo".to_string(), "npm".to_string()];
+
+        for override_root in [false, true] {
+            let mut arts = mk_artifacts(&comps, &integ);
+            arts.relationships = &rels;
+            arts.complete_ecosystems = &ecosystems;
+            if override_root {
+                arts.root_override = crate::generate::RootComponentOverride {
+                    name: Some("renamed".to_string()),
+                    version: Some("2.0".to_string()),
+                    ..Default::default()
+                };
+            }
+            let cfg = mk_cfg();
+            let cdx: serde_json::Value = serde_json::from_slice(
+                &crate::generate::cyclonedx::CycloneDxJsonSerializer.serialize(&arts, &cfg).unwrap()[0].bytes,
+            )
+            .unwrap();
+            let spdx3: serde_json::Value = serde_json::from_slice(
+                &Spdx3JsonSerializer.serialize(&arts, &cfg).unwrap()[0].bytes,
+            )
+            .unwrap();
+
+            let cdx_root = cdx["metadata"]["component"]["bom-ref"].as_str().unwrap().to_string();
+            let claim = |agg: &str| -> BTreeSet<String> {
+                cdx["compositions"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .filter(|c| c["aggregate"] == agg)
+                    .flat_map(|c| c["dependencies"].as_array().cloned().unwrap_or_default())
+                    .filter_map(|d| d.as_str().map(str::to_string))
+                    .collect()
+            };
+            let (cdx_complete, cdx_unknown) = (claim("complete"), claim("unknown"));
+
+            let graph = spdx3["@graph"].as_array().unwrap();
+            let purl_of: BTreeMap<&str, &str> = graph
+                .iter()
+                .filter_map(|e| Some((e["spdxId"].as_str()?, e["software_packageUrl"].as_str()?)))
+                .collect();
+            let root_iri = graph
+                .iter()
+                .find(|e| e["type"] == "SpdxDocument")
+                .and_then(|d| d["rootElement"][0].as_str())
+                .unwrap();
+            let mut spdx = BTreeMap::<String, BTreeSet<String>>::new();
+            for e in graph.iter().filter(|e| e["relationshipType"] == "dependsOn") {
+                let from = e["from"].as_str().unwrap();
+                let who = if from == root_iri {
+                    cdx_root.clone()
+                } else {
+                    purl_of[from].to_string()
+                };
+                let c = e["completeness"].as_str().unwrap_or("-").to_string();
+                spdx.entry(who).or_default().insert(c);
+            }
+            let ctx = format!("override_root={override_root}");
+
+            // Every CycloneDX `unknown` component is incomplete / noAssertion.
+            for u in &cdx_unknown {
+                let got = spdx.get(u).cloned().unwrap_or_default();
+                assert!(
+                    !got.is_empty() && got.iter().all(|c| c == "incomplete" || c == "noAssertion"),
+                    "{ctx}: {u} is CycloneDX-unknown but SPDX 3 says {got:?}",
+                );
+            }
+            // Every SPDX 3 qualifier has its CycloneDX counterpart, and no other.
+            for (who, cs) in &spdx {
+                for c in cs {
+                    match c.as_str() {
+                        "complete" => assert!(cdx_complete.contains(who), "{ctx}: {who} complete only in SPDX 3"),
+                        "incomplete" | "noAssertion" => {
+                            assert!(cdx_unknown.contains(who), "{ctx}: {who} {c} only in SPDX 3")
+                        }
+                        _ => assert!(
+                            !cdx_complete.contains(who) && !cdx_unknown.contains(who),
+                            "{ctx}: {who} is claimed by CycloneDX but unqualified in SPDX 3",
+                        ),
+                    }
+                }
+            }
+            assert!(cdx_unknown.contains("pkg:npm/leaf@1.0.0"), "{ctx}: fixture must exercise an unknown leaf");
+            assert_eq!(
+                spdx["pkg:npm/leaf@1.0.0"],
+                BTreeSet::from(["noAssertion".to_string()]),
+                "{ctx}: an unknown leaf gets NoAssertionElement",
+            );
+            assert!(!spdx.contains_key("pkg:pypi/p@1.0.0"), "{ctx}: an unclaimed leaf gains nothing");
+
+            // T009: the waybill completeness annotations are the SPDX 2.3 values.
+            let spdx23: serde_json::Value = serde_json::from_slice(
+                &Spdx2_3JsonSerializer.serialize(&arts, &cfg).unwrap()[0].bytes,
+            )
+            .unwrap();
+            // C45 orphan-reason, C104 graph-completeness, C105 its reason.
+            for row in ["C45", "C104", "C105"] {
+                let e = waybill::parity::extractors::EXTRACTORS
+                    .iter()
+                    .find(|e| e.row_id == row)
+                    .unwrap();
+                assert_eq!((e.spdx23)(&spdx23), (e.spdx3)(&spdx3), "{ctx}: {row} differs between SPDX 2.3 and SPDX 3");
+            }
+        }
+    }
+
     /// Milestone 1067 (T009, T017) — C191 per component and C192 at document
     /// scope, identical in all three formats, and C192's counts equal the
     /// C191 tallies (SC-005).

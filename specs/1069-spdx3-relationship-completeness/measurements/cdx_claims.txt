@@ -1,0 +1,17 @@
+go-cobra: unknown=8 complete=1
+go-opentelemetry: unknown=333 complete=1
+haskell-aeson: complete=1
+haskell-language-server: complete=1
+haskell-security-advisories: complete=1
+image-postgres16: complete=142 unknown=2 complete=1
+maven-guice: unknown=46 complete=1
+nix-closure-moat: complete=1
+npm-express: unknown=44 complete=1
+pants-clojure-polyglot: complete=29 complete=22 complete=1
+pants-example-django: complete=45 complete=1
+pants-example-golang: unknown=4 complete=1
+pants-example-javascript: complete=303 complete=1
+pants-example-jvm: complete=27 complete=1
+pants-example-python: complete=10 complete=1
+python-flask: unknown=108 complete=1
+rust-ripgrep: complete=61 complete=1

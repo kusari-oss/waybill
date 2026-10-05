@@ -189,6 +189,18 @@
       "type": "Organization"
     },
     {
+      "completeness": "complete",
+      "creationInfo": "_:creation-info",
+      "from": "https://waybill.kusari.dev/spdx3/doc-OKOAB4H5DFBG46YO6AWS3WHK/pkg-Q7X32JLRPGCHW46Q",
+      "relationshipType": "dependsOn",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-OKOAB4H5DFBG46YO6AWS3WHK/rel-5SOAC3DQEOB2WEOM",
+      "to": [
+        "https://waybill.kusari.dev/spdx3/doc-OKOAB4H5DFBG46YO6AWS3WHK/pkg-BE4OZRGHG4BEYMYQ",
+        "https://waybill.kusari.dev/spdx3/doc-OKOAB4H5DFBG46YO6AWS3WHK/pkg-MVONQLC7NTCYCDSJ"
+      ],
+      "type": "Relationship"
+    },
+    {
       "creationInfo": "_:creation-info",
       "from": "https://waybill.kusari.dev/spdx3/doc-OKOAB4H5DFBG46YO6AWS3WHK",
       "relationshipType": "describes",
@@ -199,31 +211,12 @@
       "type": "Relationship"
     },
     {
-      "creationInfo": "_:creation-info",
-      "from": "https://waybill.kusari.dev/spdx3/doc-OKOAB4H5DFBG46YO6AWS3WHK/pkg-Q7X32JLRPGCHW46Q",
-      "relationshipType": "dependsOn",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-OKOAB4H5DFBG46YO6AWS3WHK/rel-CJKQT5GZDUKHONHS",
-      "to": [
-        "https://waybill.kusari.dev/spdx3/doc-OKOAB4H5DFBG46YO6AWS3WHK/pkg-BE4OZRGHG4BEYMYQ"
-      ],
-      "type": "Relationship"
-    },
-    {
-      "creationInfo": "_:creation-info",
-      "from": "https://waybill.kusari.dev/spdx3/doc-OKOAB4H5DFBG46YO6AWS3WHK/pkg-Q7X32JLRPGCHW46Q",
-      "relationshipType": "dependsOn",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-OKOAB4H5DFBG46YO6AWS3WHK/rel-M4GXE64WNSMX3BAP",
-      "to": [
-        "https://waybill.kusari.dev/spdx3/doc-OKOAB4H5DFBG46YO6AWS3WHK/pkg-MVONQLC7NTCYCDSJ"
-      ],
-      "type": "Relationship"
-    },
-    {
+      "completeness": "complete",
       "creationInfo": "_:creation-info",
       "from": "https://waybill.kusari.dev/spdx3/doc-OKOAB4H5DFBG46YO6AWS3WHK/pkg-Q7X32JLRPGCHW46Q",
       "relationshipType": "dependsOn",
       "scope": "test",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-OKOAB4H5DFBG46YO6AWS3WHK/rel-OXDNHQLUQUW36PMC",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-OKOAB4H5DFBG46YO6AWS3WHK/rel-LJBECOJ6UJNRJIU2",
       "to": [
         "https://waybill.kusari.dev/spdx3/doc-OKOAB4H5DFBG46YO6AWS3WHK/pkg-B7B65U5T2YH5ZD5T"
       ],
