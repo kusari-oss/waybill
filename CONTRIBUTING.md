@@ -369,6 +369,13 @@ a checkbox for this.
 - Include a `## Test plan` section in the PR description with the
   commands you ran locally.
 - Run `./scripts/pre-pr.sh` clean before requesting review.
+- If an AI assistant helped write a commit, end it with an
+  `Assisted-by:` trailer in the [Linux kernel's
+  form](https://docs.kernel.org/process/coding-assistants.html#attribution):
+  `Assisted-by: AGENT_NAME:MODEL_VERSION [TOOL1] [TOOL2]` — for example
+  `Assisted-by: Claude:claude-opus-5-5`. Not `Co-Authored-By:`: authorship
+  carries copyright and responsibility, which a model cannot hold. Earlier
+  commits used `Co-Authored-By:` and are left as they are (#787).
 - For changes that regenerate byte-identity goldens, mention the
   expected diff symmetry in the PR description (e.g., "+1521/-1521
   tool-version churn only"). Use `./scripts/regen-goldens.sh` to
