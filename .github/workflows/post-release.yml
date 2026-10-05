@@ -4,23 +4,29 @@ name: Post-release version bump
 # version so nightlies are named after the release they lead up to, never
 # after one already published (RELEASING.md §2 step 10).
 #
-# The bump itself is `scripts/release-bump.sh`, which refuses any diff that
-# is not version-only (`scripts/check-version-bump.py`). This workflow runs
-# it, opens a PR, runs CI on the PR's head and merges only when CI passes.
+# Two jobs, split by privilege:
+#   prepare  read-only token, never written to disk. Runs
+#            scripts/release-bump.sh, which builds and tests the whole
+#            workspace (every dependency's build script runs here), and
+#            uploads the resulting diff as a patch.
+#   land     write token, but runs no cargo: only git, gh and the stdlib-only
+#            scripts/check-version-bump.py from main. Applies the patch,
+#            re-checks that it is version-only, pushes a branch, runs ci.yml
+#            on it, and fast-forwards main when CI passes.
+# A compromised crate can therefore change the patch, but the patch must
+# still pass the version-only check (run from main, not from the patch) and
+# CI before it reaches main, and the crate never holds a token that can push.
 #
-# Credentials (option A in #1133): the job uses GITHUB_TOKEN, which needs the
-# repository setting "Allow GitHub Actions to create and approve pull
-# requests". GitHub's anti-recursion rule has two consequences:
-#   - a PR opened with GITHUB_TOKEN triggers no `pull_request` workflows, so
-#     this job dispatches ci.yml on the branch itself and waits for it. The
-#     other PR lanes (realistic-projects, pin-consistency) do not run; for a
-#     version-only diff that check-version-bump.py has already verified,
-#     ci.yml is the gate that matters.
-#   - the merge commit triggers no `push` workflows on main.
-# A scoped bot identity would remove both limits; see #1136.
+# Why no PR: a PR opened with GITHUB_TOKEN needs the setting "Allow GitHub
+# Actions to create and approve pull requests", which is locked off above
+# this repository and which would let every workflow approve PRs. Pushing
+# uses `contents: write` granted to this one job. The push is a plain
+# fast-forward, so it fails if main moved meanwhile, and it will fail
+# outright if main gains protection that blocks bot pushes. #1136 tracks a
+# scoped bot identity that would bring back a PR with the normal CI.
 #
-# Manual use: dispatch with `tag` set to the stable tag just released. With
-# `dry_run`, the job bumps, regenerates and checks, then stops before pushing.
+# Manual use: dispatch with `tag` set to the stable tag just released.
+# `dry_run` (the default for manual runs) stops after `prepare`.
 
 on:
   workflow_run:
@@ -32,7 +38,7 @@ on:
         description: 'Stable tag that was released, e.g. v0.10.0'
         required: true
       dry_run:
-        description: 'Bump and check only; do not push, open or merge a PR'
+        description: 'Bump and check only; do not push'
         type: boolean
         default: true
 
@@ -47,8 +53,8 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  bump:
-    name: Begin next development version
+  prepare:
+    name: Prepare the bump (read-only)
     # A stable release is a tag push. Nightlies and re-runs arrive as
     # `workflow_dispatch` events on release.yml and are excluded here; the
     # tag-shape check below excludes bridge pre-releases.
@@ -57,20 +63,21 @@ jobs:
       (github.event.workflow_run.conclusion == 'success' &&
        github.event.workflow_run.event == 'push')
     runs-on: ubuntu-latest
-    timeout-minutes: 150
+    timeout-minutes: 90
     permissions:
-      contents: write        # push the bump branch, merge the PR
-      pull-requests: write   # open the PR
-      actions: write         # dispatch ci.yml and watch it
+      contents: read
     env:
-      GH_TOKEN: ${{ github.token }}
       TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.event.workflow_run.head_branch }}
-      DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+    outputs:
+      proceed: ${{ steps.plan.outputs.proceed }}
+      released: ${{ steps.plan.outputs.released }}
+      next: ${{ steps.plan.outputs.next }}
+      base: ${{ steps.plan.outputs.base }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: main
-          persist-credentials: true   # the branch push below needs it
+          persist-credentials: false
 
       - name: Plan the bump
         id: plan
@@ -96,17 +103,12 @@ jobs:
             echo "proceed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          BRANCH="release/begin-v$NEXT"
-          if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null; then
-            echo "::error::branch $BRANCH already exists; an earlier run may have left its PR open"
-            exit 1
-          fi
-          echo "::notice::bumping main $RELEASED -> $NEXT on $BRANCH (dry_run=$DRY_RUN)"
+          echo "::notice::bumping main $RELEASED -> $NEXT"
           {
             echo "proceed=true"
             echo "released=$RELEASED"
             echo "next=$NEXT"
-            echo "branch=$BRANCH"
+            echo "base=$(git rev-parse HEAD)"
           } >> "$GITHUB_OUTPUT"
 
       - name: Install stable Rust
@@ -132,29 +134,77 @@ jobs:
         if: steps.plan.outputs.proceed == 'true'
         run: ./scripts/release-bump.sh "${{ steps.plan.outputs.next }}"
 
-      - name: Push, open the PR, run CI, merge when green
-        if: steps.plan.outputs.proceed == 'true' && env.DRY_RUN != 'true'
+      - name: Export the bump as a patch
+        if: steps.plan.outputs.proceed == 'true'
+        run: |
+          git diff --binary > "$RUNNER_TEMP/bump.patch"
+          git diff --stat | tail -1
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: steps.plan.outputs.proceed == 'true'
+        with:
+          name: bump-patch
+          path: ${{ runner.temp }}/bump.patch
+          if-no-files-found: error
+          retention-days: 7
+
+  land:
+    name: Land the bump on main
+    needs: prepare
+    if: >-
+      needs.prepare.outputs.proceed == 'true' &&
+      !(github.event_name == 'workflow_dispatch' && inputs.dry_run)
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: write   # push the branch and fast-forward main
+      actions: write    # dispatch ci.yml and watch it
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASED: ${{ needs.prepare.outputs.released }}
+      NEXT: ${{ needs.prepare.outputs.next }}
+      BASE: ${{ needs.prepare.outputs.base }}
+    steps:
+      # This job runs no build and no third-party code beyond this checkout,
+      # so it is the only place the write token is persisted.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.prepare.outputs.base }}
+          persist-credentials: true
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: bump-patch
+          path: ${{ runner.temp }}
+
+      - name: Apply and re-check the patch
         shell: bash
-        env:
-          NEXT: ${{ steps.plan.outputs.next }}
-          RELEASED: ${{ steps.plan.outputs.released }}
-          BRANCH: ${{ steps.plan.outputs.branch }}
         run: |
           set -euo pipefail
+          # Copy the check out of BASE before applying anything: the patch is
+          # the thing under test and must not be able to rewrite its own test.
+          # It fails on added or deleted files, on any path outside Cargo.toml,
+          # Cargo.lock, CHANGELOG.md and the test fixtures, and on any change
+          # that is not the workspace's own version string.
+          git show HEAD:scripts/check-version-bump.py > "$RUNNER_TEMP/check-version-bump.py"
+          git apply --binary "$RUNNER_TEMP/bump.patch"
+          python3 "$RUNNER_TEMP/check-version-bump.py" "$RELEASED" "$NEXT"
+
+      - name: Push a branch, run CI on it, fast-forward main
+        shell: bash
+        run: |
+          set -euo pipefail
+          BRANCH="release/begin-v$NEXT"
           git config user.name 'github-actions[bot]'
           git config user.email '41898783+github-actions[bot]@users.noreply.github.com'
           git switch -c "$BRANCH"
           git add -A
           git commit -q -m "chore(release): begin $NEXT development (#1133)" \
-            -m "Automated by .github/workflows/post-release.yml after v$RELEASED."
-          git push -q origin "$BRANCH"
+            -m "Automated by .github/workflows/post-release.yml after v$RELEASED." \
+            -m "Run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
           SHA=$(git rev-parse HEAD)
-
-          gh pr create --base main --head "$BRANCH" \
-            --title "chore(release): begin $NEXT development" \
-            --body "Moves \`main\` to the next development version after v$RELEASED, so nightlies are named \`v$NEXT-nightly.*\` (#1133).
-
-          Opened by [post-release.yml]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID). \`scripts/check-version-bump.py\` has already verified the diff is version-only. CI was dispatched on this branch, because a PR opened with \`GITHUB_TOKEN\` does not trigger \`pull_request\` workflows. This PR merges itself when that CI run passes; if it is still open, CI failed and the run is linked above."
+          # Without --force, this fails if a branch of that name already exists.
+          git push -q origin "$BRANCH"
 
           gh workflow run ci.yml --ref "$BRANCH"
           RUN=""
@@ -172,12 +222,14 @@ jobs:
           echo "::notice::waiting for CI run $RUN"
           gh run watch "$RUN" --exit-status --interval 60
 
-          gh pr merge "$BRANCH" --squash --delete-branch --match-head-commit "$SHA"
-          echo "::notice::main is now at $NEXT"
+          # Plain fast-forward: refused if main moved past BASE meanwhile.
+          git push -q origin "$SHA:refs/heads/main"
+          git push -q origin --delete "$BRANCH"
+          echo "::notice::main is now at $NEXT ($SHA)"
 
   report-failure:
     name: Report post-release bump failure
-    needs: bump
+    needs: [prepare, land]
     if: failure() && !(github.event_name == 'workflow_dispatch' && inputs.dry_run)
     runs-on: ubuntu-latest
     permissions:
@@ -201,12 +253,17 @@ jobs:
 
             ## Triage
 
-            - **The bump PR is open**: CI failed on it. Fix it on that
-              branch and merge it.
-            - **No PR**: the bump or its version-only check failed. Run
-              `./scripts/release-bump.sh <next>` locally (RELEASING.md §2
+            - **`prepare` failed**: the bump or its version-only check failed.
+              Run `./scripts/release-bump.sh <next>` locally (RELEASING.md §2
               step 10) and read what `check-version-bump.py` reports.
-            - **"branch already exists"**: an earlier run's PR is still
-              open. Finish or close it, then delete the branch.
+            - **`land` failed at the re-check**: the patch from `prepare` was not
+              version-only when applied to `main`. Treat this as suspicious:
+              `prepare` runs the whole build, and `land` exists to catch a
+              patch that build altered.
+            - **`land` failed on CI**: the branch `release/begin-v<next>` is
+              left in place. Fix it there, then fast-forward `main` to it.
+            - **`land` failed on the final push**: `main` moved after the bump
+              was prepared. Re-run the workflow (`workflow_dispatch`,
+              `dry_run: false`) after deleting the branch.
           detail: |
             Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

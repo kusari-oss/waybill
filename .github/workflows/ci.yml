@@ -4,8 +4,8 @@ on:
   pull_request:
   push:
     branches: [main]
-  # Dispatched by post-release.yml on the version-bump branch (#1133): a PR
-  # opened with GITHUB_TOKEN triggers no pull_request workflows.
+  # Dispatched by post-release.yml on the version-bump branch before it
+  # fast-forwards main (#1133): a GITHUB_TOKEN push triggers no workflows.
   workflow_dispatch:
 
 permissions:
