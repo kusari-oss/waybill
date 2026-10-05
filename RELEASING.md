@@ -160,7 +160,9 @@ Behavior:
 2. If identical → no-op with log line "no new commits since last
    nightly at `<tag>`".
 3. If different → tags `v<X>.<Y>.<Z>-nightly.YYYYMMDD` (baseline
-   `<X>.<Y>.<Z>` read from `Cargo.toml`) + `gh workflow run release.yml`
+   `<X>.<Y>.<Z>` read from `Cargo.toml`, with any pre-release suffix
+   removed: `0.10.0-alpha.2` gives `v0.10.0-nightly.YYYYMMDD`, so a
+   bridge pre-release never pauses the nightly channel) + `gh workflow run release.yml`
    to build + sign artifacts.
 4. Cleanup step deletes nightly prereleases + tags older than 30 days
    (Q1 clarification). **Only** nightly tags (regex-anchored) — stables
@@ -230,6 +232,9 @@ differences:
 - Step 9's `gh release view` shows `isPrerelease: true` (dynamic-flag
   step in release.yml catches non-bare-SemVer tags).
 - Signing is still mandatory (Q2 clarification — all releases signed).
+- Nightlies continue from the bridge's base version: after a `0.10.0-alpha.2`
+  bump they are tagged `v0.10.0-nightly.YYYYMMDD`, which SemVer orders after the
+  bridge and before the `v0.10.0` stable.
 
 ---
 

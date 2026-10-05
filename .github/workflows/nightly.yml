@@ -77,39 +77,32 @@ jobs:
             fi
           fi
 
-      - name: Verify stable-model baseline exists
-        if: steps.skip.outputs.skip != 'true'
-        shell: bash
-        run: |
-          set -euo pipefail
-          BASELINE=$(grep '^version' Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
-          if echo "$BASELINE" | grep -q -- '-alpha\.'; then
-            echo "::warning::Baseline version is still on the retiring alpha.N model ($BASELINE)."
-            echo "::warning::Nightly cannot be produced until the v0.2.0 release-bump PR merges (Phase 8 of feature 229)."
-            echo "Graceful no-op: exiting successfully without tagging."
-            # Rewrite the skip output so subsequent steps also no-op.
-            # Note: this can't overwrite $GITHUB_OUTPUT from an earlier
-            # step, so we exit here + rely on later `if:` guards being
-            # true. Simplest: fail the job with a well-marked reason.
-            echo "BASELINE_NOT_READY=true" >> "$GITHUB_ENV"
-          else
-            echo "Baseline $BASELINE is stable-model-ready"
-          fi
-
       - name: Compute nightly tag
-        if: steps.skip.outputs.skip != 'true' && env.BASELINE_NOT_READY != 'true'
+        if: steps.skip.outputs.skip != 'true'
         id: tag
         shell: bash
         run: |
           set -euo pipefail
-          BASELINE=$(grep '^version' Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
+          VERSION=$(grep '^version' Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
+          # The nightly baseline is <X>.<Y>.<Z> with any pre-release or build
+          # suffix removed. A bridge pre-release (RELEASING.md §4) bumps
+          # Cargo.toml to e.g. 0.10.0-alpha.2; that must not pause the nightly
+          # channel. It did, from 2026-09-23 to 2026-10-05, because a guard
+          # written for the one-time v0.2.0 transition no-op'd on any -alpha.
+          # baseline while the run still reported success.
+          # SemVer orders v0.10.0-alpha.2 < v0.10.0-nightly.YYYYMMDD < v0.10.0.
+          BASELINE="${VERSION%%[-+]*}"
+          if ! [[ "$BASELINE" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Cannot derive an X.Y.Z nightly baseline from Cargo.toml version '$VERSION'."
+            exit 1
+          fi
           DATE=$(date -u +%Y%m%d)
           TAG="v${BASELINE}-nightly.${DATE}"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "Will tag: $TAG (baseline=$BASELINE, date=$DATE)"
+          echo "Will tag: $TAG (version=$VERSION, baseline=$BASELINE, date=$DATE)"
 
       - name: Create and push nightly tag
-        if: steps.skip.outputs.skip != 'true' && env.BASELINE_NOT_READY != 'true'
+        if: steps.skip.outputs.skip != 'true'
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -123,7 +116,7 @@ jobs:
           git push origin "$TAG"
 
       - name: Dispatch release workflow
-        if: steps.skip.outputs.skip != 'true' && env.BASELINE_NOT_READY != 'true'
+        if: steps.skip.outputs.skip != 'true'
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
