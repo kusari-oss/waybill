@@ -54,48 +54,20 @@ Create branch `release/v<X>.<Y>.<Z>`. PR title MUST start with
 `release: bump workspace to v<X>.<Y>.<Z>` (per memory
 `feedback_release_pr_title_format`).
 
-### Step 3 — bump `Cargo.toml`
+### Steps 3–5 — bump the version, regenerate goldens, verify the diff
 
 ```bash
 git checkout -b release/v<X>.<Y>.<Z>
-# edit Cargo.toml: [workspace.package] version = "<X>.<Y>.<Z>"
-cargo update    # regenerate Cargo.lock
+./scripts/release-bump.sh <X>.<Y>.<Z>
 ```
 
-### Step 4 — regenerate all 6 golden test files
+`scripts/release-bump.sh` does the three things these steps used to describe by hand:
 
-Per memory `feedback_release_bump_regen_all_golden_tests` — every
-release-bump PR MUST regenerate:
+- **Version:** sets `[workspace.package] version` in `Cargo.toml`.
+- **Lockfile:** runs `cargo update --workspace`, so only waybill's own crates change in `Cargo.lock`. A plain `cargo update` would upgrade every dependency as a side effect of a version bump.
+- **Goldens and check:** regenerates every golden (`scripts/regen-goldens.sh`), then runs `scripts/check-version-bump.py`. That check fails if anything outside `Cargo.toml`, `Cargo.lock`, `CHANGELOG.md` and test fixtures changed, or if a fixture differs from `HEAD` by anything other than the tool version (`waybill-<v>`, `"version": "<v>"`) and the content-addressed IDs derived from it.
 
-```bash
-WAYBILL_UPDATE_CDX_GOLDENS=1 \
-WAYBILL_UPDATE_SPDX_GOLDENS=1 \
-WAYBILL_UPDATE_SPDX3_GOLDENS=1 \
-  cargo +stable test --no-fail-fast \
-  --test cdx_regression \
-  --test spdx_regression \
-  --test spdx3_regression \
-  --test oci_pull_backward_compat \
-  --test optional_dep_classification \
-  --test pkg_alias_binding_us1
-```
-
-### Step 5 — verify normalized diff (only version-string swap)
-
-Per memory `feedback_verify_golden_churn_normalized`. Mask
-content-addressed IDs, sort, compare:
-
-```bash
-for f in waybill-cli/tests/fixtures/golden/spdx-3/cargo.spdx3.json \
-         waybill-cli/tests/fixtures/golden/cyclonedx/cargo.cdx.json; do
-  echo "=== $f ==="
-  git show HEAD:"$f" | sed -E 's/doc-[A-Z0-9]{20,32}/doc-XXX/g; s/[A-Z0-9]{16}/HEX16/g' | LC_ALL=C sort > /tmp/before.txt
-  cat "$f" | sed -E 's/doc-[A-Z0-9]{20,32}/doc-XXX/g; s/[A-Z0-9]{16}/HEX16/g' | LC_ALL=C sort > /tmp/after.txt
-  diff /tmp/before.txt /tmp/after.txt | head -6
-done
-```
-
-Expected: only `waybill-<old>` → `waybill-<new>` version-string swaps.
+Commit any new scripts or docs **before** running it, since the check treats them as unexpected changes. Then move the CHANGELOG's `[Unreleased]` entries under `## [<X>.<Y>.<Z>] - <date>`.
 
 ### Step 6 — SKIP local pre-PR gate
 
@@ -146,6 +118,18 @@ cosign verify-blob \
   waybill-source.cdx.json
 # expect: Verified OK
 ```
+
+### Step 10 — begin the next development version
+
+Right after the stable release publishes, bump `main` to the next patch version:
+
+```bash
+git checkout -b release/begin-v<X>.<Y>.<Z+1>
+./scripts/release-bump.sh <X>.<Y>.<Z+1>
+# commit, open PR "chore(release): begin <X>.<Y>.<Z+1> development", merge when green
+```
+
+The nightly version comes from `Cargo.toml` (§3). Without this step, `main` still says the version just released, so the next nightly is `v<X>.<Y>.<Z>-nightly.<date>`. SemVer orders that **before** the stable `v<X>.<Y>.<Z>`, which makes a newer build look older (#1133). If the next release turns out to be a minor or major release, its own bump (Steps 3–5) moves past the patch version.
 
 ---
 
