@@ -18,4 +18,4 @@
 - [ ] If this is a release-bump PR, I ran the SPDX-3 conformance gate locally: `WAYBILL_REQUIRE_SPDX3_VALIDATOR=1 ./scripts/pre-pr.sh`.
 - [ ] If this PR touches the scan pipeline, output dispatch, or per-format emission, I added the `perf` label to trigger the dedicated perf benchmarking lane ([`.github/workflows/perf.yml`](../.github/workflows/perf.yml)).
 
-🤖 If this PR was AI-assisted, include the Co-Authored-By trailer in the commit message.
+🤖 If this PR was AI-assisted, end each assisted commit with an `Assisted-by:` trailer, following the [Linux kernel's policy](https://docs.kernel.org/process/coding-assistants.html#attribution): `Assisted-by: AGENT_NAME:MODEL_VERSION [TOOL1] [TOOL2]`, for example `Assisted-by: Claude:claude-opus-5-5`. Do not use `Co-Authored-By:` for an AI: a model is not an author.
