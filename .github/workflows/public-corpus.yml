@@ -72,7 +72,7 @@ jobs:
       # and its hydration pre-warms the store with `nix flake archive`. So
       # this step must stay before "Run public corpus".
       - name: Install nix (for the resolution oracle and the closure target)
-        uses: DeterminateSystems/nix-installer-action@21a544727d0c62386e78b4befe52d19ad12692e3 # v13
+        uses: DeterminateSystems/nix-installer-action@3138316df39ed29be04236d7ffc686fa525866aa # v13
 
       - name: Run public corpus
         env:
