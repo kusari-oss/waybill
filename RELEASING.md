@@ -121,7 +121,36 @@ cosign verify-blob \
 
 ### Step 10 — begin the next development version
 
-Right after the stable release publishes, bump `main` to the next patch version:
+This step is automated by `.github/workflows/post-release.yml`. When `release.yml` succeeds for a stable tag push, the workflow runs two jobs.
+
+**`prepare`** (read-only token, never stored on disk):
+1. checks that `main` is still at `<X>.<Y>.<Z>`;
+2. runs `./scripts/release-bump.sh <X>.<Y>.<Z+1>`;
+3. uploads the diff as a patch.
+
+**`land`** (write token, runs no cargo):
+1. applies the patch;
+2. re-runs `scripts/check-version-bump.py` *from `main`*, not from the patch;
+3. pushes `release/begin-v<X>.<Y>.<Z+1>` and dispatches `ci.yml` on it;
+4. when CI passes, fast-forwards `main` to that commit and deletes the branch.
+
+If any step fails, it files a `[release] post-release version bump failed` issue.
+
+**Why the split.** `release-bump.sh` builds and tests the whole workspace, so every dependency's build script runs in `prepare`. That job never holds a token that can push. The patch it produces reaches `main` only if two things pass:
+- the version-only check, which rejects:
+  - added or deleted files;
+  - paths other than `Cargo.toml`, `Cargo.lock`, `CHANGELOG.md` and test fixtures;
+  - any change other than the workspace's own version;
+- CI.
+
+**Why no PR.** Opening a PR with `GITHUB_TOKEN` needs the setting "Allow GitHub Actions to create and approve pull requests". It is locked off above this repository, and turning it on would let every workflow approve PRs.
+- The push instead uses `contents: write`, granted to the `land` job alone. It is a plain fast-forward: it fails if `main` moved, and it will fail if `main` gains protection that blocks bot pushes.
+- A `GITHUB_TOKEN` push triggers no workflows, so `ci.yml` (dispatched on the branch) is the only gate, and the other PR lanes don't run.
+- #1136 tracks a scoped bot identity that would bring back a reviewed PR with the normal CI.
+
+**Check the job without pushing.** Dispatch `post-release.yml` with `tag: v<X>.<Y>.<Z>` and `dry_run: true`. It runs `prepare` only, then stops. Dry-run is the default for manual dispatches.
+
+**Manual fallback,** when the workflow is unavailable:
 
 ```bash
 git checkout -b release/begin-v<X>.<Y>.<Z+1>

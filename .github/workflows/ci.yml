@@ -4,6 +4,9 @@ on:
   pull_request:
   push:
     branches: [main]
+  # Dispatched by post-release.yml on the version-bump branch before it
+  # fast-forwards main (#1133): a GITHUB_TOKEN push triggers no workflows.
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -54,8 +57,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      # On workflow_dispatch there is no base to diff against; the filter
+      # is skipped, `ebpf` is empty and the eBPF lane does not run.
       - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         id: filter
+        if: github.event_name != 'workflow_dispatch'
         with:
           filters: |
             ebpf:
