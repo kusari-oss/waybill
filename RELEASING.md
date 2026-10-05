@@ -121,7 +121,22 @@ cosign verify-blob \
 
 ### Step 10 — begin the next development version
 
-Right after the stable release publishes, bump `main` to the next patch version:
+This step is automated. When `release.yml` succeeds for a stable tag push, `.github/workflows/post-release.yml`:
+1. checks that `main` is still at `<X>.<Y>.<Z>`;
+2. runs `./scripts/release-bump.sh <X>.<Y>.<Z+1>` on `release/begin-v<X>.<Y>.<Z+1>`;
+3. opens the PR "chore(release): begin <X>.<Y>.<Z+1> development";
+4. dispatches `ci.yml` on that branch;
+5. merges the PR when CI passes.
+
+If any of these fails, it files a `[release] post-release version bump failed` issue and leaves any PR open.
+
+**Requirement:** the repository setting *Settings → Actions → General → Workflow permissions → "Allow GitHub Actions to create and approve pull requests"* must be on. `GITHUB_TOKEN` cannot open a PR otherwise.
+
+**Limits:** a PR opened with `GITHUB_TOKEN` triggers no `pull_request` workflows, so `ci.yml` is the only gate it runs; the merge commit triggers no `push` workflows. #1136 tracks replacing the token with a scoped bot identity.
+
+**Check the job without pushing.** Dispatch `post-release.yml` with `tag: v<X>.<Y>.<Z>` and `dry_run: true`. It bumps, regenerates and checks, then stops. Dry-run is the default for manual dispatches.
+
+**Manual fallback,** when the workflow is unavailable:
 
 ```bash
 git checkout -b release/begin-v<X>.<Y>.<Z+1>
