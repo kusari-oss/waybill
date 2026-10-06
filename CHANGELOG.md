@@ -7,6 +7,12 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Fixed
+
+- **`waybill trace` records the source files a workspace build compiles** (#614, milestone 1070). Cargo compiles workspace members with paths relative to the workspace root, and the kernel noise filter dropped every relative path. As a result, every compiler invocation's read set was empty. Relative opens are now resolved against the opening process's working directory, which is modelled from the forks and directory changes the trace observes. Opens that can't be resolved are kept, flagged `unresolved_relative`, and counted in `trace_integrity.unresolved_relative_opens`. They never enter a read or write set.
+- **Compiler write sets and witness products are populated** (#614). Opens are now classified as writes when their flags say so, and they were all recorded as reads before. Successful renames are captured, so a library compile's write set holds its final `.rlib`/`.rmeta`, not the temporary name the compiler wrote first. The kernel filter no longer drops `deps/`, where build outputs and library inputs live. It now matches cargo's real `.fingerprint/` directory, which the old pattern never did.
+- **A failure to attach the new `chdir`, `fchdir` or rename tracepoints is fatal** (Principle III). Without them the attestation would silently miss what this fix adds.
+
 ## [0.10.0] - 2026-10-05
 
 ### Changed: SPDX 3 dependency relationships carry native completeness (#878)

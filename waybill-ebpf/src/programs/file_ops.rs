@@ -8,7 +8,7 @@ use aya_ebpf::{
 // fexit/tracing programs; a kprobe on vfs_open failed with `unknown
 // func bpf_d_path#147` on every kernel we tested.
 
-use waybill_common::events::{FileEvent, FileEventType};
+use waybill_common::events::{FileEvent, FileEventType, AT_FDCWD};
 use waybill_common::filter::path_matches_filter_category;
 
 use crate::helpers::{
@@ -42,7 +42,7 @@ fn widen_system() -> bool {
 /// bytes are populated into the local `[u8; 256]` buffer and BEFORE
 /// the ring-buffer reserve call. Zero cost when no category matches.
 #[inline(always)]
-fn classify_and_drop_if_noise(path: &[u8; 256]) -> bool {
+pub(crate) fn classify_and_drop_if_noise(path: &[u8; 256]) -> bool {
     match path_matches_filter_category(path, widen_system()) {
         Some(cat) => {
             increment_filter_category_hit(cat as u8);
@@ -96,6 +96,7 @@ fn try_vfs_write(ctx: &ProbeContext) -> Result<u32, i64> {
             (*event).path_truncated = 0;
             (*event)._path_padding = [0; 3];
             (*event).flags = 0;
+            (*event).dfd = AT_FDCWD;
             (*event).bytes_transferred = count;
             (*event).content_hash = [0; 32]; // computed in userspace
             (*event).inode = 0; // populated from file struct
@@ -145,6 +146,7 @@ fn try_vfs_read(ctx: &ProbeContext) -> Result<u32, i64> {
             (*event).path_truncated = 0;
             (*event)._path_padding = [0; 3];
             (*event).flags = 0;
+            (*event).dfd = AT_FDCWD;
             (*event).bytes_transferred = count;
             (*event).content_hash = [0; 32];
             (*event).inode = 0;
@@ -174,21 +176,34 @@ fn try_openat2(ctx: &ProbeContext) -> Result<u32, i64> {
         return Ok(0);
     }
 
+    let dfd: i32 = ctx.arg(0).ok_or(1i64)?;
     let filename_ptr: u64 = ctx.arg(1).ok_or(1i64)?;
+    // Milestone 1070: `struct open_how *how` is a kernel pointer here and its
+    // `u64 flags` member is at offset 0 (UAPI layout). The low 32 bits hold
+    // O_ACCMODE, O_CREAT and O_TRUNC, which is all userspace needs to tell a
+    // write from a read. 0 on failure means "read".
+    let how_ptr: *const u64 = ctx.arg(2).ok_or(1i64)?;
+    let flags: u32 = if how_ptr.is_null() {
+        0
+    } else {
+        unsafe { bpf_probe_read_kernel(how_ptr).unwrap_or(0) as u32 }
+    };
 
     let pid = current_pid();
     let tid = current_tid();
     let comm = current_comm();
     let timestamp = unsafe { bpf_ktime_get_ns() };
 
-    // Read the filename from userspace
+    // Read the filename from userspace. A copy that filled the buffer may
+    // have been cut off (milestone 1070): userspace won't resolve a truncated
+    // relative path.
     let mut path = [0u8; 256];
-    unsafe {
-        let _ = bpf_probe_read_user_str_bytes(
-            filename_ptr as *const u8,
-            &mut path,
-        );
-    }
+    let copied = unsafe {
+        bpf_probe_read_user_str_bytes(filename_ptr as *const u8, &mut path)
+            .map(|s| s.len())
+            .unwrap_or(0)
+    };
+    let path_truncated: u8 = if copied >= path.len() - 1 { 1 } else { 0 };
 
     // Milestone 213 (issue #616) — kernel-side noise filter. Drop
     // matched events BEFORE FILE_EVENTS.reserve() so the ring buffer
@@ -210,9 +225,10 @@ fn try_openat2(ctx: &ProbeContext) -> Result<u32, i64> {
             (*event).tid = tid;
             (*event).comm = comm;
             (*event).path = path;
-            (*event).path_truncated = 0;
+            (*event).path_truncated = path_truncated;
             (*event)._path_padding = [0; 3];
-            (*event).flags = 0;
+            (*event).flags = flags;
+            (*event).dfd = dfd;
             (*event).bytes_transferred = 0;
             (*event).content_hash = [0; 32];
             (*event).inode = 0;
@@ -262,10 +278,20 @@ fn try_do_filp_open(ctx: &ProbeContext) -> Result<u32, i64> {
         return Ok(0);
     }
 
+    let dfd: i32 = ctx.arg(0).ok_or(1i64)?;
     let filename_struct: *const u8 = ctx.arg(1).ok_or(1i64)?;
     if filename_struct.is_null() {
         return Ok(0);
     }
+    // Milestone 1070: `const struct open_flags *op`. Its first member,
+    // `int open_flag`, has been at offset 0 since Linux 3.x (fs/internal.h).
+    // 0 on failure means "read".
+    let op_ptr: *const u32 = ctx.arg(2).ok_or(1i64)?;
+    let flags: u32 = if op_ptr.is_null() {
+        0
+    } else {
+        unsafe { bpf_probe_read_kernel(op_ptr).unwrap_or(0) }
+    };
 
     // Read the `name` pointer (first field of struct filename, offset 0).
     let name_ptr: *const u8 = unsafe {
@@ -282,9 +308,12 @@ fn try_do_filp_open(ctx: &ProbeContext) -> Result<u32, i64> {
     let timestamp = unsafe { bpf_ktime_get_ns() };
 
     let mut path = [0u8; 256];
-    unsafe {
-        let _ = bpf_probe_read_kernel_str_bytes(name_ptr, &mut path);
-    }
+    let copied = unsafe {
+        bpf_probe_read_kernel_str_bytes(name_ptr, &mut path)
+            .map(|s| s.len())
+            .unwrap_or(0)
+    };
+    let path_truncated: u8 = if copied >= path.len() - 1 { 1 } else { 0 };
 
     // Milestone 213 (issue #616) — kernel-side noise filter, same
     // rationale as try_openat2 above. Filter matches drop before
@@ -302,9 +331,10 @@ fn try_do_filp_open(ctx: &ProbeContext) -> Result<u32, i64> {
             (*event).tid = tid;
             (*event).comm = comm;
             (*event).path = path;
-            (*event).path_truncated = 0;
+            (*event).path_truncated = path_truncated;
             (*event)._path_padding = [0; 3];
-            (*event).flags = 0;
+            (*event).flags = flags;
+            (*event).dfd = dfd;
             (*event).bytes_transferred = 0;
             (*event).content_hash = [0; 32];
             (*event).inode = 0;

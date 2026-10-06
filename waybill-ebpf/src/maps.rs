@@ -190,3 +190,24 @@ pub static FILTER_CATEGORY_HITS: PerCpuArray<u64> =
 #[map]
 pub static FILTER_WIDEN: PerCpuArray<u8> =
     PerCpuArray::with_max_entries(1, 0);
+
+/// Milestone 1070 — user pointer of a `chdir` target, stored at syscall entry
+/// and read at exit only if the call succeeded. Keyed by thread id, because a
+/// syscall's entry and exit happen on the same thread. The exit handler always
+/// removes the entry.
+#[map]
+pub static PENDING_CHDIR: HashMap<u32, u64> = HashMap::with_max_entries(4096, 0);
+
+/// Milestone 1070 — arguments of an in-flight rename, by thread id. See
+/// `PENDING_CHDIR`.
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct PendingRename {
+    pub old_dfd: i64,
+    pub old_ptr: u64,
+    pub new_dfd: i64,
+    pub new_ptr: u64,
+}
+
+#[map]
+pub static PENDING_RENAME: HashMap<u32, PendingRename> = HashMap::with_max_entries(4096, 0);

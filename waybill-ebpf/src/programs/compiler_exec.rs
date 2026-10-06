@@ -40,12 +40,12 @@ use aya_ebpf::{
     programs::TracePointContext,
 };
 
-use waybill_common::events::{CompilerExecEvent, CompilerExecEventKind};
+use waybill_common::events::{CompilerExecEvent, CompilerExecEventKind, FileEventType, LineageEvent};
 
 use crate::helpers::increment_drop_counter;
 use crate::maps::{
     COMPILER_DIRECT_EXECS, COMPILER_EXEC_DROPS, COMPILER_EXEC_EVENTS, COMPILER_INVOCATIONS,
-    PID_TO_PPID,
+    FILE_EVENTS, FILE_EVENT_DROPS, PID_TO_PPID,
 };
 
 /// Compiler whitelist per FR-002. Matched against the 16-byte
@@ -280,6 +280,31 @@ fn try_sched_process_fork(ctx: &TracePointContext) -> Result<u32, i64> {
     let parent_id = parent_invocation_id(parent_pid);
     if parent_id != 0 {
         let _ = unsafe { COMPILER_INVOCATIONS.insert(&child_pid, &parent_id, 0) };
+    }
+
+    // Milestone 1070 — report the fork to userspace, in FILE_EVENTS so it is
+    // ordered before the child's own file records. Userspace uses it to give
+    // the child its parent's working directory.
+    //
+    // The parent is the *process* id, read here in the parent's context. The
+    // tracepoint's `parent_pid` argument above is the forking thread's id,
+    // and cargo spawns compiles from worker threads. Keyed by thread id, the
+    // child would inherit nothing (analysis U1). `child_pid` is a new
+    // process's id, or a new thread's id; a thread's record is harmless,
+    // because file records carry the process id.
+    let parent_tgid = (bpf_get_current_pid_tgid() >> 32) as u32;
+    if let Some(mut buf) = FILE_EVENTS.reserve::<LineageEvent>(0) {
+        let event = buf.as_mut_ptr();
+        unsafe {
+            (*event).event_type = FileEventType::Fork;
+            (*event).parent_pid = parent_tgid;
+            (*event).timestamp_ns = bpf_ktime_get_ns();
+            (*event).child_pid = child_pid;
+            (*event)._padding = 0;
+        }
+        buf.submit(0);
+    } else {
+        increment_drop_counter(&FILE_EVENT_DROPS);
     }
     Ok(0)
 }

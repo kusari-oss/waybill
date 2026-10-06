@@ -102,8 +102,27 @@ Captured via kprobes on file operations plus the post-trace `--artifact-dir`
 walker.
 
 - **`operations`**: array of `FileOperation` — each carries:
-  - `path`: on-disk path.
-  - `op_type`: `read`, `write`, `create`, …
+  - `path`: on-disk path, always absolute unless `unresolved_relative`
+    is set. Since milestone 1070 (#614), relative opens are resolved
+    against the opening process's working directory. That directory is
+    modelled from observed forks, `chdir` and `fchdir`, and the traced
+    command is started with an explicit working directory so its first
+    `chdir` is observed too. Cargo compiles workspace members with paths
+    relative to the workspace root, so before m1070 every one of those
+    source reads was dropped in the kernel.
+  - `unresolved_relative` (m1070; omitted when `false`): the path is
+    relative, and the directory it is relative to could not be
+    established. Examples: a process with no observed directory (attach
+    mode, host processes), an open relative to a directory fd, a path
+    truncated at the 255-byte kernel limit. The path is then exactly as
+    the build passed it. Such operations are kept as evidence, but never
+    enter compiler read or write sets, and never become witness materials
+    or products.
+  - `op_type`: `read`, `write`, `create`, …. Since m1070 an open is a
+    `write` when its flags say so (`O_WRONLY`, `O_RDWR`, `O_CREAT` or
+    `O_TRUNC`), and a successful rename is a `write` of its new path.
+    Before, every open was recorded as a read, so witness products were
+    always empty.
   - `size`: byte count.
   - `content_hash`: real SHA-256 (from the artifact-dir walker's
     post-trace hash pass, not from the kprobe — the kprobe only sees the
@@ -138,6 +157,9 @@ is:
   array for any `*_drops` entry — its presence means the reported overflow
   count is a partial sum (a floor, not a total).
 - **`partial_captures`** — per-capture notes about known-incomplete paths.
+- **`unresolved_relative_opens`** (milestone 1070; omitted when zero) —
+  the number of `file_access.operations` flagged `unresolved_relative`.
+  It is derived from those operations, so the two always agree.
 - **`bloom_filter_capacity`** and **`bloom_filter_false_positive_rate`** —
   parameters of the probe-side event-deduplication bloom filter.
 - **`filter_categories_applied`** (milestone 213 / issue #616) — sorted-
@@ -196,6 +218,16 @@ The predicate structure captures, per invocation:
   file survived the trace window). Both are already trace-noise-
   filtered per FR-016 (system directories, user cache, ephemeral tmp,
   and secret-adjacent paths dropped before serialization).
+  Since milestone 1070 (#614):
+  - both sets hold absolute paths only, with relative opens resolved;
+  - an open for writing goes to `write_set`;
+  - a rename by the invocation records the new name and drops the old.
+    The compiler writes each `.rlib`/`.rmeta` to a temporary name and
+    renames it into place;
+  - the kernel no longer drops `deps/`, where those outputs and the
+    libraries a compile reads live.
+
+  Before m1070 both sets were empty on every workspace build.
 - **Diagnostic counters**: `events_dropped` per invocation.
 
 Per-scan aggregate signals ride alongside the invocations:
@@ -223,6 +255,14 @@ C130 `waybill:source-read-set` (plus C131 `waybill:read-set-source =
 "traced"`). Components that don't intersect any write-set get C131 =
 `"unknown"` only; cache-served components fall into this bucket until a
 future milestone adds compiler-cache-server tracing.
+
+**Not yet emitted in production** (#1142). No command passes the compiler
+pipeline to SBOM generation: `ScanArtifacts.compiler_pipeline` is always
+`None`, and `sbom generate` ignores the attestation's pipeline. Trace-mode
+resolution also never turns locally built binaries into components. Until
+#1142 lands, C130 and C131 are produced only by unit tests. Separately,
+the closure follows process ancestry, so a library's sources do not reach
+the binary that links it; following data flow instead is #1141.
 
 The `waybill.dev/attestation/compiler-invocation/v0.1` witness-attestor
 URI is reserved for the shape above and locked per contracts/attestor-

@@ -1,0 +1,40 @@
+## default
+file events: 34
+by process: [('cargo', 34)]
+first/last event: 2026-10-06T04:34:06.694300307Z / 2026-10-06T04:34:06.694506723Z
+relative paths: 0
+trace_integrity: {"ring_buffer_overflows": 0, "events_dropped": 0, "uprobe_attach_failures": [], "kprobe_attach_failures": [], "partial_captures": [], "bloom_filter_capacity": 65536, "bloom_filter_false_positive_rate": 0.01, "filter_categories_applied": ["CargoFingerprint", "Ephemeral", "System"]}
+compiler invocations (compiler pid reads writes):
+  rustc 24023 0 0
+  rustc 24025 0 0
+  rustc 24030 0 0
+  rustc 24034 0 0
+  rustc 24036 0 0
+  rustc 24054 0 0
+  rustc 24056 0 0
+  ld 24075 0 0
+  ld 24078 0 0
+source (.rs) opens (process path):
+  (none)
+
+## --include-system-reads
+file events: 1801
+by process: [('rustc', 994), ('ld', 492), ('cargo', 206), ('cc', 44), ('collect2', 44), ('waybill', 21)]
+first/last event: 2026-10-06T04:35:24.546555484Z / 2026-10-06T04:35:24.708103704Z
+relative paths: 22
+trace_integrity: {"ring_buffer_overflows": 0, "events_dropped": 0, "uprobe_attach_failures": [], "kprobe_attach_failures": [], "partial_captures": [], "bloom_filter_capacity": 65536, "bloom_filter_false_positive_rate": 0.01, "filter_categories_applied": ["CargoFingerprint", "Ephemeral"]}
+compiler invocations (compiler pid reads writes):
+  rustc 25584 51 0
+  rustc 25586 52 0
+  rustc 25591 51 0
+  rustc 25597 75 0
+  rustc 25596 75 0
+  rustc 25617 95 0
+  rustc 25615 95 0
+  ld 25639 95 0
+  ld 25638 95 0
+source (.rs) opens (process path):
+  rustc binaries/safe-only/src/main.rs
+  rustc binaries/vuln-included/src/main.rs
+  rustc libsafe/src/lib.rs
+  rustc libvuln/src/lib.rs

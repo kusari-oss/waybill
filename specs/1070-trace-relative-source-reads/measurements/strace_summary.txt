@@ -1,0 +1,31 @@
+# strace measurements, 2026-10-06 (probe.sh). Colima aarch64, kernel 6.8.0-136.
+# "fixture" = two_binaries_diverge into an in-tree target dir.
+# "larger"  = cargo build --release -p waybill-common, fresh target dir
+#             (31 rustc, 12 cc, 8 build scripts).
+
+## Relative opens: how many, and relative to what
+| build   | absolute opens | relative, AT_FDCWD, ok | relative, AT_FDCWD, failed | relative, directory fd |
+|---------|---------------:|-----------------------:|---------------------------:|-----------------------:|
+| fixture | 1,163 | 4  (the 4 crate roots)            | 2  (libgcc_s.so.1 probes) | 5 (toolchain name x3, raw-dylibs x2) |
+| larger  | 10,319 | 28 (crate sources, build probes) | 12 (libgcc_s.so.1 probes) | 15 (toolchain name x3, raw-dylibs x12) |
+Relative opens are 0.9% (fixture) and 0.5% (larger) of all opens.
+No ~12,000-event relative flood (milestone 213's figure) appears.
+
+## Working directory
+- fchdir: 0 calls in either build.
+- chdir: every crate compile chdirs, in the spawned child, before execve
+  (fixture: pids 154, 155, 174, 175 -> workspace root; larger: 41 calls ->
+  each registry crate's directory). Spawns are clone(CLONE_VFORK) style.
+- rustc -vV probes (pids 142, 144, 149) do not chdir; they inherit cargo's.
+
+## Writes
+- Opens for writing carry O_WRONLY / O_RDWR with O_CREAT|O_TRUNC.
+- Binaries: the linker opens deps/<bin>-<hash> O_RDWR|O_CREAT|O_TRUNC directly.
+- Libraries: rustc writes a temporary file and renameat()s it into place:
+    deps/rmeta*/full.rmeta        -> deps/lib<crate>-<hash>.rmeta
+    deps/.tmp*.temp-archive/tmp.a -> deps/lib<crate>-<hash>.rlib
+  The final library path is never opened for writing.
+- cargo hard-links deps outputs to their user-facing names
+  (linkat deps/safe_only-<hash> -> release/safe-only).
+- All of these paths contain /deps/, which milestone 213's CargoFingerprint
+  pattern drops in the kernel, together with the rlib/rmeta inputs rustc reads.

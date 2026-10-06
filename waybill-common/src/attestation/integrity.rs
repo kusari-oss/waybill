@@ -28,6 +28,15 @@ pub struct TraceIntegrity {
     /// signal that the filter ran.
     #[serde(default)]
     pub filter_categories_applied: Vec<String>,
+    /// Milestone 1070: number of file operations recorded with
+    /// `unresolved_relative: true`. Derived from those operations, so the
+    /// two cannot disagree. Omitted when zero.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub unresolved_relative_opens: u64,
+}
+
+fn is_zero(n: &u64) -> bool {
+    *n == 0
 }
 
 /// Record of an event that was only partially captured.
@@ -41,6 +50,18 @@ pub struct PartialCapture {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Milestone 1070 (SC-005): `unresolved_relative_opens` is omitted at
+    /// zero and present otherwise.
+    #[test]
+    fn unresolved_relative_opens_omitted_at_zero() {
+        let mut integrity = TraceIntegrity::default();
+        let json = serde_json::to_string(&integrity).expect("serialize");
+        assert!(!json.contains("unresolved_relative_opens"));
+        integrity.unresolved_relative_opens = 3;
+        let json = serde_json::to_string(&integrity).expect("serialize");
+        assert!(json.contains("\"unresolved_relative_opens\":3"));
+    }
 
     #[test]
     fn trace_integrity_serde_round_trip() {
@@ -57,6 +78,7 @@ mod tests {
             bloom_filter_capacity: 100_000,
             bloom_filter_false_positive_rate: 0.01,
             filter_categories_applied: vec![],
+            unresolved_relative_opens: 0,
         };
 
         let json = serde_json::to_string(&integrity).expect("serialize integrity");
@@ -90,6 +112,7 @@ mod tests {
             bloom_filter_capacity: 65536,
             bloom_filter_false_positive_rate: 0.01,
             filter_categories_applied: vec![],
+            unresolved_relative_opens: 0,
         };
 
         let json = serde_json::to_string(&integrity).expect("serialize integrity");
@@ -140,6 +163,7 @@ mod tests {
                 "Ephemeral".to_string(),
                 "System".to_string(),
             ],
+            unresolved_relative_opens: 0,
         };
 
         let json = serde_json::to_string(&integrity).expect("serialize integrity");

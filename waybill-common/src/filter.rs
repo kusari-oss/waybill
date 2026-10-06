@@ -139,8 +139,15 @@ const fn pack_pattern(bytes: &[u8; 8], len: u8, category: u8, is_prefix: bool) -
 /// - Ephemeral (prefix): `/tmp/`, `/var/tmp` (7 chars — falls through
 ///   to `/var/tmp/foo` matching)
 /// - CargoFingerprint (contains): `/fingerp` (truncated from
-///   `/fingerprint/`), `/deps/`, `/increme` (truncated from
-///   `/incremental/`)
+///   `/fingerprint/`), `/.finger` (cargo's real `.fingerprint/`
+///   directory), `/increme` (truncated from `/incremental/`)
+///
+/// Milestone 1070 (#614) removed `/deps/` from CargoFingerprint. That
+/// directory holds what the compiler writes and reads (rlibs, rmeta, object
+/// files, linked binaries), not bookkeeping, and dropping it emptied every
+/// invocation's write set. It also added `/.finger`: `/fingerp` needs a `/`
+/// directly before the `f`, so it never matched cargo's `.fingerprint/`.
+/// Measurements: specs/1070-trace-relative-source-reads/research.md R7.
 const PATTERNS: [FilterPattern; 19] = [
     // System — 8 prefix patterns (4 original + 3 post-Colima + 1 host-
     // noise addition for docker/systemd runtime dirs)
@@ -174,7 +181,7 @@ const PATTERNS: [FilterPattern; 19] = [
     // dominating Colima aarch64 6.8 traces (Cargo.toml/rust-toolchain/
     // .cargo/config probed 400+× per package):
     pack_pattern(b"/fingerp", 8, CAT_CARGO_FINGERPRINT, false),
-    pack_pattern(b"/deps/\0\0", 6, CAT_CARGO_FINGERPRINT, false),
+    pack_pattern(b"/.finger", 8, CAT_CARGO_FINGERPRINT, false),
     pack_pattern(b"/increme", 8, CAT_CARGO_FINGERPRINT, false),
     // `Cargo.to` matches `Cargo.toml` (10 chars → truncate to 8) as
     // path substring. Cargo probes Cargo.toml at every workspace level
@@ -215,28 +222,15 @@ fn read_path_word(path: &[u8; 256], offset: usize) -> u64 {
 /// use word-wide u64 XOR-and-mask (~2050 verifier insns per open, down
 /// from v1's byte-wise loops that blew the 1M budget on kernel 5.15).
 pub fn path_matches_filter_category(path: &[u8; 256], widen_system: bool) -> Option<FilterCategoryTag> {
-    // Post-Colima observation: rustup toolchain resolution via
-    // `readdir_at` / `openat(dfd, relative_name)` produces file-open
-    // events where the kernel-visible `name_ptr` in `struct filename`
-    // is a RELATIVE dirent name (e.g., `1.88.0-aarch64-unknown-linux-gnu`
-    // from a readdir over `/usr/local/rustup/toolchains/`). These
-    // events flood the ring buffer (~12000× per SC-001 fixture run on
-    // Colima aarch64 6.8) — dominating every non-relative event. Since
-    // legitimate build inputs are always absolute paths (rustc reads
-    // source files via absolute paths from cargo), any path whose
-    // first byte is NOT `/` is by definition either (a) a relative
-    // dirent name from readdir walks (System-namespace noise) or
-    // (b) an anomalous edge case we don't care about. Classify as System.
-    //
-    // Widen-flag interaction: gated on `!widen_system` — operators
-    // who opt into `--include-system-reads` are asking for MAXIMUM
-    // visibility including these readdir dirents. Passing through
-    // relative paths preserves the FR-010 semantic that the widen flag
-    // fully disables the System category (including its dominant
-    // sub-source, relative dirents).
-    if !widen_system && path[0] != b'/' {
-        return Some(FilterCategoryTag::System);
-    }
+    // Milestone 1070 (#614): relative paths are no longer classified as
+    // System. Milestone 213 dropped every path not starting with `/`, to
+    // suppress an estimated ~12,000 relative directory-entry opens while the
+    // userspace drain was slow. With the drain fixed (#991) the measured
+    // count is 22 per fixture build, 0.5-0.9% of all opens, and the rule was
+    // discarding every source read of a workspace member: cargo passes those
+    // paths relative to the workspace root. Userspace now resolves relative
+    // paths against the opener's working directory.
+    // specs/1070-trace-relative-source-reads/research.md R1.
 
     let mut i = 0usize;
     while i < PATTERNS.len() {
@@ -361,13 +355,23 @@ mod tests {
             ),
             Some(FilterCategoryTag::CargoFingerprint)
         );
+        // Cargo's real fingerprint directory is `.fingerprint`.
         assert_eq!(
             path_matches_filter_category(
-                &to_path_buf("/home/dev/proj/target/release/deps/libfoo.rlib"),
+                &to_path_buf("/home/dev/proj/target/release/.fingerprint/foo-abc/invoked.timestamp"),
                 false
             ),
             Some(FilterCategoryTag::CargoFingerprint)
         );
+        // Milestone 1070: `deps/` holds build outputs and inputs, not
+        // bookkeeping, and must not be dropped.
+        for p in [
+            "/home/dev/proj/target/release/deps/libfoo-0123.rlib",
+            "/home/dev/proj/target/release/deps/libfoo-0123.rmeta",
+            "/home/dev/proj/target/release/deps/foo-0123",
+        ] {
+            assert_eq!(path_matches_filter_category(&to_path_buf(p), false), None, "{p}");
+        }
         assert_eq!(
             path_matches_filter_category(
                 &to_path_buf("/home/dev/proj/target/debug/incremental/foo/abc"),
@@ -469,31 +473,24 @@ mod tests {
     #[test]
     fn patterns_catalog_size_matches_declared_categories() {
         // Guards against future-you adding a category without adding
-        // patterns for it. Post-Colima expansion: 8 System + 2 UserCache
-        // + 2 Ephemeral + 6 CargoFingerprint = 18.
+        // patterns for it. 8 System + 2 UserCache + 2 Ephemeral +
+        // 7 CargoFingerprint = 19 (milestone 1070 swapped `/deps/` for
+        // `/.finger`, so the count, and the verifier budget, is unchanged).
         assert_eq!(PATTERNS.len(), 19);
     }
 
     #[test]
-    fn t007_relative_paths_classified_as_system() {
-        // Post-Colima: readdir-produced relative dirent names (no
-        // leading /) dominate the fixture's noise (~12000 events per
-        // trace). Non-absolute paths ARE noise by definition — no
-        // build reads source via relative dirent names.
-        assert_eq!(
-            path_matches_filter_category(&to_path_buf("1.88.0-aarch64-unknown-linux-gnu"), false),
-            Some(FilterCategoryTag::System)
-        );
-        assert_eq!(
-            path_matches_filter_category(&to_path_buf("README.md"), false),
-            Some(FilterCategoryTag::System)
-        );
-        // FR-010: widen flag DOES unblock relative-path filtering —
-        // operators wanting max visibility get to see readdir dirents too.
-        assert_eq!(
-            path_matches_filter_category(&to_path_buf("1.88.0-aarch64-unknown-linux-gnu"), true),
-            None
-        );
+    fn relative_paths_are_not_classified() {
+        // Milestone 1070 (#614): cargo compiles workspace members with
+        // paths relative to the workspace root. These must reach userspace
+        // to be resolved, whatever the widen flag says.
+        for widen in [false, true] {
+            assert_eq!(path_matches_filter_category(&to_path_buf("libsafe/src/lib.rs"), widen), None);
+            assert_eq!(
+                path_matches_filter_category(&to_path_buf("1.98.1-aarch64-unknown-linux-gnu"), widen),
+                None
+            );
+        }
     }
 
     #[test]

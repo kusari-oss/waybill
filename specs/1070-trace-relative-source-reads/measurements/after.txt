@@ -1,0 +1,47 @@
+# Milestone 1070 verification record (tasks T001, T026).
+
+## Before (T001)
+main @ 617498a5, Dockerfile.ebpf-test built 2026-10-06 on Colima aarch64 /
+kernel 6.8.0-136: the kernel object built and loaded, and the trace logged
+"All probes attached". Default fixture trace: 34 file events (all cargo),
+0 of 4 crate roots in read sets, every write set empty, 0 overflows
+(relative_paths.txt).
+
+## After (T026), 2026-10-06
+Branch 1070-trace-relative-source-reads, Dockerfile.ebpf-test on the same
+Colima VM. Every program loaded and passed the verifier, including the
+fs_syscalls tracepoints. Feature-on `clippy --workspace --all-targets
+--features ebpf-tracing -D warnings` passes in the container, and
+`cargo run -p xtask -- ebpf` builds the kernel object.
+
+scripts/ebpf-integration-test.sh: 10 of 10 runs pass, with all m1070
+assertions on.
+
+Default trace of the fixture, built in-tree:
+| criterion | baseline | after |
+|---|---|---|
+| file events | 34 (cargo only) | 573 (rustc 238, linker 162, ...) |
+| SC-001 crate roots in rustc read sets | 0 of 4 | 4 of 4, absolute |
+| SC-002 outputs in write sets | 0 entries | both linked binaries; liblibsafe/liblibvuln .rlib and .rmeta under final names |
+| US2 sc. 4 binary compiles read their libraries | n/a | safe-only: liblibsafe; vuln-included: liblibsafe, liblibvuln |
+| SC-003 ring_buffer_overflows | 0 | 0 |
+| SC-004 unresolved relative opens | not reported | 10 = 10 flagged: cargo `1.98.1-aarch64-unknown-linux-gnu` x6, rustc `raw-dylibs` x4. Exactly the directory-fd-relative opens strace found (x2: both open probes fire per open). Every cwd-relative open resolved. |
+
+Read-set sizes per invocation: 0,0,0 (rustc -vV probes), 26, 26, 23, 24
+(crate compiles), 36, 37 (links). Write-set sizes: 0,0,0, 6, 6, 5, 5, 1, 1.
+
+Findings during T026:
+- A library compile's temporary rmeta is renamed away (FR-010). A binary
+  compile writes deps/rmeta*/full.rmeta and deletes it rather than renaming
+  it, so that entry is a real short-lived write. The harness assertion was
+  narrowed to library compiles.
+- Every write-set entry reports survived_trace_window=true and a zero
+  sha256, including deleted temporaries. This is milestone 210's
+  close-time hashing, never implemented, and is filed as #1144.
+- 1 harness run in 32 missed a crate root from its compile's read set.
+  Exec records and file records arrive through different ring buffers, so
+  a compiler starting between the two drains had its first opens processed
+  before its exec, and they were dropped. Fixed by holding a
+  compiler-named process's operations until its exec is processed
+  (compiler_pipeline.rs `held`), with a unit test pinning the ordering.
+  After the fix, 10 of 10.

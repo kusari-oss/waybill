@@ -169,7 +169,9 @@ fn subject_to_witness(s: &Subject) -> WitnessSubject {
 fn build_material_attestation(ops: &[FileOperation]) -> MaterialAttestation {
     let mut out = MaterialAttestation::new();
     for op in ops {
-        if !matches!(op.operation, FileOpType::Read) {
+        // Milestone 1070: an unresolved relative path names nothing a
+        // verifier could find (contracts/attestation.md).
+        if !matches!(op.operation, FileOpType::Read) || op.unresolved_relative {
             continue;
         }
         let Some(hash) = op.content_hash.as_ref() else {
@@ -245,7 +247,7 @@ fn shell_split(cmd: &str) -> Vec<String> {
 fn build_product_attestation_from_writes(ops: &[FileOperation]) -> ProductAttestation {
     let mut out = ProductAttestation::new();
     for op in ops {
-        if !matches!(op.operation, FileOpType::Write | FileOpType::Create) {
+        if !matches!(op.operation, FileOpType::Write | FileOpType::Create) || op.unresolved_relative {
             continue;
         }
         let Some(hash) = op.content_hash.as_ref() else {
@@ -417,6 +419,7 @@ mod tests {
                     content_hash: Some(ContentHash::sha256(&"a".repeat(64)).unwrap()),
                     size: 1024,
                     timestamp: Timestamp::now(),
+                    unresolved_relative: false,
                 }],
                 summary: FileAccessSummary {
                     total_operations: 1,
@@ -433,6 +436,7 @@ mod tests {
                 bloom_filter_capacity: 100_000,
                 bloom_filter_false_positive_rate: 0.01,
                 filter_categories_applied: vec![],
+                unresolved_relative_opens: 0,
             },
         }
     }
@@ -451,6 +455,7 @@ mod tests {
                 content_hash: Some(ContentHash::sha256(&"a".repeat(64)).unwrap()),
                 size: 100,
                 timestamp: Timestamp::now(),
+                unresolved_relative: false,
             },
             FileOperation {
                 path: "/w/read-unhashed.rs".to_string(),
@@ -463,6 +468,7 @@ mod tests {
                 content_hash: None,
                 size: 100,
                 timestamp: Timestamp::now(),
+                unresolved_relative: false,
             },
             FileOperation {
                 path: "/w/write.o".to_string(),
@@ -475,6 +481,7 @@ mod tests {
                 content_hash: Some(ContentHash::sha256(&"b".repeat(64)).unwrap()),
                 size: 100,
                 timestamp: Timestamp::now(),
+                unresolved_relative: false,
             },
         ];
         let m = build_material_attestation(&ops);
@@ -482,6 +489,31 @@ mod tests {
         assert!(m.contains_key("/w/read-hashed.rs"));
         assert!(!m.contains_key("/w/read-unhashed.rs"));
         assert!(!m.contains_key("/w/write.o"));
+    }
+
+    /// Milestone 1070: an operation flagged `unresolved_relative` is neither a
+    /// material nor a product, even if it carries a hash.
+    #[test]
+    fn unresolved_relative_ops_are_not_materials_or_products() {
+        let mk = |path: &str, operation: FileOpType, unresolved: bool| FileOperation {
+            path: path.to_string(),
+            operation,
+            process: ProcessRef { pid: 1, tid: 1, comm: "rustc".to_string() },
+            content_hash: Some(ContentHash::sha256(&"c".repeat(64)).unwrap()),
+            size: 1,
+            timestamp: Timestamp::now(),
+            unresolved_relative: unresolved,
+        };
+        let ops = vec![
+            mk("raw-dylibs", FileOpType::Read, true),
+            mk("/ws/src/lib.rs", FileOpType::Read, false),
+            mk("out.rlib", FileOpType::Write, true),
+            mk("/ws/target/out.rlib", FileOpType::Write, false),
+        ];
+        let m = serde_json::to_string(&build_material_attestation(&ops)).unwrap();
+        let p = serde_json::to_string(&build_product_attestation_from_writes(&ops)).unwrap();
+        assert!(m.contains("/ws/src/lib.rs") && !m.contains("raw-dylibs"));
+        assert!(p.contains("/ws/target/out.rlib") && !p.contains("\"out.rlib\""));
     }
 
     #[test]

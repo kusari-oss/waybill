@@ -18,7 +18,9 @@ use waybill_common::attestation::network::{
     Connection, Destination, HttpRequest, HttpResponse, NetworkSummary, NetworkTrace, ProcessRef,
     Protocol, TimingInfo, TlsInfo,
 };
-use waybill_common::events::{FileEvent, FileEventType, NetworkEvent, NetworkEventType};
+use waybill_common::events::{FileEvent, NetworkEvent, NetworkEventType};
+
+use super::observed::{ObservedKind, ObservedOp};
 use waybill_common::types::hash::ContentHash;
 use waybill_common::types::timestamp::Timestamp;
 
@@ -99,8 +101,15 @@ impl EventAggregator {
 
     /// Unique set of captured file paths. Useful for the post-trace SHA-256
     /// pass, which hashes each captured artifact file still on disk.
+    ///
+    /// Unresolved relative paths are excluded: hashing `raw-dylibs` would
+    /// read whatever that name means in the tracer's own directory.
     pub fn captured_paths(&self) -> std::collections::BTreeSet<&str> {
-        self.file_ops.iter().map(|op| op.path.as_str()).collect()
+        self.file_ops
+            .iter()
+            .filter(|op| !op.unresolved_relative)
+            .map(|op| op.path.as_str())
+            .collect()
     }
 
     /// Inject hashes computed by userspace (e.g. `hasher::sha256_file_hex`)
@@ -142,6 +151,7 @@ impl EventAggregator {
             content_hash,
             size,
             timestamp: Timestamp::from_datetime(timestamp),
+            unresolved_relative: false,
         });
     }
 
@@ -281,41 +291,44 @@ impl EventAggregator {
 
     /// Process a file event from the ring buffer.
     pub fn handle_file_event(&mut self, event: &FileEvent) {
-        let path = event.path_str().to_string();
-        if path.is_empty() {
-            return; // Skip events with empty paths
+        if let Some(op) = ObservedOp::from_file_event(event) {
+            self.handle_op(&op);
         }
+    }
 
-        let operation = match event.event_type {
-            FileEventType::Read => FileOpType::Read,
-            FileEventType::Write => FileOpType::Write,
-            // Opens carry the only reliable path (openat2 captures the
-            // filename arg) — treat them as reads until vfs_read/write
-            // path resolution lands.
-            FileEventType::Open => FileOpType::Read,
-            FileEventType::Close => return,
+    /// Record a resolved file operation (milestone 1070). Opens for writing
+    /// and renames are writes. An unresolved operation keeps its raw path
+    /// and is flagged, so it stays visible without passing for a real path.
+    pub fn handle_op(&mut self, op: &ObservedOp) {
+        if op.path.is_empty() {
+            return;
+        }
+        let operation = match op.kind {
+            ObservedKind::Read => FileOpType::Read,
+            ObservedKind::Write | ObservedKind::Rename { .. } => FileOpType::Write,
         };
 
-        let content_hash = if event.content_hash != [0u8; 32] {
-            let hex: String = event.content_hash.iter().map(|b| format!("{b:02x}")).collect();
+        let content_hash = if op.content_hash != [0u8; 32] {
+            let hex: String = op.content_hash.iter().map(|b| format!("{b:02x}")).collect();
             ContentHash::sha256(&hex).ok()
         } else {
             None
         };
 
-        let dt = self.wall_time(event.timestamp_ns);
+        let dt = self.wall_time(op.timestamp_ns);
 
         self.file_ops.push(FileOperation {
-            path,
+            path: op.path.clone(),
             operation,
             process: ProcessRef {
-                pid: event.pid,
-                tid: event.tid,
-                comm: event.comm_str().to_string(),
+                pid: op.pid,
+                tid: op.tid,
+                comm: op.comm.clone(),
             },
             content_hash,
-            size: event.bytes_transferred,
+            size: op.bytes,
             timestamp: Timestamp::from_datetime(dt),
+            unresolved_relative: op.unresolved,
         });
     }
 
@@ -495,6 +508,13 @@ impl EventAggregator {
             bloom_filter_capacity: 65536,
             bloom_filter_false_positive_rate: 0.01,
             filter_categories_applied,
+            // Milestone 1070 — derived from the operations themselves, so the
+            // count and the flagged entries cannot disagree.
+            unresolved_relative_opens: file_access
+                .operations
+                .iter()
+                .filter(|op| op.unresolved_relative)
+                .count() as u64,
         };
 
         AggregatedTrace {
@@ -645,5 +665,47 @@ mod tests {
         assert_eq!(http_req.method, "GET");
         assert_eq!(http_req.path, "/api/v1/crates/serde/1.0.197/download");
         assert_eq!(conn.hostname.as_deref(), Some("crates.io"));
+    }
+
+    // ---- Milestone 1070 (#614) ------------------------------------------
+
+    fn observed(kind: crate::trace::observed::ObservedKind, path: &str, unresolved: bool) -> ObservedOp {
+        let mut ev: FileEvent = unsafe { std::mem::zeroed() };
+        ev.pid = 7;
+        ev.tid = 7;
+        ObservedOp::with_path(&ev, kind, path.to_string(), unresolved)
+    }
+
+    /// FR-003 and T023: an unresolved operation is recorded, flagged, kept out
+    /// of the post-trace hashing set, and counted in trace_integrity from the
+    /// operations themselves. A rename is recorded as a write of its new path.
+    #[test]
+    fn unresolved_ops_are_flagged_counted_and_not_hashed() {
+        use crate::trace::observed::ObservedKind;
+        let mut agg = EventAggregator::new();
+        agg.handle_op(&observed(ObservedKind::Read, "/ws/libsafe/src/lib.rs", false));
+        agg.handle_op(&observed(ObservedKind::Read, "raw-dylibs", true));
+        agg.handle_op(&observed(ObservedKind::Rename { from: None }, "/ws/out.rlib", false));
+        assert!(!agg.captured_paths().contains("raw-dylibs"));
+        let trace = agg.finalize(&TraceStats::default());
+        let ops = &trace.file_access.operations;
+        assert_eq!(ops.len(), 3);
+        assert!(ops.iter().any(|o| o.path == "raw-dylibs" && o.unresolved_relative));
+        assert!(ops.iter().any(|o| o.path == "/ws/out.rlib" && o.operation == FileOpType::Write));
+        assert_eq!(trace.trace_integrity.unresolved_relative_opens, 1);
+    }
+
+    /// FR-008: the open flags decide read or write.
+    #[test]
+    fn open_flags_classify_reads_and_writes() {
+        let mut agg = EventAggregator::new();
+        let mut ev: FileEvent = unsafe { std::mem::zeroed() };
+        ev.path[..8].copy_from_slice(b"/ws/a.rs");
+        agg.handle_file_event(&ev); // Open (0), flags 0: read
+        ev.flags = 0o1 | 0o100; // O_WRONLY|O_CREAT
+        agg.handle_file_event(&ev);
+        let trace = agg.finalize(&TraceStats::default());
+        let kinds: Vec<_> = trace.file_access.operations.iter().map(|o| o.operation.clone()).collect();
+        assert_eq!(kinds, vec![FileOpType::Read, FileOpType::Write]);
     }
 }

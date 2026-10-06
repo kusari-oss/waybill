@@ -32,6 +32,13 @@ pub struct FileOperation {
     pub content_hash: Option<ContentHash>,
     pub size: u64,
     pub timestamp: Timestamp,
+    /// Milestone 1070: `true` when the path is relative and the directory it
+    /// is relative to could not be established, so `path` is as the build
+    /// passed it rather than absolute. Such operations are kept here as
+    /// evidence and excluded from compiler read and write sets and from
+    /// witness materials and products. Omitted when `false`.
+    #[serde(default, skip_serializing_if = "core::ops::Not::not")]
+    pub unresolved_relative: bool,
 }
 
 /// Classification of a file-system operation.
@@ -69,8 +76,34 @@ mod tests {
             content_hash: None,
             size: 4096,
             timestamp: Timestamp::now(),
+            unresolved_relative: false,
         };
         let json = serde_json::to_string(&op).expect("serialize file operation");
         assert!(!json.contains("\"content_hash\""));
+        // Milestone 1070 (SC-005): the new flag is omitted at its default.
+        assert!(!json.contains("unresolved_relative"));
+    }
+
+    /// Milestone 1070: an unresolved relative operation says so, and the flag
+    /// survives a round trip; a document without it still deserializes.
+    #[test]
+    fn unresolved_relative_round_trips_and_defaults() {
+        let op = FileOperation {
+            path: "raw-dylibs".to_string(),
+            operation: FileOpType::Read,
+            process: ProcessRef { pid: 7, tid: 7, comm: "rustc".to_string() },
+            content_hash: None,
+            size: 0,
+            timestamp: Timestamp::now(),
+            unresolved_relative: true,
+        };
+        let json = serde_json::to_string(&op).expect("serialize");
+        assert!(json.contains("\"unresolved_relative\":true"));
+        let back: FileOperation = serde_json::from_str(&json).expect("deserialize");
+        assert!(back.unresolved_relative);
+
+        let legacy = json.replace(",\"unresolved_relative\":true", "");
+        let back: FileOperation = serde_json::from_str(&legacy).expect("deserialize legacy");
+        assert!(!back.unresolved_relative);
     }
 }
