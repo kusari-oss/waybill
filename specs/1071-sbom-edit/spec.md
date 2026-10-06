@@ -26,6 +26,8 @@ waybill generates SBOMs with as much data as it can, by design. An organisation 
 
 ### Session 2026-10-06
 
+- Q: (analysis remediation) Which annotations can an edit never remove? → A: The **protected set**: `waybill:generation-context` (C21, required by the constitution's Operating Modes) and `waybill:derivation` (C194). If the original's signature material contains a redacted value, it is referenced by digest, not embedded. Runtime checks are structural; schema conformance is enforced by tests. SC-006's target is a ratio ≤ 1.0.
+
 - Q: When a dropped component sat between others in the dependency graph? → A: **Bridge.** Its dependents gain edges to its dependencies, so the graph stays connected, and their dependency lists are marked incomplete (FR-006).
 - Q: Redaction mode? → A: **Either, chosen per field class**: remove the value, or replace it with a keyed pseudonym that is stable across documents and not reversible without the key.
 - Q: Re-identification in this milestone? → A: **Next milestone**, alongside policy files. This milestone covers filter, redact, the derivation record and the signature chain.
@@ -145,10 +147,10 @@ An organisation ships `acme-foo`, which is open-source `foo` 2.3.1 with three in
   - completeness claims;
   - format bookkeeping that existed only for them.
 
-  The output MUST pass the same conformance checks waybill applies to the format on emission.
+  The output MUST leave no dangling identifier or unresolved reference (checked at runtime), and MUST pass the conformance validation waybill's test suites apply to each format (CycloneDX and SPDX 2.3 schemas, `spdx3-validate`). Those validators are test-time tools, as they are for generation.
 - **FR-005**: When a dropped component sat between others in the dependency graph, each of its dependents MUST gain a dependency on each of its dependencies (bridging). The bridged edge keeps the most restrictive lifecycle scope of the two edges it replaces. The graph stays connected, and no component becomes unreachable merely because something it was reached through was dropped. Bridging repeats across consecutive dropped components.
 - **FR-006**: A dependency list that lost members through an edit MUST NOT keep a `complete` claim. It is downgraded to incomplete.
-- **FR-007**: Annotations MUST be removable by namespace (for example every `waybill:` annotation, or a named class of them), without touching annotations of other namespaces.
+- **FR-007**: Annotations MUST be removable by namespace (for example every `waybill:` annotation, or a named class of them), without touching annotations of other namespaces. The **protected set** is never removed: `waybill:generation-context` (C21; the constitution's Operating Modes require every document to state which mode produced it) and `waybill:derivation` (C194).
 - **FR-008**: Redaction MUST cover these field classes:
   - file paths;
   - URLs and hostnames matching a pattern;
@@ -161,13 +163,13 @@ An organisation ships `acme-foo`, which is open-source `foo` 2.3.1 with three in
   Two distinct redacted values never collapse into one pseudonym.
 - **FR-009**: Every edited document MUST carry a derivation record. It states that the document is a derivative, the hash of the original, which categories of operation were applied, and how many items each removed or changed. It MUST NOT contain any removed or redacted value.
 - **FR-010**: The derivation link MUST be expressed in each format's native vocabulary where one exists, so a reader that knows the standard but not waybill can see it (Constitution Principle V).
-- **FR-011**: When signing is requested, the output MUST be signed with the same signing options waybill offers on generation. It MUST also carry or reference the original's signature: an embedded signature, or a reference to its sidecar or transparency-log entry. An unsigned original MUST be recorded as unsigned.
+- **FR-011**: When signing is requested, the output MUST be signed with the same signing options waybill offers on generation. It MUST also carry or reference the original's signature. The material is embedded, unless it contains a value this edit redacts (a keyless certificate can name a repository or account), in which case it is referenced by its digest and verification needs the original's signature file. An unsigned original MUST be recorded as unsigned.
 - **FR-012**: waybill MUST provide a verification that checks an edited document's own signature and its derivation link. Given the original, it also checks the original's hash and signature. It follows a chain of several edits back to the first original, and reports which links it could check and which it could not.
 - **FR-013**: Applying the same operations to the CycloneDX, SPDX 2.3 and SPDX 3 outputs of one scan MUST produce documents that still agree under waybill's cross-format parity check, apart from the removals themselves.
 - **FR-014**: Every operation MUST be expressible as a self-contained declarative entry (selector + action + parameters), so a later policy file can drive the same operations without new semantics. The first release exposes them as command-line options.
 - **FR-015**: Re-identification (US4) is out of scope for this milestone (Clarifications). The operation vocabulary (FR-014) MUST leave room for it as an action that adds information.
 - **FR-016**: The command MUST report what each operation matched and changed, and MUST exit non-zero on an invalid operation or an unsupported input. A refused operation (dropping the root) writes nothing.
-- **FR-017**: Documentation MUST state what redaction does not hide (content hashes, versions, graph shape) and that redaction is not anonymisation.
+- **FR-017**: Documentation MUST state what redaction does not hide, and that redaction is not anonymisation. It doesn't hide content hashes, versions, licence data or graph shape. And the derivation record's original hash lets anyone holding a candidate original confirm it was the source.
 
 ### Key Entities
 
@@ -193,7 +195,7 @@ An organisation ships `acme-foo`, which is open-source `foo` 2.3.1 with three in
 - **SC-005**: The derivation record names every operation category applied, and contains none of the removed or redacted values (checked by search).
 - **SC-007**: After a bridged drop on a fixture whose graph has dropped intermediates, every component reachable from the root before the edit and not dropped is still reachable after it.
 - **SC-008**: Pseudonymising the same values with the same key in two separate documents gives identical pseudonyms. A different key gives none of the same ones. No pseudonym equals any original value.
-- **SC-006**: Editing a document the size of the largest public-corpus SBOM finishes in the same order of time as generating it. The baseline is measured during planning; the target is set as a ratio to it.
+- **SC-006**: Editing a document the size of the largest public-corpus SBOM takes no longer than generating it: a ratio of at most 1.0 to the generation time for the same target, both numbers measured and recorded.
 
 ## Assumptions
 

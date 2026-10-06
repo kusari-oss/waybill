@@ -43,10 +43,12 @@ Each of `Cdx16`, `Spdx23` and `Spdx301` implements:
   "original": {
     "sha256": "<hex of the original file's bytes>",
     "format": "cyclonedx-1.6 | spdx-2.3 | spdx-3.0.1",
-    "signature": { "kind": "jsf | dsse | sigstore-bundle | none", "material": { } }
+    "signature": { "kind": "jsf | dsse | sigstore-bundle | none",
+                   "embedded": true, "material": { },
+                   "material_sha256": "<hex>", "reason": "contains-redacted-values" }
   },
   "operations": [ { "category": "drop-components | drop-annotations | redact-paths | redact-hosts | redact-names",
-                    "matched": 12, "changed": 12 } ],
+                    "matched": 12, "changed": 12 } ],   // format-independent units, see below
   "ancestors": [ <the original's own waybill:derivation record, recursively> ],
   "tool": "waybill <version>",
   "created": "<RFC 3339>"
@@ -54,7 +56,15 @@ Each of `Cdx16`, `Spdx23` and `Spdx301` implements:
 ```
 - **Never holds a removed or redacted value.** `category` is a closed set, and the counts are numbers.
 - **`material`** is the original's signature, copied verbatim: the JSF object, the DSSE envelope, or the Sigstore bundle. It's absent when `kind` is `none`.
-- **Serialisation** is canonical, with sorted keys, so the record is identical across the three formats (parity row C194, `SymmetricEqual`).
+  - When the material contains a value this edit redacts (analysis H2), `embedded` is `false` and `material` is omitted. `material_sha256` and `reason` are given instead, and verification needs the original's signature file.
+- **Counts are in format-independent units** (analysis M1), so the three formats' records agree:
+  - `drop-components`: components selected and components removed;
+  - `drop-annotations`: annotation entries removed, counted per (component, field) pair, which is the same in every format's envelope;
+  - `redact-*`: distinct values matched and distinct values replaced.
+
+  Completeness downgrades are reported in the command's output, not as a category.
+- **Serialisation** is canonical, with sorted keys.
+- **Parity row C194** (`SymmetricEqual`) compares only the format-independent projection: `schema`, `operations`, and each ancestor's `operations` (analysis H3). `original.sha256`, `format` and the signature necessarily differ across the three outputs, because they describe three different original files.
 
 ## Native derivation link (research R1)
 

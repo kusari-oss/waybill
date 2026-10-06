@@ -61,7 +61,7 @@ For each selector, the fields read:
    - **CycloneDX:** moves out of any `compositions[aggregate=complete]` into an `incomplete` record.
    - **SPDX 3:** its `dependsOn` relationship's `completeness` becomes `incomplete`.
    - **SPDX 2.3** has no native construct. The `waybill:graph-completeness` document annotation (C104/C105) is set to incomplete for the affected ecosystems in all three formats, so they stay in agreement.
-5. **Post-condition check.** No identifier of a dropped component remains anywhere in the output, checked by search, and the output passes the format's conformance check. If either fails, the command fails without writing (Principle IX).
+5. **Post-condition check (runtime, structural).** No identifier of a dropped component remains anywhere in the output (checked by search), and every reference resolves to an element that exists. If either fails, the command fails without writing (Principle IX). Schema and `spdx3-validate` conformance are test-time gates (analysis H1). waybill ships no runtime validator, and Principle I keeps `jsonschema` and the Python validator out of the binary.
 
 ## R5 — Redaction (FR-008)
 
@@ -89,7 +89,7 @@ For each selector, the fields read:
 
 The envelope parsing reuses the parity extractors' helpers. Annotations in other namespaces, and anything not in the envelope, are untouched.
 
-**The edit's own annotation is always kept.** A namespace match excludes `waybill:derivation`. The derivation record can't be removed by an edit.
+**The protected set is always kept** (analysis C1). A namespace match excludes `waybill:generation-context` (C21: the constitution's Operating Modes require every document to state which mode produced it, and removing it would make an edit able to unlabel a document) and `waybill:derivation` (C194). The set is defined once, in `W/edit/mod.rs`, and every adapter consults it.
 
 ## R7 — The derivation record and the signature chain (FR-009, FR-011, FR-012)
 
@@ -105,6 +105,8 @@ The envelope parsing reuses the parity extractors' helpers. Annotations in other
   - `tool` and `created`.
 
   Embedding the signature makes the derivative self-contained: given the original file, its signature can be checked without hunting for its sidecar.
+
+  **Except when the material holds a redacted value** (analysis H2). A keyless certificate's SAN can name an internal repository, workflow or account, and the material can't be altered without breaking it. Before embedding, the material is searched for every value this edit redacts. On a hit, the record holds `{kind, material_sha256, embedded: false, reason: "contains-redacted-values"}` instead, and `verify-chain` then needs the original's signature file via `--original-signature`, checked against that digest. The leak post-condition (R5) therefore never sees the material.
 - **Signing.** The output is signed with the same options as generation (`--sign-key` and keyless `--sign`), through the existing signer. The CycloneDX `signature` slot is stripped and re-signed (`strip_existing_signature`). Sidecars are written for SPDX.
 - **Verification**, `waybill sbom verify-chain <derived> [--original <file>]... [--key <pem>]...`:
   - **the derivative's own signature:**

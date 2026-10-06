@@ -9,7 +9,7 @@ Reads one CycloneDX 1.6, SPDX 2.3 or SPDX 3.0.1 JSON document, applies the opera
 | flag | meaning |
 |---|---|
 | `--drop <selector>` | Drop the matching components and every reference to them. Bridge their dependents to their dependencies, and downgrade completeness claims. |
-| `--drop-annotations <namespace>` | Remove annotations whose field starts with `<namespace>` (e.g. `waybill:` or `waybill:graph-`). `waybill:derivation` is never removed. |
+| `--drop-annotations <namespace>` | Remove annotations whose field starts with `<namespace>` (e.g. `waybill:` or `waybill:graph-`). The protected set, `waybill:generation-context` (C21) and `waybill:derivation`, is never removed. |
 | `--redact <class>[:<mode>][=<pattern>]` | `class` is `paths`, `hosts` or `names`. `mode` is `remove` or `pseudonymise` (default `remove` for paths, `pseudonymise` for hosts and names). `pattern` is a glob, or a regex prefixed `re:`; for `paths`, omitting it means every path. |
 | `--redact-key-file <path>` | The pseudonymisation key. Required when any operation pseudonymises; never written anywhere. |
 
@@ -40,7 +40,7 @@ Examples: `scope=development,test`, `ecosystem=npm;name=@acme/*`, `tier=file`.
   - an unsupported input format or version;
   - a selector that would drop the root or subject;
   - pseudonymisation without a key;
-  - a failed post-condition: a dropped identifier or a redacted value still present, or the output failing conformance.
+  - a failed post-condition: a dropped identifier or a redacted value still present, or a reference that doesn't resolve.
 - **An operation that matched nothing** is reported, and is not an error.
 
 ## `waybill sbom verify-chain <DERIVED> [--original <file>]... [--key <pem>]...`
