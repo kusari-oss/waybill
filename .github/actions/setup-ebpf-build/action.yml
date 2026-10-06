@@ -1,0 +1,122 @@
+name: 'Set up the eBPF build environment'
+description: >-
+  Everything an eBPF kernel-object build needs before bpf-linker: the pinned
+  nightly with rust-src, the system packages, optionally the workspace's stable
+  toolchain, the cargo cache, and the rustup-init cleanup. Shared by ci.yml,
+  release.yml and ebpf-canary.yml (#905).
+
+# #905. These steps were copied into three workflows and drifted: before m896
+# the canary lacked four of them, and the missing rust-src cost 35 nights of a
+# canary that blamed upstream for its own setup (#685). m896 answered with a
+# parity check in the canary; one definition makes the divergence impossible
+# instead of detectable, so that check is gone.
+#
+# Order matters. dtolnay/rust-toolchain leaves `rustup-init` in
+# ~/.cargo/bin, and rust-cache restores it from the cache, so the cleanup must
+# run after every toolchain install AND after the cache restore. That is why
+# the stable install lives here too rather than in the callers.
+#
+# Sets EBPF_TOOLCHAIN in the job environment for later steps.
+
+inputs:
+  stable:
+    description: >-
+      Also install the workspace's stable toolchain (the channel in the root
+      rust-toolchain.toml) with clippy, and make `stable` the default. Needed
+      by jobs that build or lint the user-space crates; release.yml's eBPF job
+      does not.
+    required: false
+    default: 'false'
+  cache-key:
+    description: 'Swatinem/rust-cache `key`. Empty keeps the action default.'
+    required: false
+    default: ''
+
+outputs:
+  channel:
+    description: 'The eBPF nightly channel, from waybill-ebpf/rust-toolchain.toml.'
+    value: ${{ steps.pins.outputs.ebpf }}
+
+runs:
+  using: 'composite'
+  steps:
+    # #1089: both toolchains are pinned in files. Read them rather than naming
+    # a channel here, so a bump is one edit to the toolchain file.
+    - name: Read the toolchain pins
+      id: pins
+      shell: bash
+      run: |
+        set -euo pipefail
+        channel() { sed -n 's/^channel *= *"\(.*\)"/\1/p' "$1"; }
+        ebpf=$(channel waybill-ebpf/rust-toolchain.toml)
+        stable=$(channel rust-toolchain.toml)
+        [ -n "$ebpf" ] || { echo "::error::no channel in waybill-ebpf/rust-toolchain.toml"; exit 1; }
+        [ -n "$stable" ] || { echo "::error::no channel in rust-toolchain.toml"; exit 1; }
+        echo "ebpf=$ebpf" >> "$GITHUB_OUTPUT"
+        echo "stable=$stable" >> "$GITHUB_OUTPUT"
+        echo "EBPF_TOOLCHAIN=$ebpf" >> "$GITHUB_ENV"
+        echo "eBPF toolchain: $ebpf; workspace toolchain: $stable"
+
+    # Retry-wrapped after m663: apt-get can hang for 45+ minutes on GitHub
+    # Actions network trouble.
+    - name: Install eBPF build deps
+      uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4.0.0
+      with:
+        max_attempts: 3
+        timeout_minutes: 5
+        command: |
+          sudo apt-get update
+          sudo apt-get install -y clang llvm libelf-dev pkg-config libssl-dev
+
+    # Since #904 the build resolves through waybill-ebpf/rust-toolchain.toml
+    # and rustup would provision this on demand. Installing it here keeps the
+    # download out of the build step's log and timing.
+    - name: Install nightly Rust with rust-src
+      uses: dtolnay/rust-toolchain@5b842231ba77f5c045dba54ac5560fed2db780e2 # nightly (2026-04-25)
+      with:
+        toolchain: ${{ steps.pins.outputs.ebpf }}
+        components: rust-src
+
+    - name: Install stable Rust
+      if: inputs.stable == 'true'
+      uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable (2026-04-25)
+      with:
+        toolchain: ${{ steps.pins.outputs.stable }}
+        components: clippy
+
+    - name: Make stable the default toolchain
+      if: inputs.stable == 'true'
+      shell: bash
+      run: rustup default stable
+
+    - name: Cache cargo + build artifacts
+      uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2.9.1
+      with:
+        key: ${{ inputs.cache-key }}
+        workspaces: |
+          .
+          waybill-ebpf
+
+    # Cargo's `+<channel>` dispatch sometimes resolves to `rustup-init`
+    # instead of `rustup` (same directory, same prefix), failing with
+    # "unexpected argument '+stable'". Must follow the cache restore, which
+    # puts it back (PR #217). The behavioural `cargo --version` check catches
+    # the polluted-cache shape where ~/.cargo/bin/cargo is itself the
+    # rustup-init body, which the rm alone does not.
+    - name: Remove rustup-init + verify cargo works
+      shell: bash
+      run: |
+        rm -f "$HOME/.cargo/bin/rustup-init" "$HOME/.cargo/bin/rustup-init.exe"
+        if ! cargo --version > /dev/null 2>&1; then
+          echo "ERROR: \`cargo --version\` fails — \$HOME/.cargo/bin/cargo is not a working cargo proxy."
+          ls -la "$HOME/.cargo/bin/" || true
+          file "$HOME/.cargo/bin/cargo" || true
+          cargo --version 2>&1 || true
+          exit 1
+        fi
+        echo "cargo --version OK: $(cargo --version)"
+        if [ -e "$HOME/.cargo/bin/rustup-init" ] || [ -e "$HOME/.cargo/bin/rustup-init.exe" ]; then
+          echo "ERROR: rustup-init still present after rm."
+          ls -la "$HOME/.cargo/bin/" || true
+          exit 1
+        fi

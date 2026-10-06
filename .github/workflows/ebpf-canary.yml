@@ -67,20 +67,6 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      # #1089 — the eBPF crate's nightly is pinned in its own toolchain file,
-      # which is what the build resolves (#904). Every toolchain reference
-      # in this job reads it from there rather than naming a channel.
-      - name: Read the eBPF toolchain pin
-        id: ebpf_toolchain
-        shell: bash
-        run: |
-          set -euo pipefail
-          channel=$(sed -n 's/^channel *= *"\(.*\)"/\1/p' waybill-ebpf/rust-toolchain.toml)
-          [ -n "$channel" ] || { echo "::error::no channel in waybill-ebpf/rust-toolchain.toml"; exit 1; }
-          echo "channel=$channel" >> "$GITHUB_OUTPUT"
-          echo "EBPF_TOOLCHAIN=$channel" >> "$GITHUB_ENV"
-          echo "eBPF toolchain: $channel"
-
       - name: Resolve target version
         id: resolve_target
         env:
@@ -122,134 +108,18 @@ jobs:
       # never installed and every run since 2026-08-14 failed at the build step,
       # reported as an upstream bpf-linker regression. 36 runs, 0 green.
       # Evidence: specs/896-fix-ebpf-canary/measurements/.
+      #
+      # m896 answered with a parity check against ci.yml. Since #905 this job
+      # and ci.yml's eBPF lane run the same setup action, so the environments
+      # cannot diverge and the check is gone. break_env still works: it
+      # removes rust-src after setup, further down.
       # ----------------------------------------------------------------
-
-      - name: Install eBPF build deps
-        # Mirrors ci.yml's eBPF lane, retry-wrapped for the same reason
-        # (apt-get can hang for 45+ min on GHA network issues — m663).
-        uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4.0.0
+      - name: Set up the eBPF build environment
+        id: ebpf_toolchain
+        uses: ./.github/actions/setup-ebpf-build
         with:
-          max_attempts: 3
-          timeout_minutes: 5
-          command: |
-            sudo apt-get update
-            sudo apt-get install -y clang llvm libelf-dev pkg-config libssl-dev
-
-      # Install nightly FIRST so stable ends up the default toolchain for
-      # unpinned `cargo` invocations — dtolnay/rust-toolchain defaults to
-      # whichever it installed last. Same ordering, same SHA, as ci.yml.
-      - name: Install nightly Rust with rust-src
-        uses: dtolnay/rust-toolchain@5b842231ba77f5c045dba54ac5560fed2db780e2 # nightly (2026-04-25)
-        with:
-          toolchain: ${{ steps.ebpf_toolchain.outputs.channel }}
-          # m896 T010 — ONE step with an expression-valued `components`, never
-          # two conditional steps: the parity check below must find exactly one
-          # components declaration to reason about.
-          #
-          # Note the operand order. `inputs.break_env && '' || 'rust-src'` would
-          # be wrong in both branches: GitHub's && / || return an operand, and
-          # the empty string is falsy, so the || falls through to 'rust-src'
-          # even when break_env is true. Negating first avoids that.
-          components: ${{ !inputs.break_env && 'rust-src' || '' }}
-
-      # m896 — probe A: component state immediately after the nightly install,
-      # before anything else touches the toolchain. Paired with probe B further
-      # down, this isolates which step puts rust-src on the runner.
-      - name: Probe A — nightly components right after install
-        shell: bash
-        run: |
-          echo "requested components input: '${{ !inputs.break_env && 'rust-src' || '' }}'"
-          rustup component list --toolchain "$EBPF_TOOLCHAIN" | grep '(installed)' || true
-
-      - name: Install stable Rust toolchain
-        uses: dtolnay/rust-toolchain@21dc36fb71dd22e3317045c0c31a3f4249868b17 # stable
-        with:
-          toolchain: stable
-
-      - name: Make stable the default toolchain
-        # `cargo run -p xtask` runs under stable; the nested `cargo build`
-        # inside xtask runs in waybill-ebpf/ with RUSTUP_TOOLCHAIN removed, so
-        # it resolves nightly from waybill-ebpf/rust-toolchain.toml (#904).
-        run: rustup default stable
-
-      # NOTE (measured, m896): listing `waybill-ebpf` here has a side effect.
-      # rust-cache runs cargo in each listed workspace, and a rustup-proxied
-      # command run inside waybill-ebpf resolves through its rust-toolchain.toml
-      # — which declares components = ["rust-src"] — so rustup installs the
-      # component as a side effect of caching. Probe A (right after the nightly
-      # install) shows 3 components and no rust-src; probe B (before the build)
-      # shows 4 including rust-src, and nothing between them asks for it.
-      #
-      # Since #904 the build resolves through that toolchain file too, so
-      # rustup provisions rust-src for the build itself. The explicit
-      # `components: rust-src` above stays as the declaration the parity
-      # check reasons about, not as the thing the build depends on.
-      - name: Cache cargo + build artifacts
-        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2.9.1
-        with:
-          key: ebpf-canary
-          workspaces: |
-            .
-            waybill-ebpf
-
-      - name: Remove rustup-init (prevents `cargo +<channel>` dispatch race)
-        # See ci.yml::lint-and-test for the rationale. MUST run after
-        # Swatinem/rust-cache, whose $CARGO_HOME/bin restore re-creates it.
-        shell: bash
-        run: |
-          rm -f "$HOME/.cargo/bin/rustup-init" "$HOME/.cargo/bin/rustup-init.exe"
-          if ! cargo --version > /dev/null 2>&1; then
-            echo "ERROR: \`cargo --version\` fails — \$HOME/.cargo/bin/cargo is not a working cargo proxy."
-            ls -la "$HOME/.cargo/bin/" || true
-            exit 1
-          fi
-          echo "cargo --version OK: $(cargo --version)"
-
-      # m896 T016 / FR-010 — a divergence between this job's environment and
-      # ci.yml's must be detectable here, not discovered a month later in a
-      # misattributed issue.
-      #
-      # This checks the requirement is SATISFIED, not merely that two files
-      # spell it the same way: ci.yml is the source of truth for which
-      # components an eBPF build needs, and rustup is asked whether this runner
-      # actually has them. Text-vs-text would be defeated by the expression
-      # above, and would pass while the component was absent.
-      - name: Assert toolchain parity with ci.yml
-        id: parity
-        if: ${{ !inputs.break_env }}
-        continue-on-error: true
-        shell: bash
-        run: |
-          set -euo pipefail
-          exec > >(tee "$RUNNER_TEMP/parity.log") 2>&1
-          ci=.github/workflows/ci.yml
-          # Scope the scan to the nightly step's own block — ci.yml has six
-          # `components:` lines and an unbounded scan counts the three that
-          # follow the nightly step rather than the one inside it.
-          # No heredoc here: inside a YAML block scalar the terminator would be
-          # indented, and `<<EOF` does not accept an indented terminator.
-          parity=$(awk '
-            /dtolnay\/rust-toolchain@.*# nightly/ { inblk=1; next }
-            inblk && /^      - / { inblk=0 }
-            inblk && /components:/ { c++; if (c==1) { v=$0; sub(/.*components:[[:space:]]*/, "", v) } }
-            END { printf "%d\t%s\n", c+0, v }' "$ci")
-          count=${parity%%$'\t'*}
-          decls=${parity#*$'\t'}
-          if [ "${count:-0}" -ne 1 ] || [ -z "${decls:-}" ]; then
-            echo "::error::Expected exactly 1 components declaration under ci.yml's nightly toolchain step, found $count ('$decls'). The parity check cannot tell which line to trust — fix this check, do not skip it."
-            exit 1
-          fi
-          echo "ci.yml requires nightly components: $decls"
-          missing=0
-          for c in $(echo "$decls" | tr ',' ' '); do
-            if rustup component list --toolchain "$EBPF_TOOLCHAIN" | grep -q "^$c.* (installed)"; then
-              echo "  ok: $c installed"
-            else
-              echo "::error::ci.yml's eBPF lane requires nightly component '$c'; this job does not have it. The canary's environment has diverged from the working build — that divergence is the m896 defect, recurring."
-              missing=1
-            fi
-          done
-          [ "$missing" -eq 0 ]
+          stable: 'true'
+          cache-key: ebpf-canary
 
       # m896 — record the nightly toolchain's actual component state. This is
       # evidence in every run, and it is what settled the question of how
@@ -327,7 +197,7 @@ jobs:
       # before the control build has had a chance to run.
       - name: Build eBPF kernel object
         id: build_latest
-        if: ${{ always() && steps.parity.outcome != 'failure' }}
+        if: ${{ always() && steps.ebpf_toolchain.outcome == 'success' }}
         continue-on-error: true
         shell: bash
         run: |
@@ -449,7 +319,7 @@ jobs:
           CONTROL: ${{ steps.build_control.outcome }}
           ARTIFACT: ${{ steps.verify_artifact.outputs.present }}
           CONTROL_ARTIFACT: ${{ steps.verify_control.outputs.present }}
-          PARITY: ${{ steps.parity.outcome }}
+          SETUP: ${{ steps.ebpf_toolchain.outcome }}
           INSTALL: ${{ steps.install.outcome }}
         run: |
           set -uo pipefail
@@ -482,8 +352,8 @@ jobs:
             fi
           else
             cause=canary
-            if [ "$PARITY" = "failure" ]; then
-              step="Assert toolchain parity with ci.yml"
+            if [ "$SETUP" = "failure" ]; then
+              step="Set up the eBPF build environment"
             elif [ "$INSTALL" = "failure" ]; then
               step="Install bpf-linker (via m234 composite)"
             else
@@ -508,7 +378,7 @@ jobs:
           # The target build is preferred over the control: it is the one
           # testing the version under question.
           log=""
-          for c in "$RUNNER_TEMP/build-latest.log" "$RUNNER_TEMP/build-control.log" "$RUNNER_TEMP/parity.log"; do
+          for c in "$RUNNER_TEMP/build-latest.log" "$RUNNER_TEMP/build-control.log"; do
             if [ -s "$c" ]; then log="$c"; break; fi
           done
           delim="EXCERPT_$(openssl rand -hex 8)"
@@ -688,9 +558,10 @@ jobs:
                   `This is the canary's own failure. Fix it here:`,
                   ``,
                   `1. Read the error output above and the failing step.`,
-                  `2. Compare this job's setup against \`ci.yml\`'s eBPF lane, which builds`,
-                  `   successfully — the parity step in this workflow does that check, and`,
-                  `   a divergence is the most likely cause.`,
+                  `2. This job and \`ci.yml\`'s eBPF lane share their setup`,
+                  `   (\`.github/actions/setup-ebpf-build\`), so check whether \`ci.yml\``,
+                  `   is failing too: if it is, the fault is in the shared setup or the`,
+                  `   pinned toolchain, not in this workflow.`,
                   `3. Verify with a dispatch: \`gh workflow run ebpf-canary.yml -f version=${pinned} -f dry_run=true\``,
                 ].join('\n');
 

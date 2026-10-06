@@ -49,7 +49,7 @@ installs the toolchain ahead of time reads the channel from the same file:
 
 | Site | How it reads the pin |
 |---|---|
-| `ci.yml` eBPF lane, `release.yml` `build-ebpf`, `ebpf-canary.yml` | A `Read the eBPF toolchain pin` step exports `steps.ebpf_toolchain.outputs.channel` and `$EBPF_TOOLCHAIN`; the `dtolnay/rust-toolchain` install, the canary's probes, parity check and `break_env` removal all use it |
+| `ci.yml` eBPF lane, `release.yml` `build-ebpf`, `ebpf-canary.yml` | All three run `.github/actions/setup-ebpf-build` (#905), which reads the pin, installs that nightly with `rust-src`, and exports `steps.ebpf_toolchain.outputs.channel` and `$EBPF_TOOLCHAIN`; the canary's probe and `break_env` removal use them. The action also owns the apt packages, the workspace's stable toolchain, the cargo cache and the `rustup-init` cleanup, so the three build environments cannot drift apart |
 | `Dockerfile.ebpf-test` | Copies the file alone and installs that channel, so the layer rebuilds only when the pin moves |
 | `scripts/verify-ebpf.sh` | Installs that channel if missing |
 
@@ -149,10 +149,10 @@ scripts/verify-ebpf.sh --version <version-from-issue>
 #    Both are included; you should not need to re-run anything to form
 #    a hypothesis.
 
-# 2. Compare this job against ci.yml's eBPF lane, which builds
-#    successfully. The canary asserts that parity itself — the
-#    "Assert toolchain parity with ci.yml" step asks rustup whether the
-#    components ci.yml declares are actually installed here.
+# 2. Check whether ci.yml's eBPF lane is failing too. Both run the
+#    same setup action (.github/actions/setup-ebpf-build), so if CI
+#    also fails, the fault is in that action or the pinned toolchain,
+#    not in the canary workflow.
 
 # 3. Verify a fix by dispatching against the PINNED version, which is
 #    known to build:
