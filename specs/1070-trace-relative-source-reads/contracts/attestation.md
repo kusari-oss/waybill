@@ -18,8 +18,7 @@ The kernel no longer drops an open because its path is relative. It also no long
 
 - `read_set`: every resolved path the invocation opened for reading. **No unresolved path, ever.**
 - `write_set`: every resolved path the invocation opened for writing.
-  - A rename by the invocation of a path already in its write set replaces that entry with the new path.
-  - A rename of a file the invocation did not write leaves the write set unchanged.
+  - A rename by the invocation records the new path in its write set and removes the old one if present. This holds even when the original open wasn't observed (FR-010).
   - No unresolved path, ever.
 
 ## Trace integrity (`trace_integrity`)
@@ -29,6 +28,8 @@ The kernel no longer drops an open because its path is relative. It also no long
 ## Products in `witness-v0.1`
 
 Products are built from `write` operations (`attestation/witness_builder.rs`). They were always empty because no open was ever classified as a write. With this change they list what the build wrote. That is the intended effect, not a side effect.
+
+Operations flagged `unresolved_relative` are **excluded** from both witness materials and products, matching FR-003's rule for read and write sets. A material or product named `raw-dylibs` would identify nothing.
 
 ## Unchanged
 

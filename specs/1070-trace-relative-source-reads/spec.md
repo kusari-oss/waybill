@@ -28,6 +28,8 @@
 
 ### Session 2026-10-06
 
+- Q: (analysis remediation) A rename by an invocation whose original write was not observed? → A: **Record the new name in its write set anyway**, and drop the old name if present (FR-010). A noise-filtered original open must not lose the real output.
+
 - Q: How is a kept relative open recorded? → A: **Resolved to an absolute path** against the opening process's working directory, in both the attestation's file operations and the read and write sets. The original relative spelling is not kept.
 - Q: What happens when the working directory cannot be established? → A: The open **stays in the attestation's file operations, flagged as unresolved, and is left out of the read and write sets**. A trace-level count of unresolved relative opens is reported.
 - Q: Scope, once planning found writes are never captured and C130 follows process ancestry only? → A: **Option B.** Capture relative reads (the original scope) **and writes** in this milestone. Cross-invocation (data-flow) attribution goes to #1141. US2 is restated accordingly.
@@ -98,7 +100,7 @@ A relative path is meaningful only together with the directory it was opened fro
 
 - **A process changes directory** between two relative opens: each open resolves against the directory current at that open.
 - **`..` segments and symlinked directories**: a resolved path is reported as the build saw it. It is not canonicalised against a filesystem the trace no longer has access to.
-- **A resolved path longer than the per-event path limit**: reported as truncated, as absolute paths over the limit already are.
+- **A path longer than the per-event path limit** (255 bytes as captured in the kernel): the open is marked truncated. Today the open probes never set this flag, which this feature fixes. A truncated relative path is not resolved, since joining a cut-off name would produce a wrong absolute path. It is recorded as unresolved.
 - **The tracer and the build in different PID namespaces** (observed: the child was pid 11 inside the container and 24020 on the host): the working directory is attributed by the same process identity the events carry.
 - **Directory-entry walks** (a process opening each entry of a directory by name relative to that directory): these are relative opens too. If they are excluded as noise, the exclusion must not also exclude a file open.
 - **Relative opens by non-compiler processes** (`cargo`, `ld`): treated the same way, since the file-operation record is not compiler-specific.
@@ -110,13 +112,13 @@ A relative path is meaningful only together with the directory it was opened fro
 - **FR-001**: A default trace MUST NOT discard a file open because its path is relative.
 - **FR-002**: Every relative open that is kept MUST be recorded as an absolute path, resolved against the opening process's working directory at the time of the open, in both the attestation's file operations and the compiler invocation's read or write set. The original relative spelling is not retained.
 - **FR-003**: When the working directory of a relative open cannot be established, the trace MUST keep the open in the attestation's file operations, flagged as unresolved, and MUST leave it out of every read and write set. It MUST report a trace-level count of such opens. Read and write sets, and C130 derived from them, therefore contain only absolute paths.
-- **FR-004**: Noise reduction for relative opens MAY remain only for opens that are positively identified as directory-entry walks. No relative file open of a source or build input may be excluded by it.
+- **FR-004**: Noise reduction for relative opens MAY remain only for opens that are positively identified as directory-entry walks. No relative file open of a source or build input may be excluded by it. None is retained (research R1).
 - **FR-005**: `--include-system-reads` MUST continue to disable every System-category exclusion, including any retained directory-walk exclusion (milestone 213, FR-010).
 - **FR-006**: On the `two_binaries_diverge` fixture, a default trace MUST report zero buffer overflows, as it does today.
 - **FR-007**: The eBPF integration harness MUST assert the outcome, not only the presence of compiler invocations: the four crate roots in the read sets (US1), and the outputs in the write sets (US2). The harness MUST build into a directory the noise filter does not exclude, so that writes are observable.
 - **FR-008**: A file opened for writing MUST be recorded as a write: opened write-only or read-write, or with creation or truncation requested. It goes into the opening invocation's write set and is recorded as a write in the attestation's file operations. A file opened only for reading MUST continue to be recorded as a read. (The cause and the decision are recorded in Context and Clarifications.)
 - **FR-009**: A path resolved by FR-002 MUST be treated the same as an absolute path for both reads and writes.
-- **FR-010**: When an invocation renames a file it wrote, its write set MUST record the file under the new name. A rename of a file the invocation did not write is recorded in the attestation's file operations as a write of the new name.
+- **FR-010**: When an invocation renames a file, its write set MUST record the file under the new name, and MUST drop the old name if present. This holds whether or not the original write was observed: the original open may have been discarded by a noise category, and the renamed file is still that invocation's output. Every successful rename is also recorded in the attestation's file operations as a write of the new name.
 - **FR-011**: The kernel noise filter MUST NOT discard build outputs or build inputs under the build directory's `deps/` directory (compiled libraries, metadata, object files and linked binaries). Fingerprint and incremental-compilation bookkeeping remain filtered (milestone 213).
 
 ### Key Entities

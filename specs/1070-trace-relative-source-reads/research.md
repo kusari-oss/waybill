@@ -45,13 +45,15 @@ Relative opens are 0.9% and 0.5% of all opens. The ~12,000-event relative flood 
 
 **Rejected.** A separate ring buffer for lineage events, which would require merging two streams by timestamp in userspace.
 
+**Parent identity (analysis U1).** `sched_process_fork`'s `parent_pid` argument is the parent *thread's* id. The existing m210 code stores it as-is in `PID_TO_PPID`. The fork record instead carries the parent's process id, from `bpf_get_current_pid_tgid()` in the parent's context, because cargo spawns compiles from worker threads and every other record keys on the process id. Whether m210's `PID_TO_PPID` has the same defect, which would explain `dag_edges: []` in the measured runs, is outside this milestone.
+
 ## R4 — Reporting only successful `chdir` and `rename`
 
 **Decision.** Use the syscall entry and exit tracepoints:
 - `sys_enter_chdir` / `sys_exit_chdir`, and `fchdir`;
 - `renameat` and `renameat2` (arm64 has no `rename` syscall; x86-64 adds `sys_enter_rename`).
 
-The entry tracepoint stores the path argument in a per-thread pending map. The exit tracepoint emits the record when the return value is 0, and always clears the entry. A tracepoint missing on a kernel is reported the way kprobe attach failures already are. The directory model then degrades to "unresolved" instead of guessing (Principle III).
+The entry tracepoint stores the path argument in a per-thread pending map. The exit tracepoint emits the record when the return value is 0, and always clears the entry. **Attach failure is fatal (analysis C1, Principle III).** If a required syscall tracepoint fails to attach, the trace exits non-zero with the reason. Without it, every relative path, or every library output, would silently go missing, which is the failure this milestone exists to remove. The required set is `chdir` and `fchdir` enter/exit, plus `renameat` and `renameat2` enter/exit. `rename` is required only on architectures that have the syscall; on arm64 its absence is not a failure. The existing m210 `sched_process_*` tracepoints stay best-effort here, and are noted as a follow-up.
 
 **Rejected.** A kprobe on `do_renameat2` or `set_fs_pwd`: internal functions whose arguments change shape between kernels, and which fire on attempts rather than successes.
 

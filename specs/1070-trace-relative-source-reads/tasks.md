@@ -59,14 +59,18 @@ Paths are relative to the repository root. `WC` = `waybill-common/src`, `WE` = `
 **Goal**: relative opens are kept and resolved, so each crate compile's read set contains its crate root.
 **Independent Test**: quickstart.md "US1": 4 absolute crate-root paths in the `rustc` read sets of a default trace of `two_binaries_diverge`.
 
-- [ ] T007 [US1] In `WE/programs/file_ops.rs`, both `try_openat2` and `try_do_filp_open` read `dfd` from `ctx.arg(0)` (as `i32`) and store it in the new `FileEvent.dfd`. The relative-path drop is gone with T003's classifier change; leave a comment citing #614.
-- [ ] T008 [US1] In `WE/programs/compiler_exec.rs`, `sched_process_fork` keeps its existing `PID_TO_PPID` work and additionally reserves a `LineageEvent { Fork, ts, parent_pid, child_pid }` in `FILE_EVENTS`. On reserve failure it calls `increment_drop_counter(&FILE_EVENT_DROPS)`. Import `FILE_EVENTS` and `FILE_EVENT_DROPS` from `crate::maps`.
+- [ ] T007 [US1] In `WE/programs/file_ops.rs`, both `try_openat2` and `try_do_filp_open`:
+  - read `dfd` from `ctx.arg(0)` (as `i32`) and store it in the new `FileEvent.dfd`;
+  - set `path_truncated = 1` when the string copy filled the 256-byte buffer (its returned length is 255 with no terminator inside; analysis I1).
+
+  In `WL/trace/cwd.rs`, `resolve` returns `Unresolved` for a truncated relative path, with a unit test. The relative-path drop is gone with T003's classifier change; leave a comment citing #614.
+- [ ] T008 [US1] In `WE/programs/compiler_exec.rs`, `sched_process_fork` keeps its existing `PID_TO_PPID` work and additionally reserves a `LineageEvent { Fork, ts, parent_pid, child_pid }` in `FILE_EVENTS`. **`parent_pid` is `bpf_get_current_pid_tgid() >> 32`** (the parent's process id, since the tracepoint runs in the parent). It is not the tracepoint's `parent_pid` argument at offset 24, which is a thread id (analysis U1). `child_pid` stays the offset-44 argument. In `WL/trace/cwd.rs`, add a unit test: a fork whose parent is a non-main thread's process still inherits the process's directory. On reserve failure it calls `increment_drop_counter(&FILE_EVENT_DROPS)`. Import `FILE_EVENTS` and `FILE_EVENT_DROPS` from `crate::maps`.
 - [ ] T009 [US1] Create `WE/programs/fs_syscalls.rs` (registered in `WE/programs/mod.rs` and wherever programs are declared in `WE/main.rs`). Add a per-thread pending map in `WE/maps.rs`: `PENDING_CHDIR: HashMap<u32 /*tid*/, [u8; 256]>`, 4096 entries.
   - `sys_enter_chdir`: copy the user path argument with `bpf_probe_read_user_str_bytes` into the map, keyed by tid.
   - `sys_exit_chdir`: look up and remove the entry; if `ret == 0`, reserve a `FileEvent { Chdir, path, dfd: AT_FDCWD, path_truncated }` (truncated when the copy filled the buffer).
   - `sys_exit_fchdir`: if `ret == 0`, emit `FileEvent { Fchdir }` with an empty path.
   - Every reserve failure increments `FILE_EVENT_DROPS`. Apply `should_trace()` as the other probes do. The noise classifier does **not** apply to these records.
-- [ ] T010 [US1] In `WL/trace/loader.rs`, attach the new tracepoints with the existing `attach_tracepoint(bpf, prog, "syscalls", name)` helper. An attach failure is recorded in the same failure list as the existing tracepoints and kprobes, so it reaches `trace_integrity` (Principle III). The trace still runs, and resolution degrades to unresolved.
+- [ ] T010 [US1] In `WL/trace/loader.rs`, attach the new chdir/fchdir enter/exit tracepoints with the existing `attach_tracepoint(bpf, prog, "syscalls", name)` helper. **An attach failure is fatal** (Principle III; analysis C1): return an error naming the tracepoint, so `waybill trace` exits non-zero. Do not use the `warn!`-and-continue pattern the m210 `sched_process_*` tracepoints use. Add a short comment noting that those stay best-effort, as a follow-up.
 - [ ] T011 [US1] In `WL/cli/scan.rs`:
   - `drain_file` reads the leading `event_type` (`u32`) of each record and dispatches. `Fork` → `cwd.fork`, `Chdir` → `cwd.chdir`, `Fchdir` → `cwd.fchdir`, each after checking the record's own size. `Open`/`Read`/`Write` → resolve through `cwd.resolve(ev.pid, ev.dfd, path)` before calling `agg.handle_file_event` and `compiler_agg.handle_file_event`.
   - Own the `CwdTracker` alongside the two aggregators, in the drain loop and in the settling drain.
@@ -95,14 +99,14 @@ Paths are relative to the repository root. `WC` = `waybill-common/src`, `WE` = `
   - Enter stores `{old_dfd, old_path, new_dfd, new_path}` in a per-tid pending map (`PENDING_RENAME` in `WE/maps.rs`, 4096 entries). For `rename`, the dfds are `AT_FDCWD`.
   - Exit emits a `RenameEvent` when `ret == 0`, and always removes the entry.
   - Apply `classify_and_drop_if_noise` to the **new** path only. Reserve failure increments `FILE_EVENT_DROPS`.
-- [ ] T018 [US2] In `WL/trace/loader.rs`, attach the rename tracepoints. `sys_enter_rename` / `sys_exit_rename` are optional per architecture: their absence on arm64 is not a failure; on x86-64 it is.
+- [ ] T018 [US2] In `WL/trace/loader.rs`, attach the rename tracepoints. `renameat` and `renameat2` enter/exit are **fatal on failure**, like T010. `sys_enter_rename` / `sys_exit_rename` are required only where the architecture has the syscall (x86-64); on arm64 their absence is not a failure. Select by `cfg(target_arch)`.
 - [ ] T019 [US2] In `WL/trace/aggregator.rs`, classify `Open` as `Write` when `cwd::is_write(flags)`, and as `Read` otherwise. The input struct from T013 carries the flags. A `Rename` input records a `Write` of the resolved new path, flagged unresolved if it could not be resolved.
-- [ ] T020 [US2] In `WL/trace/compiler_pipeline.rs`, an `Open` with `is_write(flags)` inserts into `write_set` (the existing `Write` branch), not `read_set`. A `Rename` whose old path is in the invocation's `write_set` moves that entry to the new path, keeping its value. A rename of a path the invocation did not write leaves `write_set` unchanged (FR-010). Unresolved paths never touch either set.
+- [ ] T020 [US2] In `WL/trace/compiler_pipeline.rs`, an `Open` with `is_write(flags)` inserts into `write_set` (the existing `Write` branch), not `read_set`. A `Rename` by a pid that belongs to an invocation inserts the new path into its `write_set`, carrying the old entry's value if the old path was present, and removes the old path. This applies even when the old path was never observed (FR-010, analysis U3). Unresolved paths never touch either set.
 - [ ] T021 [US2] In `WL/cli/scan.rs` `drain_file`, dispatch `Rename`: check the `RenameEvent` size, resolve both paths with `cwd.resolve`, count any unresolved side, and pass the result to both aggregators.
 - [ ] T022 [P] [US2] Unit tests:
   - `is_write` drives Read/Write in `aggregator.rs`;
-  - in `compiler_pipeline.rs`: a write-mode open lands in `write_set`; a read-only open lands in no `write_set` (US2 scenario 3); a rename moves an own entry from `deps/rmetaX/full.rmeta` to `deps/libfoo-h.rmeta`; a rename of a foreign file leaves `write_set` unchanged;
-  - `witness_builder.rs` products now list written files (contracts/attestation.md).
+  - in `compiler_pipeline.rs`: a write-mode open lands in `write_set`; a read-only open lands in no `write_set` (US2 scenario 3); a rename moves an own entry from `deps/rmetaX/full.rmeta` to `deps/libfoo-h.rmeta`; a rename whose old path was never observed still adds the new path;
+  - `witness_builder.rs` products now list written files, and operations flagged `unresolved_relative` appear in neither materials nor products (contracts/attestation.md; analysis U2). Implement that exclusion in `WL/attestation/witness_builder.rs`.
 
 **Checkpoint**: US2 is done when T025 shows SC-002.
 
@@ -125,6 +129,7 @@ Paths are relative to the repository root. `WC` = `waybill-common/src`, `WE` = `
   - assert that the 4 absolute crate roots appear in `rustc` read sets (quickstart US1);
   - assert that link invocations' `write_set`s contain `deps/safe_only-*` and `deps/vuln_included-*`;
   - assert that the library compiles' `write_set`s contain final `deps/liblibsafe-*.rlib` / `.rmeta` and `deps/liblibvuln-*.rlib` / `.rmeta`, and no `rmeta*/full.rmeta` entry remains;
+  - assert that the `vuln-included` and `safe-only` compiles' `read_set`s contain the `deps/lib*.rlib` or `.rmeta` of each library they depend on (US2 scenario 4; analysis G1);
   - assert `trace_integrity.unresolved_relative_opens` equals the flagged-operation count;
   - assert `ring_buffer_overflows == 0` (SC-003), replacing the `≤ 10000` threshold;
   - narrow the fingerprint-leak check from `/fingerprint/|/deps/|/incremental/` to `/.fingerprint/|/incremental/`. Note in a comment that the old `/fingerprint/` never matched cargo's `.fingerprint` directory.

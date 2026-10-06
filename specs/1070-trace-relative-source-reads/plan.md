@@ -21,7 +21,7 @@ C130/C131 emission is out of scope (#1142), and so is data-flow attribution (#11
 **Testing**:
 - unit tests for `CwdTracker` (fork / chdir / fchdir / unknown / relative chdir / truncation), `is_write`, rename handling in the compiler aggregator, and the classifier change in `waybill-common/src/filter.rs`;
 - the eBPF integration harness, with FR-007's outcome assertions, which CI runs in the eBPF lane;
-- `./scripts/pre-pr.sh`, plus `WAYBILL_PREPR_EBPF=1` locally for the feature-on build;
+- `./scripts/pre-pr.sh`. The feature-on (`ebpf-tracing`) build and the harness are gated by CI's eBPF lane and by T026 on Colima, because this macOS host can't build the feature-on lane;
 - a re-measurement with `measurements/probe.sh` on Colima for SC-003 and SC-004.
 
 **Target Platform**: Linux (eBPF trace mode). The tracepoint set differs by architecture: arm64 has no `rename`.
@@ -48,7 +48,7 @@ C130/C131 emission is out of scope (#1142), and so is data-flow attribution (#11
 |---|---|
 | I. Pure Rust | ✅ No new crates. |
 | II. eBPF-only observation (trace mode) | ✅ The working directory comes only from observed fork, chdir and fchdir events. The root is seeded by a `chdir` the probes observe, not by reading state (R2). No `/proc`, no manifests. |
-| III. Fail closed (trace mode) | ✅ Nothing is guessed. An unresolvable path is recorded, flagged and counted, never joined with a presumed directory. A missing tracepoint is reported like an attach failure. No fallback to static analysis. |
+| III. Fail closed (trace mode) | ✅ Nothing is guessed. An unresolvable path is recorded, flagged and counted, never joined with a presumed directory. **A required syscall tracepoint that fails to attach is fatal: non-zero exit with the reason** (research R4; analysis C1). No fallback to static analysis. |
 | IV. Type-driven | ✅ `WorkingDir::{Known, Unknown}` and `Resolved \| Unresolved` are enums. Record types are decoded by tag, each with its own size check. No `unwrap` in production paths. |
 | VI. Three-crate architecture | ✅ Records and filters in `waybill-common`, probes in `waybill-ebpf`, model and aggregation in `waybill-cli`. |
 | VII. Test isolation | ✅ The pure logic is unit-tested. Kernel behaviour is tested by the containerised harness CI already runs. |
