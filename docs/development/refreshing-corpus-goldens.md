@@ -309,7 +309,10 @@ Pick a mutation that reaches every target and every format.
 > lane. Dispatched in #979 it produced `1 of 3 formats drifted` — SPDX 3
 > only, and then only via the content-addressed ID cascade, not the
 > version field itself. It therefore demonstrates nothing about the CDX
-> and SPDX 2.3 comparisons, which is the whole point of this step.
+> and SPDX 2.3 comparisons, which is the whole point of this step. Since
+> #1140 that cascade is gone too (annotation and relationship IRIs no
+> longer hash the document IRI), so a version mutation now drifts nothing
+> at all.
 >
 > Any mutation you pick must be checked against `mask_nondeterministic`
 > first. A masked mutation produces a green lane and looks exactly like a
