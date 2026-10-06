@@ -201,9 +201,10 @@ fn build_annotation_with_disambiguator(
 ) -> Value {
     let envelope = MikebomAnnotationCommentV1::new(field, coerce_envelope_value(value));
     let statement = envelope.to_comment_string();
+    let subject = super::v3_relationships::local_part(subject_iri, doc_iri);
     let hash_input = match disambiguator {
-        Some(d) => format!("{subject_iri}|{field}|{d}"),
-        None => format!("{subject_iri}|{field}"),
+        Some(d) => format!("{subject}|{field}|{d}"),
+        None => format!("{subject}|{field}"),
     };
     let anno_iri = format!(
         "{doc_iri}/anno-{}",
@@ -276,15 +277,15 @@ fn push_component_fields(
     if let Some(ref v) = c.sbom_tier {
         push(out, "waybill:sbom-tier", json!(v));
     }
-    // C6 (milestone 052/part-2): the legacy `waybill:dev-dependency`
-    // annotation is REMOVED. Per Constitution Principle V (v1.4.0),
-    // SPDX 3.0.1 has a native `lifecycleScope` parameter on
-    // `dependsOn` relationships (LifecycleScopeType enum:
-    // `development`, `build`, `test`, `runtime`). The signal travels
-    // via the typed `RelationshipType::{Dev,Build,Test}DependsOn`
-    // variants set by `apply_lifecycle_scope_to_edges` in
-    // `scan_fs/mod.rs`, then emitted as `lifecycleScope` by
-    // `spdx/v3_relationships.rs`. No annotation needed.
+    // C42 `waybill:lifecycle-scope`. SPDX 3.0.1 carries scope natively
+    // as `scope` on the `LifecycleScopedRelationship` pointing at a
+    // component, but that is an edge property: a scoped component that
+    // nothing depends on has no edge, and its scope would be lost (#1148).
+    // `optional` has no `LifecycleScopeType` value at all. So the element
+    // carries the annotation too, as CycloneDX and SPDX 2.3 do.
+    if let Some(scope) = c.lifecycle_scope.filter(|s| s.is_non_runtime()) {
+        push(out, "waybill:lifecycle-scope", json!(scope.as_str()));
+    }
     // Milestone 112: `waybill:build-inclusion` — parity-bridging
     // element annotation. SPDX 3.0.1's `LifecycleScopeType` has no
     // excluded or unknown value (CDX expresses not-needed natively
@@ -1237,20 +1238,21 @@ mod tests {
             .collect()
     }
 
-    /// Milestone 145 US2 REVERTED (Principle V): SPDX 3 carries
-    /// lifecycle scope natively via `LifecycleScopedRelationship.scope`.
-    /// Asserts the `waybill:lifecycle-scope` annotation is NOT emitted
-    /// at the Package level — issue #228's existing design contract.
-    /// Guards against future reintroduction of the redundant emission.
+    /// #1148: SPDX 3 carries scope natively only on the edge pointing at
+    /// a component, so a scoped component nothing depends on would lose
+    /// it, and `optional` has no `LifecycleScopeType` value. The element
+    /// carries `waybill:lifecycle-scope` for every non-runtime scope, as in
+    /// CycloneDX and SPDX 2.3; runtime and unclassified carry nothing.
     #[test]
-    fn spdx3_lifecycle_scope_not_emitted_as_annotation_md145() {
+    fn spdx3_lifecycle_scope_annotation_matches_the_other_formats() {
         use waybill_common::resolution::LifecycleScope;
-        for scope in [
-            Some(LifecycleScope::Development),
-            Some(LifecycleScope::Build),
-            Some(LifecycleScope::Test),
-            Some(LifecycleScope::Runtime),
-            None,
+        for (scope, expected) in [
+            (Some(LifecycleScope::Development), Some("development")),
+            (Some(LifecycleScope::Build), Some("build")),
+            (Some(LifecycleScope::Test), Some("test")),
+            (Some(LifecycleScope::Optional), Some("optional")),
+            (Some(LifecycleScope::Runtime), None),
+            (None, None),
         ] {
             let c = synthetic_resolved_component(scope);
             let mut out = Vec::new();
@@ -1264,15 +1266,14 @@ mod tests {
                 true,
                 &[],
                 None,
-            None,
+                None,
             );
-            let envs = envelopes_for_field(&out, "waybill:lifecycle-scope");
-            assert!(
-                envs.is_empty(),
-                "Principle V violation: SPDX 3 carries scope natively via \
-                 LifecycleScopedRelationship.scope — waybill:lifecycle-scope \
-                 annotation MUST NOT appear on Package elements. Got: {envs:?} (scope={scope:?})"
-            );
+            let values: Vec<serde_json::Value> = envelopes_for_field(&out, "waybill:lifecycle-scope")
+                .into_iter()
+                .map(|e| e.value)
+                .collect();
+            let want: Vec<serde_json::Value> = expected.into_iter().map(|v| serde_json::json!(v)).collect();
+            assert_eq!(values, want, "scope={scope:?}");
         }
     }
 

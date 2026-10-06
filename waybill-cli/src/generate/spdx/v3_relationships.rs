@@ -31,9 +31,10 @@ pub fn build_relationship(
     doc_iri: &str,
     creation_info_id: &str,
 ) -> Value {
+    let (from, to) = (local_part(from_iri, doc_iri), local_part(to_iri, doc_iri));
     let rel_iri = format!(
         "{doc_iri}/rel-{}",
-        hash_prefix(format!("{from_iri}|{rel_type}|{to_iri}").as_bytes(), 16)
+        hash_prefix(format!("{from}|{rel_type}|{to}").as_bytes(), 16)
     );
     json!({
         "type": "Relationship",
@@ -123,10 +124,11 @@ pub(crate) fn group_dependency_relationships(
 
     let mut has_dependencies: std::collections::BTreeSet<String> = Default::default();
     for ((from, element_type, scope), targets) in sets {
-        let joined = targets.iter().cloned().collect::<Vec<_>>().join(",");
+        let joined = targets.iter().map(|t| local_part(t, doc_iri)).collect::<Vec<_>>().join(",");
+        let local_from = local_part(&from, doc_iri);
         let key = match &scope {
-            Some(sc) => format!("{from}|dependsOn|{joined}|{sc}"),
-            None => format!("{from}|dependsOn|{joined}"),
+            Some(sc) => format!("{local_from}|dependsOn|{joined}|{sc}"),
+            None => format!("{local_from}|dependsOn|{joined}"),
         };
         let mut element = json!({
             "type": element_type,
@@ -343,6 +345,14 @@ fn sort_by_spdx_id(relationships: &mut [Value]) {
         let key = |v: &Value| v["spdxId"].as_str().unwrap_or("").to_string();
         key(a).cmp(&key(b))
     });
+}
+
+/// An element IRI without the document IRI it begins with, for hashing
+/// into another element's IRI. The document IRI hashes in the tool version
+/// (`v3_document::scan_fingerprint`), so hashing full IRIs re-identified
+/// every relationship and annotation at each version bump (#1140).
+pub(crate) fn local_part<'a>(iri: &'a str, doc_iri: &str) -> &'a str {
+    iri.strip_prefix(doc_iri).unwrap_or(iri)
 }
 
 fn hash_prefix(input: &[u8], chars: usize) -> String {

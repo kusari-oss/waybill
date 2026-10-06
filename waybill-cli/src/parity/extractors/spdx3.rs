@@ -780,6 +780,7 @@ spdx3_anno!(c189_spdx3, "waybill:nixpkgs-declaration-grade", document);
 spdx3_anno!(c191_spdx3, "waybill:deps-dev-outcome", component);
 spdx3_anno!(c192_spdx3, "waybill:deps-dev-outcomes", document);
 spdx3_anno!(c193_spdx3, "waybill:vex-claims-omitted", document);
+spdx3_anno!(c42_spdx3, "waybill:lifecycle-scope", component);
 spdx3_anno!(c194_spdx3_raw, "waybill:derivation", document);
 
 /// C194 — compared by projection only (milestone 1071).
