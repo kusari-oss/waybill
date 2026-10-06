@@ -18,7 +18,7 @@ Measurements are in `measurements/` (`derivation_probe.py` and its output). `W/`
 
 ## R2 — Edit model: format-native JSON, not a neutral model
 
-**Measured.** waybill writes all three formats with sorted keys and 2-space indentation: the cargo goldens re-serialise byte-identically. So a document read into a JSON value and written back unchanged is byte-identical.
+**Measured.** waybill writes CycloneDX and SPDX 3 with sorted keys and 2-space indentation: they re-serialise byte-identically. **Corrected at implementation:** SPDX 2.3 is written in struct field order (`spdxVersion` first), not sorted, so an edited SPDX 2.3 document is the same JSON with its keys sorted. `T/sbom_edit_filter.rs::documents_round_trip` pins both behaviours.
 
 **Decision.**
 - Each format has an adapter that edits the document's own JSON in place. Untouched content is byte-identical for waybill-produced documents. For third-party documents it's equal as JSON (key order may change), which is the reading of FR-002 for them.
@@ -138,3 +138,26 @@ Operations apply in order. The command reports `matched` / `changed` per operati
 ## R10 — Detecting the input format
 
 **Decision.** Reuse the detection in `W/binding/verify.rs`: `@graph` means SPDX 3, `spdxVersion` and `packages` mean SPDX 2.3, `bomFormat: CycloneDX` means CycloneDX. Anything else, and CycloneDX `specVersion` other than 1.6, is refused (FR-016). The output keeps the input's format and version.
+
+## Implementation notes (2026-10-06)
+
+Decisions made while implementing, recorded against the research item they refine.
+
+- **R3: `optional` scope.** Selectors accept `scope=optional`, waybill's fifth `LifecycleScope`. SPDX 3 has no optional scope and carries it only as `waybill:optional-derivation` (m179). The adapters read that annotation in all three formats, so `scope=optional` matches identically; measured on the corpus goldens: python-flask 22/22/22, rust-ripgrep 3/3/3.
+- **R4: completeness.** C104 `waybill:graph-completeness` becomes `unknown`, and C105 (its reason) is removed. `partial` needs a reason code, and the closed vocabulary has none for "an edit changed this list".
+- **R5: path inventory.** Paths are collected from one list of path-bearing fields, defined once for all formats: C18, C25, C31, C63, C66, C76, C92, C120, C121, C130, C136, plus D2 evidence occurrences. The first implementation read only C18/C92 in SPDX. On image-postgres16, `--drop-annotations waybill: --redact paths` then matched 6859 paths in CycloneDX and 0 in SPDX, whose evidence rides an `evidence.occurrences` annotation that the drop leaves in place.
+- **R5: basenames.** A path's basename is replaced only within a file-tier component, whose name is the file name. Applied within any component, it renamed a package's own `bom-ref` (`postgresql-common`), and would have rewritten a `?arch=` PURL qualifier. Component-scoped forms never touch identifier fields. Identifiers change only through everywhere-forms, together with every reference to them.
+- **R5: application.** Each operation's everywhere-forms are replaced in one multi-pattern pass, longest first. The first implementation walked the document once per value: 6.0 s on the 2 MB image-postgres16 CycloneDX golden, now 0.12 s (`measurements/performance.txt`).
+- **R5: remove mode.** Values become opaque markers, distinct per value: `redacted-path-<n>`, `redacted-host-<n>.invalid`, `redacted-<n>`. Hosts always end in `.invalid` (RFC 6761), pseudonymised or not, so they stay valid hostnames.
+- **R5: leak check.** The check searches every string and what any base64 string decodes to: certificates and DSSE envelopes are base64.
+- **R7: payloads.** Signature material is embedded without its signed payload. A DSSE envelope's payload is the whole original document, and embedding it would undo every drop and redaction; the verifier has the original's bytes anyway. `material_sha256` is computed over the payload-free material.
+- **R7: the original's signature.** It is removed from the output: the CycloneDX `signature` and the m778 `attestation` reference to a keyless sidecar. It signs bytes that no longer exist; its material is in the record.
+- **R7: document identity.** A derived document is a new document:
+  - CycloneDX keeps `serialNumber` and increments `version`, CycloneDX's own model for a modified BOM;
+  - SPDX 2.3 gets a new `documentNamespace` (`<original>-edit-<16 hex>`);
+  - SPDX 3 gets a new `SpdxDocument` IRI, with references to the document itself updated, while its elements keep their IRIs.
+
+  The CycloneDX record is a `metadata.properties` entry, where document-scope `waybill:` annotations live.
+- **R7: verification keys.** Static-key signatures verify only against `--key`. The key a signature embeds is never trusted. Passing any `--key` also requires the derived document to be signed, so a stripped signature fails (tamper case (d)) instead of reading as unsigned.
+- **Found while testing, not fixed here:** SPDX 3 loses a component's lifecycle scope when the component has no incoming dependency edge. The scope rides only on the relationship, and no `waybill:lifecycle-scope` annotation is emitted. Example: maven-guice `guice-testlib` is test-scoped in CycloneDX and SPDX 2.3 and unscoped in SPDX 3, so `--drop scope=development,test` matches 17/17/16 there. This is an emitter parity gap, filed as #1148.
+

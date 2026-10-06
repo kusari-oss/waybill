@@ -1,0 +1,54 @@
+SC-006 — editing takes no longer than generating (target ratio <= 1.0)
+=====================================================================
+
+MEASURED, 2026-10-06, Apple M5 Max, release build of branch 1071-sbom-edit
+(base 9f06d4f4 plus the milestone's uncommitted implementation).
+
+Target: image-postgres16 (docker.io/library/postgres@sha256:4c9405bd…6bf56,
+the public-corpus pin).
+
+Generation (warm layer cache; the first, cold run took 12.62 s and is excluded):
+
+  waybill --offline sbom scan --image <pin> \
+    --format cyclonedx-json,spdx-2.3-json,spdx-3-json (three --output) \
+    --root-name image-postgres16 --root-version x
+
+  runs: 6.53 s, 6.63 s, 6.51 s       median 6.53 s (all three formats, one scan)
+
+Edit (the quickstart's operations, minus signing, which the scan did not do
+either), one invocation per format, on the committed goldens
+waybill-cli/tests/fixtures/public_corpus/image-postgres16/{cdx,spdx-2.3,spdx-3}.json:
+
+  --drop 'scope=development,test' --drop 'tier=file' --drop-annotations 'waybill:'
+  --redact paths --redact 'hosts:pseudonymise=*.corp.acme.example'
+  --redact 'names:pseudonymise=@acme/*' --redact-key-file <key>
+
+                 run 1    run 2    run 3    median
+  CycloneDX      0.14 s   0.12 s   0.12 s   0.12 s
+  SPDX 2.3       0.17 s   0.16 s   0.16 s   0.16 s
+  SPDX 3         0.36 s   0.35 s   0.36 s   0.36 s
+  sum                                       0.64 s
+
+Ratio (edit all three / generate all three): 0.64 / 6.53 = 0.10   PASS
+
+Per-operation counts, identical in all three formats: 117 components dropped
+(tier=file), 747 annotations removed, 6859 paths redacted.
+
+Two findings made while measuring, both fixed before these numbers were taken:
+
+1. The first measurement of the CycloneDX edit took 6.0 s and then failed
+   closed. Path redaction walked the whole document once per path (6859
+   paths), and a path's basename was replaced throughout a package's own
+   subtree, renaming its bom-ref (`postgresql-common`, from
+   /etc/logrotate.d/postgresql-common) and, for /usr/bin/arch, the `?arch=`
+   PURL qualifier. Now one multi-pattern pass replaces every form, basenames
+   apply only to file-tier components, and component-scoped forms never
+   touch identifier fields.
+
+2. With `--drop-annotations waybill:` before `--redact paths`, CycloneDX
+   matched 6859 paths and both SPDX formats matched 0, leaving every
+   evidence path in the SPDX outputs. SPDX carries evidence occurrences as
+   an `evidence.occurrences` annotation, which survives the drop, and the
+   SPDX adapters did not read it. Path collection is now defined once over
+   every path-bearing catalogue field (C18, C25, C31, C63, C66, C76, C92,
+   C120, C121, C130, C136, D2), and a test pins equal counts across formats.

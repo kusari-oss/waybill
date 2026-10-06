@@ -550,6 +550,33 @@ fn canonicalize_value(value: &Value, order_sensitive: bool) -> Value {
     }
 }
 
+/// Milestone 1071 (C194): the format-independent part of a
+/// `waybill:derivation` record. The three formats' records describe three
+/// different original files, so `original` (hash, format, signature),
+/// `tool` and `created` differ by design; what was done must not.
+pub fn derivation_parity_projection(record: &Value) -> Value {
+    let ancestors: Vec<Value> = record
+        .get("ancestors")
+        .and_then(Value::as_array)
+        .map(|a| a.iter().map(derivation_parity_projection).collect())
+        .unwrap_or_default();
+    serde_json::json!({
+        "schema": record.get("schema").cloned().unwrap_or(Value::Null),
+        "operations": record.get("operations").cloned().unwrap_or_else(|| serde_json::json!([])),
+        "ancestors": ancestors,
+    })
+}
+
+/// C194 values: each extracted record reduced to its projection.
+pub(super) fn derivation_projections(raw: BTreeSet<String>) -> BTreeSet<String> {
+    raw.into_iter()
+        .map(|s| match serde_json::from_str::<Value>(&s) {
+            Ok(v) if v.is_object() => canonicalize_for_compare(&derivation_parity_projection(&v), true),
+            _ => s,
+        })
+        .collect()
+}
+
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {

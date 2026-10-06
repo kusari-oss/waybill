@@ -5356,7 +5356,7 @@ pub async fn execute(
                 && !cdx_keyless
                 && artifact.relative_path == Path::new(serializer.default_filename())
             {
-                match sign_cdx_bytes_for_write(&artifact.bytes, &signing_mode) {
+                match crate::sbom::signer::sign_cdx_bytes_for_write(&artifact.bytes, &signing_mode) {
                     Ok(signed) => signed,
                     Err(e) => {
                         cleanup_written_files(&written_files);
@@ -5387,7 +5387,7 @@ pub async fn execute(
                         .map(|n| n.to_string_lossy().into_owned())
                         .unwrap_or_default()
                 );
-                match inject_signature_reference(&artifact.bytes, &sidecar_name) {
+                match crate::sbom::signer::inject_signature_reference(&artifact.bytes, &sidecar_name) {
                     Ok(with_ref) => with_ref,
                     Err(e) => {
                         cleanup_written_files(&written_files);
@@ -5457,7 +5457,7 @@ pub async fn execute(
                             }
                         }
                         let sidecar = target
-                            .with_extension(sidecar_extension_for(&target, &sidecar_payload));
+                            .with_extension(crate::sbom::signer::sidecar_extension_for(&target, &sidecar_payload));
                         let kind = sidecar_payload.kind_label();
                         let json = sidecar_payload.to_json_bytes().map_err(|e| {
                             anyhow::anyhow!("cannot serialize {kind} sidecar: {e}")
@@ -6008,25 +6008,6 @@ fn suggest_non_stdout_path(offender: &str) -> String {
     }
 }
 
-/// Milestone 221 US2a — parse CDX bytes, sign the doc in-place per
-/// FR-007b (JSF into `metadata.signature`), and re-serialize.
-///
-/// Returns the signed bytes ready to write to disk. Any error
-/// bubbles up as `SbomSigningError`; the CLI layer maps that to a
-/// fail-close exit per FR-009a.
-fn sign_cdx_bytes_for_write(
-    bytes: &[u8],
-    mode: &crate::sbom::signer::SigningMode,
-) -> Result<Vec<u8>, crate::sbom::signer::SbomSigningError> {
-    let mut doc: serde_json::Value = serde_json::from_slice(bytes)?;
-    crate::sbom::signer::sign_cdx_document_in_place(&mut doc, mode)?;
-    // Re-serialize with pretty indentation to match the pre-signing
-    // CDX writer's shape. The signer canonicalizes via JCS internally
-    // for the signature bytes, so the on-disk pretty formatting is
-    // decoupled from what actually got signed.
-    Ok(serde_json::to_vec_pretty(&doc)?)
-}
-
 /// Milestone 221 US2a (FR-009a) — best-effort unlink of every file
 /// waybill wrote during this scan. Called on signing failure so
 /// consumers never see a partial `--output <path>` file. Errors on
@@ -6046,80 +6027,6 @@ fn cleanup_written_files(files: &[PathBuf]) {
     }
 }
 
-/// Milestone 221 US2a + m222 US2b — variant-aware sidecar extension.
-/// Delegates to
-/// the `Sidecar::sidecar_suffix()` method so DSSE gets `.sig.json` and
-/// Sigstore Bundle gets `.sig.bundle.json` per FR-004.
-/// Milestone 778 US2 (FR-012, FR-012a) — record inside a CycloneDX
-/// document where its detached signature lives.
-///
-/// Adds one document-level external reference of type `attestation`
-/// naming the companion artifact by **bare filename**, with no
-/// directory component, so the reference stays correct wherever the
-/// document and its artifact are stored together.
-///
-/// Three things this deliberately does NOT do:
-///
-/// - It carries no hash of the artifact. CycloneDX permits hashes on an
-///   external reference and one looks attractive here, but it is
-///   circular: the artifact signs the document, so the document cannot
-///   contain the artifact's hash.
-/// - It is not emitted on the static-key path, whose signature already
-///   lives inside the document, nor on unsigned output, which must stay
-///   byte-identical (FR-011).
-/// - It does not make the document self-verifying, and signature-aware
-///   quality scorers will still report it as unsigned — they look for an
-///   in-document signature. Its purpose is discovery.
-///
-/// Distinct from the `attestation`-typed reference the `attestation:`
-/// identifier scheme emits onto `metadata.component` (catalog row C47):
-/// that one binds an identifier, this one locates a signature, and they
-/// sit at different levels of the document.
-fn inject_signature_reference(
-    cdx_bytes: &[u8],
-    sidecar_filename: &str,
-) -> anyhow::Result<Vec<u8>> {
-    use anyhow::Context;
-    let mut doc: serde_json::Value =
-        serde_json::from_slice(cdx_bytes).context("parsing CycloneDX document to record its signature location")?;
-    let root = doc
-        .as_object_mut()
-        .ok_or_else(|| anyhow::anyhow!("CycloneDX document root is not a JSON object"))?;
-    let refs = root
-        .entry("externalReferences")
-        .or_insert_with(|| serde_json::Value::Array(Vec::new()))
-        .as_array_mut()
-        .ok_or_else(|| anyhow::anyhow!("document `externalReferences` is not an array"))?;
-    refs.push(serde_json::json!({
-        "type": "attestation",
-        "url": sidecar_filename,
-        "comment": "Detached signature for this document. Resolve relative to \
-                    the document's own directory; verify with a Sigstore-aware \
-                    verifier against this document's bytes as written.",
-    }));
-    let mut out = serde_json::to_vec_pretty(&doc)
-        .context("re-serializing CycloneDX document after recording its signature location")?;
-    out.push(b'\n');
-    Ok(out)
-}
-
-fn sidecar_extension_for(
-    target: &Path,
-    sidecar: &crate::sbom::signer::Sidecar,
-) -> std::ffi::OsString {
-    let suffix = sidecar.sidecar_suffix(); // includes leading '.'
-    let mut ext = std::ffi::OsString::new();
-    if let Some(existing) = target.extension() {
-        ext.push(existing);
-        ext.push(suffix);
-    } else {
-        // Strip the leading '.' for the no-extension case (matches
-        // sidecar_extension's shape).
-        ext.push(&suffix[1..]);
-    }
-    ext
-}
-
 fn write_bytes_to(path: &Path, bytes: &[u8]) -> anyhow::Result<()> {
     use anyhow::Context;
     if let Some(parent) = path.parent() {
@@ -6137,6 +6044,7 @@ fn write_bytes_to(path: &Path, bytes: &[u8]) -> anyhow::Result<()> {
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
     use super::*;
+    use crate::sbom::signer::inject_signature_reference;
 
     fn reg() -> SerializerRegistry {
         SerializerRegistry::with_defaults()

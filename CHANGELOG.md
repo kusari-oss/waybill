@@ -7,6 +7,17 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Added
+
+- **`waybill sbom edit`** derives an edited SBOM from one waybill emitted, in the same format (CycloneDX 1.6, SPDX 2.3 or SPDX 3.0.1) (#1129, milestone 1071).
+  - **Drop components** by selector (`scope=development,test`, `tier=file`, `ecosystem=npm;name=@acme/*`, …). Their dependents are bridged to their dependencies, and completeness claims are downgraded.
+  - **Drop annotations** by namespace. The generation context (C21) and the derivation record are never removed.
+  - **Redact** paths, hosts and names, by removal or by keyed pseudonymisation that stays consistent across documents.
+  - **Fails closed.** Nothing is written unless every dropped identifier and every redacted form is gone, including from base64-encoded material, and every reference resolves.
+  - **Records its derivation.** Every edit records the original's SHA-256, the operations applied (counts, never values) and the original's signature, as `waybill:derivation` (catalogue row C194) and in each format's native link: CycloneDX `bom` external reference, SPDX 2.3 `AMENDS`, SPDX 3 `amendedBy`.
+  - **Signs** with the same flags as `sbom scan`.
+- **`waybill sbom verify-chain`** checks an edited SBOM's signature, and for each original supplied, the hash and signature its derivation record names. Keyless signatures are checked against the document digest, and the rest is delegated to a printed `cosign verify-blob` command.
+
 ### Fixed
 
 - **`waybill trace` records the source files a workspace build compiles** (#614, milestone 1070). Cargo compiles workspace members with paths relative to the workspace root, and the kernel noise filter dropped every relative path. As a result, every compiler invocation's read set was empty. Relative opens are now resolved against the opening process's working directory, which is modelled from the forks and directory changes the trace observes. Opens that can't be resolved are kept, flagged `unresolved_relative`, and counted in `trace_integrity.unresolved_relative_opens`. They never enter a read or write set.

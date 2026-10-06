@@ -1,0 +1,16 @@
+{
+  "name": "acme-shop",
+  "version": "1.4.0",
+  "dependencies": {
+    "@acme/internal-utils": "2.0.1",
+    "express": "4.18.2"
+  },
+  "devDependencies": {
+    "jest-lite": "1.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://git.corp.acme.example/acme/shop.git"
+  },
+  "homepage": "https://wiki.corp.acme.example/shop"
+}

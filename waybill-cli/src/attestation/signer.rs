@@ -667,7 +667,7 @@ fn extract_cert_oidc_issuer(
 ///
 /// Supersedes m222's `extract_fulcio_cert_subject`, which returned a bare
 /// `String` and could not distinguish the two.
-fn extract_signing_identity(cert_der: &[u8]) -> Result<SignerIdentity, SigningError> {
+pub(crate) fn extract_signing_identity(cert_der: &[u8]) -> Result<SignerIdentity, SigningError> {
     use x509_parser::extensions::GeneralName;
     let (_, cert) =
         x509_parser::parse_x509_certificate(cert_der).map_err(|e| SigningError::CryptoError {

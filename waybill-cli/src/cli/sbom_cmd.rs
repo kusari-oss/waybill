@@ -2,6 +2,7 @@ use clap::{Args, Subcommand};
 
 use std::process::ExitCode;
 
+use super::edit::EditArgs;
 use super::enrich::EnrichArgs;
 use super::generate::GenerateArgs;
 use super::parity_cmd::ParityCheckArgs;
@@ -9,6 +10,7 @@ use super::scan_cmd::ScanArgs;
 use super::trace_binding_cmd::TraceBindingArgs;
 use super::verify::VerifyArgs;
 use super::verify_binding_cmd::VerifyBindingArgs;
+use super::verify_chain::VerifyChainArgs;
 
 #[derive(Args)]
 pub struct SbomCommand {
@@ -51,6 +53,14 @@ pub enum SbomSubcommand {
     /// state against every candidate source SBOM.
     /// Always exits 0 (informational; not validating).
     TraceBinding(TraceBindingArgs),
+    /// Derive an edited SBOM from an emitted one: drop components or
+    /// annotations, redact paths, hosts or names. The output records what
+    /// was done and the original's hash and signature (milestone 1071).
+    Edit(EditArgs),
+    /// Verify an edited SBOM's derivation chain: its own signature, and
+    /// for each supplied original, the hash and signature its derivation
+    /// record names. Exits non-zero on any failed check (milestone 1071).
+    VerifyChain(VerifyChainArgs),
 }
 
 pub async fn execute(
@@ -92,5 +102,7 @@ pub async fn execute(
         SbomSubcommand::TraceBinding(args) => {
             super::trace_binding_cmd::execute(args).await
         }
+        SbomSubcommand::Edit(args) => super::edit::execute(args).await,
+        SbomSubcommand::VerifyChain(args) => super::verify_chain::execute(args).await,
     }
 }

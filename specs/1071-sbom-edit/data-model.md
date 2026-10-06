@@ -16,7 +16,7 @@ EditOp {
 ## Selector
 
 ```text
-Selector { purl?: Glob, ecosystem?: [String], scope?: [Runtime|Development|Build|Test],
+Selector { purl?: Glob, ecosystem?: [String], scope?: [Runtime|Development|Build|Test|Optional],
            tier?: [String], role?: [String], name?: Glob | Regex }
 ```
 - All present fields must match (AND). Values within one field combine with OR.
@@ -33,7 +33,7 @@ Each of `Cdx16`, `Spdx23` and `Spdx301` implements:
 - `remove_annotations(namespace)`;
 - `redaction_targets(class, pattern) -> [String]` and `rewrite_strings(map)`, per R5;
 - `attach_derivation(record)`: the native link (R1) plus the `waybill:derivation` annotation;
-- `serialise()`: sorted keys, 2-space indentation.
+- `serialise()`: sorted keys, 2-space indentation (SPDX 2.3 inputs, written in field order, come back sorted; research R2).
 
 ## DerivationRecord (`waybill:derivation`, document scope, catalogue C194)
 
@@ -55,7 +55,7 @@ Each of `Cdx16`, `Spdx23` and `Spdx301` implements:
 }
 ```
 - **Never holds a removed or redacted value.** `category` is a closed set, and the counts are numbers.
-- **`material`** is the original's signature, copied verbatim: the JSF object, the DSSE envelope, or the Sigstore bundle. It's absent when `kind` is `none`.
+- **`material`** is the original's signature: the JSF object, the DSSE envelope, or the Sigstore bundle, **without any signed payload**. A DSSE payload is the original document itself. It's absent when `kind` is `none`.
   - When the material contains a value this edit redacts (analysis H2), `embedded` is `false` and `material` is omitted. `material_sha256` and `reason` are given instead, and verification needs the original's signature file.
 - **Counts are in format-independent units** (analysis M1), so the three formats' records agree:
   - `drop-components`: components selected and components removed;
