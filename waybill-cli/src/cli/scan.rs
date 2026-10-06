@@ -190,9 +190,13 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
     use crate::trace::compiler_pipeline::{
         CompilerPipelineAggregator, FilterConfig as CompilerFilterConfig,
     };
+    use crate::trace::cwd::{CwdTracker, Resolution};
     use crate::trace::loader::{self, LoaderConfig};
+    use crate::trace::observed::{self, ObservedKind, ObservedOp};
     use crate::trace::processor::TraceStats;
-    use waybill_common::events::{CompilerExecEvent, FileEvent, NetworkEvent};
+    use waybill_common::events::{
+        CompilerExecEvent, FileEvent, FileEventType, LineageEvent, NetworkEvent, RenameEvent,
+    };
     use waybill_common::types::timestamp::Timestamp;
 
     let trace_start = Timestamp::now();
@@ -228,8 +232,16 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
     let mut child = if args.target_pid.is_none() {
         let cmd = &args.command;
         tracing::info!(command = %cmd.join(" "), "Spawning traced command");
+        // Milestone 1070 (#614): an explicit working directory, though it is
+        // the one the child would inherit anyway. Setting it makes the child
+        // perform a `chdir` before exec, which the trace observes like any
+        // other. That seeds the working-directory model for the whole build,
+        // with no PID-namespace mapping between tracer and kernel (research R2).
         let c = std::process::Command::new(&cmd[0])
             .args(&cmd[1..])
+            .current_dir(std::env::current_dir().map_err(|e| {
+                anyhow::anyhow!("cannot read the working directory to start the traced command in: {e}")
+            })?)
             .spawn()
             .map_err(|e| anyhow::anyhow!("failed to spawn: {e}"))?;
         tracing::info!(pid = c.id(), "Child started");
@@ -252,6 +264,9 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
         include_system_reads: args.include_system_reads,
         home_dir: std::env::var("HOME").ok().map(std::path::PathBuf::from),
     });
+    // Milestone 1070 — working directory per traced process, from observed
+    // forks and directory changes, used to resolve relative paths.
+    let mut cwd = CwdTracker::new();
     let mut compiler_count: u64 = 0;
     let mut net_count: u64 = 0;
     let mut file_count: u64 = 0;
@@ -361,42 +376,111 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
         n
     }
 
+    /// Milestone 1070: `FILE_EVENTS` carries four record shapes. Each starts
+    /// with its kind as a `u32`, which is checked against the known values
+    /// *before* the record is decoded: an unknown value is not a valid
+    /// `FileEventType`, so decoding first would be undefined behaviour.
+    ///
+    /// Fork and directory-change records feed the working-directory model.
+    /// Opens and renames are resolved against it, then handed to both
+    /// aggregators as one `ObservedOp`, so they agree on path and kind.
+    #[allow(clippy::too_many_arguments)]
     fn drain_file(
         rb: &mut RingBuf<MapData>,
         agg: &mut EventAggregator,
         compiler_agg: &mut CompilerPipelineAggregator,
+        cwd: &mut CwdTracker,
         count: &mut u64,
         max: usize,
         target_pids: &std::collections::HashSet<u32>,
     ) -> usize {
+        fn resolved(r: Resolution, raw: &str) -> (String, bool) {
+            match r {
+                Resolution::Resolved(p) => (p.to_string_lossy().into_owned(), false),
+                Resolution::Unresolved => (raw.to_string(), true),
+            }
+        }
+        let admitted = |pid: u32| target_pids.is_empty() || target_pids.contains(&pid);
+
         let mut n = 0;
         while n < max {
-            match rb.next() {
-                Some(item) => {
-                    let data: &[u8] = item.as_ref();
-                    if data.len() >= core::mem::size_of::<FileEvent>() {
-                        let ev = unsafe {
-                            core::ptr::read_unaligned(data.as_ptr() as *const FileEvent)
-                        };
-                        if target_pids.is_empty() || target_pids.contains(&ev.pid) {
-                            agg.handle_file_event(&ev);
-                            // Milestone 211 (post-#611 follow-up): also route
-                            // to the m210 compiler-pipeline aggregator so
-                            // per-invocation read_set/write_set populates.
-                            // The compiler_agg keys on pid_to_invocation_id,
-                            // so events from non-compiler pids no-op harmlessly.
-                            // Without this dual-dispatch the compiler-pipeline
-                            // invocation buckets stayed empty even with file
-                            // events flowing through the doc-level file_access
-                            // — which in turn kept m210's C130 always emitting
-                            // empty payloads.
-                            compiler_agg.handle_file_event(&ev);
-                            *count += 1;
-                        }
-                        n += 1;
+            let Some(item) = rb.next() else { break };
+            n += 1;
+            let data: &[u8] = item.as_ref();
+            let Some(head) = data.get(..4) else { continue };
+            let raw_kind = u32::from_ne_bytes([head[0], head[1], head[2], head[3]]);
+            let Some(kind) = FileEventType::from_raw(raw_kind) else { continue };
+            match kind {
+                FileEventType::Fork => {
+                    if data.len() >= core::mem::size_of::<LineageEvent>() {
+                        // SAFETY: length checked; the kind was validated above.
+                        let ev = unsafe { core::ptr::read_unaligned(data.as_ptr() as *const LineageEvent) };
+                        cwd.fork(ev.parent_pid, ev.child_pid);
                     }
                 }
-                None => break,
+                FileEventType::Rename => {
+                    if data.len() < core::mem::size_of::<RenameEvent>() {
+                        continue;
+                    }
+                    // SAFETY: length checked; the kind was validated above.
+                    let ev = unsafe { core::ptr::read_unaligned(data.as_ptr() as *const RenameEvent) };
+                    if !admitted(ev.pid) {
+                        continue;
+                    }
+                    let from = match cwd.resolve(ev.pid, ev.old_dfd, ev.old_path_str(), ev.old_truncated != 0) {
+                        Resolution::Resolved(p) => Some(p),
+                        Resolution::Unresolved => None,
+                    };
+                    let raw = ev.new_path_str();
+                    let (path, unresolved) =
+                        resolved(cwd.resolve(ev.pid, ev.new_dfd, raw, ev.new_truncated != 0), raw);
+                    let op = ObservedOp {
+                        kind: ObservedKind::Rename { from },
+                        path,
+                        raw_path: raw.to_string(),
+                        unresolved,
+                        pid: ev.pid,
+                        tid: ev.tid,
+                        comm: ev.comm_str().to_string(),
+                        timestamp_ns: ev.timestamp_ns,
+                        bytes: 0,
+                        content_hash: [0u8; 32],
+                    };
+                    agg.handle_op(&op);
+                    compiler_agg.handle_op(&op);
+                    *count += 1;
+                }
+                _ => {
+                    if data.len() < core::mem::size_of::<FileEvent>() {
+                        continue;
+                    }
+                    // SAFETY: length checked; the kind was validated above.
+                    let ev = unsafe { core::ptr::read_unaligned(data.as_ptr() as *const FileEvent) };
+                    match kind {
+                        FileEventType::Chdir => cwd.chdir(ev.pid, ev.path_str(), ev.path_truncated != 0),
+                        FileEventType::Fchdir => cwd.fchdir(ev.pid),
+                        _ => {
+                            if !admitted(ev.pid) {
+                                continue;
+                            }
+                            let Some(op_kind) = observed::kind_of(&ev) else { continue };
+                            let raw = ev.path_str();
+                            if raw.is_empty() || raw == "<invalid>" {
+                                continue;
+                            }
+                            let (path, unresolved) =
+                                resolved(cwd.resolve(ev.pid, ev.dfd, raw, ev.path_truncated != 0), raw);
+                            let op = ObservedOp::with_path(&ev, op_kind, path, unresolved);
+                            // Milestone 211 (post-#611 follow-up): route to
+                            // both aggregators, so the compiler pipeline's
+                            // read and write sets fill alongside the
+                            // document-level file operations.
+                            agg.handle_op(&op);
+                            compiler_agg.handle_op(&op);
+                            *count += 1;
+                        }
+                    }
+                }
             }
         }
         n
@@ -456,7 +540,7 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
             &mut compiler_count,
             MAX_PER_ITER,
         );
-        drain_file(&mut file_rb, &mut agg, &mut compiler_agg, &mut file_count, MAX_PER_ITER, active_filter);
+        drain_file(&mut file_rb, &mut agg, &mut compiler_agg, &mut cwd, &mut file_count, MAX_PER_ITER, active_filter);
 
         if done {
             // Settling drain: pull remaining events with a hard deadline so
@@ -470,7 +554,7 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
                         &mut compiler_count,
                         MAX_PER_ITER,
                     )
-                    + drain_file(&mut file_rb, &mut agg, &mut compiler_agg, &mut file_count, MAX_PER_ITER, active_filter);
+                    + drain_file(&mut file_rb, &mut agg, &mut compiler_agg, &mut cwd, &mut file_count, MAX_PER_ITER, active_filter);
                 if n == 0 {
                     break;
                 }

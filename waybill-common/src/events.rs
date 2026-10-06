@@ -37,6 +37,11 @@ pub struct NetworkEvent {
 }
 
 /// Type of file operation observed by eBPF probes.
+///
+/// Every record in the `FILE_EVENTS` ring buffer starts with this value as
+/// a `u32`, so userspace dispatches on it before choosing which record to
+/// decode (milestone 1070). Userspace reads it as a raw `u32` rather than as
+/// this enum, because an unknown value is not a valid `FileEventType`.
 #[derive(Clone, Copy, PartialEq, Eq)]
 #[repr(C)]
 pub enum FileEventType {
@@ -44,7 +49,37 @@ pub enum FileEventType {
     Read = 1,
     Write = 2,
     Close = 3,
+    /// A process was created. Carried by a [`LineageEvent`].
+    Fork = 4,
+    /// A successful `chdir`. Carried by a [`FileEvent`] whose `path` is the
+    /// target as the process passed it.
+    Chdir = 5,
+    /// A successful `fchdir`. Carried by a [`FileEvent`] with an empty path.
+    Fchdir = 6,
+    /// A successful rename. Carried by a [`RenameEvent`].
+    Rename = 7,
 }
+
+impl FileEventType {
+    /// The record kind for a raw leading `u32`, or `None` for a value this
+    /// build does not know.
+    pub fn from_raw(raw: u32) -> Option<Self> {
+        Some(match raw {
+            0 => Self::Open,
+            1 => Self::Read,
+            2 => Self::Write,
+            3 => Self::Close,
+            4 => Self::Fork,
+            5 => Self::Chdir,
+            6 => Self::Fchdir,
+            7 => Self::Rename,
+            _ => return None,
+        })
+    }
+}
+
+/// `dfd` value meaning "relative to the working directory".
+pub const AT_FDCWD: i32 = -100;
 
 /// A file access event emitted from eBPF ring buffer.
 #[derive(Clone, Copy)]
@@ -56,9 +91,15 @@ pub struct FileEvent {
     pub tid: u32,
     pub comm: [u8; 16],
     pub path: [u8; 256],
+    /// `1` when the path filled the buffer and may have been cut off.
     pub path_truncated: u8,
     pub _path_padding: [u8; 3],
+    /// Open flags (`O_ACCMODE`, `O_CREAT`, `O_TRUNC`, ...) for `Open`
+    /// records; 0 otherwise (milestone 1070).
     pub flags: u32,
+    /// Directory fd the path is relative to; [`AT_FDCWD`] for the working
+    /// directory (milestone 1070).
+    pub dfd: i32,
     pub bytes_transferred: u64,
     /// SHA-256 of content when available.
     pub content_hash: [u8; 32],
@@ -93,6 +134,63 @@ impl FileEvent {
         let len = self.comm.iter().position(|&b| b == 0).unwrap_or(16);
         core::str::from_utf8(&self.comm[..len]).unwrap_or("<invalid>")
     }
+}
+
+/// Milestone 1070: a process was created. Emitted by the
+/// `sched_process_fork` tracepoint into `FILE_EVENTS`, so it is ordered
+/// with the file records it governs.
+///
+/// `parent_pid` is the parent's process id (tgid), read in the parent's
+/// context. It is not the tracepoint's own `parent_pid` argument, which is
+/// the forking thread's id.
+#[derive(Clone, Copy)]
+#[repr(C)]
+pub struct LineageEvent {
+    pub event_type: FileEventType,
+    pub parent_pid: u32,
+    pub timestamp_ns: u64,
+    pub child_pid: u32,
+    pub _padding: u32,
+}
+
+/// Milestone 1070: a successful rename, emitted at syscall exit into
+/// `FILE_EVENTS`.
+#[derive(Clone, Copy)]
+#[repr(C)]
+pub struct RenameEvent {
+    pub event_type: FileEventType,
+    pub pid: u32,
+    pub timestamp_ns: u64,
+    pub tid: u32,
+    pub old_dfd: i32,
+    pub new_dfd: i32,
+    pub old_truncated: u8,
+    pub new_truncated: u8,
+    pub _padding: [u8; 2],
+    pub comm: [u8; 16],
+    pub old_path: [u8; 256],
+    pub new_path: [u8; 256],
+}
+
+#[cfg(feature = "std")]
+impl RenameEvent {
+    pub fn old_path_str(&self) -> &str {
+        nul_terminated(&self.old_path)
+    }
+
+    pub fn new_path_str(&self) -> &str {
+        nul_terminated(&self.new_path)
+    }
+
+    pub fn comm_str(&self) -> &str {
+        nul_terminated(&self.comm)
+    }
+}
+
+#[cfg(feature = "std")]
+fn nul_terminated(bytes: &[u8]) -> &str {
+    let len = bytes.iter().position(|&b| b == 0).unwrap_or(bytes.len());
+    core::str::from_utf8(&bytes[..len]).unwrap_or("<invalid>")
 }
 
 /// Milestone 210: kind of a compiler-pipeline event emitted from
@@ -247,7 +345,35 @@ mod tests {
     /// Never bump the pinned value in isolation.
     #[test]
     fn file_event_size_is_stable() {
-        assert_eq!(std::mem::size_of::<FileEvent>(), 352);
+        // 352 → 360 in milestone 1070: `dfd` added (and `flags` populated).
+        assert_eq!(std::mem::size_of::<FileEvent>(), 360);
+    }
+
+    /// Milestone 1070 — the two new `FILE_EVENTS` record shapes, pinned for
+    /// the same reason as `FileEvent`.
+    #[test]
+    fn lineage_and_rename_event_sizes_are_stable() {
+        assert_eq!(std::mem::size_of::<LineageEvent>(), 24);
+        assert_eq!(std::mem::size_of::<RenameEvent>(), 560);
+    }
+
+    /// Every record kind round-trips through its raw leading `u32`, which is
+    /// how userspace dispatches; an unknown value is rejected, not cast.
+    #[test]
+    fn file_event_type_round_trips_through_raw() {
+        for t in [
+            FileEventType::Open,
+            FileEventType::Read,
+            FileEventType::Write,
+            FileEventType::Close,
+            FileEventType::Fork,
+            FileEventType::Chdir,
+            FileEventType::Fchdir,
+            FileEventType::Rename,
+        ] {
+            assert!(FileEventType::from_raw(t as u32) == Some(t));
+        }
+        assert!(FileEventType::from_raw(8).is_none());
     }
 
     #[test]

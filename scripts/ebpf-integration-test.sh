@@ -34,6 +34,12 @@ echo
 # target dir so we don't clobber waybill's own compile cache.
 cd /waybill
 
+# Milestone 1070 (#614): build inside the workspace. A target dir under
+# /tmp is dropped whole by the Ephemeral noise category, which made every
+# write invisible; the in-tree layout is also what real builds use.
+FIXTURE_TARGET="$FIXTURE/target"
+rm -rf "$FIXTURE_TARGET"
+
 set +e
 # `trace capture` (not `trace run`) emits ONLY the attestation. `trace
 # run` also does SBOM generation which fails on hermetic cargo builds
@@ -47,7 +53,7 @@ set +e
     --output "$OUTPUT" \
     -- cargo build --release \
         --manifest-path "$FIXTURE/Cargo.toml" \
-        --target-dir /tmp/m210-fixture-target
+        --target-dir "$FIXTURE_TARGET"
 TRACE_STATUS=$?
 set -e
 
@@ -148,9 +154,11 @@ echo "    ring_buffer_overflows: $OVERFLOWS"
 # scoped tracing — deferred to a follow-up feature. This threshold
 # validates the filter is measurably active without demanding perfection
 # against host-noise the filter architecturally can't reach.
-if [[ "$OVERFLOWS" -gt 10000 ]]; then
-    echo "FAIL: ring_buffer_overflows=$OVERFLOWS is >10000 on the SC-001 fixture (m213 SC-002 target: ≤10000)"
-    echo "      Either the m213 kernel-side filter regressed OR the fixture generates NEW drop patterns not covered by any of the 4 filter categories."
+# Milestone 1070 (SC-003): zero. The m213 threshold of 10000 predates #991,
+# which made the drain keep up: the fixture measured 0 overflows at 34
+# events and at 1,801 (specs/1070-trace-relative-source-reads/measurements).
+if [[ "$OVERFLOWS" -ne 0 ]]; then
+    echo "FAIL: ring_buffer_overflows=$OVERFLOWS on the SC-001 fixture (m1070 SC-003: 0)"
     exit 1
 fi
 
@@ -187,11 +195,14 @@ if jq -e '.predicate.file_access.operations' "$OUTPUT" > /dev/null 2>&1; then
     # puts process metadata under a nested `process` object.
     RUSTC_FILE_COUNT=$(jq '[.predicate.file_access.operations[] | select(.process.comm == "rustc")] | length' "$OUTPUT")
     LINKER_FILE_COUNT=$(jq '[.predicate.file_access.operations[] | select(.process.comm == "ld" or .process.comm == "ld.lld" or .process.comm == "mold")] | length' "$OUTPUT")
-    FP_LEAK_COUNT=$(jq '[.predicate.file_access.operations[] | select(.path | contains("/fingerprint/") or contains("/deps/") or contains("/incremental/"))] | length' "$OUTPUT")
+    # Milestone 1070: `deps/` holds build outputs and inputs, not bookkeeping,
+    # so it is no longer filtered. The old `/fingerprint/` never matched
+    # cargo's `.fingerprint/` directory; the check now uses the real name.
+    FP_LEAK_COUNT=$(jq '[.predicate.file_access.operations[] | select(.path | contains("/.fingerprint/") or contains("/incremental/"))] | length' "$OUTPUT")
     echo "    m213 signal-recovery: rustc-files=$RUSTC_FILE_COUNT linker-files=$LINKER_FILE_COUNT fingerprint-leaks=$FP_LEAK_COUNT"
     if [[ "$FP_LEAK_COUNT" -gt 0 ]]; then
         echo "FAIL: $FP_LEAK_COUNT file-access events reference cargo fingerprint paths — m213 filter leak"
-        jq '[.predicate.file_access.operations[] | select(.path | contains("/fingerprint/") or contains("/deps/") or contains("/incremental/")) | .path] | .[:5]' "$OUTPUT"
+        jq '[.predicate.file_access.operations[] | select(.path | contains("/.fingerprint/") or contains("/incremental/")) | .path] | .[:5]' "$OUTPUT"
         exit 1
     fi
 else
@@ -204,6 +215,75 @@ RUSTC_INVOCATION_COUNT=$(jq '[.predicate.compiler_pipeline.invocations[]? | sele
 echo "    m213 SC-001: rustc invocations captured via compiler_pipeline = $RUSTC_INVOCATION_COUNT"
 if [[ "$RUSTC_INVOCATION_COUNT" -lt 1 ]]; then
     echo "FAIL: 0 rustc compiler_pipeline invocations — m213 SC-001 signal-recovery regression"
+    exit 1
+fi
+
+# Milestone 1070 (#614) — the read and write sets themselves, not only the
+# fact that compilers ran (FR-007). Before m1070 every set was empty: the
+# kernel dropped relative paths (cargo compiles workspace members relative
+# to the workspace root), every open was classified as a read, and `deps/`
+# was filtered as fingerprint noise.
+echo
+echo "==> m1070: compiler read and write sets"
+reads_of() { # $1 = jq filter selecting invocations
+    jq -r "[.predicate.compiler_pipeline.invocations[] | $1 | .read_set[].path] | .[]" "$OUTPUT"
+}
+all_writes() {
+    jq -r '[.predicate.compiler_pipeline.invocations[].write_set[].path] | .[]' "$OUTPUT"
+}
+# US1 / SC-001: each crate root, as an absolute path, in a rustc read set.
+for root in libsafe/src/lib.rs libvuln/src/lib.rs binaries/safe-only/src/main.rs binaries/vuln-included/src/main.rs; do
+    if ! reads_of 'select(.compiler == "rustc")' | grep -qx "$FIXTURE/$root"; then
+        echo "FAIL: $FIXTURE/$root is in no rustc read set (m1070 SC-001)"
+        exit 1
+    fi
+    echo "    read set has $root"
+done
+# US2 / SC-002: the linked binaries and the libraries, under final names.
+for pat in 'deps/safe_only-[0-9a-f]+$' 'deps/vuln_included-[0-9a-f]+$' \
+           'deps/liblibsafe-[0-9a-f]+\.rlib$' 'deps/liblibsafe-[0-9a-f]+\.rmeta$' \
+           'deps/liblibvuln-[0-9a-f]+\.rlib$' 'deps/liblibvuln-[0-9a-f]+\.rmeta$'; do
+    if ! all_writes | grep -Eq "$pat"; then
+        echo "FAIL: no write set holds an output matching $pat (m1070 SC-002)"
+        all_writes | sed 's/^/      /' | head -20
+        exit 1
+    fi
+    echo "    write set has $pat"
+done
+# FR-010: a library compile writes its metadata to rmeta*/full.rmeta and
+# renames it to lib<crate>-<hash>.rmeta, so its write set must hold the
+# final name and not the temporary one. (A binary compile also writes
+# rmeta*/full.rmeta but deletes it rather than renaming it, so that entry is
+# a real, short-lived write and stays.)
+if jq -e '[.predicate.compiler_pipeline.invocations[]
+          | select(any(.write_set[].path; test("deps/lib[^/]*-[0-9a-f]+\\.rmeta$")))
+          | .write_set[].path | select(test("/rmeta[^/]*/full\\.rmeta$"))] | length > 0' "$OUTPUT" > /dev/null; then
+    echo "FAIL: a library compile still holds its temporary rmeta name — rename not applied (m1070 FR-010)"
+    exit 1
+fi
+echo "    library compiles hold final rmeta names only (FR-010)"
+# US2 scenario 4: each binary compile read the libraries it depends on.
+check_lib_read() { # $1 = binary crate root, $2 = library crate
+    if ! reads_of "select(.read_set | map(.path) | index(\"$FIXTURE/$1\") != null)" \
+            | grep -Eq "deps/lib$2-[0-9a-f]+\.(rlib|rmeta)$"; then
+        echo "FAIL: the compile of $1 read no $2 library (m1070 US2 scenario 4)"
+        exit 1
+    fi
+    echo "    $1 compile read lib$2"
+}
+check_lib_read binaries/safe-only/src/main.rs libsafe
+check_lib_read binaries/vuln-included/src/main.rs libsafe
+check_lib_read binaries/vuln-included/src/main.rs libvuln
+# US3 / SC-004: the unresolved count is the number of flagged operations.
+UNRESOLVED_COUNT=$(jq '.predicate.trace_integrity.unresolved_relative_opens // 0' "$OUTPUT")
+FLAGGED_COUNT=$(jq '[.predicate.file_access.operations[] | select(.unresolved_relative == true)] | length' "$OUTPUT")
+echo "    unresolved_relative_opens=$UNRESOLVED_COUNT flagged=$FLAGGED_COUNT"
+if [[ "$UNRESOLVED_COUNT" -ne "$FLAGGED_COUNT" ]]; then
+    echo "FAIL: unresolved_relative_opens ($UNRESOLVED_COUNT) != flagged operations ($FLAGGED_COUNT) (m1070 SC-004)"
+    exit 1
+fi
+if jq -e '[.predicate.compiler_pipeline.invocations[] | (.read_set + .write_set)[].path | select(startswith("/") | not)] | length > 0' "$OUTPUT" > /dev/null; then
+    echo "FAIL: a relative path reached a read or write set (m1070 FR-003)"
     exit 1
 fi
 

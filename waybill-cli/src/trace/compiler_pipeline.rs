@@ -21,6 +21,7 @@
 // See aggregator.rs for the rationale on this attribute.
 #![allow(dead_code)]
 
+use super::observed::{ObservedKind, ObservedOp};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
@@ -29,7 +30,7 @@ use waybill_common::attestation::compiler_pipeline::{
     FilterCategory, InvocationDagEdge, PartialReason, ReadKind, ReadSetEntry,
     WriteSetEntry,
 };
-use waybill_common::events::{CompilerExecEvent, CompilerExecEventKind, FileEvent, FileEventType};
+use waybill_common::events::{CompilerExecEvent, CompilerExecEventKind, FileEvent};
 use waybill_common::types::hash::{ContentHash, HashAlgorithm, HexString};
 use waybill_common::types::timestamp::Timestamp;
 
@@ -77,7 +78,21 @@ pub struct CompilerPipelineAggregator {
     /// already started? Set at trace-start if any `Exec` event
     /// reference a pid that had already been observed.
     attach_late: bool,
+    /// Milestone 1070: operations by a compiler-named process whose exec
+    /// record hasn't been processed yet. Exec records and file records come
+    /// through different ring buffers. When a compiler starts between the
+    /// drain loop's read of the exec buffer and its read of the file buffer,
+    /// its first opens are processed before its exec, and before this buffer
+    /// existed they were dropped. That was observed once in 32 fixture runs:
+    /// a crate root missing from its compile's read set. They are replayed
+    /// when the exec arrives.
+    held: Vec<ObservedOp>,
 }
+
+/// Bound on `held`. Only compiler-named processes are held, and only until
+/// their exec record is processed, so this is a safety limit, not a working
+/// size.
+const HELD_CAP: usize = 65_536;
 
 /// A partially-populated CompilerInvocation. Read/write sets grow
 /// as events arrive; finalized to a `CompilerInvocation` at trace
@@ -118,6 +133,7 @@ impl CompilerPipelineAggregator {
             secrets_read_filtered: 0,
             filter_categories_applied: std::collections::HashSet::new(),
             attach_late: false,
+            held: Vec::new(),
         }
     }
 
@@ -141,39 +157,55 @@ impl CompilerPipelineAggregator {
     /// invocation's read_set (with hash lookup deferred to close-time
     /// via the existing hasher.rs). Writes accumulate into write_set.
     pub fn handle_file_event(&mut self, event: &FileEvent) {
-        let Some(invocation_id) = self.pid_to_invocation_id.get(&event.pid).copied() else {
-            // Not a compiler-descendant — the in-kernel filter should
-            // have dropped this event already, but defense-in-depth
-            // skip it here in case the filter races.
+        if let Some(op) = ObservedOp::from_file_event(event) {
+            self.handle_op(&op);
+        }
+    }
+
+    /// Route a resolved file operation into its invocation's read or write
+    /// set (milestone 1070).
+    ///
+    /// - An unresolved operation is never inserted (FR-003): a set holds
+    ///   only paths a consumer can trust.
+    /// - An open for writing goes to the write set (FR-008).
+    /// - A rename records the new name in the write set and drops the old
+    ///   one, even when the old write was not observed, for example because
+    ///   its open was noise-filtered (FR-010).
+    pub fn handle_op(&mut self, op: &ObservedOp) {
+        let Some(invocation_id) = self.pid_to_invocation_id.get(&op.pid).copied() else {
+            // Not (yet) a known invocation. A compiler-named process may be
+            // one whose exec record is still in the other ring buffer: hold
+            // it for replay (see `held`). Anything else is not compiler
+            // activity.
+            if classify_compiler_family(&op.comm, "") != CompilerFamily::Unknown
+                && self.held.len() < HELD_CAP
+            {
+                self.held.push(op.clone());
+            }
             return;
         };
-
-        let path_str = event.path_str();
-        if path_str == "<invalid>" || path_str.is_empty() {
-            return;
-        }
-        let path = PathBuf::from(path_str);
 
         // FR-018 — compiler CLIs treat `"-"` (e.g. `gcc -x c -`) and
         // `/dev/stdin` as reading from stdin. Detect BEFORE the FR-016
         // denylist so `/dev/stdin` isn't swallowed by the `/dev/`
         // system-prefix filter (which would silently drop the stdin
-        // signal). Detect BEFORE the `&mut invocation` borrow so we
-        // can delegate to `record_stdin_input` (itself `&mut self`)
-        // without fighting the borrow checker. Only redirects on
-        // Read/Open — Write events on `/dev/stdin` are ignored per
-        // FR-018 (stdin is input-only in the compiler-invocation model).
-        if matches!(event.event_type, FileEventType::Read | FileEventType::Open) {
-            let ps = path.to_string_lossy();
-            if ps == "-" || ps == "/dev/stdin" {
-                // `bytes_read` is 0 pending future eBPF read-syscall
-                // byte counters (spec: "tracked via subsequent read
-                // syscall counters"); the sentinel value is stable +
-                // honest today.
-                self.record_stdin_input(invocation_id, 0);
-                return;
-            }
+        // signal). Matched on the path as captured, since resolution
+        // would turn `-` into `<cwd>/-`. Write events on `/dev/stdin` are
+        // ignored per FR-018 (stdin is input-only in the
+        // compiler-invocation model).
+        if op.kind == ObservedKind::Read && (op.raw_path == "-" || op.raw_path == "/dev/stdin") {
+            // `bytes_read` is 0 pending future eBPF read-syscall
+            // byte counters (spec: "tracked via subsequent read
+            // syscall counters"); the sentinel value is stable +
+            // honest today.
+            self.record_stdin_input(invocation_id, 0);
+            return;
         }
+
+        if op.unresolved {
+            return;
+        }
+        let path = PathBuf::from(&op.path);
 
         // FR-016 denylist check — categorize + drop if matched
         // (unless include_system_reads bypass is set).
@@ -194,13 +226,13 @@ impl CompilerPipelineAggregator {
         // Convert the fixed-size content_hash bytes → ContentHash
         // newtype. Zero-hash means "not yet hashed" (in-kernel didn't
         // populate; user-space hasher.rs will fill in at close-time).
-        let hash = content_hash_from_bytes(&event.content_hash);
+        let hash = content_hash_from_bytes(&op.content_hash);
 
-        match event.event_type {
-            FileEventType::Read | FileEventType::Open => {
+        match &op.kind {
+            ObservedKind::Read => {
                 invocation.read_set.insert(path, (hash, ReadKind::File));
             }
-            FileEventType::Write => {
+            ObservedKind::Write => {
                 // Placeholder — final hash + survived_trace_window
                 // decided at close-time.
                 invocation
@@ -208,10 +240,12 @@ impl CompilerPipelineAggregator {
                     .entry(path)
                     .or_insert((Some(hash), true));
             }
-            FileEventType::Close => {
-                // Close events currently no-op — hash population +
-                // survived_trace_window resolution live in a future
-                // task (T047 wiring around hasher.rs at close-time).
+            ObservedKind::Rename { from } => {
+                let carried = from
+                    .as_ref()
+                    .and_then(|old| invocation.write_set.remove(old))
+                    .unwrap_or((Some(hash), true));
+                invocation.write_set.insert(path, carried);
             }
         }
     }
@@ -354,6 +388,22 @@ impl CompilerPipelineAggregator {
         };
         self.invocations.insert(invocation_id, partial);
         self.pid_to_invocation_id.insert(event.pid, invocation_id);
+
+        // Milestone 1070 — replay this process's operations that arrived
+        // before its exec record. Only those at or after the exec: earlier
+        // ones were the pre-exec child's, not the compiler's. (A zero
+        // timestamp is a test-crafted event; accept everything.)
+        if !self.held.is_empty() {
+            let (mine, rest): (Vec<ObservedOp>, Vec<ObservedOp>) =
+                std::mem::take(&mut self.held).into_iter().partition(|op| {
+                    op.pid == event.pid
+                        && (event.timestamp_ns == 0 || op.timestamp_ns >= event.timestamp_ns)
+                });
+            self.held = rest;
+            for op in &mine {
+                self.handle_op(op);
+            }
+        }
     }
 
     fn handle_exit(&mut self, event: &CompilerExecEvent) {
@@ -562,6 +612,7 @@ fn content_hash_from_bytes(bytes: &[u8; 32]) -> ContentHash {
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
     use super::*;
+    use waybill_common::events::FileEventType;
 
     fn make_exec_event_ts(
         pid: u32,
@@ -617,6 +668,7 @@ mod tests {
             bytes_transferred: 0,
             content_hash: [0u8; 32],
             inode: 0,
+            dfd: -100,
         }
     }
 
@@ -853,5 +905,129 @@ mod tests {
         let inv300 = data.invocations.iter().find(|i| i.pid == 300).unwrap();
         assert_eq!(inv300.read_set[0].path, PathBuf::from("/a.rs"));
         assert_eq!(inv300.read_set[1].path, PathBuf::from("/b.rs"));
+    }
+
+    // ---- Milestone 1070 (#614): resolved paths, writes, renames ----------
+
+    fn op(kind: ObservedKind, pid: u32, path: &str, unresolved: bool) -> ObservedOp {
+        let ev = make_file_event(FileEventType::Open, pid, path);
+        ObservedOp::with_path(&ev, kind, path.to_string(), unresolved)
+    }
+
+    fn write_paths(data: &CompilerPipelineData) -> Vec<PathBuf> {
+        let mut v: Vec<PathBuf> = data.invocations[0].write_set.iter().map(|w| w.path.clone()).collect();
+        v.sort();
+        v
+    }
+
+    /// FR-002/FR-009: a relative open resolved by the trace lands in the read
+    /// set as its absolute path, exactly like an absolute open.
+    #[test]
+    fn resolved_relative_read_lands_in_read_set() {
+        let mut agg = CompilerPipelineAggregator::new(FilterConfig::default());
+        agg.handle_compiler_event(&make_exec_event(100, 50, "rustc"));
+        agg.handle_op(&op(ObservedKind::Read, 100, "/ws/libsafe/src/lib.rs", false));
+        let data = agg.finalize();
+        assert_eq!(data.invocations[0].read_set[0].path, PathBuf::from("/ws/libsafe/src/lib.rs"));
+    }
+
+    /// FR-003: an unresolved operation never enters a read or write set.
+    #[test]
+    fn unresolved_op_enters_no_set() {
+        let mut agg = CompilerPipelineAggregator::new(FilterConfig::default());
+        agg.handle_compiler_event(&make_exec_event(100, 50, "rustc"));
+        agg.handle_op(&op(ObservedKind::Read, 100, "raw-dylibs", true));
+        agg.handle_op(&op(ObservedKind::Write, 100, "out.o", true));
+        let data = agg.finalize();
+        assert!(data.invocations[0].read_set.is_empty());
+        assert!(data.invocations[0].write_set.is_empty());
+    }
+
+    /// FR-008 and US2 scenario 3: an open for writing goes to the write set,
+    /// a read-only open to no write set.
+    #[test]
+    fn write_mode_open_goes_to_write_set_and_read_only_does_not() {
+        let mut agg = CompilerPipelineAggregator::new(FilterConfig::default());
+        agg.handle_compiler_event(&make_exec_event(100, 50, "ld"));
+        let mut out = make_file_event(FileEventType::Open, 100, "/ws/target/release/deps/safe_only-0a1b");
+        out.flags = 0o2 | 0o100 | 0o1000; // O_RDWR|O_CREAT|O_TRUNC, as the linker opens it
+        agg.handle_file_event(&out);
+        agg.handle_file_event(&make_file_event(FileEventType::Open, 100, "/ws/target/release/deps/liblibsafe-9f.rlib"));
+        let data = agg.finalize();
+        assert_eq!(write_paths(&data), vec![PathBuf::from("/ws/target/release/deps/safe_only-0a1b")]);
+        assert_eq!(data.invocations[0].read_set.len(), 1);
+    }
+
+    /// FR-010: the compiler writes a temporary file and renames it into place;
+    /// the write set ends up with the final name only.
+    #[test]
+    fn rename_moves_own_write_to_final_name() {
+        let mut agg = CompilerPipelineAggregator::new(FilterConfig::default());
+        agg.handle_compiler_event(&make_exec_event(100, 50, "rustc"));
+        let tmp = "/ws/target/release/deps/rmetaX1/full.rmeta";
+        agg.handle_op(&op(ObservedKind::Write, 100, tmp, false));
+        agg.handle_op(&op(
+            ObservedKind::Rename { from: Some(PathBuf::from(tmp)) },
+            100,
+            "/ws/target/release/deps/liblibsafe-9f.rmeta",
+            false,
+        ));
+        let data = agg.finalize();
+        assert_eq!(write_paths(&data), vec![PathBuf::from("/ws/target/release/deps/liblibsafe-9f.rmeta")]);
+    }
+
+    /// FR-010 (analysis U3): a rename whose original write was never observed,
+    /// for example because the noise filter dropped it, still records the
+    /// output, as does one whose old path could not be resolved.
+    #[test]
+    fn rename_without_an_observed_write_still_records_the_output() {
+        let mut agg = CompilerPipelineAggregator::new(FilterConfig::default());
+        agg.handle_compiler_event(&make_exec_event(100, 50, "rustc"));
+        agg.handle_op(&op(
+            ObservedKind::Rename { from: Some(PathBuf::from("/ws/target/release/deps/.tmp1/tmp.a")) },
+            100,
+            "/ws/target/release/deps/liblibsafe-9f.rlib",
+            false,
+        ));
+        agg.handle_op(&op(ObservedKind::Rename { from: None }, 100, "/ws/target/release/deps/liblibsafe-9f.rmeta", false));
+        let data = agg.finalize();
+        assert_eq!(
+            write_paths(&data),
+            vec![
+                PathBuf::from("/ws/target/release/deps/liblibsafe-9f.rlib"),
+                PathBuf::from("/ws/target/release/deps/liblibsafe-9f.rmeta"),
+            ]
+        );
+    }
+
+    /// Milestone 1070: a compiler's first open can be drained before its exec
+    /// record, since they come through different ring buffers. It is held and
+    /// replayed, not dropped. An open stamped before the exec (the pre-exec
+    /// child's) is not attributed to the compiler.
+    #[test]
+    fn op_drained_before_its_exec_is_replayed() {
+        let mut agg = CompilerPipelineAggregator::new(FilterConfig::default());
+        let mut early = op(ObservedKind::Read, 100, "/ws/libvuln/src/lib.rs", false);
+        early.comm = "rustc".to_string();
+        early.timestamp_ns = 5_000;
+        let mut pre_exec = op(ObservedKind::Read, 100, "/ws/Cargo.toml", false);
+        pre_exec.comm = "rustc".to_string();
+        pre_exec.timestamp_ns = 1_000;
+        agg.handle_op(&pre_exec);
+        agg.handle_op(&early);
+        agg.handle_compiler_event(&make_exec_event_ts(100, 50, "rustc", 2_000));
+        let data = agg.finalize();
+        let reads: Vec<_> = data.invocations[0].read_set.iter().map(|r| r.path.clone()).collect();
+        assert_eq!(reads, vec![PathBuf::from("/ws/libvuln/src/lib.rs")]);
+    }
+
+    /// A non-compiler process is never held.
+    #[test]
+    fn non_compiler_ops_are_not_held() {
+        let mut agg = CompilerPipelineAggregator::new(FilterConfig::default());
+        let mut o = op(ObservedKind::Read, 100, "/ws/a.rs", false);
+        o.comm = "cargo".to_string();
+        agg.handle_op(&o);
+        assert!(agg.held.is_empty());
     }
 }

@@ -189,6 +189,7 @@ mod tests {
             content_hash: None,
             size: 0,
             timestamp: Timestamp::now(),
+            unresolved_relative: false,
         };
         let input = ResolveInput::FileOp(&file_op);
         let ctx = ResolveContext {

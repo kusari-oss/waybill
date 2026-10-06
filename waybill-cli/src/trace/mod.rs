@@ -13,9 +13,11 @@
 pub mod aggregator;
 pub mod compiler_pipeline;
 pub mod counters;
+pub mod cwd;
 pub mod hasher;
 pub mod http_parser;
 pub mod loader;
+pub mod observed;
 pub mod pid_tracker;
 pub mod processor;
 pub mod sni_extractor;

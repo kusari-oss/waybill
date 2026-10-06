@@ -201,6 +201,36 @@ mod inner {
         {
             warn!("could not attach sched_process_exit tracepoint: {e}");
         }
+        // TODO(follow-up): these three stay best-effort, as milestone 210 left
+        // them. Principle III asks for a fatal error. Fork records now also
+        // drive working-directory inheritance (milestone 1070), where a
+        // missing fork tracepoint shows up as unresolved relative opens,
+        // counted in trace_integrity rather than silent.
+
+        // Milestone 1070 (#614) — directory changes and renames. Unlike the
+        // tracepoints above, a failure here is fatal (Principle III, analysis
+        // C1): without them every relative source read, or every library the
+        // compiler renames into place, would silently go missing from the
+        // attestation, which is the failure this milestone exists to remove.
+        for (prog, event) in [
+            ("sys_enter_chdir", "sys_enter_chdir"),
+            ("sys_exit_chdir", "sys_exit_chdir"),
+            ("sys_exit_fchdir", "sys_exit_fchdir"),
+            ("sys_enter_renameat", "sys_enter_renameat"),
+            ("sys_exit_renameat", "sys_exit_renameat"),
+            ("sys_enter_renameat2", "sys_enter_renameat2"),
+            ("sys_exit_renameat2", "sys_exit_renameat2"),
+        ] {
+            attach_tracepoint(&mut bpf, prog, "syscalls", event)
+                .with_context(|| format!("could not attach the {event} tracepoint"))?;
+        }
+        // `rename(2)` exists on x86-64 but not on arm64, which only has the
+        // `renameat` family. Its absence there is not a failure.
+        #[cfg(target_arch = "x86_64")]
+        for event in ["sys_enter_rename", "sys_exit_rename"] {
+            attach_tracepoint(&mut bpf, event, "syscalls", event)
+                .with_context(|| format!("could not attach the {event} tracepoint"))?;
+        }
 
         info!("All probes attached");
         Ok(EbpfHandle { bpf })
