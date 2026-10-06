@@ -1,4 +1,4 @@
-# Specification Quality Checklist: Trace captures source files opened through relative paths
+# Specification Quality Checklist: Trace captures relative source reads and compiler writes
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
 **Created**: 2026-10-06
@@ -34,3 +34,4 @@
 - FR-002 and FR-003 were resolved with the user on 2026-10-06 (see Clarifications): absolute paths only in read sets; unresolved opens flagged in file operations and counted.
 - The spec names the kernel noise filter, the PID-namespace edge case and the integration harness. As in earlier trace-mode specs (210–213), these are the observable behaviour under change, not chosen implementations. How relative paths are resolved, and how directory walks are identified, is left to the plan.
 - Every number is traced to `measurements/relative_paths.txt`. Milestone 213's ~12,000 and ~14,000 figures are quoted as history, not used as targets.
+- Scope widened during planning (2026-10-06, option B): writes were found never to be captured, so write capture (US2, FR-008) is in scope. Data-flow attribution is split to #1141. The spec was re-validated after the change; all items still pass.

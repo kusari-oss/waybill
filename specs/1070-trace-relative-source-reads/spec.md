@@ -1,4 +1,4 @@
-# Feature Specification: Trace captures source files opened through relative paths
+# Feature Specification: Trace captures relative source reads and compiler writes
 
 **Feature Branch**: `1070-trace-relative-source-reads`
 **Created**: 2026-10-06
@@ -20,7 +20,9 @@
 
 **The rule's original reason no longer holds.** It was added while the drain was slow and the buffer overflowed about 14,000 times per run, to suppress an estimated ~12,000 relative directory-entry opens. With the drain fixed, the same build makes **22 relative opens in total**: 8 are the four crate roots, each read twice, and the other 14 are toolchain and linker lookups. The trace carries all 1,801 events with zero overflows. Milestone 213's own spec deferred "full rustc-inputs capture" to a follow-up; this is that follow-up.
 
-**Writes are a separate gap.** Write sets were empty in both runs, but the harness builds into `/tmp`, which the Ephemeral noise category discards by design. Whether writes are captured for an in-tree build directory has not been measured.
+**Writes are never captured at all (found in planning, from the code).** Both open probes report the open with its flags zeroed, so userspace classifies every open as a read (`trace/aggregator.rs`). The write probe reports no path, so its events are skipped. Write sets are therefore empty on every trace, whatever the build directory. C130 is emitted only for a component whose path is in some invocation's write set, so it has never been emitted.
+
+**A third defect is split out.** C130 unions read sets along *process ancestry*. A library's sources are read by a sibling compiler process and reach a binary only through the library file it writes, so even complete read and write sets could not put `libvuln`'s sources into `vuln-included`'s C130. That changes what C130 means and is tracked in #1141.
 
 ## Clarifications
 
@@ -28,13 +30,19 @@
 
 - Q: How is a kept relative open recorded? → A: **Resolved to an absolute path** against the opening process's working directory, in both the attestation's file operations and the read and write sets. The original relative spelling is not kept.
 - Q: What happens when the working directory cannot be established? → A: The open **stays in the attestation's file operations, flagged as unresolved, and is left out of the read and write sets**. A trace-level count of unresolved relative opens is reported.
+- Q: Scope, once planning found writes are never captured and C130 follows process ancestry only? → A: **Option B.** Capture relative reads (the original scope) **and writes** in this milestone. Cross-invocation (data-flow) attribution goes to #1141. US2 is restated accordingly.
+- Q: Planning then found that no production path emits C130 at all: SBOM generation never receives the compiler pipeline, and locally built binaries are never components. Scope? → A: **Option B′.** This milestone makes the *attestation* correct: read and write sets. Emitting C130/C131 in the SBOM moves to #1142, which #1141 depends on. US2 drops its SBOM scenario.
 
 ## Out of Scope
 
 - `events_dropped`, the counter for events still queued when a trace ends (#618).
 - Restricting tracing to the build's own process tree (the "process-scoped tracing" follow-up named in milestone 213).
 - The other noise categories (System prefixes, UserCache, Ephemeral, CargoFingerprint), except where a test needs a build directory outside them.
-- File reads and writes reported without a path. The read and write probes report no path today; that is unchanged.
+- File reads and writes reported without a path. The read and write probes report no path today; that is unchanged. Writes are captured from the open that precedes them.
+- Attribution across compiler invocations: a library's sources reaching the binary that links it (#1141). C130's closure rule is unchanged here.
+- Emitting C130/C131 in the SBOM: wiring the trace's compiler pipeline into generation, and making locally built binaries components (#1142).
+- Hard links the build tool makes to user-facing names (`release/safe-only` from `deps/safe_only-<hash>`). They are not compiler writes. Matching them is #1142's concern.
+- Tracer self-exclusion inside PID namespaces (#1143).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -54,18 +62,20 @@ An operator traces a build of a Cargo workspace. Today each compiler invocation'
 
 ---
 
-### User Story 2 - Attribution tells the two binaries apart (Priority: P1)
+### User Story 2 - Compiler write sets record the files each invocation produced (Priority: P1)
 
-The fixture exists to prove one thing: the binary that links the vulnerable library is distinguishable from the one that does not. With read and write sets populated, the source read set of `vuln-included` contains `libvuln`'s source and that of `safe-only` does not.
+Each compiler or linker invocation's write set lists the files it created or overwrote. That is the half of the record that ties a binary to the invocation that produced it. Without it, C130 is never emitted, however complete the reads are.
 
-**Why this priority**: this is the outcome attribution is for. Populated read sets that do not produce the distinction would not close the issue.
+**Why this priority**: the write set is what ties an output to the invocation that produced it, and it is empty on every trace today. Every use of attribution, including C130 once #1142 wires it into the SBOM, needs it. This milestone makes it correct in the attestation.
 
-**Independent Test**: trace the fixture with its build directory inside the workspace and generate the SBOM. Compare the two binaries' C130 annotations.
+**Independent Test**: trace the fixture built into a directory inside the workspace, and read the invocations' write sets in the attestation.
 
 **Acceptance Scenarios**:
 
-1. **Given** the fixture built into an in-tree directory, **When** traced and turned into an SBOM, **Then** `vuln-included`'s source read set includes `libvuln`'s crate-root source and `safe-only`'s does not.
-2. **Given** the same SBOM, **When** C131 (`waybill:read-set-source`) is read for the two binaries, **Then** it says `traced`.
+1. **Given** the fixture built into an in-tree directory, **When** traced, **Then** the link invocation that produced each of the two binaries has that binary's output path in its write set.
+2. **Given** the same trace, **When** each library compile is read, **Then** its write set contains the library files it produced under their final names (`deps/lib<crate>-<hash>.rlib` and `.rmeta`). The compiler writes these to a temporary name and renames them into place (`measurements/strace_summary.txt`).
+3. **Given** a file opened only for reading, **When** traced, **Then** it appears in no write set.
+4. **Given** the same trace, **When** each binary compile's read set is read, **Then** it contains the library files the compile consumed. Build inputs under the build directory are not discarded as fingerprint noise.
 
 ---
 
@@ -103,8 +113,11 @@ A relative path is meaningful only together with the directory it was opened fro
 - **FR-004**: Noise reduction for relative opens MAY remain only for opens that are positively identified as directory-entry walks. No relative file open of a source or build input may be excluded by it.
 - **FR-005**: `--include-system-reads` MUST continue to disable every System-category exclusion, including any retained directory-walk exclusion (milestone 213, FR-010).
 - **FR-006**: On the `two_binaries_diverge` fixture, a default trace MUST report zero buffer overflows, as it does today.
-- **FR-007**: The eBPF integration harness MUST assert the outcome, not only the presence of compiler invocations. The four crate roots must be in the read sets (US1), and the two binaries' source read sets must differ as US2 describes. The harness MUST build into a directory the noise filter does not exclude, so that writes are observable.
-- **FR-008**: Before relying on write sets for US2, the plan MUST measure whether writes to an in-tree build directory are captured. If they are not, the cause MUST be recorded and the write capture scoped as its own requirement or a follow-up issue, not assumed.
+- **FR-007**: The eBPF integration harness MUST assert the outcome, not only the presence of compiler invocations: the four crate roots in the read sets (US1), and the outputs in the write sets (US2). The harness MUST build into a directory the noise filter does not exclude, so that writes are observable.
+- **FR-008**: A file opened for writing MUST be recorded as a write: opened write-only or read-write, or with creation or truncation requested. It goes into the opening invocation's write set and is recorded as a write in the attestation's file operations. A file opened only for reading MUST continue to be recorded as a read. (The cause and the decision are recorded in Context and Clarifications.)
+- **FR-009**: A path resolved by FR-002 MUST be treated the same as an absolute path for both reads and writes.
+- **FR-010**: When an invocation renames a file it wrote, its write set MUST record the file under the new name. A rename of a file the invocation did not write is recorded in the attestation's file operations as a write of the new name.
+- **FR-011**: The kernel noise filter MUST NOT discard build outputs or build inputs under the build directory's `deps/` directory (compiled libraries, metadata, object files and linked binaries). Fingerprint and incremental-compilation bookkeeping remain filtered (milestone 213).
 
 ### Key Entities
 
@@ -117,10 +130,10 @@ A relative path is meaningful only together with the directory it was opened fro
 ### Measurable Outcomes
 
 - **SC-001**: On the `two_binaries_diverge` fixture, a default trace puts all 4 crate-root source files in the read sets of the invocations that compiled them. The measured baseline is 0 of 4.
-- **SC-002**: On the same fixture built in-tree, `vuln-included`'s C130 read set contains `libvuln`'s crate root and `safe-only`'s does not.
+- **SC-002**: On the same fixture built in-tree, each of the 2 binaries is in the write set of the invocation that linked it, and each of the 2 library compiles has its final `.rlib` and `.rmeta` in its write set. The measured baseline is 0 write-set entries on every trace.
 - **SC-003**: On the same fixture, the default trace reports zero buffer overflows. The measured baseline is 0 at 34 events (default) and at 1,801 events (System category disabled).
 - **SC-004**: Every relative open the build makes is accounted for: it appears in the trace, it is identified as a directory-walk exclusion, or it is in the unresolved count. In the measured run there were 22, and none may go unaccounted for.
-- **SC-005**: For a build that opens no relative paths, the attestation is unchanged apart from the timestamps and process identifiers that already vary between runs.
+- **SC-005**: For a build that opens no relative paths, the only differences in the attestation are opens-for-write now recorded as writes (FR-008), apart from the timestamps and process identifiers that already vary between runs.
 
 ## Assumptions
 
