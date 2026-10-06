@@ -172,6 +172,15 @@ pub(super) fn cdx_vcs(doc: &Value) -> BTreeSet<String> {
 pub(super) fn cdx_distribution(doc: &Value) -> BTreeSet<String> {
     cdx_external_ref_by_type(doc, "distribution")
 }
+pub(super) fn cdx_issue_tracker(doc: &Value) -> BTreeSet<String> {
+    cdx_external_ref_by_type(doc, "issue-tracker")
+}
+pub(super) fn cdx_documentation(doc: &Value) -> BTreeSet<String> {
+    cdx_external_ref_by_type(doc, "documentation")
+}
+pub(super) fn cdx_attestation(doc: &Value) -> BTreeSet<String> {
+    cdx_external_ref_by_type(doc, "attestation")
+}
 
 pub(super) fn cdx_cpe(doc: &Value) -> BTreeSet<String> {
     walk_cdx_components_and_main_module(doc)

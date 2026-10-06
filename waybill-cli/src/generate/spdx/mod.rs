@@ -1012,4 +1012,96 @@ mod tests {
             "user override path must appear in the SPDX cross-reference"
         );
     }
+
+    // ---- #799: per-package reference kinds across all three formats ----
+
+    /// Every m776 reference kind reaches all three formats, read back
+    /// through the catalog's own extractors (A9–A11, A14–A16).
+    ///
+    /// The goldens cannot cover this: every golden and corpus scan runs
+    /// `--offline`, and deps.dev is the only producer of these kinds, so
+    /// those documents carry no references and the rows compare empty
+    /// sets. Here each row must extract the same non-empty set from
+    /// documents the real serializers emitted.
+    #[test]
+    fn every_reference_kind_reaches_all_three_formats() {
+        use crate::generate::cyclonedx::CycloneDxJsonSerializer;
+        use waybill_common::resolution::ExternalReference;
+
+        let mut c = mk_component("pkg:npm/sigstore@2.3.1", vec![]);
+        c.external_references = [
+            ("attestation", "https://registry.npmjs.org/-/npm/v1/attestations/sigstore@2.3.1"),
+            ("distribution", "https://registry.npmjs.org/sigstore/-/sigstore-2.3.1.tgz"),
+            ("documentation", "https://docs.sigstore.dev"),
+            ("issue-tracker", "https://github.com/sigstore/sigstore-js/issues"),
+            ("vcs", "https://github.com/sigstore/sigstore-js"),
+            ("website", "https://sigstore.dev"),
+        ]
+        .into_iter()
+        .map(|(ref_type, url)| ExternalReference {
+            ref_type: ref_type.to_string(),
+            url: url.to_string(),
+        })
+        .collect();
+        let comps = [c];
+        let integ = empty_integrity();
+        let arts = mk_artifacts(&comps, &integ);
+        let emit = |s: &dyn SbomSerializer| -> serde_json::Value {
+            let out = s.serialize(&arts, &mk_cfg()).unwrap();
+            assert_eq!(out.len(), 1, "{}: one document, no sidecar", s.id());
+            serde_json::from_slice(&out[0].bytes).unwrap()
+        };
+        let cdx = emit(&CycloneDxJsonSerializer);
+        let spdx23 = emit(&Spdx2_3JsonSerializer);
+        let spdx3 = emit(&Spdx3JsonSerializer);
+
+        for row in ["A9", "A10", "A11", "A14", "A15", "A16"] {
+            let ex = waybill::parity::extractors::EXTRACTORS
+                .iter()
+                .find(|e| e.row_id == row)
+                .unwrap();
+            let from_cdx = (ex.cdx)(&cdx);
+            assert!(!from_cdx.is_empty(), "{row}: CycloneDX carries no value");
+            assert_eq!(from_cdx, (ex.spdx23)(&spdx23), "{row}: CycloneDX vs SPDX 2.3");
+            assert_eq!(from_cdx, (ex.spdx3)(&spdx3), "{row}: CycloneDX vs SPDX 3");
+        }
+
+        // The SPDX 3 entries themselves, in the order the references were
+        // normalized to, with `locator` array-typed per the 3.0.1 model.
+        let pkg = spdx3["@graph"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|e| e["type"] == "software_Package" && e["name"] == "x")
+            .unwrap();
+        assert_eq!(
+            pkg["externalRef"],
+            serde_json::json!([
+                {"type": "ExternalRef", "externalRefType": "buildMeta",
+                 "locator": ["https://registry.npmjs.org/-/npm/v1/attestations/sigstore@2.3.1"]},
+                {"type": "ExternalRef", "externalRefType": "documentation",
+                 "locator": ["https://docs.sigstore.dev"]},
+                {"type": "ExternalRef", "externalRefType": "issueTracker",
+                 "locator": ["https://github.com/sigstore/sigstore-js/issues"]},
+            ])
+        );
+    }
+
+    /// A component with no reference that lacks a scalar slot gets no
+    /// `externalRef` key at all, rather than an empty list.
+    #[test]
+    fn no_external_ref_key_without_such_references() {
+        let comps = [mk_component("pkg:cargo/a@1", vec![])];
+        let integ = empty_integrity();
+        let arts = mk_artifacts(&comps, &integ);
+        let out = Spdx3JsonSerializer.serialize(&arts, &mk_cfg()).unwrap();
+        let spdx3 = parse_spdx3(&out[0].bytes);
+        let pkg = spdx3["@graph"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|e| e["type"] == "software_Package")
+            .unwrap();
+        assert!(pkg.get("externalRef").is_none(), "{pkg}");
+    }
 }

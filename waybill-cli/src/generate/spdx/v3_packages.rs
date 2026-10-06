@@ -167,7 +167,10 @@ pub fn build_packages(
 
         // software_homePage / software_sourceInfo / software_downloadLocation
         // — populated from the first matching CycloneDX
-        // externalReferences entry per A9/A10/A11.
+        // externalReferences entry per A9/A10/A11. The kinds with no
+        // scalar slot go to the package's externalRef[] per A14/A15/A16
+        // (#799), in the order `normalize_external_references` left them.
+        let mut ext_refs: Vec<serde_json::Value> = Vec::new();
         for r in &c.external_references {
             match r.ref_type.as_str() {
                 "homepage" | "website" => {
@@ -182,8 +185,19 @@ pub fn build_packages(
                     pkg.entry("software_downloadLocation")
                         .or_insert_with(|| json!(r.url));
                 }
-                _ => {}
+                kind => {
+                    if let Some(ref_type) = spdx3_external_ref_type(kind) {
+                        ext_refs.push(json!({
+                            "type": "ExternalRef",
+                            "externalRefType": ref_type,
+                            "locator": [r.url],
+                        }));
+                    }
+                }
             }
+        }
+        if !ext_refs.is_empty() {
+            pkg.insert("externalRef".to_string(), json!(ext_refs));
         }
 
         // externalIdentifier[] — PURL (always one entry) plus any
@@ -365,5 +379,24 @@ fn spdx3_algorithm_name(algo: waybill_common::types::hash::HashAlgorithm) -> &'s
         HashAlgorithm::Sha256 => "sha256",
         HashAlgorithm::Sha512 => "sha512",
         HashAlgorithm::Md5 => "md5",
+    }
+}
+
+/// SPDX 3.0.1 `externalRefType` for a reference kind that has no scalar
+/// slot on `software_Package` (#799, catalog rows A14–A16).
+///
+/// `attestation` is `buildMeta`, not `secureSoftwareAttestation`. The
+/// references waybill derives under that kind are deps.dev `ATTESTATION`
+/// links, and those resolve to SLSA provenance (measured on npm packages,
+/// 2026-10-05: predicate `https://slsa.dev/provenance/v1`). SPDX defines
+/// `buildMeta` as build metadata for a published package, and
+/// `secureSoftwareAttestation` as an SSDF development-practices attestation
+/// form, which a provenance statement is not.
+fn spdx3_external_ref_type(kind: &str) -> Option<&'static str> {
+    match kind {
+        "issue-tracker" => Some("issueTracker"),
+        "documentation" => Some("documentation"),
+        "attestation" => Some("buildMeta"),
+        _ => None,
     }
 }
