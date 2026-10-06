@@ -14,6 +14,8 @@
 #   - waybill policy init
 #   - waybill sbom verify-binding
 #   - waybill sbom trace-binding
+#   - waybill sbom edit
+#   - waybill sbom verify-chain
 #
 # Usage:
 #   ./scripts/verify-docs-currency.sh
@@ -61,7 +63,9 @@ for sub in \
     "trace capture" \
     "policy init" \
     "sbom verify-binding" \
-    "sbom trace-binding"; do
+    "sbom trace-binding" \
+    "sbom edit" \
+    "sbom verify-chain"; do
     # shellcheck disable=SC2086
     binary_flags=$(extract_flags_from_help $sub) || {
         echo "warning: failed to extract --help for 'waybill $sub' (subcommand may not exist at this build)" >&2

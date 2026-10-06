@@ -1936,6 +1936,162 @@ binding-state vocabulary.
 
 ---
 
+## `waybill sbom edit`
+
+Derive an edited SBOM from one waybill emitted: drop components or
+annotations, and redact paths, hosts or names. Reads CycloneDX 1.6, SPDX 2.3
+or SPDX 3.0.1 JSON and writes the same format. The output records the
+original's SHA-256, what was done (counts, never values) and the original's
+signature, as the `waybill:derivation` annotation (catalogue row C194) and in
+the format's native "derived from" link. Nothing is written unless every
+check passes: no dropped identifier or redacted value remains, and every
+reference resolves. See the [SBOM editing guide](sbom-edit.md).
+
+### Quick reference
+
+| Flag | Type | Default | Description |
+|---|---|---|---|
+| `<INPUT>` | path (required) | — | The SBOM to edit. |
+| `-o`, `--output <PATH>` | path (required) | — | Where to write it. `-` for stdout, when not signing. Must not be the input. |
+| `--drop <SELECTOR>` | string, repeatable | — | Drop matching components; bridge their dependents to their dependencies. |
+| `--drop-annotations <NAMESPACE>` | string, repeatable | — | Remove annotations whose field starts with the namespace. |
+| `--redact <CLASS>[:<MODE>][=<PATTERN>]` | string, repeatable | — | Redact `paths`, `hosts` or `names`. |
+| `--redact-key-file <PATH>` | path | (none) | Pseudonymisation key. Required when any redaction pseudonymises. |
+| `--original-signature <PATH>` | path | (found next to the input) | The original's signature sidecar. |
+| `--sign-key <PATH>` | path | (none) | Sign the output with a static key, as `sbom scan` does. |
+| `--sign-key-passphrase-env <NAME>` | string | `WAYBILL_SIGN_KEY_PASSPHRASE` | Env var holding the key's passphrase. |
+| `--sign` | bool | `false` | Sigstore keyless signing, as `sbom scan` does. |
+| `--fulcio-url <URL>` | string | `https://fulcio.sigstore.dev` | Fulcio endpoint for `--sign`. |
+| `--rekor-url <URL>` | string | `https://rekor.sigstore.dev` | Rekor endpoint for `--sign`. |
+| `--rekor-timeout-secs <SECS>` | integer | `30` | Rekor timeout for `--sign`. |
+
+Operations (`--drop`, `--drop-annotations`, `--redact`) apply in command-line
+order, across flags. An operation that matches nothing is reported on stderr
+and is not an error. Exit status is non-zero, with nothing written, for:
+
+- an invalid selector or redaction spec;
+- an unsupported format;
+- a selector matching the document's root;
+- pseudonymisation without a key;
+- a failed post-condition.
+
+### `--drop <SELECTOR>`
+
+A selector is `;`-separated `key=value[,value...]` terms. Terms combine with
+AND, and values within a term with OR. The keys are:
+
+- `purl`: glob;
+- `ecosystem`: PURL type;
+- `scope`: `runtime`, `development`, `build`, `test` or `optional`;
+- `tier`: the `waybill:sbom-tier`, or `file` for file components;
+- `role`;
+- `name`: glob, or `re:<regex>`.
+
+Globs treat `/` as an ordinary character, so `name=@acme/*` matches scoped
+names.
+
+```bash
+waybill sbom edit full.cdx.json -o shipped.cdx.json \
+    --drop 'scope=development,test' --drop 'tier=file'
+```
+
+A dropped component's dependents depend on its dependencies afterwards. Their
+dependency lists are marked incomplete: a CycloneDX `incomplete` composition,
+SPDX 3 `completeness: incomplete`, and `waybill:graph-completeness` set to
+`unknown` in all three formats.
+
+### `--drop-annotations <NAMESPACE>`
+
+Remove annotations whose field starts with `<NAMESPACE>`, e.g. `waybill:` or
+`waybill:graph-`. `waybill:generation-context` (C21) and `waybill:derivation`
+(C194) are never removed.
+
+### `--redact <CLASS>[:<MODE>][=<PATTERN>]`
+
+The class is `paths`, `hosts` or `names`. The mode is one of:
+
+- `remove`: the default for paths. Replaces values with opaque markers: `redacted-path-<n>`, `redacted-host-<n>.invalid` or `redacted-<n>`.
+- `pseudonymise`: the default for hosts and names. Replaces values with `redacted-<HMAC>`, the same in every document redacted with the same key.
+
+The pattern is a glob or `re:<regex>`. It is required for hosts and names; for
+paths, omitting it means every path.
+
+```bash
+waybill sbom edit full.spdx.json -o shipped.spdx.json \
+    --redact paths \
+    --redact 'hosts=*.corp.example' \
+    --redact 'names=@acme/*' --redact-key-file ./redact.key
+```
+
+### `--redact-key-file <PATH>`
+
+The HMAC key for pseudonymisation: the file's bytes, with a trailing newline
+ignored. It is never written to the output or logged. Keep it secret: anyone
+holding it can test a guessed value against a pseudonym.
+
+### `--original-signature <PATH>`
+
+The original's DSSE or Sigstore sidecar, when it isn't next to the input as
+`<input>.sig.json` or `<input>.sig.bundle.json`. A CycloneDX original's
+in-document signature is found without this.
+
+### Signing flags
+
+`--sign-key`, `--sign-key-passphrase-env`, `--sign`, `--fulcio-url`,
+`--rekor-url` and `--rekor-timeout-secs` behave as in
+[`waybill sbom scan`](#waybill-sbom-scan). The original's own signature
+doesn't survive an edit: it signs bytes that no longer exist. Its material
+moves into the derivation record, and the output is signed afresh.
+
+---
+
+## `waybill sbom verify-chain`
+
+Verify an edited SBOM's derivation chain: its own signature and, for each
+original supplied, the hash and signature its derivation record names.
+Exits 0 only if no check failed or mismatched.
+
+### Quick reference
+
+| Flag | Type | Default | Description |
+|---|---|---|---|
+| `<DERIVED>` | path (required) | — | The edited SBOM. |
+| `--original <PATH>` | path, repeatable | — | Each step's original, newest first. |
+| `--key <PEM>` | path, repeatable | — | Public keys for static-key signatures. |
+| `--original-signature <PATH>` | path, repeatable | — | Signature material a record carries only by digest. |
+| `--json` | bool | `false` | Machine-readable report. |
+
+Each check reports one of:
+
+- `verified`;
+- `delegated`: a keyless signature. waybill checked that the bundle signs this document's digest. The certificate, identity and Rekor checks are left to the printed `cosign verify-blob` command;
+- `unsigned`;
+- `failed`;
+- `matched` or `mismatched`, for hashes;
+- `original-not-supplied`.
+
+`delegated`, `unsigned` and `original-not-supplied` don't fail the chain, and
+are never counted as verified.
+
+### `--key <PEM>`
+
+A public key, PEM. Signatures are verified only against keys given here; a key
+embedded in a signature is never trusted. Giving any `--key` also requires the
+derived document itself to be signed.
+
+### `--original-signature <PATH>`
+
+When an original's signature held a value the edit redacted, the record
+carries only its digest. The material is found next to the original, or
+given here and matched by digest.
+
+```bash
+waybill sbom verify-chain shipped.cdx.json \
+    --original full.cdx.json --key vendor.pub
+```
+
+---
+
 ## `waybill trace run`
 
 > **Status: experimental.** Linux-only. Adds ~2-3× wall-clock overhead on

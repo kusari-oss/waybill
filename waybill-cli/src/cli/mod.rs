@@ -5,6 +5,7 @@ pub mod trace_cmd;
 
 // Subcommand implementations
 pub mod auto_dirs;
+pub mod edit;
 pub mod enrich;
 pub mod generate;
 pub mod parity_cmd;
@@ -15,4 +16,5 @@ pub mod scan_cmd;
 pub mod trace_binding_cmd;
 pub mod verify;
 pub mod verify_binding_cmd;
+pub mod verify_chain;
 pub mod report_cmd;

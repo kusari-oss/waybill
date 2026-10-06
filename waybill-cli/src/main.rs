@@ -35,6 +35,7 @@ impl ExcludeScopeArg {
 mod attestation;
 mod cli;
 mod config;
+mod edit;
 mod enrich;
 mod error;
 mod generate;

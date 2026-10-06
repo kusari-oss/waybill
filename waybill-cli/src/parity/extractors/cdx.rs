@@ -995,6 +995,12 @@ cdx_anno!(c189_cdx, "waybill:nixpkgs-declaration-grade", document);
 cdx_anno!(c191_cdx, "waybill:deps-dev-outcome", component);
 cdx_anno!(c192_cdx, "waybill:deps-dev-outcomes", document);
 cdx_anno!(c193_cdx, "waybill:vex-claims-omitted", document);
+cdx_anno!(c194_cdx_raw, "waybill:derivation", document);
+
+/// C194 — compared by projection only (milestone 1071).
+pub(super) fn c194_cdx(doc: &Value) -> BTreeSet<String> {
+    super::common::derivation_projections(c194_cdx_raw(doc))
+}
 
 /// C185 — the patches a closure member applies.
 ///

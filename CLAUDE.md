@@ -414,6 +414,7 @@ Auto-generated from all feature plans. Last updated: 2026-10-06
 - N/A, in-process per scan. (1069-spdx3-relationship-completeness)
 - Rust stable (workspace toolchain, `rust-toolchain.toml`) for user space. The pinned nightly in `waybill-ebpf/rust-toolchain.toml` for the kernel crate. No new toolchain features. + Existing only: `aya` / `aya-ebpf` (kprobes, tracepoints, ring buffer, `HashMap`), `serde` / `serde_json`, `tracing`. **Zero new Cargo dependencies.** (1070-trace-relative-source-reads)
 - N/A, in-process per trace. `CwdTracker` lives for one trace. The kernel's pending-syscall map is keyed by thread and cleared at syscall exit. (1070-trace-relative-source-reads)
+- None. File in, file out; no state between runs, unlike bomctl's cache. (1071-sbom-edit)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -593,9 +594,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 1071-sbom-edit: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. No nightly; `waybill-ebpf` untouched. + Existing only:
 - 1070-trace-relative-source-reads: Added Rust stable (workspace toolchain, `rust-toolchain.toml`) for user space. The pinned nightly in `waybill-ebpf/rust-toolchain.toml` for the kernel crate. No new toolchain features. + Existing only: `aya` / `aya-ebpf` (kprobes, tracepoints, ring buffer, `HashMap`), `serde` / `serde_json`, `tracing`. **Zero new Cargo dependencies.**
 - 1069-spdx3-relationship-completeness: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. No nightly; `waybill-ebpf` untouched. + Existing only: `serde_json`, `tracing`; the existing `hash_prefix` helper for deterministic IRIs. CI/test: the existing `spdx3-validate` 0.0.5 (milestone 078). **Zero new Cargo dependencies.**
-- 1068-vulnerability-output: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. No nightly; `waybill-ebpf` untouched. + Existing only: `serde`/`serde_json`, `tracing`. Dev: existing `jsonschema` 0.46 via the shared CycloneDX validator (`tests/common/cdx_schema.rs`). **Zero new Cargo dependencies.**
 
 
 <!-- MANUAL ADDITIONS START -->

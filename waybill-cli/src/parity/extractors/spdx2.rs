@@ -696,6 +696,12 @@ spdx23_anno!(c189_spdx23, "waybill:nixpkgs-declaration-grade", document);
 spdx23_anno!(c191_spdx23, "waybill:deps-dev-outcome", component);
 spdx23_anno!(c192_spdx23, "waybill:deps-dev-outcomes", document);
 spdx23_anno!(c193_spdx23, "waybill:vex-claims-omitted", document);
+spdx23_anno!(c194_spdx23_raw, "waybill:derivation", document);
+
+/// C194 — compared by projection only (milestone 1071).
+pub(super) fn c194_spdx23(doc: &Value) -> BTreeSet<String> {
+    super::common::derivation_projections(c194_spdx23_raw(doc))
+}
 spdx23_anno!(c163_spdx23, "waybill:document-resolve",                     document);
 spdx23_anno!(c162_spdx23, "waybill:cabal-entries-skipped",                 document);
 

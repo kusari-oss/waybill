@@ -1,0 +1,613 @@
+{
+  "bomFormat": "CycloneDX",
+  "components": [
+    {
+      "bom-ref": "pkg:npm/%40acme/internal-utils@2.0.1",
+      "cpe": "cpe:2.3:a:\\@acme\\/internal-utils:\\@acme\\/internal-utils:2.0.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"f53e0a57161438f7ebb582ce545c9732a3a13352e9c74e705e7712d66cef4559\"}",
+            "location": "package-lock.json"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@acme/internal-utils/-/internal-utils-2.0.1.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ],
+      "name": "@acme/internal-utils",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "[\"cpe:2.3:a:\\\\@acme\\\\/internal-utils:\\\\@acme\\\\/internal-utils:2.0.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:acme:\\\\@acme\\\\/internal-utils:2.0.1:*:*:*:*:*:*:*\"]"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package-lock.json\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/%40acme/internal-utils@2.0.1",
+      "supplier": {
+        "name": "@acme"
+      },
+      "type": "library",
+      "version": "2.0.1"
+    },
+    {
+      "bom-ref": "pkg:npm/express@4.18.2",
+      "cpe": "cpe:2.3:a:express:express:4.18.2:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"f53e0a57161438f7ebb582ce545c9732a3a13352e9c74e705e7712d66cef4559\"}",
+            "location": "package-lock.json"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/express/-/express-4.18.2.tgz"
+        }
+      ],
+      "name": "express",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package-lock.json\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/express@4.18.2",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library",
+      "version": "4.18.2"
+    },
+    {
+      "bom-ref": "pkg:npm/jest-lite@1.0.0",
+      "cpe": "cpe:2.3:a:jest-lite:jest-lite:1.0.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"f53e0a57161438f7ebb582ce545c9732a3a13352e9c74e705e7712d66cef4559\"}",
+            "location": "package-lock.json"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/jest-lite/-/jest-lite-1.0.0.tgz"
+        }
+      ],
+      "name": "jest-lite",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package-lock.json\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/jest-lite@1.0.0",
+      "scope": "excluded",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library",
+      "version": "1.0.0"
+    },
+    {
+      "bom-ref": "pkg:npm/lodash@4.17.21",
+      "cpe": "cpe:2.3:a:lodash:lodash:4.17.21:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"f53e0a57161438f7ebb582ce545c9732a3a13352e9c74e705e7712d66cef4559\"}",
+            "location": "package-lock.json"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz"
+        }
+      ],
+      "name": "lodash",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package-lock.json\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/lodash@4.17.21",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library",
+      "version": "4.17.21"
+    },
+    {
+      "bom-ref": "pkg:npm/pretty-format-lite@1.0.0",
+      "cpe": "cpe:2.3:a:pretty-format-lite:pretty-format-lite:1.0.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"f53e0a57161438f7ebb582ce545c9732a3a13352e9c74e705e7712d66cef4559\"}",
+            "location": "package-lock.json"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/pretty-format-lite/-/pretty-format-lite-1.0.0.tgz"
+        }
+      ],
+      "name": "pretty-format-lite",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package-lock.json\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/pretty-format-lite@1.0.0",
+      "scope": "excluded",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library",
+      "version": "1.0.0"
+    },
+    {
+      "bom-ref": "pkg:npm/safe-buffer@5.2.1",
+      "cpe": "cpe:2.3:a:safe-buffer:safe-buffer:5.2.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"f53e0a57161438f7ebb582ce545c9732a3a13352e9c74e705e7712d66cef4559\"}",
+            "location": "package-lock.json"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/safe-buffer/-/safe-buffer-5.2.1.tgz"
+        }
+      ],
+      "name": "safe-buffer",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package-lock.json\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/safe-buffer@5.2.1",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library",
+      "version": "5.2.1"
+    },
+    {
+      "bom-ref": "pkg:generic/file-tier?content-sha256=2e282c795bc69b29c1e8e9a49c4978f66bcc63b55a632f678bae2dd4f7a1a2f1",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 1.0,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 1.0,
+                "technique": "hash-comparison"
+              }
+            ]
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "2e282c795bc69b29c1e8e9a49c4978f66bcc63b55a632f678bae2dd4f7a1a2f1"
+        }
+      ],
+      "name": "index.js",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"src/index.js\"]"
+        },
+        {
+          "name": "waybill:component-tier",
+          "value": "file"
+        },
+        {
+          "name": "waybill:file-paths",
+          "value": "[\"src/index.js\"]"
+        }
+      ],
+      "type": "file",
+      "version": ""
+    },
+    {
+      "bom-ref": "pkg:generic/file-tier?content-sha256=aceb8ca50554da9c1dd861acea442c238ce56abe08f758c43e8e6593ac084dfa",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 1.0,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 1.0,
+                "technique": "hash-comparison"
+              }
+            ]
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "aceb8ca50554da9c1dd861acea442c238ce56abe08f758c43e8e6593ac084dfa"
+        }
+      ],
+      "name": "pricing.js",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"lib/pricing.js\"]"
+        },
+        {
+          "name": "waybill:component-tier",
+          "value": "file"
+        },
+        {
+          "name": "waybill:file-paths",
+          "value": "[\"lib/pricing.js\"]"
+        }
+      ],
+      "type": "file",
+      "version": ""
+    }
+  ],
+  "compositions": [
+    {
+      "aggregate": "complete",
+      "assemblies": [
+        "pkg:npm/%40acme/internal-utils@2.0.1",
+        "pkg:npm/acme-shop@1.4.0",
+        "pkg:npm/express@4.18.2",
+        "pkg:npm/jest-lite@1.0.0",
+        "pkg:npm/lodash@4.17.21",
+        "pkg:npm/pretty-format-lite@1.0.0",
+        "pkg:npm/safe-buffer@5.2.1"
+      ],
+      "dependencies": [
+        "pkg:npm/%40acme/internal-utils@2.0.1",
+        "pkg:npm/acme-shop@1.4.0",
+        "pkg:npm/express@4.18.2",
+        "pkg:npm/jest-lite@1.0.0",
+        "pkg:npm/lodash@4.17.21",
+        "pkg:npm/pretty-format-lite@1.0.0",
+        "pkg:npm/safe-buffer@5.2.1"
+      ]
+    },
+    {
+      "aggregate": "incomplete_first_party_only",
+      "assemblies": [
+        "pkg:npm/acme-shop@1.4.0"
+      ]
+    },
+    {
+      "aggregate": "complete",
+      "dependencies": [
+        "pkg:npm/acme-shop@1.4.0"
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/file-tier?content-sha256=2e282c795bc69b29c1e8e9a49c4978f66bcc63b55a632f678bae2dd4f7a1a2f1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/file-tier?content-sha256=aceb8ca50554da9c1dd861acea442c238ce56abe08f758c43e8e6593ac084dfa"
+    },
+    {
+      "dependsOn": [
+        "pkg:npm/lodash@4.17.21"
+      ],
+      "ref": "pkg:npm/%40acme/internal-utils@2.0.1"
+    },
+    {
+      "dependsOn": [
+        "pkg:npm/%40acme/internal-utils@2.0.1",
+        "pkg:npm/express@4.18.2",
+        "pkg:npm/jest-lite@1.0.0"
+      ],
+      "ref": "pkg:npm/acme-shop@1.4.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:npm/safe-buffer@5.2.1"
+      ],
+      "ref": "pkg:npm/express@4.18.2"
+    },
+    {
+      "dependsOn": [
+        "pkg:npm/pretty-format-lite@1.0.0"
+      ],
+      "ref": "pkg:npm/jest-lite@1.0.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/lodash@4.17.21"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/pretty-format-lite@1.0.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/safe-buffer@5.2.1"
+    }
+  ],
+  "metadata": {
+    "authors": [
+      {
+        "name": "waybill"
+      }
+    ],
+    "component": {
+      "bom-ref": "pkg:npm/acme-shop@1.4.0",
+      "cpe": "cpe:2.3:a:acme-shop:acme-shop:1.4.0:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "comment": "manual identifier flag",
+          "type": "vcs",
+          "url": "https://git.corp.acme.example/acme/shop.git"
+        }
+      ],
+      "name": "acme-shop",
+      "properties": [
+        {
+          "name": "waybill:component-role",
+          "value": "main-module"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\".\"]"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/acme-shop@1.4.0",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "application",
+      "version": "1.4.0"
+    },
+    "licenses": [
+      {
+        "license": {
+          "id": "CC0-1.0"
+        }
+      }
+    ],
+    "lifecycles": [
+      {
+        "phase": "pre-build"
+      }
+    ],
+    "properties": [
+      {
+        "name": "waybill:generation-context",
+        "value": "filesystem-scan"
+      },
+      {
+        "name": "waybill:cisa-2026-lifecycle",
+        "value": "after-build"
+      },
+      {
+        "name": "waybill:os-release-missing-fields",
+        "value": "[\"ID\",\"VERSION_ID\"]"
+      },
+      {
+        "name": "waybill:trace-integrity-ring-buffer-overflows",
+        "value": "0"
+      },
+      {
+        "name": "waybill:trace-integrity-events-dropped",
+        "value": "0"
+      },
+      {
+        "name": "waybill:trace-integrity-uprobe-attach-failures",
+        "value": "[]"
+      },
+      {
+        "name": "waybill:trace-integrity-kprobe-attach-failures",
+        "value": "[]"
+      },
+      {
+        "name": "waybill:graph-completeness",
+        "value": "complete"
+      },
+      {
+        "name": "waybill:workspaces-detected",
+        "value": "[\".\"]"
+      },
+      {
+        "name": "waybill:unresolved-declared-dep-count",
+        "value": "0"
+      },
+      {
+        "name": "waybill:file-inventory-source-shapes-active",
+        "value": "{\"mode\":\"source-tree\",\"restriction\":null}"
+      }
+    ],
+    "supplier": {
+      "name": "waybill contributors"
+    },
+    "timestamp": "2026-10-06T22:29:42Z",
+    "tools": {
+      "components": [
+        {
+          "name": "waybill",
+          "publisher": "waybill contributors",
+          "type": "application",
+          "version": "0.10.1"
+        }
+      ]
+    }
+  },
+  "serialNumber": "urn:uuid:57d1d54a-76e3-4c77-aa1b-a14846f56d48",
+  "specVersion": "1.6",
+  "version": 1,
+  "vulnerabilities": []
+}

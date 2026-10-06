@@ -136,6 +136,9 @@ regex = "1"
 # transitives (regex, regex-syntax, regex-automata, aho-corasick)
 # already in the workspace dep closure.
 globset = "0.4"
+# Milestone 1071 (#1129): keyed pseudonyms for `sbom edit --redact`. Already in
+# Cargo.lock through sigstore; promoted to a direct dependency, adding nothing.
+hmac = "0.12"
 
 # Milestone 003 — pure-Rust-only deps. See specs/003-multi-ecosystem-expansion/
 # tasks.md T001 for the feature-pinning rationale (Principle I: zero C).
