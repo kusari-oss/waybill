@@ -129,6 +129,15 @@ pub(super) fn spdx23_homepage(doc: &Value) -> BTreeSet<String> {
 pub(super) fn spdx23_vcs(doc: &Value) -> BTreeSet<String> {
     spdx23_external_ref_by_type(doc, "vcs")
 }
+pub(super) fn spdx23_issue_tracker(doc: &Value) -> BTreeSet<String> {
+    spdx23_external_ref_by_type(doc, "issue-tracker")
+}
+pub(super) fn spdx23_documentation(doc: &Value) -> BTreeSet<String> {
+    spdx23_external_ref_by_type(doc, "documentation")
+}
+pub(super) fn spdx23_attestation(doc: &Value) -> BTreeSet<String> {
+    spdx23_external_ref_by_type(doc, "attestation")
+}
 pub(super) fn spdx23_distribution(doc: &Value) -> BTreeSet<String> {
     let mut out = spdx23_external_ref_by_type(doc, "distribution");
     // Some downloads land in `downloadLocation` not externalRefs.

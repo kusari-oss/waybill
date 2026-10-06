@@ -111,6 +111,39 @@ pub(super) fn spdx3_distribution(doc: &Value) -> BTreeSet<String> {
         .collect()
 }
 
+/// A14–A16: locators of a package's `externalRef[]` entries of one
+/// `externalRefType`. `locator` is array-typed in SPDX 3.
+fn spdx3_external_ref_by_type(doc: &Value, ref_type: &str) -> BTreeSet<String> {
+    walk_spdx3_packages(doc)
+        .iter()
+        .flat_map(|p| {
+            p.get("externalRef")
+                .and_then(|v| v.as_array())
+                .map(|arr| arr.as_slice())
+                .unwrap_or(&[])
+                .iter()
+                .filter(|r| r.get("externalRefType").and_then(|v| v.as_str()) == Some(ref_type))
+                .flat_map(|r| {
+                    r.get("locator")
+                        .and_then(|v| v.as_array())
+                        .map(|arr| arr.as_slice())
+                        .unwrap_or(&[])
+                        .iter()
+                        .filter_map(|l| l.as_str().map(String::from))
+                })
+        })
+        .collect()
+}
+pub(super) fn spdx3_issue_tracker(doc: &Value) -> BTreeSet<String> {
+    spdx3_external_ref_by_type(doc, "issueTracker")
+}
+pub(super) fn spdx3_documentation(doc: &Value) -> BTreeSet<String> {
+    spdx3_external_ref_by_type(doc, "documentation")
+}
+pub(super) fn spdx3_attestation(doc: &Value) -> BTreeSet<String> {
+    spdx3_external_ref_by_type(doc, "buildMeta")
+}
+
 /// Milestone 104 — per-component role from SPDX 3
 /// `software_Package.software_primaryPurpose`. Returns
 /// `<purl>=<role>` strings. The SPDX 3 values are already lowercase
