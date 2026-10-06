@@ -65,7 +65,7 @@ description: "Tasks for milestone 1071: edit an emitted SBOM (filter, redact, de
   Refuse any operation whose selector matches the document's root or subject (`metadata.component`, the SPDX `DESCRIBES` target, the SPDX 3 `rootElement`), with an error naming it. Nothing is written on any error (FR-016).
 - [ ] T007 In `W/edit/mod.rs`, add the post-condition checks:
   - (a) no identifier of a dropped component appears anywhere in the serialised output (string search);
-  - (b) the output passes conformance for its format. Reuse the conformance validation the emitters' tests use; check `T/common/cdx_schema.rs` and the SPDX 2.3 schema test helper, and make a shared non-test helper only if one is needed, else validate at test level and document why;
+  - (b) every reference resolves to an element that exists in the output: CycloneDX `dependsOn`/`ref`/`assemblies` and `affects[].ref` against `bom-ref`s; SPDX 2.3 relationship ends against `SPDXID`s (and `DocumentRef-*:` prefixes); SPDX 3 `from`/`to`/`subject` against `spdxId`s or `import` entries. This is structural only. Schema and `spdx3-validate` conformance are test-time (T008, T015, T025), since waybill ships no runtime validator (Principle I; analysis H1);
   - (c) redaction leaks: wired in T024.
 
   On failure, return an error with the first offending path.
@@ -84,7 +84,7 @@ description: "Tasks for milestone 1071: edit an emitted SBOM (filter, redact, de
   - the vulnerability on the dev dependency is gone;
   - the bridged component's dependents now depend on its dependencies (SC-007: everything reachable before and not dropped is still reachable);
   - the affected dependency lists no longer claim `complete`;
-  - `--drop-annotations waybill:` leaves no `waybill:` annotation except `waybill:derivation`;
+  - `--drop-annotations waybill:` leaves no `waybill:` annotation except the protected set, `waybill:generation-context` (C21) and `waybill:derivation`. Assert C21 is still present with its original value (constitution Operating Modes, requirement 1; analysis C1);
   - the SC-002 diff: apart from the targeted content, the consequential changes and the derivation record, input and output are identical.
 - [ ] T009 [P] [US1] Write the cross-format test in `T/sbom_edit_parity.rs`. Apply the same operations to the three fixture outputs, then run every `waybill::parity::extractors::EXTRACTORS` row over the three results. They must agree with the same directionality rules the parity check uses (FR-013). Reuse the comparison logic behind `waybill sbom parity-check`; read `W/cli/parity_cmd.rs` for the entry point.
 - [ ] T010 [US1] In `W/edit/cdx.rs`, write the CycloneDX adapter: `components()` and `ComponentView`, reading the research R3 fields (`purl`, `waybill:lifecycle-scope` then `scope`, `waybill:sbom-tier`, `type` + `waybill:component-role`, `name`), with nested `components[]` walked recursively.
@@ -94,7 +94,7 @@ description: "Tasks for milestone 1071: edit an emitted SBOM (filter, redact, de
   - trim `compositions[]` `assemblies` and `dependencies`;
   - trim `vulnerabilities[].affects`, removing a vulnerability whose `affects` empties.
 
-  Then `downgrade_completeness(changed)` moves each changed `bom-ref` out of `aggregate: complete` into an `incomplete` composition. `remove_annotations(ns)` handles `properties[]` at document and component level, sparing `waybill:derivation`.
+  Then `downgrade_completeness(changed)` moves each changed `bom-ref` out of `aggregate: complete` into an `incomplete` composition. `remove_annotations(ns)` handles `properties[]` at document and component level, sparing the protected set. Define `PROTECTED_ANNOTATIONS = ["waybill:generation-context", "waybill:derivation"]` once in `W/edit/mod.rs`, and consult it in all three adapters (analysis C1).
 - [ ] T012 [P] [US1] In `W/edit/spdx23.rs`, write the SPDX 2.3 adapter:
   - **`components()`** reads `packages[]` (PURL from `externalRefs`; scope from the `waybill:lifecycle-scope` annotation envelope, else the `*_DEPENDENCY_OF` types).
   - **`drop`** removes `packages[]`, `files[]`, every relationship naming a dropped `SPDXID`, annotations on them, and `hasExtractedLicensingInfos` entries no longer referenced. Bridging covers `DEPENDS_ON` and the reversed `*_DEPENDENCY_OF` types, kept in their direction.
@@ -140,9 +140,9 @@ description: "Tasks for milestone 1071: edit an emitted SBOM (filter, redact, de
 
   PURL strings are parsed, have their name segment replaced, and are re-encoded with `waybill_common::types::purl::Purl`. `bom-ref`s and SPDX ids that embed a redacted name are rewritten consistently with every reference to them.
 - [ ] T020 [US2] In `W/edit/redact.rs`, write the remove mode: delete optional fields; set required fields to the marker; names become `redacted-<n>` ordinals in document order, so identities stay distinct.
-- [ ] T021 [US2] Write the operations' derivation categories, `redact-paths`, `redact-hosts` and `redact-names`, with their matched/changed counts, in `EditReport` (`W/edit/mod.rs`).
+- [ ] T021 [US2] Write the operations' derivation categories, `redact-paths`, `redact-hosts` and `redact-names`, with their matched/changed counts, in `EditReport` (`W/edit/mod.rs`). Counts are in the format-independent units in data-model.md (distinct values matched and replaced; components selected and removed; annotation entries per component and field), so the three formats' records agree (analysis M1).
 - [ ] T022 [US2] Add `--redact <class>[:<mode>][=<pattern>]` and `--redact-key-file <path>` to `W/cli/edit.rs` per contracts/cli.md. The default modes are `remove` for paths and `pseudonymise` for hosts and names. Read the key file without logging its contents. A missing key with pseudonymisation is an error.
-- [ ] T023 [US2] Docs: in `docs/user-guide/sbom-edit.md`, a "What redaction does not hide" section (FR-017). Content hashes, version strings, licence data and dependency-graph shape can still identify a redacted component. Redaction is not anonymisation. Pseudonyms are linkable by anyone holding the key.
+- [ ] T023 [US2] Docs: in `docs/user-guide/sbom-edit.md`, a "What redaction does not hide" section (FR-017). Content hashes, version strings, licence data and dependency-graph shape can still identify a redacted component. Redaction is not anonymisation. Pseudonyms are linkable by anyone holding the key. The derivation record's original hash lets anyone holding a candidate original confirm it was the source (analysis L1).
 - [ ] T024 [US2] Add the redaction leak post-condition (T007 part c) in `W/edit/mod.rs`. Search the serialised output for every collected original value, and fail without writing if any remains. Add a test that forces a leak by stubbing a field the collector misses (a `#[cfg(test)]` injection), and confirms the command refuses to write.
 
 **Checkpoint**: US2 is shippable. A redacted document contains none of the redacted values, and the command refuses to write rather than leak.
@@ -164,20 +164,23 @@ description: "Tasks for milestone 1071: edit an emitted SBOM (filter, redact, de
     - (e) the embedded original signature is altered.
   - **A two-step chain** (edit an edited document) verifies with two `--original`s.
   - **An unsigned original** is recorded as `kind: none`, and verification reports `Unsigned`, not `Verified`.
+  - **Signature material containing a redacted value** (analysis H2): sign the original with a static key whose JSF or DSSE material is crafted to contain a redacted host (e.g. in the public-key `kid` or a DSSE payload field), and redact that host. The record has `embedded: false`, `material_sha256` and `reason: contains-redacted-values`. The edit still succeeds, with no leak. `verify-chain` needs `--original-signature` and verifies it against `material_sha256`.
 - [ ] T026 [US3] In `W/edit/derivation.rs`, write `DerivationRecord` per data-model.md: canonical sorted-key JSON, the `schema` `waybill-derivation/v1`, `ancestors` copied from the original's own record if any, `tool`, and `created`.
 - [ ] T027 [US3] In `W/edit/derivation.rs`, write `original_signature(input_path, input_doc, override)`, returning `{kind, material}`:
   - the CycloneDX root `signature` object (JSF);
   - otherwise a sidecar at `<input>.sig.bundle.json` (Sigstore bundle) or `<input>.sig.json` (DSSE), or the `--original-signature` path;
   - otherwise `none`.
 
-  Read the sidecar naming from `W/cli/scan_cmd.rs` (around the `sign_sbom_bytes_to_sidecar` call, line ~5433) so the conventions match exactly.
+  Before embedding, search the material for every value this edit redacts. On a hit, return `{kind, embedded: false, material_sha256, reason: "contains-redacted-values"}` and do not embed (analysis H2). Read the sidecar naming from `W/cli/scan_cmd.rs` (around the `sign_sbom_bytes_to_sidecar` call, line ~5433) so the conventions match exactly.
 - [ ] T028 [US3] In `W/edit/{cdx,spdx23,spdx3}.rs`, write `attach_derivation(record)`, adding the native link (data-model.md table) and the `waybill:derivation` annotation:
   - CycloneDX root `externalReferences` `type: bom` and a root `properties` entry;
   - SPDX 2.3 `externalDocumentRefs` `DocumentRef-original` + an `AMENDS` relationship + a document annotation in the `waybill-annotation/v1` envelope;
   - SPDX 3 an `import` ExternalMap + an `amendedBy` Relationship + an `Annotation` on the `SpdxDocument`.
 
   For a second edit, a fresh `DocumentRef-original-<n>` and a fresh IRI avoid colliding with the earlier link.
-- [ ] T029 [P] [US3] Add catalogue row **C194** `waybill:derivation` (document scope, all three formats, `SymmetricEqual`) to `docs/reference/sbom-format-mapping.md`, following C193's wording pattern. Add the extractors `c194_cdx` / `c194_spdx23` / `c194_spdx3` via the `cdx_anno!` / `spdx23_anno!` / `spdx3_anno!` macros in `W/parity/extractors/{cdx,spdx2,spdx3}.rs`, and the `EXTRACTORS` entry in `W/parity/extractors/mod.rs` after C193. Then `T/sbom_format_mapping_coverage.rs` passes.
+- [ ] T029 [P] [US3] Add catalogue row **C194** `waybill:derivation` (document scope, all three formats, `SymmetricEqual`) to `docs/reference/sbom-format-mapping.md`, following C193's wording pattern. The row states that parity compares only the format-independent projection (`schema`, `operations`, the ancestors' `operations`), because `original.sha256`, `format` and the signature describe three different original files (analysis H3).
+
+  Write `c194_cdx` / `c194_spdx23` / `c194_spdx3` by hand in `W/parity/extractors/{cdx,spdx2,spdx3}.rs`, not with the plain `*_anno!` macros. Each reads the annotation value, parses the JSON and returns the canonicalised projection. Add the `EXTRACTORS` entry in `W/parity/extractors/mod.rs` after C193. Then `T/sbom_format_mapping_coverage.rs` passes.
 - [ ] T030 [US3] Wire the derivation step into the T006 pipeline in `W/edit/mod.rs`: compute the SHA-256 of the input **bytes**, build the record from `EditReport`, call `attach_derivation`. This runs after the operations and before serialisation and signing.
 - [ ] T031 [US3] Add signing to `W/cli/edit.rs`: the same flags as `sbom scan` (`--sign-key`, `--sign-key-passphrase-env`, keyless `--sign` and its companions; read their definitions in `W/cli/scan_cmd.rs` ~786–856) and `--original-signature`.
   - **CycloneDX:** `strip_existing_signature`, then `sign_cdx_document_in_place` (`W/sbom/signer.rs`). Keyless: the m778 detached bundle plus `inject_signature_reference` (`W/cli/scan_cmd.rs:6078`).
@@ -196,7 +199,7 @@ description: "Tasks for milestone 1071: edit an emitted SBOM (filter, redact, de
 
 ## Phase 6: Polish & cross-cutting
 
-- [ ] T034 SC-006 measurement: time `waybill sbom edit` (the quickstart's operations) on the `image-postgres16` corpus goldens (CycloneDX 2.1 MB, plus its SPDX outputs). Record it against the corpus run's generation time for that target, if the corpus harness logs it, or against a local scan if the image is available. Write `specs/1071-sbom-edit/measurements/performance.txt`, giving the ratio and both raw numbers, labelled as measured.
+- [ ] T034 SC-006 measurement (target: ratio ≤ 1.0, i.e. editing takes no longer than generating): time `waybill sbom edit` (the quickstart's operations) on the `image-postgres16` corpus goldens (CycloneDX 2.1 MB, plus its SPDX outputs). Record it against the corpus run's generation time for that target, if the corpus harness logs it, or against a local scan if the image is available. Write `specs/1071-sbom-edit/measurements/performance.txt`, giving the ratio and both raw numbers, labelled as measured. A ratio above 1.0 fails SC-006, and is reported rather than adjusted (analysis M2).
 - [ ] T035 [P] Write `docs/user-guide/sbom-edit.md` (the T023 section included), from quickstart.md: the model ("generate once, derive what you distribute"); operations and selectors; redaction modes and key handling; the derivation record and native links; `verify-chain` and what "delegated" means; a pointer to the next milestone (policy files, re-identification). Add `sbom edit` and `sbom verify-chain` to `docs/user-guide/cli-reference.md`.
 - [ ] T036 [P] `CHANGELOG.md` `[Unreleased]` entry under "Added": `waybill sbom edit` (filter, redact, derivation record, signing) and `waybill sbom verify-chain` (#1129).
 - [ ] T037 Run `./scripts/pre-pr.sh > /tmp/prepr.log 2>&1; echo EXIT=$?`. Require EXIT=0, `>>> all pre-PR checks passed.` and every `test result: ok`.
