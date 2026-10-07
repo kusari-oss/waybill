@@ -34,6 +34,7 @@ jobs:
   #   - lint-and-test-macos        (macOS, default features, stable only)
   #   - lint-and-test-ebpf         (Linux, --features ebpf-tracing, stable + nightly + bpf-linker)
   #   - lint-and-test-keyless-sbom (Linux, Sigstore staging, id-token: write)
+  #   - ci-ok                      (aggregate of the above minus ebpf; the required check)
   #
   # The default lanes drop the nightly + bpf-linker + xtask ebpf cost
   # entirely. The ebpf lane runs in parallel and is the regression gate
@@ -712,3 +713,31 @@ jobs:
       # (fail-close scenarios + runtime-isolation guard) run here.
       - name: Run keyless regression tests (unit + fail-close)
         run: cargo +stable test -p waybill --test cisa_2026_signing
+
+  # The one check a branch ruleset requires from this workflow. Requiring
+  # the jobs themselves would freeze their names into the ruleset, and a
+  # required check that never reports blocks a PR forever, so this job
+  # always reports: it runs whatever happened upstream and passes only if
+  # each job it needs succeeded, or was skipped by its own `if:`. Failed
+  # and cancelled both fail it.
+  #
+  # The eBPF lane is deliberately not required. `changes` is, so that a
+  # failed change detection cannot pass as a skipped lane.
+  ci-ok:
+    name: ci-ok
+    if: always()
+    needs:
+      - changes
+      - lint-and-test
+      - lint-and-test-macos
+      - lint-and-test-windows
+      - lint-and-test-keyless-sbom
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Every required job passed
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          jq -r 'to_entries[] | "\(.key): \(.value.result)"' <<< "$NEEDS"
+          jq -e 'all(.[]; .result == "success" or .result == "skipped")' <<< "$NEEDS" > /dev/null
