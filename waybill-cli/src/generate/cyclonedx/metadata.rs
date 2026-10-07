@@ -221,6 +221,8 @@ pub struct MetadataExtras<'a> {
     pub nix_eval_degraded: Option<&'a str>,
     /// C190 (m1066) — why a requested `--nix-closure` recorded no closure.
     pub nix_closure_degraded: Option<&'a str>,
+    /// C195/C196 (#1154) — the `go mod why` pass's outcome.
+    pub go_mod_why: Option<crate::scan_fs::package_db::GoModWhyStatus>,
     /// C192 (m1067) — deps.dev outcome counts, pre-rendered JSON.
     pub deps_dev_outcomes: Option<&'a str>,
     /// C193 (m1068) — VEX claims this document cannot carry.
@@ -295,6 +297,7 @@ pub fn build_metadata(
         nix_eval_tier,
         nix_eval_degraded,
         nix_closure_degraded,
+        go_mod_why,
         deps_dev_outcomes,
         vex_claims_omitted,
         nix_eval_system,
@@ -441,6 +444,15 @@ pub fn build_metadata(
             "name": "waybill:nix-closure-degraded",
             "value": reason,
         }));
+    }
+
+    // C195/C196 (#1154) — whether the `go mod why` build-inclusion pass ran,
+    // so "classified, all needed" and "never classified" read differently.
+    if let Some(g) = go_mod_why {
+        properties.push(json!({ "name": "waybill:go-mod-why", "value": g.status }));
+        if let Some(reason) = g.reason {
+            properties.push(json!({ "name": "waybill:go-mod-why-reason", "value": reason }));
+        }
     }
 
     // C178 (#971 part A) — what the tier did. Present whenever the tier ran,

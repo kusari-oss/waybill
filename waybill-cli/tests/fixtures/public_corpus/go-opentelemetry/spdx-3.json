@@ -23653,6 +23653,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-D43QZKTEBMHB22T5",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:go-mod-why-reason\",\"value\":\"unresolvable-packages\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-D457OCLIXMQIMCIN",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:orphan-reason\",\"value\":\"unresolved-indirect-require\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-G2AY3TFPREA2QERB",
@@ -36320,6 +36328,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-SGLRVHQP6DPI2ELV",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:go-transitive-source\",\"value\":\"go-sum-fallback\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-UGJNEL3LXKHIH6VU",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-SGP2GCKNDFFCXZRH",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:go-mod-why\",\"value\":\"skipped\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>",
       "type": "Annotation"
     },
     {

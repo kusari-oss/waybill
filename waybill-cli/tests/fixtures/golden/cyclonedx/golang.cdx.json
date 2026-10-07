@@ -983,6 +983,14 @@
         "value": "after-build"
       },
       {
+        "name": "waybill:go-mod-why",
+        "value": "skipped"
+      },
+      {
+        "name": "waybill:go-mod-why-reason",
+        "value": "disabled"
+      },
+      {
         "name": "waybill:os-release-missing-fields",
         "value": "[\"ID\",\"VERSION_ID\"]"
       },

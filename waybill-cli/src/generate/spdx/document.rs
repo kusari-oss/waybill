@@ -1248,6 +1248,7 @@ mod tests {
             go_transitive_fallback_count: None,
             unresolved_declared_dep_count: 0,
             go_cache_warming: None,
+            go_mod_why: None,
             go_workspace_mode: None,
             go_toolchains_detected: None,
             cross_ecosystem_edges_report: None,

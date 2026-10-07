@@ -180,6 +180,7 @@ impl SbomSerializer for CycloneDxJsonSerializer {
             .with_nix_eval_tier(scan.nix_eval_tier.map(str::to_string))
             .with_nix_eval_degraded(scan.nix_eval_degraded.map(str::to_string))
             .with_nix_closure_degraded(scan.nix_closure_degraded.map(str::to_string))
+            .with_go_mod_why(scan.go_mod_why)
             .with_deps_dev_online(scan.deps_dev_online)
             .with_vex_statements(crate::generate::openvex::vex_statements(scan))
             .with_nix_eval_system(scan.nix_eval_system.map(str::to_string))

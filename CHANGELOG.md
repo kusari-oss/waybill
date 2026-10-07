@@ -24,6 +24,11 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **SBOMs say whether Go build-inclusion classification ran** (#1154). The `go mod why` pass, which marks modules `not-needed`, is skipped wholesale when its `go list all` preflight fails, typically on private modules a scanner can't fetch. Every module then stays `build-inclusion: unknown`, and nothing in the document said so. Two document-level annotations, in all three formats, now record the outcome whenever the scan found a Go main module:
+  - `waybill:go-mod-why` (C195): `complete`, `partial` or `skipped`;
+  - `waybill:go-mod-why-reason` (C196): `disabled`, `no-toolchain`, `unresolvable-packages`, `out-of-memory`, `budget-exhausted` or `unresolved-modules`.
+
+  A preflight that runs out of memory is now reported as `out-of-memory` rather than `unresolvable-packages`, since more memory, not credentials, is the fix.
 - **`--bind-to-source` SPDX documents conform** (#1147). The edge to the source SBOM was `BUILT_FROM` (SPDX 2.3) and `built_from` (SPDX 3), neither of which those formats define, so every bound document failed the SPDX 2.3 schema and `spdx3-validate`. It is now `DESCENDANT_OF` / `descendantOf`, from this document to the source document. The source is also now named by its own identifier (CycloneDX `serialNumber`, SPDX 2.3 `documentNamespace`, or the SPDX 3 document IRI) rather than the local path it was read from. That path was not a valid IRI, and it leaked the scanning host's filesystem into the document and into every component's binding annotation. A new test runs both validators on a bound document.
 
 - **`--sign` without an OIDC token names the actual fix.** Inside GitHub Actions the error now says to grant `permissions: id-token: write`. It previously said GitHub Actions ambient OIDC was deferred to a follow-up milestone, which stopped being true in milestone 779. Elsewhere it still points at `SIGSTORE_ID_TOKEN`.

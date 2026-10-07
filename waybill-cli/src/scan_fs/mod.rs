@@ -134,6 +134,9 @@ pub struct ScanResult {
     pub go_cache_warming: Option<
         crate::scan_fs::package_db::golang::CacheWarmingResult,
     >,
+    /// #1154: the `go mod why` pass's outcome (C195/C196). `None` iff no
+    /// Go main module was found.
+    pub go_mod_why: Option<crate::scan_fs::package_db::GoModWhyStatus>,
     /// Milestone 161 (T012): workspace-mode detection outcome from
     /// `go.work` at scanned root. Distinct from
     /// `go_transitive_coverage` and `go_graph_completeness` per
@@ -375,6 +378,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
     // `scan_result.diagnostics.go_cache_warming`.
     let mut go_cache_warming:
         Option<package_db::golang::CacheWarmingResult> = None;
+    let mut go_mod_why: Option<package_db::GoModWhyStatus> = None;
     // Milestone 161 (T012): doc-scope go-workspace-mode signal.
     // Distinct from `go_transitive_coverage` per research.md R1.
     // Carried through ScanResult into the format emitters for the
@@ -459,6 +463,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         // Milestone 173: mirror cache-warming outcome from
         // ScanDiagnostics into the local for the ScanResult return.
         go_cache_warming = scan_result.diagnostics.go_cache_warming.clone();
+        go_mod_why = scan_result.diagnostics.go_mod_why;
         go_workspace_mode = scan_result.diagnostics.go_workspace_mode.clone();
         // Milestone 217 (waybill#631): mirror go-toolchain-detected
         // from ScanDiagnostics into the local for the ScanResult return.
@@ -1388,6 +1393,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         go_transitive_coverage,
         go_transitive_fallback_count,
         go_cache_warming,
+        go_mod_why,
         go_workspace_mode,
         go_toolchains_detected,
         cross_ecosystem_edges_report,

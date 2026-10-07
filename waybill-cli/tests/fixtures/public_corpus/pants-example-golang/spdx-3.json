@@ -405,6 +405,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-D43QZKTEBMHB22T5",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:go-mod-why-reason\",\"value\":\"unresolvable-packages\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-DXUYNGF3RI4INXXS",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-G4VMKWSHXDQKKU23",
@@ -648,6 +656,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-S45LRJVEJRDIPZOR",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-DKAFQULQWHAUSS6J",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-SGP2GCKNDFFCXZRH",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:go-mod-why\",\"value\":\"skipped\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>",
       "type": "Annotation"
     },
     {

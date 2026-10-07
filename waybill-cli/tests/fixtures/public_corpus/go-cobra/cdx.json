@@ -670,6 +670,14 @@
         "value": "after-build"
       },
       {
+        "name": "waybill:go-mod-why",
+        "value": "skipped"
+      },
+      {
+        "name": "waybill:go-mod-why-reason",
+        "value": "unresolvable-packages"
+      },
+      {
         "name": "waybill:file-inventory-skipped-build-dirs",
         "value": "1"
       },

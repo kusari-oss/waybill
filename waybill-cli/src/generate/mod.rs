@@ -197,6 +197,9 @@ pub struct ScanArtifacts<'a> {
     /// (`waybill:go-cache-warming-failed`) conditionally when
     /// `failures` is non-empty. Reference lifetime matches the other
     /// borrowed `ScanArtifacts` fields.
+    /// #1154 — C195 `waybill:go-mod-why` and C196 `waybill:go-mod-why-reason`.
+    /// `None` iff no Go main module was found (annotations absent).
+    pub go_mod_why: Option<crate::scan_fs::package_db::GoModWhyStatus>,
     pub go_cache_warming: Option<
         &'a crate::scan_fs::package_db::golang::CacheWarmingResult,
     >,

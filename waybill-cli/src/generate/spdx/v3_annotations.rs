@@ -641,6 +641,14 @@ fn push_document_fields(
         );
     }
 
+    // C195/C196 (#1154) — whether the `go mod why` build-inclusion pass ran.
+    if let Some(g) = scan.go_mod_why {
+        push(out, "waybill:go-mod-why", json!(g.status));
+        if let Some(reason) = g.reason {
+            push(out, "waybill:go-mod-why-reason", json!(reason));
+        }
+    }
+
     // C178 (#971 part A) — what the tier did. Present whenever it ran,
     // degradation included: "ran and got nothing" and "never ran" are
     // different facts, and only this tells them apart.

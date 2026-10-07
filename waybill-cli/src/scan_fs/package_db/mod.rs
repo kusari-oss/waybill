@@ -376,6 +376,9 @@ pub struct DbScanResult {
 /// cross-module signatures.
 #[derive(Default, Debug, Clone)]
 pub struct ScanDiagnostics {
+    /// #1154: the `go mod why` pass's outcome (C195/C196). `None` when no
+    /// Go main module was found.
+    pub go_mod_why: Option<GoModWhyStatus>,
     /// Fields from `/etc/os-release` that were absent or empty when the
     /// dpkg/apk/rpm readers tried to read them. Each entry is a string
     /// naming the missing field (e.g. `"ID"`, `"VERSION_ID"`).
@@ -1438,6 +1441,37 @@ struct GoModWhyOutcome {
     preflight_invocations: usize,
 }
 
+/// What the `go mod why` build-inclusion pass did, for C195
+/// `waybill:go-mod-why` and C196 `waybill:go-mod-why-reason` (#1154).
+/// Without it a consumer cannot tell "classified, and every module is
+/// needed" from "never classified": both leave every unclassified module
+/// `build-inclusion: unknown` and none excluded.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct GoModWhyStatus {
+    /// `complete`, `partial` or `skipped`.
+    pub status: &'static str,
+    /// Why it was not complete; `None` when it was.
+    pub reason: Option<&'static str>,
+}
+
+impl GoModWhyOutcome {
+    /// `None` when the scan found no Go main module (no annotation).
+    fn status(&self) -> Option<GoModWhyStatus> {
+        if !self.go_workspaces_found {
+            return None;
+        }
+        Some(match self.skipped {
+            // Nothing was classified: skipped outright (disabled, no
+            // toolchain, every preflight failed, or no budget left).
+            Some(reason) if self.classified.is_empty() => GoModWhyStatus { status: "skipped", reason: Some(reason) },
+            // Some main modules or chunks were classified, others not.
+            Some(reason) => GoModWhyStatus { status: "partial", reason: Some(reason) },
+            None if self.unresolved > 0 => GoModWhyStatus { status: "partial", reason: Some("unresolved-modules") },
+            None => GoModWhyStatus { status: "complete", reason: None },
+        })
+    }
+}
+
 /// Needed-by-ANY merge precedence (spec edge case: a module needed by
 /// only one of several main modules is NOT excluded).
 fn verdict_rank(
@@ -2281,6 +2315,7 @@ pub fn read_all(
     // when a `go` toolchain is on PATH; disabled via --no-go-mod-why /
     // WAYBILL_NO_GO_MOD_WHY; every failure mode degrades to Part B.
     let go_mod_why_outcome = apply_go_mod_why_classification(&mut out);
+    diagnostics.go_mod_why = go_mod_why_outcome.status();
 
     // Milestone 112 Part B (runs LAST among Go passes so it observes
     // final post-filter state): mark fallback-discovered golang
@@ -3169,6 +3204,26 @@ pub fn rpm_vendor_from_id(id: &str) -> String {
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
+
+    /// #1154: the pass's outcome as C195/C196 report it.
+    #[test]
+    fn go_mod_why_status_tells_skipped_partial_and_complete_apart() {
+        let outcome = |found: bool, classified: usize, unresolved: usize, skipped: Option<&'static str>| GoModWhyOutcome {
+            go_workspaces_found: found,
+            classified: (0..classified).map(|i| format!("m{i}")).collect(),
+            unresolved,
+            skipped,
+            ..Default::default()
+        };
+        let status = |o: GoModWhyOutcome| o.status().map(|s| (s.status, s.reason));
+        assert_eq!(status(outcome(false, 0, 0, None)), None, "no Go: no annotation");
+        assert_eq!(status(outcome(true, 3, 0, None)), Some(("complete", None)));
+        assert_eq!(status(outcome(true, 0, 0, Some("unresolvable-packages"))), Some(("skipped", Some("unresolvable-packages"))));
+        assert_eq!(status(outcome(true, 0, 0, Some("disabled"))), Some(("skipped", Some("disabled"))));
+        assert_eq!(status(outcome(true, 2, 0, Some("budget-exhausted"))), Some(("partial", Some("budget-exhausted"))));
+        assert_eq!(status(outcome(true, 2, 1, None)), Some(("partial", Some("unresolved-modules"))));
+    }
+
     use super::*;
 
     #[test]
