@@ -233,7 +233,7 @@ impl SbomSerializer for Spdx2_3JsonSerializer {
         // contracts/source-document-binding-annotation.md C-2 SPDX 2.3:
         //   * externalDocumentRefs[] entry naming the source SBOM
         //     by IRI + SHA-256 checksum.
-        //   * BUILT_FROM relationship from the document root to a
+        //   * DESCENDANT_OF relationship from the document root to a
         //     namespaced cross-doc SPDXID. We use the source-tier
         //     element form `DocumentRef-source-sbom:SPDXRef-DOCUMENT`
         //     since the SPDX 2.3 spec allows pointing at the
@@ -254,13 +254,13 @@ impl SbomSerializer for Spdx2_3JsonSerializer {
                     },
                 },
             );
-            // BUILT_FROM relationship: document root → cross-doc
+            // DESCENDANT_OF relationship: document root → cross-doc
             // SPDXRef-DOCUMENT. Per SPDX 2.3 §7.2, the cross-doc
             // SPDXID has the form `<DocumentRefId>:<SPDXID>`.
             doc.relationships.push(relationships::SpdxRelationship {
                 source: doc.spdx_id.clone(),
                 target: ids::SpdxId::cross_document_ref(&ext_ref_id, "SPDXRef-DOCUMENT"),
-                kind: relationships::SpdxRelationshipType::BuiltFrom,
+                kind: relationships::SpdxRelationshipType::DescendantOf,
                 comment: Some(
                     "milestone-072 cross-tier binding: this build/deployment was \
                      produced from the source-tier SBOM referenced above"
@@ -271,7 +271,7 @@ impl SbomSerializer for Spdx2_3JsonSerializer {
 
         // Last thing before serialization, so every producer above is
         // covered — build_relationships, the document.rs file/view edges and
-        // the m072 BUILT_FROM edge alike.
+        // the m072 DESCENDANT_OF edge alike.
         relationships::sort_relationships(&mut doc.relationships);
 
         let json_str = serde_json::to_string_pretty(&doc)

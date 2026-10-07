@@ -192,8 +192,9 @@ pub struct SourceDocumentId {
     /// SHA-256 hex of the canonical source SBOM bytes.
     /// Verifier-computable.
     pub sha256: String,
-    /// Optional IRI (URL, urn:uuid:..., file path) for human-readable
-    /// cross-reference. May be a local file path during local CI runs.
+    /// The source document's own identifier, when it has one: CycloneDX
+    /// `serialNumber`, SPDX 2.3 `documentNamespace`, or the SPDX 3
+    /// `SpdxDocument` IRI. Never the path the SBOM was read from (#1147).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub iri: Option<String>,
 }

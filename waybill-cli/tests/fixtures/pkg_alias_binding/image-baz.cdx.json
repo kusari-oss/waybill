@@ -55,7 +55,7 @@
         },
         {
           "name": "waybill:source-document-binding",
-          "value": "{\"algo\":\"v1\",\"reason\":\"source-not-found-in-bind-target\",\"source_doc_id\":{\"iri\":\"<WORKSPACE>/waybill-cli/tests/fixtures/pkg_alias_binding/source-baz.cdx.json\",\"sha256\":\"3f68e0f5c94b6af774801bdb3d2f466d3b67b4649be44c08bd1a1b2ce35bac30\"},\"strength\":\"unknown\"}"
+          "value": "{\"algo\":\"v1\",\"reason\":\"source-not-found-in-bind-target\",\"source_doc_id\":{\"iri\":\"urn:uuid:00000000-0000-0000-0000-000000000111\",\"sha256\":\"3f68e0f5c94b6af774801bdb3d2f466d3b67b4649be44c08bd1a1b2ce35bac30\"},\"strength\":\"unknown\"}"
         }
       ],
       "purl": "pkg:generic/baz?file-sha256=446db4a0be0f85cb27407792fd4ff3de0a60a92b1055dc14ee810483df82b5c9",
@@ -112,7 +112,7 @@
             }
           ],
           "type": "bom",
-          "url": "<WORKSPACE>/waybill-cli/tests/fixtures/pkg_alias_binding/source-baz.cdx.json"
+          "url": "urn:uuid:00000000-0000-0000-0000-000000000111"
         }
       ],
       "name": "waybill-test:latest",
