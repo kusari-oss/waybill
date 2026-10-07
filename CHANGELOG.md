@@ -18,6 +18,10 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   - **Signs** with the same flags as `sbom scan`.
 - **`waybill sbom verify-chain`** checks an edited SBOM's signature, and for each original supplied, the hash and signature its derivation record names. Keyless signatures are checked against the document digest, and the rest is delegated to a printed `cosign verify-blob` command.
 
+### Changed
+
+- **Releases sign their source SBOM with waybill itself.** `release.yml` now runs `waybill sbom scan --sign` with the binary it just built, rather than `cosign sign-blob`. That workaround dated from before waybill could use GitHub Actions' ambient OIDC token (milestone 779), and the release workflow now checks the signature with cosign before publishing. The bundle is published as `waybill-source.cdx.json.sig.bundle.json`, and also under its earlier name, `waybill-source.cdx.json.bundle`.
+
 ### Fixed
 
 - **`--sign` without an OIDC token names the actual fix.** Inside GitHub Actions the error now says to grant `permissions: id-token: write`. It previously said GitHub Actions ambient OIDC was deferred to a follow-up milestone, which stopped being true in milestone 779. Elsewhere it still points at `SIGSTORE_ID_TOKEN`.

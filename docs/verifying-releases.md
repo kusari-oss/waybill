@@ -75,6 +75,22 @@ gh attestation verify waybill-source.cdx.json --repo kusari-oss/waybill
 
 **Expected output**: same shape as Step 2.
 
+The release also signs this SBOM with waybill itself (`sbom scan --sign`, Sigstore
+keyless as the release workflow). Verify that signature too:
+
+```bash
+curl -LO "https://github.com/kusari-oss/waybill/releases/download/${VERSION}/waybill-source.cdx.json.sig.bundle.json"
+cosign verify-blob \
+  --bundle waybill-source.cdx.json.sig.bundle.json \
+  --certificate-identity "https://github.com/kusari-oss/waybill/.github/workflows/release.yml@refs/tags/${VERSION}" \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+  waybill-source.cdx.json
+```
+
+Nightlies are dispatched from `main`, so their identity ends in
+`release.yml@refs/heads/main`. The same bundle is also published under its
+earlier name, `waybill-source.cdx.json.bundle`.
+
 ### Verifying a waybill-produced keyless signature
 
 An SBOM signed with `waybill sbom scan --sign` carries a detached
