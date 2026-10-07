@@ -135,7 +135,9 @@ This step is automated by `.github/workflows/post-release.yml`. When `release.ym
 1. applies the patch;
 2. re-runs `scripts/check-version-bump.py` *from `main`*, not from the patch;
 3. pushes `release/begin-v<X>.<Y>.<Z+1>` and dispatches `ci.yml` on it;
-4. when CI passes, fast-forwards `main` to that commit and deletes the branch.
+4. when CI passes, stops, and its job summary prints a ready `gh pr create` for that branch.
+
+**Then you open, approve and merge that PR**, before the next nightly (06:00 UTC). Opening it runs the normal PR lanes as well.
 
 If any step fails, it files a `[release] post-release version bump failed` issue.
 
@@ -144,12 +146,14 @@ If any step fails, it files a `[release] post-release version bump failed` issue
   - added or deleted files;
   - paths other than `Cargo.toml`, `Cargo.lock`, `CHANGELOG.md` and test fixtures;
   - any change other than the workspace's own version;
-- CI.
+- CI;
+- your review of the PR.
 
-**Why no PR.** Opening a PR with `GITHUB_TOKEN` needs the setting "Allow GitHub Actions to create and approve pull requests". It is locked off above this repository, and turning it on would let every workflow approve PRs.
-- The push instead uses `contents: write`, granted to the `land` job alone. It is a plain fast-forward: it fails if `main` moved, and it will fail if `main` gains protection that blocks bot pushes.
-- A `GITHUB_TOKEN` push triggers no workflows, so `ci.yml` (dispatched on the branch) is the only gate, and the other PR lanes don't run.
-- #1136 tracks a scoped bot identity that would bring back a reviewed PR with the normal CI.
+**Why you open the PR.** The workflow cannot:
+- Opening a PR with `GITHUB_TOKEN` needs the setting "Allow GitHub Actions to create and approve pull requests". It is locked off above this repository, and turning it on would let every workflow approve PRs.
+- `main` requires a PR, so the workflow cannot push to it either. Until this changed, `land` fast-forwarded `main` itself.
+- A `GITHUB_TOKEN` push triggers no workflows, which is why `land` dispatches `ci.yml` on the branch: it shows CI passing before you open the PR.
+- #1136 tracks a scoped bot identity that could open the PR itself.
 
 **Check the job without pushing.** Dispatch `post-release.yml` with `tag: v<X>.<Y>.<Z>` and `dry_run: true`. It runs `prepare` only, then stops. Dry-run is the default for manual dispatches.
 

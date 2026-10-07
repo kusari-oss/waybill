@@ -20,6 +20,7 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Changed
 
+- **The post-release version bump is a PR the maintainer opens.** After a stable release, `post-release.yml` still prepares, checks and CI-tests the bump on `release/begin-v<next>`, but no longer fast-forwards `main`: `main` is moving to a ruleset that requires a PR. The run's job summary prints a ready `gh pr create` (RELEASING.md §2 step 10).
 - **Releases sign their source SBOM with waybill itself.** `release.yml` now runs `waybill sbom scan --sign` with the binary it just built, rather than `cosign sign-blob`. That workaround dated from before waybill could use GitHub Actions' ambient OIDC token (milestone 779), and the release workflow now checks the signature with cosign before publishing. The bundle is published as `waybill-source.cdx.json.sig.bundle.json`, and also under its earlier name, `waybill-source.cdx.json.bundle`.
 
 ### Fixed

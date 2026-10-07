@@ -11,19 +11,20 @@ name: Post-release version bump
 #            uploads the resulting diff as a patch.
 #   land     write token, but runs no cargo: only git, gh and the stdlib-only
 #            scripts/check-version-bump.py from main. Applies the patch,
-#            re-checks that it is version-only, pushes a branch, runs ci.yml
-#            on it, and fast-forwards main when CI passes.
+#            re-checks that it is version-only, pushes a branch and runs
+#            ci.yml on it. It stops there: the job summary gives the
+#            maintainer a ready `gh pr create` to open, approve and merge.
 # A compromised crate can therefore change the patch, but the patch must
-# still pass the version-only check (run from main, not from the patch) and
-# CI before it reaches main, and the crate never holds a token that can push.
+# still pass the version-only check (run from main, not from the patch), CI
+# and a maintainer's review before it reaches main, and the crate never
+# holds a token that can push.
 #
-# Why no PR: a PR opened with GITHUB_TOKEN needs the setting "Allow GitHub
-# Actions to create and approve pull requests", which is locked off above
-# this repository and which would let every workflow approve PRs. Pushing
-# uses `contents: write` granted to this one job. The push is a plain
-# fast-forward, so it fails if main moved meanwhile, and it will fail
-# outright if main gains protection that blocks bot pushes. #1136 tracks a
-# scoped bot identity that would bring back a PR with the normal CI.
+# Why the maintainer opens the PR: a PR opened with GITHUB_TOKEN needs the
+# setting "Allow GitHub Actions to create and approve pull requests", which
+# is locked off above this repository and which would let every workflow
+# approve PRs. And main's ruleset (PR required, no bypass) refuses the
+# fast-forward push this job used to make. #1136 tracks a scoped bot
+# identity that could open the PR itself.
 #
 # Manual use: dispatch with `tag` set to the stable tag just released.
 # `dry_run` (the default for manual runs) stops after `prepare`.
@@ -149,7 +150,7 @@ jobs:
           retention-days: 7
 
   land:
-    name: Land the bump on main
+    name: Push the bump branch
     needs: prepare
     if: >-
       needs.prepare.outputs.proceed == 'true' &&
@@ -157,7 +158,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 120
     permissions:
-      contents: write   # push the branch and fast-forward main
+      contents: write   # push the bump branch
       actions: write    # dispatch ci.yml and watch it
     env:
       GH_TOKEN: ${{ github.token }}
@@ -190,7 +191,7 @@ jobs:
           git apply --binary "$RUNNER_TEMP/bump.patch"
           python3 "$RUNNER_TEMP/check-version-bump.py" "$RELEASED" "$NEXT"
 
-      - name: Push a branch, run CI on it, fast-forward main
+      - name: Push a branch and run CI on it
         shell: bash
         run: |
           set -euo pipefail
@@ -222,10 +223,23 @@ jobs:
           echo "::notice::waiting for CI run $RUN"
           gh run watch "$RUN" --exit-status --interval 60
 
-          # Plain fast-forward: refused if main moved past BASE meanwhile.
-          git push -q origin "$SHA:refs/heads/main"
-          git push -q origin --delete "$BRANCH"
-          echo "::notice::main is now at $NEXT ($SHA)"
+          # main's ruleset requires a PR, and GITHUB_TOKEN cannot open one
+          # (see the header), so the maintainer does, from this summary.
+          TITLE="chore(release): begin $NEXT development (#1133)"
+          BODY="Version-only bump after v$RELEASED, prepared by post-release.yml and checked by scripts/check-version-bump.py. CI on the branch: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$RUN"
+          {
+            echo "## Open the version-bump PR"
+            echo
+            echo "CI passed on \`$BRANCH\`. Open, approve and merge it before the next nightly (06:00 UTC), which is otherwise named after v$RELEASED:"
+            echo
+            echo '```sh'
+            # Single quotes are safe: every value is digits, the repository
+            # name, the branch derived from them, or a run URL.
+            printf "gh pr create --repo %s --base main --head %s \\\\\n  --title '%s' \\\\\n  --body '%s'\\n" \
+              "$GITHUB_REPOSITORY" "$BRANCH" "$TITLE" "$BODY"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "::notice::$BRANCH is ready; open its PR from this run's summary"
 
   report-failure:
     name: Report post-release bump failure
@@ -261,9 +275,10 @@ jobs:
               `prepare` runs the whole build, and `land` exists to catch a
               patch that build altered.
             - **`land` failed on CI**: the branch `release/begin-v<next>` is
-              left in place. Fix it there, then fast-forward `main` to it.
-            - **`land` failed on the final push**: `main` moved after the bump
-              was prepared. Re-run the workflow (`workflow_dispatch`,
-              `dry_run: false`) after deleting the branch.
+              left in place. Fix it there, then open a PR from it.
+            - **`land` failed on the branch push**: the branch already exists,
+              from an earlier run. Delete it, or open a PR from it if it is
+              current, then re-run the workflow (`workflow_dispatch`,
+              `dry_run: false`) if needed.
           detail: |
             Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
