@@ -97,7 +97,7 @@ impl SpdxId {
 
     /// Construct a cross-document SPDXID per SPDX 2.3 §7.2 — a target
     /// reference of the form `<DocumentRefId>:<SPDXID>`. Used by
-    /// milestone 072 (T012) for `BUILT_FROM` cross-tier relationships
+    /// milestone 072 (T012) for `DESCENDANT_OF` cross-tier relationships
     /// against an externally-referenced source-tier SBOM.
     pub fn cross_document_ref(
         external_doc_ref_id: &str,

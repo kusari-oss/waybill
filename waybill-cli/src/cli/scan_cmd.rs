@@ -1345,7 +1345,7 @@ pub struct ScanArgs {
     /// annotation on each first-party component whose PURL appears in
     /// the source SBOM, plus a document-level cross-document reference
     /// (CDX `externalReferences[type:bom]`, SPDX `externalDocumentRefs` +
-    /// `BUILT_FROM` relationship).
+    /// `DESCENDANT_OF` relationship).
     ///
     /// FR-011 transparency: when the file cannot be loaded or parsed,
     /// the scan exits non-zero rather than silently emitting components

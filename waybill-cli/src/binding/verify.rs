@@ -566,6 +566,28 @@ pub struct SourceSbomContext {
     pub binary_name_to_purl: std::collections::HashMap<String, Vec<String>>,
 }
 
+/// The source SBOM's own identifier: CycloneDX `serialNumber`, SPDX 2.3
+/// `documentNamespace`, or the SPDX 3 `SpdxDocument` IRI. Not the path it
+/// was read from, which is not an IRI (SPDX 3 rejects it) and leaks the
+/// scanning host's filesystem into the bound document (#1147). `None` when
+/// the document names itself nowhere; emitters then use `urn:sha256:<hash>`.
+fn document_iri(doc: &Value) -> Option<String> {
+    let named = doc
+        .get("serialNumber")
+        .or_else(|| doc.get("documentNamespace"))
+        .and_then(Value::as_str)
+        .map(str::to_string);
+    named.or_else(|| {
+        doc.get("@graph")?
+            .as_array()?
+            .iter()
+            .find(|e| e.get("type").and_then(Value::as_str) == Some("SpdxDocument"))?
+            .get("spdxId")?
+            .as_str()
+            .map(str::to_string)
+    })
+}
+
 impl SourceSbomContext {
     /// Load and decode a source SBOM from disk per FR-011.
     pub fn load(path: &Path) -> Result<Self, BindingError> {
@@ -580,7 +602,7 @@ impl SourceSbomContext {
         let sha256 = data_encoding::HEXLOWER.encode(&hasher.finalize());
         let source_doc_id = crate::binding::SourceDocumentId {
             sha256,
-            iri: Some(path.display().to_string()),
+            iri: document_iri(&doc),
         };
 
         let mut source_purls = std::collections::BTreeSet::new();
@@ -744,6 +766,27 @@ fn normalize_for_auto_alias(name: &str) -> String {
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
+
+    /// #1147: the binding names the source by its own identifier, never by
+    /// the path it was read from.
+    #[test]
+    fn document_iri_is_the_documents_own_identifier() {
+        use serde_json::json;
+        assert_eq!(
+            document_iri(&json!({"bomFormat": "CycloneDX", "serialNumber": "urn:uuid:3e671687-395b-41f5-a30f-a58921a69b79"})).as_deref(),
+            Some("urn:uuid:3e671687-395b-41f5-a30f-a58921a69b79")
+        );
+        assert_eq!(
+            document_iri(&json!({"spdxVersion": "SPDX-2.3", "documentNamespace": "https://example.org/spdx/src-1"})).as_deref(),
+            Some("https://example.org/spdx/src-1")
+        );
+        assert_eq!(
+            document_iri(&json!({"@graph": [{"type": "CreationInfo"}, {"type": "SpdxDocument", "spdxId": "https://example.org/spdx3/doc-1"}]})).as_deref(),
+            Some("https://example.org/spdx3/doc-1")
+        );
+        assert_eq!(document_iri(&json!({"bomFormat": "CycloneDX"})), None);
+    }
+
     use super::*;
     use crate::binding::{
         compute_binding_hash, BindingHash, BindingHashInputs, SourceDocumentId,

@@ -59,11 +59,14 @@ pub enum SpdxRelationshipType {
     OptionalDependencyOf,
     Contains,
     ContainedBy,
-    /// Milestone 072 / T012 — SPDX 2.3 §11.1 native semantic for
-    /// "this component was built from that source-tier element".
-    /// Cross-document edge: target SPDXID is namespaced into a
-    /// `DocumentRef-source-sbom:SPDXRef-...` form (SPDX 2.3 §7.2).
-    BuiltFrom,
+    /// Milestone 072 / T012 — the `--bind-to-source` cross-tier edge:
+    /// this build/deployment document descends from the source-tier
+    /// one. Cross-document: the target SPDXID is namespaced as
+    /// `DocumentRef-source-sbom:SPDXRef-DOCUMENT` (SPDX 2.3 §7.2).
+    /// Emitted as `DESCENDANT_OF`; it was `BUILT_FROM`, which SPDX 2.3
+    /// does not define, so every bound document failed the schema
+    /// (#1147).
+    DescendantOf,
 }
 
 /// The SPDX edge a synthesized root→component link should carry, given
@@ -140,7 +143,7 @@ impl SpdxRelationshipType {
             Self::OptionalDependencyOf => "OPTIONAL_DEPENDENCY_OF",
             Self::Contains => "CONTAINS",
             Self::ContainedBy => "CONTAINED_BY",
-            Self::BuiltFrom => "BUILT_FROM",
+            Self::DescendantOf => "DESCENDANT_OF",
         }
     }
 }
@@ -435,7 +438,7 @@ pub fn build_relationships(
 /// Called once at document assembly, AFTER every producer has contributed —
 /// `build_relationships` is not the only one. `document.rs` appends
 /// file-tier and view edges, and `mod.rs` appends the m072 cross-tier
-/// BUILT_FROM edge. Sorting inside `build_relationships` alone leaves those
+/// DESCENDANT_OF edge. Sorting inside `build_relationships` alone leaves those
 /// trailing, which is how the first attempt at this fix was caught.
 ///
 /// Every edge is pushed while walking `artifacts.components` or

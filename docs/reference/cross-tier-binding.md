@@ -314,24 +314,26 @@ Document-level `externalDocumentRefs[]`:
 }
 ```
 
-Plus a `BUILT_FROM` relationship binding the image-tier root
-component to the source-tier main-module:
+Plus a `DESCENDANT_OF` relationship from this document to the
+source-tier document:
 
 ```json
 {
   "relationships": [
     {
-      "spdxElementId": "SPDXRef-image-root",
-      "relatedSpdxElement": "DocumentRef-source-sbom:SPDXRef-source-main-module",
-      "relationshipType": "BUILT_FROM"
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relatedSpdxElement": "DocumentRef-source-sbom:SPDXRef-DOCUMENT",
+      "relationshipType": "DESCENDANT_OF"
     }
   ]
 }
 ```
 
-`BUILT_FROM` (SPDX 2.3 §11.1) is the native binary-from-source
-relationship. waybill emits this for every image/build → source
-binding.
+waybill emits this for every image/build → source binding. Until
+#1147 it was `BUILT_FROM`, which SPDX 2.3 does not define, so every
+bound document failed the SPDX 2.3 schema. `DESCENDANT_OF` says the
+same lineage in a type SPDX 2.3 has, in the same direction SPDX 3's
+`descendantOf` uses.
 
 #### Per-component `waybill:source-document-binding` annotation
 
@@ -379,7 +381,7 @@ Document-level `import[]` on the `SpdxDocument` element:
   "import": [
     {
       "type": "ExternalMap",
-      "externalSpdxId": "https://example.org/sbom/foo-source.spdx3.json",
+      "externalSpdxId": "https://example.org/spdx/source-doc",
       "verifiedUsing": [
         {
           "type": "Hash",
@@ -393,15 +395,17 @@ Document-level `import[]` on the `SpdxDocument` element:
 ```
 
 Plus a `Relationship` graph element with `relationshipType:
-built_from` (lowercase per SPDX 3 convention):
+descendantOf`, from this document to the imported source document.
+Until #1147 it was `built_from`, which is not an SPDX 3 relationship
+type:
 
 ```json
 {
   "type": "Relationship",
-  "spdxId": "https://example.org/spdx/rel-built-from-1",
-  "from": "https://example.org/spdx/image-root",
-  "to": ["https://example.org/spdx/source-main-module"],
-  "relationshipType": "built_from"
+  "spdxId": "https://example.org/spdx/image-doc/relationship/descendant-of-source",
+  "from": "https://example.org/spdx/image-doc",
+  "to": ["https://example.org/spdx/source-doc"],
+  "relationshipType": "descendantOf"
 }
 ```
 
@@ -434,7 +438,7 @@ Per Constitution Principle V (named pattern: native-first,
 | Datum | Native carrier | `waybill:*` annotation |
 |---|---|---|
 | Source SBOM document identity (SHA-256, IRI) | YES — CDX `externalReferences[type:bom]`, SPDX 2.3 `externalDocumentRefs[]`, SPDX 3 `ExternalMap` | NO. The `source_doc_id` field inside the per-component annotation duplicates this for self-containment, but the document-level native field is the authoritative source. |
-| Build/source provenance edge | YES — SPDX 2.3 `BUILT_FROM` relationship, SPDX 3 `relationshipType: built_from`. CDX has no native per-edge "built-from" type, so the document-level `externalReferences[type:bom]` carries the cross-document signal alone. | NO. |
+| Build/source provenance edge | YES — SPDX 2.3 `DESCENDANT_OF` relationship, SPDX 3 `relationshipType: descendantOf`. CDX has no native per-edge "built-from" type, so the document-level `externalReferences[type:bom]` carries the cross-document signal alone. | NO. |
 | **Per-component binding hash + strength** | NO — no format has a native per-component "this binary was produced by inputs X, Y, Z with confidence W" construct. | YES (`waybill:source-document-binding`). This is the exclusive carrier. |
 
 A correct verifier reads the document-level native fields to
@@ -469,9 +473,13 @@ SPDX envelope's `value` field:
   64-char lowercase hex from Section 1.
 - `source_doc_id.sha256` — required; SHA-256 of the canonical
   source SBOM bytes. Verifier-computable.
-- `source_doc_id.iri` — optional URI / file path / urn:uuid:...
-  for human-readable cross-reference. May be a local file path
-  during local CI runs.
+- `source_doc_id.iri` — optional; the source document's own
+  identifier: CycloneDX `serialNumber`, SPDX 2.3 `documentNamespace`,
+  or the SPDX 3 `SpdxDocument` IRI. Absent when the source names
+  itself nowhere, in which case the document-level references use
+  `urn:sha256:<sha256>`. Until #1147 this was the path the source
+  SBOM was read from, which is not an IRI and leaked the scanning
+  host's filesystem into the bound document.
 - `strength` — `verified` / `weak` / `unknown` enum, snake_case.
 - `reason` — optional structured rationale string. Required when
   `strength == "unknown"` per FR-003 (transparency). See Section

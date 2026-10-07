@@ -484,10 +484,10 @@ pub fn build_document(
 
     // Milestone 072 / T014 — when --bind-to-source was used, attach
     // the standards-native `import[]` ExternalMap pointing at the
-    // source-tier SBOM. The `Relationship[built_from]` graph element
+    // source-tier SBOM. The `Relationship[descendantOf]` graph element
     // is appended into `all_relationships` further below (so it
     // sorts with the other relationship records).
-    let built_from_rel: Option<Value> = if let Some(source_id) =
+    let descendant_of_rel: Option<Value> = if let Some(source_id) =
         scan.source_document_binding
     {
         let source_iri = source_id
@@ -507,14 +507,15 @@ pub fn build_document(
                 ],
             }
         ]);
-        let rel_iri = format!("{}/relationship/built-from-source", doc_iri);
+        let rel_iri = format!("{}/relationship/descendant-of-source", doc_iri);
         Some(json!({
             "type": "Relationship",
             "spdxId": rel_iri,
             "creationInfo": CREATION_INFO_ID,
             "from": doc_iri.clone(),
             "to": [source_iri],
-            "relationshipType": "built_from",
+            // `built_from` until #1147: not an SPDX 3 relationship type.
+            "relationshipType": "descendantOf",
             "comment": "milestone-072 cross-tier binding: this build/deployment was produced from the source-tier SBOM referenced by the import[] ExternalMap above",
         }))
     } else {
@@ -849,9 +850,9 @@ pub fn build_document(
         all_relationships.extend(describes_rels);
     }
     // Milestone 072 / T014 — append the cross-tier binding's
-    // `built_from` Relationship into the sortable bucket so it
+    // `descendantOf` Relationship into the sortable bucket so it
     // sorts with peers.
-    if let Some(rel) = built_from_rel {
+    if let Some(rel) = descendant_of_rel {
         all_relationships.push(rel);
     }
     // Milestone 1069 (#878): every producer has pushed. Group dependency

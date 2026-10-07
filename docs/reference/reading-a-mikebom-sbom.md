@@ -575,7 +575,7 @@ jq '.metadata.properties[]?
 #### `waybill:source-document-binding`
 
 > **What it is**: cross-tier binding from a build-tier or analyzed-tier SBOM back to its source-tier SBOM via a content hash + optional IRI. Built using `--bind-to-source <path>` at scan time; verified with `waybill sbom verify-binding`. Enables source ↔ build ↔ deploy correlation across the artifact lifecycle.
-> **Where it lives**: rides on spec-native carriers when available — CDX `metadata.component.externalReferences[type:bom]`, SPDX 2.3 `externalDocumentRefs` + `BUILT_FROM` relationship, SPDX 3 `import[]` ExternalMap + `Relationship[built_from]`. The annotation envelope carries the binding hash + identity metadata.
+> **Where it lives**: rides on spec-native carriers when available — CDX `metadata.component.externalReferences[type:bom]`, SPDX 2.3 `externalDocumentRefs` + `DESCENDANT_OF` relationship, SPDX 3 `import[]` ExternalMap + `Relationship[descendantOf]`. The annotation envelope carries the binding hash + identity metadata.
 > **What to do with it**: when auditing a deployment, follow the binding back to the source SBOM to verify what code was actually compiled. Useful for supply-chain attestations + SLSA-style provenance correlation.
 > **Milestone**: 072 — added.
 > **Catalog**: search for "source-document-binding" in [sbom-format-mapping.md](sbom-format-mapping.md). Full design in [cross-tier-binding.md](cross-tier-binding.md).

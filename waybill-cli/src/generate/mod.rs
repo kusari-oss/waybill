@@ -313,8 +313,8 @@ pub struct ScanArtifacts<'a> {
     /// identifier (SHA-256 + optional IRI). Each format's metadata
     /// builder emits a standards-native cross-document reference
     /// (CDX `metadata.component.externalReferences[type:bom]`,
-    /// SPDX 2.3 `externalDocumentRefs` + `BUILT_FROM` relationship,
-    /// SPDX 3 `import[]` ExternalMap + `Relationship[built_from]`)
+    /// SPDX 2.3 `externalDocumentRefs` + `DESCENDANT_OF` relationship,
+    /// SPDX 3 `import[]` ExternalMap + `Relationship[descendantOf]`)
     /// when populated. Per `contracts/source-document-binding-annotation.md`
     /// C-2; per Constitution Principle V (standards-native first).
     /// `None` for every pre-072 / non-bind-to-source scan.
