@@ -75,6 +75,32 @@ for the full design rationale):
 
 See [`RELEASING.md`](RELEASING.md) if you're cutting a release.
 
+### In GitHub Actions
+
+[`kusari-oss/waybill-action`](https://github.com/kusari-oss/waybill-action)
+installs the latest stable release and verifies its SHA-256 and SLSA
+provenance before running it. It then scans, and signs each SBOM with
+Sigstore keyless as your workflow:
+
+```yaml
+jobs:
+  sbom:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write   # Sigstore keyless signing
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: kusari-oss/waybill-action@v1
+        with:
+          format: cyclonedx-json,spdx-3-json
+```
+
+It uploads the SBOMs and their `.sig.bundle.json` signatures as an
+artifact, and prints the `cosign verify-blob` command in the job summary.
+It also runs on macOS and Windows runners, can sign with a static key, and
+can publish the SBOMs as GitHub attestations. See its README for the inputs.
+
 ### Downloading a release
 
 Pre-built binaries are published with every release as GitHub Release
@@ -233,7 +259,9 @@ conformant in-document representation (see m778).
 Two ways to supply an identity:
 
 - **In GitHub Actions**, grant the job `permissions: id-token: write`
-  and run `--sign`. waybill exchanges the runner's ambient credential
+  and run `--sign`, or use
+  [`kusari-oss/waybill-action`](https://github.com/kusari-oss/waybill-action),
+  which does this by default. waybill exchanges the runner's ambient credential
   itself; no token handling, no helper action, no secret. The signer
   identity recorded is the *workflow*, e.g.
   `repo:org/repo:ref:refs/heads/main`, not a person.
