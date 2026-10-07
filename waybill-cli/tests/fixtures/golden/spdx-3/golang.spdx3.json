@@ -848,6 +848,14 @@
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-LLMDE5B722XNAVHCTVRQ5PBQ/anno-D43QZKTEBMHB22T5",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:go-mod-why-reason\",\"value\":\"disabled\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-LLMDE5B722XNAVHCTVRQ5PBQ",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-LLMDE5B722XNAVHCTVRQ5PBQ/anno-D7SBIUVOKTFHP53U",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-LLMDE5B722XNAVHCTVRQ5PBQ/pkg-OPPLTPJ24FIGRUY2",
@@ -1419,6 +1427,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-LLMDE5B722XNAVHCTVRQ5PBQ/anno-RWRWOZ3TDWSFIABO",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:build-inclusion\",\"value\":\"unknown\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-LLMDE5B722XNAVHCTVRQ5PBQ/pkg-ZGOZVHQZC2RMR6GZ",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-LLMDE5B722XNAVHCTVRQ5PBQ/anno-SGP2GCKNDFFCXZRH",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:go-mod-why\",\"value\":\"skipped\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-LLMDE5B722XNAVHCTVRQ5PBQ",
       "type": "Annotation"
     },
     {

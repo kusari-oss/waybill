@@ -395,6 +395,12 @@ pub enum SkipReason {
     Disabled,
     BudgetExhausted,
     UnresolvablePackages,
+    /// The `go list all` preflight ran out of memory: the Go runtime's
+    /// own "out of memory" fatal error, or a SIGKILL, which is how the
+    /// kernel's OOM killer ends it (#1154). Distinct from
+    /// `UnresolvablePackages` so an operator knows more memory, not
+    /// credentials, is the fix.
+    OutOfMemory,
 }
 
 impl SkipReason {
@@ -404,8 +410,23 @@ impl SkipReason {
             SkipReason::Disabled => "disabled",
             SkipReason::BudgetExhausted => "budget-exhausted",
             SkipReason::UnresolvablePackages => "unresolvable-packages",
+            SkipReason::OutOfMemory => "out-of-memory",
         }
     }
+}
+
+/// The Go runtime's out-of-memory fatal error, or a SIGKILL (how the
+/// kernel's OOM killer ends a process; the shared time budget is
+/// enforced separately, as `Invocation::TimedOut`).
+fn preflight_ran_out_of_memory(output: &std::process::Output) -> bool {
+    #[cfg(unix)]
+    {
+        use std::os::unix::process::ExitStatusExt;
+        if output.status.signal() == Some(9) {
+            return true;
+        }
+    }
+    String::from_utf8_lossy(&output.stderr).contains("runtime: out of memory")
 }
 
 /// Result of analyzing one main module's dependency set.
@@ -735,6 +756,16 @@ fn run_preflight(
         workspace_mode,
     ) {
         Invocation::Completed(output) if output.status.success() => Ok(()),
+        Invocation::Completed(output) if preflight_ran_out_of_memory(&output) => {
+            tracing::warn!(
+                main_module = %preflight_dir.display(),
+                status = %output.status,
+                "go-mod-why analysis skipped (out-of-memory): `go list all` \
+                 preflight ran out of memory; build-inclusion falls back to \
+                 unknown markers. More memory, not credentials, is the fix."
+            );
+            Err(SkipReason::OutOfMemory)
+        }
         Invocation::Completed(output) => {
             tracing::warn!(
                 main_module = %preflight_dir.display(),

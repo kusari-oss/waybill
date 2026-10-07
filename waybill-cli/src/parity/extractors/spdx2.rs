@@ -698,6 +698,8 @@ spdx23_anno!(c192_spdx23, "waybill:deps-dev-outcomes", document);
 spdx23_anno!(c193_spdx23, "waybill:vex-claims-omitted", document);
 spdx23_anno!(c42_spdx23, "waybill:lifecycle-scope", component);
 spdx23_anno!(c194_spdx23_raw, "waybill:derivation", document);
+spdx23_anno!(c195_spdx23, "waybill:go-mod-why", document);
+spdx23_anno!(c196_spdx23, "waybill:go-mod-why-reason", document);
 
 /// C194 — compared by projection only (milestone 1071).
 pub(super) fn c194_spdx23(doc: &Value) -> BTreeSet<String> {

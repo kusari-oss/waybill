@@ -1052,15 +1052,41 @@ mod byte_identity {
             );
         }
 
-        // SC-004: emission with the feature disabled (the pre-feature
-        // shape) is byte-identical to emission with classification
-        // enabled — the passes must not perturb output when there is
-        // nothing to mark or classify.
+        // #1154: each records whether the pass ran (C195/C196).
+        let doc_props = |raw: &str| -> Vec<(String, String)> {
+            let v: serde_json::Value = serde_json::from_str(raw).expect("valid cdx JSON");
+            v["metadata"]["properties"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter(|p| p["name"].as_str().is_some_and(|n| n.starts_with("waybill:go-mod-why")))
+                .map(|p| (p["name"].as_str().unwrap_or("").to_string(), p["value"].as_str().unwrap_or("").to_string()))
+                .collect()
+        };
+        let pair = |n: &str, v: &str| (n.to_string(), v.to_string());
         assert_eq!(
-            mask_serial(&disabled),
-            mask_serial(&enabled),
-            "no-fallback fixture emission must be byte-identical with \
-             classification disabled vs enabled (FR-008/SC-004)",
+            doc_props(&disabled),
+            vec![pair("waybill:go-mod-why", "skipped"), pair("waybill:go-mod-why-reason", "disabled")]
+        );
+        assert_eq!(doc_props(&enabled), vec![pair("waybill:go-mod-why", "complete")]);
+
+        // SC-004: apart from that record, emission with the feature
+        // disabled (the pre-feature shape) is byte-identical to emission
+        // with classification enabled — the passes must not perturb
+        // output when there is nothing to mark or classify.
+        let without_record = |raw: &str| -> serde_json::Value {
+            let mut v: serde_json::Value = serde_json::from_str(&mask_serial(raw)).expect("valid cdx JSON");
+            if let Some(props) = v["metadata"]["properties"].as_array_mut() {
+                props.retain(|p| !p["name"].as_str().is_some_and(|n| n.starts_with("waybill:go-mod-why")));
+            }
+            v
+        };
+        assert_eq!(
+            without_record(&disabled),
+            without_record(&enabled),
+            "no-fallback fixture emission must be identical with \
+             classification disabled vs enabled, apart from C195/C196 \
+             (FR-008/SC-004)",
         );
     }
 }

@@ -3671,6 +3671,7 @@ pub async fn execute(
         go_transitive_coverage,
         go_transitive_fallback_count,
         go_cache_warming,
+        go_mod_why,
         go_workspace_mode,
         go_toolchains_detected,
         cross_ecosystem_edges_report,
@@ -5037,6 +5038,7 @@ pub async fn execute(
         // C118 (mode) + C119 (failed) annotations. Sibling of
         // coverage; Go-gated per FR-011.
         go_cache_warming: go_cache_warming.as_ref(),
+        go_mod_why,
         // Milestone 161 (T014): doc-scope Go-workspace-mode signal
         // for the C112 annotation.
         go_workspace_mode: go_workspace_mode.as_ref(),

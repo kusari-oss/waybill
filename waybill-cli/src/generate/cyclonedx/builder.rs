@@ -196,6 +196,8 @@ pub struct CycloneDxBuilder {
     nix_eval_tier: Option<String>,
     nix_eval_degraded: Option<String>,
     nix_closure_degraded: Option<String>,
+    /// C195/C196 (#1154) — the `go mod why` pass's outcome.
+    go_mod_why: Option<crate::scan_fs::package_db::GoModWhyStatus>,
     /// C192 (m1067) — the deps.dev pass ran online.
     deps_dev_online: bool,
     /// m1068 (#1039) — the scan's VEX statements, the same ones the OpenVEX
@@ -273,6 +275,7 @@ impl CycloneDxBuilder {
             nix_eval_tier: None,
             nix_eval_degraded: None,
             nix_closure_degraded: None,
+            go_mod_why: None,
             deps_dev_online: false,
             vex_statements: Vec::new(),
             nix_eval_system: None,
@@ -355,6 +358,12 @@ impl CycloneDxBuilder {
     /// C190 (m1066) — why a requested `--nix-closure` recorded no closure.
     pub fn with_nix_closure_degraded(mut self, value: Option<String>) -> Self {
         self.nix_closure_degraded = value;
+        self
+    }
+
+    /// C195/C196 (#1154) — the `go mod why` pass's outcome.
+    pub fn with_go_mod_why(mut self, value: Option<crate::scan_fs::package_db::GoModWhyStatus>) -> Self {
+        self.go_mod_why = value;
         self
     }
 
@@ -950,6 +959,7 @@ impl CycloneDxBuilder {
                 nix_eval_tier: self.nix_eval_tier.as_deref(),
                 nix_eval_degraded: self.nix_eval_degraded.as_deref(),
                 nix_closure_degraded: self.nix_closure_degraded.as_deref(),
+                go_mod_why: self.go_mod_why,
                 deps_dev_outcomes: deps_dev_outcomes.as_deref(),
                 vex_claims_omitted: vex_claims_omitted.as_deref(),
                 nix_eval_system: self.nix_eval_system.as_deref(),
