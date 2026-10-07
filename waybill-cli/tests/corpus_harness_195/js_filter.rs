@@ -158,6 +158,8 @@ pub fn filter_spdx23_to_js(v: &mut serde_json::Value) {
 /// `LifecycleScopedRelationship` nodes where both `from` and (filtered) `to`
 /// reference retained spdxIds.
 ///
+/// `Annotation` nodes are retained iff their `subject` is a retained spdxId.
+///
 /// `to` may be an array — its members are filtered to retained spdxIds
 /// (drop the relationship if `to` becomes empty). `to` may also be a
 /// scalar string — drop the relationship if it references a removed node.
@@ -285,6 +287,17 @@ pub fn filter_spdx3_to_js(v: &mut serde_json::Value) {
                 }
                 _ => return false,
             }
+        }
+        // Annotations: retain iff their subject is kept, as relationships
+        // are retained by their endpoints. Without this every annotation
+        // was dropped, so this target's SPDX 3 golden locked none of them
+        // while the CDX and SPDX 2.3 goldens, which carry annotations inside
+        // the component, locked all of them (#1150).
+        if ty == "Annotation" {
+            return node
+                .get("subject")
+                .and_then(|s| s.as_str())
+                .is_some_and(|s| kept_ids.contains(s));
         }
         // Non-relationship: retain iff in kept set (which includes both
         // doc-scope and component nodes).
@@ -420,6 +433,26 @@ mod tests {
 
     // (e) SPDX 3 relationship with mixed .to array — drop non-kept targets,
     // retain relationship if any kept remain, drop if all removed.
+    // #1150: annotations follow their subject, document-scope included.
+    #[test]
+    fn spdx3_annotations_follow_their_subject() {
+        let mut v = json!({
+            "@graph": [
+                {"type": "SpdxDocument", "spdxId": "https://example/doc"},
+                {"type": "software_Package", "spdxId": "https://example/pkg-npm-x", "software_packageUrl": "pkg:npm/x@1"},
+                {"type": "software_Package", "spdxId": "https://example/pkg-pypi-z", "software_packageUrl": "pkg:pypi/z@1"},
+                {"type": "Annotation", "spdxId": "https://example/anno-npm", "subject": "https://example/pkg-npm-x", "statement": "a"},
+                {"type": "Annotation", "spdxId": "https://example/anno-pypi", "subject": "https://example/pkg-pypi-z", "statement": "b"},
+                {"type": "Annotation", "spdxId": "https://example/anno-doc", "subject": "https://example/doc", "statement": "c"}
+            ]
+        });
+        filter_spdx3_to_js(&mut v);
+        let ids: Vec<&str> = v["@graph"].as_array().unwrap().iter().filter_map(|n| n["spdxId"].as_str()).collect();
+        assert!(ids.contains(&"https://example/anno-npm"), "npm package's annotation kept");
+        assert!(ids.contains(&"https://example/anno-doc"), "document annotation kept");
+        assert!(!ids.contains(&"https://example/anno-pypi"), "dropped package's annotation dropped");
+    }
+
     #[test]
     fn spdx3_relationship_mixed_to_array() {
         let mut v = json!({
