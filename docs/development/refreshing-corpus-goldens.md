@@ -331,20 +331,19 @@ for c in components.iter_mut() {
 That lands in CDX `components[].name`, SPDX 2.3 `packages[].name` and
 SPDX 3 `@graph[].name`, none of which is masked.
 
-Expect **`3 of 3 formats drifted`** for most targets. Two will differ, and
-both are explainable rather than faults — check that yours match:
+Expect **`3 of 3 formats drifted`** for every target but one, which is
+explainable rather than a fault — check that yours matches:
 
-- `pants-example-javascript` reports `2 of 3`. Its SPDX 3 golden is
-  JS-filtered down to almost nothing, so that format's comparison is not
-  demonstrated by a component-level mutation.
-- `haskell-aeson` panics at **layer 1** (`public_corpus.rs:67`) rather
-  than layer 2, because renaming components trips its `base` tripwire
-  first. Layer 1 firing is healthy, but it means that target's layer 2 is
-  not demonstrated either.
+- `haskell-aeson` panics at **layer 1** rather than layer 2, because
+  renaming components trips its `base` tripwire first. Layer 1 firing is
+  healthy, but it means that target's layer 2 is not demonstrated. If you
+  need it, mutate something its layer 1 does not inspect.
 
-So a component-rename mutation demonstrates all three formats on 11 of 13
-targets. If you need the remaining two, mutate something those targets'
-layer 1 does not inspect.
+`pants-example-javascript` used to report `2 of 3`: its SPDX 3 golden is
+JS-filtered, and the filter dropped the annotations a component rename
+reaches. Since #1150 the filter keeps annotations on kept elements, and it
+reports `3 of 3` (run 37700907268 in #1160: 16 targets at `3 of 3`, plus
+`haskell-aeson` at layer 1).
 
 **Compile the mutation locally before dispatching**
 (`cargo build -p waybill --bin waybill`). The first attempt at this in

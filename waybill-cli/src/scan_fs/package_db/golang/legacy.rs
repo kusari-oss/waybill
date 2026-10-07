@@ -2790,6 +2790,27 @@ pub fn read(
             }
         }
     }
+    // #1157 — a Go toolchain on disk is the standard library at the
+    // release its `VERSION` names. Its own go.mod files are skipped
+    // (`classify_go_mod_dirs`), so it otherwise contributes nothing.
+    for root in &signals.toolchain_roots_detected {
+        let Some(release) = go_toolchain_version(root)
+            .as_deref()
+            .and_then(crate::scan_fs::package_db::go_binary::go_release_version)
+        else {
+            continue;
+        };
+        let version_path = root.join("VERSION").to_string_lossy().into_owned();
+        if let Some(&i) = emitted_versions.get(&release) {
+            if !out[i].extra_source_paths.contains(&version_path) {
+                out[i].extra_source_paths.push(version_path);
+            }
+        } else if let Some(mut entry) = build_stdlib_entry(&release, &version_path) {
+            entry.sbom_tier = Some("deployed".to_string());
+            emitted_versions.insert(release, out.len());
+            out.push(entry);
+        }
+    }
 
     (out, signals)
 }
@@ -3055,59 +3076,20 @@ pub(crate) fn extract_paths(registration: &ReaderRegistration) -> GolangDiscover
 
 /// Convert a precomputed list of `go.mod` paths (from the shared-walker
 /// pilot) into the same `(candidates, toolchain_roots)` tuple that
-/// `candidate_project_roots` produces. Runs the `module std` / `module
-/// cmd` classification inline against each `go.mod`.
+/// `candidate_project_roots` produces.
 fn candidate_project_roots_from_paths(
     mut go_mod_paths: Vec<PathBuf>,
 ) -> (Vec<PathBuf>, Vec<PathBuf>) {
-    // Deterministic order — safe_walk was not sorted, but the callers'
-    // downstream (parsed_roots.iter, known_modules union build) is
-    // order-invariant. Sort defensively so pilot vs legacy paths emit
-    // per-project log lines in the same order.
+    // Deterministic order — the shared walker sorts per directory, not
+    // across directories. Sorted by go.mod path, not by directory: the
+    // order project roots are read in fixes the order of a shared
+    // module's evidence occurrences, so it is part of the output.
     go_mod_paths.sort();
-    let mut out = Vec::new();
-    let mut toolchain_roots: Vec<PathBuf> = Vec::new();
-    for go_mod_path in &go_mod_paths {
-        let Some(dir) = go_mod_path.parent() else {
-            continue;
-        };
-        // Milestone 217 (waybill#631): mirror the toolchain-detection
-        // classification from `candidate_project_roots` verbatim.
-        if let Ok(text) = std::fs::read_to_string(go_mod_path) {
-            let doc = parse_go_mod(&text);
-            match doc.module_path.as_deref() {
-                Some("std") => {
-                    tracing::debug!(
-                        path = %go_mod_path.display(),
-                        module = "std",
-                        "gorooted-stdlib go.mod skipped (waybill#631)"
-                    );
-                    if let Some(root) = go_mod_path.parent().and_then(|p| p.parent()) {
-                        toolchain_roots.push(root.to_path_buf());
-                    }
-                    continue;
-                }
-                Some("cmd") => {
-                    tracing::debug!(
-                        path = %go_mod_path.display(),
-                        module = "cmd",
-                        "gorooted-cmd go.mod skipped (waybill#631)"
-                    );
-                    if let Some(root) = go_mod_path
-                        .parent()
-                        .and_then(|p| p.parent())
-                        .and_then(|p| p.parent())
-                    {
-                        toolchain_roots.push(root.to_path_buf());
-                    }
-                    continue;
-                }
-                _ => {}
-            }
-        }
-        out.push(dir.to_path_buf());
-    }
-    (out, toolchain_roots)
+    let dirs = go_mod_paths
+        .iter()
+        .filter_map(|p| p.parent().map(Path::to_path_buf))
+        .collect();
+    classify_go_mod_dirs(dirs)
 }
 
 /// Milestone 114: delegates to `scan_fs::walk::safe_walk`. The Go
@@ -3117,16 +3099,15 @@ fn candidate_project_roots_from_paths(
 ///
 /// **Milestone 217 (waybill#631)**: returns a tuple `(candidates,
 /// toolchain_roots)` where `toolchain_roots` names any `$GOROOT`
-/// paths whose stdlib (`module std`) or cmd (`module cmd`) go.mod
-/// was observed and skipped. Callers consume `toolchain_roots` to
-/// emit the C136 `waybill:go-toolchain-detected` document-scope
-/// annotation. Empty vec on scans that observed no Go toolchain.
+/// paths observed (see [`classify_go_mod_dirs`]). Callers consume
+/// `toolchain_roots` to emit the C136 `waybill:go-toolchain-detected`
+/// document-scope annotation. Empty vec on scans that observed no Go
+/// toolchain.
 fn candidate_project_roots(
     rootfs: &Path,
     exclude_set: &super::super::exclude_path::ExclusionSet,
 ) -> (Vec<PathBuf>, Vec<PathBuf>) {
-    let mut out = Vec::new();
-    let mut toolchain_roots: Vec<PathBuf> = Vec::new();
+    let mut dirs = Vec::new();
     let cfg = crate::scan_fs::walk::WalkConfig {
         max_depth: MAX_PROJECT_ROOT_DEPTH,
         should_skip: &|candidate: &Path, _rootfs: &Path| -> bool {
@@ -3135,58 +3116,71 @@ fn candidate_project_roots(
         exclude_set,
     };
     crate::scan_fs::walk::safe_walk(rootfs, &cfg, |path| {
-        if !(path.is_dir() && path.join("go.mod").is_file()) {
-            return;
+        if path.is_dir() && path.join("go.mod").is_file() {
+            dirs.push(path.to_path_buf());
         }
-        // Milestone 217 (waybill#631): parse the go.mod's `module`
-        // line eagerly at walker time. If it declares a toolchain-
-        // internal module boundary (`module std` = $GOROOT/src/go.mod,
-        // `module cmd` = $GOROOT/src/cmd/go.mod), skip the directory
-        // outright — no main-module component emitted, no downstream
-        // `go list all` preflight (which would flood stderr with
-        // "use of internal package … not allowed" for every stdlib
-        // package). Record the parent-of-src toolchain root path
-        // for the C136 document-scope annotation.
-        let go_mod_path = path.join("go.mod");
-        if let Ok(text) = std::fs::read_to_string(&go_mod_path) {
-            let doc = parse_go_mod(&text);
-            match doc.module_path.as_deref() {
-                Some("std") => {
-                    tracing::debug!(
-                        path = %go_mod_path.display(),
-                        module = "std",
-                        "gorooted-stdlib go.mod skipped (waybill#631)"
-                    );
-                    // $GOROOT/src/go.mod → $GOROOT
-                    if let Some(root) = go_mod_path.parent().and_then(|p| p.parent()) {
-                        toolchain_roots.push(root.to_path_buf());
-                    }
-                    return;
-                }
-                Some("cmd") => {
-                    tracing::debug!(
-                        path = %go_mod_path.display(),
-                        module = "cmd",
-                        "gorooted-cmd go.mod skipped (waybill#631)"
-                    );
-                    // $GOROOT/src/cmd/go.mod → $GOROOT
-                    if let Some(root) = go_mod_path
-                        .parent()
-                        .and_then(|p| p.parent())
-                        .and_then(|p| p.parent())
-                    {
-                        toolchain_roots.push(root.to_path_buf());
-                    }
-                    return;
-                }
-                _ => {}
-            }
-        }
-        out.push(path.to_path_buf());
     });
+    classify_go_mod_dirs(dirs)
+}
+
+/// Split directories holding a `go.mod` into user project roots and
+/// Go toolchain roots (`$GOROOT`), dropping every directory inside a
+/// toolchain.
+///
+/// A toolchain is recognised by `module std` (`$GOROOT/src/go.mod`),
+/// `module cmd` (`$GOROOT/src/cmd/go.mod`), or a parent directory
+/// that is a toolchain by [`go_toolchain_version`]. Milestone 217
+/// (waybill#631) skipped only the first two, so `$GOROOT/misc/go.mod`
+/// (`module misc`, `go 1.22`) became a project root and its `go`
+/// directive a `stdlib@v1.22` component in every image shipping a Go
+/// toolchain (#1157). The containment filter runs after the whole
+/// list is classified, since `misc/` sorts before `src/`.
+fn classify_go_mod_dirs(dirs: Vec<PathBuf>) -> (Vec<PathBuf>, Vec<PathBuf>) {
+    let mut out = Vec::new();
+    let mut toolchain_roots: Vec<PathBuf> = Vec::new();
+    for dir in dirs {
+        let go_mod_path = dir.join("go.mod");
+        let module = std::fs::read_to_string(&go_mod_path)
+            .ok()
+            .and_then(|text| parse_go_mod(&text).module_path);
+        let root = match module.as_deref() {
+            // $GOROOT/src/go.mod → $GOROOT
+            Some("std") => dir.parent().map(Path::to_path_buf),
+            // $GOROOT/src/cmd/go.mod → $GOROOT
+            Some("cmd") => dir.parent().and_then(Path::parent).map(Path::to_path_buf),
+            _ => dir
+                .parent()
+                .filter(|p| go_toolchain_version(p).is_some())
+                .map(Path::to_path_buf),
+        };
+        match root {
+            Some(root) => {
+                tracing::debug!(
+                    path = %go_mod_path.display(),
+                    module = module.as_deref().unwrap_or(""),
+                    "Go toolchain go.mod skipped (waybill#631, #1157)"
+                );
+                toolchain_roots.push(root);
+            }
+            None => out.push(dir),
+        }
+    }
     toolchain_roots.sort();
     toolchain_roots.dedup();
+    out.retain(|dir| !toolchain_roots.iter().any(|root| dir.starts_with(root)));
     (out, toolchain_roots)
+}
+
+/// #1157 — the release a Go toolchain root ships, from its `VERSION`
+/// file (first line, e.g. `go1.26.6`), when `dir` is one: the file
+/// names a `go1.` release and `src/go.mod` sits beside it.
+fn go_toolchain_version(dir: &Path) -> Option<String> {
+    if !dir.join("src").join("go.mod").is_file() {
+        return None;
+    }
+    let text = std::fs::read_to_string(dir.join("VERSION")).ok()?;
+    let first = text.lines().next()?.trim();
+    first.starts_with("go1.").then(|| first.to_string())
 }
 
 /// Skip descent into directories that can't legitimately hold a
@@ -4973,6 +4967,76 @@ func TestX(t *testing.T) { _ = lib.X() }"#,
         let (candidates, toolchains) = candidate_project_roots(root.path(), &empty);
         assert!(candidates.is_empty(), "both non-standard install paths must be skipped");
         assert_eq!(toolchains.len(), 2);
+    }
+
+    /// A Go toolchain as the official images ship it: `misc/go.mod`
+    /// (`module misc`, `go 1.22`) sorts before `src/go.mod`.
+    fn write_goroot(goroot: &Path, version_file: &str) {
+        for (rel, body) in [
+            ("VERSION", version_file),
+            ("misc/go.mod", "module misc\n\ngo 1.22\n"),
+            ("src/go.mod", "module std\n\ngo 1.26\n"),
+            ("src/cmd/go.mod", "module cmd\n\ngo 1.26\n"),
+        ] {
+            let path = goroot.join(rel);
+            std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+            std::fs::write(path, body).unwrap();
+        }
+    }
+
+    /// #1157 — no go.mod under `$GOROOT` is a project root, `misc/`
+    /// included, whichever discovery path supplies the list.
+    #[test]
+    fn candidate_project_roots_skips_everything_under_goroot() {
+        let root = tempfile::tempdir().unwrap();
+        write_goroot(&root.path().join("usr/local/go"), "go1.26.6\ntime 2026-08-06T00:00:00Z\n");
+        let app = root.path().join("app");
+        std::fs::create_dir_all(&app).unwrap();
+        std::fs::write(app.join("go.mod"), "module example.com/app\n\ngo 1.22\n").unwrap();
+
+        let empty = crate::scan_fs::package_db::exclude_path::ExclusionSet::default();
+        let walked = candidate_project_roots(root.path(), &empty);
+        let go_mods = ["usr/local/go/misc", "usr/local/go/src", "usr/local/go/src/cmd", "app"]
+            .iter()
+            .map(|d| root.path().join(d).join("go.mod"))
+            .collect();
+        let listed = candidate_project_roots_from_paths(go_mods);
+        for (candidates, toolchains) in [walked, listed] {
+            assert_eq!(candidates, vec![app.clone()]);
+            assert_eq!(toolchains, vec![root.path().join("usr/local/go")]);
+        }
+    }
+
+    #[test]
+    fn go_toolchain_version_needs_a_release_version_file_beside_src() {
+        let root = tempfile::tempdir().unwrap();
+        let goroot = root.path().join("go");
+        write_goroot(&goroot, "go1.26.6\ntime 2026-08-06T00:00:00Z\n");
+        assert_eq!(go_toolchain_version(&goroot).as_deref(), Some("go1.26.6"));
+
+        std::fs::write(goroot.join("VERSION"), "devel go1.27-abcdef\n").unwrap();
+        assert_eq!(go_toolchain_version(&goroot), None);
+
+        let not_goroot = root.path().join("project");
+        std::fs::create_dir_all(&not_goroot).unwrap();
+        std::fs::write(not_goroot.join("VERSION"), "go1.26.6\n").unwrap();
+        assert_eq!(go_toolchain_version(&not_goroot), None, "no src/go.mod beside VERSION");
+    }
+
+    /// #1157 — scanning a toolchain reports the standard library it
+    /// ships, not the `go 1.22` directive of its `misc` module.
+    #[test]
+    fn read_inventories_a_goroot_as_stdlib_at_its_version() {
+        let root = tempfile::tempdir().unwrap();
+        write_goroot(&root.path().join("usr/local/go"), "go1.26.6\ntime 2026-08-06T00:00:00Z\n");
+
+        let (entries, signals) = read(root.path(), false, &Default::default(), None);
+
+        let purls: Vec<&str> = entries.iter().map(|e| e.purl.as_str()).collect();
+        assert_eq!(purls, vec!["pkg:golang/stdlib@v1.26.6"]);
+        assert_eq!(entries[0].sbom_tier.as_deref(), Some("deployed"));
+        assert!(entries[0].source_path.ends_with("usr/local/go/VERSION"));
+        assert_eq!(signals.toolchain_roots_detected, vec![root.path().join("usr/local/go")]);
     }
 }
 
