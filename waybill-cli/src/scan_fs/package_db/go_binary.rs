@@ -93,7 +93,7 @@ pub struct GoVcsInfo {
 }
 
 /// What a successful BuildInfo extraction yields.
-#[allow(dead_code)] // main_package + go_version are diagnostic / logging-only fields populated by the BuildInfo parser.
+#[allow(dead_code)] // main_package is a diagnostic / logging-only field populated by the BuildInfo parser.
 #[derive(Clone, Debug)]
 pub struct GoBinaryInfo {
     /// Path of the binary we read (absolute, in rootfs coordinates).
@@ -104,7 +104,9 @@ pub struct GoBinaryInfo {
     pub main_module: Option<(String, String, Option<String>)>,
     /// `dep` lines — embedded dependency modules.
     pub deps: Vec<(String, String, Option<String>)>,
-    /// `build GOVERSION` key — e.g. `go1.22.1`. Surfaced for logs only.
+    /// The Go release the binary was built with, from the first line of
+    /// the BuildInfo blob — e.g. `go1.22.1`, or `go1.25.7 X:jsonv2` with
+    /// a GOEXPERIMENT. Drives the binary's `stdlib` component (#1157).
     pub go_version: Option<String>,
     /// Milestone 025 — VCS state at build time, if recorded by Go's
     /// `-buildvcs=true` emitter. `None` when no `vcs.*` keys were
@@ -804,11 +806,24 @@ fn emit_entries_from_info(
     seen_purls: &mut std::collections::HashSet<String>,
 ) {
     let source_path = info.path.to_string_lossy().into_owned();
-    let main_depends: Vec<String> = info
+    // #1157 — the standard library is compiled into every Go binary, at
+    // the release that built it, but is not a BuildInfo `dep`. Without
+    // this the binary's stdlib vulnerabilities went unreported.
+    let stdlib_version = info
+        .go_version
+        .as_deref()
+        .and_then(go_release_version)
+        .map(|release| format!("v{release}"));
+    let mut main_depends: Vec<String> = info
         .deps
         .iter()
         .map(|(p, _, _)| p.clone())
         .collect();
+    if let Some(ref version) = stdlib_version {
+        // Name and version: the golang `<name> <version>` key (m233), so a
+        // scan holding several stdlib releases links each binary to its own.
+        main_depends.push(format!("stdlib {version}"));
+    }
     if let Some((ref path, ref version, _)) = info.main_module {
         if let Some(purl) = build_golang_purl(path, version) {
             let key = purl.as_str().to_string();
@@ -895,6 +910,61 @@ fn emit_entries_from_info(
             }
         }
     }
+    if let Some(version) = stdlib_version {
+        if let Some(purl) = build_golang_purl("stdlib", &version) {
+            if seen_purls.insert(purl.as_str().to_string()) {
+                out.push(PackageDbEntry {
+                    extra_source_paths: Vec::new(),
+                    depends_ecosystem: None,
+                    build_inclusion: None,
+                    purl,
+                    name: "stdlib".to_string(),
+                    version,
+                    arch: None,
+                    source_path,
+                    depends: Vec::new(),
+                    maintainer: None,
+                    licenses: Vec::new(),
+                    lifecycle_scope: None,
+                    requirement_ranges: Vec::new(),
+                    source_type: None,
+                    buildinfo_status: None,
+                    evidence_kind: None,
+                    binary_class: None,
+                    binary_stripped: None,
+                    linkage_kind: None,
+                    detected_go: None,
+                    confidence: None,
+                    binary_packed: None,
+                    raw_version: None,
+                    parent_purl: None,
+                    npm_role: None,
+                    co_owned_by: None,
+                    hashes: Vec::new(),
+                    sbom_tier: Some("analyzed".to_string()),
+                    shade_relocation: None,
+                    extra_annotations: Default::default(),
+                    binary_role: None,
+                });
+            }
+        }
+    }
+}
+
+/// #1157 — the release in a Go version string, as the `stdlib` PURL
+/// version takes it (without the `v`). BuildInfo writes `go1.25.7`, or
+/// with GOEXPERIMENTs `go1.25.7 X:jsonv2` or `go1.26.4-X:jsonv2`;
+/// `$GOROOT/VERSION` starts `go1.26.6`. All give the bare release.
+/// `None` for a development build (`devel go1.24-abcdef ...`), which
+/// names no release.
+pub(crate) fn go_release_version(raw: &str) -> Option<String> {
+    let rest = raw.trim().strip_prefix("go")?;
+    let release = rest
+        .split(|c: char| c.is_whitespace() || c == '-')
+        .next()?;
+    let valid = release.starts_with(|c: char| c.is_ascii_digit())
+        && release.chars().all(|c| c.is_ascii_alphanumeric() || c == '.');
+    valid.then(|| release.to_string())
 }
 
 fn emit_file_level_diagnostic(
@@ -1231,6 +1301,66 @@ mod tests {
         let info = info.unwrap();
         assert_eq!(info.deps.len(), 1);
         assert_eq!(info.deps[0].0, "github.com/a/b");
+    }
+
+    #[test]
+    fn go_release_version_strips_prefix_and_experiments() {
+        for (raw, want) in [
+            ("go1.22.1", Some("1.22.1")),
+            ("go1.25.7 X:jsonv2", Some("1.25.7")),
+            ("go1.26.4-X:jsonv2", Some("1.26.4")),
+            ("go1.23rc1", Some("1.23rc1")),
+            ("devel go1.24-abcdef Tue Jan 1", None),
+            ("go", None),
+            ("", None),
+        ] {
+            assert_eq!(go_release_version(raw).as_deref(), want, "{raw:?}");
+        }
+    }
+
+    fn info_with(go_version: &str, main_module: bool) -> GoBinaryInfo {
+        GoBinaryInfo {
+            path: PathBuf::from("/usr/local/bin/app"),
+            main_package: None,
+            main_module: main_module
+                .then(|| ("example.com/app".to_string(), "v1.0.0".to_string(), None)),
+            deps: vec![("github.com/a/b".to_string(), "v1.2.3".to_string(), None)],
+            go_version: Some(go_version.to_string()),
+            vcs: None,
+        }
+    }
+
+    /// #1157 — the standard library a binary was built with is a
+    /// component, and the binary's main module depends on it.
+    #[test]
+    fn binary_emits_its_stdlib_and_links_it() {
+        let mut out = Vec::new();
+        emit_entries_from_info(&info_with("go1.25.7 X:jsonv2", true), &mut out, &mut Default::default());
+        let stdlib = out
+            .iter()
+            .find(|e| e.name == "stdlib")
+            .expect("stdlib emitted");
+        assert_eq!(stdlib.purl.as_str(), "pkg:golang/stdlib@v1.25.7");
+        assert_eq!(stdlib.sbom_tier.as_deref(), Some("analyzed"));
+        let main = out.iter().find(|e| e.name == "example.com/app").unwrap();
+        assert!(main.depends.contains(&"stdlib v1.25.7".to_string()), "{:?}", main.depends);
+    }
+
+    /// A binary without a main module (the toolchain's own `go`,
+    /// `compile`, ...) still carries its stdlib, once per release.
+    #[test]
+    fn stdlib_is_emitted_once_per_release_without_a_main_module() {
+        let mut out = Vec::new();
+        let mut seen = Default::default();
+        for _ in 0..2 {
+            emit_entries_from_info(&info_with("go1.27.1", false), &mut out, &mut seen);
+        }
+        let stdlib: Vec<&str> = out
+            .iter()
+            .filter(|e| e.name == "stdlib")
+            .map(|e| e.purl.as_str())
+            .collect();
+        assert_eq!(stdlib, vec!["pkg:golang/stdlib@v1.27.1"]);
     }
 
     #[test]
