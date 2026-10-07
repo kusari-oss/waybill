@@ -1143,6 +1143,8 @@ fn us2b_keyless_no_oidc_token_fails_close_m222() {
             "ACTIONS_ID_TOKEN_REQUEST_URL",
             "ACTIONS_ID_TOKEN_REQUEST_TOKEN",
             "SIGSTORE_ID_TOKEN",
+            // Outside Actions wording, whether or not CI runs this.
+            "GITHUB_ACTIONS",
         ],
     );
     assert!(
