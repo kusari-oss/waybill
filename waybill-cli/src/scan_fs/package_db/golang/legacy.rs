@@ -3078,8 +3078,13 @@ pub(crate) fn extract_paths(registration: &ReaderRegistration) -> GolangDiscover
 /// pilot) into the same `(candidates, toolchain_roots)` tuple that
 /// `candidate_project_roots` produces.
 fn candidate_project_roots_from_paths(
-    go_mod_paths: Vec<PathBuf>,
+    mut go_mod_paths: Vec<PathBuf>,
 ) -> (Vec<PathBuf>, Vec<PathBuf>) {
+    // Deterministic order — the shared walker sorts per directory, not
+    // across directories. Sorted by go.mod path, not by directory: the
+    // order project roots are read in fixes the order of a shared
+    // module's evidence occurrences, so it is part of the output.
+    go_mod_paths.sort();
     let dirs = go_mod_paths
         .iter()
         .filter_map(|p| p.parent().map(Path::to_path_buf))
@@ -3163,7 +3168,6 @@ fn classify_go_mod_dirs(dirs: Vec<PathBuf>) -> (Vec<PathBuf>, Vec<PathBuf>) {
     toolchain_roots.sort();
     toolchain_roots.dedup();
     out.retain(|dir| !toolchain_roots.iter().any(|root| dir.starts_with(root)));
-    out.sort();
     (out, toolchain_roots)
 }
 
