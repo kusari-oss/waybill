@@ -21,11 +21,10 @@ on:
       - '.github/**'
       - 'Dockerfile*'
       - 'scripts/**'
+  # No `paths:` filter on pull requests: this check is required by the
+  # branch ruleset, and a required check that does not run never reports,
+  # which blocks the PR. It takes seconds.
   pull_request:
-    paths:
-      - '.github/**'
-      - 'Dockerfile*'
-      - 'scripts/**'
   workflow_dispatch: {}
 
 permissions:

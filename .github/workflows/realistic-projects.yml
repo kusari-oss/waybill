@@ -445,3 +445,24 @@ jobs:
             tail -3 /tmp/scan.log >> "$GITHUB_STEP_SUMMARY"
             echo '```' >> "$GITHUB_STEP_SUMMARY"
           fi
+
+  # The one check a branch ruleset requires from this workflow, so adding,
+  # renaming or removing a project or image does not change the required
+  # set. Always reports; passes only if both matrices succeeded (a matrix
+  # job's result is `failure` if any of its legs failed). Failed and
+  # cancelled both fail it.
+  realistic-ok:
+    name: realistic-ok
+    if: always()
+    needs:
+      - scan-realistic-project
+      - scan-rootfs-image
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Every scan passed
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          jq -r 'to_entries[] | "\(.key): \(.value.result)"' <<< "$NEEDS"
+          jq -e 'all(.[]; .result == "success" or .result == "skipped")' <<< "$NEEDS" > /dev/null
