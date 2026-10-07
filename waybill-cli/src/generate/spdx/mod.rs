@@ -1105,4 +1105,43 @@ mod tests {
             .unwrap();
         assert!(pkg.get("externalRef").is_none(), "{pkg}");
     }
+
+    /// #1140: the document IRI hashes in the tool version, but no other
+    /// element's IRI may depend on it. Hashing full IRIs re-identified every
+    /// annotation and relationship at each version bump.
+    #[test]
+    fn spdx3_element_iris_do_not_change_with_the_tool_version() {
+        use waybill_common::resolution::{EnrichmentProvenance, Relationship, RelationshipType};
+        let integ = empty_integrity();
+        let comps = [mk_component("pkg:cargo/a@1", vec![]), mk_component("pkg:cargo/b@1", vec![])];
+        let rels = [Relationship {
+            from: "pkg:cargo/a@1".into(),
+            to: "pkg:cargo/b@1".into(),
+            relationship_type: RelationshipType::DependsOn,
+            provenance: EnrichmentProvenance { source: "test".into(), data_type: "test".into() },
+        }];
+        let local_ids = |version: &'static str| {
+            let mut arts = mk_artifacts(&comps, &integ);
+            arts.relationships = &rels;
+            let cfg = OutputConfig { mikebom_version: version, ..mk_cfg() };
+            let doc = parse_spdx(&Spdx3JsonSerializer.serialize(&arts, &cfg).unwrap()[0].bytes);
+            let graph = doc["@graph"].as_array().unwrap().clone();
+            let doc_iri = graph.iter().find(|e| e["type"] == "SpdxDocument").unwrap()["spdxId"]
+                .as_str()
+                .unwrap()
+                .to_string();
+            let ids: std::collections::BTreeSet<String> = graph
+                .iter()
+                .filter_map(|e| e["spdxId"].as_str())
+                .filter(|i| *i != doc_iri)
+                .map(|i| i.strip_prefix(doc_iri.as_str()).unwrap_or(i).to_string())
+                .collect();
+            (doc_iri, ids)
+        };
+        let (doc_a, ids_a) = local_ids("1.0.0");
+        let (doc_b, ids_b) = local_ids("2.0.0");
+        assert_ne!(doc_a, doc_b, "the document IRI is expected to carry the version");
+        assert!(ids_a.iter().any(|i| i.contains("/anno-")) && ids_a.iter().any(|i| i.contains("/rel-")));
+        assert_eq!(ids_a, ids_b);
+    }
 }

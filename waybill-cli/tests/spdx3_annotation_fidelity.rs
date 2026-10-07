@@ -144,16 +144,6 @@ fn collect_spdx23(doc: &serde_json::Value) -> BTreeSet<MikebomEntry> {
                     continue;
                 };
                 if let Some((field, value)) = parse_envelope(comment) {
-                    // Issue #228 — `waybill:lifecycle-scope` is a
-                    // SPDX-2.3-only parity-bridging annotation (C42 in
-                    // sbom-format-mapping.md). SPDX 3 carries the same
-                    // signal natively via `LifecycleScopedRelationship.scope`
-                    // and intentionally does NOT emit the annotation,
-                    // so the fidelity check skips it on the SPDX 2.3
-                    // side to avoid a false-positive drift.
-                    if field == "waybill:lifecycle-scope" {
-                        continue;
-                    }
                     out.insert(MikebomEntry {
                         subject: purl.clone(),
                         field,

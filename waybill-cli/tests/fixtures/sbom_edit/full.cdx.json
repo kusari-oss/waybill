@@ -594,7 +594,7 @@
     "supplier": {
       "name": "waybill contributors"
     },
-    "timestamp": "2026-10-06T22:29:42Z",
+    "timestamp": "2026-10-07T00:08:26Z",
     "tools": {
       "components": [
         {
@@ -606,7 +606,7 @@
       ]
     }
   },
-  "serialNumber": "urn:uuid:57d1d54a-76e3-4c77-aa1b-a14846f56d48",
+  "serialNumber": "urn:uuid:63d83d10-3311-44cb-977c-2b7f4c209751",
   "specVersion": "1.6",
   "version": 1,
   "vulnerabilities": []

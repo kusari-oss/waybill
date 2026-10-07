@@ -68,13 +68,10 @@ pub enum Directionality {
     /// Milestone 052/part-2: CDX-only by design. Used for
     /// finer-info carve-outs per Constitution Principle V where
     /// CDX's native field is too coarse to express the signal
-    /// directly and the SPDX sides carry the same lifecycle
-    /// signal natively via OTHER catalog rows (e.g., C42's
-    /// `waybill:lifecycle-scope` is a CDX-only finer split where
-    /// CDX `scope` cannot express dev/build/test; SPDX 2.3 + 3
-    /// carry the lifecycle scope via B2's typed dep-relationship
-    /// types / `lifecycleScope` parameter, asserted independently
-    /// by B2's extractor).
+    /// directly and the SPDX sides carry the same signal natively via
+    /// OTHER catalog rows. No row uses it since #1148, which made its
+    /// one user, C42 `waybill:lifecycle-scope`, symmetric: SPDX's edge
+    /// scope could not describe a component nothing depends on.
     ///
     /// **Not gate-checked.** A `CdxOnly` row is catalogued but its
     /// extractor's output is not asserted on: `assert_holistic_parity`

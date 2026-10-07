@@ -182,13 +182,13 @@ Vulnerability scanners need to (a) suppress dev/test/build-only deps from produc
 
 #### `waybill:lifecycle-scope`
 
-> **What it is**: the finer-grained dev / build / test / runtime distinction beyond CDX 1.6's 3-value `scope` enum. CDX 1.6's `component.scope` only carries `required`/`optional`/`excluded`; waybill emits `excluded` for non-runtime deps and this annotation carries the finer split. SPDX 2.3 has native typed relationships (`DEV_DEPENDENCY_OF` / `BUILD_DEPENDENCY_OF` / `TEST_DEPENDENCY_OF`) used as the primary signal; this annotation also rides on the target Package so consumers walking only `DEPENDS_ON` still see the distinction. SPDX 3 carries the value natively in `LifecycleScopedRelationship.scope` AND omits the parity-bridging annotation (the native field is sufficient there).
+> **What it is**: the finer-grained dev / build / test / runtime distinction beyond CDX 1.6's 3-value `scope` enum. CDX 1.6's `component.scope` only carries `required`/`optional`/`excluded`; waybill emits `excluded` for non-runtime deps and this annotation carries the finer split. SPDX 2.3 has native typed relationships (`DEV_DEPENDENCY_OF` / `BUILD_DEPENDENCY_OF` / `TEST_DEPENDENCY_OF`) used as the primary signal; this annotation also rides on the target Package so consumers walking only `DEPENDS_ON` still see the distinction. SPDX 3 carries scope natively in `LifecycleScopedRelationship.scope`, but only on an edge: a scoped component that nothing depends on has no edge to carry it, and `optional` has no SPDX 3 value. So since #1148 the annotation rides on the SPDX 3 element too, and all three formats carry it identically.
 > **Where it lives**:
 > - **CDX 1.6**: `components[].properties[]` entry `{name: "waybill:lifecycle-scope", value: "<scope>"}` on the target component. Native `component.scope: "excluded"` set alongside.
 > - **SPDX 2.3**: annotation envelope on the target Package — `{schema: "waybill-annotation/v1", field: "waybill:lifecycle-scope", value: "<scope>"}`. Plus native typed relationship `DEV_DEPENDENCY_OF` / `BUILD_DEPENDENCY_OF` / `TEST_DEPENDENCY_OF` reversed-direction edge under `--spdx2-relationship-compat=full` (the default).
-> - **SPDX 3**: NOT EMITTED as a per-package annotation. The value lives natively on the dep edge as `LifecycleScopedRelationship.scope` (`development` / `build` / `test`). Runtime edges omit `scope`.
+> - **SPDX 3**: annotation envelope on the `software_Package` (#1148). The value also lives natively on each incoming dep edge as `LifecycleScopedRelationship.scope` (`development` / `build` / `test`); runtime edges omit `scope`.
 > **What to do with it**: filter your dep-graph walk to suppress non-runtime components from production-only CVE alerting. Common policy: alert on `runtime` (or absent scope, which means runtime) deps only; report dev/test/build hits as informational. Default waybill scans INCLUDE dev/build/test-scoped components in `components[]`; the operator can drop them at scan time via `--exclude-scope dev,build,test` to produce the strict "what shipped to production" view.
-> **Milestone**: 052 — added; 228 — extended to SPDX 2.3 as parity-bridge.
+> **Milestone**: 052 — added; 228 — extended to SPDX 2.3 as parity-bridge; #1148 — extended to SPDX 3.
 > **Catalog**: [C42](sbom-format-mapping.md#section-c--waybill-specific-data-preserved-via-fallback)
 
 ```jq
@@ -956,13 +956,38 @@ jq '.relationships[]
 >
 > **SPDX 3.0.1 unchanged**: SPDX 3's `LifecycleScopeType` enum has no `optional` value at spec 3.0.1 (verified via the m078 conformance harness). SPDX 3 emits the annotation only — parity-bridge for the missing native construct, matching the m147/m178 pattern for CDX peer-edges.
 >
-> **What to do with it**: filter not-in-production components identically across CDX and SPDX 2.3 formats:
+> **What to do with it**: filter not-in-production components identically across all three formats.
+>
+> **The rule (#1135).** CycloneDX sets `scope: "excluded"` on a component exactly when it has a non-runtime `waybill:lifecycle-scope` or `waybill:build-inclusion = "not-needed"`. Both annotations are on the package itself in SPDX 2.3 and SPDX 3, so the same rule selects the same set there. Use it rather than the typed relationships: an orphan (a package nothing depends on, such as a stale `go.sum` entry) has no incoming edge to type, so a relationship-based filter misses it. Checked against all 17 public-corpus goldens: the CDX `excluded` set and the SPDX 2.3 annotation set are identical in every one.
 
 ```jq
 # CDX — filter every not-in-production component
 jq '[.components[] | select(.scope == "excluded") | .purl] | sort | unique' your.cdx.json
 
-# SPDX 2.3 — same PURL set via native typed dep-scope verbs
+# SPDX 2.3 — the same PURL set, from the package annotations (any compat mode)
+jq '
+  [ .packages[]
+    | select([.annotations[]?.comment | fromjson? | select(.schema == "waybill-annotation/v1")
+              | select((.field == "waybill:lifecycle-scope" and .value != "runtime")
+                       or (.field == "waybill:build-inclusion" and .value == "not-needed"))] | length > 0)
+    | .externalRefs[]? | select(.referenceType == "purl") | .referenceLocator
+  ] | sort | unique
+' your.spdx.json
+
+# SPDX 3 — the same PURL set, from the element annotations
+jq '
+  ( [ .["@graph"][] | select(.type == "software_Package") | {key: .spdxId, value: .software_packageUrl} ] | from_entries ) as $purl |
+  [ .["@graph"][]
+    | select(.type == "Annotation")
+    | (.statement | fromjson? | select(.schema == "waybill-annotation/v1")) as $a
+    | select(($a.field == "waybill:lifecycle-scope" and $a.value != "runtime")
+             or ($a.field == "waybill:build-inclusion" and $a.value == "not-needed"))
+    | $purl[.subject] // empty
+  ] | sort | unique
+' your.spdx3.json
+
+# SPDX 2.3 — via native typed dep-scope verbs. Misses orphans (#1135):
+# a package nothing depends on has no edge to type.
 # (works under default --spdx2-relationship-compat=full)
 jq '
   ( [ .packages[] | { key: .SPDXID, value: (.externalRefs[]? | select(.referenceType == "purl") | .referenceLocator) } ] | from_entries ) as $purl_by_ref |
@@ -1076,7 +1101,7 @@ The same `waybill:*` signal lives in different per-format carriers. Here's a rep
 
 | Signal | CDX 1.6 | SPDX 2.3 | SPDX 3 |
 |---|---|---|---|
-| `waybill:lifecycle-scope` | per-component `properties[]` flat string + native `component.scope: "excluded"` for non-runtime | per-Package annotation envelope + native typed relationships (`DEV/BUILD/TEST_DEPENDENCY_OF`) | NOT emitted as annotation — native `LifecycleScopedRelationship.scope` on the dep edge |
+| `waybill:lifecycle-scope` | per-component `properties[]` flat string + native `component.scope: "excluded"` for non-runtime | per-Package annotation envelope + native typed relationships (`DEV/BUILD/TEST_DEPENDENCY_OF`) | per-element annotation envelope (#1148) + native `LifecycleScopedRelationship.scope` on the dep edge |
 | `waybill:layer-digest` | per-component `properties[]` flat string | per-Package annotation envelope | per-`software_Package` annotation envelope |
 | `waybill:source-type` | per-component `properties[]` flat string | per-Package annotation envelope | per-`software_Package` annotation envelope |
 | `waybill:demoted-from-main-module` | per-component `properties[]` flat string | per-Package annotation envelope | per-`software_Package` annotation envelope, BUT subject routes to synth-root IRI (see [§4 subject-routing note](#4-the-waybill-annotationv1-envelope)) |

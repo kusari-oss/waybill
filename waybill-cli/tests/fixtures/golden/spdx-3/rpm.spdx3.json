@@ -65,23 +65,7 @@
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-5KRAZYZBDK2IY2KEIGYFVFFF/anno-BOTLMEXWLNBUAJED",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness\",\"value\":\"complete\"}",
-      "subject": "https://waybill.kusari.dev/spdx3/doc-5KRAZYZBDK2IY2KEIGYFVFFF",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "_:creation-info",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-5KRAZYZBDK2IY2KEIGYFVFFF/anno-DKUNIN4YVKHJY7SN",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-ring-buffer-overflows\",\"value\":\"0\"}",
-      "subject": "https://waybill.kusari.dev/spdx3/doc-5KRAZYZBDK2IY2KEIGYFVFFF",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "_:creation-info",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-5KRAZYZBDK2IY2KEIGYFVFFF/anno-I56BXX5AZQWP4WAE",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-5KRAZYZBDK2IY2KEIGYFVFFF/anno-CUCW44FV3BSQOJDG",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-kprobe-attach-failures\",\"value\":\"[]\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-5KRAZYZBDK2IY2KEIGYFVFFF",
       "type": "Annotation"
@@ -89,15 +73,15 @@
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-5KRAZYZBDK2IY2KEIGYFVFFF/anno-INIZJGOXR5M6IR6O",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep-count\",\"value\":\"0\"}",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-5KRAZYZBDK2IY2KEIGYFVFFF/anno-EFHKOK3QW4IMEQS4",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness\",\"value\":\"complete\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-5KRAZYZBDK2IY2KEIGYFVFFF",
       "type": "Annotation"
     },
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-5KRAZYZBDK2IY2KEIGYFVFFF/anno-JJSZ57UBBFEG4MTP",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-5KRAZYZBDK2IY2KEIGYFVFFF/anno-I2SLAOK4BU56NHQW",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:generation-context\",\"value\":\"filesystem-scan\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-5KRAZYZBDK2IY2KEIGYFVFFF",
       "type": "Annotation"
@@ -105,15 +89,15 @@
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-5KRAZYZBDK2IY2KEIGYFVFFF/anno-JVIN2MBEHI23FGKM",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cisa-2026-lifecycle\",\"value\":\"after-build\"}",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-5KRAZYZBDK2IY2KEIGYFVFFF/anno-LAAZFEQWALYVDGCQ",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-events-dropped\",\"value\":\"0\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-5KRAZYZBDK2IY2KEIGYFVFFF",
       "type": "Annotation"
     },
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-5KRAZYZBDK2IY2KEIGYFVFFF/anno-K3B5JV5DIRBQYKHN",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-5KRAZYZBDK2IY2KEIGYFVFFF/anno-MF6HLUR3G7YWPR6G",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-uprobe-attach-failures\",\"value\":\"[]\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-5KRAZYZBDK2IY2KEIGYFVFFF",
       "type": "Annotation"
@@ -121,16 +105,32 @@
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-5KRAZYZBDK2IY2KEIGYFVFFF/anno-TAT2HF2J5YONMZBX",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:os-release-missing-fields\",\"value\":\"[\\\"ID\\\",\\\"VERSION_ID\\\"]\"}",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-5KRAZYZBDK2IY2KEIGYFVFFF/anno-MHA4SXN5HJTTOCO7",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-ring-buffer-overflows\",\"value\":\"0\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-5KRAZYZBDK2IY2KEIGYFVFFF",
       "type": "Annotation"
     },
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-5KRAZYZBDK2IY2KEIGYFVFFF/anno-YJGROKWRTLB3DZP4",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-events-dropped\",\"value\":\"0\"}",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-5KRAZYZBDK2IY2KEIGYFVFFF/anno-MPVYNDEK6GNLRLCD",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cisa-2026-lifecycle\",\"value\":\"after-build\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-5KRAZYZBDK2IY2KEIGYFVFFF",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-5KRAZYZBDK2IY2KEIGYFVFFF/anno-YCOO3SO2OMBKANG3",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep-count\",\"value\":\"0\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-5KRAZYZBDK2IY2KEIGYFVFFF",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-5KRAZYZBDK2IY2KEIGYFVFFF/anno-Z3YTWOZVLUQQKB2C",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:os-release-missing-fields\",\"value\":\"[\\\"ID\\\",\\\"VERSION_ID\\\"]\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-5KRAZYZBDK2IY2KEIGYFVFFF",
       "type": "Annotation"
     }
