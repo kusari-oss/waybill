@@ -5,7 +5,7 @@
   "name": "acme-shop 1.4.0",
   "documentNamespace": "https://waybill.kusari.dev/spdx/CSJ3ZO45JHMUIRA2X6YAT6EW6K2W22HD",
   "creationInfo": {
-    "created": "2026-10-06T22:29:42Z",
+    "created": "2026-10-07T00:08:26Z",
     "creators": [
       "Tool: waybill-0.10.1",
       "Organization: waybill contributors",
@@ -49,37 +49,37 @@
       "annotations": [
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"package-lock.json\"]}"
         },
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:\\\\@acme\\\\/internal-utils:\\\\@acme\\\\/internal-utils:2.0.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:acme:\\\\@acme\\\\/internal-utils:2.0.1:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"package-lock.json\",\"sha256\":\"f53e0a57161438f7ebb582ce545c9732a3a13352e9c74e705e7712d66cef4559\"}]}"
         },
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
@@ -115,31 +115,31 @@
       "annotations": [
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\".\"]}"
         },
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-role\",\"value\":\"main-module\"}"
         },
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
@@ -175,31 +175,31 @@
       "annotations": [
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"package-lock.json\"]}"
         },
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"package-lock.json\",\"sha256\":\"f53e0a57161438f7ebb582ce545c9732a3a13352e9c74e705e7712d66cef4559\"}]}"
         },
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
@@ -234,37 +234,37 @@
       "annotations": [
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"development\"}"
         },
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"package-lock.json\"]}"
         },
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"package-lock.json\",\"sha256\":\"f53e0a57161438f7ebb582ce545c9732a3a13352e9c74e705e7712d66cef4559\"}]}"
         },
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
@@ -299,31 +299,31 @@
       "annotations": [
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"package-lock.json\"]}"
         },
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"package-lock.json\",\"sha256\":\"f53e0a57161438f7ebb582ce545c9732a3a13352e9c74e705e7712d66cef4559\"}]}"
         },
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
@@ -358,37 +358,37 @@
       "annotations": [
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"development\"}"
         },
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"package-lock.json\"]}"
         },
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"package-lock.json\",\"sha256\":\"f53e0a57161438f7ebb582ce545c9732a3a13352e9c74e705e7712d66cef4559\"}]}"
         },
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
@@ -423,31 +423,31 @@
       "annotations": [
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"package-lock.json\"]}"
         },
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"package-lock.json\",\"sha256\":\"f53e0a57161438f7ebb582ce545c9732a3a13352e9c74e705e7712d66cef4559\"}]}"
         },
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
@@ -470,25 +470,25 @@
       "annotations": [
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"src/index.js\"]}"
         },
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
         },
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
         },
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"src/index.js\"]}"
         }
@@ -511,25 +511,25 @@
       "annotations": [
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"lib/pricing.js\"]}"
         },
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
         },
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
         },
         {
           "annotator": "Tool: waybill-0.10.1",
-          "annotationDate": "2026-10-06T22:29:42Z",
+          "annotationDate": "2026-10-07T00:08:26Z",
           "annotationType": "OTHER",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"lib/pricing.js\"]}"
         }
@@ -576,73 +576,73 @@
   "annotations": [
     {
       "annotator": "Tool: waybill-0.10.1",
-      "annotationDate": "2026-10-06T22:29:42Z",
+      "annotationDate": "2026-10-07T00:08:26Z",
       "annotationType": "OTHER",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:generation-context\",\"value\":\"filesystem-scan\"}"
     },
     {
       "annotator": "Tool: waybill-0.10.1",
-      "annotationDate": "2026-10-06T22:29:42Z",
+      "annotationDate": "2026-10-07T00:08:26Z",
       "annotationType": "OTHER",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cisa-2026-lifecycle\",\"value\":\"after-build\"}"
     },
     {
       "annotator": "Tool: waybill-0.10.1",
-      "annotationDate": "2026-10-06T22:29:42Z",
+      "annotationDate": "2026-10-07T00:08:26Z",
       "annotationType": "OTHER",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-inventory-source-shapes-active\",\"value\":\"{\\\"mode\\\":\\\"source-tree\\\",\\\"restriction\\\":null}\"}"
     },
     {
       "annotator": "Tool: waybill-0.10.1",
-      "annotationDate": "2026-10-06T22:29:42Z",
+      "annotationDate": "2026-10-07T00:08:26Z",
       "annotationType": "OTHER",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:os-release-missing-fields\",\"value\":\"[\\\"ID\\\",\\\"VERSION_ID\\\"]\"}"
     },
     {
       "annotator": "Tool: waybill-0.10.1",
-      "annotationDate": "2026-10-06T22:29:42Z",
+      "annotationDate": "2026-10-07T00:08:26Z",
       "annotationType": "OTHER",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness\",\"value\":\"complete\"}"
     },
     {
       "annotator": "Tool: waybill-0.10.1",
-      "annotationDate": "2026-10-06T22:29:42Z",
+      "annotationDate": "2026-10-07T00:08:26Z",
       "annotationType": "OTHER",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspaces-detected\",\"value\":\"[\\\".\\\"]\"}"
     },
     {
       "annotator": "Tool: waybill-0.10.1",
-      "annotationDate": "2026-10-06T22:29:42Z",
+      "annotationDate": "2026-10-07T00:08:26Z",
       "annotationType": "OTHER",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep-count\",\"value\":\"0\"}"
     },
     {
       "annotator": "Tool: waybill-0.10.1",
-      "annotationDate": "2026-10-06T22:29:42Z",
+      "annotationDate": "2026-10-07T00:08:26Z",
       "annotationType": "OTHER",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-ring-buffer-overflows\",\"value\":\"0\"}"
     },
     {
       "annotator": "Tool: waybill-0.10.1",
-      "annotationDate": "2026-10-06T22:29:42Z",
+      "annotationDate": "2026-10-07T00:08:26Z",
       "annotationType": "OTHER",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-events-dropped\",\"value\":\"0\"}"
     },
     {
       "annotator": "Tool: waybill-0.10.1",
-      "annotationDate": "2026-10-06T22:29:42Z",
+      "annotationDate": "2026-10-07T00:08:26Z",
       "annotationType": "OTHER",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-uprobe-attach-failures\",\"value\":\"[]\"}"
     },
     {
       "annotator": "Tool: waybill-0.10.1",
-      "annotationDate": "2026-10-06T22:29:42Z",
+      "annotationDate": "2026-10-07T00:08:26Z",
       "annotationType": "OTHER",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-kprobe-attach-failures\",\"value\":\"[]\"}"
     },
     {
       "annotator": "Tool: waybill-0.10.1",
-      "annotationDate": "2026-10-06T22:29:42Z",
+      "annotationDate": "2026-10-07T00:08:26Z",
       "annotationType": "OTHER",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"compositions\",\"value\":{\"complete_ecosystems\":[\"npm\"],\"target_aggregate\":\"incomplete_first_party_only\"}}"
     }
