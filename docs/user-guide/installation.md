@@ -162,6 +162,38 @@ limactl shell waybill
 Inside the VM, `cargo build --release` and `trace`/`scan` subcommands work
 as on any Linux host.
 
+## GitHub Actions
+
+In a workflow, use [`kusari-oss/waybill-action`](https://github.com/kusari-oss/waybill-action)
+rather than installing waybill yourself:
+
+```yaml
+jobs:
+  sbom:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write   # Sigstore keyless signing
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: kusari-oss/waybill-action@v1
+        with:
+          format: cyclonedx-json,spdx-3-json
+```
+
+The action:
+
+- installs the latest stable release, or a `waybill-version` you pin;
+- checks the archive's SHA-256 and its SLSA provenance, which must come from
+  waybill's release workflow, before running it;
+- signs each SBOM with Sigstore keyless as your workflow, writing a
+  `.sig.bundle.json` beside it.
+
+It runs on Linux (x86_64, arm64), macOS and Windows runners. A job without
+`id-token: write` fails rather than producing unsigned SBOMs; set `sign: none`
+to opt out, for example for pull requests from forks. See the action's README
+for static-key signing, container images and GitHub attestations.
+
 ## Verify the install
 
 ```bash
