@@ -558,20 +558,11 @@ fn identity_token_from_github_actions() -> Result<sigstore::oauth::IdentityToken
     Ok(token)
 }
 
-/// T017 (feature 222 US2b) — dispatcher for OIDC token acquisition.
-/// v1 supports only the `Explicit` variant (`SIGSTORE_ID_TOKEN` env
-/// var). `GitHubActions` (ambient) and `Interactive` (browser) both
-/// return fail-close diagnostics pointing at the explicit-env
-/// workaround.
-///
-/// **v1 scope constraint**: sigstore-rs 0.11's `Claims` struct requires
-/// a non-optional `email: String` field (used as the CSR subject sent
-/// to Fulcio). Real GitHub Actions ambient tokens do not emit `email`
-/// — they use `sub` (workflow path). Support for GHA-ambient requires
-/// upstream sigstore-rs changes and is deferred to a follow-up
-/// milestone. Users inside GitHub Actions must fetch a token via a
-/// helper action that populates `SIGSTORE_ID_TOKEN` (see the
-/// diagnostic message for pointers).
+/// T017 (feature 222 US2b) — dispatcher for OIDC token acquisition:
+/// `SIGSTORE_ID_TOKEN` (`Explicit`), or the GitHub Actions ambient
+/// credential (`GitHubActions`, since m779). `Interactive` (browser
+/// sign-in) is unsupported and fails closed with a diagnostic naming the
+/// way to get a token where the user is.
 pub fn resolve_identity_token(
     provider: &OidcProvider,
 ) -> Result<sigstore::oauth::IdentityToken, SigningError> {
@@ -579,12 +570,24 @@ pub fn resolve_identity_token(
         OidcProvider::Explicit => identity_token_from_env_var(),
         OidcProvider::GitHubActions => identity_token_from_github_actions(),
         OidcProvider::Interactive => Err(SigningError::OidcTokenError {
-            detail: "no OIDC token available; set SIGSTORE_ID_TOKEN, e.g. \
-                     `export SIGSTORE_ID_TOKEN=$(sigstore get-identity-token)` \
-                     (pip install sigstore). Interactive browser flow and GitHub \
-                     Actions ambient OIDC are both deferred to a follow-up milestone."
-                .to_string(),
+            detail: no_token_detail(std::env::var("GITHUB_ACTIONS").as_deref() == Ok("true")),
         }),
+    }
+}
+
+/// What to do when no token source exists. Inside GitHub Actions that means
+/// the job may not request one, which a permission fixes.
+fn no_token_detail(in_github_actions: bool) -> String {
+    if in_github_actions {
+        "no OIDC token available: this GitHub Actions job cannot request one. \
+         Grant it with `permissions: id-token: write`. Pull requests from forks \
+         never receive one."
+            .to_string()
+    } else {
+        "no OIDC token available; set SIGSTORE_ID_TOKEN, e.g. \
+         `export SIGSTORE_ID_TOKEN=$(sigstore get-identity-token)` \
+         (pip install sigstore). Interactive browser sign-in is not supported."
+            .to_string()
     }
 }
 
@@ -1328,23 +1331,29 @@ mod tests {
 
     #[test]
     fn resolve_identity_token_interactive_returns_fail_close_diagnostic_m222() {
-        // No env-var mutation needed — Interactive variant is pure fail-close.
-        // Post-scope-down (2026-07-31): both Interactive AND GHA-ambient
-        // deferred; diagnostic points at sigstore-python as the local
-        // workaround.
+        // Interactive is pure fail-close; the wording depends on whether
+        // this runs inside GitHub Actions, so only the shared part is
+        // asserted here.
         match resolve_identity_token(&OidcProvider::Interactive) {
             Err(SigningError::OidcTokenError { detail }) => {
                 assert!(detail.contains("no OIDC token available"), "detail: {detail}");
-                assert!(detail.contains("SIGSTORE_ID_TOKEN"), "detail: {detail}");
-                assert!(detail.contains("sigstore get-identity-token"), "detail: {detail}");
-                assert!(
-                    detail.contains("deferred to a follow-up milestone"),
-                    "detail: {detail}"
-                );
             }
             Err(other) => panic!("expected OidcTokenError variant, got {other:?}"),
             Ok(_) => panic!("expected fail-close diagnostic, got Ok(IdentityToken)"),
         }
+    }
+
+    /// Inside GitHub Actions the fix is a permission, not a token helper;
+    /// the old text said ambient OIDC was unsupported, which m779 changed.
+    #[test]
+    fn no_token_detail_names_the_fix_where_the_user_is() {
+        let gha = no_token_detail(true);
+        assert!(gha.contains("id-token: write"), "{gha}");
+        assert!(!gha.contains("deferred"), "{gha}");
+        let local = no_token_detail(false);
+        assert!(local.contains("SIGSTORE_ID_TOKEN"), "{local}");
+        assert!(local.contains("sigstore get-identity-token"), "{local}");
+        assert!(!local.contains("deferred"), "{local}");
     }
 
     #[test]

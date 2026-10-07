@@ -20,6 +20,7 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **`--sign` without an OIDC token names the actual fix.** Inside GitHub Actions the error now says to grant `permissions: id-token: write`. It previously said GitHub Actions ambient OIDC was deferred to a follow-up milestone, which stopped being true in milestone 779. Elsewhere it still points at `SIGSTORE_ID_TOKEN`.
 - **SPDX 3 annotation and relationship IRIs no longer change with the tool version** (#1140). They hashed their subject's full IRI, which begins with the document IRI, and the document IRI hashes in the waybill version. Every version bump re-identified every annotation and relationship, with identical content. They now hash the part of the IRI after the document's. This changes every SPDX 3 annotation and relationship IRI once.
 - **SPDX 3 keeps the lifecycle scope of a component nothing depends on** (#1148). SPDX 3 carries scope only on the relationship pointing at a component, so an orphaned test or dev dependency, and any `optional` one, lost its scope. Elements now carry `waybill:lifecycle-scope` (C42), as CycloneDX and SPDX 2.3 packages already do, and parity checks C42 across all three formats.
 - **Documented how to reproduce CycloneDX `scope: "excluded"` from SPDX** (#1135): a non-runtime `waybill:lifecycle-scope` or `waybill:build-inclusion = not-needed` on the package. Filtering on typed relationships misses orphans. `docs/reference/reading-a-mikebom-sbom.md` has the queries.
