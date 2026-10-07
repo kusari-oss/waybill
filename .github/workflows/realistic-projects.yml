@@ -449,8 +449,9 @@ jobs:
   # The one check a branch ruleset requires from this workflow, so adding,
   # renaming or removing a project or image does not change the required
   # set. Always reports; passes only if both matrices succeeded (a matrix
-  # job's result is `failure` if any of its legs failed). Failed and
-  # cancelled both fail it.
+  # job's result is `failure` if any of its legs failed). Failed, cancelled
+  # and skipped all fail it: neither scan job has an `if:`, so a skipped
+  # scan means something went wrong, not that there was nothing to scan.
   realistic-ok:
     name: realistic-ok
     if: always()
@@ -465,4 +466,4 @@ jobs:
           NEEDS: ${{ toJSON(needs) }}
         run: |
           jq -r 'to_entries[] | "\(.key): \(.value.result)"' <<< "$NEEDS"
-          jq -e 'all(.[]; .result == "success" or .result == "skipped")' <<< "$NEEDS" > /dev/null
+          jq -e 'all(.[]; .result == "success")' <<< "$NEEDS" > /dev/null

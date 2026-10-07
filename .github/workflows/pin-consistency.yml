@@ -23,7 +23,8 @@ on:
       - 'scripts/**'
   # No `paths:` filter on pull requests: this check is required by the
   # branch ruleset, and a required check that does not run never reports,
-  # which blocks the PR. It takes seconds.
+  # which blocks the PR. It takes seconds. The `push` trigger keeps its
+  # filter on purpose: nothing requires the check on main.
   pull_request:
   workflow_dispatch: {}
 
