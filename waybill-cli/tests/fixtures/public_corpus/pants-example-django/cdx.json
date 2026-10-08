@@ -235,10 +235,6 @@
           "value": ">=3.9"
         },
         {
-          "name": "waybill:unresolved-declared-dep",
-          "value": "pytest-asyncio"
-        },
-        {
           "name": "waybill:workspace-member",
           "value": "[\"lockfiles\"]"
         }
@@ -933,10 +929,6 @@
           "value": ">=3.6"
         },
         {
-          "name": "waybill:unresolved-declared-dep",
-          "value": "[\"argon2-cffi\",\"bcrypt\"]"
-        },
-        {
           "name": "waybill:workspace-member",
           "value": "[\"lockfiles\"]"
         }
@@ -1060,7 +1052,7 @@
         },
         {
           "name": "waybill:unresolved-declared-dep",
-          "value": "[\"coverage\",\"eventlet\",\"gevent\",\"importlib-metadata\",\"pytest-cov\",\"setproctitle\",\"tornado\"]"
+          "value": "importlib-metadata"
         },
         {
           "name": "waybill:workspace-member",
@@ -1132,10 +1124,6 @@
         {
           "name": "waybill:requires-python",
           "value": ">=3.6"
-        },
-        {
-          "name": "waybill:unresolved-declared-dep",
-          "value": "[\"flake8\",\"ruff\"]"
         },
         {
           "name": "waybill:workspace-member",
@@ -1403,10 +1391,6 @@
           "value": ">=3.8"
         },
         {
-          "name": "waybill:unresolved-declared-dep",
-          "value": "[\"beautifulsoup4\",\"cssselect\",\"html5lib\",\"lxml-html-clean\"]"
-        },
-        {
           "name": "waybill:workspace-member",
           "value": "[\"lockfiles\"]"
         }
@@ -1578,7 +1562,7 @@
         },
         {
           "name": "waybill:unresolved-declared-dep",
-          "value": "[\"orjson\",\"pip\",\"psutil\",\"tomli\"]"
+          "value": "tomli"
         },
         {
           "name": "waybill:workspace-member",
@@ -1794,10 +1778,6 @@
           "value": ">=3.9"
         },
         {
-          "name": "waybill:unresolved-declared-dep",
-          "value": "[\"coverage\",\"pre-commit\",\"pytest-benchmark\",\"tox\"]"
-        },
-        {
           "name": "waybill:workspace-member",
           "value": "[\"lockfiles\"]"
         }
@@ -2003,10 +1983,6 @@
           "value": ">=3.8"
         },
         {
-          "name": "waybill:unresolved-declared-dep",
-          "value": "colorama"
-        },
-        {
           "name": "waybill:workspace-member",
           "value": "[\"lockfiles\"]"
         }
@@ -2180,10 +2156,6 @@
           "value": ">=3.8"
         },
         {
-          "name": "waybill:unresolved-declared-dep",
-          "value": "[\"django-configurations\",\"sphinx\",\"sphinx-rtd-theme\"]"
-        },
-        {
           "name": "waybill:workspace-member",
           "value": "[\"lockfiles\"]"
         }
@@ -2256,7 +2228,7 @@
         },
         {
           "name": "waybill:unresolved-declared-dep",
-          "value": "[\"argcomplete\",\"attrs\",\"colorama\",\"exceptiongroup\",\"hypothesis\",\"mock\",\"tomli\",\"xmlschema\"]"
+          "value": "[\"colorama\",\"exceptiongroup\",\"tomli\"]"
         },
         {
           "name": "waybill:workspace-member",
@@ -2448,10 +2420,6 @@
           "value": ">=3.9"
         },
         {
-          "name": "waybill:unresolved-declared-dep",
-          "value": "[\"chardet\",\"pysocks\"]"
-        },
-        {
           "name": "waybill:workspace-member",
           "value": "[\"lockfiles\"]"
         }
@@ -2574,10 +2542,6 @@
           "value": ">=3.9"
         },
         {
-          "name": "waybill:unresolved-declared-dep",
-          "value": "[\"build\",\"filelock\",\"furo\",\"importlib-metadata\",\"ini2toml\",\"jaraco.develop\",\"jaraco.envs\",\"jaraco.functools\",\"jaraco.packaging\",\"jaraco.path\",\"jaraco.test\",\"jaraco.text\",\"jaraco.tidelift\",\"more-itertools\",\"pip\",\"platformdirs\",\"pygments-github-lexers\",\"pyproject-hooks\",\"pytest-checkdocs\",\"pytest-cov\",\"pytest-enabler\",\"pytest-home\",\"pytest-mypy\",\"pytest-perf\",\"pytest-ruff\",\"pytest-subprocess\",\"pytest-timeout\",\"pytest-xdist\",\"rst.linker\",\"ruff\",\"sphinx\",\"sphinx-favicon\",\"sphinx-inline-tabs\",\"sphinx-lint\",\"sphinx-notfound-page\",\"sphinx-reredirects\",\"sphinxcontrib-towncrier\",\"tomli\",\"tomli-w\",\"towncrier\",\"virtualenv\",\"wheel\"]"
-        },
-        {
           "name": "waybill:workspace-member",
           "value": "[\"lockfiles\"]"
         }
@@ -2647,10 +2611,6 @@
         {
           "name": "waybill:requires-python",
           "value": ">=3.8"
-        },
-        {
-          "name": "waybill:unresolved-declared-dep",
-          "value": "[\"build\",\"hatch\",\"sphinx\"]"
         },
         {
           "name": "waybill:workspace-member",
@@ -3177,10 +3137,6 @@
           "value": ">=3.9"
         },
         {
-          "name": "waybill:unresolved-declared-dep",
-          "value": "[\"brotli\",\"brotlicffi\",\"h2\",\"pysocks\",\"zstandard\"]"
-        },
-        {
           "name": "waybill:workspace-member",
           "value": "[\"lockfiles\"]"
         }
@@ -3396,8 +3352,6 @@
     },
     {
       "dependsOn": [
-        "pkg:pypi/mypy@1.18.1",
-        "pkg:pypi/pytest@8.4.2",
         "pkg:pypi/typing-extensions@4.15.0"
       ],
       "ref": "pkg:pypi/asgiref@3.10.0"
@@ -3444,7 +3398,6 @@
       "dependsOn": [
         "pkg:pypi/django-stubs-ext@5.2.5",
         "pkg:pypi/django@3.2.25",
-        "pkg:pypi/mypy@1.18.1",
         "pkg:pypi/types-pytz@2025.2.0.20250809",
         "pkg:pypi/types-pyyaml@6.0.12.20250915",
         "pkg:pypi/typing-extensions@4.15.0"
@@ -3465,16 +3418,12 @@
     },
     {
       "dependsOn": [
-        "pkg:pypi/packaging@25.0",
-        "pkg:pypi/pytest@8.4.2"
+        "pkg:pypi/packaging@25.0"
       ],
       "ref": "pkg:pypi/gunicorn@23.0.0"
     },
     {
-      "dependsOn": [
-        "pkg:pypi/mypy@1.18.1",
-        "pkg:pypi/pytest@8.4.2"
-      ],
+      "dependsOn": [],
       "ref": "pkg:pypi/idna@3.10"
     },
     {
@@ -3495,10 +3444,8 @@
     },
     {
       "dependsOn": [
-        "pkg:pypi/lxml@6.0.2",
         "pkg:pypi/mypy-extensions@1.1.0",
         "pkg:pypi/pathspec@0.12.1",
-        "pkg:pypi/setuptools@80.9.0",
         "pkg:pypi/typing-extensions@4.15.0"
       ],
       "ref": "pkg:pypi/mypy@1.18.1"
@@ -3512,9 +3459,7 @@
       "ref": "pkg:pypi/pathspec@0.12.1"
     },
     {
-      "dependsOn": [
-        "pkg:pypi/pytest@8.4.2"
-      ],
+      "dependsOn": [],
       "ref": "pkg:pypi/pluggy@1.6.0"
     },
     {
@@ -3539,7 +3484,6 @@
     },
     {
       "dependsOn": [
-        "pkg:pypi/django@3.2.25",
         "pkg:pypi/pytest@8.4.2"
       ],
       "ref": "pkg:pypi/pytest-django@4.11.1"
@@ -3549,9 +3493,7 @@
         "pkg:pypi/iniconfig@2.1.0",
         "pkg:pypi/packaging@25.0",
         "pkg:pypi/pluggy@1.6.0",
-        "pkg:pypi/pygments@2.19.2",
-        "pkg:pypi/requests@2.32.5",
-        "pkg:pypi/setuptools@80.9.0"
+        "pkg:pypi/pygments@2.19.2"
       ],
       "ref": "pkg:pypi/pytest@8.4.2"
     },
@@ -3577,11 +3519,7 @@
       "ref": "pkg:pypi/setuptools"
     },
     {
-      "dependsOn": [
-        "pkg:pypi/mypy@1.18.1",
-        "pkg:pypi/packaging@25.0",
-        "pkg:pypi/pytest@8.4.2"
-      ],
+      "dependsOn": [],
       "ref": "pkg:pypi/setuptools@80.9.0"
     },
     {
@@ -3707,7 +3645,7 @@
       },
       {
         "name": "waybill:unresolved-declared-dep-count",
-        "value": "97"
+        "value": "7"
       },
       {
         "name": "waybill:resolve-ownership",

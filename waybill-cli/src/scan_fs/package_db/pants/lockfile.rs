@@ -17,7 +17,9 @@
 //! `specs/672-pants-reader-follow-up/research.md` §R2 for the
 //! algorithm rationale.
 
+use std::collections::{BTreeSet, HashMap};
 use std::path::Path;
+use std::sync::OnceLock;
 
 use serde::Deserialize;
 use serde_json::json;
@@ -329,6 +331,106 @@ fn extract_pep508_project_name(req: &str) -> String {
     req[..end].trim().to_string()
 }
 
+/// PEP 685 extra-name normalisation: lowercase, and every run of `-`, `_`
+/// or `.` becomes one `-`.
+fn normalize_extra(extra: &str) -> String {
+    let mut out = String::with_capacity(extra.len());
+    let mut in_sep = false;
+    for c in extra.trim().chars() {
+        if matches!(c, '-' | '_' | '.') {
+            if !in_sep {
+                out.push('-');
+            }
+            in_sep = true;
+        } else {
+            out.extend(c.to_lowercase());
+            in_sep = false;
+        }
+    }
+    out
+}
+
+/// The extras a PEP 508 requirement asks for: `foo[a, b]>=1` gives
+/// `{a, b}`.
+fn requested_extras(req: &str) -> BTreeSet<String> {
+    let head = req.split(';').next().unwrap_or("");
+    let Some((_, rest)) = head.split_once('[') else {
+        return BTreeSet::new();
+    };
+    let inner = rest.split(']').next().unwrap_or("");
+    inner
+        .split(',')
+        .map(normalize_extra)
+        .filter(|e| !e.is_empty())
+        .collect()
+}
+
+/// The extras a requirement's environment marker is gated on:
+/// `myst-parser; extra == "docs"` gives `{docs}`. Empty when the marker
+/// names no extra.
+fn gating_extras(req: &str) -> BTreeSet<String> {
+    static EXTRA: OnceLock<regex::Regex> = OnceLock::new();
+    let Some((_, marker)) = req.split_once(';') else {
+        return BTreeSet::new();
+    };
+    #[allow(clippy::unwrap_used)] // literal pattern
+    let re = EXTRA.get_or_init(|| regex::Regex::new(r#"extra\s*==\s*["']([^"']+)["']"#).unwrap());
+    re.captures_iter(marker)
+        .map(|c| normalize_extra(&c[1]))
+        .collect()
+}
+
+/// #1163 — whether a `requires_dists` entry is an install-time dependency,
+/// given the extras active on the package that declares it. An entry gated
+/// on `extra == "x"` is one only when `x` is active. Other markers
+/// (`python_version`, `sys_platform`) are kept: one lock covers several
+/// platforms, and the pip readers make the same choice.
+fn requirement_is_active(req: &str, active: Option<&BTreeSet<String>>) -> bool {
+    let gating = gating_extras(req);
+    gating.is_empty() || active.is_some_and(|a| !gating.is_disjoint(a))
+}
+
+/// #1163 — the extras active on each package of one locked resolve,
+/// keyed by normalised project name. An extra is active when the lockfile's
+/// declared `requirements` ask for it (`foo[bar]`), or when an active edge
+/// of another package does. Activating an extra can activate further edges,
+/// so this runs to a fixed point.
+pub(crate) fn active_extras(
+    lock: &PexLockfile,
+    resolve: &LockedResolve,
+) -> HashMap<String, BTreeSet<String>> {
+    let mut active: HashMap<String, BTreeSet<String>> = HashMap::new();
+    let request = |active: &mut HashMap<String, BTreeSet<String>>, req: &str| -> bool {
+        let extras = requested_extras(req);
+        if extras.is_empty() {
+            return false;
+        }
+        let name = normalize_pypi_name_for_purl(&extract_pep508_project_name(req));
+        let set = active.entry(name).or_default();
+        let before = set.len();
+        set.extend(extras);
+        set.len() != before
+    };
+    for req in &lock.requirements {
+        request(&mut active, req);
+    }
+    loop {
+        let mut changed = false;
+        for locked in &resolve.locked_requirements {
+            let name = normalize_pypi_name_for_purl(&locked.project_name);
+            let own = active.get(&name).cloned();
+            for dist in &locked.requires_dists {
+                if requirement_is_active(dist, own.as_ref()) {
+                    changed |= request(&mut active, dist);
+                }
+            }
+        }
+        if !changed {
+            return active;
+        }
+    }
+}
+
 /// Convert a `LockedRequirement` from a Pex lockfile into a
 /// `PackageDbEntry` suitable for the m191 reconciler + emit pipeline.
 ///
@@ -469,6 +571,8 @@ pub(crate) fn locked_req_to_entry(
     // lifecycle; the name allowlist is the fallback where nothing declares
     // (FR-003a, contract A-4).
     declared_by_tool: bool,
+    // #1163 — the resolve's active extras, from `active_extras`.
+    active: &HashMap<String, BTreeSet<String>>,
 ) -> Option<PackageDbEntry> {
     if req.project_name.trim().is_empty() {
         tracing::warn!(
@@ -524,10 +628,14 @@ pub(crate) fn locked_req_to_entry(
         })
         .ok()?;
 
-    // Extract dependency edges from PEP 508 requires_dists.
+    // Extract dependency edges from PEP 508 requires_dists. #1163: an entry
+    // behind `extra == "..."` is an edge only when that extra is active;
+    // otherwise nobody installing this package gets it.
+    let own_extras = active.get(&normalized_name);
     let depends: Vec<String> = req
         .requires_dists
         .iter()
+        .filter(|r| requirement_is_active(r, own_extras))
         .map(|r| extract_pep508_project_name(r))
         .filter(|n| !n.is_empty())
         .map(|n| normalize_pypi_name_for_purl(&n))
@@ -948,6 +1056,99 @@ mod tests {
             ArtifactSourceType::from_url("/opt/wheels/foo-1.0.0.whl"),
             ArtifactSourceType::Local
         );
+    }
+
+    /// #1163 — build a one-resolve lock from `(name, requires_dists)` pairs.
+    fn lock_with(requirements: &[&str], packages: &[(&str, &[&str])]) -> PexLockfile {
+        let reqs: Vec<serde_json::Value> = packages
+            .iter()
+            .map(|(name, dists)| {
+                json!({
+                    "project_name": name,
+                    "version": "1.0.0",
+                    "requires_dists": dists,
+                    "artifacts": [{"algorithm": "sha256", "hash": "00", "url": format!("https://files.pythonhosted.org/packages/xx/{name}-1.0.0-py3-none-any.whl")}],
+                })
+            })
+            .collect();
+        let doc = json!({
+            "pex_version": "2.10.0",
+            "requirements": requirements,
+            "locked_resolves": [{"locked_requirements": reqs}],
+        });
+        parse(doc.to_string().as_bytes()).unwrap().0
+    }
+
+    /// The `depends` names each package gets, in lockfile order.
+    fn edges(lock: &PexLockfile) -> Vec<(String, Vec<String>)> {
+        let resolve = &lock.locked_resolves[0];
+        let active = active_extras(lock, resolve);
+        resolve
+            .locked_requirements
+            .iter()
+            .map(|r| {
+                let e = locked_req_to_entry(r, Path::new("default.lock"), "python-default", false, &active).unwrap();
+                (e.name, e.depends)
+            })
+            .collect()
+    }
+
+    /// #1163 — an extras-gated `requires_dists` entry is not an edge when
+    /// nothing asks for the extra. Other markers still are.
+    #[test]
+    fn extras_gated_requirement_is_no_edge_unless_requested() {
+        let lock = lock_with(
+            &["attrs"],
+            &[
+                ("attrs", &["myst-parser; extra == \"docs\"", "six", "pytest ; python_version >= \"3.8\" and extra == 'tests'", "colorama; sys_platform == \"win32\""]),
+                ("myst-parser", &[]),
+                ("six", &[]),
+                ("pytest", &[]),
+                ("colorama", &[]),
+            ],
+        );
+        assert_eq!(edges(&lock)[0], ("attrs".to_string(), vec!["six".to_string(), "colorama".to_string()]));
+    }
+
+    /// #1163 — an extra the declared requirements ask for is active, and so
+    /// is one an active edge asks for, transitively. Extra names compare
+    /// under PEP 685 normalisation.
+    #[test]
+    fn requested_extras_activate_their_edges_transitively() {
+        let lock = lock_with(
+            &["Click[Shell_Completion]>=8"],
+            &[
+                ("click", &["shellingham[fast] ; extra == \"shell-completion\"", "rich; extra == \"other\""]),
+                ("shellingham", &["psutil; extra == 'fast'"]),
+                ("rich", &[]),
+                ("psutil", &[]),
+            ],
+        );
+        let got = edges(&lock);
+        assert_eq!(got[0].1, vec!["shellingham".to_string()], "click[shell-completion] only");
+        assert_eq!(got[1].1, vec!["psutil".to_string()], "shellingham[fast], activated by click's edge");
+        assert!(got[2].1.is_empty() && got[3].1.is_empty());
+    }
+
+    /// `setuptools` and `wheel` gate each other behind extras (the
+    /// `tools/setuptools.lock` shape from milestone 868); activation must
+    /// still terminate, and with nothing requested neither edge exists.
+    #[test]
+    fn mutually_gated_extras_terminate() {
+        let lock = lock_with(
+            &["setuptools[core]"],
+            &[
+                ("setuptools", &["wheel[test]; extra == \"core\""]),
+                ("wheel", &["setuptools[core]; extra == \"test\"", "pytest; extra == \"test\""]),
+                ("pytest", &[]),
+            ],
+        );
+        let got = edges(&lock);
+        assert_eq!(got[0].1, vec!["wheel".to_string()]);
+        assert_eq!(got[1].1, vec!["setuptools".to_string(), "pytest".to_string()]);
+
+        let unrequested = lock_with(&[], &[("setuptools", &["wheel; extra == \"core\""]), ("wheel", &["setuptools; extra == \"test\""])]);
+        assert!(edges(&unrequested).iter().all(|(_, d)| d.is_empty()));
     }
 
     #[test]

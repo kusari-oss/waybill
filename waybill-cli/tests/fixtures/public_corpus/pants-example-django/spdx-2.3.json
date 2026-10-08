@@ -41,7 +41,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep-count\",\"value\":\"97\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep-count\",\"value\":\"7\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -375,12 +375,6 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.9\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep\",\"value\":\"pytest-asyncio\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1233,12 +1227,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep\",\"value\":\"[\\\"argon2-cffi\\\",\\\"bcrypt\\\"]\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lockfiles\\\"]\"}"
         }
       ],
@@ -1388,7 +1376,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep\",\"value\":\"[\\\"coverage\\\",\\\"eventlet\\\",\\\"gevent\\\",\\\"importlib-metadata\\\",\\\"pytest-cov\\\",\\\"setproctitle\\\",\\\"tornado\\\"]\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep\",\"value\":\"importlib-metadata\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1477,12 +1465,6 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.6\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep\",\"value\":\"[\\\"flake8\\\",\\\"ruff\\\"]\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1746,12 +1728,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep\",\"value\":\"[\\\"beautifulsoup4\\\",\\\"cssselect\\\",\\\"html5lib\\\",\\\"lxml-html-clean\\\"]\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lockfiles\\\"]\"}"
         }
       ],
@@ -1990,7 +1966,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep\",\"value\":\"[\\\"orjson\\\",\\\"pip\\\",\\\"psutil\\\",\\\"tomli\\\"]\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep\",\"value\":\"tomli\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -2280,12 +2256,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep\",\"value\":\"[\\\"coverage\\\",\\\"pre-commit\\\",\\\"pytest-benchmark\\\",\\\"tox\\\"]\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lockfiles\\\"]\"}"
         }
       ],
@@ -2535,12 +2505,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep\",\"value\":\"colorama\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lockfiles\\\"]\"}"
         }
       ],
@@ -2751,12 +2715,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep\",\"value\":\"[\\\"django-configurations\\\",\\\"sphinx\\\",\\\"sphinx-rtd-theme\\\"]\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lockfiles\\\"]\"}"
         }
       ],
@@ -2845,7 +2803,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep\",\"value\":\"[\\\"argcomplete\\\",\\\"attrs\\\",\\\"colorama\\\",\\\"exceptiongroup\\\",\\\"hypothesis\\\",\\\"mock\\\",\\\"tomli\\\",\\\"xmlschema\\\"]\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep\",\"value\":\"[\\\"colorama\\\",\\\"exceptiongroup\\\",\\\"tomli\\\"]\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3082,12 +3040,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep\",\"value\":\"[\\\"chardet\\\",\\\"pysocks\\\"]\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lockfiles\\\"]\"}"
         }
       ],
@@ -3237,12 +3189,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep\",\"value\":\"[\\\"build\\\",\\\"filelock\\\",\\\"furo\\\",\\\"importlib-metadata\\\",\\\"ini2toml\\\",\\\"jaraco.develop\\\",\\\"jaraco.envs\\\",\\\"jaraco.functools\\\",\\\"jaraco.packaging\\\",\\\"jaraco.path\\\",\\\"jaraco.test\\\",\\\"jaraco.text\\\",\\\"jaraco.tidelift\\\",\\\"more-itertools\\\",\\\"pip\\\",\\\"platformdirs\\\",\\\"pygments-github-lexers\\\",\\\"pyproject-hooks\\\",\\\"pytest-checkdocs\\\",\\\"pytest-cov\\\",\\\"pytest-enabler\\\",\\\"pytest-home\\\",\\\"pytest-mypy\\\",\\\"pytest-perf\\\",\\\"pytest-ruff\\\",\\\"pytest-subprocess\\\",\\\"pytest-timeout\\\",\\\"pytest-xdist\\\",\\\"rst.linker\\\",\\\"ruff\\\",\\\"sphinx\\\",\\\"sphinx-favicon\\\",\\\"sphinx-inline-tabs\\\",\\\"sphinx-lint\\\",\\\"sphinx-notfound-page\\\",\\\"sphinx-reredirects\\\",\\\"sphinxcontrib-towncrier\\\",\\\"tomli\\\",\\\"tomli-w\\\",\\\"towncrier\\\",\\\"virtualenv\\\",\\\"wheel\\\"]\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lockfiles\\\"]\"}"
         }
       ],
@@ -3326,12 +3272,6 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.8\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep\",\"value\":\"[\\\"build\\\",\\\"hatch\\\",\\\"sphinx\\\"]\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3981,12 +3921,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep\",\"value\":\"[\\\"brotli\\\",\\\"brotlicffi\\\",\\\"h2\\\",\\\"pysocks\\\",\\\"zstandard\\\"]\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lockfiles\\\"]\"}"
         }
       ],
@@ -4219,21 +4153,6 @@
       "spdxElementId": "SPDXRef-Package-563FQECSQKCZJ7UG"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-CSWB6UC23KUPCURQ",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-563FQECSQKCZJ7UG"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-CBHMYQZVIKAPO245",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-C3GW2XWP7Z4WYQHU"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-TOHIXWBCZAKDS7RY",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-C3GW2XWP7Z4WYQHU"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-7XF7ES27M7Z5IOMU",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-C57ZUMENIT4CSHGY"
@@ -4249,11 +4168,6 @@
       "spdxElementId": "SPDXRef-Package-C57ZUMENIT4CSHGY"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-TOHIXWBCZAKDS7RY",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-C57ZUMENIT4CSHGY"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-YT4X5I2ZVNQ76YPG",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-C57ZUMENIT4CSHGY"
@@ -4265,16 +4179,6 @@
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-7PGGREEYPN52BKXA",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-CBHMYQZVIKAPO245"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-EYHFQQMNOGG2LFQU",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-CBHMYQZVIKAPO245"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-FPZWIH6CAOYU3T7P",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-CBHMYQZVIKAPO245"
     },
@@ -4307,26 +4211,6 @@
       "relatedSpdxElement": "SPDXRef-Package-Y7HCCY2VQG7ASLHZ",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-CSWB6UC23KUPCURQ"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-CBHMYQZVIKAPO245",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-EYHFQQMNOGG2LFQU"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-TOHIXWBCZAKDS7RY",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-EYHFQQMNOGG2LFQU"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-ZIBQF5WBZHCXASVC",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-EYHFQQMNOGG2LFQU"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-ZIBQF5WBZHCXASVC",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-EYHFQQMNOGG2LFQU"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-RRIUYEPR6T43LWT4",
@@ -4374,27 +4258,12 @@
       "spdxElementId": "SPDXRef-Package-IEU5J3H7V4XCJJTC"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-CBHMYQZVIKAPO245",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-KPBHRVCIV5SEQH3O"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-ZIBQF5WBZHCXASVC",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-KPBHRVCIV5SEQH3O"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-DOM7F6NZSIXQTJP6",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-TOHIXWBCZAKDS7RY"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-EYHFQQMNOGG2LFQU",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-TOHIXWBCZAKDS7RY"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-HH5H3VPTJ5RJ5RO7",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-TOHIXWBCZAKDS7RY"
     },
@@ -4409,24 +4278,9 @@
       "spdxElementId": "SPDXRef-Package-TOHIXWBCZAKDS7RY"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-CBHMYQZVIKAPO245",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-Y7HCCY2VQG7ASLHZ"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-TOHIXWBCZAKDS7RY",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-Y7HCCY2VQG7ASLHZ"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-YT4X5I2ZVNQ76YPG",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-Y7HCCY2VQG7ASLHZ"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-CBHMYQZVIKAPO245",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-YZ2MIPQWGEB5UZRZ"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-CSWB6UC23KUPCURQ",

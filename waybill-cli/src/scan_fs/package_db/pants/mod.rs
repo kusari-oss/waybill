@@ -614,12 +614,14 @@ pub fn read_with_summary(scan_root: &Path) -> (Vec<PackageDbEntry>, Option<Resol
         // classified from different evidence.
         let declared_by_tool = tool_declared_resolves.contains(&candidate.resolve_name);
         for resolve in &lock.locked_resolves {
+            let active = lockfile::active_extras(&lock, resolve);
             for req in &resolve.locked_requirements {
                 if let Some(entry) = lockfile::locked_req_to_entry(
                     req,
                     &candidate.path,
                     &candidate.resolve_name,
                     declared_by_tool,
+                    &active,
                 ) {
                     components.push(entry);
                 }
