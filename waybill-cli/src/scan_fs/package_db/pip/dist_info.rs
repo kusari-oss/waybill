@@ -11,13 +11,15 @@
 //! cpython extension files. Callers reach it via the re-export in
 //! `pip/mod.rs`.
 
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 use waybill_common::types::license::SpdxExpression;
 use waybill_common::types::purl::Purl;
 
 use super::super::PackageDbEntry;
-use super::{build_pypi_purl_str, tokenise_requires_dist_name};
+use super::extras::{active_extras, pep508_name, ExtraEdge};
+use super::{build_pypi_purl_str, normalize_pypi_name_for_purl, tokenise_requires_dist_name};
 
 // -----------------------------------------------------------------------
 // Tier 1: venv dist-info walker
@@ -106,8 +108,32 @@ pub(super) fn read_venv_dist_info(rootfs: &Path) -> Vec<PackageDbEntry> {
             })
             .collect();
         names.sort(); // determinism
-        for dist_info in names {
-            if let Some(entry) = parse_dist_info_dir(&dist_info) {
+        // #1163 — one site-packages directory is one installed set, so the
+        // extras it activates are resolved across all of it before any
+        // package's edges are built.
+        let parsed: Vec<(PathBuf, PipDistInfoEntry)> = names
+            .into_iter()
+            .filter_map(|dist_info| {
+                let metadata_path = dist_info.join("METADATA");
+                let bytes = std::fs::read(&metadata_path).ok()?;
+                Some((metadata_path, parse_metadata_bytes(&bytes)))
+            })
+            .collect();
+        let graph = parsed
+            .iter()
+            .map(|(_, e)| {
+                let edges = e.requires_dist.iter().filter_map(|r| ExtraEdge::from_pep508(r)).collect();
+                (normalize_pypi_name_for_purl(&e.name), edges)
+            })
+            .collect();
+        // No seeds: METADATA does not record which extras the top-level
+        // install asked for, only those one installed package asks of another.
+        let active = active_extras([], &graph);
+        for (metadata_path, entry) in parsed {
+            let own = active.get(&normalize_pypi_name_for_purl(&entry.name)).cloned();
+            if let Some(entry) =
+                entry.into_package_db_entry(metadata_path.to_string_lossy().into_owned(), own.as_ref())
+            {
                 out.push(entry);
             }
         }
@@ -161,15 +187,6 @@ fn find_site_packages_under(base: &Path) -> Vec<PathBuf> {
     out
 }
 
-/// Parse one `<name>-<version>.dist-info/` directory. Returns None if
-/// the METADATA file is absent or unreadable.
-fn parse_dist_info_dir(dist_info: &Path) -> Option<PackageDbEntry> {
-    let metadata_path = dist_info.join("METADATA");
-    let bytes = std::fs::read(&metadata_path).ok()?;
-    let parsed = parse_metadata_bytes(&bytes);
-    parsed.into_package_db_entry(metadata_path.to_string_lossy().into_owned())
-}
-
 // -----------------------------------------------------------------------
 // Tier 1 support: PipDistInfoEntry + METADATA parser
 // -----------------------------------------------------------------------
@@ -191,7 +208,13 @@ pub(crate) struct PipDistInfoEntry {
 
 impl PipDistInfoEntry {
     /// Convert to the scan-pipeline's `PackageDbEntry` shape.
-    fn into_package_db_entry(self, source_path: String) -> Option<PackageDbEntry> {
+    /// `active` is the set of this package's extras that are requested
+    /// within its installed set (`extras::active_extras`).
+    fn into_package_db_entry(
+        self,
+        source_path: String,
+        active: Option<&BTreeSet<String>>,
+    ) -> Option<PackageDbEntry> {
         if self.name.is_empty() || self.version.is_empty() {
             return None;
         }
@@ -206,11 +229,17 @@ impl PipDistInfoEntry {
             _ => None,
         };
 
-        // Depends: bare names from Requires-Dist (PEP 508 tokenised).
+        // Depends: bare names from Requires-Dist (PEP 508 tokenised). #1163:
+        // an extras-gated entry is a dependency when its extra is active.
         let depends = self
             .requires_dist
             .iter()
-            .filter_map(|raw| tokenise_requires_dist_name(raw))
+            .filter_map(|raw| match ExtraEdge::from_pep508(raw) {
+                Some(edge) if !edge.gated_by.is_empty() => {
+                    edge.is_active(active).then(|| pep508_name(raw).to_string())
+                }
+                _ => tokenise_requires_dist_name(raw),
+            })
             .collect();
 
         let licenses = extract_license(&self);
@@ -639,6 +668,32 @@ License: Ignored
     fn classifier_lookup_returns_none_for_unknown() {
         assert_eq!(classifier_to_spdx("License :: Other/Proprietary License"), None);
         assert_eq!(classifier_to_spdx("Topic :: Software Development"), None);
+    }
+
+    /// #1163 — an extras-gated Requires-Dist is a dependency when another
+    /// installed package requests the extra, and only then.
+    #[test]
+    fn requested_extra_makes_its_requires_dist_a_dependency() {
+        let requests = "\
+Name: requests
+Version: 2.31.0
+Requires-Dist: certifi >= 2017.4.17
+Requires-Dist: PySocks!=1.5.7,>=1.5.6; extra == \"socks\"
+Requires-Dist: chardet<6,>=3.0.2; extra == \"use-chardet-on-py3\"
+";
+        let alone = make_venv_rootfs(&[("requests", "2.31.0", requests)]);
+        let out = read(alone.path(), false, &Default::default());
+        assert_eq!(out[0].depends, vec!["certifi".to_string()], "nothing requests an extra");
+
+        let httpx = "\
+Name: docker
+Version: 7.1.0
+Requires-Dist: requests[Socks] >= 2.26.0
+";
+        let both = make_venv_rootfs(&[("requests", "2.31.0", requests), ("docker", "7.1.0", httpx)]);
+        let out = read(both.path(), false, &Default::default());
+        let req = out.iter().find(|e| e.name == "requests").unwrap();
+        assert_eq!(req.depends, vec!["certifi".to_string(), "PySocks".to_string()]);
     }
 
     #[test]

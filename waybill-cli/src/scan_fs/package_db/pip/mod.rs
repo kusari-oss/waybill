@@ -81,6 +81,7 @@ use std::sync::{Arc, Mutex};
 // helper.
 
 mod dist_info;
+pub(crate) mod extras;
 mod pipfile;
 mod poetry;
 mod requirements_txt;
