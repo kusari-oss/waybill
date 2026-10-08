@@ -25,6 +25,8 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **Pants Pex lockfiles no longer turn optional extras into dependencies** (#1163). Every `requires_dists` entry became an edge, including those behind `extra == "..."`, so `attrs` depended on `myst-parser` (its `docs` extra). Optional extras join much of the Python ecosystem, and on one Pants monorepo a single package was reachable from 606 roots, mostly through edges nobody installs. An extras-gated entry is now an edge only when its extra is active: requested by the lockfile's declared requirements (`click[shell-completion]`), or by another active edge, transitively. Extra names compare under PEP 685 normalisation. Other markers (`python_version`, `sys_platform`) still yield edges, since one lock covers several platforms.
+
 - **SBOMs say whether Go build-inclusion classification ran** (#1154). The `go mod why` pass, which marks modules `not-needed`, is skipped wholesale when its `go list all` preflight fails, typically on private modules a scanner can't fetch. Every module then stays `build-inclusion: unknown`, and nothing in the document said so. Two document-level annotations, in all three formats, now record the outcome whenever the scan found a Go main module:
   - `waybill:go-mod-why` (C195): `complete`, `partial` or `skipped`;
   - `waybill:go-mod-why-reason` (C196): `disabled`, `no-toolchain`, `unresolvable-packages`, `out-of-memory`, `budget-exhausted` or `unresolved-modules`.
