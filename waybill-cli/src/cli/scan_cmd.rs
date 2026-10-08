@@ -4987,9 +4987,6 @@ pub async fn execute(
         .and_then(|s| s.nix_eval.as_ref())
         .and_then(|n| n.system.as_deref());
 
-    for c in components.iter_mut() {
-        c.name.push_str("-CORPUSGATEPROBE");
-    }
     let artifacts = ScanArtifacts {
         nix_eval_tier: nix_eval_tier_json.as_deref(),
         nix_eval_system,
