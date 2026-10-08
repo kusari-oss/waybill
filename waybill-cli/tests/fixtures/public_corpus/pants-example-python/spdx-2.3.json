@@ -41,7 +41,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep-count\",\"value\":\"73\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep-count\",\"value\":\"2\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -325,12 +325,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep\",\"value\":\"[\\\"cloudpickle\\\",\\\"cogapp\\\",\\\"coverage\\\",\\\"furo\\\",\\\"hypothesis\\\",\\\"mypy\\\",\\\"myst-parser\\\",\\\"pre-commit-uv\\\",\\\"pympler\\\",\\\"pytest-codspeed\\\",\\\"pytest-mypy-plugins\\\",\\\"pytest-xdist\\\",\\\"sphinx\\\",\\\"sphinx-notfound-page\\\",\\\"sphinxcontrib-towncrier\\\",\\\"towncrier\\\"]\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -595,12 +589,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep\",\"value\":\"[\\\"coverage\\\",\\\"pre-commit\\\",\\\"pytest-benchmark\\\",\\\"tox\\\"]\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -783,7 +771,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep\",\"value\":\"[\\\"argcomplete\\\",\\\"colorama\\\",\\\"hypothesis\\\",\\\"importlib-metadata\\\",\\\"mock\\\",\\\"nose\\\",\\\"pygments\\\",\\\"requests\\\",\\\"xmlschema\\\"]\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep\",\"value\":\"[\\\"colorama\\\",\\\"importlib-metadata\\\"]\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -872,12 +860,6 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.6\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep\",\"value\":\"[\\\"certifi\\\",\\\"flake8-2020\\\",\\\"jaraco.envs\\\",\\\"jaraco.packaging\\\",\\\"jaraco.path\\\",\\\"mock\\\",\\\"paver\\\",\\\"pip\\\",\\\"pygments-github-lexers\\\",\\\"pytest-black\\\",\\\"pytest-checkdocs\\\",\\\"pytest-cov\\\",\\\"pytest-enabler\\\",\\\"pytest-flake8\\\",\\\"pytest-mypy\\\",\\\"pytest-virtualenv\\\",\\\"pytest-xdist\\\",\\\"rst.linker\\\",\\\"sphinx\\\",\\\"sphinx-inline-tabs\\\",\\\"virtualenv\\\",\\\"wheel\\\",\\\"wincertstore\\\"]\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1197,16 +1179,6 @@
       "spdxElementId": "SPDXRef-Package-2H6CQOJKUCAKBXV2"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-SZPP2Q3S7JS3P5RM",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-BX7RRJNTEW4YZ7I2"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-SZPP2Q3S7JS3P5RM",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-Q72FCOSCIJC2P37I"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-7PGGREEYPN52BKXA",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-SZPP2Q3S7JS3P5RM"
@@ -1235,11 +1207,6 @@
       "relatedSpdxElement": "SPDXRef-Package-ZIBQF5WBZHCXASVC",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-SZPP2Q3S7JS3P5RM"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-SZPP2Q3S7JS3P5RM",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-YZ2MIPQWGEB5UZRZ"
     }
   ],
   "spdxVersion": "SPDX-2.3"
