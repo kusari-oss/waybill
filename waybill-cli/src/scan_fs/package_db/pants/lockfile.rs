@@ -19,7 +19,6 @@
 
 use std::collections::{BTreeSet, HashMap};
 use std::path::Path;
-use std::sync::OnceLock;
 
 use serde::Deserialize;
 use serde_json::json;
@@ -27,6 +26,7 @@ use waybill_common::types::hash::ContentHash;
 use waybill_common::types::purl::{encode_purl_segment, Purl};
 
 use super::resolve_classifier::classify_resolve_with_source;
+use crate::scan_fs::package_db::pip::extras::{self as pip_extras, ExtraEdge};
 use crate::scan_fs::package_db::pip::normalize_pypi_name_for_purl;
 use crate::scan_fs::package_db::PackageDbEntry;
 
@@ -331,104 +331,27 @@ fn extract_pep508_project_name(req: &str) -> String {
     req[..end].trim().to_string()
 }
 
-/// PEP 685 extra-name normalisation: lowercase, and every run of `-`, `_`
-/// or `.` becomes one `-`.
-fn normalize_extra(extra: &str) -> String {
-    let mut out = String::with_capacity(extra.len());
-    let mut in_sep = false;
-    for c in extra.trim().chars() {
-        if matches!(c, '-' | '_' | '.') {
-            if !in_sep {
-                out.push('-');
-            }
-            in_sep = true;
-        } else {
-            out.extend(c.to_lowercase());
-            in_sep = false;
-        }
-    }
-    out
-}
-
-/// The extras a PEP 508 requirement asks for: `foo[a, b]>=1` gives
-/// `{a, b}`.
-fn requested_extras(req: &str) -> BTreeSet<String> {
-    let head = req.split(';').next().unwrap_or("");
-    let Some((_, rest)) = head.split_once('[') else {
-        return BTreeSet::new();
-    };
-    let inner = rest.split(']').next().unwrap_or("");
-    inner
-        .split(',')
-        .map(normalize_extra)
-        .filter(|e| !e.is_empty())
-        .collect()
-}
-
-/// The extras a requirement's environment marker is gated on:
-/// `myst-parser; extra == "docs"` gives `{docs}`. Empty when the marker
-/// names no extra.
-fn gating_extras(req: &str) -> BTreeSet<String> {
-    static EXTRA: OnceLock<regex::Regex> = OnceLock::new();
-    let Some((_, marker)) = req.split_once(';') else {
-        return BTreeSet::new();
-    };
-    #[allow(clippy::unwrap_used)] // literal pattern
-    let re = EXTRA.get_or_init(|| regex::Regex::new(r#"extra\s*==\s*["']([^"']+)["']"#).unwrap());
-    re.captures_iter(marker)
-        .map(|c| normalize_extra(&c[1]))
-        .collect()
-}
-
-/// #1163 — whether a `requires_dists` entry is an install-time dependency,
-/// given the extras active on the package that declares it. An entry gated
-/// on `extra == "x"` is one only when `x` is active. Other markers
-/// (`python_version`, `sys_platform`) are kept: one lock covers several
-/// platforms, and the pip readers make the same choice.
-fn requirement_is_active(req: &str, active: Option<&BTreeSet<String>>) -> bool {
-    let gating = gating_extras(req);
-    gating.is_empty() || active.is_some_and(|a| !gating.is_disjoint(a))
-}
-
 /// #1163 — the extras active on each package of one locked resolve,
-/// keyed by normalised project name. An extra is active when the lockfile's
-/// declared `requirements` ask for it (`foo[bar]`), or when an active edge
-/// of another package does. Activating an extra can activate further edges,
-/// so this runs to a fixed point.
+/// keyed by normalised project name, seeded from the lockfile's declared
+/// `requirements` (`foo[bar]`). See `pip::extras`.
 pub(crate) fn active_extras(
     lock: &PexLockfile,
     resolve: &LockedResolve,
 ) -> HashMap<String, BTreeSet<String>> {
-    let mut active: HashMap<String, BTreeSet<String>> = HashMap::new();
-    let request = |active: &mut HashMap<String, BTreeSet<String>>, req: &str| -> bool {
-        let extras = requested_extras(req);
-        if extras.is_empty() {
-            return false;
-        }
-        let name = normalize_pypi_name_for_purl(&extract_pep508_project_name(req));
-        let set = active.entry(name).or_default();
-        let before = set.len();
-        set.extend(extras);
-        set.len() != before
-    };
-    for req in &lock.requirements {
-        request(&mut active, req);
-    }
-    loop {
-        let mut changed = false;
-        for locked in &resolve.locked_requirements {
-            let name = normalize_pypi_name_for_purl(&locked.project_name);
-            let own = active.get(&name).cloned();
-            for dist in &locked.requires_dists {
-                if requirement_is_active(dist, own.as_ref()) {
-                    changed |= request(&mut active, dist);
-                }
-            }
-        }
-        if !changed {
-            return active;
-        }
-    }
+    let graph = resolve
+        .locked_requirements
+        .iter()
+        .map(|r| {
+            let edges = r.requires_dists.iter().filter_map(|d| ExtraEdge::from_pep508(d)).collect();
+            (normalize_pypi_name_for_purl(&r.project_name), edges)
+        })
+        .collect();
+    let seeds = lock
+        .requirements
+        .iter()
+        .filter_map(|r| ExtraEdge::from_pep508(r))
+        .map(|e| (e.target, e.requests));
+    pip_extras::active_extras(seeds, &graph)
 }
 
 /// Convert a `LockedRequirement` from a Pex lockfile into a
@@ -635,7 +558,7 @@ pub(crate) fn locked_req_to_entry(
     let depends: Vec<String> = req
         .requires_dists
         .iter()
-        .filter(|r| requirement_is_active(r, own_extras))
+        .filter(|r| ExtraEdge::from_pep508(r).is_some_and(|e| e.is_active(own_extras)))
         .map(|r| extract_pep508_project_name(r))
         .filter(|n| !n.is_empty())
         .map(|n| normalize_pypi_name_for_purl(&n))

@@ -5,12 +5,14 @@
 //! shapes. Returns None when no `poetry.lock` exists or the file is
 //! unparseable. Called from [`super::read`] after the venv tier.
 
+use std::collections::{BTreeSet, HashMap};
 use std::path::Path;
 
 use waybill_common::types::purl::Purl;
 
 use super::super::PackageDbEntry;
-use super::build_pypi_purl_str;
+use super::extras::{self, ExtraEdge};
+use super::{build_pypi_purl_str, normalize_pypi_name_for_purl};
 
 // -----------------------------------------------------------------------
 // Tier 2: Poetry lockfile (v1 + v2)
@@ -31,15 +33,143 @@ pub(super) fn read_poetry_lock(rootfs: &Path, include_dev: bool) -> Option<Vec<P
         }
     };
     let source_path = path.to_string_lossy().into_owned();
-    Some(parse_poetry_lock(&parsed, &source_path, include_dev))
+    let seeds = project_extra_requests(&rootfs.join("pyproject.toml"), include_dev);
+    Some(parse_poetry_lock_seeded(&parsed, &source_path, include_dev, &seeds))
 }
 
-/// Parse an already-deserialised `poetry.lock` TOML document.
-/// Public-in-module for unit testing.
+/// #1163 — the extras the project itself requests of its dependencies,
+/// from the `pyproject.toml` beside `poetry.lock`, which does not record
+/// them. Reads PEP 621 `[project].dependencies` and
+/// `[tool.poetry.dependencies]`, plus dependency groups when `include_dev`.
+/// Optional dependencies of the project are skipped: they install only
+/// with the project's own extras, which `poetry install` does not select
+/// by default.
+fn project_extra_requests(pyproject: &Path, include_dev: bool) -> Vec<(String, BTreeSet<String>)> {
+    let Some(doc) = std::fs::read_to_string(pyproject)
+        .ok()
+        .and_then(|t| toml::from_str::<toml::Value>(&t).ok())
+    else {
+        return Vec::new();
+    };
+    let mut out = Vec::new();
+    let pep621 = doc.get("project").and_then(|p| p.get("dependencies")).and_then(|v| v.as_array());
+    for req in pep621.into_iter().flatten().filter_map(|v| v.as_str()) {
+        if let Some(edge) = ExtraEdge::from_pep508(req) {
+            out.push((edge.target, edge.requests));
+        }
+    }
+    let poetry = doc.get("tool").and_then(|t| t.get("poetry"));
+    let mut tables: Vec<&toml::value::Table> = Vec::new();
+    tables.extend(poetry.and_then(|p| p.get("dependencies")).and_then(|v| v.as_table()));
+    if include_dev {
+        let groups = poetry.and_then(|p| p.get("group")).and_then(|v| v.as_table());
+        for (_, group) in groups.into_iter().flatten() {
+            tables.extend(group.get("dependencies").and_then(|v| v.as_table()));
+        }
+    }
+    for table in tables {
+        for (name, spec) in table {
+            let (optional, requests) = poetry_dep_spec(spec);
+            if !optional {
+                out.push((normalize_pypi_name_for_purl(name), requests));
+            }
+        }
+    }
+    out
+}
+
+/// #1163 — a Poetry dependency value (`">=2"`, `{ version = ">=2",
+/// optional = true, extras = ["socks"] }`, or an array of such tables for
+/// per-marker constraints): whether it is optional, and the extras it
+/// requests.
+fn poetry_dep_spec(spec: &toml::Value) -> (bool, BTreeSet<String>) {
+    let tables: Vec<&toml::value::Table> = match spec {
+        toml::Value::Table(t) => vec![t],
+        toml::Value::Array(a) => a.iter().filter_map(|v| v.as_table()).collect(),
+        _ => Vec::new(),
+    };
+    let optional = tables
+        .iter()
+        .any(|t| t.get("optional").and_then(|v| v.as_bool()).unwrap_or(false));
+    let requests = extras::names(
+        tables
+            .iter()
+            .filter_map(|t| t.get("extras").and_then(|v| v.as_array()))
+            .flatten()
+            .filter_map(|v| v.as_str()),
+    );
+    (optional, requests)
+}
+
+/// #1163 — the extras active on each package of a `poetry.lock`.
+///
+/// A dependency marked `optional = true` belongs to the extras whose
+/// `[package.extras]` list names it, and is installed only when one of
+/// them is active.
+fn poetry_active_extras(
+    packages: &[toml::Value],
+    seeds: &[(String, BTreeSet<String>)],
+) -> HashMap<String, BTreeSet<String>> {
+    let mut graph: HashMap<String, Vec<ExtraEdge>> = HashMap::new();
+    for tbl in packages.iter().filter_map(|p| p.as_table()) {
+        let Some(name) = tbl.get("name").and_then(|v| v.as_str()) else {
+            continue;
+        };
+        let gates = poetry_extra_gates(tbl);
+        let edges = graph.entry(normalize_pypi_name_for_purl(name)).or_default();
+        for (dep, spec) in tbl.get("dependencies").and_then(|v| v.as_table()).into_iter().flatten() {
+            let (optional, requests) = poetry_dep_spec(spec);
+            let target = normalize_pypi_name_for_purl(dep);
+            let gated_by = if optional {
+                gates.get(&target).cloned().unwrap_or_default()
+            } else {
+                BTreeSet::new()
+            };
+            // An optional dependency no extra lists can never be installed.
+            if optional && gated_by.is_empty() {
+                continue;
+            }
+            edges.push(ExtraEdge { target, requests, gated_by });
+        }
+    }
+    extras::active_extras(seeds.iter().cloned(), &graph)
+}
+
+/// `[package.extras]` inverted: dependency name → the extras that list it.
+/// Entries look like `"PySocks (>=1.5.6,!=1.5.7)"`.
+fn poetry_extra_gates(tbl: &toml::value::Table) -> HashMap<String, BTreeSet<String>> {
+    let mut gates: HashMap<String, BTreeSet<String>> = HashMap::new();
+    for (extra, deps) in tbl.get("extras").and_then(|v| v.as_table()).into_iter().flatten() {
+        for dep in deps.as_array().into_iter().flatten().filter_map(|v| v.as_str()) {
+            let name = extras::pep508_name(dep);
+            if !name.is_empty() {
+                gates
+                    .entry(normalize_pypi_name_for_purl(name))
+                    .or_default()
+                    .insert(extras::normalize_extra(extra));
+            }
+        }
+    }
+    gates
+}
+
+/// Parse an already-deserialised `poetry.lock` TOML document, with no
+/// project-level extra requests.
+#[cfg(test)]
 pub(crate) fn parse_poetry_lock(
     root: &toml::Value,
     source_path: &str,
     include_dev: bool,
+) -> Vec<PackageDbEntry> {
+    parse_poetry_lock_seeded(root, source_path, include_dev, &[])
+}
+
+/// `seeds` are the project's own extra requests (`project_extra_requests`).
+fn parse_poetry_lock_seeded(
+    root: &toml::Value,
+    source_path: &str,
+    include_dev: bool,
+    seeds: &[(String, BTreeSet<String>)],
 ) -> Vec<PackageDbEntry> {
     let mut out = Vec::new();
 
@@ -47,6 +177,7 @@ pub(crate) fn parse_poetry_lock(
     let Some(packages) = root.get("package").and_then(|v| v.as_array()) else {
         return out;
     };
+    let active = poetry_active_extras(packages, seeds);
 
     for pkg in packages {
         let Some(tbl) = pkg.as_table() else {
@@ -102,11 +233,25 @@ pub(crate) fn parse_poetry_lock(
             continue;
         }
 
-        // Nested dependencies table — keys are the dep names.
+        // Nested dependencies table — keys are the dep names. #1163: an
+        // `optional = true` dependency is one only when an extra that
+        // lists it is active.
+        let own_active = active.get(&normalize_pypi_name_for_purl(name));
+        let gates = poetry_extra_gates(tbl);
         let depends = tbl
             .get("dependencies")
             .and_then(|v| v.as_table())
-            .map(|t| t.keys().cloned().collect::<Vec<_>>())
+            .map(|t| {
+                t.iter()
+                    .filter(|(dep, spec)| {
+                        !poetry_dep_spec(spec).0
+                            || gates
+                                .get(&normalize_pypi_name_for_purl(dep))
+                                .is_some_and(|g| own_active.is_some_and(|a| !g.is_disjoint(a)))
+                    })
+                    .map(|(dep, _)| dep.clone())
+                    .collect::<Vec<_>>()
+            })
             .unwrap_or_default();
 
         // Per-package hashes from `[[package.files]]`.
@@ -496,5 +641,57 @@ lock-version = "1.1"
         assert!(!out[0]
             .extra_annotations
             .contains_key("waybill:optional-derivation"));
+    }
+
+    /// #1163 — an `optional = true` dependency is an edge only when an
+    /// extra listing it is active, here requested by the project's own
+    /// `pyproject.toml`.
+    #[test]
+    fn optional_dependency_is_an_edge_only_when_its_extra_is_requested() {
+        let lock = r#"
+[[package]]
+name = "requests"
+version = "2.31.0"
+optional = false
+python-versions = ">=3.7"
+groups = ["main"]
+
+[package.dependencies]
+certifi = ">=2017.4.17"
+PySocks = {version = ">=1.5.6,<1.5.7 || >1.5.7", optional = true}
+chardet = {version = ">=3.0.2,<6", optional = true}
+
+[package.extras]
+socks = ["PySocks (>=1.5.6,!=1.5.7)"]
+use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
+
+[[package]]
+name = "certifi"
+version = "2024.2.2"
+optional = false
+python-versions = ">=3.6"
+groups = ["main"]
+
+[[package]]
+name = "pysocks"
+version = "1.7.1"
+optional = false
+python-versions = "*"
+groups = ["main"]
+"#;
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(dir.path().join("poetry.lock"), lock).unwrap();
+        let deps = |dir: &Path| {
+            let out = read_poetry_lock(dir, false).unwrap();
+            out.into_iter().find(|e| e.name == "requests").unwrap().depends
+        };
+        assert_eq!(deps(dir.path()), vec!["certifi".to_string()], "no pyproject, no request");
+
+        std::fs::write(
+            dir.path().join("pyproject.toml"),
+            "[tool.poetry.dependencies]\npython = \"^3.11\"\nrequests = {version = \"^2.31\", extras = [\"socks\"]}\n",
+        )
+        .unwrap();
+        assert_eq!(deps(dir.path()), vec!["PySocks".to_string(), "certifi".to_string()]);
     }
 }

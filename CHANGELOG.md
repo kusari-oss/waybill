@@ -25,6 +25,11 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **The pip readers apply the same extras rule** (#1163). An extras-gated dependency is an edge exactly when its extra is requested, as in the Pants reader. Each format failed differently:
+  - **Installed packages** (`*.dist-info/METADATA`) dropped every extras-gated `Requires-Dist`, so `requests → PySocks` was missing even when another installed package asked for `requests[socks]`. The extras one installed package requests of another are now honoured. The top-level install's own requests are not recorded in METADATA, so those are still unknown.
+  - **`uv.lock`** never turned `[package.optional-dependencies]` children into edges, even when an edge requested the extra (`{ name = "requests", extra = ["socks"] }`). Children of a requested extra are now dependencies, and are no longer classified optional.
+  - **`poetry.lock`** made every `optional = true` dependency an edge. It is now one only when an extra listing it in `[package.extras]` is requested, by another package or by the project's `pyproject.toml` (`requests = {extras = ["socks"]}`).
+
 - **Pants Pex lockfiles no longer turn optional extras into dependencies** (#1163). Every `requires_dists` entry became an edge, including those behind `extra == "..."`, so `attrs` depended on `myst-parser` (its `docs` extra). Optional extras join much of the Python ecosystem, and on one Pants monorepo a single package was reachable from 606 roots, mostly through edges nobody installs. An extras-gated entry is now an edge only when its extra is active: requested by the lockfile's declared requirements (`click[shell-completion]`), or by another active edge, transitively. Extra names compare under PEP 685 normalisation. Other markers (`python_version`, `sys_platform`) still yield edges, since one lock covers several platforms.
 
 - **SBOMs say whether Go build-inclusion classification ran** (#1154). The `go mod why` pass, which marks modules `not-needed`, is skipped wholesale when its `go list all` preflight fails, typically on private modules a scanner can't fetch. Every module then stays `build-inclusion: unknown`, and nothing in the document said so. Two document-level annotations, in all three formats, now record the outcome whenever the scan found a Go main module:

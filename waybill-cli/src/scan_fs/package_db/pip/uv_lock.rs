@@ -33,7 +33,7 @@
 //! main-module + intra-workspace dependency edges. The workspace-root
 //! component is built by [`super::super::workspace::synthesize_workspace_root`].
 
-use std::collections::HashSet;
+use std::collections::{BTreeSet, HashMap, HashSet};
 use std::path::Path;
 
 use waybill_common::types::hash::ContentHash;
@@ -41,7 +41,8 @@ use waybill_common::types::purl::{encode_purl_segment, Purl};
 
 use super::super::workspace::{synthesize_workspace_root, workspace_root_name};
 use super::super::PackageDbEntry;
-use super::build_pypi_purl_str;
+use super::extras::{self, ExtraEdge};
+use super::{build_pypi_purl_str, normalize_pypi_name_for_purl};
 
 /// Milestone 674: default PyPI registry URL. Non-default values
 /// trigger emission of the `waybill:pypi-source-url` annotation so
@@ -252,6 +253,51 @@ pub(crate) fn parse_uv_lock_bytes(
 /// Kept for existing callers (Pants FR-002 fallback + unit tests) —
 /// defaults `include_dev = true` so pre-#783 behavior is byte-identical
 /// for consumers that don't yet thread the flag.
+/// #1163 — one `uv.lock` dependency entry (`{ name = "requests",
+/// extra = ["socks"] }`) as an [`ExtraEdge`].
+fn uv_edge(dep: &toml::Value, gated_by: &BTreeSet<String>) -> Option<ExtraEdge> {
+    let t = dep.as_table()?;
+    let name = t.get("name")?.as_str()?;
+    let requests = t
+        .get("extra")
+        .and_then(|v| v.as_array())
+        .map(|a| extras::names(a.iter().filter_map(|x| x.as_str())))
+        .unwrap_or_default();
+    Some(ExtraEdge {
+        target: normalize_pypi_name_for_purl(name),
+        requests,
+        gated_by: gated_by.clone(),
+    })
+}
+
+/// #1163 — the extras active on each package of a `uv.lock`. uv records
+/// requested extras on the requesting edge, and the project itself is a
+/// package of the lock, so no outside seeds are needed. The project's own
+/// extras are active only if something in the lock asks for them: `uv
+/// sync` installs none by default.
+fn uv_active_extras(packages: &[toml::Value], include_dev: bool) -> HashMap<String, BTreeSet<String>> {
+    let none = BTreeSet::new();
+    let mut graph: HashMap<String, Vec<ExtraEdge>> = HashMap::new();
+    for tbl in packages.iter().filter_map(|p| p.as_table()) {
+        let Some(name) = tbl.get("name").and_then(|v| v.as_str()) else {
+            continue;
+        };
+        let edges = graph.entry(normalize_pypi_name_for_purl(name)).or_default();
+        let deps = tbl.get("dependencies").and_then(|v| v.as_array());
+        edges.extend(deps.into_iter().flatten().filter_map(|d| uv_edge(d, &none)));
+        if include_dev {
+            for (_, arr) in tbl.get("dev-dependencies").and_then(|v| v.as_table()).into_iter().flatten() {
+                edges.extend(arr.as_array().into_iter().flatten().filter_map(|d| uv_edge(d, &none)));
+            }
+        }
+        for (extra, arr) in tbl.get("optional-dependencies").and_then(|v| v.as_table()).into_iter().flatten() {
+            let gate = extras::names([extra.as_str()]);
+            edges.extend(arr.as_array().into_iter().flatten().filter_map(|d| uv_edge(d, &gate)));
+        }
+    }
+    extras::active_extras([], &graph)
+}
+
 pub(crate) fn parse_uv_lock(
     root: &toml::Value,
     source_path: &str,
@@ -275,6 +321,16 @@ pub(crate) fn parse_uv_lock_with_flags(
 
     let Some(packages) = root.get("package").and_then(|v| v.as_array()) else {
         return out;
+    };
+
+    // #1163 — the extras requested anywhere in the lock. A package's
+    // `[package.optional-dependencies].<extra>` children are its
+    // dependencies exactly when that extra is active.
+    let active = uv_active_extras(packages, include_dev);
+    let extra_is_active = |pkg_name: &str, extra: &str| {
+        active
+            .get(&normalize_pypi_name_for_purl(pkg_name))
+            .is_some_and(|a| a.contains(&extras::normalize_extra(extra)))
     };
 
     // Detect workspace mode by reading the root pyproject.toml's
@@ -320,8 +376,13 @@ pub(crate) fn parse_uv_lock_with_flags(
                     .collect()
             })
             .unwrap_or_default();
+        let pkg_name = tbl.get("name").and_then(|v| v.as_str()).unwrap_or("");
         if let Some(opt_table) = tbl.get("optional-dependencies").and_then(|v| v.as_table()) {
-            for (_extra_name, arr) in opt_table {
+            for (extra_name, arr) in opt_table {
+                // An active extra's children are installed, not optional.
+                if extra_is_active(pkg_name, extra_name) {
+                    continue;
+                }
                 if let Some(deps_arr) = arr.as_array() {
                     for dep in deps_arr {
                         if let Some(child_name) = dep
@@ -410,6 +471,22 @@ pub(crate) fn parse_uv_lock_with_flags(
                     .collect()
             })
             .unwrap_or_default();
+
+        // #1163 — children of an active extra are dependencies.
+        if let Some(opt_table) = tbl.get("optional-dependencies").and_then(|v| v.as_table()) {
+            for (extra_name, arr) in opt_table {
+                if !extra_is_active(name, extra_name) {
+                    continue;
+                }
+                for child in arr.as_array().into_iter().flatten() {
+                    if let Some(child_name) = child.as_table().and_then(|t| t.get("name")).and_then(|v| v.as_str()) {
+                        if !depends.iter().any(|d| d == child_name) {
+                            depends.push(child_name.to_string());
+                        }
+                    }
+                }
+            }
+        }
 
         // Issue #783 — append PEP 735 dev-group children to `depends`
         // so the parent → dev-group edges land in the graph. Dedup
@@ -1310,5 +1387,55 @@ source = { registry = "https://pypi.org/simple" }
                 entry.lifecycle_scope
             );
         }
+    }
+
+    /// #1163 — a `[package.optional-dependencies]` child is a dependency
+    /// when something in the lock requests that extra, and then it is
+    /// not classified optional. An unrequested extra's child stays an
+    /// optional component with no edge (m183).
+    #[test]
+    fn requested_extra_children_are_dependencies() {
+        let tmp = tempfile::tempdir().unwrap();
+        let src = r#"
+version = 1
+
+[[package]]
+name = "app"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [{ name = "requests", extra = ["socks"] }]
+
+[[package]]
+name = "requests"
+version = "2.31.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [{ name = "certifi" }]
+
+[package.optional-dependencies]
+socks = [{ name = "pysocks" }]
+use-chardet-on-py3 = [{ name = "chardet" }]
+
+[[package]]
+name = "certifi"
+version = "2024.2.2"
+source = { registry = "https://pypi.org/simple" }
+
+[[package]]
+name = "pysocks"
+version = "1.7.1"
+source = { registry = "https://pypi.org/simple" }
+
+[[package]]
+name = "chardet"
+version = "5.2.0"
+source = { registry = "https://pypi.org/simple" }
+"#;
+        let parsed: toml::Value = toml::from_str(src).unwrap();
+        let entries = parse_uv_lock(&parsed, "/tmp/uv.lock", tmp.path());
+        let get = |n: &str| entries.iter().find(|e| e.name == n).unwrap();
+        assert_eq!(get("requests").depends, vec!["certifi".to_string(), "pysocks".to_string()]);
+        let optional = |n: &str| get(n).extra_annotations.contains_key("waybill:optional-derivation");
+        assert!(!optional("pysocks"), "an active extra's child is installed, not optional");
+        assert!(optional("chardet"), "an unrequested extra's child stays optional");
     }
 }
