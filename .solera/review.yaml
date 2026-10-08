@@ -1,0 +1,27 @@
+# What `swansong pr review` briefs its AI reviewer with (Swansong #414). The
+# review reads this file from main, never from the change under review.
+#
+# The AI reviewer is advisory. Its findings are a claim recorded for the
+# maintainer, never a verdict, and it never signs off: its key is not in this
+# repository's gittuf approver set, so its review records findings and
+# authorizes nothing (Swansong #442). The sign-off is an approver's
+# `swansong pr approve`, a touch on a hardware-held key (approver_custody:
+# touch in branches.yaml).
+
+# The documents a change is held to, read in full.
+rules:
+  - .specify/memory/constitution.md
+  - CLAUDE.md
+  - CONTRIBUTING.md
+  - GOVERNANCE.md
+  - SECURITY.md
+  - RELEASING.md
+  - docs/development/refreshing-corpus-goldens.md
+  - docs/development/ebpf-toolchain.md
+  - docs/perf/refreshing-the-baseline.md
+# How those documents' rules are cited.
+cite_as: >-
+  constitution principles by number, like "Principle IV"; other documents by
+  their file and section
+# Nothing is checked mechanically outside the reviewer's view yet.
+checked_elsewhere: ""

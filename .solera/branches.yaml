@@ -1,0 +1,17 @@
+# What guards main, forge-neutral (#384, #414). `swansong forge plan` renders
+# it for the forge; `swansong pr merge` holds a pull request to it. The
+# baseline every adopter shares is review-gate, squash, current by tree, no
+# bypass (ADR-0052); the gates beyond review-gate are this project's own.
+branches:
+  main:
+    pull_request: required
+    gates: [review-gate, ci-ok, realistic-ok, bpf-linker pin consistency]
+    skippable: []
+    labels: {}
+    merge: [squash]
+    currency: tree
+    merge_lock: none
+    approver_custody: touch
+    bypass: none
+    deletion: deny
+    force_push: deny

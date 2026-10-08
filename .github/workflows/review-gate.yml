@@ -1,0 +1,121 @@
+# review-gate: is this pull request mergeable into its base under the
+# repository's gittuf policy? Written by `swansong repo adopt` (#416); plain
+# config. Public gittuf, git and the forge's API run here, and no Swansong
+# code does.
+#
+# The policy says a change to main needs an approver's gittuf authorization
+# of the pull request's tree. An approver signs it with `swansong pr approve`
+# (or `pr review`), which records the pull request's head as `pr/<n>` in
+# gittuf's log and pushes refs/gittuf/*.
+#
+# pull_request_target, so this file and everything it runs are main's, never
+# the pull request's (#404). It checks out main and fetches the pull
+# request's head only as git data for gittuf; nothing from the pull request is
+# checked out or run.
+#
+# The answer is a commit status named `review-gate` on the pull request's
+# head, which the branch rules require. The workflow posts it itself, so a
+# re-run after an approval (`workflow_dispatch` with the pull request's
+# number, what `swansong pr approve` triggers) lands on the same head. Fork
+# pull requests' own workflows need a maintainer's approval to run
+# (repository settings), so none posts a look-alike first.
+#
+# Actions are pinned to commit SHAs. A newer gittuf is a pin change here.
+name: review-gate
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: the pull request to judge
+        required: true
+
+permissions:
+  contents: read
+  pull-requests: read
+  statuses: write
+
+env:
+  GITTUF_VERSION: v0.16.0
+  GITTUF_SHA256: 31ca79426f8c282149df7dd39e30c215684fbd8a18e0557762f54a3ab7f71b91
+
+jobs:
+  judge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
+          # The token never lands in .git/config, where it would sit on disk
+          # while gittuf parses the pull request's untrusted objects; the
+          # fetches below pass it per command instead.
+          persist-credentials: false
+
+      - name: gittuf (pinned release binary, checksum from the release)
+        env:
+          V: ${{ env.GITTUF_VERSION }}
+          SUM: ${{ env.GITTUF_SHA256 }}
+        run: |
+          set -euo pipefail
+          curl -fsSL -o gittuf "https://github.com/gittuf/gittuf/releases/download/${V}/gittuf_${V#v}_linux_amd64"
+          echo "${SUM}  gittuf" | sha256sum -c -
+          install -m 0755 gittuf /usr/local/bin/gittuf
+          gittuf version
+
+      - name: review-gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number || inputs.pr }}
+        run: |
+          set -euo pipefail
+          case "$PR" in '' | *[!0-9]*) echo "not a pull request number: $PR"; exit 1 ;; esac
+          HEAD_SHA=$(gh api "repos/$REPO/pulls/$PR" --jq .head.sha)
+          BASE=$(gh api "repos/$REPO/pulls/$PR" --jq .base.ref)
+          report() {
+            gh api -X POST "repos/$REPO/statuses/$HEAD_SHA" -f state="$1" \
+              -f context=review-gate -f description="$(printf '%s' "$2" | cut -c1-140)" >/dev/null
+            echo "review-gate: #$PR (${HEAD_SHA:0:12}): $2" | tee -a "${GITHUB_STEP_SUMMARY:-/dev/null}"
+          }
+          # git sees the token only on the commands that fetch (a private
+          # repository needs it; a public one doesn't), and gittuf never does.
+          authed() {
+            git -c "http.${GITHUB_SERVER_URL:-https://github.com}/.extraheader=AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 | tr -d '\n')" "$@"
+          }
+          git config user.name review-gate
+          git config user.email review-gate@users.noreply.github.com
+          if ! authed ls-remote origin refs/gittuf/policy | grep -q refs/gittuf/policy; then
+            report failure "not bootstrapped: origin has no refs/gittuf/policy, so nothing governs $BASE"
+            exit 1
+          fi
+          authed fetch -q origin --force 'refs/gittuf/*:refs/gittuf/*' \
+            "refs/heads/$BASE:refs/remotes/origin/$BASE" "refs/pull/$PR/head:refs/pull/$PR/head"
+          if [ "$(git rev-parse "refs/pull/$PR/head")" != "$HEAD_SHA" ]; then
+            report error "the head moved while fetching; run again"
+            exit 1
+          fi
+          git update-ref "refs/heads/$BASE" "refs/remotes/origin/$BASE"
+          git update-ref "refs/heads/pr/$PR" "$HEAD_SHA"
+          # gittuf judges pr/<n> as its log last recorded it, at the approval,
+          # not as the ref is now: the head's tree must be the one approved.
+          recorded=$(env -u GH_TOKEN gittuf rsl log | awk -v ref="refs/heads/pr/$PR" \
+            '$1 == "Ref:" { r = $2 } $1 == "Target:" && r == ref && !found { print $2; found = 1 }')
+          if [ -z "$recorded" ]; then
+            report failure "not approved: gittuf's log has no entry for pr/$PR"
+            exit 1
+          fi
+          approved=$(git rev-parse -q --verify "$recorded^{tree}" || true)
+          if [ "$approved" != "$(git rev-parse "$HEAD_SHA^{tree}")" ]; then
+            report failure "commits landed after the approval (gittuf's log records ${recorded:0:12}); approve it again"
+            exit 1
+          fi
+          if out=$(env -u GH_TOKEN gittuf verify-mergeable --base-branch "$BASE" --feature-branch "pr/$PR" 2>&1); then
+            report success "mergeable into $BASE under the gittuf policy"
+          else
+            echo "$out"
+            report failure "not mergeable into $BASE: $(printf '%s\n' "$out" | tail -1)"
+            exit 1
+          fi
