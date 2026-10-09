@@ -25,6 +25,10 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **A missing image is reported as missing, not as an authentication failure** (#1171). Scanning a tag or digest a registry does not have sent the operator to check `~/.docker/config.json`, because every non-2xx status that followed the bearer-token handshake was reported as a credentials problem. The status now decides:
+  - **404** names the thing that is absent — `manifest not found: library/python@sha256:0000…0001 in registry-1.docker.io (404 MANIFEST_UNKNOWN)` — and says outright that credentials are not the issue. Blob and referrer fetches name their own endpoint. The registry's own OCI error code is quoted when it sends one; `registry.k8s.io` answers plain text, so a missing code is normal.
+  - **401 and 403** keep the credential guidance, which was right for them all along. Docker Hub, ghcr.io, gcr.io and quay.io all answer 401 for a repository that is absent exactly as for one that is private, so there the message cannot say which it was — and should not guess.
+
 - **The pip readers apply the same extras rule** (#1163). An extras-gated dependency is an edge exactly when its extra is requested, as in the Pants reader. Each format failed differently:
   - **Installed packages** (`*.dist-info/METADATA`) dropped every extras-gated `Requires-Dist`, so `requests → PySocks` was missing even when another installed package asked for `requests[socks]`. The extras one installed package requests of another are now honoured. The top-level install's own requests are not recorded in METADATA, so those are still unknown.
   - **`uv.lock`** never turned `[package.optional-dependencies]` children into edges, even when an edge requested the extra (`{ name = "requests", extra = ["socks"] }`). Children of a requested extra are now dependencies, and are no longer classified optional.
