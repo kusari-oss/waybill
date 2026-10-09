@@ -414,10 +414,37 @@ ecosystem = "pants+uv"
 # Observed 2026-09-04 (offline, sbomqs v2.0.6):
 #   wall=2033ms sbomqs=7.27 pkgs=271 files=59 edges=918 depth=5 flat=false
 #   waybill self-report: partial
+# Re-measured 2026-10-08 after m1163 (#1164), offline, sbomqs v2.0.6:
+#   wall=1048ms sbomqs=6.90 pkgs=281 files=59 edges=519 depth=5 flat=false
+#   nodes_with_out_edges=144   waybill self-report: partial
+#
+# `edges` drops 935 -> 519 and nodes_with_out_edges 175 -> 144. Both are the
+# intended effect of #1164: the Pex reader had turned EVERY requires_dists
+# entry into an edge, including those behind `extra == "..."`, so a package
+# depended on its own docs extra's tree. The 416 edges that went away were
+# edges that should never have existed, so the bound below is re-authored
+# rather than the scan being "fixed" back.
+#
+# Why the fix did not catch this itself: #1164 regenerated the PUBLIC-corpus
+# goldens, where pants-example-django / -python / -clojure-polyglot lose
+# 10 / 15 / 3 extras-gated edges. pants-backend-ai exists only in THIS
+# corpus, which that PR did not touch — so an edge-affecting change can be
+# fully green in one corpus and out of range in the other. Both corpora want
+# checking when edge construction changes.
+#
+# Two observations, identical, as this file's sizing rule requires:
+#   run 37724940127 @ 70dd58c1 (nightly) and 37862396179 @ a18d6c05
+#   (workflow_dispatch, --filter pants-backend-ai). Both edges=519.
+# Not measured locally on purpose: the authoring machine has sbomqs v2.1.1
+# and these numbers are only comparable within one sbomqs version.
+#
+# `pkgs` has also drifted 271 -> 281 since 2026-09-04, still inside its
+# bound; recorded here so the block states what waybill now produces.
 [targets.expect]
 pkgs      = { min = 243, max = 299 }
 files     = { min = 53, max = 65 }
-edges     = { min = 826, max = 1010 }
+# +/-10% of the observed 519, per HOW THE BOUNDS WERE SIZED above.
+edges     = { min = 467, max = 571 }
 max_depth = { min = 4, max = 9 }
 sbomqs    = { min = 6.77, max = 7.77 }
 wall_ms   = { min = 5, max = 30000 }
