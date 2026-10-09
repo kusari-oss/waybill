@@ -273,11 +273,20 @@ fn scan_node_image_emits_mixed_apk_and_npm_components() {
         "expected musl + nodejs, got {:?}",
         apk.iter().map(|c| c["name"].as_str()).collect::<Vec<_>>()
     );
+    // #1170: three, not two. `myapp` is the app's own main module at
+    // /usr/src/app/package.json. Before #1170 it was skipped from
+    // `components[]` on the assumption that a lone main module is always
+    // the document's subject — but for an `--image` scan the IMAGE is
+    // the subject, so skipping it dropped it from the document
+    // altogether. It now emits as a component like any other package.
+    let mut npm_names: Vec<&str> =
+        npm.iter().filter_map(|c| c["name"].as_str()).collect();
+    npm_names.sort_unstable();
     assert_eq!(
-        npm.len(),
-        2,
-        "expected express + safe-buffer (from node_modules walk under /usr/src/app/), got {:?}",
-        npm.iter().map(|c| c["name"].as_str()).collect::<Vec<_>>()
+        npm_names,
+        vec!["express", "myapp", "safe-buffer"],
+        "expected express + safe-buffer from the node_modules walk under \
+         /usr/src/app/, plus the app's own main module (#1170)"
     );
 
     assert!(
@@ -322,7 +331,110 @@ fn scan_image_with_mixed_deb_pypi_npm_surfaces_all_three() {
 
     assert_eq!(components_by_prefix(&sbom, "pkg:deb/").len(), 1);
     assert_eq!(components_by_prefix(&sbom, "pkg:pypi/").len(), 1);
-    assert_eq!(components_by_prefix(&sbom, "pkg:npm/").len(), 1);
+    // #1170: lodash from the node_modules walk, plus `service` — the
+    // app's own main module at /app/package.json, which was previously
+    // dropped from the document because a lone main module was assumed
+    // to be the subject. For an `--image` scan the image is.
+    let mut npm_names: Vec<&str> = components_by_prefix(&sbom, "pkg:npm/")
+        .iter()
+        .filter_map(|c| c["name"].as_str())
+        .collect();
+    npm_names.sort_unstable();
+    assert_eq!(npm_names, vec!["lodash", "service"]);
+}
+
+/// #1170 — the document must SAY the image outranked a main module.
+///
+/// The report's second complaint was silence: "The document has no
+/// `waybill:root-selection-heuristic` property, and the scan logs no
+/// root-selection warning, so nothing indicates that a heuristic chose
+/// this root." The old branch-2 fast path returned `heuristic: None`
+/// and `losers: []`, so there was nothing to emit.
+///
+/// C69 is emitted only when a heuristic fired AND something lost, which
+/// is why images with no main module at all (most `oci_*` fixtures) emit
+/// nothing and their goldens are unchanged by this fix — no displacement
+/// happened there. Here one did.
+#[test]
+fn image_subject_records_the_main_modules_it_outranked_issue_1170() {
+    let files = vec![
+        ImageFile {
+            path: "etc/os-release",
+            content: b"ID=alpine\nVERSION_ID=3.19.1\n".to_vec(),
+        },
+        ImageFile {
+            path: "usr/src/app/package.json",
+            content: br#"{"name":"waybill-fixture-app","version":"0.1.0"}"#.to_vec(),
+        },
+    ];
+    let tarball = build_synthetic_image(&files);
+    let sbom = scan_image(&tarball);
+
+    let props = sbom["metadata"]["properties"]
+        .as_array()
+        .cloned()
+        .unwrap_or_default();
+    let heuristic: Vec<&str> = props
+        .iter()
+        .filter(|p| p["name"].as_str() == Some("waybill:root-selection-heuristic"))
+        .filter_map(|p| p["value"].as_str())
+        .collect();
+
+    assert!(
+        !heuristic.is_empty(),
+        "the document must record WHY the image is the subject (#1170); \
+         properties = {:?}",
+        props
+            .iter()
+            .filter_map(|p| p["name"].as_str())
+            .collect::<Vec<_>>()
+    );
+    let joined = heuristic.join(" ");
+    assert!(
+        joined.contains("explicit-scan-target"),
+        "heuristic must name the explicit-scan-target rung; got {joined:?}"
+    );
+    assert!(
+        joined.contains("0.99"),
+        "heuristic must carry the rung's confidence; got {joined:?}"
+    );
+
+    // The displaced PURLs are NOT in this annotation: C69's envelope is
+    // `{heuristic, confidence}` for every branch. `losers` drives the
+    // FR-007 WARN instead, which is the surface branches 5-8 use too.
+    // Asserted here so "the document says why" and "the operator is told
+    // what lost" are both covered, rather than assumed.
+    let bin = env!("CARGO_BIN_EXE_waybill");
+    let out_path = tempfile::NamedTempFile::new()
+        .unwrap()
+        .path()
+        .to_path_buf();
+    let stderr = String::from_utf8_lossy(
+        &Command::new(bin)
+            .arg("--offline")
+            .arg("sbom")
+            .arg("scan")
+            .arg("--image")
+            .arg(&tarball)
+            .arg("--output")
+            .arg(&out_path)
+            .arg("--no-deep-hash")
+            .output()
+            .expect("waybill should run")
+            .stderr,
+    )
+    .to_string();
+    assert!(
+        stderr.contains("explicit-scan-target"),
+        "the FR-007 warning must name the rung; stderr tail = {:?}",
+        &stderr[stderr.len().saturating_sub(600)..]
+    );
+    assert!(
+        stderr.contains("waybill-fixture-app"),
+        "the FR-007 warning must name the displaced main module; \
+         stderr tail = {:?}",
+        &stderr[stderr.len().saturating_sub(600)..]
+    );
 }
 
 // ----------------------------------------------------------------------
@@ -369,5 +481,87 @@ fn image_scan_emits_mikebom_npm_role_property() {
     assert!(
         !tagged.is_empty(),
         "expected at least one component with waybill:npm-role=internal in --image output"
+    );
+}
+
+// ── #1170 — the image is the document's subject ─────────────────────
+//
+// `select_root`'s ladder had no notion of an image. An image reached
+// the subject only through branch 7, the last-resort
+// `SyntheticPlaceholder` at confidence 0.30, while branch 2 ("exactly
+// one main-module component") sits five rungs above it. So a single
+// package anywhere in the rootfs silently became the subject, with
+// `heuristic: None` and no losers — which is why the reporter saw no
+// `waybill:root-selection-heuristic` and no warning.
+//
+// Reported against `node:22-alpine`, whose global yarn install at
+// `/opt/yarn-v1.22.22/package.json` is the lone main module, making
+// every `node:*`-derived image ingest as `pkg:npm/yarn@1.22.22`.
+// `python:3.13-slim` looked correct only because it has no main module
+// at all, so it fell to branch 7 by accident rather than by rule.
+//
+// Reproduced here hermetically: one main module in the rootfs, no
+// network, no registry.
+
+/// The document subject (CDX `metadata.component`).
+fn subject(sbom: &serde_json::Value) -> &serde_json::Value {
+    sbom.get("metadata")
+        .and_then(|m| m.get("component"))
+        .expect("every CDX document has metadata.component")
+}
+
+#[test]
+fn image_with_one_main_module_keeps_the_image_as_subject_issue_1170() {
+    // An app package.json at the node:*-image convention, exactly as
+    // the reporter's image carries its global yarn: the ONLY main
+    // module in the rootfs, so pre-fix it won ladder branch 2.
+    let files = vec![
+        ImageFile {
+            path: "etc/os-release",
+            content: b"ID=alpine\nVERSION_ID=3.19.1\n".to_vec(),
+        },
+        ImageFile {
+            path: "lib/apk/db/installed",
+            content: apk_stanza("musl", "1.2.4_git20230717-r4").into_bytes(),
+        },
+        ImageFile {
+            path: "usr/src/app/package.json",
+            content: br#"{"name":"waybill-fixture-app","version":"0.1.0"}"#.to_vec(),
+        },
+    ];
+    let tarball = build_synthetic_image(&files);
+    let sbom = scan_image(&tarball);
+
+    let subj = subject(&sbom);
+    let purl = subj.get("purl").and_then(|p| p.as_str()).unwrap_or("");
+    let name = subj.get("name").and_then(|n| n.as_str()).unwrap_or("");
+
+    assert!(
+        !purl.starts_with("pkg:npm/"),
+        "a package inside the rootfs must not become the image's subject \
+         (#1170); got purl={purl:?} name={name:?}"
+    );
+    assert!(
+        purl.starts_with("pkg:generic/"),
+        "the image is the subject, carried as pkg:generic/<target>; \
+         got purl={purl:?} name={name:?}"
+    );
+
+    // The displaced main module must still be IN the document — this
+    // changes which component is the subject, not what is inventoried.
+    let all: Vec<&str> = sbom["components"]
+        .as_array()
+        .map(|a| {
+            a.iter()
+                .map(|c| c["purl"].as_str().or_else(|| c["name"].as_str()).unwrap_or("?"))
+                .collect()
+        })
+        .unwrap_or_default();
+    let npm = components_by_prefix(&sbom, "pkg:npm/");
+    assert!(
+        npm.iter().any(|c| c["name"].as_str() == Some("waybill-fixture-app")),
+        "the app package stays a component, just not the subject; npm={:?} ALL={:?}",
+        npm.iter().map(|c| c["name"].as_str()).collect::<Vec<_>>(),
+        all
     );
 }

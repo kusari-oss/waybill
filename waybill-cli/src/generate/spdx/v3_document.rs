@@ -588,6 +588,7 @@ pub fn build_document(
         scan.scan_target_coord,
         scan.target_name,
         "0.0.0",
+        scan.scan_target_kind,
     );
     let m158_workspace_peer_edges =
         crate::generate::graph_completeness::build_workspace_peer_edges(
@@ -1079,6 +1080,7 @@ fn pick_root_iri(
         scan.scan_target_coord,
         scan.target_name,
         "0.0.0",
+        scan.scan_target_kind,
     );
     if let crate::generate::root_selector::ResolvedRootSubject::MainModule(idx) =
         &selection.subject

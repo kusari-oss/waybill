@@ -176,6 +176,9 @@ pub async fn execute(args: GenerateArgs, offline: bool) -> anyhow::Result<()> {
     // attestation, so the context is always a build-time trace here; the
     // scan subcommand carries its own context through its own orchestrator.
     let cdx_config = CycloneDxConfig {
+        // #1170: `sbom generate` reads an attestation, not an --image
+        // target, so main-module detection is the right subject rule.
+        scan_target_kind: crate::generate::root_selector::ScanTargetKind::Path,
         include_hashes: !args.no_hashes,
         include_source_files: matches!(args.scope, SbomScope::Source),
         scan_roots: Vec::new(),

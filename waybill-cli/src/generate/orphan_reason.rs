@@ -269,6 +269,7 @@ pub fn classify_orphans_pre_emit(
     root_override: &RootComponentOverride,
     scan_target_coord: Option<&ScanTargetCoord>,
     target_name: &str,
+    target_kind: crate::generate::root_selector::ScanTargetKind,
 ) -> OrphanReasonCounts {
     // Mirror the CDX builder's target-version placeholder (`"0.0.0"`).
     // The graph-completeness pass uses `target_ref` as a fallback seed
@@ -285,6 +286,7 @@ pub fn classify_orphans_pre_emit(
         scan_target_coord,
         target_name,
         target_version,
+        target_kind,
     );
 
     // Mirror the CDX builder's target_ref derivation (`builder.rs:430`):
