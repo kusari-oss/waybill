@@ -23,6 +23,21 @@ Anyone who contributes code, documentation, or other improvements to the project
 - **Major changes**: Require discussion and consensus among maintainers
 - **Breaking changes**: Require announcement and community feedback period
 
+## How a Change Merges
+
+`main` is protected by a ruleset that requires the project's CI and a
+`review-gate` check. `review-gate` passes only when a maintainer has
+reviewed the pull request and signed an approval of its exact content with
+a hardware-held key; the approval is published in the repository's own
+refs and verified from there, so it needs no secrets and works the same
+for pull requests from forks.
+
+Contributors need nothing beyond an ordinary pull request: no commit
+signing, no tooling. A maintainer reviews, signs the approval, and merges
+with the control plane's merge command, which also records the new `main`
+in the repository's log. Pushing new commits after approval invalidates
+it, and the pull request is reviewed again. The merge button is not used.
+
 ## Becoming a Maintainer
 
 Contributors who have made significant contributions may be invited to become
