@@ -310,6 +310,15 @@ pub struct ScanArtifacts<'a> {
     /// m206 MVP. Docker + Remote scans emit nothing to preserve
     /// pre-m206 golden byte-identity.
     pub image_source: Option<&'a crate::cli::scan_cmd::ImageSource>,
+    /// #1170 — what the operator pointed waybill at. Drives the root
+    /// selector's explicit-target rung so a package inside an image's
+    /// rootfs cannot become the document's subject.
+    ///
+    /// Distinct from `image_source` above, which stays `None` for
+    /// `--image <local-archive>` because no `--image-src` dispatch
+    /// runs for a tarball. This field is `ExplicitImage` for every
+    /// `--image` form.
+    pub scan_target_kind: crate::generate::root_selector::ScanTargetKind,
     /// Milestone 072 / T010-T014: when the scan was invoked with
     /// `--bind-to-source <path>` AND the source SBOM was loaded
     /// successfully, this field carries the source SBOM's stable

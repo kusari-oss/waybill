@@ -3510,6 +3510,18 @@ pub async fn execute(
     // can be emitted (conditional per FR-005 byte-identity).
     let mut selected_image_source: Option<ImageSource> = None;
 
+    // #1170 — the operator naming `--image` IS naming the document's
+    // subject, so the root selector must not let a package found inside
+    // the rootfs displace it. Derived from `args.image` rather than from
+    // `selected_image_source` because the latter stays None for
+    // `--image <local-archive>`: no `--image-src` dispatch runs for a
+    // tarball, yet a tarball is just as explicitly named.
+    let scan_target_kind = if args.image.is_some() {
+        crate::generate::root_selector::ScanTargetKind::ExplicitImage
+    } else {
+        crate::generate::root_selector::ScanTargetKind::Path
+    };
+
     let (root_path, target_name, generation_context, auto_codename, _extracted) =
         if let Some(archive) = args.image.as_ref() {
             // `--image` accepts either an on-disk tarball OR an OCI
@@ -3777,6 +3789,7 @@ pub async fn execute(
             scan_target_coord.as_ref(),
             &target_name,
             "0.0.0",
+            scan_target_kind,
         );
         if let Some(h) = selection.heuristic {
             if !selection.losers.is_empty() {
@@ -4929,6 +4942,7 @@ pub async fn execute(
             &crate::generate::RootComponentOverride::default(),
             scan_target_coord.as_ref(),
             &target_name,
+            scan_target_kind,
         );
 
     // Build the neutral artifacts bundle once and hand it to every
@@ -5070,6 +5084,7 @@ pub async fn execute(
         // the C124 annotation. Conditional emission (podman-only)
         // preserves FR-005 byte-identity for docker/remote scans.
         image_source: selected_image_source.as_ref(),
+        scan_target_kind,
         // Milestone 072 / T010-T014: when --bind-to-source was set
         // AND the scan target is image-tier, expose the source-doc
         // identifier so each format's metadata builder can emit the

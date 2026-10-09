@@ -64,6 +64,10 @@ pub enum RootSelectionHeuristic {
     /// FR-004 — no main-module at the repo root; the longest common
     /// path prefix of main-module manifest paths matches exactly one.
     LongestCommonPrefix,
+    /// #1170 — the operator named an explicit image target
+    /// (`--image <ref|path>`), so the image IS the subject and a
+    /// package found inside its rootfs does not displace it.
+    ExplicitScanTarget,
     /// Fallback to the existing Maven JAR-walker `scan_target_coord`.
     MavenScanTargetCoord,
     /// Fallback to `pkg:generic/<target>@0.0.0`.
@@ -77,6 +81,7 @@ impl RootSelectionHeuristic {
             Self::RepoRoot => "repo-root-main-module",
             Self::EcosystemPriority => "ecosystem-priority",
             Self::LongestCommonPrefix => "longest-common-prefix",
+            Self::ExplicitScanTarget => "explicit-scan-target",
             Self::MavenScanTargetCoord => "maven-scan-target-coord",
             Self::SyntheticPlaceholder => "synthetic-placeholder",
         }
@@ -86,6 +91,7 @@ impl RootSelectionHeuristic {
     /// CDX `evidence.identity.confidence` channel. Always in `[0.0, 1.0]`.
     pub fn confidence(&self) -> f64 {
         match self {
+            Self::ExplicitScanTarget => 0.99,
             Self::RepoRoot => 0.95,
             Self::LongestCommonPrefix => 0.80,
             Self::EcosystemPriority => 0.70,
@@ -115,6 +121,22 @@ pub enum ResolvedRootSubject {
     OperatorOverride,
 }
 
+/// #1170 — what the operator pointed waybill at. An explicitly named
+/// target is a statement of the document's subject, so it outranks any
+/// main module discovered inside that target.
+///
+/// `Path` is a plain `--path` scan, where main-module detection IS the
+/// right way to find the subject. `ExplicitImage` is `--image`, by ref
+/// or by local archive path.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum ScanTargetKind {
+    /// A plain `--path` scan: main-module detection IS the right way
+    /// to find the subject, so this is the default.
+    #[default]
+    Path,
+    ExplicitImage,
+}
+
 /// Output of [`select_root`].
 #[derive(Debug, Clone)]
 pub struct RootSelectionResult {
@@ -138,36 +160,47 @@ pub struct RootSelectionResult {
 ///
 /// 1. **Operator override** ([`RootComponentOverride::is_active`]) →
 ///    `OperatorOverride` subject, no heuristic annotation. FR-008.
-/// 2. **Single main-module fast path** (exactly one main-module
+/// 2. **#1170 explicit scan target** ([`ScanTargetKind::ExplicitImage`])
+///    → the target itself is the subject, heuristic =
+///    `ExplicitScanTarget` (confidence 0.99), `losers` = every
+///    main-module it outranked. Above the main-module branches because
+///    naming `--image <ref>` IS naming the subject; only an explicit
+///    `--root-name`/`--root-purl` (branch 1) beats it. Without this
+///    rung an image reached the subject only through branch 8, so one
+///    package in the rootfs silently won — `node:22-alpine` ingesting
+///    as `pkg:npm/yarn@1.22.22`.
+/// 3. **Single main-module fast path** (exactly one main-module
 ///    component) → `MainModule(idx)`, no heuristic annotation
 ///    (preserves byte-identity per FR-009). This is the
 ///    pre-milestone-127 behavior, unchanged.
-/// 3. **FR-002 repo-root tiebreaker** — exactly one main-module has
+/// 4. **FR-002 repo-root tiebreaker** — exactly one main-module has
 ///    `waybill:is-workspace-root == true` → `MainModule(idx)`,
 ///    heuristic = `RepoRoot` (confidence 0.95).
-/// 4. **FR-003 ecosystem-priority** — multiple main-modules have
+/// 5. **FR-003 ecosystem-priority** — multiple main-modules have
 ///    `is_workspace_root == true`; pick by [`ECOSYSTEM_PRIORITY`] →
 ///    heuristic = `EcosystemPriority` (confidence 0.70).
-/// 5. **FR-004 longest common path prefix** — zero main-modules have
+/// 6. **FR-004 longest common path prefix** — zero main-modules have
 ///    `is_workspace_root == true`; LCP of all main-module manifest
 ///    paths matches exactly one → heuristic = `LongestCommonPrefix`
 ///    (confidence 0.80).
-/// 6. **Maven `scan_target_coord` branch** — fall through with
+/// 7. **Maven `scan_target_coord` branch** — fall through with
 ///    `scan_target_coord.is_some()` → heuristic =
 ///    `MavenScanTargetCoord` (confidence 0.60).
-/// 7. **Synthetic placeholder** — last resort
+/// 8. **Synthetic placeholder** — last resort
 ///    `pkg:generic/<target>@0.0.0` → heuristic =
 ///    `SyntheticPlaceholder` (confidence 0.30).
 ///
-/// `losers` is populated for branches 4–7 with the PURLs of
-/// main-modules NOT picked (FR-007 warning surface). Empty for
-/// branches 1, 2, and 3.
+/// `losers` is populated for branches 5–8 with the PURLs of
+/// main-modules NOT picked (FR-007 warning surface), and for branch 2
+/// with every main-module the explicit target outranked. Empty for
+/// branches 1, 3, and 4.
 pub fn select_root(
     components: &[ResolvedComponent],
     root_override: &RootComponentOverride,
     scan_target_coord: Option<&ScanTargetCoord>,
     target_name: &str,
     target_version: &str,
+    target_kind: ScanTargetKind,
 ) -> RootSelectionResult {
     // Ladder branch 1 — operator override.
     if root_override.is_active() {
@@ -179,6 +212,8 @@ pub fn select_root(
     }
 
     // Collect main-module-tagged components (indexed for stable refs).
+    // Needed before the #1170 branch too, so the image can record what
+    // it outranked rather than silently winning.
     let main_modules: Vec<usize> = components
         .iter()
         .enumerate()
@@ -191,7 +226,29 @@ pub fn select_root(
         .map(|(i, _)| i)
         .collect();
 
-    // Ladder branch 2 — count==1 fast path (byte-identity preserved).
+    // Ladder branch 2 (#1170) — an explicitly named image is the
+    // subject. Emitted in the same `pkg:generic/<target>@<version>`
+    // shape branch 8 uses, so the bytes match what a main-module-free
+    // image already produced; what changes is that a main module can no
+    // longer displace it, and the document now records the choice.
+    if target_kind == ScanTargetKind::ExplicitImage {
+        return RootSelectionResult {
+            subject: ResolvedRootSubject::SyntheticPlaceholder {
+                name: target_name.to_string(),
+                version: target_version.to_string(),
+            },
+            heuristic: Some(RootSelectionHeuristic::ExplicitScanTarget),
+            // Every main module it outranked, matching the
+            // `losers` closure used by branches 3-7 below.
+            losers: main_modules
+                .iter()
+                .copied()
+                .map(|i| components[i].purl.clone())
+                .collect(),
+        };
+    }
+
+    // Ladder branch 3 — count==1 fast path (byte-identity preserved).
     if main_modules.len() == 1 {
         return RootSelectionResult {
             subject: ResolvedRootSubject::MainModule(main_modules[0]),
@@ -755,6 +812,7 @@ mod tests {
             None,
             "target",
             "0.0.0",
+            ScanTargetKind::Path,
         );
         assert!(matches!(result.subject, ResolvedRootSubject::MainModule(0)));
         assert!(result.heuristic.is_none());
@@ -777,6 +835,7 @@ mod tests {
             None,
             "target",
             "0.0.0",
+            ScanTargetKind::Path,
         );
         assert!(matches!(result.subject, ResolvedRootSubject::OperatorOverride));
         assert!(result.heuristic.is_none());
@@ -804,6 +863,7 @@ mod tests {
             None,
             "target",
             "0.0.0",
+            ScanTargetKind::Path,
         );
         assert!(matches!(result.subject, ResolvedRootSubject::MainModule(0)));
         assert_eq!(result.heuristic, Some(RootSelectionHeuristic::RepoRoot));
@@ -831,6 +891,7 @@ mod tests {
             None,
             "target",
             "0.0.0",
+            ScanTargetKind::Path,
         );
         assert!(matches!(result.subject, ResolvedRootSubject::MainModule(1)));
         assert_eq!(
@@ -862,6 +923,7 @@ mod tests {
             None,
             "target",
             "0.0.0",
+            ScanTargetKind::Path,
         );
         assert!(matches!(result.subject, ResolvedRootSubject::MainModule(0)));
         assert_eq!(
@@ -892,6 +954,7 @@ mod tests {
             None,
             "target",
             "0.0.0",
+            ScanTargetKind::Path,
         );
         match result.subject {
             ResolvedRootSubject::SyntheticPlaceholder { ref name, .. } => {
@@ -920,6 +983,7 @@ mod tests {
             Some(&coord),
             "target",
             "0.0.0",
+            ScanTargetKind::Path,
         );
         assert!(matches!(result.subject, ResolvedRootSubject::MavenCoord));
         assert_eq!(

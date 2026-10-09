@@ -52,6 +52,7 @@ impl SbomSerializer for CycloneDxJsonSerializer {
     ) -> anyhow::Result<Vec<EmittedArtifact>> {
         let cdx_config = CycloneDxConfig {
             include_hashes: scan.include_hashes,
+            scan_target_kind: scan.scan_target_kind,
             include_source_files: scan.include_source_files,
             scan_roots: scan.scan_roots.clone(),
             generation_context: scan.generation_context.clone(),

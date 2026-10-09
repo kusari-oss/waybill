@@ -16,6 +16,8 @@ use super::vex::build_vulnerabilities;
 pub struct CycloneDxConfig {
     /// Whether to include per-component content hashes.
     pub include_hashes: bool,
+    /// #1170: see `ScanArtifacts::scan_target_kind`.
+    pub scan_target_kind: crate::generate::root_selector::ScanTargetKind,
     /// Whether to include source file paths in evidence.
     pub include_source_files: bool,
     /// #1084: see `ScanArtifacts::scan_roots`.
@@ -43,6 +45,7 @@ impl Default for CycloneDxConfig {
     fn default() -> Self {
         Self {
             include_hashes: true,
+            scan_target_kind: crate::generate::root_selector::ScanTargetKind::Path,
             include_source_files: false,
             scan_roots: Vec::new(),
             generation_context: GenerationContext::BuildTimeTrace,
@@ -823,6 +826,7 @@ impl CycloneDxBuilder {
             scan_target_coord,
             target_name,
             "0.0.0",
+            self.config.scan_target_kind,
         );
 
         // FR-002 workspace-peer linkage: for each loser Purl, emit a
@@ -921,6 +925,7 @@ impl CycloneDxBuilder {
             },
             MetadataExtras {
                 components: effective_components,
+                scan_target_kind: self.config.scan_target_kind,
                 scan_roots: &self.config.scan_roots,
                 nix_closure_summary: self.nix_closure_summary.as_ref(),
                 nixpkgs_security_summary: self.nixpkgs_security_summary.as_ref(),
@@ -1225,8 +1230,18 @@ impl CycloneDxBuilder {
                 .and_then(|v| v.as_str())
                 == Some("main-module")
         };
+        // #1170 — `main_module_count == 1` is no longer sufficient to
+        // mean "promoted". When the operator names `--image`, the image
+        // itself is the subject (root_selector ladder branch 1b), so the
+        // lone main module is NOT in `metadata.component` and must emit
+        // in `components[]` like any other package. Skipping it on count
+        // alone dropped it from the document entirely: it was neither
+        // the subject nor a sibling, and its manifest then resurfaced as
+        // an unattributed file-tier component.
+        let subject_is_a_main_module =
+            self.config.scan_target_kind != crate::generate::root_selector::ScanTargetKind::ExplicitImage;
         let is_promoted_main_module = |c: &ResolvedComponent| {
-            main_module_count == 1 && is_main_module(c)
+            subject_is_a_main_module && main_module_count == 1 && is_main_module(c)
         };
 
         // First pass: identify top-level PURLs so we can route children
@@ -2275,6 +2290,7 @@ mod tests {
     fn no_hashes_config_omits_hashes() {
         let config = CycloneDxConfig {
             include_hashes: false,
+            scan_target_kind: Default::default(),
             include_source_files: false,
             scan_roots: Vec::new(),
             generation_context: GenerationContext::BuildTimeTrace,
@@ -3008,6 +3024,7 @@ mod tests {
 
         let builder = CycloneDxBuilder::new(CycloneDxConfig {
             include_hashes: true,
+            scan_target_kind: Default::default(),
             include_source_files: false,
             scan_roots: Vec::new(),
             generation_context: GenerationContext::BuildTimeTrace,

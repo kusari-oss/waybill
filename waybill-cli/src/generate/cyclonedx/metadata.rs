@@ -64,6 +64,9 @@ pub struct MetadataSubject<'a> {
 #[derive(Default)]
 pub struct MetadataExtras<'a> {
     pub components: &'a [ResolvedComponent],
+    /// #1170: see `ScanArtifacts::scan_target_kind`. Drives the root
+    /// selector's explicit-target rung.
+    pub scan_target_kind: crate::generate::root_selector::ScanTargetKind,
     /// #1084: see `ScanArtifacts::scan_roots`.
     pub scan_roots: &'a [std::path::PathBuf],
     pub os_release_missing_fields: &'a [String],
@@ -288,6 +291,7 @@ pub fn build_metadata(
         gradle_scan_summary,
         no_binary_scan_mode,
         image_source,
+        scan_target_kind,
         compiler_pipeline,
         project_discovery_mode,
         sbom_version,
@@ -689,6 +693,7 @@ pub fn build_metadata(
         scan_target_coord,
         target_name,
         target_version,
+        scan_target_kind,
     );
     let override_active = root_override.is_active();
     let (main_module, subject_name, subject_version, synthetic_component_purl): (

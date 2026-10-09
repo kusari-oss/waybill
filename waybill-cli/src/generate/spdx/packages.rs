@@ -763,6 +763,7 @@ mod tests {
             gradle_scan_summary: None,
             no_binary_scan_mode: None,
             image_source: None,
+            scan_target_kind: Default::default(),
             scan_target_coord: None,
             generation_context: GenerationContext::FilesystemScan,
             include_dev: false,
