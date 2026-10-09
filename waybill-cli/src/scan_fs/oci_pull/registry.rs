@@ -143,7 +143,9 @@ impl RegistryClient {
         reference: &ImageReference,
     ) -> Result<ManifestOrIndex> {
         let url = manifest_url(reference, &self.tls_config);
-        let body = self.fetch_with_auth_retry(&url, MANIFEST_MEDIA_TYPES).await?;
+        let body = self
+            .fetch_with_auth_retry(&url, MANIFEST_MEDIA_TYPES, FetchTarget::Manifest)
+            .await?;
         let content_type = body.content_type;
         let bytes = body.bytes;
 
@@ -173,7 +175,9 @@ impl RegistryClient {
         reference: &ImageReference,
     ) -> Result<Vec<u8>> {
         let url = manifest_url(reference, &self.tls_config);
-        let body = self.fetch_with_auth_retry(&url, MANIFEST_MEDIA_TYPES).await?;
+        let body = self
+            .fetch_with_auth_retry(&url, MANIFEST_MEDIA_TYPES, FetchTarget::Manifest)
+            .await?;
         Ok(body.bytes)
     }
 
@@ -234,7 +238,9 @@ impl RegistryClient {
         // paid for the challenge round-trip). We prefer this over duplicating
         // fetch_with_auth_retry's ~90 lines of Bearer/Basic logic.
         drop(probe);
-        let body = self.fetch_with_auth_retry(&url, accept).await?;
+        let body = self
+            .fetch_with_auth_retry(&url, accept, FetchTarget::Referrers)
+            .await?;
         let index: ImageIndex = serde_json::from_slice(&body.bytes)
             .with_context(|| format!("parsing Referrers response at {url}"))?;
         Ok(Some(index))
@@ -261,7 +267,9 @@ impl RegistryClient {
         }
         let url = blob_url(reference, digest, &self.tls_config);
         // Blob endpoint accepts any media type; we send `*/*`.
-        let body = self.fetch_with_auth_retry(&url, &["*/*"]).await?;
+        let body = self
+            .fetch_with_auth_retry(&url, &["*/*"], FetchTarget::Blob)
+            .await?;
         verify_sha256(&body.bytes, digest)
             .with_context(|| format!("verifying blob {digest} from {url}"))?;
         if let Some(cache) = self.cache.as_ref() {
@@ -281,10 +289,15 @@ impl RegistryClient {
     /// flow) and `Basic` (direct-credentials flow, used by ECR).
     /// Returns the body bytes + the Content-Type header so the
     /// caller can dispatch.
+    ///
+    /// `target` says what the GET was asking for, so a 404 can name
+    /// the missing thing instead of being reported as a credentials
+    /// problem (#1171) — see [`classify_http_failure`].
     async fn fetch_with_auth_retry(
         &self,
         url: &str,
         accept: &[&str],
+        target: FetchTarget,
     ) -> Result<ResponseBody> {
         let accept_header = accept.join(", ");
         let first = match self
@@ -353,24 +366,25 @@ impl RegistryClient {
             if retry.status().is_success() {
                 return ResponseBody::from_response(retry).await;
             }
-            if self.credentials.is_some() {
-                bail!(
-                    "registry authentication failed for GET {url} \
-                     (got {} after auth retry). Verify credentials \
-                     in ~/.docker/config.json or your credential helper.",
-                    retry.status()
-                );
-            }
-            bail!(
-                "registry returned {} for GET {url} after anonymous \
-                 auth retry. For private registries, configure \
-                 ~/.docker/config.json (`auth` or `identitytoken` field) \
-                 or a credential helper.",
-                retry.status()
-            );
+            return Err(classify_http_failure(
+                url,
+                target,
+                retry,
+                self.credentials.is_some(),
+                AuthRetry::Attempted,
+            )
+            .await);
         }
-        // 403 / 404 / 5xx etc.
-        bail!("registry returned {status} for GET {url}.");
+        // 403 / 404 / 5xx etc. — the registry answered without ever
+        // asking us to authenticate.
+        Err(classify_http_failure(
+            url,
+            target,
+            first,
+            self.credentials.is_some(),
+            AuthRetry::NotNeeded,
+        )
+        .await)
     }
 
     /// Bearer-token fetch from the realm. Used when the registry's
@@ -639,6 +653,183 @@ fn split_host_port(hostport: &str) -> (&str, Option<u16>) {
         },
         None => (hostport, None),
     }
+}
+
+/// What a registry GET was asking for. A 404 means a different thing
+/// for each of them, so the classifier needs to be told which one it
+/// is holding (#1171).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum FetchTarget {
+    Manifest,
+    Blob,
+    Referrers,
+}
+
+/// Whether the failing response came back before or after an auth
+/// retry. Only affects wording.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum AuthRetry {
+    /// The registry challenged us, we authenticated, and it still
+    /// refused.
+    Attempted,
+    /// The registry answered without ever asking us to authenticate.
+    NotNeeded,
+}
+
+/// Turn a non-2xx registry response into an error that names what
+/// actually went wrong (#1171).
+///
+/// Before this existed, every non-2xx status that followed an auth
+/// retry was reported as a credentials failure, so a mistyped or
+/// garbage-collected digest sent the operator off to check
+/// `~/.docker/config.json`. Measured against four registries on
+/// 2026-10-09:
+///
+/// | case                          | status | OCI code           |
+/// |-------------------------------|--------|--------------------|
+/// | mistyped / collected digest   | 404    | `MANIFEST_UNKNOWN` |
+/// | tag absent from a public repo | 404    | `MANIFEST_UNKNOWN` |
+/// | private or nonexistent repo   | 401    | `UNAUTHORIZED`     |
+/// | token rejected (ghcr.io)      | 403    | `DENIED`           |
+/// | nonexistent repo (k8s mirror) | 404    | none — plain text  |
+///
+/// 401 and 403 keep the credential guidance: for those the registry
+/// is declining to say whether the repository even exists, which is
+/// deliberate (Docker Hub, ghcr.io, gcr.io and quay.io all answer 401
+/// for a repository that is absent as well as one that is private).
+/// A 404 is the opposite — the registry served us and the thing we
+/// asked for is not there.
+async fn classify_http_failure(
+    url: &str,
+    target: FetchTarget,
+    resp: reqwest::Response,
+    has_credentials: bool,
+    retry: AuthRetry,
+) -> anyhow::Error {
+    let status = resp.status();
+    // The body is diagnostic only — an unreadable one must not mask
+    // the status we already hold. A missing code is normal, not an
+    // anomaly: registry.k8s.io answers a bare `repository does not
+    // exist` in plain text.
+    let body = resp.text().await.unwrap_or_default();
+    let code = oci_error_code(&body);
+    // Two renderings: the 404 message already has the status inside
+    // parentheses, so the code sits beside it bare; the others append
+    // it as its own clause rather than growing `401 Unauthorized
+    // UNAUTHORIZED`.
+    let code_suffix = code
+        .as_deref()
+        .map(|c| format!(" {c}"))
+        .unwrap_or_default();
+    let code_paren = code
+        .as_deref()
+        .map(|c| format!(" (registry error code: {c})"))
+        .unwrap_or_default();
+    let after = match retry {
+        AuthRetry::Attempted if has_credentials => " after auth retry",
+        AuthRetry::Attempted => " after anonymous auth retry",
+        AuthRetry::NotNeeded => "",
+    };
+
+    if status.as_u16() == 404 {
+        let (host, what) = describe_request(url);
+        let (noun, hint) = match target {
+            FetchTarget::Manifest => (
+                "manifest not found",
+                "The tag or digest is wrong, or the manifest was deleted or \
+                 garbage-collected. This is not a credentials problem: a \
+                 registry withholding a private repository answers 401, not 404.",
+            ),
+            FetchTarget::Blob => (
+                "blob not found",
+                "The manifest references a blob this registry does not have — \
+                 the image is incomplete or was partially garbage-collected.",
+            ),
+            FetchTarget::Referrers => (
+                "referrers index not found",
+                "The registry does not implement the OCI Distribution Spec \
+                 v1.1 Referrers API.",
+            ),
+        };
+        return anyhow!("{noun}: {what} in {host} (404{code_suffix}). {hint}");
+    }
+
+    if matches!(status.as_u16(), 401 | 403) {
+        if has_credentials {
+            return anyhow!(
+                "registry authentication failed for GET {url} — got \
+                 {status}{after}{code_paren}. Verify credentials in \
+                 ~/.docker/config.json or your credential helper."
+            );
+        }
+        return anyhow!(
+            "registry returned {status} for GET {url}{after}{code_paren}. \
+             For private registries, configure ~/.docker/config.json \
+             (`auth` or `identitytoken` field) or a credential helper."
+        );
+    }
+
+    anyhow!("registry returned {status} for GET {url}{after}{code_paren}.")
+}
+
+/// The `code` of the first entry in an OCI distribution-spec error
+/// body (`{"errors":[{"code":"MANIFEST_UNKNOWN",…}]}`), when there is
+/// one.
+///
+/// The body is registry-controlled, so the code is admitted into our
+/// diagnostic only if it has the spec's shape — short, and ASCII
+/// alphanumerics or underscores. Anything else is dropped rather than
+/// echoed.
+fn oci_error_code(body: &str) -> Option<String> {
+    let parsed: serde_json::Value = serde_json::from_str(body).ok()?;
+    let code = parsed
+        .get("errors")?
+        .as_array()?
+        .first()?
+        .get("code")?
+        .as_str()?;
+    if code.is_empty() || code.len() > 64 {
+        return None;
+    }
+    if !code
+        .bytes()
+        .all(|b| b.is_ascii_alphanumeric() || b == b'_')
+    {
+        return None;
+    }
+    Some(code.to_string())
+}
+
+/// Split a registry URL into the host and a human reading of what was
+/// requested — `library/python@sha256:0000…` or `library/python:3.13`.
+/// Falls back to the URL itself when the path is not the expected
+/// `/v2/<repo>/<kind>/<reference>` shape.
+fn describe_request(url: &str) -> (String, String) {
+    let host = url_host_display(url);
+    let host = if host.is_empty() {
+        "the registry".to_string()
+    } else {
+        host
+    };
+    (host, describe_v2_path(url).unwrap_or_else(|| url.to_string()))
+}
+
+fn describe_v2_path(url: &str) -> Option<String> {
+    let parsed = reqwest::Url::parse(url).ok()?;
+    let path = parsed.path().to_string();
+    let rest = path.strip_prefix("/v2/")?;
+    for kind in ["/manifests/", "/blobs/", "/referrers/"] {
+        if let Some((repository, reference)) = rest.rsplit_once(kind) {
+            if repository.is_empty() || reference.is_empty() {
+                return None;
+            }
+            // A digest carries its own `<algorithm>:` separator, so it
+            // joins with `@`; a tag joins with `:`.
+            let joiner = if reference.contains(':') { '@' } else { ':' };
+            return Some(format!("{repository}{joiner}{reference}"));
+        }
+    }
+    None
 }
 
 /// Milestone 182 — classify a `reqwest` transport error into an
@@ -1185,7 +1376,7 @@ mod tests {
 
         let url = format!("http://{addr}/v2/foo/bar/manifests/latest");
         let body = client
-            .fetch_with_auth_retry(&url, &["application/json"])
+            .fetch_with_auth_retry(&url, &["application/json"], FetchTarget::Manifest)
             .await
             .unwrap();
         assert_eq!(body.bytes, br#"{"hello":"world"}"#.to_vec());
@@ -1248,7 +1439,7 @@ mod tests {
 
         let url = format!("http://{addr}/v2/foo/bar/manifests/latest");
         let err = client
-            .fetch_with_auth_retry(&url, &["application/json"])
+            .fetch_with_auth_retry(&url, &["application/json"], FetchTarget::Manifest)
             .await
             .unwrap_err()
             .to_string();
@@ -1373,5 +1564,318 @@ mod tests {
         assert_eq!(scheme_for_registry("docker.io", &cfg), "http");
         // registry-1.docker.io is the resolved endpoint → does not match, so https.
         assert_eq!(scheme_for_registry("registry-1.docker.io", &cfg), "https");
+    }
+
+    // ── #1171: a 404 is a missing thing, not a credentials problem ──
+
+    /// Serve one scripted response per inbound connection, in order,
+    /// and hand back the requests that arrived. Every response closes
+    /// its connection, so the client opens a fresh one for each step —
+    /// which is the sequencing the bearer-token flow needs (challenge,
+    /// then realm, then retry).
+    async fn serve_scripted(
+        listener: tokio::net::TcpListener,
+        responses: Vec<String>,
+    ) -> Vec<String> {
+        use tokio::io::{AsyncReadExt as _, AsyncWriteExt as _};
+        let mut seen = Vec::new();
+        for response in responses {
+            let (mut stream, _) = listener.accept().await.unwrap();
+            let mut buf = vec![0u8; 8192];
+            let mut total = 0;
+            while total < buf.len() {
+                let n = stream.read(&mut buf[total..]).await.unwrap();
+                if n == 0 {
+                    break;
+                }
+                total += n;
+                if buf[..total].windows(4).any(|w| w == b"\r\n\r\n") {
+                    break;
+                }
+            }
+            seen.push(String::from_utf8_lossy(&buf[..total]).into_owned());
+            stream.write_all(response.as_bytes()).await.unwrap();
+            stream.flush().await.unwrap();
+        }
+        seen
+    }
+
+    fn http_response(status_line: &str, content_type: &str, body: &str) -> String {
+        format!(
+            "HTTP/1.1 {status_line}\r\n\
+             Content-Type: {content_type}\r\n\
+             Content-Length: {}\r\n\
+             Connection: close\r\n\r\n{body}",
+            body.len()
+        )
+    }
+
+    fn bearer_challenge(addr: std::net::SocketAddr) -> String {
+        format!(
+            "HTTP/1.1 401 Unauthorized\r\n\
+             WWW-Authenticate: Bearer realm=\"http://{addr}/token\",service=\"test\"\r\n\
+             Content-Length: 0\r\n\
+             Connection: close\r\n\r\n"
+        )
+    }
+
+    /// #1171 — Docker Hub answers a mistyped or garbage-collected
+    /// digest with 404 `MANIFEST_UNKNOWN` *after* the anonymous bearer
+    /// handshake has succeeded. waybill used to report every non-2xx
+    /// status on that path as a credentials failure, sending the
+    /// operator to `~/.docker/config.json` over a wrong reference.
+    ///
+    /// Credentials are present here on purpose: that is the arm the
+    /// reporter hit, and the arm whose text said "registry
+    /// authentication failed".
+    #[tokio::test]
+    async fn manifest_404_after_auth_retry_reads_as_not_found_issue_1171() {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let addr = listener.local_addr().unwrap();
+        let server = tokio::spawn(serve_scripted(
+            listener,
+            vec![
+                bearer_challenge(addr),
+                http_response("200 OK", "application/json", r#"{"token":"anon"}"#),
+                http_response(
+                    "404 Not Found",
+                    "application/json",
+                    r#"{"errors":[{"code":"MANIFEST_UNKNOWN","message":"manifest unknown"}]}"#,
+                ),
+            ],
+        ));
+
+        let client = RegistryClient {
+            http: reqwest::Client::new(),
+            credentials: Some(Credential {
+                username: "someone".to_string(),
+                secret: "a-secret".to_string(),
+            }),
+            cache: None,
+            tls_config: RegistryTlsConfig::default(),
+        };
+        let digest = format!("sha256:{}1", "0".repeat(63));
+        let url = format!("http://{addr}/v2/library/python/manifests/{digest}");
+        let err = client
+            .fetch_with_auth_retry(&url, MANIFEST_MEDIA_TYPES, FetchTarget::Manifest)
+            .await
+            .unwrap_err()
+            .to_string();
+
+        assert!(
+            err.contains("manifest not found"),
+            "a 404 must name the missing manifest; got: {err}"
+        );
+        assert!(
+            err.contains(&format!("library/python@{digest}")),
+            "the message must name what was asked for; got: {err}"
+        );
+        assert!(
+            err.contains("MANIFEST_UNKNOWN"),
+            "the registry's own error code belongs in the message; got: {err}"
+        );
+        // The defect itself: the wrong trail.
+        let lower = err.to_lowercase();
+        assert!(
+            !lower.contains("authentication failed"),
+            "a 404 is not an authentication failure; got: {err}"
+        );
+        assert!(
+            !lower.contains("config.json"),
+            "a 404 must not send the operator to check credentials; got: {err}"
+        );
+        assert!(
+            err.contains("not a credentials problem"),
+            "the message should say outright that credentials are not the \
+             issue — that wrong trail is what was reported; got: {err}"
+        );
+
+        // Control: the request really did travel the auth-retry path,
+        // rather than short-circuiting somewhere earlier and reaching
+        // the same message by accident.
+        let seen = server.await.unwrap();
+        assert_eq!(seen.len(), 3, "expected challenge, realm, retry: {seen:?}");
+        assert!(
+            seen[2].contains("Authorization: Bearer anon")
+                || seen[2].contains("authorization: Bearer anon"),
+            "the retry must carry the token it fetched; got:\n{}",
+            seen[2]
+        );
+    }
+
+    /// The counterpart that keeps the fix honest: a 401 that survives
+    /// the auth retry really is about credentials, and must keep
+    /// saying so. Every registry measured for #1171 — Docker Hub,
+    /// ghcr.io, gcr.io, quay.io — answers 401 for a repository that is
+    /// absent just as it does for one that is private, so "not found"
+    /// would be a guess there. This fails if the 404 handling is ever
+    /// widened into "any failure after a retry is a missing image".
+    #[tokio::test]
+    async fn persistent_401_after_auth_retry_still_points_at_credentials_issue_1171() {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let addr = listener.local_addr().unwrap();
+        let server = tokio::spawn(serve_scripted(
+            listener,
+            vec![
+                bearer_challenge(addr),
+                http_response("200 OK", "application/json", r#"{"token":"anon"}"#),
+                http_response(
+                    "401 Unauthorized",
+                    "application/json",
+                    r#"{"errors":[{"code":"UNAUTHORIZED","message":"authentication required"}]}"#,
+                ),
+            ],
+        ));
+
+        let client = RegistryClient {
+            http: reqwest::Client::new(),
+            credentials: None,
+            cache: None,
+            tls_config: RegistryTlsConfig::default(),
+        };
+        let url = format!("http://{addr}/v2/private/thing/manifests/latest");
+        let err = client
+            .fetch_with_auth_retry(&url, MANIFEST_MEDIA_TYPES, FetchTarget::Manifest)
+            .await
+            .unwrap_err()
+            .to_string();
+
+        assert!(
+            err.contains("config.json"),
+            "a persistent 401 must still guide the operator to credentials; got: {err}"
+        );
+        assert!(
+            !err.contains("manifest not found"),
+            "a 401 does not tell us whether the manifest exists; got: {err}"
+        );
+        assert!(
+            err.contains("UNAUTHORIZED"),
+            "the registry's error code belongs in the message; got: {err}"
+        );
+        let seen = server.await.unwrap();
+        assert_eq!(seen.len(), 3, "expected challenge, realm, retry: {seen:?}");
+    }
+
+    /// A blob 404 names the blob, not the manifest — the same status
+    /// means a different missing thing per endpoint.
+    #[tokio::test]
+    async fn blob_404_reads_as_a_missing_blob_issue_1171() {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let addr = listener.local_addr().unwrap();
+        let server = tokio::spawn(serve_scripted(
+            listener,
+            vec![http_response(
+                "404 Not Found",
+                "application/json",
+                r#"{"errors":[{"code":"BLOB_UNKNOWN","message":"blob unknown"}]}"#,
+            )],
+        ));
+
+        let client = RegistryClient {
+            http: reqwest::Client::new(),
+            credentials: None,
+            cache: None,
+            tls_config: RegistryTlsConfig::default(),
+        };
+        let digest = format!("sha256:{}2", "0".repeat(63));
+        let url = format!("http://{addr}/v2/library/python/blobs/{digest}");
+        let err = client
+            .fetch_with_auth_retry(&url, &["*/*"], FetchTarget::Blob)
+            .await
+            .unwrap_err()
+            .to_string();
+        assert!(
+            err.contains("blob not found") && err.contains("BLOB_UNKNOWN"),
+            "expected a blob-specific not-found message; got: {err}"
+        );
+        server.await.unwrap();
+    }
+
+    #[test]
+    fn oci_error_code_reads_the_spec_shape() {
+        assert_eq!(
+            oci_error_code(r#"{"errors":[{"code":"MANIFEST_UNKNOWN","message":"x"}]}"#),
+            Some("MANIFEST_UNKNOWN".to_string())
+        );
+        // registry.k8s.io answers a bare plain-text body — a missing
+        // code is normal, not an anomaly.
+        assert_eq!(oci_error_code("repository does not exist"), None);
+        assert_eq!(oci_error_code(""), None);
+        assert_eq!(oci_error_code(r#"{"errors":[]}"#), None);
+        assert_eq!(oci_error_code(r#"{"errors":[{"message":"no code"}]}"#), None);
+        assert_eq!(oci_error_code(r#"{"errors":[{"code":""}]}"#), None);
+    }
+
+    #[test]
+    fn oci_error_code_drops_a_code_that_is_not_a_code() {
+        // The body is registry-controlled, so anything outside the
+        // spec's shape is dropped rather than echoed into our
+        // diagnostic.
+        assert_eq!(
+            oci_error_code(r#"{"errors":[{"code":"run `rm -rf /` to fix"}]}"#),
+            None
+        );
+        assert_eq!(
+            oci_error_code(r#"{"errors":[{"code":"NEW\nLINE"}]}"#),
+            None
+        );
+        let long = "A".repeat(65);
+        assert_eq!(
+            oci_error_code(&format!(r#"{{"errors":[{{"code":"{long}"}}]}}"#)),
+            None
+        );
+        let at_limit = "A".repeat(64);
+        assert_eq!(
+            oci_error_code(&format!(r#"{{"errors":[{{"code":"{at_limit}"}}]}}"#)),
+            Some(at_limit)
+        );
+    }
+
+    #[test]
+    fn describe_v2_path_reads_repository_and_reference() {
+        assert_eq!(
+            describe_v2_path(
+                "https://registry-1.docker.io/v2/library/python/manifests/sha256:abc123"
+            )
+            .as_deref(),
+            Some("library/python@sha256:abc123")
+        );
+        assert_eq!(
+            describe_v2_path("https://ghcr.io/v2/owner/repo/manifests/1.2.3").as_deref(),
+            Some("owner/repo:1.2.3")
+        );
+        assert_eq!(
+            describe_v2_path("https://ghcr.io/v2/owner/repo/blobs/sha256:def").as_deref(),
+            Some("owner/repo@sha256:def")
+        );
+        assert_eq!(
+            describe_v2_path("https://ghcr.io/v2/owner/repo/referrers/sha256:fed").as_deref(),
+            Some("owner/repo@sha256:fed")
+        );
+        // A repository path containing `manifests` splits on the last
+        // occurrence, not the first.
+        assert_eq!(
+            describe_v2_path("https://ghcr.io/v2/org/manifests/repo/manifests/tag").as_deref(),
+            Some("org/manifests/repo:tag")
+        );
+        // Shapes we do not recognise fall back to the URL itself.
+        assert_eq!(describe_v2_path("https://example.com/healthz"), None);
+        assert_eq!(describe_v2_path("https://example.com/v2/"), None);
+        assert_eq!(
+            describe_v2_path("https://example.com/v2/repo/manifests/"),
+            None
+        );
+        assert_eq!(describe_v2_path("not a url"), None);
+    }
+
+    #[test]
+    fn describe_request_falls_back_to_the_url() {
+        let (host, what) = describe_request("https://example.com/v2/foo/bar/manifests/latest");
+        assert_eq!(host, "example.com");
+        assert_eq!(what, "foo/bar:latest");
+
+        let (host, what) = describe_request("https://example.com:5000/healthz");
+        assert_eq!(host, "example.com:5000");
+        assert_eq!(what, "https://example.com:5000/healthz");
     }
 }
