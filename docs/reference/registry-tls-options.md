@@ -152,6 +152,34 @@ Error: no PEM certificates found in --registry-ca-cert file `/etc/ssl/empty.pem`
        (expected one or more `-----BEGIN CERTIFICATE-----` blocks)
 ```
 
+### Case 5 — the reference is wrong (no flag fixes this)
+
+A transport flag will not help here, and the message says so. A
+registry that served you and then could not find what you asked for
+answers 404:
+
+```
+Error: manifest not found: library/python@sha256:0000…0001 in registry-1.docker.io (404 MANIFEST_UNKNOWN).
+       The tag or digest is wrong, or the manifest was deleted or garbage-collected.
+       This is not a credentials problem: a registry withholding a private
+       repository answers 401, not 404.
+```
+
+A registry that is *declining to tell you* whether the repository
+exists answers 401 instead — and for that one, credentials are the
+fix. Docker Hub, ghcr.io, gcr.io and quay.io all answer 401 for a
+repository that is absent exactly as they do for one that is private,
+so this message cannot say which it was:
+
+```
+Error: registry returned 401 Unauthorized for GET https://registry-1.docker.io/v2/team/private/manifests/latest after anonymous auth retry (registry error code: UNAUTHORIZED).
+       For private registries, configure ~/.docker/config.json (`auth` or `identitytoken` field) or a credential helper.
+```
+
+Telling the two apart is the whole point of reading the status: before
+#1171, both came back as an authentication failure, which sent people
+to check credentials over a mistyped digest.
+
 ## Precedence rules
 
 - `--insecure-registry <host>` matches on the **user-facing** registry

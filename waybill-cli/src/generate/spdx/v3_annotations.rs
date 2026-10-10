@@ -773,6 +773,7 @@ fn push_document_fields(
             scan.scan_target_coord,
             scan.target_name,
             "0.0.0",
+            scan.scan_target_kind,
         );
         if let Some(h) = selection.heuristic {
             if !selection.losers.is_empty() {

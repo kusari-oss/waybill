@@ -76,13 +76,37 @@ Before opening any PR, **both** of these MUST exit clean:
 
 This single script runs, in order:
 
-1. `cargo +stable clippy --workspace --all-targets -- -D warnings` — zero
+1. `python3 scripts/check-homoglyphs.py` — no confusable characters.
+2. `bash scripts/check-walker-audit.sh` — the walker allow-list is current
+   (see [Walker-audit CI gate](#walker-audit-ci-gate) below).
+3. `cargo +stable clippy --workspace --all-targets -- -D warnings` — zero
    clippy warnings (warnings become errors).
-2. `cargo +stable test --workspace` — every test suite must report
-   `N passed; 0 failed`.
+4. `cargo +stable test --workspace --no-fail-fast` — every test suite must
+   report `N passed; 0 failed`.
 
-Both gates are what CI enforces; running the script locally first saves
-a CI round-trip.
+These are what CI enforces; running the script locally first saves a CI
+round-trip.
+
+**Read the script's own exit status, and a positive signal in its
+output.** A shell pipeline reports its *last* command's status, so
+`./scripts/pre-pr.sh | grep ...` tells you about `grep`. Redirect and
+check `$?`:
+
+```bash
+./scripts/pre-pr.sh > /tmp/prepr.log 2>&1; echo "EXIT=$?"
+```
+
+Then look for `>>> all pre-PR checks passed.` and the per-target
+`test result: ok. N passed; 0 failed` lines. The absence of the word
+FAILED proves nothing: a run that died in clippy before compiling a
+single test also contains no failures, and its summary reads
+`targets= passed= failed=` — which looks like a formatting quirk rather
+than the alarm it is. The general form: **a check that did not run looks
+identical to a check that passed.**
+
+`--no-fail-fast` is load-bearing. Without it cargo stops after the first
+failing test *binary*, so a clean-looking tail can hide failures in the
+targets that never ran.
 
 For PRs that touch SBOM emission or output formats, also opt-in to the
 SPDX-3 conformance validator:
@@ -95,6 +119,44 @@ This requires the JPEWdev `spdx3-validate` Python package pinned in
 `.venv/spdx3-validate/`. If the validator isn't installed locally,
 the gate skips silently — but CI runs it strictly on release branches,
 so test locally before release-bump PRs.
+
+## Review + merge (`review-gate`)
+
+`main` requires four checks — `ci-ok`, `realistic-ok`, `bpf-linker pin
+consistency` and `review-gate`. The first three are the ones your own work
+has to satisfy. `review-gate` passes only when a maintainer has reviewed
+the pull request and signed an approval of its exact content with a
+hardware-held key. The approval is published in the repository's own refs
+and verified from there, so it needs no secrets and behaves the same for
+pull requests from forks.
+
+**Contributors need nothing for it.** No commit signing, no tooling, no
+account setup — an ordinary pull request is enough. Until a maintainer
+approves, the check sits red with:
+
+```
+review-gate — not approved: gittuf's log has no entry for pr/<N>
+```
+
+That is the gate working, not a problem with your branch, and there is
+nothing for you to fix. Make sure the other checks are green and say so
+in the PR; a maintainer takes it from there.
+
+Two consequences worth knowing:
+
+- **Pushing after approval invalidates it.** The approval covers one exact
+  tree. New commits — including a merge of `main` — mean it is reviewed
+  again, so get the branch into its final shape before asking.
+- **The branch must be current with `main`.** An approval of a tree that
+  `main` has since moved past would not be an approval of what lands, so
+  the gate asks you to merge `main` in and push first.
+
+Maintainers merge with the control plane's merge command, which records
+the new `main` in the repository's log. The GitHub merge button is not
+used.
+
+See [`GOVERNANCE.md`](GOVERNANCE.md#how-a-change-merges) for the policy
+this implements.
 
 ## Walker-audit CI gate
 

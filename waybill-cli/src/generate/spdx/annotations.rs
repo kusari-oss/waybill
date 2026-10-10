@@ -763,6 +763,7 @@ pub fn annotate_document(
             artifacts.scan_target_coord,
             artifacts.target_name,
             "0.0.0",
+            artifacts.scan_target_kind,
         );
         if let Some(h) = selection.heuristic {
             if !selection.losers.is_empty() {
