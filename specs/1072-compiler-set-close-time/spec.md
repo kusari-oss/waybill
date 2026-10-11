@@ -248,6 +248,12 @@ written.
 - A rename target that collides with an existing write-set entry: the
   surviving entry keeps the final path, and `renamed_from` accumulates both
   histories in observed order.
+- Two write-set paths sharing one inode (cargo hard-links `deps/<bin>-<hash>`
+  to its user-facing name on Linux): both are hashed independently and
+  legitimately report the same `sha256_at_close`. Identical hashes across
+  entries are not an error and MUST NOT be deduplicated.
+- One path in two invocations' write sets: not specified for, because it
+  does not occur — see Assumptions and `measurements/findings.md` Q1.
 - A path whose size exceeds the remaining budget: skipped, counted in
   `paths_skipped`, `truncated` set, and the pass continues to the next path
   — so one oversized artifact early in sort order does not blind the pass to
@@ -280,6 +286,9 @@ written.
   serialization when empty.
 - **FR-009**: A rename observed within an invocation MUST yield exactly one
   write-set entry, keyed by the final observed path.
+- **FR-009a**: `renamed_from` MUST record renames only. A hard link is not a
+  rename — both names survive and share an inode — and MUST NOT populate
+  `renamed_from`.
 - **FR-010**: The close-time pass MUST run after the compiler aggregator has
   finalized and before the attestation is built, and MUST NOT mutate the
   observation tier.
@@ -373,6 +382,22 @@ written.
   `--features ebpf-tracing`, which is off by default everywhere.
 - The existing `hasher.rs` streaming hasher and its per-file `max_bytes` cap
   are reused unchanged; this feature adds no new hashing primitive.
+- **A path is written by at most one compiler invocation per trace**, so a
+  single close-time hash is never attributed to an invocation that did not
+  produce the bytes. Measured, not assumed: no real path in milestone 1070's
+  kernel strace is opened for writing by more than one pid, and the detector
+  was proven to fire on an injected second writer. It is also structural —
+  cargo embeds a metadata hash in every output filename and compiles each
+  crate once per build, so two invocations sharing a final path would
+  require two compilations sharing a metadata hash. Evidence and the one
+  unmeasured route (build scripts writing a shared `OUT_DIR` path, which are
+  not compiler invocations) are in `measurements/findings.md` Q1.
+- Compiler outputs reach their final names by three measured mechanisms:
+  binaries are opened directly with `O_TRUNC`; libraries are renamed into
+  place from a randomized temporary, their final path never opened for
+  writing; and cargo materialises the user-facing `release/<bin>` afterwards
+  by hard link on Linux and by copy on macOS. `two_binaries_diverge`
+  exercises the first two, which is why it is the fixture for US1 and US3.
 - Verification requires a real kernel. macOS `cargo check` cannot see
   `#[cfg(all(target_os = "linux", feature = "ebpf-tracing"))]` code, so
   every acceptance scenario above is exercised in a Linux container.
@@ -384,5 +409,11 @@ written.
 - Labelling the existing unlabelled close-time hash on `file_access`
   (`scan.rs:608`). Same defect class, separate issue.
 - Any form of read-time or drain-time hashing.
+- The missing user-facing artifact. `release/<bin>` — the file an operator
+  actually ships — appears in no compiler write set, because cargo creates
+  it after compilation and no compiler ever wrote it
+  (`measurements/findings.md` Q2). A genuine provenance gap, found while
+  writing this spec, but a different defect from #1144; it needs its own
+  issue.
 - Changes to `network_trace`, `trace_integrity`'s existing fields, or the
   `build-trace` predicate's URI.
