@@ -270,8 +270,13 @@ written.
   and close: hashed only if it is a regular file; otherwise
   `existed_at_close` reflects the stat and the path is counted in
   `paths_skipped`.
-- A file larger than `hasher.rs`'s per-file `max_bytes`: hashed to the cap
-  exactly as the existing `file_access` pass does, and counted as hashed.
+- A file larger than `hasher.rs`'s per-file `max_bytes`: **skipped**, with
+  `existed_at_close: true`, no hash, and counted in `paths_skipped`.
+  Corrected at plan time: `sha256_file_hex` *refuses* an oversized file
+  (`Err(InvalidData)`) rather than hashing to the cap, and the existing
+  `file_access` pass logs at debug and moves on
+  (`waybill-cli/src/cli/scan.rs:871`, `hasher.rs:49-61`). The earlier
+  wording asserted the opposite of both halves.
 - A rename whose source was never observed as a write (the compiler renamed
   a file it did not create in this invocation): the destination gets an
   entry; `renamed_from` records the observed source.
