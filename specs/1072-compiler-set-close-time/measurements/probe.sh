@@ -70,3 +70,49 @@ shasum -a 256 safe-only deps/safe_only-* 2>/dev/null \
 
 echo "## Probe 3: did rustc's temporaries survive?"
 ls -d deps/rmeta* deps/*.temp-archive 2>/dev/null || echo "none (expected: #1144's case)"
+
+# --- Probe 4: paths READ by more than one compiler invocation -------
+# The mirror of probe 1. Probe 1 asked whether two invocations can WRITE
+# one path (no). This asks whether two can READ one path (yes, routinely),
+# which is what makes a distinct-path count differ from an entry count and
+# why the budget must not be charged per entry.
+#
+# strace -f lists threads as separate pids, so a reader pid must be walked
+# back up the clone() edges to the rustc that owns it -- otherwise one
+# rustc's worker threads look like several invocations.
+echo "## Probe 4a: rustc invocations in the trace"
+rustc_pids=$(grep -E '^[0-9]+ +execve\("[^"]*/rustc"' "$M1070/fixture.strace" \
+  | sed -E 's/^([0-9]+).*/\1/' | sort -un)
+echo "rustc pids: $(echo "$rustc_pids" | tr '\n' ' ')"
+
+# parent[child]=parent, from every clone/vfork return
+parents() {
+  grep -E '^[0-9]+ +(clone3?|vfork)\(.*\) += [0-9]+$' "$M1070/fixture.strace" \
+    | sed -E 's/^([0-9]+) +(clone3?|vfork)\(.*= ([0-9]+)$/\3 \1/' | sort -u
+}
+
+echo "## Probe 4b: owning invocation of each reader of one shared .rlib"
+# libsafe is depended on by BOTH fixture binaries, so its .rlib is the
+# natural candidate for a path read by more than one invocation.
+target=$(grep -oE '[^"]*liblibsafe-[0-9a-f]+\.rlib' "$M1070/fixture.strace" | head -1)
+echo "path: $target"
+readers=$(grep -E 'openat2?\(' "$M1070/fixture.strace" \
+  | grep -vE 'O_(WRONLY|RDWR)' | grep -F "\"$target\"" \
+  | sed -E 's/^([0-9]+).*/\1/' | sort -un)
+parents > /tmp/m1072-parents.txt
+for r in $readers; do
+  cur=$r; hops=0
+  # walk up until we hit a rustc pid or run out of parents
+  while [ $hops -lt 20 ]; do
+    if echo "$rustc_pids" | grep -qx "$cur"; then echo "reader $r -> rustc $cur"; break; fi
+    next=$(awk -v c="$cur" '$1==c {print $2; exit}' /tmp/m1072-parents.txt)
+    [ -n "$next" ] || { echo "reader $r -> (not under rustc; pid $cur)"; break; }
+    cur=$next; hops=$((hops+1))
+  done
+done
+
+echo "## Probe 4c: how many paths have more than one reader at all"
+grep -E 'openat2?\(' "$M1070/fixture.strace" | grep -vE 'O_(WRONLY|RDWR)' \
+  | sed -E 's/^([0-9]+) +openat2?\((AT_FDCWD|[0-9]+)<?[^,]*>?, "([^"]+)".*/\1\t\3/' \
+  | grep -E '^[0-9]+	' | sort -u \
+  | awk -F'\t' '{c[$2]++} END {n=0; for (p in c) if (c[p]>1) n++; print n " paths"}'

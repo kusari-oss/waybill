@@ -1,10 +1,13 @@
 # Milestone 1072 measurements (#1144)
 
-Run `./probe.sh` to reproduce. Probe 1 reads milestone 1070's committed
-strace of a real kernel trace (Colima aarch64, Ubuntu 24.04, kernel
-6.8.0-136); probes 2 and 3 run on any host, because inode identity and
-file survival need no eBPF. Output below captured 2026-10-11 on macOS
-(darwin 25.5.0) against `two_binaries_diverge` (2 lib crates, 2 bins).
+Run `./probe.sh` to reproduce. Probes 1 and 4 read milestone 1070's
+committed strace of a real kernel trace (Colima aarch64, Ubuntu 24.04,
+kernel 6.8.0-136); probes 2 and 3 run on any host, because inode identity
+and file survival need no eBPF. Probe numbering follows the order the
+probes were written, not the questions: probe 1 → Q1, probes 2–3 → Q2,
+probe 4 → Q3. Output below captured 2026-10-11 (probes 1–3) and
+2026-10-12 (probe 4) on macOS (darwin 25.5.0) against
+`two_binaries_diverge` (2 lib crates, 2 bins).
 
 ## Q1. Can one path appear in two invocations' write sets?
 
@@ -61,7 +64,43 @@ Probe 3 confirms the rustc temporaries are gone by trace end
 (`deps/rmeta*` does not exist), which is exactly the case #1144
 reports as falsely `survived_trace_window: true`.
 
-## Q3. Consequences for the spec
+## Q3. Can one path appear in two invocations' *read* sets?
+
+**Yes, routinely.** This is the mirror of Q1 and the opposite answer.
+
+Probe 4 walks each reader pid up the `clone()` edges to the `rustc` that
+owns it, because `strace -f` lists worker threads as separate pids — without
+that walk, one rustc's threads look like several invocations.
+
+`deps/liblibsafe-2d5f1ecd358a29fb.rlib` is read under **three distinct
+rustc invocations**:
+
+| reader pid | owning invocation |
+|-----------|-------------------|
+| 157 | rustc 154 |
+| 177 | rustc 174 |
+| 180 | rustc 175 |
+| 152 | cargo (pid 139), not a compiler invocation |
+| 196, 197 | `/usr/bin/ld`, linker children |
+
+The 7 rustc invocations in the trace are pids 142 144 149 154 155 174 175.
+Both fixture binaries declare `libsafe = { path = ... }`, so its `.rlib` is
+read by both of their compilations plus the lib's own, which is exactly the
+shape expected. Across the whole trace, **213 paths have more than one
+reader.**
+
+**Consequence.** The close-time pass must count and charge per *distinct
+path*, not per set entry. Charging per entry would bill one `.rlib`'s bytes
+three times against the budget, and would let two entries for one path
+disagree about its close-time state if the file changed between their
+checks. Spec: FR-011, FR-011a, FR-013, SC-010.
+
+Note the asymmetry this creates with Q1: a write path has exactly one
+producing invocation, so `sha256_at_close` is attributable; a read path has
+many consuming invocations, so the same hash is legitimately shared by all
+of their entries.
+
+## Consequences for the spec
 
 1. No multi-writer FR. Recorded as an assumption with this evidence.
 2. A hard link is **not** a rename: both names survive and share an
@@ -71,6 +110,8 @@ reports as falsely `survived_trace_window: true`.
 4. `release/<bin>` — the artifact an operator ships — appears in **no**
    compiler write set, because no compiler wrote it. A real provenance
    gap, but outside #1144; needs its own issue.
+5. Hash and stat **once per distinct path** per trace, with the coverage
+   counts over distinct paths (Q3).
 
 ## Not measured
 

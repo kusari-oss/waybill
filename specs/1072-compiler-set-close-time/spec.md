@@ -95,6 +95,16 @@ spec does not change `file_access`.
   guarantee" is structured disclosure; discarding a complete observation
   tier because an advisory tier was partial loses real data.
 
+### Session 2026-10-12 (spec review)
+
+- Q: Does the close-time pass count and charge per set entry or per distinct
+  path, given a dependency's `.rmeta` is read by every invocation that
+  depends on it? → A: Per distinct path. One filesystem check and one hash
+  per path per trace, every entry naming it carrying that result, and the
+  coverage counts over distinct paths. Charging per entry would bill the
+  same bytes N times against the budget and would let two entries disagree
+  about one path's close-time state.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 — A deleted intermediate is reported as deleted (Priority: P1)
@@ -249,11 +259,23 @@ written.
   surviving entry keeps the final path, and `renamed_from` accumulates both
   histories in observed order.
 - Two write-set paths sharing one inode (cargo hard-links `deps/<bin>-<hash>`
-  to its user-facing name on Linux): both are hashed independently and
-  legitimately report the same `sha256_at_close`. Identical hashes across
-  entries are not an error and MUST NOT be deduplicated.
+  to its user-facing name on Linux): these are two distinct paths, so
+  FR-011's once-per-path rule does not merge them. Both are hashed
+  independently and legitimately report the same `sha256_at_close`.
+  Identical hashes across entries are not an error and MUST NOT be
+  deduplicated.
+- One path in several invocations' read sets (the normal case — every
+  invocation that depends on a crate reads its `.rmeta`): hashed once, with
+  every entry naming it carrying that one hash, and counted once in
+  `paths_total`. This is what distinguishes a distinct-path count from an
+  entry count, and it is why the budget is not charged per entry.
+- One path in both a write set and a read set (one invocation's output read
+  by another): one check, one hash, charged once, in the write-set
+  position.
 - One path in two invocations' write sets: not specified for, because it
-  does not occur — see Assumptions and `measurements/findings.md` Q1.
+  does not occur — see Assumptions and `measurements/findings.md` Q1. Were
+  it to occur, FR-011 would give both entries the same hash rather than
+  two conflicting ones.
 - A path whose size exceeds the remaining budget: skipped, counted in
   `paths_skipped`, `truncated` set, and the pass continues to the next path
   — so one oversized artifact early in sort order does not blind the pass to
@@ -292,9 +314,16 @@ written.
 - **FR-010**: The close-time pass MUST run after the compiler aggregator has
   finalized and before the attestation is built, and MUST NOT mutate the
   observation tier.
-- **FR-011**: The close-time pass MUST be bounded by a cumulative-bytes
-  budget, with write-set paths processed before read-set paths and each set
-  processed in lexicographic path order.
+- **FR-011**: The close-time pass MUST operate over the union of distinct
+  paths across all invocations, performing at most one filesystem check and
+  at most one hash per distinct path per trace. Every set entry naming that
+  path MUST carry the same resulting `existed_at_close` and, when hashed,
+  the same `sha256_at_close`; two entries naming one path can therefore
+  never disagree about its close-time state.
+- **FR-011a**: The pass MUST be bounded by a cumulative-bytes budget, with
+  write-set paths processed before read-set paths and each set processed in
+  lexicographic path order. A path named by more than one entry is charged
+  to the budget once, at its first position in that order.
 - **FR-012**: A path whose size exceeds the remaining budget MUST be skipped
   and the pass MUST continue to the next path, so two runs of the same
   reproducible build under the same budget hash the same set of paths.
@@ -302,7 +331,9 @@ written.
   `paths_total`, `paths_hashed`, `paths_absent`, `paths_skipped`,
   `truncated`, and whether the budget was the default or
   operator-supplied, such that
-  `paths_hashed + paths_absent + paths_skipped == paths_total`.
+  `paths_hashed + paths_absent + paths_skipped == paths_total`. All four
+  counts MUST be over distinct paths, not over set entries: a path read by
+  N invocations counts once.
 - **FR-014**: The coverage record MUST be additive and placed last in
   `TraceIntegrity`, omitted when no compiler invocations were captured, so
   pre-m1072 attestations round-trip and stay byte-identical.
@@ -331,11 +362,11 @@ written.
   its final observed path. Observation tier: `path`, `renamed_from`.
   Close-time tier: `existed_at_close`, optional `sha256_at_close`.
 - **CompilerHashCoverage** — per-trace disclosure of what the close-time
-  pass covered: `paths_total`, `paths_hashed`, `paths_absent` (did not exist
-  at close), `paths_skipped` (existed but not hashed — unreadable, not a
-  regular file, or over budget), `truncated`, and the budget source. Lives
-  last in `TraceIntegrity`, absent when no compiler invocations were
-  captured.
+  pass covered, counted over **distinct paths** rather than set entries:
+  `paths_total`, `paths_hashed`, `paths_absent` (did not exist at close),
+  `paths_skipped` (existed but not hashed — unreadable, not a regular file,
+  or over budget), `truncated`, and the budget source. Lives last in
+  `TraceIntegrity`, absent when no compiler invocations were captured.
 
 ## Success Criteria *(mandatory)*
 
@@ -368,6 +399,13 @@ written.
 - **SC-009**: `cargo +stable clippy --workspace --all-targets` and
   `cargo +stable test --workspace --no-fail-fast` pass, and the
   `ebpf-tracing` feature-on lane passes in a Linux container.
+- **SC-010**: On a real kernel trace of `two_binaries_diverge`, every pair
+  of set entries naming one path reports the same `existed_at_close` and the
+  same `sha256_at_close`, and `paths_total` equals the number of distinct
+  paths across all read and write sets — strictly less than the number of
+  entries on this fixture, because `deps/liblibsafe-<hash>.rlib` is read
+  under three distinct rustc invocations (measured; `measurements/findings.md`
+  Q3).
 
 ## Assumptions
 
