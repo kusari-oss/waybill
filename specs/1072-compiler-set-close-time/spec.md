@@ -61,6 +61,26 @@ stream-hashed after the command finishes. That is the same defect class in a
 different field. It is out of scope here and should get its own issue; this
 spec does not change `file_access`.
 
+### Maturity, and what happens if this is wrong
+
+The tracing subsystem is experimental. `compiler_pipeline` populates only on
+Linux behind `--features ebpf-tracing`, off by default everywhere, and the
+witness attestor is explicitly pre-stable. This feature does not have to be
+right the first time.
+
+So the bar is **not** "never ship an approach we later remove" — it is
+"never remove one without recording why it did not work". If the two-tier
+shape, the cumulative-bytes budget or the once-per-path rule proves
+ineffective in practice, the finding goes in `measurements/findings.md`
+alongside the evidence that motivated it, and the spec records the reversal.
+A design that was tried and abandoned with its reasoning intact is a
+contribution; one that is quietly reverted costs the next person the same
+investigation.
+
+What this does *not* relax: a signed attestation must not contain a false
+statement (Principle IX) for however long it ships. Being experimental is a
+reason the shape may change, not a reason a field may lie in the meantime.
+
 ## Clarifications
 
 ### Session 2026-10-10

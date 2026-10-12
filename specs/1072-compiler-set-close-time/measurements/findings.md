@@ -113,6 +113,14 @@ of their entries.
 5. Hash and stat **once per distinct path** per trace, with the coverage
    counts over distinct paths (Q3).
 
+## If something here is later found wrong
+
+This file is also where negative results belong. The tracing subsystem is
+experimental, so an approach recorded above may turn out not to work —
+append the finding and what it cost rather than deleting the claim it
+replaces. A measurement that was superseded still tells the next person
+which question had already been asked.
+
 ## Not measured
 
 The close-time hashing cost that SC-008 ties its ceiling to. That
