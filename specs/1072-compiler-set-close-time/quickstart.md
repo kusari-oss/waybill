@@ -65,16 +65,28 @@ mod tests {
 
 ## What needs a real kernel
 
-SC-001 – SC-006 assert on an actual trace, so they need Colima. macOS
+SC-001 – SC-006 assert on an actual trace, so they need a real kernel. macOS
 `cargo check` is blind to the gated call site — see the standing note in
 memory about the eBPF container test gap.
+
+The *committed* form of these assertions is the `m1072` section of
+`scripts/ebpf-integration-test.sh`, which runs under `--privileged` via
+`Dockerfile.ebpf-test` (tasks T023/T027/T028/T033/T042/T043). Constitution VII
+is why they live there rather than in a cfg-gated Rust test: the feature-on
+`cargo test` lane runs unprivileged. The commands below are the manual
+equivalent for working on them interactively.
 
 ```sh
 # in the Linux VM
 cargo run -p xtask -- ebpf
 cargo +stable test --workspace --no-fail-fast --features ebpf-tracing
 
-sudo ./target/release/waybill trace run \
+# `trace capture`, not `trace run`: run's SBOM step fails on a hermetic
+# cargo build ("resolution produced zero components from attestation"),
+# recorded at scripts/ebpf-integration-test.sh:44-50. capture is also the
+# `ScanArgs` path this feature modifies.
+sudo ./target/release/waybill trace capture \
+  --attestation-format waybill-v1 \
   --output /tmp/att.json \
   -- cargo build --release \
        --manifest-path waybill-cli/tests/fixtures/compiler_pipeline/two_binaries_diverge/Cargo.toml
@@ -110,7 +122,8 @@ trusting the ordering code:
 
 ```sh
 for i in 1 2; do
-  sudo ./target/release/waybill trace run --output /tmp/att-$i.json -- \
+  sudo ./target/release/waybill trace capture --attestation-format waybill-v1 \
+    --output /tmp/att-$i.json -- \
     cargo build --release --manifest-path …/two_binaries_diverge/Cargo.toml
   jq -S . /tmp/att-$i.json | grep -v '"trace_start"\|"trace_end"\|"pid"' > /tmp/norm-$i.json
 done
@@ -125,7 +138,7 @@ and the comparison is vacuous — two empty traces also match.
 No large fixture required; `0` means "hash nothing":
 
 ```sh
-sudo ./target/release/waybill trace run \
+sudo ./target/release/waybill trace capture --attestation-format waybill-v1 \
   --compiler-hash-budget-bytes 0 --output /tmp/att-trunc.json -- cargo build --release …
 echo "EXIT=$?"      # must be 0
 
@@ -137,8 +150,10 @@ jq '.predicate.trace_integrity.compiler_hash_coverage' /tmp/att-trunc.json
 ## Order of work
 
 1. **Measure first.** The default budget constant must not be guessed
-   (SC-008, `contracts/cli-budget.md` C-1072-9). Until the measurement
-   lands, `Budget` is a required parameter with no default.
+   (`contracts/cli-budget.md` C-1072-9). Until the measurement lands,
+   `Budget` is a required parameter with no default. SC-008's 5%
+   wall-clock ceiling is not that number — it is fixed in advance and the
+   measurement either meets it or reports a finding.
 2. Wire shapes in `waybill-common` (E1–E4) — this breaks compilation at
    every consumer, which is the point: it enumerates the work.
 3. Aggregator maps + rename accumulation (E5).
@@ -157,6 +172,8 @@ waybill-cli/src/trace/close_time.rs                   NEW — the pass
 waybill-cli/src/trace/compiler_pipeline.rs            E5, stdin sentinel
 waybill-cli/src/cli/scan.rs                           call site, `let mut trace`, flag
 waybill-cli/src/generate/compiler_pipeline_annotation.rs  C130 payload
+waybill-cli/src/cli/run.rs                            ScanArgs literal (:361)
+scripts/ebpf-integration-test.sh                      the m1072 kernel assertions
 ```
 
 No golden regeneration: nothing under `waybill-cli/tests/fixtures/` records

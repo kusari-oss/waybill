@@ -417,10 +417,19 @@ written.
 - **SC-007**: An attestation from a trace with zero compiler invocations has
   a serialized `trace_integrity` byte-identical to one produced before this
   feature.
-- **SC-008**: The close-time pass adds no more than a ratio of total trace
-  wall-clock established by the measurement committed under
-  `measurements/`, against a baseline the same measurement records. No
-  absolute cost figure enters this spec or the plan until measured.
+- **SC-008**: The close-time pass adds no more than **5%** of total trace
+  wall-clock, measured against a baseline the measurement under
+  `measurements/` records. The ceiling is committed here, before the
+  measurement runs, because a ceiling the measurement sets cannot be missed:
+  the criterion would pass by construction. 5% is a choice, not an
+  observation — the pass is one `symlink_metadata` plus one streaming
+  SHA-256 per distinct path against a trace that spawns a compiler per
+  crate, so the expectation is well under it, and an overrun is a real
+  finding. If the measurement exceeds 5%, record it in
+  `measurements/findings.md` and re-decide the ceiling deliberately; do not
+  re-baseline it silently. Separately, the **byte** budget's default
+  constant remains unquotable until measured (C-1072-9) — that is a
+  different number from this ratio.
 - **SC-009**: `cargo +stable clippy --workspace --all-targets` and
   `cargo +stable test --workspace --no-fail-fast` pass, and the
   `ebpf-tracing` feature-on lane passes in a Linux container.

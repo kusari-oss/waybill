@@ -46,15 +46,20 @@ dev-dep). **Zero new Cargo dependencies** (FR-020).
 finalized `CompilerPipelineData`; nothing persists beyond the emitted
 attestation.
 **Testing**: `cargo +stable test --workspace --no-fail-fast` for the pass
-and wire shapes (unprivileged, no eBPF — see R6); the `ebpf-tracing`
-feature-on lane in a Linux container for SC-001 – SC-006.
+and wire shapes (unprivileged, no eBPF — see R6); the privileged container
+harness `scripts/ebpf-integration-test.sh` under `Dockerfile.ebpf-test` for
+SC-001 – SC-006, which is where m210/m212/m213 put their kernel assertions
+and what Principle VII requires (the feature-on `cargo test` lane runs
+unprivileged, so a cfg-only gate is not a privilege check).
 **Target Platform**: the pass compiles on every host; its call site is Linux
 + `--features ebpf-tracing`, off by default everywhere.
 **Project Type**: single Rust workspace, three crates (Principle VI).
-**Performance Goals**: deliberately unquantified until measured — SC-008
-expresses the ceiling as a ratio against a baseline the first
-implementation task establishes. No absolute figure may enter this plan
-(`contracts/cli-budget.md` C-1072-9).
+**Performance Goals**: the close-time pass stays within **5% of total trace
+wall-clock** — SC-008's ceiling, committed before the measurement so the
+criterion can fail. The *baseline* it is a ratio against is what T034/T035
+establish. The **byte** budget's default constant is the separate number
+that may not be quoted before measurement (`contracts/cli-budget.md`
+C-1072-9); no absolute byte figure may enter this plan.
 **Constraints**: byte-identical pre-signature payloads across re-runs of a
 reproducible build (feature 006 US2) — this is why the budget is in
 cumulative bytes rather than wall-clock; exit zero on truncation with
@@ -126,8 +131,11 @@ waybill-cli/src/trace/
 ├── compiler_pipeline.rs    E5 in-flight maps, rename accumulation, stdin sentinel
 └── hasher.rs               unchanged — reused as-is (FR: no new primitive)
 
-waybill-cli/src/cli/scan.rs            call site (766..789), `let mut trace`, the flag
+waybill-cli/src/cli/scan.rs            call site (770..777), two `let mut`, the flag
+waybill-cli/src/cli/run.rs             `ScanArgs` literal (:361) — flag forwarding
 waybill-cli/src/generate/compiler_pipeline_annotation.rs   C130 payload (:129)
+
+scripts/ebpf-integration-test.sh       the `m1072` kernel-assertion section
 ```
 
 **Structure Decision**: no new module tree. The pass is one new file in the
@@ -160,7 +168,8 @@ in it:
    file explained only via cargo's timing.
 
 The one deliberately unresolved item, **R10**: the default budget number.
-Not a clarification to chase — SC-008 forbids an unmeasured figure, so
+Not a clarification to chase — `contracts/cli-budget.md` C-1072-9 forbids an
+unmeasured byte figure, so
 `Budget` is a required parameter until the measurement task lands, and the
 constant's definition site must cite `measurements/`.
 
@@ -215,7 +224,9 @@ The measurement, before any default constant exists:
 > Trace `two_binaries_diverge` on a real kernel with the pass present and a
 > budget high enough not to truncate; record total trace wall-clock, pass
 > wall-clock, bytes hashed and distinct-path count under `measurements/`.
-> The default budget constant and SC-008's ratio both derive from that file.
+> The default budget constant derives from that file, and so does the
+> baseline SC-008's 5% is measured against — the 5% itself is fixed in
+> `spec.md` ahead of the measurement.
 
 Then: wire shapes (which break compilation at every consumer, usefully
 enumerating the work) → aggregator maps and rename accumulation → the pass

@@ -148,10 +148,14 @@ two lines above it:
     pub compiler_hash_coverage: Option<CompilerHashCoverage>,
 ```
 
-`TraceIntegrity` derives `Default`, so `Option` + `serde(default)` keeps
-both round-tripping and `..Default::default()` construction working at the
-four existing construction sites (`aggregator.rs:502`,
-`scan_cmd.rs:4142`, `pipeline_legacy_reference.rs:509`, and the tests).
+`TraceIntegrity` derives `Default` and the field is `Option` +
+`serde(default)`, so pre-m1072 JSON round-trips and `..Default::default()`
+construction keeps working. Construction is a different matter: there are
+**21** exhaustive `TraceIntegrity { … }` literals across 18 files and not one
+of them spreads `..Default::default()`, so each is a compile error until the
+field is added or the literal gains a spread. Counted at plan time, not
+estimated; re-run T004's grep before starting, since the number moves with
+the tree.
 
 ## E5. `PartialInvocation` in-flight maps (modified, internal)
 

@@ -213,8 +213,10 @@ and is omitted when there is no hash. Emission wiring stays #1142's.
 **Status**: NEEDS MEASUREMENT — and that is the first implementation task,
 not a clarification to chase.
 
-SC-008 forbids an absolute cost figure entering the spec or plan before
-measurement, per the project rule on measuring external behaviour. The
+`contracts/cli-budget.md` C-1072-9 forbids an absolute byte figure entering
+the spec or plan before measurement, per the project rule on measuring
+external behaviour. (SC-008's 5% wall-clock ceiling is the opposite case: it
+is committed in advance so the measurement can miss it.) The
 budget is therefore a **required parameter** of the pass from the first
 commit, with the default constant landing only after the measurement task
 records a figure under `measurements/`.

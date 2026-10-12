@@ -13,11 +13,33 @@ default CI lane.
 
 ## Format: `[ID] [P?] [Story] Description`
 
-- **[P]**: can run in parallel (different files, no dependency on incomplete work)
+- **[P]**: can run in parallel — different files, or disjoint functions
+  within one file (T015–T018 are the latter), with no dependency on
+  incomplete work
 - **[Story]**: US1–US4 from `spec.md`
 - Every task names its file path
 
-## Two sequencing notes
+## Three sequencing notes
+
+**Kernel assertions go in the bash harness, not a cfg-gated Rust test.**
+Constitution VII requires eBPF-loading integration tests to be gated behind a
+root/`CAP_BPF` *runtime* check so `cargo test` succeeds unprivileged. A
+`#![cfg(all(target_os = "linux", feature = "ebpf-tracing"))]` gate is not that
+check: `.github/workflows/ci.yml:618` runs `cargo test --workspace --features
+ebpf-tracing` **unprivileged** on `ubuntu-latest`, so a cfg-only-gated test
+that calls the tracer compiles, runs and fails there. The m210 precedent
+(`waybill-cli/tests/compiler_pipeline_stdin.rs`) does not prove otherwise — it
+has no test body and cannot fail. The privileged path in this repo is
+`scripts/ebpf-integration-test.sh` under `Dockerfile.ebpf-test`, which m210,
+m212 and m213 each extended; m1072 appends an `m1072` section the same way.
+
+Two consequences. The harness traces `two_binaries_diverge` **once** at
+`scripts/ebpf-integration-test.sh:51`, so T023/T027/T028/T033 all assert over
+that one `$OUTPUT` and only T042 and T043 need further captures. And every
+assertion uses `trace capture`, never `trace run`: the harness records at
+:44-50 that `trace run`'s SBOM step fails on a hermetic cargo build with
+"resolution produced zero components from attestation". `trace capture` is the
+`ScanArgs` path this feature modifies anyway (`trace_cmd.rs:36,43`).
 
 **The measurement sits at the head of US4, not Phase 1.** `plan.md`'s
 closing section says to sequence "the measurement" first, which read
@@ -63,8 +85,14 @@ satisfied by type removal, not by a runtime check.
 build between T005 and T011; do not treat an intermediate failure as a
 regression.
 
+T004's literal sweep is the widest part of that cascade and reaches files this
+feature otherwise never touches (`generate/spdx/*`, `generate/cyclonedx/*`,
+`generate/openvex/mod.rs`, `policy/apply.rs`,
+`resolve/pipeline_legacy_reference.rs`). `serde(default)` does not help here:
+it governs deserialization, not struct construction.
+
 - [ ] T003 [P] Add `CompilerHashCoverage` and `BudgetSource` (data-model E3) to `waybill-common/src/attestation/integrity.rs` — four `u64` counts, `truncated: bool`, `budget_source: BudgetSource`, with `#[serde(rename_all = "snake_case")]` on the two-variant enum
-- [ ] T004 Add `compiler_hash_coverage: Option<CompilerHashCoverage>` as the LAST field of `TraceIntegrity` in `waybill-common/src/attestation/integrity.rs` with `#[serde(default, skip_serializing_if = "Option::is_none")]`, following the m1070 `unresolved_relative_opens` precedent two lines above (data-model E4)
+- [ ] T004 Add `compiler_hash_coverage: Option<CompilerHashCoverage>` as the LAST field of `TraceIntegrity` in `waybill-common/src/attestation/integrity.rs` with `#[serde(default, skip_serializing_if = "Option::is_none")]`, following the m1070 `unresolved_relative_opens` precedent two lines above (data-model E4), THEN update every exhaustive `TraceIntegrity` literal the new field breaks — 21 sites in 18 files, none of which spread `..Default::default()`. Enumerate with `grep -rn 'TraceIntegrity {' --include='*.rs' waybill-common/src waybill-cli/src | grep -v '> TraceIntegrity {' | grep -v 'pub struct'`. Prefer adding `..Default::default()` at each test-only site over naming the field 21 times; the three production sites (`trace/aggregator.rs:502`, `cli/scan_cmd.rs:4142`, `attestation/builder.rs:176`) spell it out as `None`
 - [ ] T005 Replace `ReadSetEntry` and `WriteSetEntry` in `waybill-common/src/attestation/compiler_pipeline.rs:81-101` with the data-model E1/E2 shapes: drop `sha256` from both, drop `survived_trace_window`, add `renamed_from: Vec<PathBuf>` (write only, `skip_serializing_if = "Vec::is_empty"`), add `existed_at_close: bool` and `sha256_at_close: Option<ContentHash>` to both, and rewrite the stale doc comments that claim `sha256` is `None` for deleted intermediates
 - [ ] T006 Bump both attestor URI constants to `compiler-invocation/v0.2` (FR-017) — `waybill-common/src/attestation/compiler_pipeline.rs:216` and `waybill-common/src/attestation/witness.rs:57` — and their two asserting tests at `compiler_pipeline.rs:399` and `witness.rs:568`. Research R8: the constant is duplicated; bump both, do not refactor
 - [ ] T007 Change `PartialInvocation.read_set` to `HashMap<PathBuf, ReadKind>` and `write_set` to `HashMap<PathBuf, PendingWrite>` in `waybill-cli/src/trace/compiler_pipeline.rs:114-116`, adding `struct PendingWrite { renamed_from: Vec<PathBuf> }` (data-model E5) so neither map has a field a kernel hash could occupy
@@ -72,14 +100,14 @@ regression.
 - [ ] T009 Update `finalize_invocation` at `waybill-cli/src/trace/compiler_pipeline.rs:508-532` to build the new entry shapes with `existed_at_close: false` and `sha256_at_close: None` as the pre-pass defaults, preserving the existing lex sort on path (R8 determinism)
 - [ ] T010 Remove the 64-zero sentinel from `record_stdin_input` in `waybill-cli/src/trace/compiler_pipeline.rs` (FR-007) — the entry becomes path `<stdin>`, `kind: StdinInput { bytes_read }`, `existed_at_close: false`, no hash
 - [ ] T011 Update the C130 payload builder at `waybill-cli/src/generate/compiler_pipeline_annotation.rs:129` to emit `"sha256_at_close"` instead of `"sha256"`, omitted when absent (FR-019, research R9). Emission wiring stays #1142's scope — this only keeps the dormant builder compiling and honestly labelled
-- [ ] T012 Fix the in-tree test constructors the type change breaks: `write_set_entry_omits_none_sha256` and the `zero_sha256()` helper at `waybill-common/src/attestation/compiler_pipeline.rs:225,340-360`, and the fixture builder at `waybill-cli/src/generate/compiler_pipeline_annotation.rs:291-302`. Delete `zero_sha256()` outright — FR-006 means no test should be able to construct the value
-- [ ] T013 Implement the distinct-path collection and fan-out core of `apply_close_time_facts` in `waybill-cli/src/trace/close_time.rs` (data-model E6 steps 1 and 3): union of write-set paths then read-set paths, each lex-sorted, a path in both visited once in its write-set position, `StdinInput` entries excluded from the walk entirely (contract C-1072-2a), and the per-path result fanned out to every entry naming that path across all invocations
-- [ ] T014 Add the stat half of the pass in `waybill-cli/src/trace/close_time.rs` (E6 step 2, no hashing yet): `symlink_metadata` → absent sets `existed_at_close: false` and increments `paths_absent`; present-but-not-a-regular-file sets `existed_at_close: true` and increments `paths_skipped`; present regular files set `existed_at_close: true`. Return a `CompilerHashCoverage` with `paths_hashed: 0`
+- [ ] T012 Fix the in-tree test constructors the type change breaks: `write_set_entry_omits_none_sha256`, `read_set_entry_carries_hash_when_file_kind`, and the `zero_sha256()` helper at `waybill-common/src/attestation/compiler_pipeline.rs:225,339-362`. `read_set_entry_carries_hash_when_file_kind` asserts `json["sha256"].is_object()` — the direct negation of FR-001 — so it is deleted, not repaired; `write_set_entry_omits_none_sha256` is rewritten against `sha256_at_close` — its `assert!(json.contains("survived_trace_window"))` is what breaks, and its negative assertion must become `!json.contains("\"sha256\":")` so `sha256_at_close` does not satisfy it, and the fixture builder at `waybill-cli/src/generate/compiler_pipeline_annotation.rs:291-302`. Delete `zero_sha256()` outright — FR-006 means no test should be able to construct the value
+- [ ] T013 Implement `Budget { total_bytes: u64, source: BudgetSource }` and the distinct-path collection and fan-out core of `apply_close_time_facts(data: &mut CompilerPipelineData, budget: Budget) -> CompilerHashCoverage` in `waybill-cli/src/trace/close_time.rs` (data-model E6 steps 1 and 3). The budget is a parameter from this commit per research R10 and contract C-1072-9 — unused until T037 charges against it, which is why `Budget` derives no `Default`: there is no defensible default until T036 measures one. Steps: union of write-set paths then read-set paths, each lex-sorted, a path in both visited once in its write-set position, `StdinInput` entries excluded from the walk entirely (contract C-1072-2a), and the per-path result fanned out to every entry naming that path across all invocations
+- [ ] T014 Add the stat half of the pass in `waybill-cli/src/trace/close_time.rs` (E6 step 2, no hashing yet): `symlink_metadata` → absent sets `existed_at_close: false` and increments `paths_absent`; present-but-not-a-regular-file (directory, device node, dangling symlink) sets `existed_at_close: true` and increments `paths_skipped`; a present regular file sets `existed_at_close: true` and ALSO increments `paths_skipped` for now — "existed but not hashed" is exactly true while hashing does not yet exist, and it keeps FR-013's partition satisfied at this commit rather than only after T020. Return a `CompilerHashCoverage` with `paths_hashed: 0`
 - [ ] T015 [P] Add the tempdir test scaffold in `waybill-cli/src/trace/close_time.rs` — a helper building a synthetic `CompilerPipelineData` from `(path, kind)` pairs under `tempfile::tempdir()`, inside `#[cfg(test)] #[cfg_attr(test, allow(clippy::unwrap_used))] mod tests` per the crate convention
-- [ ] T016 [P] Unit-test the count partition invariant `paths_hashed + paths_absent + paths_skipped == paths_total` (FR-013) in `waybill-cli/src/trace/close_time.rs` across the stat-only cases: missing file, directory at a write path, dangling symlink, regular file
+- [ ] T016 [P] Unit-test the count partition invariant `paths_hashed + paths_absent + paths_skipped == paths_total` (FR-013) in `waybill-cli/src/trace/close_time.rs` across the stat-only cases: missing file → `paths_absent`; directory at a write path → `paths_skipped`; dangling symlink → `existed_at_close: true` and `paths_skipped`, since `symlink_metadata` succeeds on the link itself; regular file → `paths_skipped` until T020 reclassifies it to `paths_hashed`. Assert the partition both before and after that reclassification, so it cannot silently drop a path
 - [ ] T017 [P] Unit-test that the pass never adds, removes or reorders an entry and never alters `path`, `kind` or `renamed_from` (FR-010, contract C-1072-7, Principle II) in `waybill-cli/src/trace/close_time.rs` — snapshot the observation tier before and after and assert equality
-- [ ] T018 [P] Unit-test that a `StdinInput` entry is not stat'd (C-1072-2a) in `waybill-cli/src/trace/close_time.rs`: create a real file literally named `<stdin>` in the tempdir, set it as the CWD, and assert the entry still reports `existed_at_close: false` and contributes to none of the four counts
-- [ ] T019 Wire the pass into `waybill-cli/src/cli/scan.rs` between `compiler_agg.finalize()` (line 766) and `builder::build_attestation(...)` (line 789), keeping the existing `#[cfg(all(target_os = "linux", feature = "ebpf-tracing"))]` gate on the call site, and change `let trace` at `waybill-cli/src/cli/scan.rs:652` to `let mut trace` so the coverage record can be assigned (research R5)
+- [ ] T018 [P] Unit-test that a `StdinInput` entry is never stat'd (C-1072-2a) in `waybill-cli/src/trace/close_time.rs`: give the entry `kind: ReadKind::StdinInput { bytes_read: N }` (`waybill-common/src/attestation/compiler_pipeline.rs:72`) and a path that *does* resolve — an existing regular file in the tempdir — then assert it still reports `existed_at_close: false`, carries no hash, and contributes to none of the four counts. Pointing it at a real file is the positive control: an absent path would make the test vacuous, since a stat'd missing path also yields `false`. The exclusion under test is by `kind`, not by the path's spelling. Do **not** `set_current_dir` to stage a file literally named `<stdin>` — the working directory is process-global, `cargo test` runs test functions on several threads in one process, and `crate::testing::EnvGuard` serializes env mutation without saving or restoring the CWD
+- [ ] T019 Wire the pass into `waybill-cli/src/cli/scan.rs` in the gap between the `compiler_pipeline_data` binding (lines 765-769) and the `builder::build_attestation(` call at line 778 — not line 789, which is that call's `trace_end` argument — keeping the existing `#[cfg(all(target_os = "linux", feature = "ebpf-tracing"))]` gate on the call site. Two bindings become mutable, not one: `let trace` at line 652 so the coverage record can be assigned (research R5), and `let compiler_pipeline_data` at line 765, since the pass takes `&mut CompilerPipelineData`. Until T036 exists there is no flag to read, so pass `Budget { total_bytes: u64::MAX, source: BudgetSource::Default }` with a comment naming T036 as the task that replaces it, and `let _ = …` the returned coverage until T038 assigns it
 
 **Checkpoint**: tree builds; `./scripts/pre-pr.sh` clean; no all-zero hash
 is constructible anywhere in the workspace; `existed_at_close` is a real
@@ -97,10 +125,10 @@ confirm `deps/rmeta*/full.rmeta` reports `existed_at_close: false` with no
 hash while the final `.rlib`/binary reports `true` with a hash matching an
 independent `sha256sum`.
 
-- [ ] T020 [US1] Add the hashing half of the pass in `waybill-cli/src/trace/close_time.rs`: for a present regular file call `crate::trace::hasher::sha256_file_hex(path, DEFAULT_SIZE_CAP_BYTES)`, set `sha256_at_close` on `Ok`, and on `Err` increment `paths_skipped` with a WARN naming the path and error — never `.unwrap()` (Boundary 4). No cumulative budget yet; US4 adds it
+- [ ] T020 [US1] Add the hashing half of the pass in `waybill-cli/src/trace/close_time.rs`: for a present regular file call `crate::trace::hasher::sha256_file_hex(path, crate::scan_fs::walker::DEFAULT_SIZE_CAP_BYTES)` — the cap constant lives in `scan_fs`, not `trace` — set `sha256_at_close` on `Ok` and move the path from `paths_skipped` to `paths_hashed` (T014's stat-only classification); on `Err` leave it in `paths_skipped` with a WARN naming the path and error — never `.unwrap()` (Boundary 4). The `budget` parameter is still not consulted: T037 adds the charging, and `u64::MAX` at the T019 call site makes it a no-op until then, so US1 ships correct-but-unbounded exactly as `spec.md` describes in US4's priority rationale
 - [ ] T021 [P] [US1] Unit-test the over-cap path in `waybill-cli/src/trace/close_time.rs`: pass a deliberately tiny per-file cap and assert the file is counted in `paths_skipped` with `existed_at_close: true` and no hash — research R2's correction, since `sha256_file_hex` returns `Err(InvalidData)` rather than hashing a prefix
 - [ ] T022 [P] [US1] Unit-test an unreadable file in `waybill-cli/src/trace/close_time.rs` via `set_permissions(0o000)`, asserting `existed_at_close: true`, no hash, counted in `paths_skipped`, and that the pass completes rather than aborting. Skip the assertion when running as root, where the mode is not enforced
-- [ ] T023 [US1] Add the kernel integration test for US1's three acceptance scenarios in `waybill-cli/tests/compiler_pipeline_close_time.rs`, gated `#![cfg(all(target_os = "linux", feature = "ebpf-tracing"))]` per the m210 convention: at least one write-set entry reports `existed_at_close: false` (SC-001's positive control — a zero here is a FAILURE, indistinguishable from the pass never running), zero entries carry an all-zero hash (SC-002), and ten sampled `sha256_at_close` values match an independent `sha256sum` (SC-003)
+- [ ] T023 [US1] Add an `m1072 US1` section to `scripts/ebpf-integration-test.sh` asserting over the existing `$OUTPUT` capture: at least one write-set entry reports `existed_at_close: false` (SC-001's positive control — a zero here is a FAILURE, indistinguishable from the pass never running), zero entries carry an all-zero hash (SC-002), and ten sampled `sha256_at_close` values match an independent `sha256sum` (SC-003). Also assert SC-001's other half — every entry with `existed_at_close: true` still resolves on disk
 
 **Checkpoint**: US1 verifiable on a real kernel. #1144's headline defect is
 fixed and the fix is proven to have run.
@@ -124,8 +152,8 @@ the `<stdin>` case.
 - [ ] T024 [P] [US2] Unit-test in `waybill-common/src/attestation/compiler_pipeline.rs` that a serialized `ReadSetEntry` contains no `"sha256"` key (substring assertion, so `sha256_at_close` does not satisfy it — assert on `"\"sha256\":"`), and that `sha256_at_close` is omitted rather than null when absent
 - [ ] T025 [P] [US2] Unit-test in `waybill-cli/src/trace/compiler_pipeline.rs` that `record_stdin_input` produces an entry with `existed_at_close: false`, no `sha256_at_close`, and no 64-zero value anywhere in the serialized invocation (FR-007, US2 scenario 2)
 - [ ] T026 [P] [US2] Unit-test a read path deleted before close in `waybill-cli/src/trace/close_time.rs`: the entry reports `existed_at_close: false` and is still present in the read set rather than omitted (US2 scenario 3, Principle VIII)
-- [ ] T027 [US2] Extend `waybill-cli/tests/compiler_pipeline_close_time.rs` with US2's kernel assertions: no read-set entry carries `sha256`, and every `sha256_at_close` present in a read set matches an independent `sha256sum`
-- [ ] T028 [US2] Add the shared-path assertion for SC-010 in `waybill-cli/tests/compiler_pipeline_close_time.rs`: every pair of entries naming one path agrees on both close-time fields, and `paths_total` is strictly less than the total entry count on this fixture because `deps/liblibsafe-<hash>.rlib` is read under three distinct rustc invocations (`measurements/findings.md` Q3)
+- [ ] T027 [US2] Extend the `m1072` section of `scripts/ebpf-integration-test.sh` with US2's assertions over `$OUTPUT`: no read-set entry carries a `sha256` key, and every `sha256_at_close` present in a read set matches an independent `sha256sum`
+- [ ] T028 [US2] Add SC-010 to the `m1072` section of `scripts/ebpf-integration-test.sh`: every pair of entries naming one path agrees on both close-time fields, and `paths_total` is strictly less than the total entry count on this fixture because `deps/liblibsafe-<hash>.rlib` is read under three distinct rustc invocations (`measurements/findings.md` Q3)
 
 **Checkpoint**: both P1 stories complete. The predicate can no longer state
 a hash it does not have, in either set.
@@ -145,7 +173,7 @@ the intermediate, which also appears in the raw `file_access` events.
 - [ ] T030 [P] [US3] Unit-test the three rename shapes in `waybill-cli/src/trace/compiler_pipeline.rs`: single rename yields one entry with `renamed_from: [tmp]` and no entry at `tmp` (FR-009); a two-step chain lists both intermediates oldest-first (US3 scenario 2); a write with no rename serializes without the key at all (US3 scenario 3)
 - [ ] T031 [P] [US3] Unit-test the two rename edge cases from `spec.md` in `waybill-cli/src/trace/compiler_pipeline.rs`: a rename whose source was never observed as a write still yields a destination entry recording that source, and a rename onto an existing write-set entry keeps the final path while accumulating both histories in observed order
 - [ ] T032 [P] [US3] Add the FR-009a regression test in `waybill-cli/src/trace/compiler_pipeline.rs` asserting `ObservedKind` has exactly three variants and that no code path synthesises a `Rename` from a link. Research R4: `linkat` is traced nowhere, so this invariant currently holds by construction — the test's job is to fail loudly if a future link probe routes through this arm
-- [ ] T033 [US3] Extend `waybill-cli/tests/compiler_pipeline_close_time.rs` with SC-004: every entry for an artifact rustc renamed into place has a non-empty `renamed_from`, and no entry's `path` appears in another entry's `renamed_from`
+- [ ] T033 [US3] Add SC-004 to the `m1072` section of `scripts/ebpf-integration-test.sh`: every entry for an artifact rustc renamed into place has a non-empty `renamed_from`, and no entry's `path` appears in another entry's `renamed_from`
 
 **Checkpoint**: rename-into-place — rustc's normal pattern for libraries,
 per `measurements/findings.md` Q2 — is recorded losslessly.
@@ -164,16 +192,16 @@ naming the exhaustion, and exit zero with the attestation written.
 **The two measurement tasks gate the default constant.** No byte figure may
 appear in code before T035.
 
-- [ ] T034 [US4] Measure the baseline in Colima and record it under `specs/1072-compiler-set-close-time/measurements/cost.md`: total `waybill trace run` wall-clock for `two_binaries_diverge` at the US3 checkpoint, plus the distinct-path count and total hashable bytes the pass would face. This is SC-008's denominator and must be captured before the pass is budgeted
-- [ ] T035 [US4] Measure the pass itself in Colima and append to `measurements/cost.md`: per-run wall-clock of `apply_close_time_facts` against that same trace, as a ratio of total trace wall-clock, over at least three runs with the fixture's `target/` cleaned between them. State the kernel, arch and fixture, as `measurements/findings.md` does
-- [ ] T036 [US4] Define the default budget constant in `waybill-cli/src/cli/scan.rs` with a doc comment citing `measurements/cost.md` for the figure (contract C-1072-9), and add the `compiler_hash_budget_bytes: Option<u64>` flag to `ScanArgs` with `#[arg(long, env = "WAYBILL_COMPILER_HASH_BUDGET_BYTES", value_name = "BYTES")]` — `None` → default + `BudgetSource::Default`, `Some(_)` → `BudgetSource::Operator` (C-1072-8)
-- [ ] T037 [US4] Add the cumulative-bytes budget to `apply_close_time_facts` in `waybill-cli/src/trace/close_time.rs` (FR-011a, FR-012): a path whose size exceeds the remaining budget is skipped, counted in `paths_skipped`, sets `truncated: true`, and the pass CONTINUES to the next path, so one oversized artifact early in sort order does not blind the pass to everything after it. A shared path is charged once, at its first position
+- [ ] T034 [US4] Measure the baseline in the privileged container and record it under `specs/1072-compiler-set-close-time/measurements/cost.md`: total `waybill trace capture` wall-clock for `two_binaries_diverge` at the US3 checkpoint, plus the distinct-path count and total hashable bytes the pass would face. This is SC-008's denominator — the 5% ceiling is the numerator and is already fixed in `spec.md` — and must be captured before the pass is budgeted
+- [ ] T035 [US4] Measure the pass itself in the privileged container and append to `measurements/cost.md`: per-run wall-clock of `apply_close_time_facts` against that same trace, as a ratio of total trace wall-clock, over at least three runs with the fixture's `target/` cleaned between them. State the kernel, arch and fixture, as `measurements/findings.md` does
+- [ ] T036 [US4] Define the default budget constant in `waybill-cli/src/cli/scan.rs` with a doc comment citing `measurements/cost.md` for the figure (contract C-1072-9), and add the `compiler_hash_budget_bytes: Option<u64>` flag to `ScanArgs` with `#[arg(long, env = "WAYBILL_COMPILER_HASH_BUDGET_BYTES", value_name = "BYTES")]` — `None` → default + `BudgetSource::Default`, `Some(_)` → `BudgetSource::Operator` (C-1072-8). Add the same flag to `RunArgs` and forward it in the exhaustive `ScanArgs` literal at `waybill-cli/src/cli/run.rs:361`, which the new field breaks: `trace run` is a user-facing path, so hardcoding `None` there would make FR-016's override unreachable on half the CLI surface. Assert the mapping where it lives, in this crate layer: a `ScanArgs` with the flag unset yields the measured default plus `BudgetSource::Default`, and with the flag set yields the operator's value plus `BudgetSource::Operator` (C-1072-8). T041 can only assert pass-through
+- [ ] T037 [US4] Charge against the `Budget` parameter T013 already threads through `apply_close_time_facts` in `waybill-cli/src/trace/close_time.rs` (FR-011a, FR-012): a path whose size exceeds the remaining budget is skipped, counted in `paths_skipped`, sets `truncated: true`, and the pass CONTINUES to the next path, so one oversized artifact early in sort order does not blind the pass to everything after it. A shared path is charged once, at its first position
 - [ ] T038 [US4] Attach the coverage record to the attestation in `waybill-cli/src/cli/scan.rs`: assign `trace.trace_integrity.compiler_hash_coverage = Some(coverage)` after the pass, and leave it `None` when the trace captured zero compiler invocations so pre-m1072 byte-identity holds (FR-014)
 - [ ] T039 [US4] Emit the exhaustion WARN in `waybill-cli/src/trace/close_time.rs` naming hashed/skipped/absent/total and the budget, exactly once per trace, and confirm the exit status stays zero (FR-015, C-1072-10)
 - [ ] T040 [P] [US4] Unit-test truncation determinism in `waybill-cli/src/trace/close_time.rs`: with `Budget { total_bytes: 0 }` every existing path lands in `paths_skipped` with `truncated: true`; and with a budget that cuts mid-way, two runs over the same synthetic input hash the identical path set (FR-012, SC-006)
-- [ ] T041 [P] [US4] Unit-test `budget_source` reporting in `waybill-cli/src/trace/close_time.rs` — `Default` when the flag is absent, `Operator` when supplied — and that `TraceIntegrity` with `compiler_hash_coverage: None` serializes without the key (SC-007, FR-014)
-- [ ] T042 [US4] Extend `waybill-cli/tests/compiler_pipeline_close_time.rs` with US4's kernel scenarios: `--compiler-hash-budget-bytes 0` yields `truncated: true`, `paths_hashed: 0`, `budget_source: "operator"`, a satisfied count partition, exit zero and a written attestation (SC-006)
-- [ ] T043 [US4] Add the determinism test for SC-005 in `waybill-cli/tests/compiler_pipeline_close_time.rs`: two consecutive traces of the same build produce byte-identical pre-signature canonical payloads including the coverage record, with the fixture's `target/` cleaned between runs so the second build is not a vacuous no-op
+- [ ] T041 [P] [US4] Unit-test `budget_source` pass-through in `waybill-cli/src/trace/close_time.rs` — the `source` on the `Budget` handed to `apply_close_time_facts` is the value that reaches the coverage record, for both variants — and that `TraceIntegrity` with `compiler_hash_coverage: None` serializes without the key (SC-007, FR-014). The pass sees only a `Budget`, never a flag, so "absent → `Default`, supplied → `Operator`" is not testable at this layer; that mapping is asserted at the flag site in T036
+- [ ] T042 [US4] Add US4's scenario to `scripts/ebpf-integration-test.sh` as a second capture: `waybill trace capture --compiler-hash-budget-bytes 0` over the same fixture yields `truncated: true`, `paths_hashed: 0`, `budget_source: "operator"`, a satisfied count partition, exit zero and a written attestation (SC-006)
+- [ ] T043 [US4] Add SC-005 to `scripts/ebpf-integration-test.sh`: two consecutive `trace capture` runs of the same build produce byte-identical pre-signature canonical payloads including the coverage record, with `rm -rf "$FIXTURE_TARGET"` between them (the harness already does this at :41) so the second build is not a vacuous no-op
 
 **Checkpoint**: all four stories complete. Partial hash coverage can no
 longer be mistaken for a clean result.
@@ -182,12 +210,12 @@ longer be mistaken for a clean result.
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T044 [P] Verify SC-007 end to end against `waybill-common/src/attestation/integrity.rs`: an attestation from a trace with zero compiler invocations has a `trace_integrity` byte-identical to one produced before this feature, by diffing against an attestation generated at the pre-m1072 commit `3a385042`
+- [ ] T044 [P] Verify SC-007 end to end against `waybill-common/src/attestation/integrity.rs`: an attestation from a trace with zero compiler invocations has a `trace_integrity` byte-identical to one produced before this feature, by diffing against an attestation generated at `git merge-base HEAD origin/main`, not at a literal SHA — a branch-local commit is invalidated by any rebase or squash of this branch, and the merge base is exactly the pre-m1072 code state. Record the resolved SHA in the output so the comparison stays reproducible
 - [ ] T045 [P] Update `docs/architecture/attestations.md` for the `compiler-invocation/v0.2` attestor and the two-tier read/write set shape, pointing at `contracts/read-write-set-shape.md` as the normative source
 - [ ] T046 [P] Add a pointer at the top of `specs/210-compiler-pipeline-trace/contracts/attestor-predicate.md` noting that C-1 and C-2 are superseded for these two entities by `specs/1072-compiler-set-close-time/contracts/read-write-set-shape.md`, without editing the historical clauses
 - [ ] T047 Run the full `quickstart.md` verification block in Colima — the four `jq` checks, the determinism diff and the truncation run — and record the output in `measurements/cost.md` alongside the timings
 - [ ] T048 Run `./scripts/pre-pr.sh > /tmp/prepr.log 2>&1; echo "EXIT=$?"` and assert on the POSITIVE signals: the `>>> all pre-PR checks passed.` line and every per-target `test result: ok. N passed; 0 failed`. The absence of FAILED is not evidence — a build that never compiled also contains no failures
-- [ ] T049 Run the `ebpf-tracing` feature-on lane in a Linux container (`cargo run -p xtask -- ebpf` then `cargo +stable test --workspace --no-fail-fast --features ebpf-tracing`) and confirm the gated integration tests actually executed rather than compiling as empty modules (SC-009)
+- [ ] T049 Run both eBPF lanes: the unprivileged feature-on lane (`cargo run -p xtask -- ebpf`, then `cargo +stable test --workspace --no-fail-fast --features ebpf-tracing`) must pass with no privilege-dependent test attempting to attach; and the privileged harness (`docker build -f Dockerfile.ebpf-test -t waybill-ebpf-test . && docker run --privileged waybill-ebpf-test`) must print the m1072 assertions as executed, not skipped (SC-009). Then assert C-1072-11's no-effect half on the default build: with `ebpf-tracing` off, a `waybill trace capture` emits no `compiler_hash_coverage` key and no coverage WARN, and `--compiler-hash-budget-bytes 0` changes neither — the flag parses and does nothing, which is the one difference the contract allows
 
 ---
 
@@ -206,7 +234,7 @@ longer be mistaken for a clean result.
 ### Story Dependencies
 
 - US1 → none beyond Foundational.
-- US2 → none beyond Foundational. Shares `waybill-cli/tests/compiler_pipeline_close_time.rs` with US1, so T027/T028 follow T023 to avoid a merge conflict in one file.
+- US2 → none beyond Foundational. Shares the `m1072` section of `scripts/ebpf-integration-test.sh` with US1, so T027/T028 follow T023 to avoid a merge conflict in one file.
 - US3 → none beyond Foundational. Fully parallel with US1 and US2.
 - US4 → **US1** (T037 budgets the hash call T020 adds).
 
@@ -216,7 +244,7 @@ Implementation precedes its unit tests here rather than the reverse. The
 breaking type change makes a test-first ordering impossible to compile for
 T003–T012, and `spec.md`'s acceptance scenarios are the test specification
 those tests transcribe. The kernel integration test for each story comes
-last in its phase, because it can only run in Colima.
+last in its phase, because it can only run in the privileged container.
 
 ### Parallel Opportunities
 
@@ -254,11 +282,19 @@ change already made). US3 is independent and can land in any order. US4 is
 last because it is the only story that needs a measured number, and
 measuring it needs the pass US1 delivers.
 
-**What needs Colima**: T023, T027, T028, T033, T034, T035, T042, T043,
-T044, T047, T049. Everything else runs on the dev host, which is research
-R6's whole purpose — macOS `cargo check` is blind to the gated call site,
-so a design that put the pass behind the gate would have made 30 of these
-49 tasks unverifiable locally.
+**What needs the privileged container**: T023, T027, T028, T033, T034, T035,
+T042, T043, T044, T047, T049 — eleven tasks, all of them appending to
+`scripts/ebpf-integration-test.sh` or reading its output. Everything else runs
+on the dev host, which is research R6's whole purpose — macOS `cargo check` is
+blind to the gated call site, so a design that put the pass behind the gate
+would have made every task naming `waybill-cli/src/trace/close_time.rs`
+unverifiable locally. That is **15** of the 49:
+
+```sh
+grep '^- \[ \] T' tasks.md | grep -c 'trace/close_time.rs'
+```
+
+Counted, not estimated; re-run it if tasks move.
 
 **Experimental posture**: the tracing subsystem is feature-gated and
 pre-stable (`spec.md`, "Maturity, and what happens if this is wrong"). If

@@ -44,7 +44,11 @@ No field in either set may carry an unqualified `sha256` key.
   source hash MUST NOT use this field for that purpose.
 - `sha256_at_close` is absent whenever the path was not hashed. Absent means
   "not measured", never "zero".
-- `existed_at_close` is a `symlink_metadata` result, never a constant.
+- `existed_at_close` is a `symlink_metadata` result, never a constant: true
+  iff the call succeeded. It asserts that the name resolved, NOT that readable
+  content was there — a dangling symlink is `true` with no hash, counted in
+  `paths_skipped`. A consumer wanting "content existed" must read
+  `sha256_at_close`'s presence instead.
 
 `kind` retains its m210 shape: `"file"`, or
 `{"stdin_input": {"bytes_read": N}}`.
