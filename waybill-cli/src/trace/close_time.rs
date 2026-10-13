@@ -640,6 +640,50 @@ mod tests {
         );
     }
 
+    /// T026 / US2 scenario 3, Principle VIII: a read path deleted before
+    /// the trace ended reports `existed_at_close: false` and stays in the
+    /// read set. Dropping the entry would erase an observation the kernel
+    /// actually made -- the compiler did read that file.
+    #[test]
+    fn deleted_read_path_is_reported_not_removed() {
+        let dir = tempfile::tempdir().unwrap();
+        let generated = dir.path().join("build-script-output.rs");
+        std::fs::write(&generated, b"// generated, then cleaned up").unwrap();
+        let kept = dir.path().join("lib.rs");
+        std::fs::write(&kept, b"// still here").unwrap();
+
+        let mut data = pipeline(
+            &[
+                (generated.clone(), ReadKind::File),
+                (kept.clone(), ReadKind::File),
+            ],
+            &[],
+        );
+
+        // The build deletes it between the read and the trace ending.
+        std::fs::remove_file(&generated).unwrap();
+
+        let cov = apply_close_time_facts(&mut data, unbudgeted());
+
+        assert_eq!(cov.paths_total, 2);
+        assert_eq!(cov.paths_absent, 1);
+        assert_eq!(cov.paths_hashed, 1);
+        assert!(partition_holds(&cov));
+
+        assert_eq!(
+            data.invocations[0].read_set.len(),
+            2,
+            "the deleted path must still be in the read set"
+        );
+        let gone = data.invocations[0]
+            .read_set
+            .iter()
+            .find(|e| e.path == generated)
+            .expect("entry retained");
+        assert!(!gone.existed_at_close);
+        assert!(gone.sha256_at_close.is_none());
+    }
+
     /// The visit order is a pure function of the path set: write-set paths
     /// lexicographically, then read-only paths lexicographically. SC-005
     /// and the budget's truncation point both rest on this.

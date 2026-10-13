@@ -459,6 +459,110 @@ if [[ "$SAMPLED" -lt 1 ]]; then
 fi
 echo "    hashes verified against sha256sum: $SAMPLED/$SAMPLED agree"
 
+# --- US2: a read-set entry never claims a hash it does not have --------
+echo
+echo "==> m1072 US2: read-set honesty (FR-001)"
+
+# The type no longer has the field, so this cannot regress without a
+# deliberate change -- which is exactly why it is worth asserting on the
+# emitted bytes rather than trusting the type. `"sha256":` with the colon,
+# so `sha256_at_close` does not satisfy it.
+BARE_SHA256=$(jq '[.predicate.compiler_pipeline.invocations[]?
+                   | (.read_set[]?, .write_set[]?)
+                   | select(has("sha256"))] | length' "$OUTPUT")
+if [[ "$BARE_SHA256" -ne 0 ]]; then
+    echo "FAIL: $BARE_SHA256 set entries carry an unqualified sha256 key (FR-001)"
+    exit 1
+fi
+echo "    entries carrying a bare sha256 key: 0"
+
+# Every read-set hash must also agree with sha256sum, not just the write
+# sets sampled above -- a read set is where a consumer would most likely
+# mistake the value for "what the compiler read".
+READ_SAMPLED=0
+READ_BAD=0
+while IFS=' ' read -r claimed path; do
+    [[ -z "$claimed" || -z "$path" ]] && continue
+    [[ -f "$path" ]] || continue
+    actual=$(sha256sum "$path" | cut -d' ' -f1)
+    READ_SAMPLED=$((READ_SAMPLED + 1))
+    if [[ "$actual" != "$claimed" ]]; then
+        echo "FAIL: read-set hash mismatch for $path ($claimed vs $actual)"
+        READ_BAD=$((READ_BAD + 1))
+    fi
+done < <(jq -r '[.predicate.compiler_pipeline.invocations[]? | .read_set[]?
+                 | select(.sha256_at_close != null)
+                 | "\(.sha256_at_close.value) \(.path)"] | unique | .[0:10] | .[]' "$OUTPUT")
+if [[ "$READ_BAD" -ne 0 || "$READ_SAMPLED" -lt 1 ]]; then
+    echo "FAIL: read-set hash check — $READ_BAD mismatched of $READ_SAMPLED sampled"
+    exit 1
+fi
+echo "    read-set hashes verified against sha256sum: $READ_SAMPLED/$READ_SAMPLED agree"
+
+# SC-010: one path, one answer. Two entries naming the same path must agree
+# on both close-time fields, because the pass visits a path once and fans
+# the result out (FR-011). Disagreement would mean the fan-out missed one.
+DISAGREEMENTS=$(jq '[.predicate.compiler_pipeline.invocations[]?
+                     | (.read_set[]?, .write_set[]?)
+                     | {path, e: .existed_at_close, h: (.sha256_at_close.value // "none")}]
+                    | group_by(.path) | map(select((map({e, h}) | unique | length) > 1))
+                    | length' "$OUTPUT")
+if [[ "$DISAGREEMENTS" -ne 0 ]]; then
+    echo "FAIL: $DISAGREEMENTS paths have entries that disagree on close-time facts (SC-010)"
+    jq '[.predicate.compiler_pipeline.invocations[]? | (.read_set[]?, .write_set[]?)
+         | {path, e: .existed_at_close, h: (.sha256_at_close.value // "none")}]
+        | group_by(.path) | map(select((map({e, h}) | unique | length) > 1)) | .[0:3]' "$OUTPUT"
+    exit 1
+fi
+
+# SC-010's second half: counts are over distinct paths, so on this fixture
+# the entry count must EXCEED the distinct-path count --
+# deps/liblibsafe-<hash>.rlib is read by three rustc invocations
+# (measurements/findings.md Q3). Equality would mean either the fan-out is
+# per-entry or the fixture stopped sharing, and both deserve a look.
+ENTRY_COUNT=$(jq '[.predicate.compiler_pipeline.invocations[]?
+                   | (.read_set[]?, .write_set[]?)] | length' "$OUTPUT")
+DISTINCT_COUNT=$(jq '[.predicate.compiler_pipeline.invocations[]?
+                      | (.read_set[]?, .write_set[]?) | .path] | unique | length' "$OUTPUT")
+if [[ "$ENTRY_COUNT" -le "$DISTINCT_COUNT" ]]; then
+    echo "FAIL: $ENTRY_COUNT entries vs $DISTINCT_COUNT distinct paths — expected entries > paths (SC-010)"
+    echo "      This fixture shares .rlib reads across three rustc invocations."
+    exit 1
+fi
+echo "    entries: $ENTRY_COUNT over $DISTINCT_COUNT distinct paths, all agreeing"
+
+# --- US3: a renamed artifact is one entry with its history --------------
+echo
+echo "==> m1072 US3: rename history (SC-004)"
+
+# No entry's path may appear in another entry's renamed_from. If it does,
+# the same artifact is recorded twice -- once under its temporary name and
+# once under its final one -- which is the duplication FR-009 forbids.
+SHADOWED=$(jq '[.predicate.compiler_pipeline.invocations[]?
+                | .write_set[]? | .path] as $paths
+               | [.predicate.compiler_pipeline.invocations[]? | .write_set[]?
+                  | .renamed_from[]? | select(. as $r | $paths | index($r))]
+               | unique | length' "$OUTPUT")
+if [[ "$SHADOWED" -ne 0 ]]; then
+    echo "FAIL: $SHADOWED intermediate names also exist as their own write-set entries (SC-004)"
+    exit 1
+fi
+
+# rustc renames libraries into place, so this fixture must show history
+# somewhere. A zero means either the Rename arm stopped accumulating or
+# the rename events stopped arriving -- and an all-zero result here would
+# otherwise look identical to a clean pass.
+WITH_HISTORY=$(jq '[.predicate.compiler_pipeline.invocations[]?
+                    | .write_set[]? | select((.renamed_from // []) | length > 0)] | length' "$OUTPUT")
+if [[ "$WITH_HISTORY" -lt 1 ]]; then
+    echo "FAIL: no write-set entry carries renamed_from (SC-004)"
+    echo "      rustc renames libraries into place; measurements/findings.md Q2."
+    jq '[.predicate.compiler_pipeline.invocations[]? | .write_set[]? | .path] | .[0:10]' "$OUTPUT"
+    exit 1
+fi
+echo "    write-set entries carrying rename history: $WITH_HISTORY"
+echo "    intermediate names shadowing a real entry: 0"
+
 echo
 echo ">>> m210 + m212 + m213 + m1072 integration test PASSED"
 echo "    compiler_pipeline: $INVOCATION_COUNT invocations, $RUSTC_COUNT rustc"

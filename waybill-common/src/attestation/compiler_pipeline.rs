@@ -398,6 +398,44 @@ mod tests {
         assert_eq!(v["existed_at_close"], true);
     }
 
+    /// T024 / FR-001: `sha256_at_close` is omitted when absent, not null,
+    /// and present when there is a hash. The `"sha256":` assertion is
+    /// written with the colon so the close-time field cannot satisfy it --
+    /// a bare `contains("sha256")` would pass on `sha256_at_close` and
+    /// prove nothing.
+    #[test]
+    fn read_set_entry_close_time_hash_is_omitted_not_null() {
+        let absent = ReadSetEntry {
+            path: PathBuf::from("/src/deleted.rs"),
+            kind: ReadKind::File,
+            existed_at_close: false,
+            sha256_at_close: None,
+        };
+        let json = serde_json::to_string(&absent).unwrap();
+        assert!(!json.contains("sha256_at_close"), "omitted, not null: {json}");
+        assert!(!json.contains("null"), "{json}");
+        assert!(!json.contains("\"sha256\":"), "{json}");
+
+        let present = ReadSetEntry {
+            path: PathBuf::from("/src/kept.rs"),
+            kind: ReadKind::File,
+            existed_at_close: true,
+            sha256_at_close: Some(ContentHash {
+                algorithm: crate::types::hash::HashAlgorithm::Sha256,
+                value: crate::types::hash::HexString::new(
+                    "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+                )
+                .unwrap(),
+            }),
+        };
+        let json = serde_json::to_string(&present).unwrap();
+        assert!(json.contains("sha256_at_close"), "{json}");
+        assert!(
+            !json.contains("\"sha256\":"),
+            "an unqualified sha256 key must never appear: {json}"
+        );
+    }
+
     #[test]
     fn invocation_dag_edge_round_trips() {
         let e = InvocationDagEdge {
