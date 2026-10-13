@@ -356,8 +356,111 @@ if [[ "$ETC_HOSTNAME_COUNT" -lt 1 ]]; then
     echo "WARN: widened run's file_access.operations has 0 /etc/hostname events — expected ≥1 (may indicate trace-attach timing race, not a widen-flag bug)"
 fi
 
+# ---------------------------------------------------------------------
+# Milestone 1072 (#1144) — close-time facts for compiler read/write sets.
+#
+# These assertions live here, not in a cfg-gated Rust integration test,
+# because Constitution VII requires an eBPF-loading test to be gated
+# behind a root/CAP_BPF *runtime* check: ci.yml runs
+# `cargo test --features ebpf-tracing` UNPRIVILEGED, so a cfg-only gate
+# would compile, run and fail there. This harness is the privileged path.
+#
+# Asserted over the $OUTPUT capture above — no second trace needed.
 echo
-echo ">>> m210 + m212 + m213 integration test PASSED"
+echo "==> m1072 US1: close-time facts (SC-001, SC-002, SC-003)"
+
+# SC-001 positive control. At least one write-set entry must report
+# existed_at_close: false. A zero here is a FAILURE, not a clean result:
+# it is indistinguishable from the pass never having run, which is
+# exactly the state #1144 reported. rustc's deps/rmeta* temporaries are
+# gone by trace end, so the expected count is >= 1.
+ABSENT_WRITES=$(jq '[.predicate.compiler_pipeline.invocations[]?
+                     | .write_set[]? | select(.existed_at_close == false)] | length' "$OUTPUT")
+if [[ "$ABSENT_WRITES" -lt 1 ]]; then
+    echo "FAIL: zero write-set entries report existed_at_close: false (SC-001)"
+    echo "      Before m1072 every entry claimed survival. A zero here cannot be"
+    echo "      told apart from the close-time pass never running."
+    jq '[.predicate.compiler_pipeline.invocations[]? | .write_set[]?
+         | {path, existed_at_close}] | .[0:10]' "$OUTPUT"
+    exit 1
+fi
+echo "    write-set entries reporting absent at close: $ABSENT_WRITES"
+
+# SC-001's other half: a true must be true. Every entry claiming the name
+# resolved must still resolve now. `-e || -L` mirrors the contract's
+# definition -- existed_at_close is a symlink_metadata success, so a
+# dangling symlink counts as resolved (C-1072-2).
+UNRESOLVED=0
+CHECKED=0
+while IFS= read -r p; do
+    [[ -z "$p" ]] && continue
+    CHECKED=$((CHECKED + 1))
+    if [[ ! -e "$p" && ! -L "$p" ]]; then
+        echo "FAIL: $p reports existed_at_close: true but does not resolve"
+        UNRESOLVED=$((UNRESOLVED + 1))
+    fi
+done < <(jq -r '[.predicate.compiler_pipeline.invocations[]?
+                 | (.read_set[]?, .write_set[]?)
+                 | select(.existed_at_close == true) | .path] | unique | .[]' "$OUTPUT")
+if [[ "$UNRESOLVED" -ne 0 ]]; then
+    echo "FAIL: $UNRESOLVED paths claim they resolved but do not (SC-001)"
+    exit 1
+fi
+# A jq typo or a renamed field would empty that loop and the check above
+# would "pass" having examined nothing. A real rustc trace reads its own
+# source, so the count is never legitimately zero.
+if [[ "$CHECKED" -lt 1 ]]; then
+    echo "FAIL: zero entries report existed_at_close: true — nothing was checked"
+    exit 1
+fi
+echo "    entries claiming resolution, re-checked on disk: $CHECKED"
+
+# SC-002: no all-zero hash anywhere in the document. The m210 sentinel was
+# 64 zeros; FR-006 forbids the value outright, and after the type change
+# there is no field left to hold it.
+ZERO_HASHES=$(grep -c '"value": *"0\{64\}"' "$OUTPUT" || true)
+if [[ "$ZERO_HASHES" -ne 0 ]]; then
+    echo "FAIL: $ZERO_HASHES all-zero hashes in the attestation (SC-002)"
+    grep -n '"value": *"0\{64\}"' "$OUTPUT" | head -5
+    exit 1
+fi
+echo "    all-zero hashes: 0"
+
+# SC-003: waybill's hashes must agree with an independent implementation.
+# Sample up to ten and compare against sha256sum. A sample of zero is a
+# failure for the same reason as SC-001's zero: nothing was checked.
+SAMPLED=0
+MISMATCHED=0
+while IFS=' ' read -r claimed path; do
+    [[ -z "$claimed" || -z "$path" ]] && continue
+    [[ -f "$path" ]] || continue
+    actual=$(sha256sum "$path" | cut -d' ' -f1)
+    SAMPLED=$((SAMPLED + 1))
+    if [[ "$actual" != "$claimed" ]]; then
+        echo "FAIL: hash mismatch for $path"
+        echo "      waybill:    $claimed"
+        echo "      sha256sum:  $actual"
+        MISMATCHED=$((MISMATCHED + 1))
+    fi
+done < <(jq -r '[.predicate.compiler_pipeline.invocations[]?
+                 | (.read_set[]?, .write_set[]?)
+                 | select(.sha256_at_close != null)
+                 | "\(.sha256_at_close.value) \(.path)"] | unique | .[0:10] | .[]' "$OUTPUT")
+if [[ "$MISMATCHED" -ne 0 ]]; then
+    echo "FAIL: $MISMATCHED of $SAMPLED sampled hashes disagree with sha256sum (SC-003)"
+    exit 1
+fi
+if [[ "$SAMPLED" -lt 1 ]]; then
+    echo "FAIL: zero hashes available to sample (SC-003)"
+    echo "      Either nothing was hashed or sha256_at_close is never emitted;"
+    echo "      a vacuous pass here would hide both."
+    jq '.predicate.trace_integrity.compiler_hash_coverage' "$OUTPUT"
+    exit 1
+fi
+echo "    hashes verified against sha256sum: $SAMPLED/$SAMPLED agree"
+
+echo
+echo ">>> m210 + m212 + m213 + m1072 integration test PASSED"
 echo "    compiler_pipeline: $INVOCATION_COUNT invocations, $RUSTC_COUNT rustc"
 echo "    trace_integrity: ring_buffer_overflows=$OVERFLOWS"
 echo "    filter_categories_applied (default run): [$APPLIED]"

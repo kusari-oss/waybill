@@ -37,10 +37,13 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
-use tracing::debug;
+use tracing::{debug, warn};
 use waybill_common::attestation::compiler_pipeline::{CompilerPipelineData, ReadKind};
 use waybill_common::attestation::integrity::{BudgetSource, CompilerHashCoverage};
-use waybill_common::types::hash::ContentHash;
+use waybill_common::types::hash::{ContentHash, HashAlgorithm, HexString};
+
+use crate::scan_fs::walker::DEFAULT_SIZE_CAP_BYTES;
+use crate::trace::hasher::sha256_file_hex;
 
 /// How many bytes the pass may hash in total, and where that number came
 /// from.
@@ -90,6 +93,15 @@ pub fn apply_close_time_facts(
     data: &mut CompilerPipelineData,
     budget: Budget,
 ) -> CompilerHashCoverage {
+    run(data, budget, DEFAULT_SIZE_CAP_BYTES)
+}
+
+/// The pass, with the per-file size cap as a parameter.
+///
+/// Exists so the over-cap branch is reachable from a unit test with a
+/// two-byte cap instead of a 256 MB fixture. Production always passes
+/// `DEFAULT_SIZE_CAP_BYTES`.
+fn run(data: &mut CompilerPipelineData, budget: Budget, cap: u64) -> CompilerHashCoverage {
     let ordered = distinct_paths(data);
 
     let mut facts: BTreeMap<PathBuf, PathFacts> = BTreeMap::new();
@@ -98,7 +110,7 @@ pub fn apply_close_time_facts(
     let mut skipped = 0u64;
 
     for path in &ordered {
-        let (f, outcome) = visit(path);
+        let (f, outcome) = visit(path, cap);
         match outcome {
             Outcome::Hashed => hashed += 1,
             Outcome::Absent => absent += 1,
@@ -160,30 +172,66 @@ fn distinct_paths(data: &CompilerPipelineData) -> Vec<PathBuf> {
 /// `symlink_metadata`, not `metadata`: the question is whether the name
 /// resolved, so a dangling symlink is a successful stat of the link itself
 /// — present, not a regular file, no hash.
-fn visit(path: &PathBuf) -> (PathFacts, Outcome) {
-    match std::fs::symlink_metadata(path) {
-        Err(_) => (
+fn visit(path: &PathBuf, cap: u64) -> (PathFacts, Outcome) {
+    let Ok(md) = std::fs::symlink_metadata(path) else {
+        return (
             PathFacts {
                 existed: false,
                 hash: None,
             },
             Outcome::Absent,
-        ),
-        Ok(md) => {
-            // Hashing lands in T020. Until then a present regular file is
-            // "existed but not hashed", which is exactly true, and keeps
-            // FR-013's partition satisfied at this commit rather than only
-            // after US1.
-            if !md.is_file() {
-                debug!(path = %path.display(), "close-time: not a regular file, skipped");
-            }
-            (
+        );
+    };
+
+    // The name resolved. Whether anything readable is behind it is a
+    // separate question, which `sha256_at_close`'s presence answers.
+    let existed = PathFacts {
+        existed: true,
+        hash: None,
+    };
+
+    if !md.is_file() {
+        debug!(path = %path.display(), "close-time: not a regular file, not hashed");
+        return (existed, Outcome::Skipped);
+    }
+
+    // `sha256_file_hex` refuses a file over the cap rather than hashing a
+    // prefix (research R2), so an over-cap file arrives here as an `Err`
+    // and lands in `paths_skipped` like any other unreadable file. The
+    // budget is not consulted yet: T037 adds the charging, and the call
+    // site passes `u64::MAX` until T036 measures a default, so US1 ships
+    // correct-but-unbounded exactly as spec.md describes.
+    match sha256_file_hex(path, cap) {
+        Ok(hex) => match HexString::new(&hex) {
+            Ok(value) => (
                 PathFacts {
                     existed: true,
-                    hash: None,
+                    hash: Some(ContentHash {
+                        algorithm: HashAlgorithm::Sha256,
+                        value,
+                    }),
                 },
-                Outcome::Skipped,
-            )
+                Outcome::Hashed,
+            ),
+            Err(e) => {
+                // Unreachable in practice -- the hasher emits lowercase
+                // hex -- but a panic here would abort a whole trace's
+                // post-processing over one path (Boundary 4).
+                warn!(
+                    path = %path.display(),
+                    error = %e,
+                    "close-time: hasher returned a value that is not hex; not hashed"
+                );
+                (existed, Outcome::Skipped)
+            }
+        },
+        Err(e) => {
+            warn!(
+                path = %path.display(),
+                error = %e,
+                "close-time: could not hash; counted as skipped"
+            );
+            (existed, Outcome::Skipped)
         }
     }
 }
@@ -345,10 +393,12 @@ mod tests {
 
         assert_eq!(cov.paths_total, 3);
         assert_eq!(cov.paths_absent, 1, "the deleted write");
-        // The regular file is "existed but not hashed" until T020 adds
-        // hashing, which is exactly true at this commit.
-        assert_eq!(cov.paths_skipped, 2, "the directory and the regular file");
-        assert_eq!(cov.paths_hashed, 0, "hashing arrives in T020");
+        // Before T020 added hashing this was `skipped: 2, hashed: 0` --
+        // the regular file was "existed but not hashed", which was true
+        // then. T020 reclassified it, and the partition held across the
+        // move, which is what T016 exists to prove.
+        assert_eq!(cov.paths_skipped, 1, "the directory");
+        assert_eq!(cov.paths_hashed, 1, "the regular file");
         assert!(partition_holds(&cov));
 
         let inv = &data.invocations[0];
@@ -369,7 +419,16 @@ mod tests {
         assert!(present_dir.sha256_at_close.is_none(), "not a regular file");
 
         assert!(inv.read_set[0].existed_at_close);
-        assert!(inv.read_set[0].sha256_at_close.is_none());
+        let hash = inv.read_set[0]
+            .sha256_at_close
+            .as_ref()
+            .expect("a readable regular file is hashed");
+        // sha256 of "fn main() {}" from `shasum -a 256`, not from this
+        // code -- the same independence SC-003 asks for on a real trace.
+        assert_eq!(
+            hash.value.as_str(),
+            "ef32637cb9c3ec2e3968c9cbdf26a5e9c172be94f88af533e14bd43f892d5297"
+        );
     }
 
     /// T016: a dangling symlink is a *successful* `symlink_metadata` of
@@ -456,6 +515,101 @@ mod tests {
             "stdin was stat'd: the file is there, so a stat would say true"
         );
         assert!(e.sha256_at_close.is_none());
+    }
+
+    // std::os::unix doesn't expose geteuid directly; use the C ABI
+    // (always available on unix without adding a libc dep). Same idiom as
+    // `scan_fs/podman_source.rs:571`.
+    #[cfg(unix)]
+    extern "C" {
+        fn geteuid() -> u32;
+    }
+
+    /// T021: a file over the per-file cap is skipped, not truncated.
+    ///
+    /// Research R2's correction: `sha256_file_hex` returns
+    /// `Err(InvalidData)` for an oversized file rather than hashing a
+    /// prefix, so there is no way for a partial digest to be emitted as
+    /// if it were the whole file. The path still existed, so the entry
+    /// says so — "existed but not hashed" is the honest answer.
+    #[test]
+    fn over_cap_file_is_skipped_not_truncated() {
+        let dir = tempfile::tempdir().unwrap();
+        let big = dir.path().join("over-the-cap.rlib");
+        std::fs::write(&big, b"more than two bytes").unwrap();
+
+        let mut data = pipeline(&[], std::slice::from_ref(&big));
+        let cov = run(&mut data, unbudgeted(), 2);
+
+        assert_eq!(cov.paths_total, 1);
+        assert_eq!(cov.paths_skipped, 1);
+        assert_eq!(cov.paths_hashed, 0);
+        assert_eq!(cov.paths_absent, 0, "it was right there");
+        assert!(partition_holds(&cov));
+
+        let e = &data.invocations[0].write_set[0];
+        assert!(e.existed_at_close);
+        assert!(
+            e.sha256_at_close.is_none(),
+            "a prefix hash would be worse than no hash"
+        );
+
+        // Control: the same file under a cap that admits it does hash,
+        // so the skip above is the cap's doing and not a broken fixture.
+        let mut data = pipeline(&[], std::slice::from_ref(&big));
+        let cov = run(&mut data, unbudgeted(), 1024);
+        assert_eq!(cov.paths_hashed, 1);
+        assert!(data.invocations[0].write_set[0].sha256_at_close.is_some());
+    }
+
+    /// T022: an unreadable file is skipped and the pass keeps going.
+    ///
+    /// One bad path must not cost the other 400 their close-time facts.
+    #[cfg(unix)]
+    #[test]
+    fn unreadable_file_is_skipped_and_the_pass_continues() {
+        use std::os::unix::fs::PermissionsExt;
+
+        if unsafe { geteuid() } == 0 {
+            // Root ignores the mode bits, so the file would hash and the
+            // assertion would be meaningless. Skipping beats asserting
+            // something untrue of the environment.
+            return;
+        }
+
+        let dir = tempfile::tempdir().unwrap();
+        let locked = dir.path().join("no-permissions.rlib");
+        std::fs::write(&locked, b"secret").unwrap();
+        std::fs::set_permissions(&locked, std::fs::Permissions::from_mode(0o000)).unwrap();
+
+        let after = dir.path().join("zzz-later-in-sort-order.rlib");
+        std::fs::write(&after, b"readable").unwrap();
+
+        let mut data = pipeline(&[], &[locked.clone(), after.clone()]);
+        let cov = apply_close_time_facts(&mut data, unbudgeted());
+
+        assert_eq!(cov.paths_total, 2);
+        assert_eq!(cov.paths_skipped, 1, "the unreadable one");
+        assert_eq!(cov.paths_hashed, 1, "the pass did not abort");
+        assert!(partition_holds(&cov));
+
+        let bad = data.invocations[0]
+            .write_set
+            .iter()
+            .find(|e| e.path == locked)
+            .unwrap();
+        assert!(bad.existed_at_close, "the name resolved");
+        assert!(bad.sha256_at_close.is_none());
+
+        let good = data.invocations[0]
+            .write_set
+            .iter()
+            .find(|e| e.path == after)
+            .unwrap();
+        assert!(
+            good.sha256_at_close.is_some(),
+            "a path after the failure in sort order must still be measured"
+        );
     }
 
     /// FR-011: one path named by several invocations is visited once and

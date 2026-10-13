@@ -76,6 +76,58 @@ is why they live there rather than in a cfg-gated Rust test: the feature-on
 `cargo test` lane runs unprivileged. The commands below are the manual
 equivalent for working on them interactively.
 
+### Running the harness from macOS
+
+Measured while implementing this milestone, because each of these cost a
+failed run:
+
+```sh
+colima start --cpu 8 --memory 12          # 2 CPU / 4 GiB is the default and is slow
+docker build -f Dockerfile.ebpf-test -t waybill-ebpf-test .
+docker run --rm --privileged \
+  -v /sys/kernel/debug:/sys/kernel/debug \
+  waybill-ebpf-test
+```
+
+- **The debugfs mount is required.** `--privileged` alone is not enough:
+  every tracepoint attach fails with `tracefs not found` and the run dies
+  on `sys_enter_chdir` before reaching a single assertion. CI gets the
+  mount from `scripts/ebpf-container-run.sh`, which is why the flag is
+  easy to miss when invoking `docker run` by hand.
+- **`scripts/ebpf-container-run.sh` does not work on macOS.** It calls GNU
+  `timeout`, which macOS does not ship, and the failure surfaces as
+  `::error::eBPF integration container did not exit within 720s` — printed
+  instantly, while the container is in fact running the trace normally.
+  A misleading hang report, not a hang.
+- **Editing the harness script invalidates the cargo-build layer.** The
+  Dockerfile says `.dockerignore` excludes `scripts/` so the script can be
+  iterated cheaply as a final layer; `.dockerignore` contains no such
+  entry, so `COPY . .` picks the script up and a one-line assertion edit
+  costs a full rebuild. Bind-mount over it instead, which is what the
+  Dockerfile's final layer was meant to buy:
+
+  ```sh
+  docker run --rm --privileged \
+    -v /sys/kernel/debug:/sys/kernel/debug \
+    -v "$PWD/scripts/ebpf-integration-test.sh:/usr/local/bin/ebpf-integration-test.sh" \
+    waybill-ebpf-test
+  ```
+
+  The bind source must be somewhere Colima shares into the VM — under
+  `$HOME` works, a path under `/private/tmp` does not, and the failure is
+  an opaque `not a directory` mount error rather than a missing-file one.
+  This is also how to mutation-test the assertions: point the SC-003 jq
+  at `.sha256_at_close_TYPO`, re-run, and confirm it reports
+  `FAIL: zero hashes available to sample` instead of passing over an
+  empty sample.
+- **`cargo clippy --all-targets` cannot run in the image as built.**
+  `.dockerignore` excludes `tests/fixtures/`, so an unrelated
+  `include_str!` at `waybill-cli/src/attestation/serializer.rs:197` fails
+  to resolve. Bind the directory back in to reproduce CI's lane:
+  `docker run --rm -v "$PWD/tests/fixtures:/waybill/tests/fixtures" --entrypoint bash waybill-ebpf-test -c 'cargo clippy --workspace --all-targets --features ebpf-tracing -- -D warnings'`.
+  The image's own `cargo build --bin waybill` never compiles that module,
+  so the build does not reveal it.
+
 ```sh
 # in the Linux VM
 cargo run -p xtask -- ebpf
