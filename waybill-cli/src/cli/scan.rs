@@ -187,6 +187,7 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
     use crate::attestation::serializer;
     use crate::error::MikebomError;
     use crate::trace::aggregator::EventAggregator;
+    use crate::trace::close_time;
     use crate::trace::compiler_pipeline::{
         CompilerPipelineAggregator, FilterConfig as CompilerFilterConfig,
     };
@@ -194,6 +195,7 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
     use crate::trace::loader::{self, LoaderConfig};
     use crate::trace::observed::{self, ObservedKind, ObservedOp};
     use crate::trace::processor::TraceStats;
+    use waybill_common::attestation::integrity::BudgetSource;
     use waybill_common::events::{
         CompilerExecEvent, FileEvent, FileEventType, LineageEvent, NetworkEvent, RenameEvent,
     };
@@ -762,7 +764,7 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
     // tracepoint attach failed, operator's command didn't invoke a
     // whitelisted compiler). None-elision preserves pre-m210
     // attestation byte-identity per research R6.
-    let compiler_pipeline_data = if compiler_count > 0 {
+    let mut compiler_pipeline_data = if compiler_count > 0 {
         Some(compiler_agg.finalize())
     } else {
         None
@@ -773,6 +775,26 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
             secrets_filtered = data.secrets_read_filtered,
             "compiler-pipeline data captured"
         );
+    }
+
+    // Milestone 1072 (#1144) — apply close-time facts to the compiler
+    // read/write sets. Until this ran, every write-set entry claimed it
+    // survived the trace window and every hash was 64 zeros.
+    //
+    // Only runs when the trace captured compiler invocations: a trace
+    // with none emits no coverage record at all, so its `trace_integrity`
+    // stays byte-identical to a pre-m1072 attestation (SC-007).
+    if let Some(ref mut data) = compiler_pipeline_data {
+        // T036 is what reads `--compiler-hash-budget-bytes` and supplies a
+        // measured default; until then the pass is unbudgeted, which
+        // spec.md calls correct-but-unbounded. `u64::MAX` cannot truncate.
+        let budget = close_time::Budget {
+            total_bytes: u64::MAX,
+            source: BudgetSource::Default,
+        };
+        // T038 assigns this to `trace.trace_integrity`; the pass's own
+        // effect on `data` is what matters at this commit.
+        let _ = close_time::apply_close_time_facts(data, budget);
     }
 
     let stmt = builder::build_attestation(

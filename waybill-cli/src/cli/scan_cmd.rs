@@ -4149,6 +4149,7 @@ pub async fn execute(
         bloom_filter_false_positive_rate: 0.0,
         filter_categories_applied: vec![],
         unresolved_relative_opens: 0,
+        compiler_hash_coverage: None,
     };
 
     // Milestone 073: resolve identifiers — auto-detected

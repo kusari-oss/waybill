@@ -72,32 +72,56 @@ pub enum ReadKind {
     StdinInput { bytes_read: u64 },
 }
 
-/// One entry in a `CompilerInvocation.read_set`. See data-model E4.
+/// One entry in a `CompilerInvocation.read_set`.
 ///
-/// For `kind == StdinInput`, the `path` is a synthetic `"<stdin>"`
-/// marker and the `sha256` is a sentinel zero-value hash (real bytes
-/// don't get captured in MVP per FR-018).
+/// Two tiers, structurally distinct (milestone 1072,
+/// `contracts/read-write-set-shape.md` C-1072-1): `path` and `kind` are
+/// what the trace observed; the `_at_close` fields are what userspace
+/// measured after the traced command exited.
+///
+/// For `kind == StdinInput` the `path` is a synthetic `"<stdin>"` marker
+/// and is never stat'd — `existed_at_close` is `false` with no hash, and
+/// the entry contributes to none of the coverage counts (C-1072-2a).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ReadSetEntry {
     pub path: PathBuf,
-    pub sha256: ContentHash,
     pub kind: ReadKind,
+    /// The name resolved when the trace ended. A `symlink_metadata`
+    /// success, so a dangling symlink is `true` — it asserts that the
+    /// name resolved, not that readable content was there.
+    pub existed_at_close: bool,
+    /// The content of `path` **when the trace ended**, not the bytes the
+    /// compiler read. A verifier binding a component to a source hash
+    /// MUST NOT use this field for that purpose. Absent means "not
+    /// measured", never "zero".
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sha256_at_close: Option<ContentHash>,
 }
 
-/// One entry in a `CompilerInvocation.write_set`. See data-model E5.
+/// One entry in a `CompilerInvocation.write_set`.
 ///
-/// `sha256` is `None` when the file was deleted between close-time
-/// and trace-end (typical for build intermediates like `*.o` files
-/// that get consumed by the linker then removed). `survived_trace_window`
-/// captures the same distinction more directly and is preserved
-/// alongside `sha256` for downstream consumers that want the boolean
-/// flag without null-check gymnastics.
+/// Same two tiers as `ReadSetEntry`. `path` is the **final** observed
+/// path, and exactly one entry exists per artifact per invocation
+/// (FR-009): an artifact written to a temporary name and renamed appears
+/// once, under its final name, with the intermediate in `renamed_from`.
+///
+/// An artifact the compiler wrote and then deleted reports
+/// `existed_at_close: false` with no hash. That is #1144: before
+/// milestone 1072 every entry here claimed it survived.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct WriteSetEntry {
     pub path: PathBuf,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub sha256: Option<ContentHash>,
-    pub survived_trace_window: bool,
+    /// Observed intermediate names, oldest first. **Renames only** — a
+    /// hard link is not a rename, since both names survive and share an
+    /// inode (FR-009a). No link syscall is traced today, so this
+    /// constrains any future link probe rather than describing one.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub renamed_from: Vec<PathBuf>,
+    /// The name resolved when the trace ended. See `ReadSetEntry`.
+    pub existed_at_close: bool,
+    /// The content of `path` when the trace ended. See `ReadSetEntry`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sha256_at_close: Option<ContentHash>,
 }
 
 /// A single traced compiler invocation. See data-model E2.
@@ -207,27 +231,24 @@ pub struct CompilerPipelineData {
 }
 
 impl CompilerPipelineData {
-    /// The waybill-owned URI for the `compiler-invocation/v0.1`
-    /// witness attestor entry. Locked per Clarifications Q3 +
-    /// `contracts/attestor-predicate.md` C-1. Future version bumps
-    /// (v0.2, v1, etc.) MUST retain the `/compiler-invocation/` path
-    /// prefix.
+    /// The waybill-owned URI for the `compiler-invocation/v0.2`
+    /// witness attestor entry. Bumped from v0.1 by milestone 1072
+    /// (#1144), which changed the read/write set shape: the payload is
+    /// explicitly pre-stable, so the bump is free and signals the change
+    /// to anything matching on the type. Future bumps MUST retain the
+    /// `/compiler-invocation/` path prefix.
+    ///
+    /// Duplicated at `attestation::witness::COMPILER_INVOCATION_TYPE`
+    /// (research R8). Bump both; do not refactor into one constant as
+    /// part of this milestone.
     pub const PREDICATE_TYPE: &'static str =
-        "https://waybill.dev/attestation/compiler-invocation/v0.1";
+        "https://waybill.dev/attestation/compiler-invocation/v0.2";
 }
 
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
     use super::*;
-    use crate::types::hash::HashAlgorithm;
-
-    fn zero_sha256() -> ContentHash {
-        ContentHash {
-            algorithm: HashAlgorithm::Sha256,
-            value: crate::types::hash::HexString::new(&"0".repeat(64)).unwrap(),
-        }
-    }
 
     #[test]
     fn compiler_family_serializes_snake_case() {
@@ -336,29 +357,45 @@ mod tests {
         assert!(!json.contains("exit_code"), "{json}");
     }
 
+    /// Milestone 1072: a deleted intermediate omits the hash rather than
+    /// reporting a zero one, and the removed `survived_trace_window` is
+    /// not resurrected under its old name.
     #[test]
-    fn write_set_entry_omits_none_sha256() {
+    fn write_set_entry_omits_absent_hash() {
         let e = WriteSetEntry {
             path: PathBuf::from("/tmp/foo.o"),
-            sha256: None,
-            survived_trace_window: false,
+            renamed_from: vec![],
+            existed_at_close: false,
+            sha256_at_close: None,
         };
         let json = serde_json::to_string(&e).unwrap();
-        assert!(!json.contains("sha256"), "{json}");
-        assert!(json.contains("survived_trace_window"), "{json}");
+        assert!(!json.contains("sha256_at_close"), "{json}");
+        assert!(!json.contains("survived_trace_window"), "{json}");
+        assert!(!json.contains("renamed_from"), "{json}");
+        assert!(json.contains("\"existed_at_close\":false"), "{json}");
     }
 
+    /// FR-001: no entry in either set may carry an unqualified `sha256`
+    /// key. Asserted on `"sha256":` with the colon, so the close-time
+    /// field's name does not satisfy the check.
+    ///
+    /// This replaces `read_set_entry_carries_hash_when_file_kind`, which
+    /// asserted `json["sha256"].is_object()` — the direct negation of
+    /// FR-001. It could not be repaired, only deleted.
     #[test]
-    fn read_set_entry_carries_hash_when_file_kind() {
+    fn read_set_entry_carries_no_unqualified_sha256() {
         let e = ReadSetEntry {
             path: PathBuf::from("/src/main.rs"),
-            sha256: zero_sha256(),
             kind: ReadKind::File,
+            existed_at_close: true,
+            sha256_at_close: None,
         };
-        let json = serde_json::to_value(&e).unwrap();
-        assert_eq!(json["path"], "/src/main.rs");
-        assert_eq!(json["kind"], "file");
-        assert!(json["sha256"].is_object());
+        let json = serde_json::to_string(&e).unwrap();
+        assert!(!json.contains("\"sha256\":"), "{json}");
+        let v: serde_json::Value = serde_json::from_str(&json).unwrap();
+        assert_eq!(v["path"], "/src/main.rs");
+        assert_eq!(v["kind"], "file");
+        assert_eq!(v["existed_at_close"], true);
     }
 
     #[test]
@@ -391,12 +428,12 @@ mod tests {
 
     #[test]
     fn predicate_type_uri_is_mikebom_owned_per_q3() {
-        // Contract lock — this URI is documented in
-        // contracts/attestor-predicate.md C-1 and MUST NOT change
-        // without a URI bump (v0.2, etc.).
+        // Contract lock — bumped to v0.2 by milestone 1072 (#1144, FR-017)
+        // when the read/write set shape changed. MUST NOT change again
+        // without a further URI bump.
         assert_eq!(
             CompilerPipelineData::PREDICATE_TYPE,
-            "https://waybill.dev/attestation/compiler-invocation/v0.1"
+            "https://waybill.dev/attestation/compiler-invocation/v0.2"
         );
     }
 }

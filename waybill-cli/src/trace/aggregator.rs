@@ -515,6 +515,7 @@ impl EventAggregator {
                 .iter()
                 .filter(|op| op.unresolved_relative)
                 .count() as u64,
+            compiler_hash_coverage: None,
         };
 
         AggregatedTrace {

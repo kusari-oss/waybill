@@ -150,12 +150,19 @@ two lines above it:
 
 `TraceIntegrity` derives `Default` and the field is `Option` +
 `serde(default)`, so pre-m1072 JSON round-trips and `..Default::default()`
-construction keeps working. Construction is a different matter: there are
-**21** exhaustive `TraceIntegrity { … }` literals across 18 files and not one
-of them spreads `..Default::default()`, so each is a compile error until the
-field is added or the literal gains a spread. Counted at plan time, not
-estimated; re-run T004's grep before starting, since the number moves with
-the tree.
+construction keeps working. Construction is a different matter: **20**
+exhaustive `TraceIntegrity { … }` literals break, because `serde(default)`
+governs deserialization, not struct construction.
+
+Measured during T004 rather than estimated, and the measurement corrected
+the plan-time figure twice over. A `waybill-common/src waybill-cli/src` grep
+returns 21 hits, but three of those already spread
+`..TraceIntegrity::default()` and need no edit — patching them is a hard
+error, not a redundancy. It also misses two literals under
+`waybill-cli/tests/`, which the type change breaks just as thoroughly.
+Two sites are production (`trace/aggregator.rs:502`,
+`cli/scan_cmd.rs:4142`); the other 18 are test-only. Re-run T004's grep
+before starting: the number moves with the tree.
 
 ## E5. `PartialInvocation` in-flight maps (modified, internal)
 
