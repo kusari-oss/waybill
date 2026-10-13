@@ -313,14 +313,26 @@ read entries and 96 bytes.
 A wider spread appeared in the four-run `F R R F` set, where `paths_total`
 ranged **15,029 → 23,200** across runs of the same build (two per layout).
 
-**This is silent, not disclosed.** Principle X's remedy for "cannot
-guarantee" is structured disclosure, and m212 exists to count exactly this
-kind of loss — `events_dropped` and `ring_buffer_overflows` were added so
-a consumer could tell a complete trace from a lossy one. Here they read
-zero while the trace demonstrably observed less. Whatever the mechanism —
-process exit racing the ring-buffer drain, exec events missed before the
-probe sees the child, per-CPU accounting that does not cover this path —
-the attestation asserts `completeness: complete` for all three.
+**This is silent, not disclosed** — and the reason is narrower than it
+first looked. Of the two columns above, only `ring_buffer_overflows` is a
+measurement: m212 wired it to the per-CPU maps, and it genuinely read
+zero, ruling out kernel-side reserve failure. `events_dropped` is a
+literal `0` on this path, deferred to #618 with the deferral stated at
+`waybill-cli/src/cli/scan.rs:713`. And `completeness` could not have said
+anything else: `derive_completeness`
+(`trace/compiler_pipeline.rs:517`) returns `Degraded` only when
+`events_dropped > 0`, while the sole caller of `record_events_dropped` in
+the tree is the unit test at `compiler_pipeline.rs:844` — so the
+`Degraded` arm is unreachable in production and the test proving it *can*
+fire is the only thing that ever reaches it.
+
+So the trace did not fail to report loss; the reporting path for this
+class of loss was never built. That leaves #618's second drop path — an
+event written to the ring buffer that the drain loop does not consume
+before the child exits and the programs unload — as the leading
+candidate, with its first path measured at zero. Filed as #1185 with that
+narrowing; the probe's `events_dropped` column should be read as "not
+instrumented", not as "zero loss".
 
 ### Why this matters beyond #1144
 
