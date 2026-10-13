@@ -123,22 +123,42 @@ pub struct ScanArgs {
     pub command: Vec<String>,
 }
 
-/// Default cumulative budget for the close-time hashing pass: 2 GiB.
+/// Default cumulative budget for the close-time hashing pass: 16 GiB.
 ///
-/// **Measured, not chosen by feel** — see
-/// `specs/1072-compiler-set-close-time/measurements/cost.md`, which
-/// `contracts/cli-budget.md` C-1072-9 requires this definition to cite.
-/// The `two_binaries_diverge` fixture hashes 955,494 bytes across 102
-/// distinct paths in 2 ms, 0.2% of its trace's wall-clock. 2 GiB is
-/// ~2,200x that demand, so a normal build never truncates; truncation
-/// costs real data, so the default should only be reached by something
-/// pathological.
+/// **Measured against a real workspace** — see
+/// `measurements/cost.md` §"Sizing the default against a real workspace"
+/// and `measurements/budget-probe.sh`, which `contracts/cli-budget.md`
+/// C-1072-9 requires this definition to cite.
+///
+/// This was 2 GiB until the probe ran, sized at ~2,200x the
+/// `two_binaries_diverge` fixture's 955,494 bytes. A four-crate fixture
+/// is the wrong denominator for a global default, and measuring the right
+/// one moved the headroom by three orders of magnitude:
+///
+/// | traced build | bytes demanded | headroom at 2 GiB |
+/// |---|---|---|
+/// | `two_binaries_diverge` fixture | 955,494 | ~2,200x |
+/// | `--release --bin waybill` | 880,376,492 | 2.4x |
+/// | `--release --workspace --all-targets` | 1,515,056,247 | **1.4x** |
+///
+/// waybill's own CI-shaped build consumes 70% of the old default, so a
+/// workspace 1.5x this one truncated — mainstream, not pathological, and
+/// truncation costs real data. 16 GiB is ~11x that build, bounding a full
+/// spend at ~2.3 minutes at the measured 120 MB/s.
 ///
 /// This constant does **not** enforce SC-008's 5% ratio and cannot: a
-/// full 2 GiB spend against a one-second trace would be ~500%. The ratio
-/// holds because hashable bytes and build duration scale together. The
-/// budget bounds the case where that correlation breaks, and `truncated`
-/// plus the FR-015 WARN is what an operator sees when it does.
+/// full spend against a one-second trace would be thousands of percent.
+/// What the probe established is that raising the budget does not
+/// endanger the ratio either, because both terms scale with the build:
+/// hashing runs at ~120 MB/s while a build emits artifacts at ~2.3 MB/s,
+/// so the pass costs ~2% of wall-clock at any budget (measured: 2.4% and
+/// 1.8%). The budget bounds the case where that correlation breaks —
+/// read-set paths that existed before the trace are not bounded by its
+/// duration — and `truncated` plus the FR-015 WARN is what an operator
+/// sees when it does.
+///
+/// Still 64x the 256 MB per-file cap, so the two limits do not interact
+/// in the normal case.
 ///
 /// Only the gated call site reads it, so off the eBPF path it is dead —
 /// same bind as `trace/close_time.rs` and `trace/cwd.rs`, and the same
@@ -147,7 +167,7 @@ pub struct ScanArgs {
     not(all(target_os = "linux", feature = "ebpf-tracing")),
     allow(dead_code)
 )]
-pub const DEFAULT_COMPILER_HASH_BUDGET_BYTES: u64 = 2 * 1024 * 1024 * 1024;
+pub const DEFAULT_COMPILER_HASH_BUDGET_BYTES: u64 = 16 * 1024 * 1024 * 1024;
 
 impl ScanArgs {
     /// Build a [`SigningIdentity`] from the current flag combination.

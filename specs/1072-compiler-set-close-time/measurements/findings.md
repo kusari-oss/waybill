@@ -211,3 +211,78 @@ verification comparing two independently produced attestations — it is
 identifier (hash of argv + cwd + ordinal) rather than a clock. That is a
 predicate-shape change well outside #1144, and it would not fix the
 `mkdtemp` paths, which are irreducibly per-run facts about what happened.
+
+## Q6. Does the 2 GiB default budget survive a real workspace?
+
+**No — it was 1.4× a build this repo's own CI performs.** Measured after
+T049 was marked done, by `budget-probe.sh`, because the question "where
+did 2 GiB come from" has a worse answer than it looked.
+
+`cost.md`'s original sizing cited the measurement it was required to
+cite, and that measurement was of `two_binaries_diverge`: four crates,
+955,494 bytes. The headroom was quoted as ~2,200×. A four-crate fixture
+is the wrong denominator for a global default, and the project rule the
+spec cites — measure external behaviour before designing around it —
+applies to the scale of a real build just as much as to an API's page
+size. 2 GiB satisfied the letter of C-1072-9 while resting on a toy.
+
+Two traced builds of waybill itself, fresh target dir, budget flag at
+64 GiB so nothing clamps:
+
+| traced build | bytes demanded | % of 2 GiB |
+|---|---|---|
+| `two_binaries_diverge` | 955,494 | 0.04% |
+| `--release --bin waybill` | 880,376,492 | 41.0% |
+| `--release --workspace --all-targets` | 1,515,056,247 | **70.5%** |
+
+Truncation costs real data, so the default is meant to be reached only
+by something pathological. At 70.5% consumed by an ordinary CI build,
+any workspace 1.5× this one hit it. **Revised to 16 GiB** (~11× the
+CI-shaped demand); full detail and the SC-008 consequences are in
+`cost.md`.
+
+Two of `cost.md`'s numbers were also measured properly for the first
+time: hashing throughput is **~120 MB/s**, not the ~478 MB/s derived
+from a 2 ms sample, and the pass costs **1.8–2.4%** of a real build's
+wall-clock rather than 0.2%. Both original figures were labelled
+honestly — the throughput as derived, the ratio as fixture-specific —
+and both were wrong by about 4× and 10× respectively. A correct label on
+a wrong number still ships the wrong number.
+
+### The probe measured a kernel filter twice before it measured a budget
+
+Worth recording because the failure was indistinguishable from a product
+defect. The first two runs put the fresh target dir at
+`/tmp/m1072-probe-target` and reported:
+
+```
+paths_total=496 paths_hashed=419 bytes_hashed=9971025
+total write entries: 0        (across 582 invocations, 358 crates)
+```
+
+Zero write-set entries for an entire release build, with
+`events_dropped=0` and `completeness: complete`. That reads as a capture
+defect in m210/m213 — and it is m213 working exactly as designed:
+`Ephemeral` filters the `/tmp/` prefix in-kernel
+(`waybill-common/src/filter.rs:139`), so every artifact write was dropped
+before userspace saw it. The same build with the target dir under
+`/waybill/` produced 3,432 write entries and 839 MiB.
+
+Three things made it recoverable, all of them cross-checks the first
+version of the probe did not have:
+
+1. **cargo's own `Compiling` count** as ground truth for how much work
+   the build did;
+2. **artifact bytes left in the fresh target dir**, which bounds what a
+   complete capture would have faced — 884 MiB against 9.97 MB hashed,
+   i.e. 1%, is not a plausible reading of an ample budget;
+3. **write-set entry count**, asked directly, because #1144 exists to
+   resolve write-set entries and zero of them means the probe measured
+   nothing about its own subject.
+
+`budget-probe.sh` now refuses a `/tmp` or `/var/tmp` target dir with exit
+2 rather than printing a number, and prints all three cross-checks beside
+the result. The lesson is the one already in the project's memory in a
+different costume: a number that looks like "plenty of headroom" and a
+number that means "the experiment measured nothing" are the same number,
+so the probe has to carry its own positive control.

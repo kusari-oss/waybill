@@ -58,6 +58,20 @@ on a real kernel trace — the baseline SC-008's 5% is quoted against, not the
 ceiling itself. Nothing downstream may quote a byte figure that is not
 traceable to that file.
 
+**Amended after T049 (see findings.md Q6).** A kernel trace is necessary
+and not sufficient: the *scale* of the traced build is part of the
+measurement. The first sizing of this constant was traceable to a real
+kernel trace of a **four-crate fixture**, and quoted a headroom of
+~2,200× that a real workspace revised to 1.4×. A byte figure must
+therefore be traceable to a trace of a build **representative of what the
+default has to survive** — for this repository, a `--workspace
+--all-targets` build of itself — and the measurement file must record,
+alongside the figure, the ground truth that the capture was substantially
+complete: artifact bytes on disk, invocations captured against crates
+compiled, and a non-zero write-set entry count. A budget measurement
+taken from a capture that saw 1% of the build is indistinguishable from
+one taken from an ample budget, and the two call for opposite decisions.
+
 ## C-1072-10. Exhaustion behaviour
 
 On exhaustion the command MUST:

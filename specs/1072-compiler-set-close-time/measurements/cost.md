@@ -65,7 +65,7 @@ contradictions": the common case is absence, so a pass that silently did
 nothing would be reporting the exact opposite of the truth for 85% of the
 set.
 
-## Derived, not measured
+## Derived, not measured — and later measured
 
 Flagged separately because extrapolation is not measurement:
 
@@ -76,7 +76,13 @@ Flagged separately because extrapolation is not measurement:
   1 GB/s, and a 2 ms reading cannot narrow it further. Re-measure with a
   multi-hundred-MB fixture before relying on it for anything.
 
-## The default budget constant
+> **Superseded.** `budget-probe.sh` did that re-measurement over 7.1 s
+> and 12.7 s samples: **~120 MB/s** (880,376,492 ÷ 7.131 s = 123 MB/s;
+> 1,515,056,247 ÷ 12.734 s = 119 MB/s, same host). The derived figure was
+> ~4× high. The caveat above was correct and the number was not, which is
+> the reason the project rule puts predictions outside the data table.
+
+## The default budget constant — original sizing, now superseded
 
 **2 GiB** (`DEFAULT_COMPILER_HASH_BUDGET_BYTES`), with this reasoning:
 
@@ -98,6 +104,115 @@ exists to bound the pathological case where that correlation breaks, and
 `truncated: true` plus the FR-015 WARN is what an operator sees when it
 does. Principle X: disclose, rather than claim a guarantee that cannot be
 made.
+
+> **The ~2,200× headroom in the first bullet is wrong by three orders of
+> magnitude.** It is a fact about a four-crate fixture, which is the wrong
+> denominator for a global default. The section below measures the right
+> one and revises the constant to 16 GiB. The last paragraph survives
+> intact, and the probe sharpened it: see "Why a higher budget does not
+> endanger SC-008".
+
+## Sizing the default against a real workspace
+
+Produced by `budget-probe.sh`, committed next to this file. Same image,
+same host, same kernel as above. Two traced builds of waybill itself, each
+with a **fresh target dir** and the budget flag set to 64 GiB so the pass
+hashes everything and reports true demand rather than clamping.
+
+| traced build | wall-clock | paths_total | bytes hashed | pass | ratio | headroom at 2 GiB |
+|---|---|---|---|---|---|---|
+| `two_binaries_diverge` (above) | 0.9 s | 102 | 955,494 | 2 ms | 0.2% | ~2,200× |
+| `--release --bin waybill` | 285.3 s | 6,537 | 880,376,492 | 7,131 ms | 2.4% | 2.4× |
+| `--release --workspace --all-targets` | 685.0 s | 17,188 | 1,515,056,247 | 12,734 ms | 1.8% | **1.4×** |
+
+The third row is the shape CI compiles. It consumes **70.5% of the old
+2 GiB default**, so a workspace 1.5× this one truncated — and that is a
+mainstream case, not the pathological one the default was supposed to
+reserve truncation for.
+
+**Revised: 16 GiB.** ~11× the CI-shaped build's measured demand, bounding
+a full spend at ~2.3 minutes at the measured 120 MB/s, and still 64× the
+256 MB per-file cap.
+
+### The capture is near-complete, so these are facts about the budget
+
+A small `bytes_hashed` has two readings — an ample budget, or a trace that
+saw a fraction of the build — and they call for opposite decisions. So the
+probe records ground truth in the same run:
+
+| | `--bin waybill` | `--workspace --all-targets` |
+|---|---|---|
+| bytes hashed | 880,376,492 | 1,515,056,247 |
+| artifact bytes in the fresh target dir | 927,472,769 | 1,594,179,924 |
+| hashed ÷ on-disk | **94.9%** | **95.0%** |
+| invocations captured | 582 | 1,310 |
+| with a non-empty write set | 527 | 1,247 |
+| write-set entries | 3,432 | 7,012 |
+| read-set entries | 21,048 | 96,013 |
+| `events_dropped` / `ring_buffer_overflows` | 0 / 0 | 0 / 0 |
+
+95% of the artifact bytes the build left on disk were hashed, with no ring
+buffer loss. The remaining 5% is the `paths_absent` tail plus two paths
+counted `paths_skipped` in each run — present at close but not hashable.
+Those two were **not** inspected individually; the fixture's single
+skipped path was a directory that reached a write set, and the same cause
+is plausible here but unverified, so it is recorded as unexplained rather
+than assumed.
+
+### Why a higher budget does not endanger SC-008
+
+The original note said the ratio holds because hashable bytes and build
+duration scale together. The probe measures both terms, so that is no
+longer an argument but a rate:
+
+- hashing: **~120 MB/s** (two samples, 123 and 119);
+- artifact production: **~2.3–3.3 MB/s** of artifact bytes per second of
+  build (884 MiB / 285 s; 1,520 MiB / 685 s).
+
+The ratio is the quotient, ~2%, and it is *independent of the budget* —
+which is what the two measured ratios show (2.4% and 1.8%, against a 5%
+ceiling). Raising the default from 2 to 16 GiB therefore does not move the
+pass toward SC-008's ceiling under observed scaling; it only widens the
+window before truncation.
+
+What the budget is actually for is the case where that correlation breaks,
+and the probe names it more precisely than the original note did: **it is
+the read set, not the write set.** Artifact bytes cannot be produced
+faster than the build runs, but read-set paths — rlibs, sysroot objects,
+headers — existed before the trace started and their size is bounded by
+nothing the trace can see. 96,013 read entries against 7,012 write
+entries in the wider build is the shape of that exposure.
+
+### Margins, stated plainly
+
+Both of the original claims passed, with far less room than the fixture
+suggested:
+
+| claim | fixture says | real workspace says |
+|---|---|---|
+| SC-008 ≤ 5% of wall-clock | 0.2% (25× inside) | 1.8–2.4% (2.1–2.8× inside) |
+| budget headroom | ~2,200× | 1.4× at 2 GiB, ~11× at 16 GiB |
+
+### Re-running
+
+```sh
+docker run --rm --privileged \
+  -v /sys/kernel/debug:/sys/kernel/debug \
+  -v "$PWD/specs/1072-compiler-set-close-time/measurements/budget-probe.sh:/budget-probe.sh" \
+  -v "$PWD/specs/1072-compiler-set-close-time/measurements/.probe-out:/probe-out" \
+  -e BUILD_ARGS="--release --workspace --all-targets" \
+  -e TARGET_DIR=/waybill/target-m1072-probe-all \
+  --entrypoint bash waybill-ebpf-test /budget-probe.sh
+```
+
+**The target dir must not be under `/tmp`.** The first two runs of this
+probe put it there and measured a demand of 9.97 MB with *zero* write-set
+entries across a 358-crate build, because m213's kernel noise filter drops
+the `/tmp/` prefix as category `Ephemeral`
+(`waybill-common/src/filter.rs:139`). That reads exactly like a capture
+defect and is an experiment artifact. `budget-probe.sh` now refuses such a
+path with exit 2 rather than reporting the number. findings.md Q6 records
+it.
 
 ## Re-running
 
