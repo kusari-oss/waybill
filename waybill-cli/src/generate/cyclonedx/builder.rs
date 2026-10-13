@@ -790,7 +790,25 @@ impl CycloneDxBuilder {
         // main-module case while builder.rs kept emitting the legacy
         // short-form. Detection uses the same `waybill:component-role:
         // main-module` annotation as the override-filter at lines 272-293.
-        let main_module_purl: Option<String> = if !override_active {
+        //
+        // #1186 — and not when the subject is an explicitly named image.
+        // The ladder's branch 2 (#1170) hands `metadata.component` to the
+        // image, in the same `<name>@<version>` shape the `None` arm below
+        // produces. Promoting an in-image main module here would root the
+        // graph at a component the subject does not point to: the subject
+        // would get no `dependencies[]` entry at all, and
+        // `build_dependencies`' orphan-anchor fallback — "primary depends
+        // on every component nothing else depends on" — would fire on an
+        // ordinary npm package, making it declare `dependsOn` every apk
+        // package in the image.
+        //
+        // This is the same guard #1170 already applied to component
+        // emission at the `subject_is_a_main_module` binding below; that
+        // site was patched and this one was not, so the subject moved and
+        // the graph root stayed behind.
+        let subject_is_a_main_module = self.config.scan_target_kind
+            != crate::generate::root_selector::ScanTargetKind::ExplicitImage;
+        let main_module_purl: Option<String> = if !override_active && subject_is_a_main_module {
             effective_components
                 .iter()
                 .find(|c| {

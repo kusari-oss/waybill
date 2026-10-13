@@ -565,3 +565,85 @@ fn image_with_one_main_module_keeps_the_image_as_subject_issue_1170() {
         all
     );
 }
+
+/// #1186 — the subject must also ROOT the dependency graph.
+///
+/// `build_metadata` picks the subject through `select_root`, which since
+/// #1170 returns `ExplicitScanTarget` for an explicitly named image.
+/// `builder.rs` derived `target_ref` separately, from the first component
+/// annotated `waybill:component-role: main-module`, and
+/// `build_dependencies` keys the whole graph off that. When the image
+/// carried a main module the two disagreed: the subject was the image,
+/// the graph was rooted at the in-image package, and `dependencies[]`
+/// had no entry for the subject at all.
+///
+/// The second half matters as much as the first. `build_dependencies`
+/// anchors orphans with "primary depends on every component nothing else
+/// depends on". Fired on the wrong primary, that made an ordinary npm
+/// package declare `dependsOn` every apk package in the image — observed
+/// on the nightly `node:22-alpine` target, where `pkg:npm/yarn@1.22.22`
+/// claimed nineteen dependencies it does not have.
+///
+/// SPDX 2.3 was never affected: its root holds the anchor edges and the
+/// in-image main module has out-degree zero there.
+#[test]
+fn image_subject_roots_the_dependency_graph_issue_1186() {
+    let files = vec![
+        ImageFile {
+            path: "etc/os-release",
+            content: b"ID=alpine\nVERSION_ID=3.19.1\n".to_vec(),
+        },
+        ImageFile {
+            path: "usr/src/app/package.json",
+            content: br#"{"name":"waybill-fixture-app","version":"0.1.0"}"#.to_vec(),
+        },
+    ];
+    let tarball = build_synthetic_image(&files);
+    let sbom = scan_image(&tarball);
+
+    let subject = sbom["metadata"]["component"]["bom-ref"]
+        .as_str()
+        .expect("subject bom-ref")
+        .to_string();
+    let deps = sbom["dependencies"].as_array().cloned().unwrap_or_default();
+    let refs: Vec<&str> = deps.iter().filter_map(|d| d["ref"].as_str()).collect();
+
+    let subject_entry = deps
+        .iter()
+        .find(|d| d["ref"].as_str() == Some(subject.as_str()));
+    let subject_edges = subject_entry
+        .and_then(|d| d["dependsOn"].as_array())
+        .map(|a| a.len())
+        .unwrap_or(0);
+
+    assert!(
+        subject_entry.is_some(),
+        "the subject must have a dependencies[] entry, or nothing walking \
+         from metadata.component finds anything; subject={subject} refs={refs:?}"
+    );
+    assert!(
+        subject_edges > 0,
+        "the subject must anchor the graph, not sit in it with an empty \
+         dependsOn; subject={subject}"
+    );
+
+    // The in-image main module is an ordinary component now. It must not
+    // have inherited the orphan-anchor role, which is what produced the
+    // `yarn dependsOn alpine-baselayout` class of false edge.
+    let main_module = "pkg:npm/waybill-fixture-app@0.1.0";
+    assert!(
+        refs.contains(&main_module),
+        "the in-image main module must still be in the graph; refs={refs:?}"
+    );
+    let main_module_edges: Vec<&str> = deps
+        .iter()
+        .find(|d| d["ref"].as_str() == Some(main_module))
+        .and_then(|d| d["dependsOn"].as_array())
+        .map(|a| a.iter().filter_map(|v| v.as_str()).collect())
+        .unwrap_or_default();
+    assert!(
+        main_module_edges.is_empty(),
+        "the in-image main module declares no dependencies, so it must not \
+         carry the root's orphan anchors; got {main_module_edges:?}"
+    );
+}
