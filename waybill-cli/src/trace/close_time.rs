@@ -236,7 +236,7 @@ fn distinct_paths(data: &CompilerPipelineData) -> Vec<PathBuf> {
         .invocations
         .iter()
         .flat_map(|inv| inv.read_set.iter())
-        .filter(|e| matches!(e.kind, ReadKind::File))
+        .filter(|e| walks_a_real_path(&e.kind))
         .map(|e| &e.path)
         .collect();
 
@@ -246,6 +246,28 @@ fn distinct_paths(data: &CompilerPipelineData) -> Vec<PathBuf> {
         .chain(reads.iter().copied().filter(|p| !writes.contains(*p)))
         .cloned()
         .collect()
+}
+
+/// Whether a read-set entry names a path the pass should visit.
+///
+/// An **exhaustive** match, deliberately, not `matches!(k, ReadKind::File)`.
+/// A `matches!` allowlist silently drops any variant added later, and
+/// here the consequence is not a missed path but a false statement: a
+/// dropped path falls through to `fan_out`'s unknown-path arm and gets
+/// stamped `existed_at_close: false`, which is the exact class of defect
+/// #1144 is about. The project has already paid for this pattern once —
+/// see the note about an enum allowlist falling out of date, where a
+/// `matches!` survived about two years.
+///
+/// So a new `ReadKind` stops this function compiling, and whoever adds it
+/// has to decide whether it names something on disk.
+fn walks_a_real_path(kind: &ReadKind) -> bool {
+    match kind {
+        ReadKind::File => true,
+        // `<stdin>` is a marker, not a location. Stat'ing it would
+        // resolve against the working directory (C-1072-2a).
+        ReadKind::StdinInput { .. } => false,
+    }
 }
 
 /// Stat one path and classify it (data-model E6 step 2).
@@ -344,20 +366,39 @@ fn visit(path: &PathBuf, cap: u64, remaining: u64) -> Visit {
 /// Write each path's facts onto every entry naming it, in both sets,
 /// across every invocation (data-model E6 step 3, FR-011).
 ///
-/// An entry whose path has no facts is a `StdinInput` entry, which was
-/// excluded from the walk: it reports `existed_at_close: false` with no
-/// hash and contributes to none of the counts.
+/// An entry whose kind names no filesystem path reports
+/// `existed_at_close: false` with no hash and contributes to none of the
+/// counts — the `<stdin>` case (C-1072-2a).
+///
+/// The decision is made from the entry's `kind`, never from a missing
+/// lookup. "No facts for this path" would otherwise mean both "correctly
+/// excluded" and "the walk missed it", and the second would be reported as
+/// a confident `false` — a false statement of exactly the kind this
+/// milestone removes.
 fn fan_out(data: &mut CompilerPipelineData, facts: &BTreeMap<PathBuf, PathFacts>) {
     for inv in &mut data.invocations {
         for entry in &mut inv.read_set {
+            if !walks_a_real_path(&entry.kind) {
+                entry.existed_at_close = false;
+                entry.sha256_at_close = None;
+                continue;
+            }
             match facts.get(&entry.path) {
                 Some(f) => {
                     entry.existed_at_close = f.existed;
                     entry.sha256_at_close = f.hash.clone();
                 }
                 None => {
-                    entry.existed_at_close = false;
-                    entry.sha256_at_close = None;
+                    // Unreachable by construction: `distinct_paths` walks
+                    // every entry this predicate accepts. Reaching here
+                    // means the two disagree, so say so and leave the
+                    // entry's close-time fields at their honest pre-pass
+                    // state rather than inventing an answer.
+                    warn!(
+                        path = %entry.path.display(),
+                        "close-time: read-set path was not visited; \
+                         distinct_paths and fan_out disagree"
+                    );
                 }
             }
         }
