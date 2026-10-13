@@ -356,8 +356,428 @@ if [[ "$ETC_HOSTNAME_COUNT" -lt 1 ]]; then
     echo "WARN: widened run's file_access.operations has 0 /etc/hostname events — expected ≥1 (may indicate trace-attach timing race, not a widen-flag bug)"
 fi
 
+# ---------------------------------------------------------------------
+# Milestone 1072 (#1144) — close-time facts for compiler read/write sets.
+#
+# These assertions live here, not in a cfg-gated Rust integration test,
+# because Constitution VII requires an eBPF-loading test to be gated
+# behind a root/CAP_BPF *runtime* check: ci.yml runs
+# `cargo test --features ebpf-tracing` UNPRIVILEGED, so a cfg-only gate
+# would compile, run and fail there. This harness is the privileged path.
+#
+# Asserted over the $OUTPUT capture above — no second trace needed.
 echo
-echo ">>> m210 + m212 + m213 integration test PASSED"
+echo "==> m1072 US1: close-time facts (SC-001, SC-002, SC-003)"
+
+# SC-001 positive control. At least one write-set entry must report
+# existed_at_close: false. A zero here is a FAILURE, not a clean result:
+# it is indistinguishable from the pass never having run, which is
+# exactly the state #1144 reported. rustc's deps/rmeta* temporaries are
+# gone by trace end, so the expected count is >= 1.
+ABSENT_WRITES=$(jq '[.predicate.compiler_pipeline.invocations[]?
+                     | .write_set[]? | select(.existed_at_close == false)] | length' "$OUTPUT")
+if [[ "$ABSENT_WRITES" -lt 1 ]]; then
+    echo "FAIL: zero write-set entries report existed_at_close: false (SC-001)"
+    echo "      Before m1072 every entry claimed survival. A zero here cannot be"
+    echo "      told apart from the close-time pass never running."
+    jq '[.predicate.compiler_pipeline.invocations[]? | .write_set[]?
+         | {path, existed_at_close}] | .[0:10]' "$OUTPUT"
+    exit 1
+fi
+echo "    write-set entries reporting absent at close: $ABSENT_WRITES"
+
+# SC-001's other half: a true must be true. Every entry claiming the name
+# resolved must still resolve now. `-e || -L` mirrors the contract's
+# definition -- existed_at_close is a symlink_metadata success, so a
+# dangling symlink counts as resolved (C-1072-2).
+UNRESOLVED=0
+CHECKED=0
+while IFS= read -r p; do
+    [[ -z "$p" ]] && continue
+    CHECKED=$((CHECKED + 1))
+    if [[ ! -e "$p" && ! -L "$p" ]]; then
+        echo "FAIL: $p reports existed_at_close: true but does not resolve"
+        UNRESOLVED=$((UNRESOLVED + 1))
+    fi
+done < <(jq -r '[.predicate.compiler_pipeline.invocations[]?
+                 | (.read_set[]?, .write_set[]?)
+                 | select(.existed_at_close == true) | .path] | unique | .[]' "$OUTPUT")
+if [[ "$UNRESOLVED" -ne 0 ]]; then
+    echo "FAIL: $UNRESOLVED paths claim they resolved but do not (SC-001)"
+    exit 1
+fi
+# A jq typo or a renamed field would empty that loop and the check above
+# would "pass" having examined nothing. A real rustc trace reads its own
+# source, so the count is never legitimately zero.
+if [[ "$CHECKED" -lt 1 ]]; then
+    echo "FAIL: zero entries report existed_at_close: true — nothing was checked"
+    exit 1
+fi
+echo "    entries claiming resolution, re-checked on disk: $CHECKED"
+
+# SC-002: no all-zero hash anywhere in the document. The m210 sentinel was
+# 64 zeros; FR-006 forbids the value outright, and after the type change
+# there is no field left to hold it.
+ZERO_HASHES=$(grep -c '"value": *"0\{64\}"' "$OUTPUT" || true)
+if [[ "$ZERO_HASHES" -ne 0 ]]; then
+    echo "FAIL: $ZERO_HASHES all-zero hashes in the attestation (SC-002)"
+    grep -n '"value": *"0\{64\}"' "$OUTPUT" | head -5
+    exit 1
+fi
+echo "    all-zero hashes: 0"
+
+# SC-003: waybill's hashes must agree with an independent implementation.
+# Sample up to ten and compare against sha256sum. A sample of zero is a
+# failure for the same reason as SC-001's zero: nothing was checked.
+SAMPLED=0
+MISMATCHED=0
+while IFS=' ' read -r claimed path; do
+    [[ -z "$claimed" || -z "$path" ]] && continue
+    [[ -f "$path" ]] || continue
+    actual=$(sha256sum "$path" | cut -d' ' -f1)
+    SAMPLED=$((SAMPLED + 1))
+    if [[ "$actual" != "$claimed" ]]; then
+        echo "FAIL: hash mismatch for $path"
+        echo "      waybill:    $claimed"
+        echo "      sha256sum:  $actual"
+        MISMATCHED=$((MISMATCHED + 1))
+    fi
+done < <(jq -r '[.predicate.compiler_pipeline.invocations[]?
+                 | (.read_set[]?, .write_set[]?)
+                 | select(.sha256_at_close != null)
+                 | "\(.sha256_at_close.value) \(.path)"] | unique | .[0:10] | .[]' "$OUTPUT")
+if [[ "$MISMATCHED" -ne 0 ]]; then
+    echo "FAIL: $MISMATCHED of $SAMPLED sampled hashes disagree with sha256sum (SC-003)"
+    exit 1
+fi
+if [[ "$SAMPLED" -lt 1 ]]; then
+    echo "FAIL: zero hashes available to sample (SC-003)"
+    echo "      Either nothing was hashed or sha256_at_close is never emitted;"
+    echo "      a vacuous pass here would hide both."
+    jq '.predicate.trace_integrity.compiler_hash_coverage' "$OUTPUT"
+    exit 1
+fi
+echo "    hashes verified against sha256sum: $SAMPLED/$SAMPLED agree"
+
+# --- US2: a read-set entry never claims a hash it does not have --------
+echo
+echo "==> m1072 US2: read-set honesty (FR-001)"
+
+# The type no longer has the field, so this cannot regress without a
+# deliberate change -- which is exactly why it is worth asserting on the
+# emitted bytes rather than trusting the type. `"sha256":` with the colon,
+# so `sha256_at_close` does not satisfy it.
+BARE_SHA256=$(jq '[.predicate.compiler_pipeline.invocations[]?
+                   | (.read_set[]?, .write_set[]?)
+                   | select(has("sha256"))] | length' "$OUTPUT")
+if [[ "$BARE_SHA256" -ne 0 ]]; then
+    echo "FAIL: $BARE_SHA256 set entries carry an unqualified sha256 key (FR-001)"
+    exit 1
+fi
+echo "    entries carrying a bare sha256 key: 0"
+
+# Every read-set hash must also agree with sha256sum, not just the write
+# sets sampled above -- a read set is where a consumer would most likely
+# mistake the value for "what the compiler read".
+READ_SAMPLED=0
+READ_BAD=0
+while IFS=' ' read -r claimed path; do
+    [[ -z "$claimed" || -z "$path" ]] && continue
+    [[ -f "$path" ]] || continue
+    actual=$(sha256sum "$path" | cut -d' ' -f1)
+    READ_SAMPLED=$((READ_SAMPLED + 1))
+    if [[ "$actual" != "$claimed" ]]; then
+        echo "FAIL: read-set hash mismatch for $path ($claimed vs $actual)"
+        READ_BAD=$((READ_BAD + 1))
+    fi
+done < <(jq -r '[.predicate.compiler_pipeline.invocations[]? | .read_set[]?
+                 | select(.sha256_at_close != null)
+                 | "\(.sha256_at_close.value) \(.path)"] | unique | .[0:10] | .[]' "$OUTPUT")
+if [[ "$READ_BAD" -ne 0 || "$READ_SAMPLED" -lt 1 ]]; then
+    echo "FAIL: read-set hash check — $READ_BAD mismatched of $READ_SAMPLED sampled"
+    exit 1
+fi
+echo "    read-set hashes verified against sha256sum: $READ_SAMPLED/$READ_SAMPLED agree"
+
+# SC-010: one path, one answer. Two entries naming the same path must agree
+# on both close-time fields, because the pass visits a path once and fans
+# the result out (FR-011). Disagreement would mean the fan-out missed one.
+DISAGREEMENTS=$(jq '[.predicate.compiler_pipeline.invocations[]?
+                     | (.read_set[]?, .write_set[]?)
+                     | {path, e: .existed_at_close, h: (.sha256_at_close.value // "none")}]
+                    | group_by(.path) | map(select((map({e, h}) | unique | length) > 1))
+                    | length' "$OUTPUT")
+if [[ "$DISAGREEMENTS" -ne 0 ]]; then
+    echo "FAIL: $DISAGREEMENTS paths have entries that disagree on close-time facts (SC-010)"
+    jq '[.predicate.compiler_pipeline.invocations[]? | (.read_set[]?, .write_set[]?)
+         | {path, e: .existed_at_close, h: (.sha256_at_close.value // "none")}]
+        | group_by(.path) | map(select((map({e, h}) | unique | length) > 1)) | .[0:3]' "$OUTPUT"
+    exit 1
+fi
+
+# SC-010's second half: counts are over distinct paths, so on this fixture
+# the entry count must EXCEED the distinct-path count --
+# deps/liblibsafe-<hash>.rlib is read by three rustc invocations
+# (measurements/findings.md Q3). Equality would mean either the fan-out is
+# per-entry or the fixture stopped sharing, and both deserve a look.
+ENTRY_COUNT=$(jq '[.predicate.compiler_pipeline.invocations[]?
+                   | (.read_set[]?, .write_set[]?)] | length' "$OUTPUT")
+DISTINCT_COUNT=$(jq '[.predicate.compiler_pipeline.invocations[]?
+                      | (.read_set[]?, .write_set[]?) | .path] | unique | length' "$OUTPUT")
+if [[ "$ENTRY_COUNT" -le "$DISTINCT_COUNT" ]]; then
+    echo "FAIL: $ENTRY_COUNT entries vs $DISTINCT_COUNT distinct paths — expected entries > paths (SC-010)"
+    echo "      This fixture shares .rlib reads across three rustc invocations."
+    exit 1
+fi
+echo "    entries: $ENTRY_COUNT over $DISTINCT_COUNT distinct paths, all agreeing"
+
+# --- US3: a renamed artifact is one entry with its history --------------
+echo
+echo "==> m1072 US3: rename history (SC-004)"
+
+# No entry's path may appear in another entry's renamed_from. If it does,
+# the same artifact is recorded twice -- once under its temporary name and
+# once under its final one -- which is the duplication FR-009 forbids.
+SHADOWED=$(jq '[.predicate.compiler_pipeline.invocations[]?
+                | .write_set[]? | .path] as $paths
+               | [.predicate.compiler_pipeline.invocations[]? | .write_set[]?
+                  | .renamed_from[]? | select(. as $r | $paths | index($r))]
+               | unique | length' "$OUTPUT")
+if [[ "$SHADOWED" -ne 0 ]]; then
+    echo "FAIL: $SHADOWED intermediate names also exist as their own write-set entries (SC-004)"
+    exit 1
+fi
+
+# rustc renames libraries into place, so this fixture must show history
+# somewhere. A zero means either the Rename arm stopped accumulating or
+# the rename events stopped arriving -- and an all-zero result here would
+# otherwise look identical to a clean pass.
+WITH_HISTORY=$(jq '[.predicate.compiler_pipeline.invocations[]?
+                    | .write_set[]? | select((.renamed_from // []) | length > 0)] | length' "$OUTPUT")
+if [[ "$WITH_HISTORY" -lt 1 ]]; then
+    echo "FAIL: no write-set entry carries renamed_from (SC-004)"
+    echo "      rustc renames libraries into place; measurements/findings.md Q2."
+    jq '[.predicate.compiler_pipeline.invocations[]? | .write_set[]? | .path] | .[0:10]' "$OUTPUT"
+    exit 1
+fi
+echo "    write-set entries carrying rename history: $WITH_HISTORY"
+echo "    intermediate names shadowing a real entry: 0"
+
+# --- US4: an operator can see how much was hashed --------------------
+echo
+echo "==> m1072 US4: coverage record (FR-013, FR-014)"
+
+COVERAGE=$(jq -c '.predicate.trace_integrity.compiler_hash_coverage' "$OUTPUT")
+if [[ "$COVERAGE" == "null" || -z "$COVERAGE" ]]; then
+    echo "FAIL: no compiler_hash_coverage record, though this trace captured"
+    echo "      $INVOCATION_COUNT compiler invocations (FR-014)"
+    exit 1
+fi
+echo "    $COVERAGE"
+
+# FR-013's partition, on real data. Computed in jq rather than asserted
+# field-by-field so a miscount cannot hide behind a plausible-looking
+# record.
+PARTITION_OK=$(jq '.predicate.trace_integrity.compiler_hash_coverage
+                   | (.paths_hashed + .paths_absent + .paths_skipped) == .paths_total' "$OUTPUT")
+if [[ "$PARTITION_OK" != "true" ]]; then
+    echo "FAIL: hashed + absent + skipped != total (FR-013)"
+    jq '.predicate.trace_integrity.compiler_hash_coverage' "$OUTPUT"
+    exit 1
+fi
+
+# The record must agree with the sets it describes: paths_total is over
+# DISTINCT paths across both sets. A record that drifts from the document
+# it sits in would be worse than no record.
+DISTINCT_IN_SETS=$(jq '[.predicate.compiler_pipeline.invocations[]?
+                        | (.read_set[]?, .write_set[]?)
+                        | select((.kind | type) != "object")
+                        | .path] | unique | length' "$OUTPUT")
+RECORD_TOTAL=$(jq '.predicate.trace_integrity.compiler_hash_coverage.paths_total' "$OUTPUT")
+if [[ "$RECORD_TOTAL" -ne "$DISTINCT_IN_SETS" ]]; then
+    echo "FAIL: coverage says $RECORD_TOTAL paths, the sets contain $DISTINCT_IN_SETS distinct non-stdin paths (FR-013)"
+    exit 1
+fi
+echo "    paths_total agrees with the sets: $RECORD_TOTAL distinct paths"
+
+# A stock run must say so, and paths_hashed must match the number of
+# entries that actually carry a hash.
+BUDGET_SOURCE=$(jq -r '.predicate.trace_integrity.compiler_hash_coverage.budget_source' "$OUTPUT")
+if [[ "$BUDGET_SOURCE" != "default" ]]; then
+    echo "FAIL: budget_source is '$BUDGET_SOURCE' on a run with no --compiler-hash-budget-bytes (C-1072-8)"
+    exit 1
+fi
+HASHED_PATHS=$(jq '[.predicate.compiler_pipeline.invocations[]?
+                    | (.read_set[]?, .write_set[]?)
+                    | select(.sha256_at_close != null) | .path] | unique | length' "$OUTPUT")
+RECORD_HASHED=$(jq '.predicate.trace_integrity.compiler_hash_coverage.paths_hashed' "$OUTPUT")
+if [[ "$RECORD_HASHED" -ne "$HASHED_PATHS" ]]; then
+    echo "FAIL: coverage says $RECORD_HASHED hashed, $HASHED_PATHS distinct paths carry a hash"
+    exit 1
+fi
+echo "    paths_hashed agrees with the entries carrying a hash: $RECORD_HASHED"
+
+# SC-006: budget 0 truncates, discloses, and still exits zero. `0` is the
+# cheapest possible truncation test -- no large fixture required.
+echo
+echo "==> m1072 US4: budget truncation (SC-006)"
+TRUNC_OUTPUT=/tmp/m1072-truncated.attestation.json
+rm -rf "$FIXTURE_TARGET"
+set +e
+"$MIKEBOM" trace capture \
+    --attestation-format waybill-v1 \
+    --compiler-hash-budget-bytes 0 \
+    --output "$TRUNC_OUTPUT" \
+    -- cargo build --release \
+        --manifest-path "$FIXTURE/Cargo.toml" \
+        --target-dir "$FIXTURE_TARGET"
+TRUNC_STATUS=$?
+set -e
+if [[ $TRUNC_STATUS -ne 0 ]]; then
+    echo "FAIL: a zero budget must not fail the command — hashing is advisory"
+    echo "      and truncating it loses no observation (C-1072-10). exit=$TRUNC_STATUS"
+    exit 1
+fi
+if [[ ! -f "$TRUNC_OUTPUT" ]]; then
+    echo "FAIL: no attestation written under a zero budget (C-1072-10 step 3)"
+    exit 1
+fi
+TRUNC_OK=$(jq '.predicate.trace_integrity.compiler_hash_coverage
+               | .truncated == true and .paths_hashed == 0
+                 and .budget_source == "operator"
+                 and ((.paths_hashed + .paths_absent + .paths_skipped) == .paths_total)' "$TRUNC_OUTPUT")
+if [[ "$TRUNC_OK" != "true" ]]; then
+    echo "FAIL: zero-budget coverage record is wrong (SC-006)"
+    jq '.predicate.trace_integrity.compiler_hash_coverage' "$TRUNC_OUTPUT"
+    exit 1
+fi
+TRUNC_HASHES=$(jq '[.predicate.compiler_pipeline.invocations[]?
+                    | (.read_set[]?, .write_set[]?)
+                    | select(.sha256_at_close != null)] | length' "$TRUNC_OUTPUT")
+if [[ "$TRUNC_HASHES" -ne 0 ]]; then
+    echo "FAIL: $TRUNC_HASHES entries carry a hash under a zero budget (SC-006)"
+    exit 1
+fi
+# Existence is NOT truncated -- only hashing is. This is the half of
+# C-1072-10 that says no observation is lost.
+TRUNC_ABSENT=$(jq '.predicate.trace_integrity.compiler_hash_coverage.paths_absent' "$TRUNC_OUTPUT")
+if [[ "$TRUNC_ABSENT" -lt 1 ]]; then
+    echo "FAIL: a zero budget suppressed existence reporting too (C-1072-10)"
+    exit 1
+fi
+echo "    exit 0, truncated: true, paths_hashed: 0, budget_source: operator"
+echo "    existence still reported: paths_absent=$TRUNC_ABSENT"
+
+# SC-005a: the close-time tier introduces no nondeterminism of its own.
+#
+# NOT whole-payload byte-identity. That is unachievable and predates this
+# milestone: `invocation_id` is bpf_ktime_get_ns() at exec by m210's
+# design, and rustc's temporaries are mkdtemp-random, so deps/rmetaA36mif
+# in one run is deps/rmeta35kQFf in the next. Both sit in the observation
+# tier, which the pass may not touch (Principle II). Contract C-1072-6
+# records the measurement that settled this.
+#
+# What the pass controls is asserted instead: the coverage record, and
+# every path's close-time facts for the paths both runs observed.
+echo
+echo "==> m1072 US4: close-time determinism (SC-005a)"
+DET_A=/tmp/m1072-det-a.json
+DET_B=/tmp/m1072-det-b.json
+for out in "$DET_A" "$DET_B"; do
+    # Clean between runs or the second build is a no-op, and two empty
+    # traces agree just as well as two correct ones.
+    rm -rf "$FIXTURE_TARGET"
+    "$MIKEBOM" trace capture \
+        --attestation-format waybill-v1 \
+        --output "$out" \
+        -- cargo build --release \
+            --manifest-path "$FIXTURE/Cargo.toml" \
+            --target-dir "$FIXTURE_TARGET" > /dev/null 2>&1
+done
+
+COV_A=$(jq -cS '.predicate.trace_integrity.compiler_hash_coverage' "$DET_A")
+COV_B=$(jq -cS '.predicate.trace_integrity.compiler_hash_coverage' "$DET_B")
+if [[ "$COV_A" != "$COV_B" ]]; then
+    echo "FAIL: the coverage record differs between two runs (SC-005a)"
+    echo "      run A: $COV_A"
+    echo "      run B: $COV_B"
+    exit 1
+fi
+DET_PATHS=$(jq '.predicate.trace_integrity.compiler_hash_coverage.paths_total // 0' "$DET_A")
+if [[ "$DET_PATHS" -lt 1 ]]; then
+    echo "FAIL: determinism run captured no paths — nothing was compared (SC-005a)"
+    exit 1
+fi
+echo "    coverage record identical across runs: $COV_A"
+
+# Per-path close-time facts, over the paths both runs saw. The random
+# temporaries differ by name and simply do not intersect, which is why the
+# comparison is an intersection rather than a diff.
+facts() {
+    jq -r '[.predicate.compiler_pipeline.invocations[]?
+            | (.read_set[]?, .write_set[]?)
+            | "\(.path)\t\(.existed_at_close)\t\(.sha256_at_close.value // "none")"]
+           | unique | .[]' "$1"
+}
+facts "$DET_A" | sort > /tmp/m1072-facts-a
+facts "$DET_B" | sort > /tmp/m1072-facts-b
+SHARED=$(comm -12 <(cut -f1 /tmp/m1072-facts-a | sort -u) <(cut -f1 /tmp/m1072-facts-b | sort -u) | wc -l | tr -d ' ')
+CONFLICTS=0
+while IFS= read -r p; do
+    a=$(grep -F "$p	" /tmp/m1072-facts-a | head -1)
+    b=$(grep -F "$p	" /tmp/m1072-facts-b | head -1)
+    if [[ "$a" != "$b" ]]; then
+        echo "FAIL: close-time facts differ between runs for $p"
+        echo "      A: $a"
+        echo "      B: $b"
+        CONFLICTS=$((CONFLICTS + 1))
+    fi
+done < <(comm -12 <(cut -f1 /tmp/m1072-facts-a | sort -u) <(cut -f1 /tmp/m1072-facts-b | sort -u))
+if [[ "$CONFLICTS" -ne 0 ]]; then
+    echo "FAIL: $CONFLICTS paths disagree across runs (SC-005a)"
+    exit 1
+fi
+# A tiny intersection would make the comparison above nearly vacuous: the
+# fixture's real sources and artifacts have stable names and must dominate.
+if [[ "$SHARED" -lt 20 ]]; then
+    echo "FAIL: only $SHARED paths appear in both runs — too few to call this a check (SC-005a)"
+    exit 1
+fi
+echo "    close-time facts identical for all $SHARED paths both runs observed"
+
+# --- SC-007: a trace with no compiler invocations is unchanged --------
+#
+# The m213 widen run above traced `cat /etc/hostname`, which invokes no
+# compiler, so it is exactly the zero-invocation case FR-014 is about.
+# Reusing it costs nothing and tests the real emission path.
+echo
+echo "==> m1072 SC-007: zero-compiler trace is byte-unchanged"
+
+if jq -e '.predicate.trace_integrity | has("compiler_hash_coverage")' "$WIDENED_OUTPUT" > /dev/null 2>&1; then
+    echo "FAIL: a trace with no compiler invocations emitted a coverage record (FR-014)"
+    jq '.predicate.trace_integrity' "$WIDENED_OUTPUT"
+    exit 1
+fi
+
+# Stronger than "no new key": every key must be one the pre-m1072 struct
+# already had, so an unrelated addition cannot slip through either. The
+# list comes from `git show 33561a91:waybill-common/src/attestation/integrity.rs`
+# -- the merge base of this branch -- not from the current struct, which
+# would make the check circular.
+PRE_M1072_FIELDS='["bloom_filter_capacity","bloom_filter_false_positive_rate","events_dropped","filter_categories_applied","kprobe_attach_failures","partial_captures","ring_buffer_overflows","unresolved_relative_opens","uprobe_attach_failures"]'
+UNEXPECTED=$(jq --argjson pre "$PRE_M1072_FIELDS" \
+    '[.predicate.trace_integrity | keys[] | select([.] | inside($pre) | not)]' \
+    "$WIDENED_OUTPUT")
+if [[ "$UNEXPECTED" != "[]" ]]; then
+    echo "FAIL: trace_integrity carries keys the pre-m1072 struct did not have (SC-007)"
+    echo "      $UNEXPECTED"
+    exit 1
+fi
+echo "    trace_integrity keys: $(jq -c '.predicate.trace_integrity | keys' "$WIDENED_OUTPUT")"
+echo "    all present in the pre-m1072 struct; no coverage record emitted"
+
+echo
+echo ">>> m210 + m212 + m213 + m1072 integration test PASSED"
 echo "    compiler_pipeline: $INVOCATION_COUNT invocations, $RUSTC_COUNT rustc"
 echo "    trace_integrity: ring_buffer_overflows=$OVERFLOWS"
 echo "    filter_categories_applied (default run): [$APPLIED]"

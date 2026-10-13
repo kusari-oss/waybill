@@ -110,14 +110,26 @@ struct PartialInvocation {
     argv: Vec<String>,
     cwd: Option<PathBuf>,
     exit_code: Option<i32>,
-    /// path → (hash, kind) — dedup on path.
-    read_set: std::collections::HashMap<PathBuf, (ContentHash, ReadKind)>,
-    /// path → (Option<hash>, survived_trace_window) — dedup on path.
-    write_set: std::collections::HashMap<PathBuf, (Option<ContentHash>, bool)>,
+    /// path → kind — dedup on path. Observation tier only: no hash,
+    /// because the kernel has none to give (milestone 1072, research R1).
+    read_set: std::collections::HashMap<PathBuf, ReadKind>,
+    /// path → observed rename history — dedup on path.
+    write_set: std::collections::HashMap<PathBuf, PendingWrite>,
     /// FR-008 per-invocation drop counter (subset of the aggregator-
     /// wide `events_dropped`; used to attribute drops to specific
     /// invocations for the C132 `affected_component_count` signal).
     events_dropped: u64,
+}
+
+/// Observation-tier state of an in-flight write (data-model E5).
+///
+/// Carries no hash by design: there is no kernel hash to carry, and
+/// milestone 1072 removed the zero sentinel that used to stand in for one.
+/// The close-time pass supplies both `_at_close` fields later.
+#[derive(Debug, Default)]
+struct PendingWrite {
+    /// Observed intermediate names, oldest first (FR-008).
+    renamed_from: Vec<PathBuf>,
 }
 
 impl CompilerPipelineAggregator {
@@ -223,29 +235,44 @@ impl CompilerPipelineAggregator {
             return;
         };
 
-        // Convert the fixed-size content_hash bytes → ContentHash
-        // newtype. Zero-hash means "not yet hashed" (in-kernel didn't
-        // populate; user-space hasher.rs will fill in at close-time).
-        let hash = content_hash_from_bytes(&op.content_hash);
-
+        // `op.content_hash` is deliberately NOT read here. The kernel
+        // reports that a path was opened, not what its bytes were, so the
+        // field only ever held zeros for these two sets (milestone 1072,
+        // research R1). Content now comes from the close-time pass, and
+        // neither map has a field a kernel hash could occupy.
         match &op.kind {
             ObservedKind::Read => {
-                invocation.read_set.insert(path, (hash, ReadKind::File));
+                invocation.read_set.insert(path, ReadKind::File);
             }
             ObservedKind::Write => {
-                // Placeholder — final hash + survived_trace_window
-                // decided at close-time.
-                invocation
-                    .write_set
-                    .entry(path)
-                    .or_insert((Some(hash), true));
+                invocation.write_set.entry(path).or_default();
             }
             ObservedKind::Rename { from } => {
-                let carried = from
+                // Accumulate, don't replace (FR-008, data-model E5). The
+                // destination keeps whatever history the source had and
+                // gains the source's own name, so a two-step rename reads
+                // oldest-first and a rename onto an existing entry keeps
+                // both histories.
+                //
+                // `unwrap_or_default` covers a rename whose source was
+                // never observed as a write -- the noise filter may have
+                // dropped it -- which still yields an entry at the
+                // destination recording where it came from.
+                let mut pending = from
                     .as_ref()
                     .and_then(|old| invocation.write_set.remove(old))
-                    .unwrap_or((Some(hash), true));
-                invocation.write_set.insert(path, carried);
+                    .unwrap_or_default();
+                if let Some(old) = from {
+                    pending.renamed_from.push(old.clone());
+                }
+                if let Some(existing) = invocation.write_set.remove(&path) {
+                    // The destination already had a history of its own;
+                    // it came first, so it stays first.
+                    let mut merged = existing.renamed_from;
+                    merged.extend(pending.renamed_from);
+                    pending.renamed_from = merged;
+                }
+                invocation.write_set.insert(path, pending);
             }
         }
     }
@@ -258,16 +285,14 @@ impl CompilerPipelineAggregator {
     /// pipe-read event with the invocation's pid).
     pub fn record_stdin_input(&mut self, invocation_id: u64, bytes_read: u64) {
         if let Some(invocation) = self.invocations.get_mut(&invocation_id) {
-            let path = PathBuf::from("<stdin>");
-            let sentinel = ContentHash {
-                algorithm: HashAlgorithm::Sha256,
-                value: HexString::new(&"0".repeat(64))
-                    .expect("64-char zero string is valid hex"),
-            };
-            invocation.read_set.insert(
-                path,
-                (sentinel, ReadKind::StdinInput { bytes_read }),
-            );
+            // No sentinel hash (FR-006/FR-007). `<stdin>` is a marker, not
+            // a location: the close-time pass never stats it, and the
+            // entry reports `existed_at_close: false` with no hash
+            // (contract C-1072-2a). Removing the sentinel also removes an
+            // `.expect()` from a production path.
+            invocation
+                .read_set
+                .insert(PathBuf::from("<stdin>"), ReadKind::StdinInput { bytes_read });
         }
     }
 
@@ -508,13 +533,18 @@ impl CompilerPipelineAggregator {
 /// serializable shape. Read/write sets are converted from
 /// path-keyed hashmaps into sorted vecs (R8 determinism).
 fn finalize_invocation(p: PartialInvocation) -> CompilerInvocation {
+    // The close-time tier starts empty for every entry. `false` + `None`
+    // is the honest pre-pass state: nothing has been measured yet. The
+    // pass overwrites both, and a trace with no pass leaves them saying
+    // exactly that rather than claiming survival (milestone 1072, #1144).
     let mut read_set: Vec<ReadSetEntry> = p
         .read_set
         .into_iter()
-        .map(|(path, (sha256, kind))| ReadSetEntry {
+        .map(|(path, kind)| ReadSetEntry {
             path,
-            sha256,
             kind,
+            existed_at_close: false,
+            sha256_at_close: None,
         })
         .collect();
     read_set.sort_by(|a, b| a.path.cmp(&b.path));
@@ -522,10 +552,11 @@ fn finalize_invocation(p: PartialInvocation) -> CompilerInvocation {
     let mut write_set: Vec<WriteSetEntry> = p
         .write_set
         .into_iter()
-        .map(|(path, (sha256, survived))| WriteSetEntry {
+        .map(|(path, pending)| WriteSetEntry {
             path,
-            sha256,
-            survived_trace_window: survived,
+            renamed_from: pending.renamed_from,
+            existed_at_close: false,
+            sha256_at_close: None,
         })
         .collect();
     write_set.sort_by(|a, b| a.path.cmp(&b.path));
@@ -998,6 +1029,193 @@ mod tests {
                 PathBuf::from("/ws/target/release/deps/liblibsafe-9f.rmeta"),
             ]
         );
+    }
+
+    /// T030 / FR-008: a single rename yields one entry at the final path
+    /// whose `renamed_from` names the intermediate, and no entry at the
+    /// intermediate itself.
+    #[test]
+    fn rename_records_the_intermediate_name() {
+        let mut agg = CompilerPipelineAggregator::new(FilterConfig::default());
+        agg.handle_compiler_event(&make_exec_event(100, 50, "rustc"));
+        let tmp = "/ws/target/release/deps/rmetaX1/full.rmeta";
+        let final_path = "/ws/target/release/deps/liblibsafe-9f.rmeta";
+        agg.handle_op(&op(ObservedKind::Write, 100, tmp, false));
+        agg.handle_op(&op(
+            ObservedKind::Rename { from: Some(PathBuf::from(tmp)) },
+            100,
+            final_path,
+            false,
+        ));
+        let data = agg.finalize();
+
+        assert_eq!(write_paths(&data), vec![PathBuf::from(final_path)]);
+        assert_eq!(
+            data.invocations[0].write_set[0].renamed_from,
+            vec![PathBuf::from(tmp)],
+            "the intermediate must survive as history, not vanish"
+        );
+    }
+
+    /// T030 / US3 scenario 2: a two-step rename lists both intermediates
+    /// oldest-first, so the chain can be read in the order it happened.
+    #[test]
+    fn two_step_rename_lists_both_intermediates_oldest_first() {
+        let mut agg = CompilerPipelineAggregator::new(FilterConfig::default());
+        agg.handle_compiler_event(&make_exec_event(100, 50, "rustc"));
+        let first = "/ws/target/release/deps/.tmpA/stage1.a";
+        let second = "/ws/target/release/deps/.tmpB/stage2.a";
+        let final_path = "/ws/target/release/deps/liblibsafe-9f.rlib";
+
+        agg.handle_op(&op(ObservedKind::Write, 100, first, false));
+        agg.handle_op(&op(
+            ObservedKind::Rename { from: Some(PathBuf::from(first)) },
+            100,
+            second,
+            false,
+        ));
+        agg.handle_op(&op(
+            ObservedKind::Rename { from: Some(PathBuf::from(second)) },
+            100,
+            final_path,
+            false,
+        ));
+        let data = agg.finalize();
+
+        assert_eq!(write_paths(&data), vec![PathBuf::from(final_path)]);
+        assert_eq!(
+            data.invocations[0].write_set[0].renamed_from,
+            vec![PathBuf::from(first), PathBuf::from(second)],
+            "observed order, oldest first"
+        );
+    }
+
+    /// T030 / US3 scenario 3: a write that was never renamed serializes
+    /// without the key at all, rather than with an empty array.
+    #[test]
+    fn unrenamed_write_omits_renamed_from_entirely() {
+        let mut agg = CompilerPipelineAggregator::new(FilterConfig::default());
+        agg.handle_compiler_event(&make_exec_event(100, 50, "rustc"));
+        agg.handle_op(&op(ObservedKind::Write, 100, "/ws/target/release/deps/plain.o", false));
+        let data = agg.finalize();
+
+        assert!(data.invocations[0].write_set[0].renamed_from.is_empty());
+        let json = serde_json::to_string(&data.invocations[0].write_set[0]).unwrap();
+        assert!(!json.contains("renamed_from"), "{json}");
+    }
+
+    /// T031 / spec.md edge case: a rename whose source was never observed as
+    /// a write still records that source as history. The noise filter can
+    /// drop the original write, and losing the provenance with it would be
+    /// worse than recording a one-element chain.
+    #[test]
+    fn rename_from_an_unobserved_write_still_records_the_source() {
+        let mut agg = CompilerPipelineAggregator::new(FilterConfig::default());
+        agg.handle_compiler_event(&make_exec_event(100, 50, "rustc"));
+        let tmp = "/ws/target/release/deps/.tmp1/tmp.a";
+        agg.handle_op(&op(
+            ObservedKind::Rename { from: Some(PathBuf::from(tmp)) },
+            100,
+            "/ws/target/release/deps/liblibsafe-9f.rlib",
+            false,
+        ));
+        let data = agg.finalize();
+
+        assert_eq!(
+            data.invocations[0].write_set[0].renamed_from,
+            vec![PathBuf::from(tmp)]
+        );
+    }
+
+    /// T031 / spec.md edge case: a rename onto a path that already has a
+    /// write-set entry keeps the destination and accumulates both
+    /// histories, destination's first since it was observed first.
+    #[test]
+    fn rename_onto_an_existing_entry_accumulates_both_histories() {
+        let mut agg = CompilerPipelineAggregator::new(FilterConfig::default());
+        agg.handle_compiler_event(&make_exec_event(100, 50, "rustc"));
+        let dest = "/ws/target/release/deps/liblibsafe-9f.rlib";
+        let dest_tmp = "/ws/target/release/deps/.tmpDest/first.a";
+        let src_tmp = "/ws/target/release/deps/.tmpSrc/second.a";
+
+        // The destination arrives with a history of its own ...
+        agg.handle_op(&op(ObservedKind::Write, 100, dest_tmp, false));
+        agg.handle_op(&op(
+            ObservedKind::Rename { from: Some(PathBuf::from(dest_tmp)) },
+            100,
+            dest,
+            false,
+        ));
+        // ... and is then overwritten by a second rename.
+        agg.handle_op(&op(ObservedKind::Write, 100, src_tmp, false));
+        agg.handle_op(&op(
+            ObservedKind::Rename { from: Some(PathBuf::from(src_tmp)) },
+            100,
+            dest,
+            false,
+        ));
+        let data = agg.finalize();
+
+        assert_eq!(write_paths(&data), vec![PathBuf::from(dest)], "one entry");
+        assert_eq!(
+            data.invocations[0].write_set[0].renamed_from,
+            vec![PathBuf::from(dest_tmp), PathBuf::from(src_tmp)],
+            "neither history may be dropped"
+        );
+    }
+
+    /// T032 / FR-009a: `renamed_from` records renames only. A hard link is
+    /// not a rename -- both names survive and share an inode -- so no code
+    /// path may synthesise a `Rename` from one.
+    ///
+    /// No link syscall is traced today (research R4), so the invariant holds
+    /// by construction. This test exists to fail loudly if a future link
+    /// probe routes through the `Rename` arm: adding a fourth `ObservedKind`
+    /// variant, or a link event, makes the match below stop compiling.
+    #[test]
+    fn observed_kind_has_exactly_three_variants_none_of_them_a_link() {
+        let kinds = [
+            ObservedKind::Read,
+            ObservedKind::Write,
+            ObservedKind::Rename { from: None },
+        ];
+        for k in &kinds {
+            // Exhaustive by construction: a new variant breaks this match,
+            // which is the alarm. An `_ =>` arm here would silence it.
+            let label = match k {
+                ObservedKind::Read => "read",
+                ObservedKind::Write => "write",
+                ObservedKind::Rename { .. } => "rename",
+            };
+            assert!(!label.contains("link"));
+        }
+        assert_eq!(kinds.len(), 3);
+    }
+
+    /// T025 / FR-007, US2 scenario 2: the stdin entry carries no hash and no
+    /// 64-zero value survives anywhere in the serialized invocation.
+    #[test]
+    fn stdin_input_entry_carries_no_sentinel_hash() {
+        let mut agg = CompilerPipelineAggregator::new(FilterConfig::default());
+        agg.handle_compiler_event(&make_exec_event(100, 50, "gcc"));
+        agg.record_stdin_input(1, 4096);
+        let data = agg.finalize();
+
+        let entry = data.invocations[0]
+            .read_set
+            .iter()
+            .find(|e| e.path.as_os_str() == "<stdin>")
+            .expect("stdin entry present");
+        assert!(matches!(
+            entry.kind,
+            waybill_common::attestation::compiler_pipeline::ReadKind::StdinInput { bytes_read: 4096 }
+        ));
+        assert!(!entry.existed_at_close, "<stdin> is not a filesystem path");
+        assert!(entry.sha256_at_close.is_none());
+
+        let json = serde_json::to_string(&data.invocations[0]).unwrap();
+        assert!(!json.contains(&"0".repeat(64)), "{json}");
+        assert!(!json.contains("\"sha256\":"), "{json}");
     }
 
     /// Milestone 1070: a compiler's first open can be drained before its exec

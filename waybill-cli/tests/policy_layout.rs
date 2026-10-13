@@ -89,6 +89,7 @@ fn minimal_statement() -> InTotoStatement {
                 bloom_filter_false_positive_rate: 0.01,
                 filter_categories_applied: vec![],
                 unresolved_relative_opens: 0,
+                ..Default::default()
             },
             compiler_pipeline: None,
         },

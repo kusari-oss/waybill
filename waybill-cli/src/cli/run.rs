@@ -324,6 +324,17 @@ pub struct RunArgs {
     #[arg(long)]
     pub include_system_reads: bool,
 
+    /// Milestone 1072 (FR-016) — forwarded verbatim to the capture phase.
+    /// `trace run` is as user-facing as `trace capture`, so hardcoding
+    /// `None` in the `ScanArgs` literal below would make the override
+    /// unreachable on half the CLI surface.
+    #[arg(
+        long,
+        env = "WAYBILL_COMPILER_HASH_BUDGET_BYTES",
+        value_name = "BYTES"
+    )]
+    pub compiler_hash_budget_bytes: Option<u64>,
+
     /// Build command to trace
     #[arg(last = true, required = true)]
     pub command: Vec<String>,
@@ -385,6 +396,7 @@ pub async fn execute(args: RunArgs) -> anyhow::Result<()> {
         // false (denylist active) so `waybill run` behaves identically to
         // pre-m210 for existing operators.
         include_system_reads: args.include_system_reads,
+        compiler_hash_budget_bytes: args.compiler_hash_budget_bytes,
         command: args.command.clone(),
     };
     super::scan::execute(scan_args).await?;

@@ -124,11 +124,28 @@ pub fn map_component_to_source_read_set(
     let read_set_json: Vec<Value> = read_set_sorted
         .into_iter()
         .map(|entry| match &entry.kind {
-            ReadKind::File => json!({
-                "path": entry.path.to_string_lossy(),
-                "sha256": entry.sha256.value.as_str(),
-                "kind": "file",
-            }),
+            // Milestone 1072 (FR-019, research R9): the key is
+            // `sha256_at_close` and is omitted when there is no hash. A
+            // consumer reading `"sha256"` on a *source read set* would
+            // believe it was the content the compiler read; it never was.
+            // Whether to surface `existed_at_close` here too is #1142's
+            // call along with the rest of the emission wiring — this
+            // builder is still dormant.
+            ReadKind::File => {
+                let mut obj = serde_json::Map::new();
+                obj.insert(
+                    "path".to_string(),
+                    Value::String(entry.path.to_string_lossy().into_owned()),
+                );
+                if let Some(hash) = &entry.sha256_at_close {
+                    obj.insert(
+                        "sha256_at_close".to_string(),
+                        Value::String(hash.value.as_str().to_string()),
+                    );
+                }
+                obj.insert("kind".to_string(), Value::String("file".to_string()));
+                Value::Object(obj)
+            }
             ReadKind::StdinInput { bytes_read } => json!({
                 "path": entry.path.to_string_lossy(),
                 "kind": { "stdin_input": { "bytes_read": bytes_read } },
@@ -197,17 +214,9 @@ mod tests {
     use waybill_common::resolution::{
         FileOccurrence, ResolutionEvidence, ResolutionTechnique, ResolvedComponent,
     };
-    use waybill_common::types::hash::{ContentHash, HashAlgorithm, HexString};
     use waybill_common::types::purl::Purl;
     use waybill_common::types::timestamp::Timestamp;
     use std::path::PathBuf;
-
-    fn zero_hash() -> ContentHash {
-        ContentHash {
-            algorithm: HashAlgorithm::Sha256,
-            value: HexString::new(&"0".repeat(64)).unwrap(),
-        }
-    }
 
     fn mk_component_with_path(purl: &str, path: &str) -> ResolvedComponent {
         ResolvedComponent {
@@ -288,16 +297,18 @@ mod tests {
                 .iter()
                 .map(|p| ReadSetEntry {
                     path: PathBuf::from(p),
-                    sha256: zero_hash(),
                     kind: ReadKind::File,
+                    existed_at_close: false,
+                    sha256_at_close: None,
                 })
                 .collect(),
             write_set: writes
                 .iter()
                 .map(|p| WriteSetEntry {
                     path: PathBuf::from(p),
-                    sha256: Some(zero_hash()),
-                    survived_trace_window: true,
+                    renamed_from: vec![],
+                    existed_at_close: false,
+                    sha256_at_close: None,
                 })
                 .collect(),
             events_dropped: 0,

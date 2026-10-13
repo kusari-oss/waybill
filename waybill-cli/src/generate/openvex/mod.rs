@@ -575,6 +575,7 @@ pub(crate) mod tests {
             bloom_filter_false_positive_rate: 0.0,
             filter_categories_applied: vec![],
             unresolved_relative_opens: 0,
+            ..Default::default()
         }
     }
 

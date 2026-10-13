@@ -54,7 +54,7 @@ pub const NETWORK_TRACE_TYPE: &str = "https://witness.dev/attestations/network-t
 /// `/compiler-invocation/` path prefix so URI-alias migration
 /// preserves downstream-consumer parsing.
 pub const COMPILER_INVOCATION_TYPE: &str =
-    "https://waybill.dev/attestation/compiler-invocation/v0.1";
+    "https://waybill.dev/attestation/compiler-invocation/v0.2";
 
 // ---------------------------------------------------------------------
 // Statement + Collection
@@ -307,8 +307,11 @@ pub fn sha256_digest(hex: impl Into<String>) -> DigestSet {
 }
 
 /// Milestone 210 — build a `CollectionEntry` carrying the
-/// waybill-owned `compiler-invocation/v0.1` attestor payload per
-/// `contracts/attestor-predicate.md` C-2. Called from the trace-end
+/// waybill-owned `compiler-invocation/v0.2` attestor payload. C-2 of
+/// m210's `contracts/attestor-predicate.md` is superseded for the
+/// read/write set entities by
+/// `specs/1072-compiler-set-close-time/contracts/read-write-set-shape.md`;
+/// every other clause of that contract still applies. Called from the trace-end
 /// wiring in `waybill-cli/src/trace/*` when the trace produced
 /// compiler-pipeline data.
 ///
@@ -560,12 +563,14 @@ mod tests {
 
     #[test]
     fn compiler_invocation_type_uri_locked_per_clarifications_q3() {
-        // Contract lock — this URI is documented in
+        // Contract lock — bumped to v0.2 by milestone 1072 (#1144, FR-017).
         // specs/210-compiler-pipeline-trace/contracts/attestor-predicate.md
-        // C-1 and MUST NOT change without a URI bump (v0.2, etc.).
+        // C-1 is superseded for the read/write set entities by
+        // specs/1072-compiler-set-close-time/contracts/read-write-set-shape.md.
+        // MUST NOT change again without a further URI bump.
         assert_eq!(
             COMPILER_INVOCATION_TYPE,
-            "https://waybill.dev/attestation/compiler-invocation/v0.1"
+            "https://waybill.dev/attestation/compiler-invocation/v0.2"
         );
     }
 

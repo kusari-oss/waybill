@@ -103,9 +103,94 @@ pub struct ScanArgs {
     #[arg(long)]
     pub include_system_reads: bool,
 
+    /// Milestone 1072 (FR-016) — cumulative byte budget for the
+    /// close-time hashing pass. Absent means the measured default;
+    /// supplying it marks the coverage record `budget_source: "operator"`
+    /// so a reader can tell a tuned run from a stock one (C-1072-8).
+    ///
+    /// `0` is meaningful: hash nothing, report every path's existence,
+    /// and set `truncated: true`. The command still exits zero — hashing
+    /// is an advisory tier, and truncating it loses no observation
+    /// (C-1072-10).
+    #[arg(
+        long,
+        env = "WAYBILL_COMPILER_HASH_BUDGET_BYTES",
+        value_name = "BYTES"
+    )]
+    pub compiler_hash_budget_bytes: Option<u64>,
+
     #[arg(last = true)]
     pub command: Vec<String>,
 }
+
+/// Default cumulative budget for the close-time hashing pass: 16 GiB.
+///
+/// **Measured against a real workspace** — see
+/// `measurements/cost.md` §"Sizing the default against a real workspace"
+/// and `measurements/budget-probe.sh`, which `contracts/cli-budget.md`
+/// C-1072-9 requires this definition to cite.
+///
+/// This was 2 GiB until the probe ran, sized at ~2,200x the
+/// `two_binaries_diverge` fixture's 955,494 bytes. A four-crate fixture
+/// is the wrong denominator for a global default, and measuring the right
+/// one moved the headroom by three orders of magnitude. Demand for a
+/// `--release --workspace --all-targets` build of this repository, over
+/// six runs and two toolchain layouts:
+///
+/// | traced build | bytes demanded | % of the old 2 GiB |
+/// |---|---|---|
+/// | `two_binaries_diverge` fixture | 955,494 | 0.04% |
+/// | `--release --bin waybill` | 880,376,492 | 41% |
+/// | `--all-targets`, toolchain under `/usr/` | 1.39–1.52 GB | 65–71% |
+/// | `--all-targets`, toolchain under `~/` | 1.77–2.00 GB | **82–93%** |
+///
+/// The last row is the ordinary case: `~/.cargo` and `~/.rustup` match no
+/// m213 filter pattern, so dependency-source and sysroot reads enter the
+/// read set, where under `/usr/` the System filter hides them. At 82–93%
+/// consumed by a normal build of this repository the old default was
+/// effectively breached already, and truncation costs real data. 16 GiB
+/// is ~8-9x that demand.
+///
+/// Ranges, not points, deliberately: path capture varied 15,029–23,200
+/// between runs of one build. Whether that variance is disclosed loss or
+/// silent non-determinism is open — findings.md Q7.
+///
+/// This constant does **not** enforce SC-008's 5% ratio and cannot: a
+/// full spend against a one-second trace would be thousands of percent.
+/// What the probe established is that raising the budget does not
+/// endanger the ratio either — the pass hashes only what the trace
+/// observed, so the budget caps that work rather than creating it.
+///
+/// SC-008's ceiling is nonetheless **exceeded in 2 of 9 observations**
+/// (5.2% and 7.1%), which is a property of the criterion rather than of
+/// the pass: its absolute cost is 6.3–24.8 s for ~2 GB, against builds
+/// that took 118.9–857.6 s for identical work on one host, so the ratio
+/// is breached exactly when the host is fast. Recorded in findings.md
+/// Q7 with three options and a recommendation; the ceiling is unchanged
+/// pending that decision, per spec.md's rule against silent
+/// re-baselining. No throughput figure is quoted either: it spread
+/// 80–479 MB/s on one host, so the ~120 MB/s an earlier revision of this
+/// comment cited was as unfounded as the ~478 MB/s it replaced.
+///
+/// The budget bounds the case where bytes stop scaling with build
+/// duration, and the probe names it: **the read set, not the write set.**
+/// Artifacts cannot be produced faster than the build runs, but read-set
+/// paths existed before the trace and nothing it can see bounds their
+/// size — 184,628 read entries against 7,012 write entries in the wider
+/// build. `truncated` plus the FR-015 WARN is what an operator sees when
+/// it engages.
+///
+/// Still 64x the 256 MB per-file cap, so the two limits do not interact
+/// in the normal case.
+///
+/// Only the gated call site reads it, so off the eBPF path it is dead —
+/// same bind as `trace/close_time.rs` and `trace/cwd.rs`, and the same
+/// attribute.
+#[cfg_attr(
+    not(all(target_os = "linux", feature = "ebpf-tracing")),
+    allow(dead_code)
+)]
+pub const DEFAULT_COMPILER_HASH_BUDGET_BYTES: u64 = 16 * 1024 * 1024 * 1024;
 
 impl ScanArgs {
     /// Build a [`SigningIdentity`] from the current flag combination.
@@ -187,6 +272,7 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
     use crate::attestation::serializer;
     use crate::error::MikebomError;
     use crate::trace::aggregator::EventAggregator;
+    use crate::trace::close_time;
     use crate::trace::compiler_pipeline::{
         CompilerPipelineAggregator, FilterConfig as CompilerFilterConfig,
     };
@@ -649,7 +735,7 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
     let mut counter_attach_failures = drops.attach_failures;
     counter_attach_failures.extend(filter_hits.attach_failures);
 
-    let trace = agg.finalize(&TraceStats {
+    let mut trace = agg.finalize(&TraceStats {
         network_events: net_count,
         file_events: file_count,
         ring_buffer_overflows: overflows_total,
@@ -762,7 +848,7 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
     // tracepoint attach failed, operator's command didn't invoke a
     // whitelisted compiler). None-elision preserves pre-m210
     // attestation byte-identity per research R6.
-    let compiler_pipeline_data = if compiler_count > 0 {
+    let mut compiler_pipeline_data = if compiler_count > 0 {
         Some(compiler_agg.finalize())
     } else {
         None
@@ -774,6 +860,29 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
             "compiler-pipeline data captured"
         );
     }
+
+    // Milestone 1072 (#1144) — apply close-time facts to the compiler
+    // read/write sets. Until this ran, every write-set entry claimed it
+    // survived the trace window and every hash was 64 zeros.
+    //
+    // Only runs when the trace captured compiler invocations: a trace
+    // with none emits no coverage record at all, so its `trace_integrity`
+    // stays byte-identical to a pre-m1072 attestation (SC-007).
+    if let Some(ref mut data) = compiler_pipeline_data {
+        // C-1072-8's mapping lives in `close_time::budget_from_flag` so
+        // that it is testable: everything in this function is behind the
+        // Linux + ebpf-tracing gate, where no unprivileged test reaches.
+        let budget = close_time::budget_from_flag(
+            args.compiler_hash_budget_bytes,
+            DEFAULT_COMPILER_HASH_BUDGET_BYTES,
+        );
+        let coverage = close_time::apply_close_time_facts(data, budget);
+        trace.trace_integrity.compiler_hash_coverage = Some(coverage);
+    }
+    // Left `None` when the trace captured no compiler invocations, so
+    // `trace_integrity` serializes byte-identically to a pre-m1072
+    // attestation (FR-014, SC-007). That is the `if let` above doing
+    // nothing, not a separate branch.
 
     let stmt = builder::build_attestation(
         trace,

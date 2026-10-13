@@ -33,10 +33,57 @@ pub struct TraceIntegrity {
     /// two cannot disagree. Omitted when zero.
     #[serde(default, skip_serializing_if = "is_zero")]
     pub unresolved_relative_opens: u64,
+    /// Milestone 1072 (#1144): what the close-time hashing pass covered.
+    ///
+    /// Absent when the trace captured zero compiler invocations, so a
+    /// pre-m1072 attestation serializes byte-identically (SC-007). Field
+    /// placement is LAST in the struct for the same reason, following the
+    /// m1070 precedent two fields above.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub compiler_hash_coverage: Option<CompilerHashCoverage>,
 }
 
 fn is_zero(n: &u64) -> bool {
     *n == 0
+}
+
+/// What the milestone-1072 close-time hashing pass covered, in distinct
+/// paths rather than set entries: a path named by three invocations counts
+/// once (FR-013, `contracts/read-write-set-shape.md` C-1072-5).
+///
+/// `paths_hashed + paths_absent + paths_skipped == paths_total` is an
+/// invariant, not a coincidence — the pass visits each distinct path exactly
+/// once and every visit lands in exactly one of the three.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CompilerHashCoverage {
+    /// Distinct paths across every read and write set.
+    pub paths_total: u64,
+    /// Existed, was a regular file, fit the budget, and hashed cleanly.
+    pub paths_hashed: u64,
+    /// Did not exist when the trace ended.
+    pub paths_absent: u64,
+    /// Existed but was not hashed: unreadable, not a regular file, over the
+    /// per-file cap, or over the remaining budget.
+    pub paths_skipped: u64,
+    /// The cumulative-bytes budget was exhausted. The attestation is still
+    /// written and the command still exits zero (C-1072-10).
+    pub truncated: bool,
+    pub budget_source: BudgetSource,
+}
+
+/// Where the hashing budget came from.
+///
+/// An enum rather than a bool so the wire shape reads
+/// `"budget_source": "operator"` instead of `"budget_was_overridden": true`
+/// — Principle IV, no raw primitives for domain values across boundaries.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum BudgetSource {
+    /// The compiled-in default, measured under
+    /// `specs/1072-compiler-set-close-time/measurements/`.
+    Default,
+    /// Supplied by the operator via `--compiler-hash-budget-bytes`.
+    Operator,
 }
 
 /// Record of an event that was only partially captured.
@@ -79,6 +126,7 @@ mod tests {
             bloom_filter_false_positive_rate: 0.01,
             filter_categories_applied: vec![],
             unresolved_relative_opens: 0,
+            ..Default::default()
         };
 
         let json = serde_json::to_string(&integrity).expect("serialize integrity");
@@ -113,6 +161,7 @@ mod tests {
             bloom_filter_false_positive_rate: 0.01,
             filter_categories_applied: vec![],
             unresolved_relative_opens: 0,
+            ..Default::default()
         };
 
         let json = serde_json::to_string(&integrity).expect("serialize integrity");
@@ -164,6 +213,7 @@ mod tests {
                 "System".to_string(),
             ],
             unresolved_relative_opens: 0,
+            ..Default::default()
         };
 
         let json = serde_json::to_string(&integrity).expect("serialize integrity");
