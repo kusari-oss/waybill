@@ -345,7 +345,8 @@ is what these runs break. The consequences land on the consumers:
 Not investigated further here — root-causing it means instrumenting the
 ring-buffer drain and the exec path, which is m210/m212 territory, not
 #1144's. Recorded so the next person starts from a measurement instead of
-an assumption.
+an assumption, and filed as **#1185** with the three-run table, the
+layout dependence, and the two reproduction traps.
 
 ### SC-008's 5% ceiling is exceeded in 2 of 9 observations
 
