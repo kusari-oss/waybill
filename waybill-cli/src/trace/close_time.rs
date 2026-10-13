@@ -36,6 +36,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
+use std::time::Instant;
 
 use tracing::{debug, warn};
 use waybill_common::attestation::compiler_pipeline::{CompilerPipelineData, ReadKind};
@@ -60,6 +61,29 @@ pub struct Budget {
     pub source: BudgetSource,
 }
 
+/// Resolve the `--compiler-hash-budget-bytes` flag into a `Budget`
+/// (C-1072-8).
+///
+/// A free function rather than a few lines at the call site because the
+/// call site is behind
+/// `#[cfg(all(target_os = "linux", feature = "ebpf-tracing"))]`, where no
+/// unprivileged test can reach it. Here it is testable on every host.
+///
+/// `Some(0)` is an operator saying "hash nothing", not an absent flag, and
+/// must not collapse into the default.
+pub fn budget_from_flag(flag: Option<u64>, default_bytes: u64) -> Budget {
+    match flag {
+        Some(total_bytes) => Budget {
+            total_bytes,
+            source: BudgetSource::Operator,
+        },
+        None => Budget {
+            total_bytes: default_bytes,
+            source: BudgetSource::Default,
+        },
+    }
+}
+
 /// What the pass determined about one distinct path, before fan-out.
 #[derive(Clone, Debug, PartialEq, Eq)]
 struct PathFacts {
@@ -76,6 +100,15 @@ enum Outcome {
     Hashed,
     Absent,
     Skipped,
+}
+
+/// One path's visit: what was learned, which count it belongs to, how much
+/// of the budget it consumed, and whether it was the budget that stopped it.
+struct Visit {
+    facts: PathFacts,
+    outcome: Outcome,
+    bytes_hashed: u64,
+    over_budget: bool,
 }
 
 /// Apply close-time facts to every entry in `data`, in place, and return
@@ -102,31 +135,79 @@ pub fn apply_close_time_facts(
 /// two-byte cap instead of a 256 MB fixture. Production always passes
 /// `DEFAULT_SIZE_CAP_BYTES`.
 fn run(data: &mut CompilerPipelineData, budget: Budget, cap: u64) -> CompilerHashCoverage {
+    let started = Instant::now();
     let ordered = distinct_paths(data);
 
     let mut facts: BTreeMap<PathBuf, PathFacts> = BTreeMap::new();
     let mut hashed = 0u64;
     let mut absent = 0u64;
     let mut skipped = 0u64;
+    let mut bytes_hashed = 0u64;
+    let mut remaining = budget.total_bytes;
+    let mut truncated = false;
 
     for path in &ordered {
-        let (f, outcome) = visit(path, cap);
-        match outcome {
+        let v = visit(path, cap, remaining);
+        match v.outcome {
             Outcome::Hashed => hashed += 1,
             Outcome::Absent => absent += 1,
             Outcome::Skipped => skipped += 1,
         }
-        facts.insert(path.clone(), f);
+        bytes_hashed += v.bytes_hashed;
+        // Charged once per distinct path, at its first (only) visit, since
+        // the walk is over distinct paths and the result is fanned out.
+        remaining = remaining.saturating_sub(v.bytes_hashed);
+        if v.over_budget {
+            // Do NOT break. One oversized artifact early in sort order
+            // must not blind the pass to every path after it (FR-012);
+            // smaller files later can still fit the remainder.
+            truncated = true;
+        }
+        facts.insert(path.clone(), v.facts);
     }
 
     fan_out(data, &facts);
+
+    // Deliberately DEBUG, not INFO: with the feature on, an unconditional
+    // INFO line would be new default output, and C-1072-11 is a promise
+    // about not changing what an operator sees. It is also how SC-008's
+    // ratio is measured -- see `measurements/cost.md` -- so the elapsed
+    // figure needs to be obtainable without a code change.
+    //
+    // Nothing here reaches the attestation: a duration in the predicate
+    // would break the byte-identity that signing depends on (C-1072-6).
+    debug!(
+        paths_total = ordered.len(),
+        paths_hashed = hashed,
+        paths_absent = absent,
+        paths_skipped = skipped,
+        bytes_hashed,
+        elapsed_ms = started.elapsed().as_millis(),
+        "close-time pass complete"
+    );
+
+    // FR-015, C-1072-10: exactly one WARN per trace, naming the counts and
+    // the budget. Principle III is not engaged -- no observation is lost
+    // when hashing truncates, so the attestation is still written and the
+    // command still exits zero. Principle X's remedy for "cannot
+    // guarantee" is structured disclosure, which the coverage record is.
+    if truncated {
+        warn!(
+            paths_hashed = hashed,
+            paths_skipped = skipped,
+            paths_absent = absent,
+            paths_total = ordered.len(),
+            budget_bytes = budget.total_bytes,
+            "close-time hashing budget exhausted; coverage is partial"
+        );
+    }
 
     CompilerHashCoverage {
         paths_total: ordered.len() as u64,
         paths_hashed: hashed,
         paths_absent: absent,
         paths_skipped: skipped,
-        truncated: false,
+        truncated,
         budget_source: budget.source,
     }
 }
@@ -172,15 +253,24 @@ fn distinct_paths(data: &CompilerPipelineData) -> Vec<PathBuf> {
 /// `symlink_metadata`, not `metadata`: the question is whether the name
 /// resolved, so a dangling symlink is a successful stat of the link itself
 /// — present, not a regular file, no hash.
-fn visit(path: &PathBuf, cap: u64) -> (PathFacts, Outcome) {
+fn visit(path: &PathBuf, cap: u64, remaining: u64) -> Visit {
+    let skipped = |facts: PathFacts, over_budget: bool| Visit {
+        facts,
+        outcome: Outcome::Skipped,
+        bytes_hashed: 0,
+        over_budget,
+    };
+
     let Ok(md) = std::fs::symlink_metadata(path) else {
-        return (
-            PathFacts {
+        return Visit {
+            facts: PathFacts {
                 existed: false,
                 hash: None,
             },
-            Outcome::Absent,
-        );
+            outcome: Outcome::Absent,
+            bytes_hashed: 0,
+            over_budget: false,
+        };
     };
 
     // The name resolved. Whether anything readable is behind it is a
@@ -192,7 +282,20 @@ fn visit(path: &PathBuf, cap: u64) -> (PathFacts, Outcome) {
 
     if !md.is_file() {
         debug!(path = %path.display(), "close-time: not a regular file, not hashed");
-        return (existed, Outcome::Skipped);
+        return skipped(existed, false);
+    }
+
+    // FR-012: the budget is checked before the read, not after. Hashing a
+    // file and then discarding it would spend the cost the budget exists
+    // to bound.
+    if md.len() > remaining {
+        debug!(
+            path = %path.display(),
+            size = md.len(),
+            remaining,
+            "close-time: over the remaining budget, not hashed"
+        );
+        return skipped(existed, true);
     }
 
     // `sha256_file_hex` refuses a file over the cap rather than hashing a
@@ -203,16 +306,18 @@ fn visit(path: &PathBuf, cap: u64) -> (PathFacts, Outcome) {
     // correct-but-unbounded exactly as spec.md describes.
     match sha256_file_hex(path, cap) {
         Ok(hex) => match HexString::new(&hex) {
-            Ok(value) => (
-                PathFacts {
+            Ok(value) => Visit {
+                facts: PathFacts {
                     existed: true,
                     hash: Some(ContentHash {
                         algorithm: HashAlgorithm::Sha256,
                         value,
                     }),
                 },
-                Outcome::Hashed,
-            ),
+                outcome: Outcome::Hashed,
+                bytes_hashed: md.len(),
+                over_budget: false,
+            },
             Err(e) => {
                 // Unreachable in practice -- the hasher emits lowercase
                 // hex -- but a panic here would abort a whole trace's
@@ -222,7 +327,7 @@ fn visit(path: &PathBuf, cap: u64) -> (PathFacts, Outcome) {
                     error = %e,
                     "close-time: hasher returned a value that is not hex; not hashed"
                 );
-                (existed, Outcome::Skipped)
+                skipped(existed, false)
             }
         },
         Err(e) => {
@@ -231,7 +336,7 @@ fn visit(path: &PathBuf, cap: u64) -> (PathFacts, Outcome) {
                 error = %e,
                 "close-time: could not hash; counted as skipped"
             );
-            (existed, Outcome::Skipped)
+            skipped(existed, false)
         }
     }
 }
@@ -682,6 +787,206 @@ mod tests {
             .expect("entry retained");
         assert!(!gone.existed_at_close);
         assert!(gone.sha256_at_close.is_none());
+    }
+
+    /// T040 / FR-012, SC-006: a zero budget hashes nothing, says so, and
+    /// still reports every path's existence. Truncation costs hashes, not
+    /// observations.
+    #[test]
+    fn zero_budget_hashes_nothing_and_reports_truncated() {
+        let dir = tempfile::tempdir().unwrap();
+        let a = dir.path().join("a.rlib");
+        let b = dir.path().join("b.rlib");
+        std::fs::write(&a, b"content a").unwrap();
+        std::fs::write(&b, b"content b").unwrap();
+        let gone = dir.path().join("gone.o");
+
+        let mut data = pipeline(&[], &[a.clone(), b.clone(), gone.clone()]);
+        let cov = apply_close_time_facts(
+            &mut data,
+            Budget {
+                total_bytes: 0,
+                source: BudgetSource::Operator,
+            },
+        );
+
+        assert!(cov.truncated);
+        assert_eq!(cov.paths_hashed, 0);
+        assert_eq!(cov.paths_skipped, 2);
+        assert_eq!(cov.paths_absent, 1, "existence is still reported");
+        assert!(partition_holds(&cov));
+        assert_eq!(cov.budget_source, BudgetSource::Operator);
+
+        for e in &data.invocations[0].write_set {
+            assert!(e.sha256_at_close.is_none());
+        }
+    }
+
+    /// T040 / FR-012: a budget that cuts mid-way does not stop the pass.
+    /// A file too big for the remainder is skipped, and smaller files
+    /// later in sort order still get hashed — one oversized artifact must
+    /// not blind the pass to everything after it.
+    #[test]
+    fn budget_skips_the_oversized_and_keeps_going() {
+        let dir = tempfile::tempdir().unwrap();
+        // Sort order is a, b, c. `b` is the one that cannot fit.
+        let a = dir.path().join("a.rlib");
+        let b = dir.path().join("b.rlib");
+        let c = dir.path().join("c.rlib");
+        std::fs::write(&a, vec![b'a'; 10]).unwrap();
+        std::fs::write(&b, vec![b'b'; 500]).unwrap();
+        std::fs::write(&c, vec![b'c'; 10]).unwrap();
+
+        let mut data = pipeline(&[], &[a.clone(), b.clone(), c.clone()]);
+        // Room for a and c (10 + 10) but never for b (500).
+        let cov = apply_close_time_facts(
+            &mut data,
+            Budget {
+                total_bytes: 25,
+                source: BudgetSource::Default,
+            },
+        );
+
+        assert!(cov.truncated);
+        assert_eq!(cov.paths_hashed, 2, "a and c");
+        assert_eq!(cov.paths_skipped, 1, "b");
+        assert!(partition_holds(&cov));
+
+        let hash_of = |p: &PathBuf| {
+            data.invocations[0]
+                .write_set
+                .iter()
+                .find(|e| &e.path == p)
+                .and_then(|e| e.sha256_at_close.clone())
+        };
+        assert!(hash_of(&a).is_some());
+        assert!(hash_of(&b).is_none(), "over the remaining budget");
+        assert!(
+            hash_of(&c).is_some(),
+            "a path after the oversized one must still be measured"
+        );
+    }
+
+    /// T040 / SC-005: truncation is reproducible. Two runs over the same
+    /// input under the same budget must hash the identical path set, since
+    /// the budget is charged in sorted-path order and nothing about the
+    /// decision depends on wall-clock, thread scheduling or map iteration.
+    #[test]
+    fn truncation_point_is_identical_across_runs() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut paths = Vec::new();
+        for i in 0..8 {
+            let p = dir.path().join(format!("artifact-{i}.rlib"));
+            std::fs::write(&p, vec![b'x'; 100]).unwrap();
+            paths.push(p);
+        }
+
+        let hashed_set = |budget: u64| -> Vec<PathBuf> {
+            let mut data = pipeline(&[], &paths);
+            apply_close_time_facts(
+                &mut data,
+                Budget {
+                    total_bytes: budget,
+                    source: BudgetSource::Default,
+                },
+            );
+            let mut v: Vec<PathBuf> = data.invocations[0]
+                .write_set
+                .iter()
+                .filter(|e| e.sha256_at_close.is_some())
+                .map(|e| e.path.clone())
+                .collect();
+            v.sort();
+            v
+        };
+
+        // 350 bytes admits exactly three 100-byte files.
+        let first = hashed_set(350);
+        let second = hashed_set(350);
+        assert_eq!(first, second, "the truncation point moved between runs");
+        assert_eq!(first.len(), 3);
+        // And it is the first three in sort order, not an arbitrary three.
+        assert_eq!(first, {
+            let mut expected = paths[0..3].to_vec();
+            expected.sort();
+            expected
+        });
+    }
+
+    /// T041: the `source` on the budget handed in is the one that reaches
+    /// the coverage record, for both variants. The pass never sees a flag,
+    /// so the "absent flag → Default" half of the mapping is asserted at
+    /// the flag site in `cli/scan.rs`, not here.
+    #[test]
+    fn budget_source_passes_through_unchanged() {
+        let dir = tempfile::tempdir().unwrap();
+        let f = dir.path().join("x.rlib");
+        std::fs::write(&f, b"x").unwrap();
+
+        for source in [BudgetSource::Default, BudgetSource::Operator] {
+            let mut data = pipeline(&[], std::slice::from_ref(&f));
+            let cov = apply_close_time_facts(
+                &mut data,
+                Budget {
+                    total_bytes: u64::MAX,
+                    source,
+                },
+            );
+            assert_eq!(cov.budget_source, source);
+            assert!(!cov.truncated, "u64::MAX cannot truncate");
+        }
+    }
+
+    /// T036 / C-1072-8: the flag-to-`Budget` mapping, asserted at the
+    /// layer that owns it. An absent flag takes the measured default and
+    /// reports `Default`; any supplied value reports `Operator`.
+    ///
+    /// `Some(0)` is the case worth writing down: an operator asking for
+    /// no hashing at all must not be folded into the default, which is
+    /// what a `unwrap_or(default)` would have done.
+    #[test]
+    fn flag_maps_to_budget_and_source() {
+        let default_bytes = 2 * 1024 * 1024 * 1024;
+
+        let absent = budget_from_flag(None, default_bytes);
+        assert_eq!(absent.total_bytes, default_bytes);
+        assert_eq!(absent.source, BudgetSource::Default);
+
+        let supplied = budget_from_flag(Some(4096), default_bytes);
+        assert_eq!(supplied.total_bytes, 4096);
+        assert_eq!(supplied.source, BudgetSource::Operator);
+
+        let zero = budget_from_flag(Some(0), default_bytes);
+        assert_eq!(zero.total_bytes, 0, "an explicit 0 is not an absent flag");
+        assert_eq!(zero.source, BudgetSource::Operator);
+    }
+
+    /// T041 / SC-007, FR-014: a `TraceIntegrity` without a coverage record
+    /// serializes without the key, so a trace that captured no compiler
+    /// invocations stays byte-identical to a pre-m1072 attestation.
+    #[test]
+    fn absent_coverage_record_serializes_without_the_key() {
+        use waybill_common::attestation::integrity::TraceIntegrity;
+
+        let integrity = TraceIntegrity::default();
+        assert!(integrity.compiler_hash_coverage.is_none());
+        let json = serde_json::to_string(&integrity).unwrap();
+        assert!(!json.contains("compiler_hash_coverage"), "{json}");
+
+        let with = TraceIntegrity {
+            compiler_hash_coverage: Some(CompilerHashCoverage {
+                paths_total: 1,
+                paths_hashed: 1,
+                paths_absent: 0,
+                paths_skipped: 0,
+                truncated: false,
+                budget_source: BudgetSource::Default,
+            }),
+            ..Default::default()
+        };
+        let json = serde_json::to_string(&with).unwrap();
+        assert!(json.contains("\"compiler_hash_coverage\""), "{json}");
+        assert!(json.contains("\"budget_source\":\"default\""), "{json}");
     }
 
     /// The visit order is a pure function of the path set: write-set paths

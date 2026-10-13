@@ -126,3 +126,88 @@ which question had already been asked.
 The close-time hashing cost that SC-008 ties its ceiling to. That
 requires a real kernel trace with the pass implemented, so it belongs
 to the first implementation task, not to this probe.
+
+## Q5. Can two traces of one build produce byte-identical payloads?
+
+**No, and this predates milestone 1072.** Measured while implementing
+T043, which originally asked the harness to assert exactly that.
+
+Two consecutive `trace capture` runs of `two_binaries_diverge`, with
+`target/` removed between them, on Colima 6.8.0 aarch64. The normalised
+payloads differ in two places, both in the **observation** tier that
+Principle II forbids the close-time pass to touch:
+
+```
+17c17
+<           "invocation_id": 3114349875006
+>           "invocation_id": 3118339958275
+...
+151c151
+<   ".../target/release/deps/rmetaA36mif"
+>   ".../target/release/deps/rmeta35kQFf"
+156c156
+<   ".../target/release/deps/rustceARhX8"
+>   ".../target/release/deps/rustcdRlOq7"
+194c194
+<   ".../deps/.tmpZ6GhkV.temp-archive/tmp.a"
+>   ".../deps/.tmpCc2MIw.temp-archive/tmp.a"
+```
+
+1. **`invocation_id` is `bpf_ktime_get_ns()` at exec time.** Milestone
+   210's deliberate choice, commented at
+   `waybill-cli/src/trace/compiler_pipeline.rs:371` — "unique +
+   monotonically increasing within a boot". A boot-relative nanosecond
+   clock cannot repeat across runs, so no two traces have ever agreed
+   here.
+2. **rustc's temporaries are `mkdtemp`-random.** `rmeta<6 random>`,
+   `rustc<6 random>` and `.tmp<6 random>.temp-archive` appear in read
+   sets, write sets and `renamed_from` because the kernel genuinely
+   observed them. m1070 shipped those sets; the randomness arrived with
+   them.
+
+### Why the original requirement looked safe
+
+It cited feature 006 US2. That text reads "byte-identical across re-runs
+**when the build is reproducible**", and FR-006 constrains the *signing
+step*: re-signing one canonical payload must not change the payload
+bytes. Neither promises that two *traces* agree. The conflation is
+between a build whose **outputs** are reproducible — this fixture's are —
+and a build whose **process** is. The trace records the process.
+
+### Disposition
+
+C-1072-6 now requires what the pass can actually deliver: given the same
+observation tier and budget, the close-time tier and the coverage record
+are identical. SC-005a states it, and T043's harness section asserts it
+by comparing the coverage record plus every path's close-time facts over
+the paths both runs observed — an intersection, because the random
+temporaries differ by name and never meet.
+
+Evidence that the narrower claim holds: `cost.md`'s five runs produced
+`paths_total=102, paths_hashed=14, bytes_hashed=955494` with no column
+moving, and the corrected harness assertion reports the coverage record
+identical across runs with identical close-time facts for every shared
+path.
+
+### How much of the set is per-run
+
+**50 of 102 paths appear in both runs.** The other 52 — just over half —
+are `mkdtemp` names that exist in exactly one trace. That ratio is the
+scale of the problem the old requirement would have had to solve: not a
+field or two, but half the path set. It is also why the harness compares
+an intersection and then asserts a floor on its size: 50 shared paths is
+a real check, whereas a handful would have been close to vacuous.
+
+**Recorded rather than quietly relaxed**, per `spec.md`'s experimental
+posture: the subsystem is pre-stable, and an obligation found to be
+unachievable belongs in this file with its measurement, not in a silent
+edit.
+
+### Open consequence for signing
+
+If byte-identical re-runs are ever genuinely needed — reproducible-build
+verification comparing two independently produced attestations — it is
+`invocation_id` that has to change, not this pass: a content-derived
+identifier (hash of argv + cwd + ordinal) rather than a clock. That is a
+predicate-shape change well outside #1144, and it would not fix the
+`mkdtemp` paths, which are irreducibly per-run facts about what happened.

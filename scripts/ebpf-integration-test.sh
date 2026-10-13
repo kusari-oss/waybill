@@ -563,6 +563,188 @@ fi
 echo "    write-set entries carrying rename history: $WITH_HISTORY"
 echo "    intermediate names shadowing a real entry: 0"
 
+# --- US4: an operator can see how much was hashed --------------------
+echo
+echo "==> m1072 US4: coverage record (FR-013, FR-014)"
+
+COVERAGE=$(jq -c '.predicate.trace_integrity.compiler_hash_coverage' "$OUTPUT")
+if [[ "$COVERAGE" == "null" || -z "$COVERAGE" ]]; then
+    echo "FAIL: no compiler_hash_coverage record, though this trace captured"
+    echo "      $INVOCATION_COUNT compiler invocations (FR-014)"
+    exit 1
+fi
+echo "    $COVERAGE"
+
+# FR-013's partition, on real data. Computed in jq rather than asserted
+# field-by-field so a miscount cannot hide behind a plausible-looking
+# record.
+PARTITION_OK=$(jq '.predicate.trace_integrity.compiler_hash_coverage
+                   | (.paths_hashed + .paths_absent + .paths_skipped) == .paths_total' "$OUTPUT")
+if [[ "$PARTITION_OK" != "true" ]]; then
+    echo "FAIL: hashed + absent + skipped != total (FR-013)"
+    jq '.predicate.trace_integrity.compiler_hash_coverage' "$OUTPUT"
+    exit 1
+fi
+
+# The record must agree with the sets it describes: paths_total is over
+# DISTINCT paths across both sets. A record that drifts from the document
+# it sits in would be worse than no record.
+DISTINCT_IN_SETS=$(jq '[.predicate.compiler_pipeline.invocations[]?
+                        | (.read_set[]?, .write_set[]?)
+                        | select((.kind | type) != "object")
+                        | .path] | unique | length' "$OUTPUT")
+RECORD_TOTAL=$(jq '.predicate.trace_integrity.compiler_hash_coverage.paths_total' "$OUTPUT")
+if [[ "$RECORD_TOTAL" -ne "$DISTINCT_IN_SETS" ]]; then
+    echo "FAIL: coverage says $RECORD_TOTAL paths, the sets contain $DISTINCT_IN_SETS distinct non-stdin paths (FR-013)"
+    exit 1
+fi
+echo "    paths_total agrees with the sets: $RECORD_TOTAL distinct paths"
+
+# A stock run must say so, and paths_hashed must match the number of
+# entries that actually carry a hash.
+BUDGET_SOURCE=$(jq -r '.predicate.trace_integrity.compiler_hash_coverage.budget_source' "$OUTPUT")
+if [[ "$BUDGET_SOURCE" != "default" ]]; then
+    echo "FAIL: budget_source is '$BUDGET_SOURCE' on a run with no --compiler-hash-budget-bytes (C-1072-8)"
+    exit 1
+fi
+HASHED_PATHS=$(jq '[.predicate.compiler_pipeline.invocations[]?
+                    | (.read_set[]?, .write_set[]?)
+                    | select(.sha256_at_close != null) | .path] | unique | length' "$OUTPUT")
+RECORD_HASHED=$(jq '.predicate.trace_integrity.compiler_hash_coverage.paths_hashed' "$OUTPUT")
+if [[ "$RECORD_HASHED" -ne "$HASHED_PATHS" ]]; then
+    echo "FAIL: coverage says $RECORD_HASHED hashed, $HASHED_PATHS distinct paths carry a hash"
+    exit 1
+fi
+echo "    paths_hashed agrees with the entries carrying a hash: $RECORD_HASHED"
+
+# SC-006: budget 0 truncates, discloses, and still exits zero. `0` is the
+# cheapest possible truncation test -- no large fixture required.
+echo
+echo "==> m1072 US4: budget truncation (SC-006)"
+TRUNC_OUTPUT=/tmp/m1072-truncated.attestation.json
+rm -rf "$FIXTURE_TARGET"
+set +e
+"$MIKEBOM" trace capture \
+    --attestation-format waybill-v1 \
+    --compiler-hash-budget-bytes 0 \
+    --output "$TRUNC_OUTPUT" \
+    -- cargo build --release \
+        --manifest-path "$FIXTURE/Cargo.toml" \
+        --target-dir "$FIXTURE_TARGET"
+TRUNC_STATUS=$?
+set -e
+if [[ $TRUNC_STATUS -ne 0 ]]; then
+    echo "FAIL: a zero budget must not fail the command — hashing is advisory"
+    echo "      and truncating it loses no observation (C-1072-10). exit=$TRUNC_STATUS"
+    exit 1
+fi
+if [[ ! -f "$TRUNC_OUTPUT" ]]; then
+    echo "FAIL: no attestation written under a zero budget (C-1072-10 step 3)"
+    exit 1
+fi
+TRUNC_OK=$(jq '.predicate.trace_integrity.compiler_hash_coverage
+               | .truncated == true and .paths_hashed == 0
+                 and .budget_source == "operator"
+                 and ((.paths_hashed + .paths_absent + .paths_skipped) == .paths_total)' "$TRUNC_OUTPUT")
+if [[ "$TRUNC_OK" != "true" ]]; then
+    echo "FAIL: zero-budget coverage record is wrong (SC-006)"
+    jq '.predicate.trace_integrity.compiler_hash_coverage' "$TRUNC_OUTPUT"
+    exit 1
+fi
+TRUNC_HASHES=$(jq '[.predicate.compiler_pipeline.invocations[]?
+                    | (.read_set[]?, .write_set[]?)
+                    | select(.sha256_at_close != null)] | length' "$TRUNC_OUTPUT")
+if [[ "$TRUNC_HASHES" -ne 0 ]]; then
+    echo "FAIL: $TRUNC_HASHES entries carry a hash under a zero budget (SC-006)"
+    exit 1
+fi
+# Existence is NOT truncated -- only hashing is. This is the half of
+# C-1072-10 that says no observation is lost.
+TRUNC_ABSENT=$(jq '.predicate.trace_integrity.compiler_hash_coverage.paths_absent' "$TRUNC_OUTPUT")
+if [[ "$TRUNC_ABSENT" -lt 1 ]]; then
+    echo "FAIL: a zero budget suppressed existence reporting too (C-1072-10)"
+    exit 1
+fi
+echo "    exit 0, truncated: true, paths_hashed: 0, budget_source: operator"
+echo "    existence still reported: paths_absent=$TRUNC_ABSENT"
+
+# SC-005a: the close-time tier introduces no nondeterminism of its own.
+#
+# NOT whole-payload byte-identity. That is unachievable and predates this
+# milestone: `invocation_id` is bpf_ktime_get_ns() at exec by m210's
+# design, and rustc's temporaries are mkdtemp-random, so deps/rmetaA36mif
+# in one run is deps/rmeta35kQFf in the next. Both sit in the observation
+# tier, which the pass may not touch (Principle II). Contract C-1072-6
+# records the measurement that settled this.
+#
+# What the pass controls is asserted instead: the coverage record, and
+# every path's close-time facts for the paths both runs observed.
+echo
+echo "==> m1072 US4: close-time determinism (SC-005a)"
+DET_A=/tmp/m1072-det-a.json
+DET_B=/tmp/m1072-det-b.json
+for out in "$DET_A" "$DET_B"; do
+    # Clean between runs or the second build is a no-op, and two empty
+    # traces agree just as well as two correct ones.
+    rm -rf "$FIXTURE_TARGET"
+    "$MIKEBOM" trace capture \
+        --attestation-format waybill-v1 \
+        --output "$out" \
+        -- cargo build --release \
+            --manifest-path "$FIXTURE/Cargo.toml" \
+            --target-dir "$FIXTURE_TARGET" > /dev/null 2>&1
+done
+
+COV_A=$(jq -cS '.predicate.trace_integrity.compiler_hash_coverage' "$DET_A")
+COV_B=$(jq -cS '.predicate.trace_integrity.compiler_hash_coverage' "$DET_B")
+if [[ "$COV_A" != "$COV_B" ]]; then
+    echo "FAIL: the coverage record differs between two runs (SC-005a)"
+    echo "      run A: $COV_A"
+    echo "      run B: $COV_B"
+    exit 1
+fi
+DET_PATHS=$(jq '.predicate.trace_integrity.compiler_hash_coverage.paths_total // 0' "$DET_A")
+if [[ "$DET_PATHS" -lt 1 ]]; then
+    echo "FAIL: determinism run captured no paths — nothing was compared (SC-005a)"
+    exit 1
+fi
+echo "    coverage record identical across runs: $COV_A"
+
+# Per-path close-time facts, over the paths both runs saw. The random
+# temporaries differ by name and simply do not intersect, which is why the
+# comparison is an intersection rather than a diff.
+facts() {
+    jq -r '[.predicate.compiler_pipeline.invocations[]?
+            | (.read_set[]?, .write_set[]?)
+            | "\(.path)\t\(.existed_at_close)\t\(.sha256_at_close.value // "none")"]
+           | unique | .[]' "$1"
+}
+facts "$DET_A" | sort > /tmp/m1072-facts-a
+facts "$DET_B" | sort > /tmp/m1072-facts-b
+SHARED=$(comm -12 <(cut -f1 /tmp/m1072-facts-a | sort -u) <(cut -f1 /tmp/m1072-facts-b | sort -u) | wc -l | tr -d ' ')
+CONFLICTS=0
+while IFS= read -r p; do
+    a=$(grep -F "$p	" /tmp/m1072-facts-a | head -1)
+    b=$(grep -F "$p	" /tmp/m1072-facts-b | head -1)
+    if [[ "$a" != "$b" ]]; then
+        echo "FAIL: close-time facts differ between runs for $p"
+        echo "      A: $a"
+        echo "      B: $b"
+        CONFLICTS=$((CONFLICTS + 1))
+    fi
+done < <(comm -12 <(cut -f1 /tmp/m1072-facts-a | sort -u) <(cut -f1 /tmp/m1072-facts-b | sort -u))
+if [[ "$CONFLICTS" -ne 0 ]]; then
+    echo "FAIL: $CONFLICTS paths disagree across runs (SC-005a)"
+    exit 1
+fi
+# A tiny intersection would make the comparison above nearly vacuous: the
+# fixture's real sources and artifacts have stable names and must dominate.
+if [[ "$SHARED" -lt 20 ]]; then
+    echo "FAIL: only $SHARED paths appear in both runs — too few to call this a check (SC-005a)"
+    exit 1
+fi
+echo "    close-time facts identical for all $SHARED paths both runs observed"
+
 echo
 echo ">>> m210 + m212 + m213 + m1072 integration test PASSED"
 echo "    compiler_pipeline: $INVOCATION_COUNT invocations, $RUSTC_COUNT rustc"

@@ -103,9 +103,51 @@ pub struct ScanArgs {
     #[arg(long)]
     pub include_system_reads: bool,
 
+    /// Milestone 1072 (FR-016) — cumulative byte budget for the
+    /// close-time hashing pass. Absent means the measured default;
+    /// supplying it marks the coverage record `budget_source: "operator"`
+    /// so a reader can tell a tuned run from a stock one (C-1072-8).
+    ///
+    /// `0` is meaningful: hash nothing, report every path's existence,
+    /// and set `truncated: true`. The command still exits zero — hashing
+    /// is an advisory tier, and truncating it loses no observation
+    /// (C-1072-10).
+    #[arg(
+        long,
+        env = "WAYBILL_COMPILER_HASH_BUDGET_BYTES",
+        value_name = "BYTES"
+    )]
+    pub compiler_hash_budget_bytes: Option<u64>,
+
     #[arg(last = true)]
     pub command: Vec<String>,
 }
+
+/// Default cumulative budget for the close-time hashing pass: 2 GiB.
+///
+/// **Measured, not chosen by feel** — see
+/// `specs/1072-compiler-set-close-time/measurements/cost.md`, which
+/// `contracts/cli-budget.md` C-1072-9 requires this definition to cite.
+/// The `two_binaries_diverge` fixture hashes 955,494 bytes across 102
+/// distinct paths in 2 ms, 0.2% of its trace's wall-clock. 2 GiB is
+/// ~2,200x that demand, so a normal build never truncates; truncation
+/// costs real data, so the default should only be reached by something
+/// pathological.
+///
+/// This constant does **not** enforce SC-008's 5% ratio and cannot: a
+/// full 2 GiB spend against a one-second trace would be ~500%. The ratio
+/// holds because hashable bytes and build duration scale together. The
+/// budget bounds the case where that correlation breaks, and `truncated`
+/// plus the FR-015 WARN is what an operator sees when it does.
+///
+/// Only the gated call site reads it, so off the eBPF path it is dead —
+/// same bind as `trace/close_time.rs` and `trace/cwd.rs`, and the same
+/// attribute.
+#[cfg_attr(
+    not(all(target_os = "linux", feature = "ebpf-tracing")),
+    allow(dead_code)
+)]
+pub const DEFAULT_COMPILER_HASH_BUDGET_BYTES: u64 = 2 * 1024 * 1024 * 1024;
 
 impl ScanArgs {
     /// Build a [`SigningIdentity`] from the current flag combination.
@@ -195,7 +237,6 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
     use crate::trace::loader::{self, LoaderConfig};
     use crate::trace::observed::{self, ObservedKind, ObservedOp};
     use crate::trace::processor::TraceStats;
-    use waybill_common::attestation::integrity::BudgetSource;
     use waybill_common::events::{
         CompilerExecEvent, FileEvent, FileEventType, LineageEvent, NetworkEvent, RenameEvent,
     };
@@ -651,7 +692,7 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
     let mut counter_attach_failures = drops.attach_failures;
     counter_attach_failures.extend(filter_hits.attach_failures);
 
-    let trace = agg.finalize(&TraceStats {
+    let mut trace = agg.finalize(&TraceStats {
         network_events: net_count,
         file_events: file_count,
         ring_buffer_overflows: overflows_total,
@@ -785,17 +826,20 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
     // with none emits no coverage record at all, so its `trace_integrity`
     // stays byte-identical to a pre-m1072 attestation (SC-007).
     if let Some(ref mut data) = compiler_pipeline_data {
-        // T036 is what reads `--compiler-hash-budget-bytes` and supplies a
-        // measured default; until then the pass is unbudgeted, which
-        // spec.md calls correct-but-unbounded. `u64::MAX` cannot truncate.
-        let budget = close_time::Budget {
-            total_bytes: u64::MAX,
-            source: BudgetSource::Default,
-        };
-        // T038 assigns this to `trace.trace_integrity`; the pass's own
-        // effect on `data` is what matters at this commit.
-        let _ = close_time::apply_close_time_facts(data, budget);
+        // C-1072-8's mapping lives in `close_time::budget_from_flag` so
+        // that it is testable: everything in this function is behind the
+        // Linux + ebpf-tracing gate, where no unprivileged test reaches.
+        let budget = close_time::budget_from_flag(
+            args.compiler_hash_budget_bytes,
+            DEFAULT_COMPILER_HASH_BUDGET_BYTES,
+        );
+        let coverage = close_time::apply_close_time_facts(data, budget);
+        trace.trace_integrity.compiler_hash_coverage = Some(coverage);
     }
+    // Left `None` when the trace captured no compiler invocations, so
+    // `trace_integrity` serializes byte-identically to a pre-m1072
+    // attestation (FR-014, SC-007). That is the `if let` above doing
+    // nothing, not a separate branch.
 
     let stmt = builder::build_attestation(
         trace,

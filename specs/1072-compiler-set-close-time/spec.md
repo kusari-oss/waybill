@@ -411,6 +411,13 @@ written.
   whose path is also listed in another entry's `renamed_from`.
 - **SC-005**: Two consecutive traces of the same build produce byte-identical
   pre-signature canonical payloads, including the coverage record.
+- **SC-005a**: Given the same observation tier and budget, the close-time
+  tier and the coverage record are identical across runs. Note that whole-
+  attestation byte-identity across two traces is **not** achievable and
+  never was: `invocation_id` is a kernel nanosecond clock by m210's design
+  and rustc's temporaries carry `mkdtemp`-random names, both in the
+  observation tier. See `contracts/read-write-set-shape.md` C-1072-6 for
+  the measurement that established this.
 - **SC-006**: With the budget set below the build's hashable bytes, the
   attestation reports `truncated: true`, the command exits zero, and the set
   of hashed paths is identical across two such runs.

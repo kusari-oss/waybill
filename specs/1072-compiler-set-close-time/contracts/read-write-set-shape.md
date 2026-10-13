@@ -133,13 +133,40 @@ captured zero compiler invocations:
 
 ## C-1072-6. Determinism
 
-Two traces of the same reproducible build under the same budget MUST
-produce byte-identical pre-signature canonical payloads, including this
-coverage record. This is a hard constraint from feature 006 US2, not a
-quality goal: the signature is over these bytes.
+**The close-time tier MUST introduce no nondeterminism of its own.** Two
+runs over the same observation tier under the same budget MUST produce the
+same close-time tier and the same coverage record, byte for byte.
 
 It follows from the pass being ordered by sorted path and budgeted in
 cumulative bytes. A wall-clock budget would violate it and is forbidden.
+
+### What this clause used to say, and why it was wrong
+
+It required two traces of the same reproducible build to produce
+byte-identical payloads, citing feature 006 US2. **Measured against a real
+kernel, that is unachievable, and was already unachievable before this
+milestone.** Two independent sources of per-run variation sit in the
+*observation* tier, which Principle II forbids this pass to touch:
+
+- **`invocation_id` is `bpf_ktime_get_ns()` at exec time** — m210's
+  deliberate design (`trace/compiler_pipeline.rs:371`), a boot-relative
+  nanosecond clock that cannot repeat across runs;
+- **rustc's own temporaries are `mkdtemp`-random.** One traced build
+  emitted `deps/rmetaA36mif`, `deps/rustceARhX8` and
+  `deps/.tmpZ6GhkV.temp-archive`; the next emitted `rmeta35kQFf`,
+  `rustcdRlOq7` and `.tmpCc2MIw.temp-archive`. These appear in read sets,
+  write sets and `renamed_from` because the kernel genuinely saw them.
+
+Feature 006's actual claim is narrower and survives intact: its US2 says
+"byte-identical across re-runs **when the build is reproducible**", and
+FR-006 requires that *re-signing the same canonical payload* not change
+the payload bytes. A build whose outputs are reproducible is not the same
+thing as a build whose *process* is: the trace records the process.
+
+So the obligation this milestone can carry, and does, is the one above.
+The evidence that it holds is in `measurements/cost.md`: five runs
+produced `paths_total=102, paths_hashed=14, bytes_hashed=955494`
+identically, with no column moving.
 
 ## C-1072-7. The pass is read-only over the observation tier
 
