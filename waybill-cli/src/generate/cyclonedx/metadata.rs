@@ -805,21 +805,36 @@ pub fn build_metadata(
     // pip, rpm) per SC-003 — those fixtures hit `SyntheticPlaceholder`
     // with empty losers, where there's no "loss" to signal. The 3
     // single-main-module fixtures (golang, maven, npm) hit the
-    // count==1 fast path with `heuristic == None`. Envelope shape
-    // matches contracts/annotation-schema.md.
+    // count==1 fast path with `heuristic == None`.
+    //
+    // #1190 — the value is the bare `(heuristic, confidence)` object,
+    // not a `waybill-annotation/v1` envelope. That envelope lets an
+    // SPDX comment say which field it carries, which is why
+    // `build_annotation` (`generate/spdx/annotations.rs:128`) adds it
+    // to every SPDX annotation; a CDX `properties[]` entry has `name`
+    // already, so nothing else in CDX wraps a value — 0 occurrences of
+    // the schema string in any committed CDX golden against 16176 per
+    // SPDX side, and all 577 object-valued CDX properties bare. The
+    // parity extractor `cdx_property_values` has no envelope-awareness
+    // for that reason, so an enveloped CDX value cannot satisfy C69's
+    // `SymmetricEqual`. m127's contract called the envelope "the
+    // existing convention (milestones 011, 080, 119)"; it is SPDX's
+    // convention, and those milestones' CDX values are bare strings.
+    //
+    // Two tests asserted the enveloped shape but read CDX alone, and
+    // no parity fixture reached this row — it is suppressed on the
+    // count==1 fast path and on zero-main-module scans, which covers
+    // every `holistic_parity` case until #1190 added one image with a
+    // main module.
     if let Some(h) = selection.heuristic {
         if !selection.losers.is_empty() {
-            let envelope = json!({
-                "schema": "waybill-annotation/v1",
-                "field": "waybill:root-selection-heuristic",
-                "value": {
-                    "heuristic": h.name(),
-                    "confidence": h.confidence(),
-                }
+            let value = json!({
+                "heuristic": h.name(),
+                "confidence": h.confidence(),
             });
             properties.push(json!({
                 "name": "waybill:root-selection-heuristic",
-                "value": serde_json::to_string(&envelope).unwrap_or_default(),
+                "value": serde_json::to_string(&value).unwrap_or_default(),
             }));
         }
     }

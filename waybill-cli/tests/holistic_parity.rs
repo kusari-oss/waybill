@@ -289,3 +289,62 @@ fn parity_synthetic_container_image() {
     );
     assert_holistic_parity("synthetic-container-image", &scan);
 }
+
+/// #1186 — an explicitly named image that *contains* a main module.
+///
+/// `parity_synthetic_container_image` above already scans an image, but
+/// its fixture places every `package.json` under
+/// `usr/lib/node_modules/`, and `should_skip_default_descent`
+/// (`scan_fs/package_db/project_roots.rs:44`) skips `node_modules` when
+/// looking for project roots. That fixture therefore emits no component
+/// carrying `waybill:component-role: main-module` at all, and the CDX
+/// builder's graph-root selection is gated on finding one
+/// (`generate/cyclonedx/builder.rs:812`). The ten ecosystem cases do
+/// have main modules but scan with `--path`, so
+/// `ScanTargetKind::ExplicitImage` never applies to them either.
+///
+/// #1186 needed both conditions at once: an explicit image subject and
+/// an in-image main module. No fixture sat in that intersection, so B1
+/// — a `SymmetricEqual` comparison of `(from_purl, to_purl)` dependency
+/// edges across all three formats, which would have caught it — passed
+/// while exercising none of it. This case occupies the intersection.
+///
+/// The fixture reproduces both halves of the defect. The main module
+/// declares no dependencies, so `build_dependencies`' orphan-anchor
+/// fallback ("primary depends on every component nothing else depends
+/// on", `cyclonedx/dependencies.rs:71-80`) is reachable and will fire
+/// on whichever component holds the graph root; the pypi component
+/// nothing depends on is what it would wrongly attach. Pre-fix the CDX
+/// root moved to the npm main module while the SPDX root stayed on the
+/// image subject, so the two edge sets differ in the `from` endpoint.
+#[test]
+fn parity_image_with_main_module_issue_1186() {
+    let files = vec![
+        dual_format_perf::ImageFile {
+            path: "etc/os-release",
+            content: b"ID=alpine\nVERSION_ID=3.19.1\n".to_vec(),
+        },
+        // A main module at a genuine project root — not under
+        // node_modules, which the root walker skips. No `dependencies`
+        // key, so it has no outgoing edges of its own.
+        dual_format_perf::ImageFile {
+            path: "usr/src/app/package.json",
+            content: br#"{"name":"waybill-fixture-app","version":"0.1.0","license":"MIT"}"#
+                .to_vec(),
+        },
+        // A component in a different ecosystem that nothing depends on:
+        // what the orphan-anchor fallback attaches to the graph root.
+        dual_format_perf::ImageFile {
+            path: "usr/lib/python3.11/site-packages/waybill_fixture_lib-1.0.0.dist-info/METADATA",
+            content: b"Metadata-Version: 2.1\nName: waybill-fixture-lib\nVersion: 1.0.0\nLicense: MIT\n".to_vec(),
+        },
+    ];
+    let (_keep_alive, image_path) = dual_format_perf::build_synthetic_image(&files);
+    let scan = triple_scan_at_path(
+        "image-with-main-module",
+        &image_path,
+        None,
+        InputKind::Image,
+    );
+    assert_holistic_parity("image-with-main-module", &scan);
+}
