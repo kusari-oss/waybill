@@ -581,15 +581,22 @@ mod tests {
     /// the link itself, so the name resolved even though nothing readable
     /// is behind it. `existed_at_close: true` with no hash, counted as
     /// skipped (contract C-1072-2).
+    ///
+    /// Milestone 100: `#[cfg(unix)]` — creating a symlink on Windows
+    /// needs a privilege the runner does not grant, and the distinction
+    /// under test is POSIX `symlink_metadata` semantics. The first
+    /// version of this test used a `#[cfg(not(unix))]; return;` shim,
+    /// which clippy `-D warnings` rejects on Windows as
+    /// `unreachable_code` plus an unused `link` — the same shim, and the
+    /// same two errors, that `scan_fs/os_release.rs:589` already
+    /// records having removed for this reason.
+    #[cfg(unix)]
     #[test]
     fn dangling_symlink_resolved_but_unhashable() {
         let dir = tempfile::tempdir().unwrap();
         let link = dir.path().join("dangling");
 
-        #[cfg(unix)]
         std::os::unix::fs::symlink(dir.path().join("nothing-here"), &link).unwrap();
-        #[cfg(not(unix))]
-        return;
 
         let mut data = pipeline(&[], std::slice::from_ref(&link));
         let cov = apply_close_time_facts(&mut data, unbudgeted());
