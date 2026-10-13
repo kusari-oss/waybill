@@ -167,23 +167,55 @@ A zero from check 2 is a **failure**, not a clean result: it is
 indistinguishable from the pass never running. That is the whole reason
 SC-001 demands at least one `false`.
 
-## Determinism check (SC-005)
+## Determinism check (SC-005a)
 
-Byte-identity is load-bearing for signing, so check it directly rather than
-trusting the ordering code:
+**Do not diff whole payloads.** They differ, they always have, and the
+reason is not this feature — see `measurements/findings.md` Q5 and
+`contracts/read-write-set-shape.md` C-1072-6. `invocation_id` is
+`bpf_ktime_get_ns()` at exec by m210's design, and rustc's temporaries are
+`mkdtemp`-random: one run writes `deps/rmetaA36mif`, the next
+`deps/rmeta35kQFf`. **50 of 102 paths in a measured run appear in only one
+of the two traces.** Both live in the observation tier, which the
+close-time pass may not touch (Principle II).
+
+What is guaranteed, and worth checking, is that the pass adds no
+nondeterminism of its own: the same observation tier and budget produce
+the same close-time tier and the same coverage record.
 
 ```sh
 for i in 1 2; do
+  rm -rf …/two_binaries_diverge/target     # or the second build is a no-op
   sudo ./target/release/waybill trace capture --attestation-format waybill-v1 \
     --output /tmp/att-$i.json -- \
     cargo build --release --manifest-path …/two_binaries_diverge/Cargo.toml
-  jq -S . /tmp/att-$i.json | grep -v '"trace_start"\|"trace_end"\|"pid"' > /tmp/norm-$i.json
+
+  jq -cS '.predicate.trace_integrity.compiler_hash_coverage' /tmp/att-$i.json \
+    > /tmp/cov-$i.json
+  jq -r '[.predicate.compiler_pipeline.invocations[]
+          | (.read_set[], .write_set[])
+          | "\(.path)\t\(.existed_at_close)\t\(.sha256_at_close.value // "none")"]
+         | unique | .[]' /tmp/att-$i.json | sort > /tmp/facts-$i
 done
-diff /tmp/norm-1.json /tmp/norm-2.json && echo "byte-identical"
+
+diff /tmp/cov-1.json /tmp/cov-2.json && echo "coverage record identical"
+
+# Per-path facts, over the paths BOTH runs saw. An intersection, because
+# the random temporaries never meet.
+comm -12 <(cut -f1 /tmp/facts-1 | sort -u) <(cut -f1 /tmp/facts-2 | sort -u) \
+  > /tmp/shared-paths
+wc -l < /tmp/shared-paths        # a small number here makes the check vacuous
+while IFS= read -r p; do
+  a=$(grep -F "$p	" /tmp/facts-1 | head -1)
+  b=$(grep -F "$p	" /tmp/facts-2 | head -1)
+  [[ "$a" == "$b" ]] || echo "DIFFERS: $p"
+done < /tmp/shared-paths
 ```
 
 Clean the fixture's `target/` between runs or the second build is a no-op
-and the comparison is vacuous — two empty traces also match.
+and the comparison is vacuous — two empty traces also agree. The committed
+form of this check is the `m1072 US4` determinism section of
+`scripts/ebpf-integration-test.sh`, which also floors the intersection
+size at 20.
 
 ## Budget truncation (SC-006)
 

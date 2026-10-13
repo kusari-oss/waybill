@@ -1,5 +1,18 @@
 # Contract: `compiler-invocation/v0.1` attestor predicate
 
+> **Superseded in part by milestone 1072 (#1144).** C-1's URI is now
+> `compiler-invocation/v0.2`, and C-2's wire shape for `ReadSetEntry` and
+> `WriteSetEntry` is replaced by
+> `specs/1072-compiler-set-close-time/contracts/read-write-set-shape.md`:
+> both entries lost `sha256`, the write set lost `survived_trace_window`
+> and gained `renamed_from`, and both gained the close-time tier
+> (`existed_at_close`, `sha256_at_close`).
+>
+> **Every other clause of this contract stands.** This file is a
+> historical record of what was decided in July 2026 and its clauses are
+> deliberately left unedited — see the superseding contract's header for
+> the same statement from the other side.
+
 **Date**: 2026-07-19
 **Purpose**: Lock the URI + JSON shape of the new attestor entry so downstream consumers (SBOMit, witness verify, in-toto policy engines, custom parsers) can parse mikebom-produced attestations without breakage across releases.
 

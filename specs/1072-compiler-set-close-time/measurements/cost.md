@@ -122,3 +122,84 @@ needs no code change while leaving default operator output unchanged
 `grep paths_total=` finds nothing against the raw bytes. That cost one
 run which correctly reported **ABSENT** in every row rather than a zero —
 the script refuses to print a mean it could not measure.
+
+## T047 — the quickstart verification block, run
+
+Every check `quickstart.md` describes is now committed as a section of
+`scripts/ebpf-integration-test.sh` and runs under `--privileged`. Measured
+output of the full harness on Colima 6.8.0 aarch64:
+
+```
+==> m1072 US1: close-time facts (SC-001, SC-002, SC-003)
+    write-set entries reporting absent at close: 14
+    entries claiming resolution, re-checked on disk: 15
+    all-zero hashes: 0
+    hashes verified against sha256sum: 10/10 agree
+
+==> m1072 US2: read-set honesty (FR-001)
+    entries carrying a bare sha256 key: 0
+    read-set hashes verified against sha256sum: 10/10 agree
+    entries: 196 over 102 distinct paths, all agreeing
+
+==> m1072 US3: rename history (SC-004)
+    write-set entries carrying rename history: 4
+    intermediate names shadowing a real entry: 0
+
+==> m1072 US4: coverage record (FR-013, FR-014)
+    {"paths_total":102,"paths_hashed":14,"paths_absent":87,
+     "paths_skipped":1,"truncated":false,"budget_source":"default"}
+    paths_total agrees with the sets: 102 distinct paths
+    paths_hashed agrees with the entries carrying a hash: 14
+
+==> m1072 US4: budget truncation (SC-006)
+    exit 0, truncated: true, paths_hashed: 0, budget_source: operator
+    existence still reported: paths_absent=87
+
+==> m1072 US4: close-time determinism (SC-005a)
+    coverage record identical across runs
+    close-time facts identical for all 50 paths both runs observed
+
+==> m1072 SC-007: zero-compiler trace is byte-unchanged
+    trace_integrity keys: ["bloom_filter_capacity",
+      "bloom_filter_false_positive_rate","events_dropped",
+      "filter_categories_applied","kprobe_attach_failures",
+      "partial_captures","ring_buffer_overflows","uprobe_attach_failures"]
+    all present in the pre-m1072 struct; no coverage record emitted
+
+>>> m210 + m212 + m213 + m1072 integration test PASSED
+```
+
+The quickstart's determinism snippet was **wrong as written** and is
+corrected there: it diffed whole payloads. See findings.md Q5.
+
+## T049 — what each lane actually verifies, and where
+
+| lane | where it can run | result |
+|------|------------------|--------|
+| privileged harness | this image, `--privileged` + debugfs mount | PASSED |
+| `clippy --all-targets --features ebpf-tracing -- -D warnings` | this image **with `tests/fixtures` bind-mounted** | exit 0 |
+| `cargo test --workspace --features ebpf-tracing` | **a full checkout**, i.e. CI's runner — not this image | see below |
+
+The image cannot run the full feature-on test lane, because
+`.dockerignore` excludes `tests/fixtures/`, `docs/` and `specs/`, and the
+image has no `spdx3-validate`. That is a property of the image, which
+exists to be the integration harness, not a regression — and CI runs that
+lane directly on `ubuntu-latest` with a complete checkout
+(`ci.yml`), not in the container.
+
+What the image can still establish about that lane, and did:
+
+- all 15 `trace::close_time` tests and all 7 rename tests pass with
+  `--features ebpf-tracing` on;
+- **no test fails by attempting to attach eBPF unprivileged** — a grep of
+  the whole run for `panicked.*(attach|ebpf|permission)` returns nothing.
+  That is SC-009's actual concern and the reason Constitution VII wants a
+  runtime privilege check rather than a `cfg` gate;
+- mounting the excluded directories back in accounts for every other
+  failure: `tests/fixtures` alone takes the run from a build error to 2061
+  passing, `docs` adds the four `parity::catalog` tests, and what remains
+  is the `spdx3-validate` family failing with
+  `No such file or directory` on a binary the image does not carry.
+
+So the feature-on lane's verdict belongs to CI. The claim made here is the
+narrower one that can be measured locally.

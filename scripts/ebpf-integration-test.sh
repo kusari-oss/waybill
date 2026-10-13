@@ -745,6 +745,37 @@ if [[ "$SHARED" -lt 20 ]]; then
 fi
 echo "    close-time facts identical for all $SHARED paths both runs observed"
 
+# --- SC-007: a trace with no compiler invocations is unchanged --------
+#
+# The m213 widen run above traced `cat /etc/hostname`, which invokes no
+# compiler, so it is exactly the zero-invocation case FR-014 is about.
+# Reusing it costs nothing and tests the real emission path.
+echo
+echo "==> m1072 SC-007: zero-compiler trace is byte-unchanged"
+
+if jq -e '.predicate.trace_integrity | has("compiler_hash_coverage")' "$WIDENED_OUTPUT" > /dev/null 2>&1; then
+    echo "FAIL: a trace with no compiler invocations emitted a coverage record (FR-014)"
+    jq '.predicate.trace_integrity' "$WIDENED_OUTPUT"
+    exit 1
+fi
+
+# Stronger than "no new key": every key must be one the pre-m1072 struct
+# already had, so an unrelated addition cannot slip through either. The
+# list comes from `git show 33561a91:waybill-common/src/attestation/integrity.rs`
+# -- the merge base of this branch -- not from the current struct, which
+# would make the check circular.
+PRE_M1072_FIELDS='["bloom_filter_capacity","bloom_filter_false_positive_rate","events_dropped","filter_categories_applied","kprobe_attach_failures","partial_captures","ring_buffer_overflows","unresolved_relative_opens","uprobe_attach_failures"]'
+UNEXPECTED=$(jq --argjson pre "$PRE_M1072_FIELDS" \
+    '[.predicate.trace_integrity | keys[] | select([.] | inside($pre) | not)]' \
+    "$WIDENED_OUTPUT")
+if [[ "$UNEXPECTED" != "[]" ]]; then
+    echo "FAIL: trace_integrity carries keys the pre-m1072 struct did not have (SC-007)"
+    echo "      $UNEXPECTED"
+    exit 1
+fi
+echo "    trace_integrity keys: $(jq -c '.predicate.trace_integrity | keys' "$WIDENED_OUTPUT")"
+echo "    all present in the pre-m1072 struct; no coverage record emitted"
+
 echo
 echo ">>> m210 + m212 + m213 + m1072 integration test PASSED"
 echo "    compiler_pipeline: $INVOCATION_COUNT invocations, $RUSTC_COUNT rustc"

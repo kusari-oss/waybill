@@ -214,10 +214,9 @@ The predicate structure captures, per invocation:
   absent when the trace attached mid-execve).
 - **I/O sets**: `read_set` (every file the invocation `read`'d or
   `openat`'d for read) + `write_set` (every file the invocation
-  `openat`'d for write, plus the closing-time content SHA-256 if the
-  file survived the trace window). Both are already trace-noise-
-  filtered per FR-016 (system directories, user cache, ephemeral tmp,
-  and secret-adjacent paths dropped before serialization).
+  `openat`'d for write). Both are already trace-noise-filtered per
+  FR-016 (system directories, user cache, ephemeral tmp, and
+  secret-adjacent paths dropped before serialization).
   Since milestone 1070 (#614):
   - both sets hold absolute paths only, with relative opens resolved;
   - an open for writing goes to `write_set`;
@@ -228,6 +227,58 @@ The predicate structure captures, per invocation:
     libraries a compile reads live.
 
   Before m1070 both sets were empty on every workspace build.
+
+  Since milestone 1072 (#1144) each entry carries **two structurally
+  distinct tiers**, and the normative source for their shape is
+  `specs/1072-compiler-set-close-time/contracts/read-write-set-shape.md`:
+
+  | tier | read set | write set |
+  |------|----------|-----------|
+  | observation — what the kernel saw | `path`, `kind` | `path`, `renamed_from` |
+  | close-time — what userspace measured after the command exited | `existed_at_close`, `sha256_at_close` | `existed_at_close`, `sha256_at_close` |
+
+  A close-time field always carries the `_at_close` suffix, so a consumer
+  can tell the tiers apart from the field name alone. **No field in
+  either set may carry an unqualified `sha256` key.**
+
+  `sha256_at_close` is the content of `path` **when the trace ended** —
+  not the bytes the compiler read. A verifier binding a component to a
+  source hash MUST NOT use it for that purpose. It is absent whenever the
+  path was not hashed, and absent means "not measured", never "zero".
+
+  `existed_at_close` is a `symlink_metadata` result: it asserts that the
+  *name* resolved, not that readable content was there, so a dangling
+  symlink reports `true` with no hash.
+
+  What m1072 replaced:
+
+  | before | after | why |
+  |--------|-------|-----|
+  | `read_set[].sha256` | `sha256_at_close` | the old field only ever emitted 64 zeros — the kernel has no hash to give |
+  | `write_set[].sha256` | `sha256_at_close` | likewise, `Some(64 zeros)` |
+  | `write_set[].survived_trace_window` | `existed_at_close` | the old field was a hardcoded `true`; the new one is derived |
+  | — | `renamed_from` | the intermediate names an artifact passed through, oldest first. Renames only: a hard link is not a rename |
+
+  `trace_integrity.compiler_hash_coverage` discloses what the hashing
+  pass covered — `paths_total`, `paths_hashed`, `paths_absent`,
+  `paths_skipped`, `truncated`, `budget_source` — over **distinct paths**
+  rather than entries, so a path read by three invocations counts once.
+  The first three always sum to the total. It is absent when a trace
+  captured no compiler invocations, which keeps `trace_integrity`
+  byte-identical to a pre-m1072 attestation.
+
+  `--compiler-hash-budget-bytes` caps the cumulative bytes hashed; the
+  default is measured, not guessed
+  (`specs/1072-compiler-set-close-time/measurements/cost.md`). Exhausting
+  it sets `truncated: true`, emits one WARN, still writes the attestation
+  and still exits zero: hashing is an advisory tier, and truncating it
+  loses no observation.
+
+  Two traces of one build do **not** produce identical payloads, and
+  never did — `invocation_id` is a kernel nanosecond clock and rustc's
+  temporaries are `mkdtemp`-random. What is guaranteed is narrower: the
+  close-time tier and the coverage record are a function of the
+  observation tier and the budget. See that contract's C-1072-6.
 - **Diagnostic counters**: `events_dropped` per invocation.
 
 Per-scan aggregate signals ride alongside the invocations:
@@ -264,10 +315,19 @@ resolution also never turns locally built binaries into components. Until
 the closure follows process ancestry, so a library's sources do not reach
 the binary that links it; following data flow instead is #1141.
 
-The `waybill.dev/attestation/compiler-invocation/v0.1` witness-attestor
-URI is reserved for the shape above and locked per contracts/attestor-
-predicate.md (m210 spec Q3); version bumps MUST retain the
+The `waybill.dev/attestation/compiler-invocation/v0.2` witness-attestor
+URI is reserved for the shape above. It was `v0.1` through milestone
+1071; milestone 1072 (#1144) bumped it because the read/write set shape
+changed, per that milestone's FR-017 — the payload is explicitly
+pre-stable, so the bump is free and signals the change to anything
+matching on the type. Version bumps MUST retain the
 `/compiler-invocation/` path segment.
+
+The URI is duplicated at two constants,
+`waybill-common/src/attestation/compiler_pipeline.rs` (`PREDICATE_TYPE`)
+and `waybill-common/src/attestation/witness.rs`
+(`COMPILER_INVOCATION_TYPE`), each with its own contract-lock test. Bump
+both.
 
 ### Adding a new compiler to the whitelist
 

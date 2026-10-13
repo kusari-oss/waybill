@@ -307,8 +307,11 @@ pub fn sha256_digest(hex: impl Into<String>) -> DigestSet {
 }
 
 /// Milestone 210 — build a `CollectionEntry` carrying the
-/// waybill-owned `compiler-invocation/v0.1` attestor payload per
-/// `contracts/attestor-predicate.md` C-2. Called from the trace-end
+/// waybill-owned `compiler-invocation/v0.2` attestor payload. C-2 of
+/// m210's `contracts/attestor-predicate.md` is superseded for the
+/// read/write set entities by
+/// `specs/1072-compiler-set-close-time/contracts/read-write-set-shape.md`;
+/// every other clause of that contract still applies. Called from the trace-end
 /// wiring in `waybill-cli/src/trace/*` when the trace produced
 /// compiler-pipeline data.
 ///

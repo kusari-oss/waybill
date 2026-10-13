@@ -8,8 +8,8 @@
 //! - `BuildTracePredicate.compiler_pipeline` (statement.rs E7) —
 //!   native attestation shape
 //! - `witness::build_witness_collection` (m210 T039) — emits the
-//!   `compiler-invocation/v0.1` attestor entry per
-//!   `contracts/attestor-predicate.md` C-1
+//!   `compiler-invocation/v0.2` attestor entry (v0.1 through m1071; the
+//!   URI bumped with the m1072 set shape, FR-017)
 //! - The three per-format emitters at
 //!   `waybill-cli/src/generate/{cyclonedx,spdx}/*.rs` — emit the
 //!   `waybill:source-read-set` per-component annotation (C130)
