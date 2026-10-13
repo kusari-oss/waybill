@@ -286,3 +286,129 @@ the result. The lesson is the one already in the project's memory in a
 different costume: a number that looks like "plenty of headroom" and a
 number that means "the experiment measured nothing" are the same number,
 so the probe has to carry its own positive control.
+
+## Q7. Is the trace's observation tier stable across runs of one build, and does SC-008 hold on a real workspace?
+
+**No to the first. Not reliably, to the second.** Measured by
+`budget-probe-paired.sh` after Q6 revised the budget, because Q6's single
+runs raised both questions without being able to answer either.
+
+### Capture varies between identical runs, and nothing discloses it
+
+Three consecutive `--release --workspace --all-targets` builds, same
+container, same relocated toolchain, fresh target dir each, cargo
+reporting `Compiling` 392 times in all three:
+
+| # | invocations | paths_total | read entries | bytes hashed | `events_dropped` | `ring_buffer_overflows` |
+|---|---|---|---|---|---|---|
+| 1 | 1,261 | 22,447 | 174,898 | 1,953,456,369 | **0** | **0** |
+| 2 | 1,311 | 23,200 | 184,482 | 1,996,591,335 | **0** | **0** |
+| 3 | 1,311 | 23,200 | 184,216 | 1,996,591,239 | **0** | **0** |
+
+Run 1 is missing **50 compiler invocations and 753 paths** relative to the
+other two, and every integrity counter says nothing was lost. Runs 2 and 3
+agree on `paths_total` and `paths_hashed` exactly, and still differ by 266
+read entries and 96 bytes.
+
+A wider spread appeared in the four-run `F R R F` set, where `paths_total`
+ranged **15,029 → 23,200** across runs of the same build (two per layout).
+
+**This is silent, not disclosed.** Principle X's remedy for "cannot
+guarantee" is structured disclosure, and m212 exists to count exactly this
+kind of loss — `events_dropped` and `ring_buffer_overflows` were added so
+a consumer could tell a complete trace from a lossy one. Here they read
+zero while the trace demonstrably observed less. Whatever the mechanism —
+process exit racing the ring-buffer drain, exec events missed before the
+probe sees the child, per-CPU accounting that does not cover this path —
+the attestation asserts `completeness: complete` for all three.
+
+### Why this matters beyond #1144
+
+It is not a close-time problem. The close-time pass is read-only over the
+observation tier and faithfully reports whatever reaches it; SC-005a
+promises determinism *given the same observation tier*, and that premise
+is what these runs break. The consequences land on the consumers:
+
+1. **m210/m212's completeness claim.** `completeness: complete` plus zero
+   drop counters is the strongest statement this predicate makes, and it
+   was true of a trace that saw 96% of another run of the same build.
+2. **#1142, the SBOM wiring.** C130 (`waybill:source-read-set`) exists to
+   attribute source files to a built component. If the read set moves by
+   5% between runs, so does that annotation, and two SBOMs of one build
+   differ for a reason no field in either document explains. Worth
+   deciding before the wiring lands rather than after.
+3. **Reproducible-build verification.** Q5 already established that
+   payloads cannot be byte-identical across traces. Q7 is the stronger
+   statement: the *set* is not stable either, so even a normalised
+   comparison has no fixed baseline on a build this size.
+
+Not investigated further here — root-causing it means instrumenting the
+ring-buffer drain and the exec path, which is m210/m212 territory, not
+#1144's. Recorded so the next person starts from a measurement instead of
+an assumption.
+
+### SC-008's 5% ceiling is exceeded in 2 of 9 observations
+
+Every `--workspace --all-targets` observation taken, both layouts, three
+containers:
+
+| source | layout | wall (s) | pass (ms) | ratio |
+|---|---|---|---|---|
+| standalone | filtered | 685.019 | 12,734 | 1.8% |
+| paired A #1 | filtered | 204.820 | 3,484 | 1.7% |
+| paired A #4 | filtered | 190.313 | 2,901 | 1.5% |
+| paired A #2 | relocated | 175.096 | 4,330 | 2.4% |
+| paired B #1 | relocated | 685.358 | 17,239 | 2.5% |
+| paired B #3 | relocated | 857.598 | 24,029 | 2.8% |
+| paired A #3 | relocated | 524.688 | 16,743 | 3.1% |
+| standalone | relocated | 118.927 | 6,291 | **5.2%** |
+| paired B #2 | relocated | 345.142 | 24,812 | **7.1%** |
+
+The first overrun looked like an outlier produced by the fastest
+wall-clock in the set, and an earlier revision of `cost.md` said so. The
+7.1% retired that reading: its wall-clock, 345 s, sits mid-range.
+
+**The mechanism is not noise, and it is worth stating precisely.** The
+pass's absolute cost on this build is **6.3–24.8 s** for ~2 GB hashed.
+The ratio is that over a build whose duration ranged 118.9–857.6 s for
+*identical work* on this host. So the criterion is violated exactly when
+the host is fast:
+
+> a ratio-of-wall-clock ceiling penalises a quick build for being quick,
+> while the pass's own cost is unchanged or better.
+
+A host that compiles this workspace in three minutes would see ~13% with
+the pass behaving perfectly. That is a property of how SC-008 was written,
+not of the pass.
+
+### Not re-baselined
+
+`spec.md` requires an overrun to be recorded here and the ceiling
+re-decided deliberately. This entry is the record; the ceiling is
+**unchanged** pending that decision. The options, with the measurement
+each would rest on:
+
+1. **Keep 5% and accept 2-in-9 overruns on this host.** Defensible only
+   if the reference host is defined and is not this VM — its throughput
+   spread is 80–479 MB/s, 6×, which no criterion can be quoted against.
+2. **Re-express the ceiling in absolute terms** — e.g. the pass adds no
+   more than N seconds per GB hashed. Measured: 3.2–12.4 s/GB here. This
+   survives a fast host, which is the failure mode above, and it is the
+   form the pass can actually control.
+3. **Keep the ratio but quote it against a defined reference class**, as
+   m669's bench harness does (Linux x86_64 GHA, median-of-5). Then
+   measure it there, not on Colima.
+
+My recommendation is (2), with (3) if a ratio is wanted for operator
+communication. Both require a measurement this file does not yet have:
+`budget-probe-paired.sh` on the m669 reference class.
+
+### Hashing throughput: no single figure
+
+Nine samples on one host, 80–479 MB/s — a 6× spread. The ~478 MB/s in
+`cost.md`'s original "Derived, not measured" section happens to sit at the
+top of that range, and the ~120 MB/s that replaced it sits near the
+bottom. **Both were single-point readings of a quantity that does not hold
+still here**, and quoting either as "the" throughput was the same mistake
+twice. No duration bound for a full budget spend is quoted anywhere as a
+result.

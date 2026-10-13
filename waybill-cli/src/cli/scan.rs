@@ -133,29 +133,52 @@ pub struct ScanArgs {
 /// This was 2 GiB until the probe ran, sized at ~2,200x the
 /// `two_binaries_diverge` fixture's 955,494 bytes. A four-crate fixture
 /// is the wrong denominator for a global default, and measuring the right
-/// one moved the headroom by three orders of magnitude:
+/// one moved the headroom by three orders of magnitude. Demand for a
+/// `--release --workspace --all-targets` build of this repository, over
+/// six runs and two toolchain layouts:
 ///
-/// | traced build | bytes demanded | headroom at 2 GiB |
+/// | traced build | bytes demanded | % of the old 2 GiB |
 /// |---|---|---|
-/// | `two_binaries_diverge` fixture | 955,494 | ~2,200x |
-/// | `--release --bin waybill` | 880,376,492 | 2.4x |
-/// | `--release --workspace --all-targets` | 1,515,056,247 | **1.4x** |
+/// | `two_binaries_diverge` fixture | 955,494 | 0.04% |
+/// | `--release --bin waybill` | 880,376,492 | 41% |
+/// | `--all-targets`, toolchain under `/usr/` | 1.39–1.52 GB | 65–71% |
+/// | `--all-targets`, toolchain under `~/` | 1.77–2.00 GB | **82–93%** |
 ///
-/// waybill's own CI-shaped build consumes 70% of the old default, so a
-/// workspace 1.5x this one truncated — mainstream, not pathological, and
-/// truncation costs real data. 16 GiB is ~11x that build, bounding a full
-/// spend at ~2.3 minutes at the measured 120 MB/s.
+/// The last row is the ordinary case: `~/.cargo` and `~/.rustup` match no
+/// m213 filter pattern, so dependency-source and sysroot reads enter the
+/// read set, where under `/usr/` the System filter hides them. At 82–93%
+/// consumed by a normal build of this repository the old default was
+/// effectively breached already, and truncation costs real data. 16 GiB
+/// is ~8-9x that demand.
+///
+/// Ranges, not points, deliberately: path capture varied 15,029–23,200
+/// between runs of one build. Whether that variance is disclosed loss or
+/// silent non-determinism is open — findings.md Q7.
 ///
 /// This constant does **not** enforce SC-008's 5% ratio and cannot: a
 /// full spend against a one-second trace would be thousands of percent.
 /// What the probe established is that raising the budget does not
-/// endanger the ratio either, because both terms scale with the build:
-/// hashing runs at ~120 MB/s while a build emits artifacts at ~2.3 MB/s,
-/// so the pass costs ~2% of wall-clock at any budget (measured: 2.4% and
-/// 1.8%). The budget bounds the case where that correlation breaks —
-/// read-set paths that existed before the trace are not bounded by its
-/// duration — and `truncated` plus the FR-015 WARN is what an operator
-/// sees when it does.
+/// endanger the ratio either — the pass hashes only what the trace
+/// observed, so the budget caps that work rather than creating it.
+///
+/// SC-008's ceiling is nonetheless **exceeded in 2 of 9 observations**
+/// (5.2% and 7.1%), which is a property of the criterion rather than of
+/// the pass: its absolute cost is 6.3–24.8 s for ~2 GB, against builds
+/// that took 118.9–857.6 s for identical work on one host, so the ratio
+/// is breached exactly when the host is fast. Recorded in findings.md
+/// Q7 with three options and a recommendation; the ceiling is unchanged
+/// pending that decision, per spec.md's rule against silent
+/// re-baselining. No throughput figure is quoted either: it spread
+/// 80–479 MB/s on one host, so the ~120 MB/s an earlier revision of this
+/// comment cited was as unfounded as the ~478 MB/s it replaced.
+///
+/// The budget bounds the case where bytes stop scaling with build
+/// duration, and the probe names it: **the read set, not the write set.**
+/// Artifacts cannot be produced faster than the build runs, but read-set
+/// paths existed before the trace and nothing it can see bounds their
+/// size — 184,628 read entries against 7,012 write entries in the wider
+/// build. `truncated` plus the FR-015 WARN is what an operator sees when
+/// it engages.
 ///
 /// Still 64x the 256 MB per-file cap, so the two limits do not interact
 /// in the normal case.

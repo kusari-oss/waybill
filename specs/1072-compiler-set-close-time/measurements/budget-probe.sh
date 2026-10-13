@@ -12,7 +12,7 @@
 #
 # The budget flag is set deliberately HIGH so the pass hashes everything
 # and reports true demand rather than clamping at the default. Whether
-# the 2 GiB default would truncate then follows from the measured total:
+# the default would truncate then follows from the measured total:
 # the pass charges cumulatively, so demand > budget truncates and
 # demand < budget does not.
 #
@@ -54,6 +54,14 @@ TARGET_DIR="${TARGET_DIR:-/waybill/target-m1072-probe}"
 # wider build -- `--workspace --all-targets` is what CI compiles, and it
 # is the case the default budget has to survive.
 BUILD_ARGS="${BUILD_ARGS:---release --bin waybill}"
+# RELOCATE_TOOLCHAIN=1 moves CARGO_HOME and RUSTUP_HOME out from under
+# /usr/local, which the m213 System filter drops wholesale via its `/usr/`
+# prefix. In this image both live there, so a build's reads of dependency
+# sources (299 MB) and of the Rust sysroot (1.1 GB) never reach a read set
+# and never reach the budget. On an ordinary host they are at ~/.cargo and
+# ~/.rustup, which match NO filter pattern, so they do. Without this the
+# measured demand is a lower bound shaped by the harness, not by the build.
+RELOCATE_TOOLCHAIN="${RELOCATE_TOOLCHAIN:-0}"
 OUT="${OUT:-/probe-out}"
 ATT="$OUT/attestation.json"
 LOG="$OUT/trace.log"
@@ -65,6 +73,17 @@ case "$TARGET_DIR" in
         echo "and the probe would report a demand of zero bytes." >&2
         exit 2 ;;
 esac
+
+if [[ "$RELOCATE_TOOLCHAIN" == "1" ]]; then
+    echo "relocating toolchain out of /usr/local (see RELOCATE_TOOLCHAIN)..." >&2
+    cp -a "${CARGO_HOME:-/usr/local/cargo}" /root/.cargo
+    cp -a "${RUSTUP_HOME:-/usr/local/rustup}" /root/.rustup
+    export CARGO_HOME=/root/.cargo
+    export RUSTUP_HOME=/root/.rustup
+    export PATH="/root/.cargo/bin:$PATH"
+    command -v cargo >/dev/null && cargo --version >&2 \
+        || { echo "relocated cargo is not runnable; aborting" >&2; exit 3; }
+fi
 
 mkdir -p "$OUT"
 # A warm target/ makes the build a no-op, and an empty trace agrees with
@@ -78,7 +97,10 @@ echo "- arch: \`$(uname -m)\`"
 echo "- waybill: \`$("$WAYBILL" --version 2>/dev/null || echo unknown)\`"
 echo "- traced command: \`cargo build $BUILD_ARGS\` (fresh target dir)"
 echo "- probe budget: $PROBE_BUDGET bytes ($(( PROBE_BUDGET / 1024 / 1024 / 1024 )) GiB)"
-echo "- default under test: 2147483648 bytes (2 GiB)"
+echo "- default under test: 17179869184 bytes (16 GiB)"
+echo "- CARGO_HOME: \`${CARGO_HOME:-unset}\`, RUSTUP_HOME: \`${RUSTUP_HOME:-unset}\`"
+echo "  (both under \`/usr/\` means the m213 System filter hides every"
+echo "  dependency-source and sysroot read from the pass)"
 echo
 
 start_ns=$(date +%s%N)
@@ -170,9 +192,9 @@ jq -r '[.predicate.compiler_pipeline.invocations[] | {r: (.read_set|length), w: 
   "$ATT" "$ATT" 2>/dev/null || echo '(could not read the attestation)'
 echo
 
-echo "## Verdict against the 2 GiB default"
+echo "## Verdict against the 16 GiB default"
 echo
-DEFAULT=2147483648
+DEFAULT=17179869184
 if [[ "$bytes" -gt "$DEFAULT" ]]; then
     echo "**Demand EXCEEDS the default.** $bytes > $DEFAULT. A normal clean"
     echo "build of this workspace WOULD truncate under the shipped default."
@@ -181,7 +203,7 @@ else
     headroom_milli=$(( DEFAULT * 1000 / bytes ))
     echo "**Demand fits the default.** $bytes < $DEFAULT, headroom"
     echo "$(( headroom_milli / 1000 )).$(( (headroom_milli % 1000) / 100 ))x --"
-    echo "compare cost.md's ~2,200x, which used the four-crate fixture."
+    echo "compare the 2 GiB this default replaced."
     echo
     echo "READ THIS WITH CROSS-CHECK 1 AND 2. If capture is a fraction of"
     echo "the build, the headroom is a fact about what was observed, not"

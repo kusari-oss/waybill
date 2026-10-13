@@ -125,14 +125,34 @@ hashes everything and reports true demand rather than clamping.
 | `--release --bin waybill` | 285.3 s | 6,537 | 880,376,492 | 7,131 ms | 2.4% | 2.4× |
 | `--release --workspace --all-targets` | 685.0 s | 17,188 | 1,515,056,247 | 12,734 ms | 1.8% | **1.4×** |
 
-The third row is the shape CI compiles. It consumes **70.5% of the old
-2 GiB default**, so a workspace 1.5× this one truncated — and that is a
-mainstream case, not the pathological one the default was supposed to
-reserve truncation for.
+The third row is the shape CI compiles.
 
-**Revised: 16 GiB.** ~11× the CI-shaped build's measured demand, bounding
-a full spend at ~2.3 minutes at the measured 120 MB/s, and still 64× the
-256 MB per-file cap.
+**Both of the last two rows understate demand**, because this image puts
+`CARGO_HOME` and `RUSTUP_HOME` under `/usr/local`, and m213's System
+filter drops the `/usr/` prefix wholesale. Every read of a dependency's
+sources (299 MB) and of the Rust sysroot (1.1 GB) was therefore invisible
+to the pass. On an ordinary host those live at `~/.cargo` and `~/.rustup`,
+which match **no** pattern in the catalog, so those reads do reach it.
+`budget-probe.sh RELOCATE_TOOLCHAIN=1` measures that layout, and prints
+both homes in its environment block so no future run's numbers can be
+read without knowing which layout produced them.
+
+Over all runs of the `--workspace --all-targets` build (see the paired
+table below for the rest):
+
+| toolchain layout | bytes demanded | % of the old 2 GiB |
+|---|---|---|
+| under `/usr/` — filtered, as this image ships | 1.39–1.52 GB | 65–71% |
+| under `/root/` — visible, as an ordinary host | 1.77–2.00 GB | **82–93%** |
+
+**Revised: 16 GiB.** ~8–9× the representative-layout demand, and still
+64× the 256 MB per-file cap. At 82–93% of 2 GiB consumed by an ordinary
+build of this repository, the old default was effectively already
+breached, not merely approached: truncation costs real data and was
+reserved for the pathological case.
+
+A full-spend duration is deliberately **not** quoted here. See "Hashing
+throughput is not a constant on this host".
 
 ### The capture is near-complete, so these are facts about the budget
 
@@ -159,21 +179,79 @@ skipped path was a directory that reached a write set, and the same cause
 is plausible here but unverified, so it is recorded as unexplained rather
 than assumed.
 
+### Hashing throughput is not a constant on this host
+
+An earlier revision of this section quoted **~120 MB/s** from two samples
+(123 and 119) and used it to bound a full budget spend at ~2.3 minutes.
+More runs destroyed that figure:
+
+| run | bytes hashed | pass | implied throughput |
+|---|---|---|---|
+| paired A #4 | 1,392,523,084 | 2,901 ms | 479 MB/s |
+| paired A #1 | 1,515,039,978 | 3,484 ms | 435 MB/s |
+| paired A #2 | 1,772,435,829 | 4,330 ms | 409 MB/s |
+| `--all-targets`, relocated | 1,996,663,640 | 6,291 ms | 317 MB/s |
+| `--bin waybill` | 880,376,492 | 7,131 ms | 123 MB/s |
+| `--all-targets`, separate container | 1,515,056,247 | 12,734 ms | 119 MB/s |
+| paired A #3 | 1,996,591,239 | 16,743 ms | 119 MB/s |
+| paired B #1 | 1,953,456,369 | 17,239 ms | 113 MB/s |
+| paired B #3 | 1,996,591,239 | 24,029 ms | 83 MB/s |
+| paired B #2 | 1,996,591,335 | 24,812 ms | 80 MB/s |
+
+**A 6× spread, same host, same image, several of them inside one
+container.** Compare rows 4, 9 and 10: the same 1.9966 GB hashed in
+6,291 ms, 24,029 ms and 24,812 ms — identical work, four times the time.
+Wall-clock moved as much: 118.9, 175.1, 190.3, 204.8, 345.1, 524.7,
+685.0, 685.4, 857.6 s for the same 392-crate build. This is a Colima VM
+on an Apple-silicon host over virtiofs, and its I/O throughput is not
+stable enough to support a single rate.
+
+So no duration bound is quoted for a full budget spend. On this host a
+16 GiB spend lands between ~35 seconds and ~3.4 minutes — too wide to
+design against, and obtained on hardware nobody ships on. Measure it on
+the target class before relying on it.
+
+Worth naming the pattern rather than just fixing the number: the
+~478 MB/s this file originally derived sits at the **top** of the
+measured range, and the ~120 MB/s that replaced it sits near the
+**bottom**. Both were single-point readings of a quantity that does not
+hold still here. Quoting either as "the" throughput was the same mistake
+twice, the second time while correcting the first.
+
+What survives from the original note is the unquantified form of its
+argument: hashable bytes and build duration scale together, because
+artifacts cannot be produced faster than the build runs. The ratios
+support it (see below), the rate does not pin it down, and the budget is
+not what holds SC-008.
+
 ### Why a higher budget does not endanger SC-008
 
-The original note said the ratio holds because hashable bytes and build
-duration scale together. The probe measures both terms, so that is no
-longer an argument but a rate:
+Raising the default from 2 to 16 GiB does not move the pass toward the
+ceiling, because the pass only hashes what the trace observed — the
+budget caps that, it does not create work. Six observations of the
+`--workspace --all-targets` build, two layouts:
 
-- hashing: **~120 MB/s** (two samples, 123 and 119);
-- artifact production: **~2.3–3.3 MB/s** of artifact bytes per second of
-  build (884 MiB / 285 s; 1,520 MiB / 685 s).
+Nine observations are tabulated in findings.md Q7. **Two of them exceed
+SC-008's 5% ceiling** — 5.2% and 7.1%.
 
-The ratio is the quotient, ~2%, and it is *independent of the budget* —
-which is what the two measured ratios show (2.4% and 1.8%, against a 5%
-ceiling). Raising the default from 2 to 16 GiB therefore does not move the
-pass toward SC-008's ceiling under observed scaling; it only widens the
-window before truncation.
+An earlier revision of this section had six observations, read the single
+5.2% as an outlier caused by the fastest wall-clock in the set, and
+concluded the ceiling was safe. The 7.1% retired that: its wall-clock,
+345 s, is mid-range.
+
+What the nine runs show instead is that the criterion's *form* is the
+problem. The pass costs **6.3–24.8 s** for ~2 GB hashed; the build it is
+quoted against ranged **118.9–857.6 s for identical work** on this host.
+So the ratio is breached precisely when the host is fast, with the pass
+behaving the same or better. A machine compiling this workspace in three
+minutes would read ~13%.
+
+**The ceiling is not re-baselined here.** `spec.md` requires an overrun
+to be recorded and the ceiling re-decided deliberately, and findings.md
+Q7 carries the record, the three options and a recommendation
+(re-express in absolute terms — seconds per GB hashed, measured at
+3.2–12.4 s/GB — rather than as a fraction of wall-clock). That decision
+needs a run on m669's reference class, which this file does not have.
 
 What the budget is actually for is the case where that correlation breaks,
 and the probe names it more precisely than the original note did: **it is
@@ -183,6 +261,50 @@ headers — existed before the trace started and their size is bounded by
 nothing the trace can see. 96,013 read entries against 7,012 write
 entries in the wider build is the shape of that exposure.
 
+### The paired measurement
+
+`budget-probe-paired.sh`, committed next to this file. Four
+`--workspace --all-targets` builds inside **one** container, fresh target
+dir each, in the order `F R R F` so each layout gets an early and a late
+slot and host drift biases both arms rather than one.
+
+| # | layout | wall (s) | pass (ms) | ratio | paths | hashed | bytes hashed | read entries |
+|---|---|---|---|---|---|---|---|---|
+| 1 | filtered | 204.820 | 3,484 | 1.7% | 17,188 | 2,769 | 1,515,039,978 | 96,057 |
+| 2 | relocated | 175.096 | 4,330 | 2.4% | 19,141 | 8,190 | 1,772,435,829 | 137,601 |
+| 3 | relocated | 524.688 | 16,743 | 3.1% | 23,200 | 8,602 | 1,996,591,239 | 184,371 |
+| 4 | filtered | 190.313 | 2,901 | 1.5% | 15,029 | 2,553 | 1,392,523,084 | 81,093 |
+
+Why it was run: two single runs had disagreed by 5.7× on wall-clock for
+identical work, and SC-008's ratio is a quotient of exactly the two
+numbers that moved. A ratio from unpaired runs on a host that swings that
+far is not evidence either way.
+
+What it settled: the **layout** effect is real and large (81k–96k read
+entries filtered against 137k–184k relocated, with write entries pinned
+at 7,012), and the **ratio** sits at 1.5–3.1% across both arms.
+
+What it did not settle, and a claim to withdraw: paths_total varied
+**15,029 → 23,200** and bytes_hashed **1.39 → 2.00 GB** between runs of
+one build. On the strength of rows 1 and 3 — which reproduced the
+separate-container runs to within 0.001% and 0.004% — an earlier note in
+this file called the filtered arm "reproducible to 16 KB". Row 4, 8%
+below, retired that. Demand is a range, not a point, and the ranges in
+the sizing table above are stated accordingly.
+
+The capture variance was the open question this table could not answer:
+it carries no `events_dropped` or `ring_buffer_overflows`, so whether the
+variance was **disclosed loss** (the system working as designed,
+Principle X) or **silent non-determinism** (a defect) was not decidable
+from these rows. The script now prints both counters per run, and a
+second set of three identical runs answered it: **silent.** One run saw
+50 fewer compiler invocations and 753 fewer paths than the other two with
+every integrity counter reading zero and `completeness: complete`. That
+is an m210/m212 finding, not a close-time one, and it is the most
+consequential thing these probes turned up — findings.md Q7 has the
+table, the consequences for #1142, and what was deliberately not
+investigated.
+
 ### Margins, stated plainly
 
 Both of the original claims passed, with far less room than the fixture
@@ -190,8 +312,8 @@ suggested:
 
 | claim | fixture says | real workspace says |
 |---|---|---|
-| SC-008 ≤ 5% of wall-clock | 0.2% (25× inside) | 1.8–2.4% (2.1–2.8× inside) |
-| budget headroom | ~2,200× | 1.4× at 2 GiB, ~11× at 16 GiB |
+| SC-008 ≤ 5% of wall-clock | 0.2% (25× inside) | 1.5–3.1%, one 5.2% outlier |
+| budget headroom | ~2,200× | 1.1–1.2× at 2 GiB, ~8–9× at 16 GiB |
 
 ### Re-running
 
@@ -202,7 +324,20 @@ docker run --rm --privileged \
   -v "$PWD/specs/1072-compiler-set-close-time/measurements/.probe-out:/probe-out" \
   -e BUILD_ARGS="--release --workspace --all-targets" \
   -e TARGET_DIR=/waybill/target-m1072-probe-all \
+  -e RELOCATE_TOOLCHAIN=1 \
   --entrypoint bash waybill-ebpf-test /budget-probe.sh
+```
+
+Drop `RELOCATE_TOOLCHAIN=1` to measure the filtered layout instead. For
+the paired form — several builds alternating layout inside one container,
+which is the only way the ratio means anything on this host:
+
+```sh
+docker run --rm --privileged \
+  -v /sys/kernel/debug:/sys/kernel/debug \
+  -v "$PWD/specs/1072-compiler-set-close-time/measurements/budget-probe-paired.sh:/paired.sh" \
+  -e SEQUENCE="F R R F" \
+  --entrypoint bash waybill-ebpf-test /paired.sh
 ```
 
 **The target dir must not be under `/tmp`.** The first two runs of this
