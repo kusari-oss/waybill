@@ -12,6 +12,10 @@ name: Pin consistency
 # file value — those are the only two literal-version sites in the
 # repo, and they MUST stay in sync.
 #
+# Since #1194 the same treatment covers the second pin this repo cares
+# about: the workspace compiler in `rust-toolchain.toml`, duplicated as a
+# literal at 16 workflow sites and 3 Dockerfile base images.
+#
 # Spec: specs/234-fix-ebpf-linker-regression/spec.md FR-001
 
 on:
@@ -33,6 +37,12 @@ permissions:
 
 jobs:
   pin-consistency:
+    # Do NOT rename this job. "bpf-linker pin consistency" is a required check
+    # in the `main` ruleset by exact name, and a required check that never
+    # reports blocks every PR -- the same trap the `pull_request` trigger note
+    # above describes. Since #1194 the job covers the Rust toolchain pin too,
+    # so the name undersells it; correcting that means editing the ruleset and
+    # this line together, which needs repo-admin rights.
     name: bpf-linker pin consistency
     runs-on: ubuntu-latest
     timeout-minutes: 3
@@ -84,3 +94,98 @@ jobs:
             exit 1
           fi
           echo "Env file and Dockerfile ARG default agree on $env_version — OK."
+
+      # #1194. The workspace compiler is pinned in `rust-toolchain.toml`, and
+      # 16 workflow sites plus 3 Dockerfiles repeat the value under a comment
+      # saying they must match it. A comment is not a check. Bump the pin and
+      # forget a site, and that job installs the OLD compiler, then cargo
+      # reads the pin and has rustup download the new one on the first call --
+      # two downloads per job, and the build still passes, so the drift is
+      # invisible. That is the same defect class #1189 fixed, on the install
+      # side of the same seam.
+      #
+      # This is the third guard of its shape in this file because `bpf-linker`
+      # already got the treatment the toolchain pin never did (the two steps
+      # above). `.github/actions/setup-ebpf-build` is the one site that
+      # derives the value instead of repeating it; converting the rest to that
+      # shape is the real fix (#1194), and this guard makes drift loud in the
+      # meantime. It does not object to the derived shape, so that refactor
+      # can land site by site without touching this step.
+      #
+      # The eBPF nightly in `waybill-ebpf/rust-toolchain.toml` is deliberately
+      # not covered: measured at 2026-10-14, it has zero literal duplicates --
+      # every consumer already reads it through `setup-ebpf-build`. A guard
+      # over no sites would assert nothing.
+      - name: Guard — literal toolchain pins match rust-toolchain.toml
+        run: |
+          set -euo pipefail
+
+          channel=$(sed -n 's/^channel *= *"\(.*\)"/\1/p' rust-toolchain.toml)
+          if [ -z "$channel" ]; then
+            echo "::error::no \`channel\` in rust-toolchain.toml"
+            exit 1
+          fi
+          echo "rust-toolchain.toml pins: $channel"
+          # Escape the version for use inside a regex: the dots are the point.
+          channel_re=$(printf '%s' "$channel" | sed 's/[].[^$*\\]/\\&/g')
+
+          # `git grep -E` is POSIX ERE: `\s` matches nothing here, silently.
+          # A guard whose pattern matches nothing looks exactly like a tree
+          # with no drift, so both shapes are counted and a total of zero is
+          # treated as a broken guard rather than a pass.
+          lit_re='^[[:space:]]*toolchain:[[:space:]]*"?[0-9]'
+          expr_re='^[[:space:]]*toolchain:[[:space:]]*\$\{\{'
+
+          literals=$(git grep -nE "$lit_re" -- '.github/' || true)
+          lit_n=$(printf '%s' "$literals" | grep -c . || true)
+          # `|| true` inside the pipeline, not after it: under `pipefail` a
+          # grep that matches nothing kills the script before the check below
+          # can say why, which is a loud failure with a useless message.
+          expr_n=$({ git grep -hcE "$expr_re" -- '.github/' || true; } \
+              | awk '{s+=$1} END {print s+0}')
+          echo "toolchain: keys under .github/ -- $lit_n literal, $expr_n derived"
+
+          if [ "$lit_n" -eq 0 ] && [ "$expr_n" -eq 0 ]; then
+            echo "::error::no \`toolchain:\` key found under .github/ in either shape."
+            echo "The patterns in this guard no longer match the workflows."
+            echo "Fix the guard -- this is not evidence that the pins agree."
+            exit 1
+          fi
+
+          rc=0
+
+          # Every literal must be exactly the pinned channel, quoted or not.
+          drift=$(printf '%s' "$literals" \
+              | grep -vE "toolchain:[[:space:]]*\"?${channel_re}\"?[[:space:]]*$" || true)
+          if [ -n "$drift" ]; then
+            echo "::error::workflow toolchain pin(s) disagree with rust-toolchain.toml ($channel):"
+            printf '%s\n' "$drift"
+            rc=1
+          fi
+
+          # Same pin, second shape: the Rust base images. A disagreement here
+          # makes rustup download the pinned toolchain inside the container,
+          # which defeats pinning the base image at all.
+          images=$(git grep -nE '^FROM[[:space:]]+rust:[0-9]' -- 'Dockerfile*' || true)
+          img_n=$(printf '%s' "$images" | grep -c . || true)
+          echo "rust base images: $img_n"
+          if [ "$img_n" -eq 0 ]; then
+            echo "::error::no \`FROM rust:<version>\` line found in any Dockerfile."
+            echo "Fix the guard -- this is not evidence that the pins agree."
+            exit 1
+          fi
+          img_drift=$(printf '%s' "$images" | grep -vE "rust:${channel_re}-" || true)
+          if [ -n "$img_drift" ]; then
+            echo "::error::Dockerfile base image(s) disagree with rust-toolchain.toml ($channel):"
+            printf '%s\n' "$img_drift"
+            rc=1
+          fi
+
+          if [ "$rc" -ne 0 ]; then
+            echo ""
+            echo "Either update the site(s) above, or -- better -- derive the"
+            echo "value the way .github/actions/setup-ebpf-build does:"
+            echo "  c=\$(sed -n 's/^channel *= *\"\\(.*\\)\"/\\1/p' rust-toolchain.toml)"
+            exit 1
+          fi
+          echo "All $lit_n literal pin(s) and $img_n base image(s) agree on $channel — OK."
