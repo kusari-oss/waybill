@@ -176,8 +176,11 @@ fn scan_cargo_workspace_root_wins_multi_ecosystem_m201() {
     // positive-identifier signal), NOT ecosystem-priority (pre-m201
     // fallback that happened to also pick 'app' alphabetically in this
     // fixture layout). The heuristic annotation lives at
-    // metadata.properties[] as a JSON-envelope-in-string carrying
-    // {"heuristic": "...", "confidence": N} per the m127 wire contract.
+    // metadata.properties[] as a JSON-object-in-string carrying
+    // {"heuristic": "...", "confidence": N}. #1190: bare, not wrapped
+    // in a `waybill-annotation/v1` envelope — that envelope is the
+    // SPDX-side shape, which `build_annotation` applies because an SPDX
+    // comment carries no field name of its own.
     let heuristic_annot = sbom["metadata"]["properties"]
         .as_array()
         .and_then(|arr| {
@@ -186,9 +189,9 @@ fn scan_cargo_workspace_root_wins_multi_ecosystem_m201() {
         })
         .and_then(|p| p["value"].as_str())
         .expect("root-selection-heuristic annotation must be present on metadata");
-    let envelope: serde_json::Value =
-        serde_json::from_str(heuristic_annot).expect("valid JSON envelope");
-    let heuristic_name = envelope["value"]["heuristic"].as_str();
+    let annot: serde_json::Value =
+        serde_json::from_str(heuristic_annot).expect("valid JSON object");
+    let heuristic_name = annot["heuristic"].as_str();
     // Heuristic name is `"repo-root-main-module"` per
     // `RootSelectionHeuristic::RepoRoot::name()` at root_selector.rs:77
     // (confidence 0.95). Pre-m201 was `"ecosystem-priority"` conf 0.7.
@@ -197,7 +200,7 @@ fn scan_cargo_workspace_root_wins_multi_ecosystem_m201() {
         Some("repo-root-main-module"),
         "post-m201 the multi-main-module root election MUST use the RepoRoot ladder \
          (heuristic=\"repo-root-main-module\") — was \"ecosystem-priority\" pre-m201. \
-         Full annotation envelope: {heuristic_annot}"
+         Full annotation value: {heuristic_annot}"
     );
 }
 

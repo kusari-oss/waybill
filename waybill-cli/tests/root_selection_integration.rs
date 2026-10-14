@@ -256,17 +256,27 @@ fn us1_multi_module_emits_heuristic_annotation() {
     let (_, value_json) =
         heuristic_prop.expect("heuristic annotation present in CDX properties");
 
-    let envelope: serde_json::Value =
-        serde_json::from_str(value_json).expect("envelope is JSON");
+    // #1190: the CDX value is the bare `(heuristic, confidence)`
+    // object. It was read here as `/value/heuristic` because m127's
+    // contract described a `waybill-annotation/v1` envelope, which is
+    // the SPDX-side shape — `build_annotation` adds it there because an
+    // SPDX comment has no name slot. A CDX `properties[]` entry has
+    // `name`, and no other CDX property is enveloped.
+    let value: serde_json::Value =
+        serde_json::from_str(value_json).expect("value is JSON");
     assert_eq!(
-        envelope.pointer("/value/heuristic").and_then(|v| v.as_str()),
+        value.pointer("/heuristic").and_then(|v| v.as_str()),
         Some("repo-root-main-module"),
-        "envelope = {envelope}"
+        "value = {value}"
+    );
+    assert!(
+        value.get("schema").is_none() && value.get("field").is_none(),
+        "the CDX value must not be enveloped (#1190); value = {value}"
     );
     assert_eq!(
-        envelope.pointer("/value/confidence").and_then(|v| v.as_f64()),
+        value.pointer("/confidence").and_then(|v| v.as_f64()),
         Some(0.95),
-        "envelope = {envelope}"
+        "value = {value}"
     );
 
     // FR-007 warning fires in stderr.
