@@ -130,7 +130,7 @@ jobs:
           targets: x86_64-unknown-linux-gnu
 
       - name: Cache cargo + cross-compiled build
-        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2.9.1
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
           key: ${{ env.TARGET }}
 
@@ -293,7 +293,7 @@ jobs:
           targets: aarch64-unknown-linux-gnu
 
       - name: Cache cargo + cross-compiled build
-        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2.9.1
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
           key: ${{ env.TARGET }}
 
@@ -427,7 +427,7 @@ jobs:
           targets: aarch64-apple-darwin
 
       - name: Cache cargo + build
-        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2.9.1
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
           key: ${{ env.TARGET }}
 
@@ -534,7 +534,7 @@ jobs:
           targets: x86_64-pc-windows-msvc
 
       - name: Cache cargo + build
-        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2.9.1
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
           key: ${{ env.TARGET }}
 
