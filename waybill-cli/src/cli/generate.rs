@@ -216,7 +216,25 @@ pub async fn execute(args: GenerateArgs, offline: bool) -> anyhow::Result<()> {
         // SBOM Type override from `waybill trace run --sbom-type
         // <type>`. None by default for the standalone
         // `waybill sbom generate` invocation.
-        .with_sbom_type_override(args.sbom_type_override);
+        .with_sbom_type_override(args.sbom_type_override)
+        // #1197 — the compiler pipeline captured by `waybill trace` lands in
+        // `BuildTracePredicate.compiler_pipeline`, and until now nothing read
+        // it back out. The comment at `scan_cmd.rs:5207` asserted that it
+        // reached the emitter "via the `sbom generate --attestation` code
+        // path"; this is that path, and it mentioned the field zero times. So
+        // C130 `waybill:source-read-set` and C131 `waybill:read-set-source`
+        // were unreachable from every entry point, not just from `sbom scan`.
+        //
+        // This is the seam rather than `scan_cmd.rs:5207` because `sbom scan`
+        // does not trace: feeding it eBPF-captured data is #1142's larger
+        // problem. Here the parsed statement is already in hand, and
+        // `trace_integrity` is already read off the same predicate below.
+        //
+        // `None` for any attestation whose trace captured no compiler
+        // invocations, which keeps output byte-identical for every existing
+        // attestation (the producer elides the field in that case --
+        // `cli/scan.rs:851`).
+        .with_compiler_pipeline(statement.predicate.compiler_pipeline.clone());
     let bom = builder.build(
         &components,
         &relationships,

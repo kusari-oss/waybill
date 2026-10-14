@@ -511,3 +511,116 @@ of concurrent rustc processes.
   `sched_process_exec` / `_fork` / `_exit` and `sys_enter_chdir` fail to attach
   with "tracefs not found". The repo's own container harness therefore likely
   runs without those tracepoints. Noted, not chased.
+
+## Q9. Is C130's claim stable across two traces of one build, and can it reach a component at all?
+
+#1197 asks for one bounded experiment to decide whether the eBPF tier earns
+further investment: wire C130 far enough to emit, trace one build twice, and
+diff the payloads. Q5 asked a version of this against hand-built inputs; this
+is the same question against two real traces.
+
+Wiring is `generate.rs` reading `statement.predicate.compiler_pipeline` into
+the builder (#1197). `sbom generate` takes an attestation *file*, so only the
+capture needs a kernel: the two attestations were taken in the privileged
+Colima container and the SBOMs emitted on the macOS host.
+
+Two builds, each traced twice, `--trace-children`, target dir under `/root/`
+(not `/tmp`, per Q6), `cargo build --offline`:
+
+| Build | run | file_ops | invocations | read paths | common across runs | hashed reads | hashed identical |
+|---|---|---|---|---|---|---|---|
+| no deps | a | 825 | 5 | 32 | 3 of 32 | 2 | **yes** |
+| no deps | b | 149 | 5 | 32 | — | 2 | — |
+| one dep (`cfg-if`) | a | 189 | 7 | 41 | 6 of 41 | 4 | **yes** |
+| one dep (`cfg-if`) | b | 203 | 6 | 41 | — | 4 | — |
+
+### The raw read set is unstable, and the hashed subset is exactly stable
+
+Both answers are in the same two columns, which is why the headline verdict
+depends entirely on which one C130 emits.
+
+Unstable, because rustc embeds per-invocation random names in the paths it
+reads and writes — `rmeta2oN36i` vs `rmetay0UMEW`, `rustcR2w8dY` vs
+`rustc9ZCtxh`, and the codegen-unit segment `1ydxavt` vs `1p6b3m4`. Only 3 of
+32 read paths (and 6 of 41 with a dependency) survive from one run to the
+next. Emitted as-is, C130 would differ between two SBOMs of one build, which
+is the outcome #1185 predicted and the one it argued should block #1142.
+
+But every differing entry has `existed_at_close: false` and no hash, and every
+hashed entry is identical across runs — same paths, same digests:
+
+```
+src/main.rs                                            927d6c37588c…
+target/debug/build/cfg-if/…/libcfg_if-….rlib           8f575f922e3f…
+target/debug/build/cfg-if/…/libcfg_if-….rmeta          50d1fdbbcd22…
+target/debug/build/waybill-fixture-tracee/…/out/…      5a25eb3d8381…
+```
+
+`compiler_hash_coverage` says the same thing from the other side:
+`paths_total: 43, paths_hashed: 6, paths_absent: 37`. The instability is
+confined to the 37 names that no longer resolved when the trace ended — files
+the compiler created and deleted inside its own invocation. Those are not
+source provenance under any reading, and the field's own documentation already
+says absent means "not measured".
+
+So the stability question has a different answer than #1185 assumed, and the
+fix implied is one predicate — restrict C130 to entries with
+`existed_at_close && sha256_at_close.is_some()` — not more instrumentation.
+
+### C130 cannot reach a component yet, and that is measured, not inferred
+
+Separately and more decisively: **both builds resolve zero components.**
+`sbom generate` exits with `resolution produced zero components from
+attestation` on all four attestations, so there is nothing for C130 to attach
+to regardless of its stability.
+
+The reason is structural and was checked rather than assumed. Across all four
+traces, the number of write-set paths outside the build's own target directory
+is **0**. A compiler writes build outputs; it never writes the registry cache a
+dependency component resolves from. So a dependency component's path cannot
+appear in a write set, and the write-set intersection C130's classifier
+requires can only ever match a component that *is* a build output — which is
+exactly #1142's scope ("locally built binaries as components").
+
+The earlier draft of this section inferred that from the no-dependency build
+alone. Adding `cfg-if` and re-measuring is what turned it into an observation:
+with a real dependency present, still 0 write paths outside the target dir,
+and still 0 components.
+
+### A limitation that bears on the differentiator itself
+
+`cfg-if`'s own source never appears in any read set. The invocation that
+compiled it reads nine paths, all of them its own outputs under
+`target/debug/build/cfg-if/…/out/`; the registry `src/lib.rs` it must have
+read is absent, and `unresolved_relative_opens: 8` in the same attestation is
+the plausible home for it (m1070 — rustc opens relative to a directory fd).
+
+That matters because "these exact source files were read by the invocation
+that produced this component" is the claim the tier is judged on. For the root
+crate it holds — `src/main.rs` is captured and hashed. For a dependency, on
+this evidence, the sources are not captured at all.
+
+### Verdict for #1197
+
+Not "park the tier", and not "finish #1142" either. The claim is reproducible
+once the payload is restricted to entries that resolved at close, so the
+differentiator is real; but it reaches no consumer until components exist for
+build outputs, and it is incomplete for dependencies until the unresolved
+relative opens are attributed. Those are two bounded, named pieces of work with
+measured justification, which is what the issue asked the experiment to produce.
+
+### Not measured
+
+- Whether the m213 filter is what drops the registry source reads.
+  `filter_categories_applied` lists `CargoFingerprint`, `Ephemeral` and
+  `System`, and no pattern in the catalog obviously matches a
+  `/usr/local/cargo/registry/src/…` path, so `unresolved_relative_opens` is
+  the better candidate — but neither was confirmed.
+- Any build with more than one dependency, or any non-cargo toolchain.
+- SPDX 2.3 / SPDX 3. `generate.rs` constructs no SPDX emitter, so C130 was
+  observed in CycloneDX only.
+- `completeness` read `complete` in all four traces, which #1185 states is
+  unreachable by construction. Not chased here.
+
+Measured 2026-10-14 on Colima aarch64, kernel 6.8.0-136, `cargo build
+--offline` against the image's prepopulated registry (417 cached crates).
