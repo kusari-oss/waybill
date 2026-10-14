@@ -425,3 +425,89 @@ bottom. **Both were single-point readings of a quantity that does not hold
 still here**, and quoting either as "the" throughput was the same mistake
 twice. No duration bound for a full budget spend is quoted anywhere as a
 result.
+
+## Q8. Is the loss Q7 found actually undisclosed, and is the drain window the cause?
+
+Q7 found that two traces of one build observe different amounts while both
+integrity counters read zero, and #1185 was filed from it naming the userspace
+drain window (#618) as the leading candidate. Q7's evidence was comparative —
+run against run — so it could show that capture *varies* but not where the
+events went. `ringbuf-accounting-probe.sh` tests the hypothesis against a
+workload with exact ground truth instead.
+
+The control opens N distinct pre-created files; each `open()` fires both the
+`openat2` and `do_filp_open` kprobes, so the trace must record 2N events. The
+files sit under `/root/probe/` because that prefix matches none of the 19 m213
+filter patterns. An earlier revision used `/etc/hostname`, which is a
+`CAT_SYSTEM` prefix, and measured zero for the wrong reason — the same trap
+Q6 hit with a target dir under `/tmp`, and the one #1185 warns about in its
+reproduction notes. That makes three times a filter has been measured instead
+of the thing intended; the prefix list is worth checking first, every time.
+
+| scenario | expected | recorded | events_dropped | ring_buffer_overflows |
+|---|---|---|---|---|
+| seq, 100k opens, rb=64 KiB | 200,000 | 200,000 | 0 | 0 |
+| seq, 100k opens, rb=64 MiB | 200,000 | 200,000 | 0 | 0 |
+| 8-way, 15k each, rb=64 MiB | 240,000 | 240,000 | 0 | 0 |
+| 8-way, 100k each, rb=8 MiB | 1,600,000 | ~766k | 0 | ~834k |
+| exec-heavy, 5,000 execs | 10,000 | 10,000 | 0 | 0 |
+
+### No undisclosed loss was reproducible
+
+Across every configuration — a 64 KiB ring buffer against 200k sequential
+events, 240k events from eight producers exiting at once, 5,000 `fork`+`execl`
+children — every probe-path event was either recorded or counted. Loss
+appeared only when the buffer genuinely overflowed, and then
+`ring_buffer_overflows` covered the shortfall.
+
+**#618's path 2 never fired.** That is the substantive result. #618's premise
+quotes #614's ~1 ms/event; #991 cut that to ~13 µs/event and m213 removed the
+bulk of the traffic, so the backlog it was filed to instrument appears
+unreachable on this workload class. #618 anticipated exactly this — *"#616 is
+the actual throughput fix and should reduce backlog dramatically; this counter
+is transparency for cases where backlog still occurs after #616 lands"* — and
+measurement says those cases are rare to absent here. Wiring the counter
+remains worth doing because a hardcoded `0` is a claim the code cannot
+support, but it will not explain Q7.
+
+### The accounting relation is an inequality, and saying otherwise was wrong
+
+Two runs produced `recorded + ring_buffer_overflows == expected` exactly, and
+that was written up as an exact identity. The probe's third run failed it by
+29 events. The counter is a **global** count of reserve failures while
+`recorded` is filtered to `/root/probe/`, so the two are not commensurable:
+the control's own loader and libc opens are also eligible to be dropped. The
+two exact matches were luck — those non-probe events occur at trace start,
+before the buffer fills. The honest form is `recorded + counters >= expected`,
+and that is what the probe now asserts. A claim of exactness that holds twice
+and fails on the third trial was never a measurement.
+
+### What this means for #1185
+
+#1185 reports a deficit with `ring_buffer_overflows == 0`. Here all
+buffer-pressure loss *is* disclosed, and no configuration produced undisclosed
+loss at all. So its deficit is not buffer pressure, and on this evidence not
+the drain window either. That re-weights its own third candidate — exec events
+missed before the probe observes the child. Its deficit was 50 *compiler
+invocations*, a process-event quantity; this probe's clean exec rows cover
+`fork`+`execl` of a trivial binary, which is a far weaker test than hundreds
+of concurrent rustc processes.
+
+### Not measured
+
+- Anything resembling a compiler pipeline. The loads here are `open()` loops
+  and trivial execs: no large reads or writes, no page-cache pressure, no
+  rustc, no `cargo`. `budget-probe-paired.sh` with `SEQUENCE="R R R"` remains
+  the right instrument for Q7's scenario and this probe does not replace it.
+- `events_dropped` itself, which is hardcoded `0` (#618) and so appears in
+  every row above as a constant rather than an observation.
+- Whether #1143 (tracer self-exclusion under a PID namespace) reproduces. The
+  `waybill-v1` predicate exposes no `comm` on file operations, so events cannot
+  be attributed to the tracer process by path alone. Inconclusive, not negative.
+- The default `--ring-buffer-size` is 8 MiB — ~26,000 events at ~320 B per
+  `FileEvent` — not the 128 MiB declared in `maps.rs`. Worth knowing when
+  reading any trace taken at defaults; not investigated further here.
+- `scripts/ebpf-integration-test.sh` mounts neither debugfs nor tracefs, so
+  `sched_process_exec` / `_fork` / `_exit` and `sys_enter_chdir` fail to attach
+  with "tracefs not found". The repo's own container harness therefore likely
+  runs without those tracepoints. Noted, not chased.
