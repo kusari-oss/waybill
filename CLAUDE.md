@@ -428,7 +428,7 @@ Auto-generated from all feature plans. Last updated: 2026-10-12
   from the dep graph and nightly + bpf-linker are not required. When on
   (Linux + `--features ebpf-tracing`), build the kernel-side artifact
   first via `cargo run -p xtask -- ebpf`, then test with
-  `cargo +stable test --workspace --no-fail-fast --features ebpf-tracing`. Local pre-PR
+  `cargo test --workspace --no-fail-fast --features ebpf-tracing`. Local pre-PR
   opt-in: `WAYBILL_PREPR_EBPF=1 ./scripts/pre-pr.sh`. CI runs the
   feature-on path in the dedicated `lint-and-test-ebpf` job. See
   `specs/020-ebpf-feature-gate/contracts/feature-flag.md` for the full
@@ -488,14 +488,20 @@ tests/
 Before opening any PR, BOTH of these MUST pass locally — not one, not
 a subset, BOTH:
 
-1. `cargo +stable clippy --workspace --all-targets` — zero errors
-2. `cargo +stable test --workspace --no-fail-fast` — every suite `ok. N passed; 0 failed`
+1. `cargo clippy --workspace --all-targets` — zero errors
+2. `cargo test --workspace --no-fail-fast` — every suite `ok. N passed; 0 failed`
 
 `./scripts/pre-pr.sh` runs both in order and exits non-zero on the
 first failure — preferred over invoking them by hand so the flag
 set stays aligned with CI.
 
-These are the exact commands CI runs (`.github/workflows/ci.yml`).
+These are the exact commands CI runs (`.github/workflows/ci.yml`), on the
+exact compiler: neither invocation names a toolchain, so both resolve
+through `rust-toolchain.toml`. They carried `+stable` until #1189, which
+overrode the pin and silently ran the gate on whatever the stable channel
+was that day — 1.99.0 locally and in CI while the pin said 1.98.1. Do not
+reintroduce a `+toolchain` argument here; it is the one thing that can make
+this sentence false again.
 
 The compiler is pinned in `rust-toolchain.toml` (workspace root) so that
 "exact" is true of the toolchain as well as the flags. Without it, CI

@@ -84,10 +84,14 @@ runs:
         toolchain: ${{ steps.pins.outputs.stable }}
         components: clippy
 
-    - name: Make stable the default toolchain
+    # The nightly install above sets itself as the default, which once sent
+    # clippy to the wrong toolchain (e0e59d61). Point the default back at the
+    # workspace pin -- not at `stable`, which resolves to whatever the channel
+    # is today and would override `rust-toolchain.toml` (#1189).
+    - name: Make the workspace toolchain the default
       if: inputs.stable == 'true'
       shell: bash
-      run: rustup default stable
+      run: rustup default "${{ steps.pins.outputs.stable }}"
 
     - name: Cache cargo + build artifacts
       uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
@@ -97,11 +101,10 @@ runs:
           .
           waybill-ebpf
 
-    # Cargo's `+<channel>` dispatch sometimes resolves to `rustup-init`
-    # instead of `rustup` (same directory, same prefix), failing with
-    # "unexpected argument '+stable'". Must follow the cache restore, which
-    # puts it back (PR #217). The behavioural `cargo --version` check catches
-    # the polluted-cache shape where ~/.cargo/bin/cargo is itself the
+    # A stale `rustup-init` in ~/.cargo/bin breaks cargo's rustup-proxy
+    # dispatch (same directory, same prefix). Must follow the cache restore,
+    # which puts it back (PR #217). The behavioural `cargo --version` check
+    # catches the polluted-cache shape where ~/.cargo/bin/cargo is itself the
     # rustup-init body, which the rm alone does not.
     - name: Remove rustup-init + verify cargo works
       shell: bash

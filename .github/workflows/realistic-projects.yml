@@ -135,7 +135,7 @@ jobs:
       # projects workflow is where the flake surfaced on PR #214.
       # MUST run AFTER Swatinem/rust-cache or its $CARGO_HOME/bin
       # restore re-creates rustup-init.
-      - name: Remove rustup-init + verify cargo works (`cargo +stable` dispatch race)
+      - name: Remove rustup-init + verify cargo works (rustup proxy dispatch race)
         shell: bash
         run: |
           rm -f "$HOME/.cargo/bin/rustup-init" "$HOME/.cargo/bin/rustup-init.exe"
@@ -183,7 +183,7 @@ jobs:
             "/tmp/realistic-fixtures/${{ matrix.project.name }}-${{ matrix.project.tag }}"
 
       - name: Build waybill
-        run: cargo +stable build -p waybill
+        run: cargo build -p waybill
 
       - name: Scan ${{ matrix.project.name }}
         run: |
@@ -398,7 +398,7 @@ jobs:
           ls -lh /tmp/${{ matrix.image.name }}.tar
 
       - name: Build waybill
-        run: cargo +stable build -p waybill
+        run: cargo build -p waybill
 
       - name: Scan ${{ matrix.image.name }}
         run: |

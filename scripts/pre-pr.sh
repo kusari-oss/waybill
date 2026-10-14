@@ -48,8 +48,8 @@ fi
 steps=(
     "python3 scripts/check-homoglyphs.py"
     "bash scripts/check-walker-audit.sh"
-    "cargo +stable clippy --workspace --all-targets ${feature_args[*]:-} -- -D warnings"
-    "cargo +stable test --workspace --no-fail-fast ${feature_args[*]:-}"
+    "cargo clippy --workspace --all-targets ${feature_args[*]:-} -- -D warnings"
+    "cargo test --workspace --no-fail-fast ${feature_args[*]:-}"
 )
 
 for cmd in "${steps[@]}"; do

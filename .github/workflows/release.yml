@@ -137,7 +137,7 @@ jobs:
       # See ci.yml::lint-and-test for the rationale. MUST run AFTER
       # Swatinem/rust-cache or its $CARGO_HOME/bin restore re-creates
       # rustup-init.
-      - name: Remove rustup-init (prevents `cargo +stable` dispatch race)
+      - name: Remove rustup-init (prevents the rustup proxy dispatch race)
         shell: bash
         run: |
           rm -f "$HOME/.cargo/bin/rustup-init" "$HOME/.cargo/bin/rustup-init.exe"
@@ -300,7 +300,7 @@ jobs:
       # See ci.yml::lint-and-test for the rationale. MUST run AFTER
       # Swatinem/rust-cache or its $CARGO_HOME/bin restore re-creates
       # rustup-init.
-      - name: Remove rustup-init (prevents `cargo +stable` dispatch race)
+      - name: Remove rustup-init (prevents the rustup proxy dispatch race)
         shell: bash
         run: |
           rm -f "$HOME/.cargo/bin/rustup-init" "$HOME/.cargo/bin/rustup-init.exe"
@@ -434,7 +434,7 @@ jobs:
       # See ci.yml::lint-and-test for the rationale. MUST run AFTER
       # Swatinem/rust-cache or its $CARGO_HOME/bin restore re-creates
       # rustup-init.
-      - name: Remove rustup-init (prevents `cargo +stable` dispatch race)
+      - name: Remove rustup-init (prevents the rustup proxy dispatch race)
         shell: bash
         run: |
           rm -f "$HOME/.cargo/bin/rustup-init" "$HOME/.cargo/bin/rustup-init.exe"
@@ -541,7 +541,7 @@ jobs:
       # See ci.yml::lint-and-test for the rationale. MUST run AFTER
       # Swatinem/rust-cache or its $CARGO_HOME/bin restore re-creates
       # rustup-init.
-      - name: Remove rustup-init (prevents `cargo +stable` dispatch race)
+      - name: Remove rustup-init (prevents the rustup proxy dispatch race)
         shell: bash
         run: |
           rm -f "$HOME/.cargo/bin/rustup-init" "$HOME/.cargo/bin/rustup-init.exe"

@@ -56,7 +56,7 @@ jobs:
       # See ci.yml::lint-and-test for the rationale. MUST run AFTER
       # Swatinem/rust-cache or its $CARGO_HOME/bin restore re-creates
       # rustup-init.
-      - name: Remove rustup-init (prevents `cargo +stable` dispatch race)
+      - name: Remove rustup-init (prevents the rustup proxy dispatch race)
         shell: bash
         run: |
           rm -f "$HOME/.cargo/bin/rustup-init" "$HOME/.cargo/bin/rustup-init.exe"
@@ -83,14 +83,14 @@ jobs:
         with:
           max_attempts: 3
           timeout_minutes: 5
-          command: cargo +stable test --workspace -- --ignored --test-threads=1 triple_format_is_at_least_25_percent_faster_than_three_sequential_scans
+          command: cargo test --workspace -- --ignored --test-threads=1 triple_format_is_at_least_25_percent_faster_than_three_sequential_scans
 
       - name: Run dual_format_perf (with retry)
         uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4.0.0
         with:
           max_attempts: 3
           timeout_minutes: 5
-          command: cargo +stable test --workspace -- --ignored --test-threads=1 dual_format_is_at_least_30_percent_faster_than_two_sequential_scans
+          command: cargo test --workspace -- --ignored --test-threads=1 dual_format_is_at_least_30_percent_faster_than_two_sequential_scans
 
   # Issue #859 sweep. Green for all 21 scheduled runs on record, so this
   # escalation is latent rather than overdue — which is the point of doing
