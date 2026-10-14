@@ -86,7 +86,7 @@ jobs:
           WAYBILL_SIGSTORE_BIN: sigstore
         run: |
           set -o pipefail
-          cargo +stable test --workspace --test cisa_2026_signing -- --ignored \
+          cargo test --workspace --test cisa_2026_signing -- --ignored \
             --nocapture 2>&1 | tee /tmp/keyless.log
 
       # FR-014 / SC-007: an outage and a defect call for opposite
@@ -169,7 +169,7 @@ jobs:
               '```',
               `export WAYBILL_TEST_KEYLESS=1`,
               `export SIGSTORE_ID_TOKEN=$(sigstore --staging get-identity-token)`,
-              `cargo +stable test --workspace --test cisa_2026_signing -- --ignored`,
+              `cargo test --workspace --test cisa_2026_signing -- --ignored`,
               '```',
               ``,
               `---`,

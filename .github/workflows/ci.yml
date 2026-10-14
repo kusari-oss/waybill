@@ -208,7 +208,7 @@ jobs:
       # That action caches `$CARGO_HOME/bin` and on cache-hit restores
       # `rustup-init` — undoing this cleanup if it runs before. Verified
       # via PR #217 macOS failure logs (2026-05-15).
-      - name: Remove rustup-init + verify cargo works (`cargo +stable` dispatch race)
+      - name: Remove rustup-init + verify cargo works (rustup proxy dispatch race)
         shell: bash
         run: |
           rm -f "$HOME/.cargo/bin/rustup-init" "$HOME/.cargo/bin/rustup-init.exe"
@@ -345,10 +345,10 @@ jobs:
       # most of the work), or add `#[allow(...)]` with a concrete
       # planned-consumer reference per spec FR-003.
       - name: Clippy
-        run: cargo +stable clippy --workspace --all-targets -- -D warnings
+        run: cargo clippy --workspace --all-targets -- -D warnings
 
       - name: Tests
-        run: cargo +stable test --workspace --no-fail-fast
+        run: cargo test --workspace --no-fail-fast
 
       # Milestone 089 — production-deps vuln gate. Re-uses the trivy
       # 0.69.3 install above. Excludes test fixtures (intentionally
@@ -415,7 +415,7 @@ jobs:
       # See lint-and-test job for the rationale. MUST run AFTER
       # Swatinem/rust-cache or its $CARGO_HOME/bin restore re-creates
       # rustup-init.
-      - name: Remove rustup-init + verify cargo works (`cargo +stable` dispatch race)
+      - name: Remove rustup-init + verify cargo works (rustup proxy dispatch race)
         shell: bash
         run: |
           rm -f "$HOME/.cargo/bin/rustup-init" "$HOME/.cargo/bin/rustup-init.exe"
@@ -451,10 +451,10 @@ jobs:
       # exists to enforce the maintainer's local-dev experience: zero
       # warnings on Apple Silicon, all user-space tests pass.
       - name: Clippy
-        run: cargo +stable clippy --workspace --all-targets -- -D warnings
+        run: cargo clippy --workspace --all-targets -- -D warnings
 
       - name: Tests
-        run: cargo +stable test --workspace --no-fail-fast
+        run: cargo test --workspace --no-fail-fast
 
   # Milestone 100 — Windows-host build + test lane. Validates that the
   # user-space readers (cargo / npm / pip / gem / maven / golang) +
@@ -490,7 +490,7 @@ jobs:
       # fixes the root cause (rustup-init left on PATH alongside
       # rustup) on every lane. MUST run AFTER Swatinem/rust-cache or
       # its $CARGO_HOME/bin restore re-creates rustup-init.
-      - name: Remove rustup-init + verify cargo works (`cargo +stable` dispatch race)
+      - name: Remove rustup-init + verify cargo works (rustup proxy dispatch race)
         shell: bash
         run: |
           rm -f "$HOME/.cargo/bin/rustup-init" "$HOME/.cargo/bin/rustup-init.exe"
@@ -522,7 +522,7 @@ jobs:
           key: waybill-fixtures-${{ runner.os }}-${{ hashFiles('tests/fixtures.rev') }}
 
       - name: Clippy
-        run: cargo +stable clippy --workspace --all-targets -- -D warnings
+        run: cargo clippy --workspace --all-targets -- -D warnings
 
       # Milestone 101 — Windows smoke test (blocking gate). Runs the
       # `scan_windows_smoke.rs` integration test which invokes
@@ -534,7 +534,7 @@ jobs:
       # step. NO `continue-on-error:` — failures block the merge.
       # See specs/101-windows-smoke-experimental/.
       - name: Smoke test (blocking — milestone 101)
-        run: cargo +stable test --test scan_windows_smoke
+        run: cargo test --test scan_windows_smoke
 
       # Milestone 100 ships build correctness (clippy `-D warnings`
       # above) + SBOM emission with forward-slash paths + a Windows
@@ -550,7 +550,7 @@ jobs:
       # closes, drop the `continue-on-error` line.
       - name: Tests (non-blocking, see issue #210)
         continue-on-error: true
-        run: cargo +stable test --workspace --no-fail-fast
+        run: cargo test --workspace --no-fail-fast
 
   # Opt-in eBPF lane. Pays the nightly + bpf-linker + xtask ebpf cost
   # so the user-space eBPF integration (waybill-cli/src/trace/* +
@@ -612,10 +612,10 @@ jobs:
         run: echo "WAYBILL_REQUIRE_SPDX3_VALIDATOR=1" >> "$GITHUB_ENV"
 
       - name: Clippy (--features ebpf-tracing)
-        run: cargo +stable clippy --workspace --all-targets --features ebpf-tracing -- -D warnings
+        run: cargo clippy --workspace --all-targets --features ebpf-tracing -- -D warnings
 
       - name: Tests (--features ebpf-tracing)
-        run: cargo +stable test --workspace --no-fail-fast --features ebpf-tracing
+        run: cargo test --workspace --no-fail-fast --features ebpf-tracing
 
       # Milestone 212 (issue #615) — invoke the container integration
       # harness on amd64. Verifies the real ring_buffer_overflows
@@ -689,7 +689,7 @@ jobs:
         uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
 
       # See lint-and-test-ebpf job for the rationale. Cleans up any
-      # stale rustup-init that would race with `cargo +stable`
+      # stale rustup-init that would race with cargo's rustup proxy
       # dispatch after Swatinem/rust-cache restore.
       - name: Remove rustup-init + verify cargo works
         shell: bash
@@ -712,7 +712,7 @@ jobs:
       # provide in CI post-scope-down. The unconditional tests
       # (fail-close scenarios + runtime-isolation guard) run here.
       - name: Run keyless regression tests (unit + fail-close)
-        run: cargo +stable test -p waybill --test cisa_2026_signing
+        run: cargo test -p waybill --test cisa_2026_signing
 
   # The one check a branch ruleset requires from this workflow. Requiring
   # the jobs themselves would freeze their names into the ruleset, and a

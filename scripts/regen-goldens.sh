@@ -33,7 +33,7 @@ printf '>>> regenerating all byte-identity goldens via workspace test sweep\n'
 WAYBILL_UPDATE_CDX_GOLDENS=1 \
 WAYBILL_UPDATE_SPDX_GOLDENS=1 \
 WAYBILL_UPDATE_SPDX3_GOLDENS=1 \
-    cargo +stable test --workspace --no-fail-fast >/dev/null
+    cargo test --workspace --no-fail-fast >/dev/null
 
 printf '\n>>> regen sweep done. Review `git status` + `git diff --stat`\n'
 printf '    to confirm only intended goldens churned.\n'
