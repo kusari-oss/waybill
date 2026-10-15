@@ -25,8 +25,45 @@ use waybill_common::types::hash::ContentHash;
 use waybill_common::types::timestamp::Timestamp;
 
 use super::http_parser;
-use super::processor::TraceStats;
 use super::sni_extractor;
+
+/// Statistics collected during a trace session.
+#[derive(Clone, Debug, Default)]
+pub struct TraceStats {
+    /// Total network events consumed from the ring buffer.
+    pub network_events: u64,
+    /// Total file events consumed from the ring buffer.
+    pub file_events: u64,
+    /// Number of ring buffer overflow events detected.
+    pub ring_buffer_overflows: u64,
+    /// Always `0`: `cli/scan.rs::execute_scan` passes a literal and
+    /// nothing increments it. The drain loop that once did lived in a
+    /// `trace/processor.rs` module that had no callers, so the counter it
+    /// fed never observed anything -- a zero that read like a measurement.
+    /// Measuring it for real is #618; until then it means "not measured".
+    /// `ring_buffer_overflows` beside it IS measured (m212), which is what
+    /// makes the pair easy to misread.
+    pub events_dropped: u64,
+    /// Milestone 212 (issue #615) — short names of any counter maps
+    /// that failed to attach on this kernel (e.g. `"file_event_drops"`).
+    /// Populated by `waybill-cli/src/trace/counters.rs::read_ring_buffer_drops`.
+    /// Empty on kernels where all three maps loaded cleanly.
+    /// Flows into `TraceIntegrity.kprobe_attach_failures[]` per Q3 —
+    /// consumers of the attestation JSON check this array to
+    /// disambiguate "counter says zero drops" from "counter unavailable
+    /// on this kernel; aggregate is a floor, not a total."
+    pub counter_attach_failures: Vec<String>,
+    /// Milestone 213 (issue #616) — sorted-deduplicated names of the
+    /// noise-filter categories that fired during the trace
+    /// (`"System"`, `"UserCache"`, `"Ephemeral"`, `"CargoFingerprint"`).
+    /// Populated by
+    /// `waybill-cli/src/trace/counters.rs::read_filter_category_hits`
+    /// at trace-end + threaded into `TraceIntegrity.filter_categories_applied`
+    /// via `aggregator.rs::finalize`. Empty when no category fired
+    /// (per FR-009 — MUST serialize as `[]` in the emitted JSON, never
+    /// null, never absent).
+    pub filter_categories_applied: Vec<String>,
+}
 
 /// Aggregated trace results ready for attestation building.
 pub struct AggregatedTrace {

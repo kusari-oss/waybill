@@ -6,6 +6,11 @@ use crate::types::timestamp::Timestamp;
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct TraceIntegrity {
     pub ring_buffer_overflows: u64,
+    /// Not measured: no producer in this repository sets it to anything
+    /// but `0` (see `trace::aggregator::TraceStats::events_dropped` and
+    /// #618). A consumer judging capture fidelity should treat `0` here as
+    /// absence of evidence, and read `ring_buffer_overflows` -- which is
+    /// measured since m212 -- for the loss the kernel does report.
     pub events_dropped: u64,
     pub uprobe_attach_failures: Vec<String>,
     pub kprobe_attach_failures: Vec<String>,

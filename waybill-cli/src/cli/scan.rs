@@ -279,7 +279,7 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
     use crate::trace::cwd::{CwdTracker, Resolution};
     use crate::trace::loader::{self, LoaderConfig};
     use crate::trace::observed::{self, ObservedKind, ObservedOp};
-    use crate::trace::processor::TraceStats;
+    use crate::trace::aggregator::TraceStats;
     use waybill_common::events::{
         CompilerExecEvent, FileEvent, FileEventType, LineageEvent, NetworkEvent, RenameEvent,
     };
@@ -739,6 +739,9 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
         network_events: net_count,
         file_events: file_count,
         ring_buffer_overflows: overflows_total,
+        // Not measured. See the field's doc on `TraceStats`: unlike
+        // `overflows_total` above, nothing counts this, and #618 is where
+        // measuring it lives.
         events_dropped: 0,
         counter_attach_failures,
         filter_categories_applied,
