@@ -3,7 +3,6 @@
 //! This module implements the userspace side of the waybill trace pipeline:
 //!
 //! - **loader**: Loads eBPF bytecode and attaches probes (Linux only)
-//! - **processor**: Consumes events from eBPF ring buffers
 //! - **aggregator**: (future) Correlates raw events into connections and file operations
 //! - **http_parser**: Parses HTTP request/response from TLS plaintext fragments
 //! - **sni_extractor**: Extracts SNI hostnames from TLS ClientHello messages
@@ -20,5 +19,4 @@ pub mod http_parser;
 pub mod loader;
 pub mod observed;
 pub mod pid_tracker;
-pub mod processor;
 pub mod sni_extractor;
