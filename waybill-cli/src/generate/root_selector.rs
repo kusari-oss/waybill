@@ -500,11 +500,16 @@ pub fn is_internal_emission_key(key: &str) -> bool {
     // CDX/SPDX SBOMs.
     // Milestone 925 FR-007: the Nix reader's root-input marker drives
     // flake-input attachment in `scan_fs` and is likewise internal.
+    // #800: the uv.lock artifact URL is a carrier for the native
+    // `distribution` external reference, not a property of its own.
+    // Principle V puts the standards-native field first; emitting both
+    // would publish one URL under two names.
     matches!(
         key,
         IS_WORKSPACE_ROOT_KEY
             | "waybill:is-cargo-workspace-toplevel"
             | crate::scan_fs::package_db::nix::ROOT_INPUT_KEY
+            | crate::scan_fs::package_db::pip::uv_lock::ARTIFACT_URL_KEY
     )
 }
 

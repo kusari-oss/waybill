@@ -2182,14 +2182,21 @@ fn external_refs_from_purl(
     // request during implementation (T026), not inferred from a
     // pattern that looked plausible.
     //
-    // REJECTED — pypi. `https://pypi.org/packages/source/{f}/{name}/
-    // {name}-{version}.tar.gz` resolves for some packages and not
-    // others: the sdist filename uses the PROJECT's own spelling,
-    // which the PURL does not carry (PURL normalizes to hyphens, so
-    // `typing-extensions` 404s where `typing_extensions` succeeds),
-    // and wheel-only projects publish no sdist at all. Emitting it
-    // would fabricate dead URLs for a large share of Python packages
-    // (FR-010, Principle IX).
+    // REJECTED — pypi, as a PURL DERIVATION.
+    // `https://pypi.org/packages/source/{f}/{name}/{name}-{version}.tar.gz`
+    // resolves for some packages and not others: the sdist filename
+    // uses the PROJECT's own spelling, which the PURL does not carry
+    // (PURL normalizes to hyphens, so `typing-extensions` 404s where
+    // `typing_extensions` succeeds), and wheel-only projects publish no
+    // sdist at all. Deriving it would fabricate dead URLs for a large
+    // share of Python packages (FR-010, Principle IX).
+    //
+    // Still true, and still the reason there is no pypi arm in the
+    // match below. #800 does not weaken it -- it removes the need for
+    // it, for one reader: `uv.lock` RECORDS the artifact URL that the
+    // resolve produced, so the pypi arm further down reads a measured
+    // value instead of deriving one. Nothing is spelled, guessed or
+    // normalized. Readers with no recorded URL still get nothing.
     //
     // DEFERRED — golang. `https://proxy.golang.org/{module}/@v/
     // {version}.zip` is valid, but the proxy requires `!x`
@@ -2272,6 +2279,33 @@ fn external_refs_from_purl(
                         "https://api.nuget.org/v3-flatcontainer/{n}/{v}/{n}.{v}.nupkg"
                     ),
                 });
+            }
+            // #800: NOT derived. The URL is whatever `uv.lock` recorded
+            // for the resolve, carried here by the uv reader on an
+            // internal annotation and promoted to the native
+            // `distribution` reference. The pypi rejection documented
+            // above applies to derivation and does not apply here --
+            // there is no spelling to guess, because the lockfile has
+            // the filename.
+            //
+            // Scoped to the annotation's presence rather than to the
+            // ecosystem: a pypi component from any other reader has no
+            // recorded URL and correctly gets no reference. That also
+            // makes this arm inert for the editable and virtual uv
+            // shapes, which are the project being scanned rather than a
+            // published artifact.
+            "pypi" => {
+                if let Some(url) = extra_annotations
+                    .get(crate::scan_fs::package_db::pip::uv_lock::ARTIFACT_URL_KEY)
+                    .and_then(|v| v.as_str())
+                {
+                    if !url.is_empty() {
+                        out.push(ExternalReference {
+                            ref_type: "distribution".to_string(),
+                            url: url.to_string(),
+                        });
+                    }
+                }
             }
             // Verified: Maven Central layout, groupId dots -> slashes.
             //
@@ -3358,6 +3392,51 @@ mod m776_distribution_tests {
     /// uses the project's own spelling, which the PURL does not carry
     /// (`typing-extensions` 404s where `typing_extensions` succeeds),
     /// and wheel-only projects publish no sdist at all.
+    #[test]
+    fn m800_recorded_pypi_url_becomes_a_distribution_ref() {
+        // #800. The URL is not derived from the PURL -- it is the value
+        // uv.lock recorded, carried on an internal annotation. So the
+        // PURL here is deliberately the hyphen-normalized spelling that
+        // m776 found 404s when derived, while the URL carries the
+        // project's own underscore spelling. That mismatch is the whole
+        // point: a derivation cannot produce this, and a lockfile can.
+        let p = Purl::new("pkg:pypi/waybill-fixture-pkg@1.2.3").unwrap();
+        let mut anns = std::collections::BTreeMap::new();
+        anns.insert(
+            crate::scan_fs::package_db::pip::uv_lock::ARTIFACT_URL_KEY.to_string(),
+            serde_json::Value::String(
+                "https://files.pythonhosted.org/packages/ab/cd/waybill_fixture_pkg-1.2.3.tar.gz"
+                    .to_string(),
+            ),
+        );
+        let urls: Vec<String> = external_refs_from_purl(&p, &anns)
+            .into_iter()
+            .filter(|r| r.ref_type == "distribution")
+            .map(|r| r.url)
+            .collect();
+        assert_eq!(
+            urls,
+            vec![
+                "https://files.pythonhosted.org/packages/ab/cd/waybill_fixture_pkg-1.2.3.tar.gz"
+            ]
+        );
+    }
+
+    #[test]
+    fn m800_carrier_annotation_is_never_serialized() {
+        // Principle V: the standards-native `externalReference` is the
+        // field that ships. If the carrier also serialized, one URL
+        // would appear twice under two names -- and it would need a
+        // catalog row plus three parity extractors to be legal, which
+        // is the cost this design exists to avoid.
+        assert!(
+            crate::generate::root_selector::is_internal_emission_key(
+                crate::scan_fs::package_db::pip::uv_lock::ARTIFACT_URL_KEY
+            ),
+            "the artifact-URL carrier must be stripped before emission"
+        );
+    }
+
     #[test]
     fn m776_pypi_emits_no_distribution_url() {
         assert!(
