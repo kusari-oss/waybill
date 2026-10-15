@@ -91,12 +91,21 @@ pub fn generate_markdown(baseline: &BenchRun) -> String {
          - **waybill commit**: `{}`\n\
          - **fixtures pin**: `{}`\n\
          - **runner**: `{}` (noise class: `{:?}`)\n\
+         - **compiler**: {}\n\
          - **duration**: {}s\n\
          - **schema version**: {}\n\n",
         baseline.metadata.waybill_commit_sha,
         baseline.metadata.fixture_sha,
         baseline.metadata.runner_uname,
         baseline.metadata.noise_class,
+        // #1195. Spelled out rather than omitted when absent: a missing
+        // row reads as an oversight in the page, while "not recorded"
+        // says the baseline predates the field, which is the fact.
+        baseline
+            .metadata
+            .rustc_version
+            .as_deref()
+            .map_or_else(|| "not recorded".to_string(), |v| format!("`{v}`")),
         baseline.metadata.total_duration_sec,
         baseline.schema_version,
     ));
@@ -240,6 +249,7 @@ mod tests {
                 fixture_sha: "1111111111111111111111111111111111111111".into(),
                 runner_uname: "Linux ci 6.5.0 x86_64".into(),
                 noise_class: NoiseClass::Reference,
+                rustc_version: Some("rustc 1.98.1 (0f52b1c4a 2026-08-11)".into()),
                 started_at: "2026-08-29T00:00:00Z".into(),
                 finished_at: "2026-08-29T00:15:00Z".into(),
                 total_duration_sec: 900,

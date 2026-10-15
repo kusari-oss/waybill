@@ -50,8 +50,9 @@ you get a right one.
    that was missed:
 
    ```bash
-   jq '.metadata | {runner_uname, noise_class}' docs/perf/baseline.json
+   jq '.metadata | {runner_uname, noise_class, rustc_version}' docs/perf/baseline.json
    # noise_class MUST be "reference"
+   # rustc_version SHOULD be present and match rust-toolchain.toml
    ```
 
 5. Regenerate the numbers page and commit both:
@@ -60,11 +61,34 @@ you get a right one.
    cargo run -p xtask -- bench-docs
    ```
 
+## The compiler is recorded too, and a pin bump is a refresh trigger
+
+`metadata.rustc_version` holds `rustc --version` as it resolved when the
+baseline was captured (#1195). Compiler version is a first-order input to
+both wall-clock and peak-RSS — codegen, inlining and MIR opts all move
+between releases — and it was the one invalidating input the block did
+not record. `rust-toolchain.toml`'s own header says a compiler change
+"invalidates every artifact by design"; the baseline's numbers are such
+an artifact.
+
+So **bumping the pin in `rust-toolchain.toml` is a reason to refresh**,
+alongside the two below. `xtask bench` prints a note to stderr when the
+baseline's compiler differs from the running one, or when the baseline
+records none — a note, not a refusal, because comparing across a pin
+bump is often exactly what you want to see. It only has to not look like
+a code regression.
+
+Baselines captured before #1195 have no `rustc_version` at all, and the
+note says so rather than treating the silence as agreement. The one
+committed on 2026-09-08 is in that state; it will carry a compiler from
+its next refresh onward.
+
 ## When to refresh
 
-After a release, or after a change that legitimately shifts the
-performance envelope — the rayon thread-pool work in #732/#734/#739
-added ~2 MB of fixed memory, which is a real and expected shift.
+After a release, after a `rust-toolchain.toml` pin bump, or after a
+change that legitimately shifts the performance envelope — the rayon
+thread-pool work in #732/#734/#739 added ~2 MB of fixed memory, which is
+a real and expected shift.
 
 Refreshing to silence a regression you have not explained is how a
 performance gate stops being one. Explain the shift first, in the PR

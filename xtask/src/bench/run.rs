@@ -305,6 +305,7 @@ pub fn run_matrix(
         fixture_sha: cfg.fixture_sha.clone(),
         runner_uname,
         noise_class,
+        rustc_version: read_rustc_version(),
         started_at,
         finished_at,
         total_duration_sec,
@@ -346,6 +347,30 @@ pub(crate) fn read_uname_srmn() -> String {
     {
         format!("{}-{}", std::env::consts::OS, std::env::consts::ARCH)
     }
+}
+
+/// Best-effort `rustc --version` capture, for #1195. Returns `None`
+/// rather than a placeholder when the subprocess cannot run or does not
+/// succeed: a baseline that says nothing about its compiler is honest,
+/// and a baseline that says `"unknown"` would compare equal to the next
+/// `"unknown"` from a different compiler.
+///
+/// `rustc --version` and not `rustc -vV`: the one-line form already
+/// carries release, commit-hash and commit-date, which is the whole
+/// compiler identity, and leaves out `host:` -- which duplicates
+/// `runner_uname` and would make this field disagree across hosts for a
+/// reason that has nothing to do with the compiler.
+///
+/// Resolution is rustup's, so inside the workspace this is the compiler
+/// `rust-toolchain.toml` pins. See the field's doc for why that is not
+/// the same claim as "the compiler that built the measured binary".
+pub(crate) fn read_rustc_version() -> Option<String> {
+    let out = Command::new("rustc").arg("--version").output().ok()?;
+    if !out.status.success() {
+        return None;
+    }
+    let s = String::from_utf8(out.stdout).ok()?.trim().to_string();
+    if s.is_empty() { None } else { Some(s) }
 }
 
 /// Classify the runner's host per the m669 noise-budget tiers:
@@ -566,6 +591,47 @@ mod tests {
         // Smoke: should return something even on non-Unix (fallback).
         let s = read_uname_srmn();
         assert!(!s.is_empty());
+    }
+
+    #[test]
+    fn read_rustc_version_reports_the_pinned_compiler() {
+        // #1195. The field is only worth recording if it is the
+        // compiler `rust-toolchain.toml` pins -- a value that drifted
+        // from the pin would be metadata that misleads, which is the
+        // defect class #1189 fixed on the gate's side of the same seam.
+        //
+        // The pin is read from the file rather than hardcoded, because
+        // bumping it is now a documented baseline-refresh trigger and a
+        // test that fails on every bump would be noise, not a check.
+        let channel = std::fs::read_to_string(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .parent()
+                .expect("xtask has a parent workspace root")
+                .join("rust-toolchain.toml"),
+        )
+        .expect("rust-toolchain.toml is readable")
+        .lines()
+        .find_map(|l| {
+            l.trim()
+                .strip_prefix("channel")?
+                .trim_start()
+                .strip_prefix('=')
+                .map(|v| v.trim().trim_matches('"').to_string())
+        })
+        .expect("rust-toolchain.toml declares a channel");
+
+        let Some(v) = read_rustc_version() else {
+            // Honest skip rather than a false pass: on a host without a
+            // working `rustc` there is nothing to check, and `None` is
+            // the documented behaviour there.
+            eprintln!("skipping: `rustc --version` did not succeed on this host");
+            return;
+        };
+        assert!(
+            v.contains(&channel),
+            "recorded compiler {v:?} does not carry the pinned channel {channel:?} -- \
+             the bench harness is resolving a compiler the pin does not name"
+        );
     }
 
     #[test]

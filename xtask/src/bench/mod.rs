@@ -150,6 +150,9 @@ pub fn run(args: BenchArgs) -> Result<(), Box<dyn Error>> {
         let threshold = args.threshold.unwrap_or(0.25);
         let baseline = load_baseline(baseline_path)?;
         assert_baseline_is_comparable(&run_result, &baseline)?;
+        if let Some(note) = compiler_mismatch_note(&run_result, &baseline) {
+            eprintln!("{note}");
+        }
         let diff = compare(&run_result, &baseline, threshold);
 
         let diff_path = workspace_root
@@ -409,6 +412,47 @@ fn assert_baseline_is_comparable(
     .into())
 }
 
+/// Warn -- not refuse -- when the baseline's compiler is not this run's
+/// (#1195).
+///
+/// A warning rather than a refusal, unlike the noise-class check above,
+/// because the two failures differ in kind. A cross-host comparison
+/// reports the machine as the code and its numbers are fiction, so there
+/// is nothing to salvage. A cross-compiler comparison is ordinary and
+/// often the thing you want to see: a pin bump's performance effect is
+/// real, measured on one host, and the only way to learn it is to
+/// compare across the bump. What it must not do is look like a code
+/// regression, so it is named in stderr beside the table instead.
+///
+/// `None` from either side is reported as what it is -- not recorded --
+/// and never as agreement. The committed baseline is in exactly that
+/// state until the next refresh, which is the gap #1195 describes.
+fn compiler_mismatch_note(subject: &BenchRun, baseline: &BenchRun) -> Option<String> {
+    let sub = subject.metadata.rustc_version.as_deref();
+    let base = baseline.metadata.rustc_version.as_deref();
+    match (sub, base) {
+        (Some(a), Some(b)) if a == b => None,
+        (Some(a), Some(b)) => Some(format!(
+            "note: this run and the baseline were measured on different compilers.\n             \tbaseline: {b}\n             \tthis run: {a}\n             Codegen, inlining and MIR opts move between releases, so part of \
+             any delta below may be the compiler rather than the code. If the \
+             pin moved deliberately, refresh the baseline after explaining the \
+             shift (docs/perf/refreshing-the-baseline.md)."
+        )),
+        (_, None) => Some(
+            "note: the baseline records no compiler, so this comparison cannot \
+             tell a real regression from a toolchain change. Baselines taken \
+             before #1195 are all in this state; the next refresh fixes it.\n\
+             \tsee docs/perf/refreshing-the-baseline.md"
+                .to_string(),
+        ),
+        (None, Some(b)) => Some(format!(
+            "note: this run recorded no compiler (the `rustc --version` \
+             subprocess did not succeed), so it cannot be checked against the \
+             baseline's {b}."
+        )),
+    }
+}
+
 /// Render a compact Markdown table of the run's Results. One row per
 /// (fixture, mode). Docs-page rendering (US3) is a richer surface;
 /// this is just the stdout summary US1 asks for.
@@ -419,11 +463,15 @@ fn render_markdown_table(run: &BenchRun) -> String {
         run.results.len()
     ));
     s.push_str(&format!(
-        "- waybill: `{}`\n- fixtures: `{}`\n- runner: `{}` ({:?})\n- started: {}\n- duration: {}s\n\n",
+        "- waybill: `{}`\n- fixtures: `{}`\n- runner: `{}` ({:?})\n- compiler: {}\n- started: {}\n- duration: {}s\n\n",
         run.metadata.waybill_commit_sha,
         run.metadata.fixture_sha,
         run.metadata.runner_uname,
         run.metadata.noise_class,
+        run.metadata
+            .rustc_version
+            .as_deref()
+            .unwrap_or("not recorded"),
         run.metadata.started_at,
         run.metadata.total_duration_sec,
     ));
@@ -498,6 +546,7 @@ mod tests {
                 fixture_sha: "1111111111111111111111111111111111111111".into(),
                 runner_uname: "Linux ci 6.5.0 x86_64".into(),
                 noise_class: NoiseClass::Reference,
+                rustc_version: Some("rustc 1.98.1 (0f52b1c4a 2026-08-11)".into()),
                 started_at: "2026-08-29T00:00:00Z".into(),
                 finished_at: "2026-08-29T00:15:00Z".into(),
                 total_duration_sec: 900,
@@ -613,6 +662,93 @@ mod tests {
         assert!(
             msg.contains("bench-run-") && msg.contains("baseline.json"),
             "message must carry the refresh recipe: {msg}"
+        );
+    }
+
+    // ── #1195: the compiler note ───────────────────────────────
+
+    #[test]
+    fn same_compiler_produces_no_note() {
+        let subject = stub_run();
+        let baseline = stub_run();
+        assert!(compiler_mismatch_note(&subject, &baseline).is_none());
+    }
+
+    #[test]
+    fn differing_compilers_name_both_sides() {
+        let subject = stub_run();
+        let mut baseline = stub_run();
+        baseline.metadata.rustc_version = Some("rustc 1.97.0 (deadbeef 2026-05-01)".into());
+
+        let note = compiler_mismatch_note(&subject, &baseline)
+            .expect("a compiler change must be reported");
+        assert!(note.contains("1.97.0"), "baseline compiler missing: {note}");
+        assert!(note.contains("1.98.1"), "subject compiler missing: {note}");
+        // The reader has to be able to act on it, not just notice it.
+        assert!(
+            note.contains("refreshing-the-baseline.md"),
+            "note must point at the remedy: {note}"
+        );
+    }
+
+    #[test]
+    fn absent_baseline_compiler_is_reported_as_absent_not_as_agreement() {
+        // The committed baseline is in exactly this state until the
+        // next refresh, so this is the path that actually runs today.
+        // Treating `None` as "same compiler" would make the whole field
+        // a no-op for every pre-#1195 baseline -- a silence that reads
+        // like a pass.
+        let subject = stub_run();
+        let mut baseline = stub_run();
+        baseline.metadata.rustc_version = None;
+
+        let note = compiler_mismatch_note(&subject, &baseline)
+            .expect("an unrecorded baseline compiler must be reported");
+        assert!(
+            note.contains("no compiler"),
+            "note must say the baseline records none: {note}"
+        );
+    }
+
+    #[test]
+    fn absent_subject_compiler_is_reported_too() {
+        let mut subject = stub_run();
+        subject.metadata.rustc_version = None;
+        let baseline = stub_run();
+
+        let note = compiler_mismatch_note(&subject, &baseline)
+            .expect("an uncapturable subject compiler must be reported");
+        assert!(note.contains("1.98.1"), "baseline side missing: {note}");
+    }
+
+    #[test]
+    fn the_committed_baseline_still_deserializes() {
+        // `docs/perf/baseline.json` was captured 2026-09-08 and has no
+        // `rustc_version` key, so this asserts the additive half of
+        // json-schema.md C-2 against the one file that actually has to
+        // keep loading: the baseline `bench.yml` compares every run to.
+        //
+        // What this does NOT guard, checked by mutation rather than
+        // assumed: the `#[serde(default)]` on the new field. serde maps
+        // a missing key to `None` for any `Option<T>` on its own, so
+        // the test still passes with the attribute deleted -- it is
+        // there for C-2's letter and to state the intent, not because
+        // it is load-bearing. What does break this test is renaming or
+        // removing an existing field, which is what C-2 prohibits:
+        // putting `#[serde(rename = "runner_host")]` on `runner_uname`
+        // fails it with `missing field runner_host`.
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .expect("xtask has a parent workspace root")
+            .join("docs/perf/baseline.json");
+        let bytes = std::fs::read(&path)
+            .unwrap_or_else(|e| panic!("committed baseline unreadable at {}: {e}", path.display()));
+        let run: BenchRun = serde_json::from_slice(&bytes)
+            .unwrap_or_else(|e| panic!("committed baseline failed to deserialize: {e}"));
+        assert_eq!(
+            run.metadata.rustc_version, None,
+            "this baseline predates #1195; if it now records a compiler, \
+             it was refreshed and this test's premise should be rechecked"
         );
     }
 
