@@ -1283,6 +1283,21 @@ fn apply_go_mod_why_classification(entries: &mut [PackageDbEntry]) -> GoModWhyOu
     // exactly on tiny fixtures + preserves single-thread determinism
     // for any test relying on log ordering.
     let worker_count = mod_why::worker_count(workspaces.len());
+    // #1154. `go list all` is memory-hungry enough to be OOM-killed in a
+    // constrained container, and the kill takes the whole classification
+    // pass with it. Derive a per-child `GOMEMLIMIT` from the cgroup
+    // allowance so the Go GC works harder instead of the kernel killing
+    // the process. Computed here because it needs `worker_count`: these
+    // children share one cgroup, so each may only claim its share (see
+    // `go_memory_limit_bytes` for the measurements).
+    let go_memory_limit = mod_why::resolve_go_memory_limit(worker_count);
+    if let Some(bytes) = go_memory_limit {
+        tracing::debug!(
+            gomemlimit_bytes = bytes,
+            workers = worker_count,
+            "go-mod-why: derived GOMEMLIMIT for `go` children from the cgroup memory limit"
+        );
+    }
     if worker_count == 1 || workspaces.len() <= 1 {
         // Serial fallback — byte-identical to pre-m771 behavior EXCEPT
         // for m771 US3 shared-preflight when a go.work scope is present.
@@ -1291,8 +1306,14 @@ fn apply_go_mod_why_classification(entries: &mut [PackageDbEntry]) -> GoModWhyOu
             let shared_scope = workspace_scope
                 .get(&canon)
                 .map(|arc| (&shared_cache, arc));
-            let analysis =
-                mod_why::analyze_main_module(workspace, &query, offline, &budget, shared_scope);
+            let analysis = mod_why::analyze_main_module(
+                workspace,
+                &query,
+                offline,
+                &budget,
+                shared_scope,
+                go_memory_limit,
+            );
             if let Some(reason) = analysis.skip_reason {
                 outcome.skipped.get_or_insert(reason.as_str());
             }
@@ -1347,6 +1368,7 @@ fn apply_go_mod_why_classification(entries: &mut [PackageDbEntry]) -> GoModWhyOu
                         offline,
                         &budget,
                         shared_scope,
+                        go_memory_limit,
                     );
                     // Send may fail only if the receiver has been dropped,
                     // which only happens after the main thread finishes the

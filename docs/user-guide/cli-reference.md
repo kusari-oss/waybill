@@ -505,6 +505,24 @@ one-line `go-mod-why classification: …` summary on stderr. See the
 matrix. With `--offline`, the `go` children are pinned to `GOPROXY=off`,
 `GOFLAGS=-mod=mod`, `GOTOOLCHAIN=local`.
 
+On Linux, when the scan runs under a cgroup memory limit, waybill also
+sets `GOMEMLIMIT` on each `go` child so the Go garbage collector works
+harder instead of the kernel killing the process and taking the whole
+classification pass with it. The value is the cgroup's limit divided by
+the number of concurrent workers, less a fixed reserve for the memory
+`GOMEMLIMIT` does not govern — the children share one cgroup, so each
+may only claim its share. Setting `GOMEMLIMIT` yourself suppresses this
+entirely; outside a limited cgroup, and on macOS and Windows, nothing
+is set.
+
+This reduces OOM kills rather than preventing them: `GOMEMLIMIT` is a
+soft target, so a cgroup genuinely too small for the repository still
+loses processes, reported as the `out-of-memory` skip reason. Measured
+on Kubernetes v1.31.0, it lowers the smallest survivable cgroup for a
+single `go list all` from 192 MiB to 128 MiB, paid for in GC time. See
+`specs/1154-gomemlimit-preflight/measurements/` for the harness and
+figures.
+
 ### `--gradle-resolve`
 
 Opt in to the milestone-235 Gradle transitive dependency resolver.
