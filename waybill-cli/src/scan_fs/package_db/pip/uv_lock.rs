@@ -150,6 +150,65 @@ fn extract_sha256_hashes(pkg_tbl: &toml::value::Table) -> Vec<ContentHash> {
     hashes
 }
 
+/// Internal-only annotation key carrying the artifact URL that
+/// `uv.lock` recorded for a registry-resolved package (#800).
+///
+/// Internal because the URL's destination is the NATIVE `distribution`
+/// external reference that `scan_fs::external_refs_from_purl` builds
+/// from it -- a CycloneDX `externalReference` / SPDX
+/// `PACKAGE_MANAGER` ref, not a `waybill:` property. Principle V puts
+/// the standards-native field first, and emitting both would publish
+/// the same URL twice under two names. `is_internal_emission_key`
+/// strips this key at every per-format iteration site, so it never
+/// reaches a serialized SBOM and needs no catalog row.
+pub(crate) const ARTIFACT_URL_KEY: &str = "waybill:pypi-artifact-url";
+
+/// Extract the artifact URL for a `uv.lock` `[[package]]` entry (#800).
+///
+/// m776 rejected pypi distribution URLs because they are not derivable
+/// from a PURL: the sdist filename uses the project's own spelling,
+/// which PURL normalizes away, so `typing-extensions` 404s where
+/// `typing_extensions` resolves. That reasoning is unchanged and still
+/// documented at the emission site. This reads the URL `uv` already
+/// recorded instead of deriving one, so there is nothing to get wrong --
+/// the value is digest-addressed and came from the resolve itself.
+///
+/// Returns, in order of preference:
+///   1. `sdist.url` -- the source distribution. Unambiguous.
+///   2. the single `wheels[].url`, when there is exactly ONE wheel.
+///   3. `None` when several wheels exist.
+///
+/// Case 3 is the honest answer rather than a shortfall. Several wheels
+/// means several platforms, and choosing one would assert a platform the
+/// scan has no basis to assert -- a `distribution` ref naming a
+/// `win32` wheel on a Linux scan is the plausible-but-wrong shape
+/// Principle IX exists to prevent. Measured against Apache Airflow's
+/// 947-package lockfile: 797 entries carry an sdist URL, 9 more are
+/// wheel-only with exactly one wheel (every one `py3-none-any`, so
+/// genuinely platform-independent), and 6 publish many platform wheels
+/// and correctly get nothing.
+fn extract_artifact_url(pkg_tbl: &toml::value::Table) -> Option<String> {
+    let from_sdist = pkg_tbl
+        .get("sdist")
+        .and_then(|v| v.as_table())
+        .and_then(|t| t.get("url"))
+        .and_then(|v| v.as_str());
+    if let Some(u) = from_sdist {
+        return Some(u.to_string());
+    }
+
+    let wheels = pkg_tbl.get("wheels").and_then(|v| v.as_array())?;
+    let mut urls = wheels
+        .iter()
+        .filter_map(|w| w.as_table()?.get("url")?.as_str());
+    let first = urls.next()?;
+    // A second wheel means a platform choice. Decline it.
+    if urls.next().is_some() {
+        return None;
+    }
+    Some(first.to_string())
+}
+
 /// Read `<rootfs>/uv.lock` if present. Returns None when absent or
 /// unparseable. Mirrors `read_poetry_lock` and `read_pipfile_lock` in
 /// shape so the dispatcher can call all three uniformly.
@@ -569,6 +628,31 @@ pub(crate) fn parse_uv_lock_with_flags(
                         serde_json::Value::String(url.to_string()),
                     );
                 }
+                // #800: the artifact URL `uv` resolved, carried to the
+                // emitter for the native `distribution` external
+                // reference. Registry-sourced entries only -- the Git /
+                // Path / Url shapes emit as `pkg:generic/*` and already
+                // carry `waybill:source-url`, and Editable / Virtual
+                // entries are the project being scanned rather than a
+                // published artifact.
+                if let Some(raw) = extract_artifact_url(tbl) {
+                    // A private index can embed credentials in the
+                    // resolved URL, and an SBOM is a document that gets
+                    // shared. m075's helper strips userinfo; its
+                    // `Cow::Owned` return is the documented signal that
+                    // it fired, and FR-016 requires saying so.
+                    let cleaned = waybill::identifiers::sanitize::sanitize_userinfo(&raw);
+                    if matches!(cleaned, std::borrow::Cow::Owned(_)) {
+                        tracing::warn!(
+                            package = %name,
+                            "stripped userinfo from a uv.lock artifact URL before emission"
+                        );
+                    }
+                    extra.insert(
+                        ARTIFACT_URL_KEY.to_string(),
+                        serde_json::Value::String(cleaned.into_owned()),
+                    );
+                }
                 None
             }
             UvSourceShape::Git { url, rev } => {
@@ -804,6 +888,115 @@ mod tests {
             fs::create_dir_all(parent).unwrap();
         }
         fs::write(path, contents).unwrap();
+    }
+
+    // ── #800: the artifact URL uv.lock already recorded ────────
+
+    /// Build a one-package lockfile and return its artifact-URL
+    /// annotation, if any. Package names are synthetic
+    /// (`waybill-fixture-*`) so the fixture never names a real
+    /// coordinate an advisory scan would flag.
+    fn artifact_url(pkg_body: &str) -> Option<String> {
+        let src = format!(
+            "version = 1\nrequires-python = \">=3.11\"\n\n\
+             [[package]]\nname = \"waybill-fixture-pkg\"\nversion = \"1.2.3\"\n{pkg_body}"
+        );
+        let parsed: toml::Value = toml::from_str(&src).unwrap();
+        let tmp = tempfile::tempdir().unwrap();
+        let entries = parse_uv_lock(&parsed, "/tmp/uv.lock", tmp.path());
+        let e = entries
+            .iter()
+            .find(|e| e.name == "waybill-fixture-pkg")
+            .expect("fixture package must emit");
+        e.extra_annotations
+            .get(ARTIFACT_URL_KEY)
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string())
+    }
+
+    #[test]
+    fn m800_sdist_url_is_carried_verbatim() {
+        let got = artifact_url(
+            "source = { registry = \"https://pypi.org/simple\" }\n\
+             sdist = { url = \"https://files.pythonhosted.org/packages/ab/cd/waybill_fixture_pkg-1.2.3.tar.gz\", hash = \"sha256:aa\" }\n",
+        );
+        assert_eq!(
+            got.as_deref(),
+            Some("https://files.pythonhosted.org/packages/ab/cd/waybill_fixture_pkg-1.2.3.tar.gz"),
+            "the sdist URL must be carried exactly as recorded, not rebuilt"
+        );
+    }
+
+    #[test]
+    fn m800_sdist_wins_over_wheels() {
+        let got = artifact_url(
+            "source = { registry = \"https://pypi.org/simple\" }\n\
+             sdist = { url = \"https://files.pythonhosted.org/packages/ab/cd/pkg-1.2.3.tar.gz\", hash = \"sha256:aa\" }\n\
+             wheels = [\n\
+               { url = \"https://files.pythonhosted.org/packages/ef/01/pkg-1.2.3-py3-none-any.whl\", hash = \"sha256:bb\" },\n\
+             ]\n",
+        );
+        assert!(
+            got.as_deref().unwrap().ends_with(".tar.gz"),
+            "source distribution is the unambiguous artifact; got {got:?}"
+        );
+    }
+
+    #[test]
+    fn m800_single_wheel_is_emitted_when_there_is_no_sdist() {
+        // 9 of Airflow's 15 sdist-less packages look like this, and
+        // every one was `py3-none-any` -- one wheel means there is no
+        // platform to choose, so the URL is exact.
+        let got = artifact_url(
+            "source = { registry = \"https://pypi.org/simple\" }\n\
+             wheels = [\n\
+               { url = \"https://files.pythonhosted.org/packages/ef/01/pkg-1.2.3-py3-none-any.whl\", hash = \"sha256:bb\" },\n\
+             ]\n",
+        );
+        assert_eq!(
+            got.as_deref(),
+            Some("https://files.pythonhosted.org/packages/ef/01/pkg-1.2.3-py3-none-any.whl")
+        );
+    }
+
+    #[test]
+    fn m800_many_wheels_emit_nothing_rather_than_pick_a_platform() {
+        // The case that decides whether this feature is honest. Six of
+        // Airflow's sdist-less packages publish 2-55 platform wheels;
+        // naming one would assert a platform the scan has no basis to
+        // assert -- a `win32` wheel on a Linux scan reads as fact.
+        let got = artifact_url(
+            "source = { registry = \"https://pypi.org/simple\" }\n\
+             wheels = [\n\
+               { url = \"https://files.pythonhosted.org/packages/ef/01/pkg-1.2.3-cp311-cp311-win32.whl\", hash = \"sha256:bb\" },\n\
+               { url = \"https://files.pythonhosted.org/packages/ef/02/pkg-1.2.3-cp311-cp311-manylinux_2_17_x86_64.whl\", hash = \"sha256:cc\" },\n\
+             ]\n",
+        );
+        assert_eq!(got, None, "a platform choice must be declined, not guessed");
+    }
+
+    #[test]
+    fn m800_editable_entries_get_no_artifact_url() {
+        // An editable entry is the project being scanned, not something
+        // published. It stays `pkg:pypi/*` for m106 compatibility, so
+        // the guard has to be the recorded URL's absence rather than
+        // the PURL type.
+        let got = artifact_url("source = { editable = \".\" }\n");
+        assert_eq!(got, None);
+    }
+
+    #[test]
+    fn m800_private_index_credentials_are_stripped() {
+        // An SBOM is a document that gets shared, and a private index
+        // can put userinfo in the resolved URL.
+        let got = artifact_url(
+            "source = { registry = \"https://idx.invalid/simple\" }\n\
+             sdist = { url = \"https://user:secret@idx.invalid/packages/pkg-1.2.3.tar.gz\", hash = \"sha256:aa\" }\n",
+        )
+        .expect("a private-index URL is still a real artifact URL");
+        assert!(!got.contains("secret"), "password survived: {got}");
+        assert!(!got.contains("user:"), "username survived: {got}");
+        assert!(got.contains("idx.invalid"), "host must survive: {got}");
     }
 
     #[test]
