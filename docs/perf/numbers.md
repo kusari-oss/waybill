@@ -5,6 +5,7 @@ Generated from `docs/perf/baseline.json` captured at:
 - **waybill commit**: `39eaf9b3be932d5c44019f68a393da2a4b9d3ee7`
 - **fixtures pin**: `891f63429480554cd2fedd48de8e5c0bdd6ba943`
 - **runner**: `Linux runnervmejwal 6.17.0-1022-azure x86_64` (noise class: `Reference`)
+- **compiler**: not recorded
 - **duration**: 64s
 - **schema version**: 1
 

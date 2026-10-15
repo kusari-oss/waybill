@@ -291,6 +291,29 @@ pub struct RunMetadata {
     pub runner_uname: String,
     /// Classifier: is this a known-noisy runner class per m094?
     pub noise_class: NoiseClass,
+    /// `rustc --version` as it resolved at run start -- e.g.
+    /// `rustc 1.98.1 (0f52b1c4a 2026-08-11)`. Compiler version is a
+    /// first-order input to both wall-clock and peak-RSS (codegen,
+    /// inlining and MIR opts all move between releases), and it was the
+    /// one invalidating input this block did not record: after a pin
+    /// bump there was no way to tell a real regression from a different
+    /// compiler, or to know the baseline needed refreshing at all
+    /// (#1195). `runner_uname` beside it is the precedent -- recorded
+    /// for exactly this reason, so a baseline from elsewhere is
+    /// recognisable rather than silently compared.
+    ///
+    /// `None` on any baseline captured before #1195, including the one
+    /// committed on 2026-09-08, and on a host where the subprocess
+    /// fails. Absent means not recorded, never "same compiler".
+    ///
+    /// Caveat worth knowing before trusting it: this is the compiler
+    /// that resolved when the *harness* ran, not provably the one that
+    /// built the binary it measures. `bench.yml` builds and benches in
+    /// one job under one toolchain so they agree there, but a hand-run
+    /// against a stale `target/release/waybill` would record a compiler
+    /// that did not produce the binary.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rustc_version: Option<String>,
     /// RFC 3339 timestamp of run start (wall-clock, not monotonic).
     pub started_at: String,
     /// RFC 3339 timestamp of run end.
@@ -653,6 +676,7 @@ mod tests {
             fixture_sha: "1111111111111111111111111111111111111111".into(),
             runner_uname: "Linux ci-runner 6.5.0-generic x86_64".into(),
             noise_class: NoiseClass::Reference,
+            rustc_version: Some("rustc 1.98.1 (0f52b1c4a 2026-08-11)".into()),
             started_at: "2026-08-29T00:00:00Z".into(),
             finished_at: "2026-08-29T00:15:00Z".into(),
             total_duration_sec: 900,

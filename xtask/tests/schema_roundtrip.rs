@@ -19,6 +19,7 @@ fn a_full_bench_run() -> BenchRun {
             fixture_sha: "1111111111111111111111111111111111111111".into(),
             runner_uname: "Linux ci-runner 6.5.0-generic x86_64".into(),
             noise_class: NoiseClass::Reference,
+            rustc_version: Some("rustc 1.98.1 (0f52b1c4a 2026-08-11)".into()),
             started_at: "2026-08-29T00:00:00Z".into(),
             finished_at: "2026-08-29T00:15:00Z".into(),
             total_duration_sec: 900,
