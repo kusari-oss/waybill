@@ -429,6 +429,235 @@ fn preflight_ran_out_of_memory(output: &std::process::Output) -> bool {
     String::from_utf8_lossy(&output.stderr).contains("runtime: out of memory")
 }
 
+/// Memory each `go` child needs *beyond* what `GOMEMLIMIT` governs:
+/// the binary's text and data mappings, thread stacks, and runtime
+/// structures outside the Go heap. `GOMEMLIMIT` caps Go-managed
+/// memory only, but the kernel's OOM killer counts the whole process
+/// against the cgroup, so a limit set to the full cgroup allowance is
+/// still killed by exactly this difference.
+///
+/// Measured (#1154, go1.27 linux/arm64, `go list all` over Kubernetes
+/// v1.31.0, 3613 packages) by finding where a limit stops rescuing the
+/// run — survival tracks absolute headroom, not a fraction of the cap:
+///
+/// | cgroup cap | `GOMEMLIMIT` | headroom | outcome      |
+/// |------------|--------------|----------|--------------|
+/// | 160 MiB    | 144 MiB      | 16.8 MB  | completed    |
+/// | 128 MiB    | 115 MiB      | 13.6 MB  | completed    |
+/// | 112 MiB    | 100 MiB      | 12.6 MB  | OOM-killed   |
+///
+/// So the true figure sits between 12.6 and 13.6 MB on that platform.
+/// 16 MiB is that, rounded up: a larger `go` binary (amd64 builds are
+/// bigger than arm64) or a future toolchain eats the difference, and
+/// over-reserving costs a little GC time while under-reserving costs
+/// the whole classification pass.
+///
+/// Worth knowing before tuning it: the single-process boundary above
+/// is sharp, but under concurrency the exact reserve stopped
+/// mattering. Four concurrent children at a ~12 MB reserve and at a
+/// 16 MiB reserve lost the same number of runs at every cap measured
+/// -- there, transient overshoot of a soft limit dominates, not the
+/// fixed non-heap cost this constant describes.
+const GO_NON_HEAP_RESERVE_BYTES: u64 = 16 * 1024 * 1024;
+
+/// Compile-time floor on the constant above: 13.6 MB of headroom was
+/// measured to survive and 12.6 MB to be OOM-killed, so any value
+/// below the survivor is known-insufficient on the measured platform.
+/// A compile error here means someone tuned the reserve past the
+/// evidence; re-measure before relaxing it.
+const _: () = assert!(GO_NON_HEAP_RESERVE_BYTES >= 13_600_000);
+
+/// Below this, don't bother. A share this small means the cgroup is
+/// too tight to be worth constraining further, and a very low limit is
+/// not free: tightening one measurably costs GC time, roughly doubling
+/// wall clock (8.4s → 18.6s) at the lowest values tried. Leaving
+/// `GOMEMLIMIT` unset there keeps the likely failure the one an
+/// operator can act on -- `out-of-memory`, already a distinct skip
+/// reason -- rather than the shared time budget expiring under GC
+/// thrash, which reports as `budget-exhausted` and points nowhere.
+///
+/// Unlike `GO_NON_HEAP_RESERVE_BYTES`, this bound is a judgement, not
+/// a measured boundary: the probe found no per-child value at which
+/// the pass flipped from working to thrashing, because the runs at the
+/// lowest limits tried still completed, only slowly. What *is*
+/// measured is that below a ~128 MiB cgroup a single `go list all` over
+/// Kubernetes died at every limit tried, so a share well under that
+/// cannot be rescued and 32 MiB sits comfortably below anything useful.
+const MIN_GO_MEMORY_LIMIT_BYTES: u64 = 32 * 1024 * 1024;
+
+/// A cgroup-v1 `memory.limit_in_bytes` reads as a near-`u64::MAX`
+/// sentinel rather than a word when no limit is set (the kernel's
+/// page-rounded `PAGE_COUNTER_MAX`). Anything this large is "no
+/// limit", not a limit worth dividing.
+///
+/// Unlike the v2 shapes below, this threshold is NOT measured: the
+/// host available here (Ubuntu 24.04) is cgroup-v2-only, so the v1
+/// branch could not be exercised against a real kernel. It is written
+/// to fail safe — an unrecognised value yields `None`, which leaves
+/// `GOMEMLIMIT` unset and behaviour exactly as it is today.
+#[cfg(any(target_os = "linux", test))]
+const CGROUP_V1_UNLIMITED_FLOOR: u64 = 1 << 60;
+
+/// Per-child `GOMEMLIMIT` for a cgroup allowance shared by `workers`
+/// concurrent `go` processes. Pure; `None` means "leave it unset".
+///
+/// The division is the load-bearing part. waybill runs up to
+/// `worker_count()` = `min(workspaces, available_parallelism())`
+/// preflights at once, all in one cgroup, so a limit computed against
+/// the full allowance lets N children each believe they may use all of
+/// it. Measured (#1154, go1.27 linux/arm64) with 4 concurrent
+/// `go list all` over Kubernetes v1.31.0, counting how many of the 4
+/// the kernel killed:
+///
+/// | cgroup cap | unset | 90% undivided | this formula |
+/// |------------|-------|---------------|--------------|
+/// | 384 MiB    | 1     | 1 (345 MiB)   | 0 (80 MiB)   |
+/// | 320 MiB    | 3     | 3 (288 MiB)   | 1 (64 MiB)   |
+/// | 288 MiB    | 3     | --            | 2 (56 MiB)   |
+/// | 256 MiB    | 3     | 3 (230 MiB)   | 2 (48 MiB)   |
+///
+/// Two things to read off that. An *undivided* limit is
+/// indistinguishable from no limit at all -- it is the division, not
+/// the limit, that does the work. And dividing does not eliminate
+/// kills: `GOMEMLIMIT` is a soft target the runtime may transiently
+/// overshoot, so a cgroup too small for the workload still loses
+/// processes. What it buys is measured and bounded -- single-process,
+/// the smallest cgroup `go list all` survives in moves from 192 MiB
+/// to 128 MiB, about 1.5x -- and it is paid for in GC time, roughly
+/// doubling wall clock at the tightest useful limits.
+///
+/// This matters less than the table suggests for the environment in
+/// the report, a 4 GiB container: four workers there get ~1 GiB each
+/// against a working set measured at ~96 MiB live, so the GC is never
+/// near the limit and the cost rounds to nothing. The caps above are
+/// stress points chosen to make the mechanism observable at all, not
+/// the operating range.
+pub(crate) fn go_memory_limit_bytes(cgroup_limit: u64, workers: usize) -> Option<u64> {
+    let workers = u64::try_from(workers.max(1)).unwrap_or(1);
+    let share = cgroup_limit.checked_div(workers)?;
+    let limit = share.checked_sub(GO_NON_HEAP_RESERVE_BYTES)?;
+    (limit >= MIN_GO_MEMORY_LIMIT_BYTES).then_some(limit)
+}
+
+/// The cgroup-v2 path this process lives in, from `/proc/self/cgroup`
+/// contents. The v2 line is the one with an empty controller field:
+/// `0::/docker/<id>`, or `0::/` in a private cgroup namespace.
+///
+/// Measured: a container started normally reports `0::/`; the same
+/// container with `--cgroupns=host` reports
+/// `0::/docker/6bf2aecb7d31…`. That difference is why this is read at
+/// all instead of using a fixed path — see `cgroup_v2_limit_in`.
+#[cfg(any(target_os = "linux", test))]
+fn parse_cgroup_v2_path(contents: &str) -> Option<String> {
+    contents.lines().find_map(|line| {
+        let mut parts = line.splitn(3, ':');
+        let hierarchy = parts.next()?;
+        let controllers = parts.next()?;
+        let path = parts.next()?;
+        (hierarchy == "0" && controllers.is_empty() && path.starts_with('/'))
+            .then(|| path.to_string())
+    })
+}
+
+/// Smallest numeric `memory.max` from this process's own cgroup up to
+/// the root, under `cgroup_root`. `None` when every level reads `max`
+/// (or is unreadable), which means no limit applies.
+///
+/// Walking is required, not thorough: a limit set on an ancestor does
+/// NOT appear at the leaf. Measured on this host — a parent cgroup at
+/// `memory.max = 1073741824` has a child whose own `memory.max` reads
+/// the literal `max`, while a process in that child is still confined
+/// to the parent's 1 GiB. That is the ordinary shape of a systemd
+/// slice, so reading only the leaf would report "unlimited" in
+/// precisely the constrained environments this exists to serve.
+///
+/// The minimum (not the nearest) is correct because every level in the
+/// chain binds simultaneously.
+#[cfg(any(target_os = "linux", test))]
+fn cgroup_v2_limit_in(cgroup_root: &Path, own_path: &str) -> Option<u64> {
+    let mut best: Option<u64> = None;
+    let mut cursor = Some(Path::new(own_path));
+    while let Some(rel) = cursor {
+        // `own_path` is absolute by construction; strip the leading
+        // `/` so it joins under `cgroup_root` instead of replacing it.
+        let joined = cgroup_root.join(rel.strip_prefix("/").unwrap_or(rel));
+        if let Ok(raw) = std::fs::read_to_string(joined.join("memory.max")) {
+            if let Ok(v) = raw.trim().parse::<u64>() {
+                best = Some(best.map_or(v, |b: u64| b.min(v)));
+            }
+            // A literal `max` parses as nothing and is skipped: that
+            // level imposes no limit, but an ancestor still might.
+        }
+        cursor = rel.parent();
+    }
+    best
+}
+
+/// cgroup-v1 fallback: a single file, no hierarchy walk, because the
+/// v1 memory controller reports the effective limit at the leaf.
+#[cfg(any(target_os = "linux", test))]
+fn cgroup_v1_limit_in(cgroup_root: &Path) -> Option<u64> {
+    let raw = std::fs::read_to_string(cgroup_root.join("memory/memory.limit_in_bytes")).ok()?;
+    let v = raw.trim().parse::<u64>().ok()?;
+    (v < CGROUP_V1_UNLIMITED_FLOOR).then_some(v)
+}
+
+/// The memory limit that applies to this process, or `None` when none
+/// does (or when it cannot be determined).
+///
+/// Deliberately does NOT fall back to total system memory. Measured:
+/// inside a container capped at 4 GiB, `/proc/meminfo` still reports
+/// the host's `MemTotal` (12 GB here) — so `MemTotal` is not an upper
+/// bound on what this process may use, and a `GOMEMLIMIT` derived
+/// from it would be worse than none. No detectable cgroup limit means
+/// no limit is applied: the point is to respect a ceiling that exists,
+/// never to invent one.
+#[cfg(target_os = "linux")]
+fn detect_cgroup_memory_limit() -> Option<u64> {
+    const CGROUP_ROOT: &str = "/sys/fs/cgroup";
+    let own = std::fs::read_to_string("/proc/self/cgroup")
+        .ok()
+        .as_deref()
+        .and_then(parse_cgroup_v2_path)
+        .unwrap_or_else(|| "/".to_string());
+    cgroup_v2_limit_in(Path::new(CGROUP_ROOT), &own)
+        .or_else(|| cgroup_v1_limit_in(Path::new(CGROUP_ROOT)))
+}
+
+/// Non-Linux hosts have no cgroup memory controller to read. macOS and
+/// Windows are developer platforms for this tool, not the constrained
+/// container environments the limit exists for (#1154).
+#[cfg(not(target_os = "linux"))]
+fn detect_cgroup_memory_limit() -> Option<u64> {
+    None
+}
+
+/// `GOMEMLIMIT` to apply to every `go` child this pass spawns, or
+/// `None` to leave the toolchain's default (effectively unlimited).
+///
+/// An operator-set `GOMEMLIMIT` always wins: it is inherited by the
+/// child through the environment already, and someone who tuned it
+/// knows something about their deployment that a cgroup read does not.
+pub(crate) fn resolve_go_memory_limit(workers: usize) -> Option<u64> {
+    resolve_go_memory_limit_with(detect_cgroup_memory_limit(), workers)
+}
+
+/// The decision itself, with cgroup detection lifted out as an
+/// argument. Split from `resolve_go_memory_limit` so the
+/// operator-override rule is testable on a host that has no cgroup:
+/// folded in, the test passed on macOS with the override check
+/// deleted, because detection returned `None` and the function
+/// returned `None` for the wrong reason (mutation-verified, #1154).
+pub(crate) fn resolve_go_memory_limit_with(
+    detected: Option<u64>,
+    workers: usize,
+) -> Option<u64> {
+    if std::env::var_os("GOMEMLIMIT").is_some() {
+        return None;
+    }
+    go_memory_limit_bytes(detected?, workers)
+}
+
 /// Result of analyzing one main module's dependency set.
 #[derive(Debug, Default)]
 pub struct MainModuleAnalysis {
@@ -619,6 +848,7 @@ fn run_bounded(
     offline: bool,
     timeout: Duration,
     workspace_mode: &WorkspaceMode,
+    go_memory_limit: Option<u64>,
 ) -> Invocation {
     use std::sync::mpsc;
     use std::thread;
@@ -628,9 +858,7 @@ fn run_bounded(
     let args = args.to_vec();
     let workspace_mode = workspace_mode.clone();
     thread::spawn(move || {
-        let mut cmd = Command::new("go");
-        cmd.args(&args).current_dir(&cwd);
-        apply_offline_env(&mut cmd, offline, &workspace_mode);
+        let mut cmd = build_go_command(&cwd, &args, offline, &workspace_mode, go_memory_limit);
         let _ = tx.send(cmd.output());
     });
 
@@ -639,6 +867,35 @@ fn run_bounded(
         Ok(Err(e)) => Invocation::SpawnFailed(e.to_string()),
         Err(_) => Invocation::TimedOut,
     }
+}
+
+/// Build the `go` child exactly as `run_bounded` spawns it.
+///
+/// Split out so the child's environment is assertable without
+/// spawning anything: `Command::get_envs` is the only way to prove
+/// `GOMEMLIMIT` reaches the child, because `go env GOMEMLIMIT` prints
+/// empty -- the `go` tool does not list it among its own variables
+/// (verified against go1.27), so there is no subprocess observation
+/// available to stand in for this.
+fn build_go_command(
+    cwd: &Path,
+    args: &[String],
+    offline: bool,
+    workspace_mode: &WorkspaceMode,
+    go_memory_limit: Option<u64>,
+) -> Command {
+    let mut cmd = Command::new("go");
+    cmd.args(args).current_dir(cwd);
+    apply_offline_env(&mut cmd, offline, workspace_mode);
+    // #1154. Applied to every `go` child, not only the preflight:
+    // `go mod why` chunks run in the same cgroup over the same module
+    // graph, so an unbounded chunk can be the process the kernel
+    // picks. `None` leaves the variable absent, so the child inherits
+    // whatever the operator set.
+    if let Some(bytes) = go_memory_limit {
+        cmd.env("GOMEMLIMIT", bytes.to_string());
+    }
+    cmd
 }
 
 /// Milestone 775 — single-flight coordination for the shared
@@ -747,6 +1004,7 @@ fn run_preflight(
     offline: bool,
     remaining: Duration,
     workspace_mode: &WorkspaceMode,
+    go_memory_limit: Option<u64>,
 ) -> Result<(), SkipReason> {
     match run_bounded(
         preflight_dir,
@@ -754,6 +1012,7 @@ fn run_preflight(
         offline,
         remaining,
         workspace_mode,
+        go_memory_limit,
     ) {
         Invocation::Completed(output) if output.status.success() => Ok(()),
         Invocation::Completed(output) if preflight_ran_out_of_memory(&output) => {
@@ -822,6 +1081,7 @@ pub fn analyze_main_module(
     offline: bool,
     budget: &BudgetTracker,
     shared_scope: Option<(&Arc<Mutex<SharedPreflightCache>>, &Arc<GoWorkScope>)>,
+    go_memory_limit: Option<u64>,
 ) -> MainModuleAnalysis {
     let mut analysis = MainModuleAnalysis::default();
     if module_paths.is_empty() {
@@ -858,10 +1118,22 @@ pub fn analyze_main_module(
     // its own preflight and reports the spawn.
     let (preflight_result, preflight_spawned) = match shared_scope {
         Some((cache, scope)) => preflight_single_flight(cache, &scope.root_dir, || {
-            run_preflight(&scope.root_dir, offline, remaining, &workspace_mode)
+            run_preflight(
+                &scope.root_dir,
+                offline,
+                remaining,
+                &workspace_mode,
+                go_memory_limit,
+            )
         }),
         None => (
-            run_preflight(main_module_dir, offline, remaining, &workspace_mode),
+            run_preflight(
+                main_module_dir,
+                offline,
+                remaining,
+                &workspace_mode,
+                go_memory_limit,
+            ),
             true,
         ),
     };
@@ -892,7 +1164,14 @@ pub fn analyze_main_module(
         let mut args: Vec<String> =
             vec!["mod".into(), "why".into(), "-m".into(), "-vendor".into()];
         args.extend(chunk.iter().cloned());
-        match run_bounded(main_module_dir, &args, offline, remaining, &workspace_mode) {
+        match run_bounded(
+            main_module_dir,
+            &args,
+            offline,
+            remaining,
+            &workspace_mode,
+            go_memory_limit,
+        ) {
             Invocation::Completed(output) if output.status.success() => {
                 let parsed = parse_go_mod_why(&String::from_utf8_lossy(&output.stdout));
                 for module in chunk {
@@ -1896,6 +2175,305 @@ mod m775_single_flight_tests {
         assert!(
             failed_fast,
             "a waiter on a poisoned scope must fail fast, not silently succeed",
+        );
+    }
+}
+
+/// #1154 ask 3 — the `GOMEMLIMIT` derivation. Every test here is pure
+/// or runs against a tempdir standing in for `/sys/fs/cgroup`, so the
+/// Linux-only read path is exercised on a macOS developer host too.
+/// The fixture *shapes* are measured, not invented: see the comments
+/// naming what was observed on a real cgroup-v2 host.
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod m1154_gomemlimit_tests {
+    use super::*;
+
+    const MIB: u64 = 1024 * 1024;
+
+    /// The whole point of the feature: N children sharing one cgroup
+    /// each get a share, not the whole allowance. A 4 GiB cgroup with
+    /// 4 workers yields ~1 GiB each, NOT ~4 GiB each -- the latter is
+    /// what made an undivided limit measure the same as no limit.
+    #[test]
+    fn m1154_the_limit_is_divided_between_concurrent_workers() {
+        let cgroup = 4096 * MIB;
+        let one = go_memory_limit_bytes(cgroup, 1).unwrap();
+        let four = go_memory_limit_bytes(cgroup, 4).unwrap();
+        assert_eq!(one, cgroup - GO_NON_HEAP_RESERVE_BYTES);
+        assert_eq!(four, cgroup / 4 - GO_NON_HEAP_RESERVE_BYTES);
+        assert!(
+            four < one / 3,
+            "4 workers must get roughly a quarter, got {four} vs {one}"
+        );
+    }
+
+    /// The reserve exists because `GOMEMLIMIT` governs Go-managed
+    /// memory while the OOM killer counts the whole process. Measured
+    /// boundary: 12.6 MB of headroom was killed, 13.6 MB survived.
+    #[test]
+    fn m1154_each_share_keeps_the_non_heap_reserve_back() {
+        let share = 256 * MIB;
+        let got = go_memory_limit_bytes(share * 4, 4).unwrap();
+        assert_eq!(got, share - GO_NON_HEAP_RESERVE_BYTES);
+        // The reserve's measured lower bound is pinned at compile time
+        // by the `const _: () = assert!(..)` beside the constant.
+    }
+
+    /// A cgroup too small to be worth constraining yields `None`
+    /// rather than a limit that would only add GC thrash to a run the
+    /// kernel kills anyway. Measured: below ~128 MiB single-process,
+    /// `go list all` over Kubernetes died at every limit tried.
+    #[test]
+    fn m1154_a_share_below_the_floor_sets_nothing() {
+        // 4 workers in 256 MiB: 64 MiB each, minus 16 MiB reserve =
+        // 48 MiB, under the 32 MiB floor? No -- 48 > 32, so Some.
+        assert!(go_memory_limit_bytes(256 * MIB, 4).is_some());
+        // 8 workers in 256 MiB: 32 MiB each, minus reserve = 16 MiB.
+        assert_eq!(go_memory_limit_bytes(256 * MIB, 8), None);
+    }
+
+    /// Underflow guard: a share smaller than the reserve must not wrap
+    /// into an enormous limit, which is the failure mode that would
+    /// make this code worse than absent.
+    #[test]
+    fn m1154_a_share_smaller_than_the_reserve_sets_nothing() {
+        assert_eq!(go_memory_limit_bytes(8 * MIB, 1), None);
+        assert_eq!(go_memory_limit_bytes(64 * MIB, 64), None);
+    }
+
+    /// `worker_count(0)` is a reachable value (zero workspaces), and
+    /// dividing by it must not panic.
+    #[test]
+    fn m1154_zero_workers_is_treated_as_one() {
+        assert_eq!(
+            go_memory_limit_bytes(1024 * MIB, 0),
+            go_memory_limit_bytes(1024 * MIB, 1)
+        );
+    }
+
+    /// Both measured `/proc/self/cgroup` shapes. A container started
+    /// normally reports `0::/`; the same container under
+    /// `--cgroupns=host` reports `0::/docker/<id>`. The second is why
+    /// the path is read at all rather than assumed to be the root.
+    #[test]
+    fn m1154_both_observed_proc_self_cgroup_shapes_parse() {
+        assert_eq!(parse_cgroup_v2_path("0::/\n").as_deref(), Some("/"));
+        assert_eq!(
+            parse_cgroup_v2_path(
+                "0::/docker/6bf2aecb7d3113aeb68afd5d3aadbd95437dcd96ec36fef1f9913704e08ae6db\n"
+            )
+            .as_deref(),
+            Some("/docker/6bf2aecb7d3113aeb68afd5d3aadbd95437dcd96ec36fef1f9913704e08ae6db")
+        );
+    }
+
+    /// A hybrid or v1 file has numbered, controller-named lines. Only
+    /// the `0::` line is the v2 path; picking any other would join a
+    /// controller-relative path onto the v2 root and read nothing.
+    #[test]
+    fn m1154_v1_controller_lines_are_not_mistaken_for_the_v2_path() {
+        let hybrid = "12:memory:/user.slice\n11:cpu,cpuacct:/user.slice\n0::/user.slice/x\n";
+        assert_eq!(parse_cgroup_v2_path(hybrid).as_deref(), Some("/user.slice/x"));
+        let v1_only = "12:memory:/user.slice\n11:cpu,cpuacct:/user.slice\n";
+        assert_eq!(parse_cgroup_v2_path(v1_only), None);
+    }
+
+    /// The measured ancestor case, and the reason this walks at all:
+    /// a parent cgroup at `memory.max = 1 GiB` has a child whose own
+    /// `memory.max` reads the literal `max`, while a process in that
+    /// child is still confined to the parent's 1 GiB. Reading only the
+    /// leaf reports "unlimited" in exactly the constrained environment
+    /// the feature exists for.
+    #[test]
+    fn m1154_an_ancestor_limit_is_found_when_the_leaf_reads_max() {
+        let root = tempfile::tempdir().unwrap();
+        let parent = root.path().join("wbprobe");
+        let child = parent.join("child");
+        std::fs::create_dir_all(&child).unwrap();
+        std::fs::write(parent.join("memory.max"), "1073741824\n").unwrap();
+        std::fs::write(child.join("memory.max"), "max\n").unwrap();
+
+        assert_eq!(
+            cgroup_v2_limit_in(root.path(), "/wbprobe/child"),
+            Some(1073741824),
+            "a limit on an ancestor must be found from the leaf"
+        );
+    }
+
+    /// Every level binding at once means the *minimum* is the
+    /// effective limit, not the nearest one.
+    #[test]
+    fn m1154_the_smallest_limit_in_the_chain_wins() {
+        let root = tempfile::tempdir().unwrap();
+        let outer = root.path().join("a");
+        let inner = outer.join("b");
+        std::fs::create_dir_all(&inner).unwrap();
+        std::fs::write(outer.join("memory.max"), "134217728\n").unwrap(); // 128 MiB
+        std::fs::write(inner.join("memory.max"), "536870912\n").unwrap(); // 512 MiB
+        assert_eq!(
+            cgroup_v2_limit_in(root.path(), "/a/b"),
+            Some(134217728),
+            "the tighter ancestor limit must win over the looser leaf"
+        );
+    }
+
+    /// Measured: an unconstrained container reads the literal `max`.
+    /// That must mean "no limit", never a parse that yields a number.
+    #[test]
+    fn m1154_an_unlimited_cgroup_yields_no_limit() {
+        let root = tempfile::tempdir().unwrap();
+        std::fs::write(root.path().join("memory.max"), "max\n").unwrap();
+        assert_eq!(cgroup_v2_limit_in(root.path(), "/"), None);
+    }
+
+    /// A missing hierarchy is the ordinary non-container case and must
+    /// degrade silently, not error.
+    #[test]
+    fn m1154_an_absent_cgroup_hierarchy_yields_no_limit() {
+        let root = tempfile::tempdir().unwrap();
+        assert_eq!(cgroup_v2_limit_in(root.path(), "/does/not/exist"), None);
+    }
+
+    /// cgroup v1. The unlimited sentinel is a near-`u64::MAX` word, and
+    /// treating it as a real limit would divide it by the worker count
+    /// and hand `go` a meaningless multi-exabyte target.
+    #[test]
+    fn m1154_the_v1_unlimited_sentinel_is_not_a_limit() {
+        let root = tempfile::tempdir().unwrap();
+        let mem = root.path().join("memory");
+        std::fs::create_dir_all(&mem).unwrap();
+
+        std::fs::write(mem.join("memory.limit_in_bytes"), "9223372036854771712\n").unwrap();
+        assert_eq!(cgroup_v1_limit_in(root.path()), None);
+
+        std::fs::write(mem.join("memory.limit_in_bytes"), "4294967296\n").unwrap();
+        assert_eq!(cgroup_v1_limit_in(root.path()), Some(4294967296));
+    }
+
+    /// An operator who set `GOMEMLIMIT` knows something about their
+    /// deployment that a cgroup read does not, and the child inherits
+    /// their value through the environment already. Never override it.
+    #[test]
+    fn m1154_an_operator_set_gomemlimit_is_never_overridden() {
+        let detected = Some(4096 * MIB);
+        let mut env = crate::testing::EnvGuard::acquire();
+
+        // Control first: with the var absent, this detected limit DOES
+        // produce one. Without this line the assertion below passes
+        // whenever the function returns `None` for any reason at all.
+        env.remove("GOMEMLIMIT");
+        assert!(
+            resolve_go_memory_limit_with(detected, 4).is_some(),
+            "control: a detected cgroup limit must yield a derived limit"
+        );
+
+        env.set("GOMEMLIMIT", "123MiB");
+        assert_eq!(
+            resolve_go_memory_limit_with(detected, 4),
+            None,
+            "an operator-set GOMEMLIMIT must suppress the derived one"
+        );
+    }
+
+    /// The plumbing, asserted on the command production actually
+    /// spawns. The computation tests above would all pass with the
+    /// value never reaching a child process.
+    fn env_of(limit: Option<u64>) -> Vec<(String, Option<String>)> {
+        let cmd = build_go_command(
+            Path::new("/tmp"),
+            &["list".to_string(), "all".to_string()],
+            false,
+            &WorkspaceMode::Inactive,
+            limit,
+        );
+        cmd.get_envs()
+            .map(|(k, v)| {
+                (
+                    k.to_string_lossy().into_owned(),
+                    v.map(|v| v.to_string_lossy().into_owned()),
+                )
+            })
+            .collect()
+    }
+
+    #[test]
+    fn m1154_a_resolved_limit_reaches_the_go_child_env() {
+        let envs = env_of(Some(123 * MIB));
+        let found = envs
+            .iter()
+            .find(|(k, _)| k == "GOMEMLIMIT")
+            .and_then(|(_, v)| v.clone());
+        assert_eq!(
+            found.as_deref(),
+            Some("128974848"),
+            "GOMEMLIMIT must be set on the child, in bytes; env was {envs:?}"
+        );
+    }
+
+    /// `None` must leave the variable absent rather than set it to
+    /// something like `0`, which the Go runtime would read as a limit
+    /// of zero bytes and GC-thrash against forever.
+    #[test]
+    fn m1154_no_resolved_limit_leaves_the_child_env_untouched() {
+        let envs = env_of(None);
+        assert!(
+            !envs.iter().any(|(k, _)| k == "GOMEMLIMIT"),
+            "GOMEMLIMIT must be absent, not zero; env was {envs:?}"
+        );
+    }
+
+    /// Positive control for the Linux-only read path, which no test
+    /// above reaches: `detect_cgroup_memory_limit` is
+    /// `cfg(target_os = "linux")`, so on a macOS developer host it is
+    /// not merely unexercised, it is never compiled. Everything else
+    /// here runs against tempdir fixtures whose shapes were copied
+    /// from a real cgroup -- faithful, but still a fixture.
+    ///
+    /// Run it by setting the expected limit in bytes, inside a cgroup
+    /// that actually has one:
+    ///
+    /// ```sh
+    /// docker run --memory=512m -e WAYBILL_TEST_EXPECT_CGROUP_LIMIT=536870912 ...
+    /// ```
+    ///
+    /// Skipped, loudly, when that variable is absent. A silent skip
+    /// here would be indistinguishable from a pass, which is the
+    /// failure mode this test exists to rule out.
+    #[test]
+    #[cfg(target_os = "linux")]
+    fn m1154_the_real_cgroup_read_returns_the_container_limit() {
+        let Ok(raw) = std::env::var("WAYBILL_TEST_EXPECT_CGROUP_LIMIT") else {
+            eprintln!(
+                "SKIPPED m1154_the_real_cgroup_read_returns_the_container_limit: \
+                 set WAYBILL_TEST_EXPECT_CGROUP_LIMIT=<bytes> inside a \
+                 memory-capped cgroup to run it"
+            );
+            return;
+        };
+        let expected: u64 = raw.trim().parse().expect("expected limit must be bytes");
+        assert_eq!(
+            detect_cgroup_memory_limit(),
+            Some(expected),
+            "the real cgroup read must return the cgroup's own limit"
+        );
+    }
+
+    /// On a host with no cgroup memory limit -- every developer macOS
+    /// box, and any Linux host outside a constrained cgroup -- nothing
+    /// is set, so behaviour is exactly as it was before #1154.
+    /// Deliberately not asserted as `None` on Linux: CI runners do run
+    /// in cgroups, and a test that demands "no limit" would fail there
+    /// for the right reason, which makes it a bad test.
+    #[test]
+    #[cfg(not(target_os = "linux"))]
+    fn m1154_a_host_without_cgroups_sets_nothing() {
+        let mut env = crate::testing::EnvGuard::acquire();
+        env.remove("GOMEMLIMIT");
+        assert_eq!(
+            resolve_go_memory_limit(4),
+            None,
+            "no cgroup controller to read means no limit is applied"
         );
     }
 }
