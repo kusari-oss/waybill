@@ -537,13 +537,21 @@ of CI-readiness — they are not equivalent.
 pipeline reports the status of its *last* command, so
 `./scripts/pre-pr.sh | grep ... | awk ...` reports awk's — a
 successful filter over the output of a script that died at clippy.
-Run it to a file and read `$?`:
+Both halves of the fix are one command, because the four-step version of
+it kept losing to the one-step broken form:
 
 ```sh
-./scripts/pre-pr.sh > /tmp/prepr.log 2>&1; echo "EXIT=$?"
+./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh
 ```
 
-Then assert on a **positive** signal in the log: the
+`scripts/gate.sh` runs the command to a log, exits with the command's own
+status, and appends `GATE_EXIT=` / `GATE_RESULT=` as the log's last lines —
+so a caller who pipes it and loses `$?` can still recover the verdict from
+the log. `--expect` is the positive signal, and is repeatable: a gate that
+exits 0 without printing it **fails**. Mutation tests for both behaviours
+are in `waybill-cli/tests/release_gates.rs`.
+
+Assert on a **positive** signal, never on absence: the
 `>>> all pre-PR checks passed.` line, and the per-target
 `test result: ok. N passed; 0 failed` lines. The absence of the word
 FAILED is not evidence — a build that never compiled also contains no
