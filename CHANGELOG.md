@@ -7,7 +7,25 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
-## [0.10.1] - 2026-10-16
+## [0.11.0] - 2026-10-16
+
+A minor release, not a patch. It adds two subcommands, and five things a
+consumer can observe on the wire change. Each of those five is a fix, and
+some corrected output that failed its own schema — but a consumer pinned to
+`0.10` would get them silently, so they are collected here rather than left
+to be found under *Fixed*:
+
+- `waybill:root-selection-heuristic` is a bare string, not a
+  `waybill-annotation/v1` envelope (#1190).
+- Every SPDX 3 annotation and relationship IRI changes once, and stops
+  changing with every tool version after that (#1140).
+- `--bind-to-source` SPDX edges are `DESCENDANT_OF` / `descendantOf` rather
+  than the undefined `BUILT_FROM` / `built_from`, and name the source by its
+  own identifier instead of the local path it was read from (#1147).
+- The witness compiler attestor is `compiler-invocation/v0.2` (#1144).
+- An explicitly named `--image` is the document's subject, and also roots the
+  CycloneDX dependency graph, so an image carrying a main module changes
+  identity (#1170, #1186).
 
 ### Added
 
@@ -6462,8 +6480,8 @@ per-release breakdown.
 
 ---
 
-[Unreleased]: https://github.com/kusari-oss/waybill/compare/v0.10.1...HEAD
-[0.10.1]: https://github.com/kusari-oss/waybill/releases/tag/v0.10.1
+[Unreleased]: https://github.com/kusari-oss/waybill/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/kusari-oss/waybill/releases/tag/v0.11.0
 [0.10.0]: https://github.com/kusari-oss/waybill/releases/tag/v0.10.0
 [0.10.0-alpha.2]: https://github.com/kusari-oss/waybill/releases/tag/v0.10.0-alpha.2
 [0.10.0-alpha.1]: https://github.com/kusari-oss/waybill/releases/tag/v0.10.0-alpha.1
