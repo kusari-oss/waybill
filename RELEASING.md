@@ -72,6 +72,13 @@ Pre-1.0, the minor is the strongest signal available short of `1.0.0`; there
 is no separate major to escalate to, which is why step 2 of the list is not
 "wait for a major".
 
+Question 1 is enforced, so you cannot skip it by accident:
+`scripts/check-release-version.py` refuses a patch whose changelog section has
+a non-empty `### Added`, and it runs in every CI lane via
+`waybill-cli/tests/release_gates.rs`. Questions 2 and 3 are yours — no check
+can read an entry under *Fixed* and tell whether a consumer can observe it. The
+gate is a floor, not a verdict.
+
 If the answer is minor or major, steps 3–5 move the version past the
 placeholder. `release-bump.sh` exits 1 rather than no-op if handed the
 version already set, so a release that *is* a patch needs no bump at all and
