@@ -24,6 +24,15 @@ The tests read these as inputs, not goldens: they assert properties of the
 edited output, so a regeneration needs no test change unless the scan's
 shape changes.
 
+Because of that, **the waybill version inside them is frozen** — it names the
+build that emitted them, and a release bump deliberately leaves it alone.
+`scripts/regen-goldens.sh` drives goldens through `WAYBILL_UPDATE_*` env vars
+and never touches these, so `scripts/check-version-bump.py` lists this
+directory in `INPUT_FIXTURES` and exempts it from the grep that catches a
+golden the sweep missed. Do not hand-edit the version here to match a release:
+that asserts a build which did not produce these bytes, and the three files
+then disagree about their own provenance.
+
 Two things a plain npm scan cannot produce, and where they are covered
 instead:
 
