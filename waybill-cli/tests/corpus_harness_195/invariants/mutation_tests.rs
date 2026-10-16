@@ -254,6 +254,74 @@ fn i7_can_be_made_to_fail() {
     assert_fails_with(&out, checks::orphan_explained::KIND_UNREACHABLE_AND_UNEXPLAINED);
 }
 
+#[test]
+fn i8_can_be_made_to_fail() {
+    let target = first_passing("I8");
+    let out = mutate("I8", &target, |cdx| {
+        // A component with an empty version and none of the four
+        // annotations that would account for the absence.
+        cdx["components"].as_array_mut().expect("components").push(serde_json::json!({
+            "bom-ref": "pkg:generic/mutation-versionless",
+            "name": "mutation-versionless",
+            "version": "",
+            "type": "library",
+            "purl": "pkg:generic/mutation-versionless"
+        }));
+    });
+    assert_fails_with(&out, checks::versionless_explained::KIND_VERSIONLESS_AND_UNEXPLAINED);
+}
+
+/// Negative control for I8, in two halves, because the invariant has two
+/// ways to be wrong in the direction that matters least — flagging data
+/// that is already honest.
+///
+/// A versionless component carrying any one of the accepted annotations
+/// is explained and must not be flagged. A component carrying an
+/// unknown-version *sentinel* is outside I8's precondition entirely: it
+/// has made a statement on the wire, so it belongs to I6.
+#[test]
+fn i8_does_not_flag_explained_absences_or_sentinel_versions() {
+    let target = first_passing("I8");
+    let out = mutate("I8", &target, |cdx| {
+        let arr = cdx["components"].as_array_mut().expect("components");
+        for (reference, prop, value) in [
+            ("mutation-tier-file", "waybill:component-tier", "file"),
+            ("mutation-unresolved", "waybill:unresolved-reason", "no lockfile present"),
+            (
+                "mutation-haskell",
+                "waybill:haskell-version-unresolved-reason",
+                "compiler-supplied",
+            ),
+            ("mutation-closure", "waybill:closure-role", "runtime"),
+        ] {
+            arr.push(serde_json::json!({
+                "bom-ref": format!("pkg:generic/{reference}"),
+                "name": reference,
+                "version": "",
+                "type": "library",
+                "purl": format!("pkg:generic/{reference}"),
+                "properties": [{ "name": prop, "value": value }]
+            }));
+        }
+        // Sentinel spellings — I6's population, not I8's.
+        for sentinel in ["unknown", "v0.0.0-unknown", "NOASSERTION"] {
+            arr.push(serde_json::json!({
+                "bom-ref": format!("pkg:generic/mutation-sentinel-{sentinel}"),
+                "name": format!("mutation-sentinel-{sentinel}"),
+                "version": sentinel,
+                "type": "library",
+                "purl": format!("pkg:generic/mutation-sentinel-{sentinel}")
+            }));
+        }
+    });
+    assert_eq!(
+        out,
+        CellOutcome::Pass,
+        "an accounted-for absence and a sentinel version are both honest; \
+         neither is what I8 reports"
+    );
+}
+
 /// SC-007 — a cell moving from pass to fail without a declaration fails
 /// the corpus lane, naming the invariant, the target and the
 /// observation. This is the regression path, verified deliberately.

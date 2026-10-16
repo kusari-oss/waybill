@@ -270,3 +270,80 @@ are uv's alternate resolution forks: real entries in the lockfile that the
 chosen resolution does not use. They need a marker saying so, or they read as
 part of the artifact.
 """
+
+# ---------------------------------------------------------------------
+# I8 — a component with no version and no annotation explaining why.
+# Tracked by #1216. Two populations in one invariant: Pants resolve
+# anchors, which are inherently versionless and need a marker saying so,
+# and one Go binary whose version was never read. They are declared
+# separately because the fixes are different and #1216 may close them in
+# different changes.
+# ---------------------------------------------------------------------
+
+[[declaration]]
+invariant = "I8"
+target = "image-postgres16"
+kind = "versionless-and-unexplained"
+count_at_declaration = 1
+reason = """
+`pkg:generic/gosu?file-sha256=…` is a statically-linked, UNSTRIPPED Go ELF at
+`usr/local/bin/gosu`, annotated `detected-go=true`, with no version and no
+reason for not having one. Unlike the Pants rows below, this is a real
+resolution gap rather than a labelling one: the Go build info that carries a
+module version is plausibly present and unread, which is what milestone 129's
+`.dep-v0` section reader exists for. The document cannot distinguish "read it
+and found nothing" from "never looked".
+"""
+issue = 1216
+
+[[declaration]]
+invariant = "I8"
+target = "pants-clojure-polyglot"
+kind = "versionless-and-unexplained"
+count_at_declaration = 4
+reason = """
+Four Pants resolve anchors — two jvm (`java17`, `java21`) and two python
+(`pants-2.30`, `pants-2.31`). A resolve is a lockfile, not a package, so there
+is no version to find; the data is right and only the document's account of
+itself is incomplete. They carry `waybill:component-kind = lockfile-resolve`,
+which I8 deliberately does not accept: it describes resolve ownership
+(milestone 1064), not version absence, so a consumer still cannot tell an
+anchor from a package whose resolution failed. See #1216 for why the fix is a
+marker meaning "not versioned" rather than a wider accepted set here.
+"""
+issue = 1216
+
+[[declaration]]
+invariant = "I8"
+target = "pants-example-django"
+kind = "versionless-and-unexplained"
+count_at_declaration = 1
+reason = """
+One Pants resolve anchor, `pkg:generic/python-default?pants-namespace=python`.
+Same defect as pants-clojure-polyglot; kept as its own row so #1216's
+per-target reach is readable from this file's diff.
+"""
+issue = 1216
+
+[[declaration]]
+invariant = "I8"
+target = "pants-example-jvm"
+kind = "versionless-and-unexplained"
+count_at_declaration = 1
+reason = """
+One Pants resolve anchor, `pkg:generic/jvm-default?pants-namespace=jvm`. Same
+defect as pants-clojure-polyglot, on the jvm namespace.
+"""
+issue = 1216
+
+[[declaration]]
+invariant = "I8"
+target = "pants-example-python"
+kind = "versionless-and-unexplained"
+count_at_declaration = 1
+reason = """
+One Pants resolve anchor, `pkg:generic/python-default?pants-namespace=python`.
+Same defect and the same anchor name as pants-example-django, in a second
+Pants target.
+"""
+issue = 1216
