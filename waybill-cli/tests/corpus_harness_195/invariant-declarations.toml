@@ -2,7 +2,7 @@
 #
 # This file holds NON-PASSING CELLS ONLY (FR-014b). A passing cell is
 # implicit, so the file stays proportional to the number of outstanding
-# defects rather than to the 7 x 17 cell count, and adding a corpus
+# defects rather than to the 8 x 17 cell count, and adding a corpus
 # target does not rewrite unrelated entries.
 #
 # Sorted by (invariant, target), ascending. The sort is what keeps an
@@ -207,8 +207,12 @@ issue = 1207
 # NOT one of #1206-#1211. This is a defect class the matrix surfaced on
 # its first run: design-tier and toolchain components emitted by readers
 # that post-date milestone 167's orphan-reason vocabulary and milestone
-# 194's anchoring passes. It wants its own issue; these rows carry no
-# `issue` field until one exists, which is why the field is optional.
+# 194's anchoring passes. Filed as #1214, which these rows now cite.
+#
+# #1214 is the largest of the classes the first run surfaced: every code
+# in milestone 167's vocabulary is Go- or npm-specific by construction
+# (`classify_orphans` short-circuits on any other ecosystem), so these
+# cells want new vocabulary rather than a new caller of the old.
 # ---------------------------------------------------------------------
 
 [[declaration]]
@@ -223,6 +227,7 @@ setup, has no edge to the Go subject, and carries no orphan-reason. Either
 it is a build-tooling component and should say so, or the pip reader should
 not attach it to this subject at all.
 """
+issue = 1214
 
 [[declaration]]
 invariant = "I7"
@@ -234,6 +239,7 @@ Two `pkg:generic/ghc-*@unspecified` toolchain components with no edge and no
 orphan-reason. A compiler pin is build tooling, not a dependency of the
 subject; it needs the marker that says so.
 """
+issue = 1214
 
 [[declaration]]
 invariant = "I7"
@@ -246,6 +252,7 @@ orphan-reason. The milestone-925 lockfile reader emits flake inputs as
 components but only wires edges between lockfile nodes, so an input that is
 not itself depended on by another node ends up unexplained.
 """
+issue = 1214
 
 [[declaration]]
 invariant = "I7"
@@ -257,6 +264,7 @@ Five `pkg:bazel/*` components read from WORKSPACE, source-tier, with no edge
 and no orphan-reason. guice builds with both Maven and Bazel; the bazel
 reader emits archives it found but never relates them to the subject.
 """
+issue = 1214
 
 [[declaration]]
 invariant = "I7"
@@ -270,6 +278,7 @@ are uv's alternate resolution forks: real entries in the lockfile that the
 chosen resolution does not use. They need a marker saying so, or they read as
 part of the artifact.
 """
+issue = 1214
 
 # ---------------------------------------------------------------------
 # I8 — a component with no version and no annotation explaining why.

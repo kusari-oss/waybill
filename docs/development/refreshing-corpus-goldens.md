@@ -85,6 +85,25 @@ gh workflow run "Public corpus regression" \
   -f branch=<your-branch> -f regen_goldens=false
 ```
 
+> **`-f branch=`, never `--ref`.** `--ref <your-branch>` is the form `gh`
+> documents for picking a branch, and it is what muscle memory reaches
+> for. It runs the lane against **main**. The checkout resolves
+> `${{ github.event.inputs.branch || github.ref }}`, and the `branch`
+> input declares `default: main`, so an omitted `-f branch` is not absent
+> — it is `main`. `--ref` selects only which copy of the workflow *file*
+> executes, never what that file scans.
+>
+> Nothing errors. The run reports **success**, with a pass count for main,
+> which is the whole problem: a lane that scanned the wrong tree looks
+> exactly like a lane that scanned yours and found nothing wrong. The
+> visible tell is the job name — `Run public corpus (main)` instead of
+> `Run public corpus (<your-branch>)`.
+>
+> Before trusting any conclusion from this lane, check that job name and
+> the `ref:` line in its checkout step. A cell count that disagrees with
+> what you expect on your branch is the second tell, and the one you will
+> probably notice first.
+
 Getting the run id is fiddly and it matters — see the warning under
 step 2. Take it from the dispatch you just made:
 
