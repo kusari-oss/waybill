@@ -70,14 +70,63 @@ fn run_target(name: &str) {
     // format, without either format raising an error. Schema validation
     // cannot see this class — CycloneDX has no referential-integrity rule
     // for `bom-ref`, and SPDX drops the relationship rather than dangling it.
-    if let Err(fail) = corpus_harness_195::layer1_assertions::layer0_document_integrity(
+    if let Err(fail) = corpus_harness_195::expectations::layer0_document_integrity(
         target.name, &sboms,
     ) {
         panic!("{fail}");
     }
-    // Layer 1 — fast-fail with class-of-bug diagnostic.
-    if let Err(fail) = (target.layer1)(&sboms) {
+    // Per-target expectations — fast-fail with class-of-bug diagnostic.
+    if let Err(fail) = (target.expectations)(&sboms) {
         panic!("{fail}");
+    }
+    // The universal semantic-invariant layer (milestone 1155).
+    //
+    // Every catalogued invariant is evaluated against this target's
+    // freshly emitted documents, and all failing cells are reported
+    // together rather than stopping at the first — a `Result` cannot
+    // express a matrix, which is why this layer has its own outcome
+    // type. An undeclared failure fails the lane; a declared one with
+    // the declared kind passes, whatever its count.
+    //
+    // The same matrix also runs hermetically over the committed goldens
+    // in the default `cargo test` lane
+    // (`invariants::tests::golden_matrix_is_evaluable_and_gated`). The
+    // two are complementary: the goldens catch a refresh that imports a
+    // defect, this path catches a defect before a refresh can hide it.
+    {
+        use corpus_harness_195::invariants;
+        let cells = invariants::evaluate_target(target.name, &sboms);
+        let declarations = invariants::declarations::load();
+        let errors = invariants::declarations::validate(&declarations);
+        if !errors.is_empty() {
+            panic!(
+                "invariant-declarations.toml is invalid, so no cell can be trusted:\n  {}",
+                errors.join("\n  ")
+            );
+        }
+        let report = invariants::report::build(cells, &declarations);
+        println!("{}", report.console());
+        // FR-006a is a corpus-wide rule, not a per-target one: an
+        // invariant can legitimately be not-applicable on this target
+        // while applying elsewhere. The golden-matrix test enforces it
+        // over the whole corpus; here only per-cell verdicts gate.
+        let failures: Vec<String> = report
+            .verdicts
+            .iter()
+            .filter(|(_, v)| v.fails_lane())
+            .map(|((inv, tgt), v)| format!("{inv} / {tgt}: {v:?}"))
+            .collect();
+        if !failures.is_empty() {
+            panic!(
+                "{} invariant cell(s) failed for {}:\n  {}\n\nEach is either a defect to fix \
+                 or a cell to declare in \
+                 waybill-cli/tests/corpus_harness_195/invariant-declarations.toml with a \
+                 written reason. See docs/reference/sbom-invariants.md for the diagnostic.",
+                failures.len(),
+                target.name,
+                failures.join("\n  ")
+            );
+        }
     }
     // Layer 2 — full-SBOM byte-identity golden diff.
     //
@@ -113,7 +162,7 @@ fn corpus_go_cobra() {
 }
 
 // #879 — the first multi-module Go target (29 modules). See
-// `layer1_assertions::go_opentelemetry_layer1`.
+// `expectations::go_opentelemetry_expectations`.
 #[test]
 #[ignore = "public-corpus target: needs WAYBILL_RUN_PUBLIC_CORPUS=1 and a populated corpus cache. Ignored rather than silently early-returning: a gated test that prints `skipping` and reports `ok` is indistinguishable from one that compared goldens, and a green local run then implies corpus coverage it does not have. CI passes --include-ignored. See #918."]
 fn corpus_go_opentelemetry() {
@@ -199,7 +248,7 @@ fn corpus_pants_example_javascript() {
 // #898 — the first Haskell target in either corpus. Its absence is what let
 // the #891 defects live, and the gap recurred as #937, #936, #938 and #943
 // inside one week, each found by scanning a repository by hand rather than by
-// a gate. See `layer1_assertions::haskell_aeson_layer1` for the four tripwires.
+// a gate. See `expectations::haskell_aeson_expectations` for the four tripwires.
 #[test]
 #[ignore = "public-corpus target: needs WAYBILL_RUN_PUBLIC_CORPUS=1 and a populated corpus cache. Ignored rather than silently early-returning: a gated test that prints `skipping` and reports `ok` is indistinguishable from one that compared goldens, and a green local run then implies corpus coverage it does not have. CI passes --include-ignored. See #918."]
 fn corpus_haskell_aeson() {
@@ -212,7 +261,7 @@ fn corpus_haskell_aeson() {
 // none by a test. This target's `flake.lock` has `original.ref` set with no
 // `original.rev`, and `locked.rev` present — the ordinary shape, and exactly
 // what the #947 gate rejected. It would have failed on its first CI run.
-// See `layer1_assertions::haskell_language_server_layer1` for the five
+// See `expectations::haskell_language_server_expectations` for the five
 // tripwires.
 #[test]
 #[ignore = "public-corpus target: needs WAYBILL_RUN_PUBLIC_CORPUS=1 and a populated corpus cache. Ignored rather than silently early-returning: a gated test that prints `skipping` and reports `ok` is indistinguishable from one that compared goldens, and a green local run then implies corpus coverage it does not have. CI passes --include-ignored. See #918."]
@@ -229,7 +278,7 @@ fn corpus_haskell_language_server() {
 // shape (`packages: code/*/*.cabal`, the glob arm of #1032 that no other
 // target exercises), and a large transitive population, which is where
 // #1033's defect lived and where waybill's disagreement detector still does
-// not reach. See `layer1_assertions::haskell_security_advisories_layer1`.
+// not reach. See `expectations::haskell_security_advisories_expectations`.
 #[test]
 #[ignore = "public-corpus target: needs WAYBILL_RUN_PUBLIC_CORPUS=1 and a populated corpus cache. Ignored rather than silently early-returning: a gated test that prints `skipping` and reports `ok` is indistinguishable from one that compared goldens, and a green local run then implies corpus coverage it does not have. CI passes --include-ignored. See #918."]
 fn corpus_haskell_security_advisories() {

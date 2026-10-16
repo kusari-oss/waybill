@@ -38,7 +38,8 @@ corpus tests locally *without* it only compares, and is fine. Building
 and running `xtask corpus-diff` locally is fine — steps below require it.
 
 That includes a target whose goldens do not exist yet: run locally, it
-fails with `layer2-golden-missing` once its Layer 0 and Layer 1 checks
+fails with `layer2-golden-missing` once its layer-0, invariant and
+per-target expectation checks
 have passed, and writes nothing. Until #1067 it wrote the missing goldens
 from your machine and passed.
 
@@ -334,16 +335,17 @@ SPDX 3 `@graph[].name`, none of which is masked.
 Expect **`3 of 3 formats drifted`** for every target but one, which is
 explainable rather than a fault — check that yours matches:
 
-- `haskell-aeson` panics at **layer 1** rather than layer 2, because
-  renaming components trips its `base` tripwire first. Layer 1 firing is
+- `haskell-aeson` panics in its **per-target expectations** rather than
+  at layer 2, because renaming components trips its `base` tripwire
+  first. An expectation firing is
   healthy, but it means that target's layer 2 is not demonstrated. If you
-  need it, mutate something its layer 1 does not inspect.
+  need it, mutate something its expectations do not inspect.
 
 `pants-example-javascript` used to report `2 of 3`: its SPDX 3 golden is
 JS-filtered, and the filter dropped the annotations a component rename
 reaches. Since #1150 the filter keeps annotations on kept elements, and it
 reports `3 of 3` (run 37700907268 in #1160: 16 targets at `3 of 3`, plus
-`haskell-aeson` at layer 1).
+`haskell-aeson` in its expectations).
 
 **Compile the mutation locally before dispatching**
 (`cargo build -p waybill --bin waybill`). The first attempt at this in

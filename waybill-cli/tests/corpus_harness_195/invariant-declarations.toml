@@ -1,0 +1,251 @@
+# Known-failure declarations for the invariant matrix — milestone 1155.
+#
+# This file holds NON-PASSING CELLS ONLY (FR-014b). A passing cell is
+# implicit, so the file stays proportional to the number of outstanding
+# defects rather than to the 7 x 17 cell count, and adding a corpus
+# target does not rewrite unrelated entries.
+#
+# Sorted by (invariant, target), ascending. The sort is what keeps an
+# unrelated change from moving an entry (FR-014c) — the line-stability
+# requirement milestone 117 had to retrofit onto
+# walk.audit-allowlist.txt after churn made its predecessor unusable.
+#
+# `kind` is PINNED: a different kind, or an additional kind, fails the
+# lane. `count_at_declaration` is context only and never compared —
+# counts drift for reasons unrelated to waybill, and a gate that reddens
+# on innocent drift is the gate that gets switched off.
+#
+# WHEN A FIX LANDS, DELETE THE ENTRY IN THE SAME CHANGE. The lane fails
+# on a stale declaration (FR-011) precisely so a fixed defect cannot keep
+# its exemption.
+#
+# See specs/1155-invariant-major-corpus/contracts/declarations.md.
+
+# ---------------------------------------------------------------------
+# I1 — file-tier components on the receiving end of a dependsOn edge.
+# Tracked by #1206. The orphan-anchoring pass (milestone 194 US1)
+# anchors otherwise-unreachable components to the subject with a plain
+# dependsOn; retyping to containment is a parity-model change across
+# all three formats.
+# ---------------------------------------------------------------------
+
+[[declaration]]
+invariant = "I1"
+target = "image-postgres16"
+kind = "file-tier-dependency-edge"
+count_at_declaration = 117
+reason = """
+dpkg maintainer scripts are anchored to the image root by the milestone-194
+US1 orphan-anchoring pass, which emits a plain dependsOn. An image does not
+depend on a maintainer script; the edge should be containment. Retyping it
+is a parity-model change across CycloneDX, SPDX 2.3 and SPDX 3.
+"""
+issue = 1206
+
+[[declaration]]
+invariant = "I1"
+target = "pants-example-django"
+kind = "file-tier-dependency-edge"
+count_at_declaration = 1
+reason = """
+Same defect as image-postgres16, one anchored file rather than 117. Kept as
+its own row so the fix's per-target reach is readable from this file's diff:
+#1206 landing should remove all four I1 entries, and any it leaves behind is
+the visible record of a gap.
+"""
+issue = 1206
+
+[[declaration]]
+invariant = "I1"
+target = "pants-example-jvm"
+kind = "file-tier-dependency-edge"
+count_at_declaration = 1
+reason = """
+Same defect as image-postgres16; see the pants-example-django entry for why
+each target carries its own row.
+"""
+issue = 1206
+
+[[declaration]]
+invariant = "I1"
+target = "pants-example-python"
+kind = "file-tier-dependency-edge"
+count_at_declaration = 1
+reason = """
+Same defect as image-postgres16; see the pants-example-django entry for why
+each target carries its own row.
+"""
+issue = 1206
+
+# ---------------------------------------------------------------------
+# I2 — same-basename file components sharing one identity. #1208.
+# ---------------------------------------------------------------------
+
+[[declaration]]
+invariant = "I2"
+target = "maven-guice"
+kind = "duplicate-file-identity"
+count_at_declaration = 1
+reason = """
+Seven file-tier components are all named `pom.xml` with an empty version, so
+`(name, version, type)` identifies all seven at once. This is #1208's defect
+with a different basename: the file-tier identity needs to carry enough of
+the path to be distinguishing. The seven are distinct files in distinct
+modules, so the SBOM is not wrong about what it saw — only about which is
+which.
+"""
+issue = 1208
+
+# ---------------------------------------------------------------------
+# I3 — non-runtime scope is not propagated transitively. #1209.
+# ---------------------------------------------------------------------
+
+[[declaration]]
+invariant = "I3"
+target = "haskell-language-server"
+kind = "unmarked-non-runtime-reachable"
+count_at_declaration = 26
+reason = """
+Test-suite and benchmark dependencies from the .cabal stanzas are reachable
+only through non-runtime edges but carry no lifecycle-scope marker, so they
+read as runtime. #1209 is the same defect measured on pydantic; the Haskell
+reader needs the same transitive propagation the npm and pip readers got in
+milestones 180 and 183.
+"""
+issue = 1209
+
+[[declaration]]
+invariant = "I3"
+target = "haskell-security-advisories"
+kind = "unmarked-non-runtime-reachable"
+count_at_declaration = 13
+reason = """
+Same defect as haskell-language-server — unpropagated test-stanza scope in
+the Haskell reader.
+"""
+issue = 1209
+
+[[declaration]]
+invariant = "I3"
+target = "nix-closure-moat"
+kind = "unmarked-non-runtime-reachable"
+count_at_declaration = 9
+reason = """
+Same defect as haskell-language-server, reached through moat's .cabal
+stanzas rather than its closure.
+"""
+issue = 1209
+
+[[declaration]]
+invariant = "I3"
+target = "python-flask"
+kind = "unmarked-non-runtime-reachable"
+count_at_declaration = 51
+reason = """
+The docs and test extras resolved from uv.lock are reachable only via
+non-runtime edges and carry no marker. This is #1209's defect in the pip
+reader: milestone 183 classified declared extras, but the packages those
+extras pull in transitively keep the default scope.
+"""
+issue = 1209
+
+[[declaration]]
+invariant = "I3"
+target = "rust-ripgrep"
+kind = "unmarked-non-runtime-reachable"
+count_at_declaration = 2
+reason = """
+Two dev-dependency-only crates read as runtime. Same defect as #1209; the
+cargo reader propagates scope for declared dev-dependencies but not through
+them.
+"""
+issue = 1209
+
+# ---------------------------------------------------------------------
+# I5 — a `complete` verdict over a document with unreachable
+# components. #1207.
+# ---------------------------------------------------------------------
+
+[[declaration]]
+invariant = "I5"
+target = "rust-ripgrep"
+kind = "complete-with-unreachable"
+count_at_declaration = 7
+reason = """
+The document claims graph-completeness `complete` while carrying seven
+file-tier components unreachable from the subject. #1207 is exactly this:
+the completeness classifier excludes file-tier components as edgeless, so
+they do not count against the verdict even when they are present and
+unreachable. Either they get edges or the verdict stops saying `complete`.
+"""
+issue = 1207
+
+# ---------------------------------------------------------------------
+# I7 — components with no edge and no annotation explaining why.
+#
+# NOT one of #1206-#1211. This is a defect class the matrix surfaced on
+# its first run: design-tier and toolchain components emitted by readers
+# that post-date milestone 167's orphan-reason vocabulary and milestone
+# 194's anchoring passes. It wants its own issue; these rows carry no
+# `issue` field until one exists, which is why the field is optional.
+# ---------------------------------------------------------------------
+
+[[declaration]]
+invariant = "I7"
+target = "go-opentelemetry"
+kind = "unreachable-and-unexplained"
+count_at_declaration = 1
+reason = """
+`pkg:pypi/codespell` comes from a requirements.txt in a Go repository's
+tooling directory. It is a real declared dependency of the repo's lint
+setup, has no edge to the Go subject, and carries no orphan-reason. Either
+it is a build-tooling component and should say so, or the pip reader should
+not attach it to this subject at all.
+"""
+
+[[declaration]]
+invariant = "I7"
+target = "haskell-language-server"
+kind = "unreachable-and-unexplained"
+count_at_declaration = 2
+reason = """
+Two `pkg:generic/ghc-*@unspecified` toolchain components with no edge and no
+orphan-reason. A compiler pin is build tooling, not a dependency of the
+subject; it needs the marker that says so.
+"""
+
+[[declaration]]
+invariant = "I7"
+target = "haskell-security-advisories"
+kind = "unreachable-and-unexplained"
+count_at_declaration = 3
+reason = """
+Three `pkg:github/*` flake inputs from flake.lock with no edge and no
+orphan-reason. The milestone-925 lockfile reader emits flake inputs as
+components but only wires edges between lockfile nodes, so an input that is
+not itself depended on by another node ends up unexplained.
+"""
+
+[[declaration]]
+invariant = "I7"
+target = "maven-guice"
+kind = "unreachable-and-unexplained"
+count_at_declaration = 5
+reason = """
+Five `pkg:bazel/*` components read from WORKSPACE, source-tier, with no edge
+and no orphan-reason. guice builds with both Maven and Bazel; the bazel
+reader emits archives it found but never relates them to the subject.
+"""
+
+[[declaration]]
+invariant = "I7"
+target = "python-flask"
+kind = "unreachable-and-unexplained"
+count_at_declaration = 23
+reason = """
+Twenty-three uv.lock-resolved packages with no edge and no orphan-reason,
+including a second `alabaster` at 0.7.16 alongside the reachable 1.0.0. These
+are uv's alternate resolution forks: real entries in the lockfile that the
+chosen resolution does not use. They need a marker saying so, or they read as
+part of the artifact.
+"""

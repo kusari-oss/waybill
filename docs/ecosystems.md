@@ -13,7 +13,9 @@ diving into the [architecture docs](architecture/overview.md).
 | [deb](#deb) | `/var/lib/dpkg/status` + `.list` files | DB (`Depends:`) | Per-file SHA-256 (deep hash) or `.md5sums` fallback | — / Planned | Implemented |
 | [gem](#gem) | `Gemfile.lock` + `specifications/*.gemspec` | Lockfile indent-6 | — | — / ✓ | Implemented |
 | [golang](#golang) | `go.mod` / `go.sum` + module cache; `runtime/debug.BuildInfo` for binaries | Cache walker (source); **none** (binaries) | `go.sum` H1 (Merkle trie, not CDX) | ✓ / ✓ | Implemented |
+| [haskell](#haskell) | `cabal.project.freeze`, `cabal.project`, `stack.yaml.lock`, `stack.yaml`, `package.yaml`, `*.cabal` | Lockfile pin set (freeze / stack lock); `build-depends:` unioned across all stanzas for the main module | — | — / — | Implemented (milestones 143, 895) |
 | [maven](#maven) | Project `pom.xml` + JAR `META-INF/maven` + `~/.m2` + deps.dev fallback + Gradle `gradle.lockfile` / `buildscript-gradle.lockfile` | Layered: local → JAR → `~/.m2` BFS → parent POM chain → deps.dev. Gradle lockfile = flat | JAR sidecar `.sha512` > `.sha256` > `.sha1` | ✓ / ✓ | Implemented |
+| [nix](#nix) | `flake.lock` + `flake.nix`; runtime-closure and `nix eval` tiers behind `--nix-closure` | `flake.lock` node graph (flake inputs). Closure references drive component *roles*, not `dependsOn` edges | nixpkgs `hackage-packages.nix` SHA-256 (Haskell members) | — / — | Implemented (milestones 925, 926, 1034, 1035, 1050, 1066) |
 | [npm](#npm) | `package-lock.json` v2/v3, `pnpm-lock.yaml`, `bun.lock`, `yarn.lock` (v1 + Berry), `node_modules/` | Lockfile (full tree) | Lockfile `integrity` (package-lock / pnpm-lock only) | ✓ / ✓ | Implemented |
 | [nuget](#nuget) | `*.csproj` / `*.vbproj` / `*.fsproj` + `packages.lock.json` + `Directory.Packages.props` | Lockfile (full tree) when present; otherwise direct-deps only | — | ✓ / — | Implemented |
 | [pip](#pip) | venv `dist-info/METADATA` + Poetry/Pipfile + `uv.lock` + `requirements.txt` | Lockfile (Poetry / Pipfile / uv), flat (venv) | `--hash=alg:hex` flags | ✓ / ✓ | Implemented |
@@ -88,7 +90,9 @@ attached?
 | [deb](#deb) | No — always source | Installed-DB scan: version is always known. | `pkg:deb/<distro>/<name>@<version>` | N/A |
 | [gem](#gem) | Yes — automatic | Gemfile declaration with no matching `Gemfile.lock` entry (design-tier), OR synthetic Ruby built-in gems (allowlist). | `pkg:gem/<name>` (versionless) | No |
 | [golang](#golang) | Rare | `go.mod` present but no `go.sum` — resolver falls back to design-tier for the missing modules. Ordinarily go.sum is authoritative. | `pkg:golang/<module>@<version>` (if pseudo-version can be inferred) or versionless | No |
+| [haskell](#haskell) | Yes — automatic | No `cabal.project.freeze` / `stack.yaml.lock` covering a `*.cabal` `build-depends:` entry; the declared constraint emits at design-tier with `waybill:requirement-range`. | `pkg:hackage/<name>` (versionless) or `pkg:hackage/<name>@<version>` | No |
 | [maven](#maven) | Yes — automatic | `pom.xml` declares a dep with no `<version>` element (typically inherited-scope declarations that would resolve via `mvn` subprocess — waybill doesn't shell to mvn), OR version contains `${…}` property syntax and the property isn't in the parsed POM chain. | `pkg:maven/<group>/<name>` (versionless) or `@<literal-${…}>` legacy | No |
+| [nix](#nix) | No — always source | Flake inputs and closure members are store-resolved, so a component only exists once nix has it; `sbom_tier` is set to `source` at emission. | `pkg:generic/<name>@<version>`, plus `pkg:github/` / `pkg:gitlab/` for flake inputs | No |
 | [npm](#npm) | Yes — automatic | `package.json` declares a dep but no lockfile (`package-lock.json` / `pnpm-lock.yaml` / `yarn.lock` / `bun.lock`) covers it. | `pkg:npm/<name>@<declared-range>` or versionless | No |
 | [nuget](#nuget) | Yes — automatic (post [#653](https://github.com/kusari-oss/waybill/pull/656)) | 4-step resolution ladder exhausted: no `packages.lock.json`, no CPM entry in `Directory.Packages.props`, no inline `Version=`, no matching `<PackageVersion>` in `Directory.Build.props`/`targets`. | `pkg:nuget/<name>` (versionless) | **Yes** — the only reader today emitting `waybill:unresolved-reason` |
 | [pip](#pip) | Yes — automatic | `requirements.txt` declares a dep with no matching resolved lockfile (`uv.lock` / `pip-tools` / `poetry.lock`), OR extras cause an unresolved constraint. | `pkg:pypi/<name>` or `pkg:pypi/<name>@<constraint>` | No |
@@ -2167,6 +2171,80 @@ identity; other entries in the same file still emit.
 ---
 
 > **Design-tier fallback**: No — always source. `Package.resolved` is authoritative. **Caveat**: `Package.swift`-only projects (no `Package.resolved`) emit NO components at all — see [Known limitations (Swift v0.1)](#known-limitations-swift-v01). See [SBOM tiers → §2 matrix](#2-per-ecosystem-design-tier-fallback-matrix).
+
+---
+
+## haskell
+
+Waybill's Haskell reader (milestone 143, extended by milestone 895)
+parses six file shapes, matched by exact basename and then by the
+`.cabal` extension:
+
+| File | Role |
+|---|---|
+| `cabal.project.freeze` | Authoritative pin set — `constraints:` lines give exact versions |
+| `stack.yaml.lock` | Authoritative pin set — Stack's resolved snapshot |
+| `cabal.project` | Project topology: which directories hold packages |
+| `stack.yaml` | Project topology, plus the resolver; Hpack projects are detected here |
+| `package.yaml` | Hpack source — detected and reported, since it generates the `.cabal` |
+| `*.cabal` | Per-package metadata and `build-depends:` declarations |
+
+Components carry `pkg:hackage/<name>@<version>` PURLs. The main
+module's `depends` set is the **union of every stanza's**
+`build-depends:` — library, executable, test-suite, benchmark and
+foreign-library — because a Haskell package's dependency surface is
+genuinely the union, not the library stanza alone.
+
+Neither deps.dev nor ClearlyDefined indexes Hackage, so both
+enrichment columns are `—`: the lookups are skipped rather than
+attempted and failed. No content hash is emitted — the freeze and lock
+formats do not carry one.
+
+---
+
+> **Design-tier fallback**: Yes — automatic. A `build-depends:` entry
+> with no covering freeze or lock entry emits at design-tier with
+> `waybill:requirement-range` carrying the declared constraint. See
+> [SBOM tiers → §2 matrix](#2-per-ecosystem-design-tier-fallback-matrix).
+
+---
+
+## nix
+
+Waybill reads Nix at three increasingly expensive tiers. Only the
+first runs by default.
+
+1. **Flake lockfile** (milestone 925, always on) — parses `flake.lock`
+   and emits one component per node, with `depends` edges following the
+   lockfile's own node graph. Flake inputs resolve to `pkg:github/` or
+   `pkg:gitlab/` PURLs where their source is a forge, and
+   `pkg:generic/` otherwise.
+2. **Evaluation** (milestone 1034, `--nix-closure`) — invokes the host
+   `nix` to evaluate an attribute. Note that evaluating a flake can run
+   repository code via import-from-derivation, which is why this tier is
+   opt-in and is the one sanctioned exception to the corpus harness's
+   offline rule.
+3. **Runtime closure** (milestones 1035, 1066, `--nix-closure`) —
+   queries the built closure and emits its derivations. Closure
+   references drive each component's **role** (artifact-input,
+   build-tooling, both, unreferenced) rather than `dependsOn` edges,
+   because a store reference is not a declared dependency.
+
+Haskell members of a nixpkgs closure additionally get versions and
+SHA-256 hashes from the pinned revision's `hackage-packages.nix`
+(milestone 926), cached per revision under
+`~/.cache/waybill/nixpkgs/<rev>/`. Milestone 1050 adds a per-member
+security-declaration pass over the same revision.
+
+`pkg:generic/` is indexed by neither deps.dev nor ClearlyDefined, so
+both enrichment columns are `—`.
+
+---
+
+> **Design-tier fallback**: No — always source. A flake input or closure
+> member only exists as a component once nix has resolved it, so
+> `sbom_tier` is set to `source` at emission. See
+> [SBOM tiers → §2 matrix](#2-per-ecosystem-design-tier-fallback-matrix).
 
 ---
 

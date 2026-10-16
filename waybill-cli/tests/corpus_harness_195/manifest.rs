@@ -12,10 +12,109 @@ pub struct CorpusTarget {
     pub name: &'static str,
     pub source: SourceKind,
     pub pinned: PinnedRef,
+    /// Coarse **target classifier** — what kind of thing this target is.
+    /// One of seven categories, one of which (`PolyglotImage`) is not an
+    /// ecosystem at all. `cross_ecosystem_coverage_check` asserts over
+    /// this field. Not the same axis as `reader_ecosystems`.
     pub ecosystem: Ecosystem,
     pub exercises: &'static str,
-    pub layer1: fn(&EmittedSboms) -> Result<(), AssertionFailure>,
+    /// Which **reader ecosystems** this target actually exercises, named
+    /// as `docs/ecosystems.md`'s coverage matrix names them. A different
+    /// question from `ecosystem` above: `image-postgres16` classifies as
+    /// `PolyglotImage` and exercises `deb` + `golang`.
+    ///
+    /// Each entry is derived from the manifest files the target's
+    /// components actually cite, not from its repository's advertised
+    /// language — see milestone 1155 T010. Restricted to ecosystems the
+    /// coverage matrix documents, so a target may exercise a reader that
+    /// cannot be named here; `maven-guice` also trips the bazel reader,
+    /// which has no matrix row.
+    pub reader_ecosystems: &'static [EcosystemId],
+    pub expectations: fn(&EmittedSboms) -> Result<(), AssertionFailure>,
     pub scan_mode: ScanMode,
+}
+
+/// One ecosystem as `docs/ecosystems.md`'s coverage matrix names it —
+/// the universe FR-015's covered/uncovered statement is computed over.
+///
+/// This is an enum rather than a string because the failure mode of a
+/// typo is silent and backwards: a misspelled entry makes a *covered*
+/// ecosystem read as uncovered, which is a false claim of exactly the
+/// kind this layer exists to catch. `invariants::report` gates the
+/// variants against the document's rows in both directions, so a doc
+/// rename reddens the lane instead of quietly shrinking the covered set.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub enum EcosystemId {
+    Apk,
+    Cargo,
+    Deb,
+    Gem,
+    Golang,
+    Haskell,
+    Maven,
+    Nix,
+    Npm,
+    Nuget,
+    Pip,
+    PantsPython,
+    PantsJvm,
+    PantsShell,
+    PantsGo,
+    Kotlin,
+    Rpm,
+    Swift,
+    Yocto,
+}
+
+impl EcosystemId {
+    /// Every variant, for the bidirectional gate against the catalog doc.
+    pub const ALL: &'static [EcosystemId] = &[
+        EcosystemId::Apk,
+        EcosystemId::Cargo,
+        EcosystemId::Deb,
+        EcosystemId::Gem,
+        EcosystemId::Golang,
+        EcosystemId::Haskell,
+        EcosystemId::Maven,
+        EcosystemId::Nix,
+        EcosystemId::Npm,
+        EcosystemId::Nuget,
+        EcosystemId::Pip,
+        EcosystemId::PantsPython,
+        EcosystemId::PantsJvm,
+        EcosystemId::PantsShell,
+        EcosystemId::PantsGo,
+        EcosystemId::Kotlin,
+        EcosystemId::Rpm,
+        EcosystemId::Swift,
+        EcosystemId::Yocto,
+    ];
+
+    /// The row label in `docs/ecosystems.md`'s coverage matrix, with the
+    /// markdown link wrapper stripped. `[golang](#golang)` → `golang`.
+    pub fn doc_row(self) -> &'static str {
+        match self {
+            EcosystemId::Apk => "apk",
+            EcosystemId::Cargo => "cargo",
+            EcosystemId::Deb => "deb",
+            EcosystemId::Gem => "gem",
+            EcosystemId::Golang => "golang",
+            EcosystemId::Haskell => "haskell",
+            EcosystemId::Maven => "maven",
+            EcosystemId::Nix => "nix",
+            EcosystemId::Npm => "npm",
+            EcosystemId::Nuget => "nuget",
+            EcosystemId::Pip => "pip",
+            EcosystemId::PantsPython => "pants (Python)",
+            EcosystemId::PantsJvm => "pants (JVM)",
+            EcosystemId::PantsShell => "pants (shell)",
+            EcosystemId::PantsGo => "pants (Go)",
+            EcosystemId::Kotlin => "kotlin",
+            EcosystemId::Rpm => "rpm",
+            EcosystemId::Swift => "swift",
+            EcosystemId::Yocto => "yocto",
+        }
+    }
 }
 
 /// How the harness invokes `waybill sbom scan` for a target.
@@ -71,7 +170,8 @@ pub const TARGETS: &[CorpusTarget] = &[
         },
         ecosystem: Ecosystem::Go,
         exercises: "m194 US1 (Go stdlib edge synthesis) + m053 main-module version-resolution + m055 transitive-edges",
-        layer1: super::layer1_assertions::go_cobra_layer1,
+        reader_ecosystems: &[EcosystemId::Golang],
+        expectations: super::expectations::go_cobra_expectations,
         scan_mode: ScanMode::Offline,
     },
     // #879 — the first MULTI-MODULE Go target. `go-cobra` and
@@ -100,7 +200,8 @@ pub const TARGETS: &[CorpusTarget] = &[
         exercises: "#879 multi-module Go: a dependency shared by several modules records \
                     every declaring go.sum, and every module sharing a `go` version keeps \
                     its stdlib edge",
-        layer1: super::layer1_assertions::go_opentelemetry_layer1,
+        reader_ecosystems: &[EcosystemId::Golang, EcosystemId::Pip],
+        expectations: super::expectations::go_opentelemetry_expectations,
         scan_mode: ScanMode::Offline,
     },
     // The first corpus target that runs `--nix-closure`, so the first to
@@ -135,7 +236,8 @@ pub const TARGETS: &[CorpusTarget] = &[
         exercises: "--nix-closure end to end: closure classification and roles (m1034), \
                     closure-derived components and patch evidence (m1035), and the nixpkgs \
                     declaration pass's coverage record (m1050)",
-        layer1: super::layer1_assertions::nix_closure_moat_layer1,
+        reader_ecosystems: &[EcosystemId::Haskell, EcosystemId::Nix],
+        expectations: super::expectations::nix_closure_moat_expectations,
         scan_mode: ScanMode::NixClosure { attr: "default" },
     },
     // T022 (US2) — Rust source target:
@@ -148,7 +250,8 @@ pub const TARGETS: &[CorpusTarget] = &[
         },
         ecosystem: Ecosystem::Rust,
         exercises: "m064 cargo main-module + m087 workspace-version + m088 procmacro edges",
-        layer1: super::layer1_assertions::rust_ripgrep_layer1,
+        reader_ecosystems: &[EcosystemId::Cargo],
+        expectations: super::expectations::rust_ripgrep_expectations,
         scan_mode: ScanMode::Offline,
     },
     // T025 (US2) — npm source target:
@@ -161,7 +264,8 @@ pub const TARGETS: &[CorpusTarget] = &[
         },
         ecosystem: Ecosystem::Npm,
         exercises: "m066 npm main-module + m147 peer-edges + m180 optional-dep classification",
-        layer1: super::layer1_assertions::npm_express_layer1,
+        reader_ecosystems: &[EcosystemId::Npm],
+        expectations: super::expectations::npm_express_expectations,
         scan_mode: ScanMode::Offline,
     },
     // T028 (US2) — Python source target:
@@ -174,7 +278,8 @@ pub const TARGETS: &[CorpusTarget] = &[
         },
         ecosystem: Ecosystem::Python,
         exercises: "m068 pip main-module + m183 pip extras/optional",
-        layer1: super::layer1_assertions::python_flask_layer1,
+        reader_ecosystems: &[EcosystemId::Pip],
+        expectations: super::expectations::python_flask_expectations,
         scan_mode: ScanMode::Offline,
     },
     // T031 (US2) — Java/Maven source target:
@@ -187,7 +292,8 @@ pub const TARGETS: &[CorpusTarget] = &[
         },
         ecosystem: Ecosystem::JavaMaven,
         exercises: "m070 Maven main-module + m085 Maven SPDX dep edges + m184 optional deps",
-        layer1: super::layer1_assertions::maven_guice_layer1,
+        reader_ecosystems: &[EcosystemId::Maven],
+        expectations: super::expectations::maven_guice_expectations,
         scan_mode: ScanMode::Offline,
     },
     // T034 (US2) — Polyglot container image target:
@@ -209,7 +315,8 @@ pub const TARGETS: &[CorpusTarget] = &[
         },
         ecosystem: Ecosystem::PolyglotImage,
         exercises: "deb reader + Go BuildInfo (gosu bin) + m177 TransitiveEdgesUnresolvable classifier",
-        layer1: super::layer1_assertions::image_postgres16_layer1,
+        reader_ecosystems: &[EcosystemId::Deb, EcosystemId::Golang],
+        expectations: super::expectations::image_postgres16_expectations,
         scan_mode: ScanMode::Offline,
     },
     // Pants example repos — permanent regression gates for m223 (pex-lockfile
@@ -230,7 +337,8 @@ pub const TARGETS: &[CorpusTarget] = &[
         },
         ecosystem: Ecosystem::Python,
         exercises: "m673 US1 (repo-root `python-default.lock` discovery) + m223 Pants pex-lockfile reader",
-        layer1: super::layer1_assertions::pants_example_python_layer1,
+        reader_ecosystems: &[EcosystemId::PantsPython, EcosystemId::Pip],
+        expectations: super::expectations::pants_example_python_expectations,
         scan_mode: ScanMode::Offline,
     },
     CorpusTarget {
@@ -244,7 +352,8 @@ pub const TARGETS: &[CorpusTarget] = &[
         },
         ecosystem: Ecosystem::Python,
         exercises: "m673 US2 (`lockfiles/python-default.lock` discovery) + m223 Pants pex-lockfile reader",
-        layer1: super::layer1_assertions::pants_example_django_layer1,
+        reader_ecosystems: &[EcosystemId::PantsPython, EcosystemId::Pip],
+        expectations: super::expectations::pants_example_django_expectations,
         scan_mode: ScanMode::Offline,
     },
     // Feature 676 (issue #756 fix) — re-enable pants-example-jvm now that
@@ -263,7 +372,8 @@ pub const TARGETS: &[CorpusTarget] = &[
         exercises: "m224 Pants coursier-JVM reader (3rdparty/jvm/default.lock) — \
                     unblocked by #676 (coord-table directDependencies + \
                     dependencies fix)",
-        layer1: super::layer1_assertions::pants_example_jvm_layer1,
+        reader_ecosystems: &[EcosystemId::PantsJvm],
+        expectations: super::expectations::pants_example_jvm_expectations,
         scan_mode: ScanMode::Offline,
     },
     // #925 — the first polyglot Pants target: `[python.resolves]` and
@@ -283,7 +393,8 @@ pub const TARGETS: &[CorpusTarget] = &[
         ecosystem: Ecosystem::Python,
         exercises: "m223 Pants pex reader + m224 coursier-JVM reader in one repo; \
                     resolve membership across both namespaces (m868/#919)",
-        layer1: super::layer1_assertions::pants_clojure_polyglot_layer1,
+        reader_ecosystems: &[EcosystemId::PantsPython, EcosystemId::PantsJvm],
+        expectations: super::expectations::pants_clojure_polyglot_expectations,
         scan_mode: ScanMode::Offline,
     },
     CorpusTarget {
@@ -297,7 +408,8 @@ pub const TARGETS: &[CorpusTarget] = &[
         },
         ecosystem: Ecosystem::Go,
         exercises: "m226 Pants Go enricher + m053/m055 Go go.sum reader",
-        layer1: super::layer1_assertions::pants_example_golang_layer1,
+        reader_ecosystems: &[EcosystemId::Golang, EcosystemId::PantsGo],
+        expectations: super::expectations::pants_example_golang_expectations,
         scan_mode: ScanMode::Offline,
     },
     // Feature 675 — Pants JavaScript / npm regression gate.
@@ -319,7 +431,8 @@ pub const TARGETS: &[CorpusTarget] = &[
         exercises: "npm reader stack (m066 + m147 + m180) against a \
                     Pants-managed JavaScript monorepo — regression-locks \
                     issue #760 option-B behavior",
-        layer1: super::layer1_assertions::pants_example_javascript_layer1,
+        reader_ecosystems: &[EcosystemId::Npm],
+        expectations: super::expectations::pants_example_javascript_expectations,
         scan_mode: ScanMode::Offline,
     },
     // #898 — Haskell source target. The FIRST Haskell target in either
@@ -348,7 +461,8 @@ pub const TARGETS: &[CorpusTarget] = &[
         },
         ecosystem: Ecosystem::Haskell,
         exercises: "m143 .cabal design-tier emission + #936 cross-manifest constraint union + #938 per-dependency lockfile scoping + #943 case-preserving Hackage identifiers",
-        layer1: super::layer1_assertions::haskell_aeson_layer1,
+        reader_ecosystems: &[EcosystemId::Haskell],
+        expectations: super::expectations::haskell_aeson_expectations,
         scan_mode: ScanMode::Offline,
     },
     // The SECOND corpus target that resolves through nixpkgs, and the reason
@@ -388,7 +502,8 @@ pub const TARGETS: &[CorpusTarget] = &[
         exercises: "nixpkgs-backed Haskell resolution at a second revision (#971 oracle \
                     generality), the #1032 cabal.project glob arm (`code/*/*.cabal`), and \
                     the transitive closure path where #1033's defect lived",
-        layer1: super::layer1_assertions::haskell_security_advisories_layer1,
+        reader_ecosystems: &[EcosystemId::Haskell, EcosystemId::Nix],
+        expectations: super::expectations::haskell_security_advisories_expectations,
         scan_mode: ScanMode::Offline,
     },
     // #969 — the FIRST corpus target that exercises nixpkgs-backed Haskell
@@ -433,7 +548,8 @@ pub const TARGETS: &[CorpusTarget] = &[
                     the flake.lock gate, package-set version + native SHA-256 \
                     assignment, boot-library classification, and the #973 \
                     document-scope resolution record",
-        layer1: super::layer1_assertions::haskell_language_server_layer1,
+        reader_ecosystems: &[EcosystemId::Haskell, EcosystemId::Nix],
+        expectations: super::expectations::haskell_language_server_expectations,
         scan_mode: ScanMode::Offline,
     },
 ];
