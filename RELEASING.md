@@ -42,17 +42,61 @@ The full design rationale + comparison with peer OSS projects is in
 
 Full end-to-end procedure. Follow every step in order.
 
-### Step 1 — decide `main` is stable-worthy
+### Step 1 — decide `main` is stable-worthy, and decide the version
 
 Maintainer judgment. No automated gate. Rule of thumb: recent CI green,
 no in-flight destabilizing PRs, changelog contains a coherent set of
 features/fixes since the last stable.
 
+**Then choose the version. Do not inherit it.** `Cargo.toml` already holds
+one: the next *patch*, which `post-release.yml` set as a placeholder after
+the previous release (step 10). A placeholder is a default, not a decision.
+Read `[Unreleased]` and ask, in this order:
+
+1. **Any new surface?** A subcommand, a flag, an output format. New surface
+   is a **minor**, whatever else is in the release.
+2. **Anything a consumer can observe change on the wire?** An annotation's
+   shape, a relationship type, a document's subject, an identifier that was
+   stable and now is not, a schema version. Also a **minor** — *even when
+   every one of those items is a bug fix*. SemVer grades observable change,
+   not whether the change was justified.
+3. **Only fixes no consumer can distinguish from the last release, except
+   by the bug being gone?** Then the placeholder patch is correct.
+
+Why it matters concretely: cargo treats `0.Y.Z` and `0.Y.Z+1` as one
+compatibility range, so `^0.Y` resolves a patch release without a thought.
+Shipping new surface or a wire change as a patch tells every consumer that
+nothing changed for them.
+
+Pre-1.0, the minor is the strongest signal available short of `1.0.0`; there
+is no separate major to escalate to, which is why step 2 of the list is not
+"wait for a major".
+
+If the answer is minor or major, steps 3–5 move the version past the
+placeholder. `release-bump.sh` exits 1 rather than no-op if handed the
+version already set, so a release that *is* a patch needs no bump at all and
+its PR is changelog-only.
+
+> **Worked example — v0.11.0 (#1219).** It was first cut as `0.10.1`, the
+> placeholder, carrying two new subcommands (`sbom edit`,
+> `sbom verify-chain`) and five wire-visible changes, all filed in the
+> changelog under *Added* and *Fixed*. The arithmetic was never wrong; this
+> step did not exist, so nobody asked whether the placeholder still fit. It
+> was caught before the tag only because someone questioned the number.
+> Write the consumer-visible changes into a note at the top of the release
+> section too — a reader scanning *Fixed* will not expect their pipeline to
+> break.
+
 ### Step 2 — cut a release-bump PR
 
-Create branch `release/v<X>.<Y>.<Z>`. PR title MUST start with
-`release: bump workspace to v<X>.<Y>.<Z>` (per memory
-`feedback_release_pr_title_format`).
+Create branch `release/v<X>.<Y>.<Z>`. Title it
+`release: bump workspace to v<X>.<Y>.<Z>`, or `release: cut v<X>.<Y>.<Z>`
+for a changelog-only patch.
+
+Nothing parses the title. It was mandatory while `auto-tag-release.yml`
+matched on it to create the tag; feature 229 deleted that workflow (§6) and
+the tag is pushed by hand at step 8, so the format is now a convention for
+readers alone.
 
 ### Steps 3–5 — bump the version, regenerate goldens, verify the diff
 
@@ -65,9 +109,16 @@ git checkout -b release/v<X>.<Y>.<Z>
 
 - **Version:** sets `[workspace.package] version` in `Cargo.toml`.
 - **Lockfile:** runs `cargo update --workspace`, so only waybill's own crates change in `Cargo.lock`. A plain `cargo update` would upgrade every dependency as a side effect of a version bump.
-- **Goldens and check:** regenerates every golden (`scripts/regen-goldens.sh`), then runs `scripts/check-version-bump.py`. That check fails if anything outside `Cargo.toml`, `Cargo.lock`, `CHANGELOG.md` and test fixtures changed, or if a fixture differs from `HEAD` by anything other than the tool version (`waybill-<v>`, `"version": "<v>"`) and the content-addressed IDs derived from it.
+- **Goldens and check:** regenerates every golden (`scripts/regen-goldens.sh`), then runs `scripts/check-version-bump.py`. That check fails if anything outside `Cargo.toml`, `Cargo.lock`, `CHANGELOG.md` and test fixtures changed, or if a fixture differs from `HEAD` by anything other than the tool version (`waybill-<v>`, `"version": "<v>"`) and the content-addressed IDs derived from it. It then greps the fixture tree for the old version in **both** of those forms, to catch a golden the regen sweep never reached — a fixture that did not change at all cannot "differ beyond the version", so the comparison alone is silent about that case (#1221). Fixtures listed in its `INPUT_FIXTURES` are exempt from that grep: they are documents a test reads as *input*, nothing regenerates them, and the version in them names the build that emitted them. Do not hand-edit a fixture to satisfy this check — that is how v0.11.0 left three `sbom_edit` documents disagreeing about their own provenance and broke the next automated bump (#1220).
 
 Commit any new scripts or docs **before** running it, since the check treats them as unexpected changes. Then move the CHANGELOG's `[Unreleased]` entries under `## [<X>.<Y>.<Z>] - <date>`.
+
+**If the release is a patch and `Cargo.toml` already holds that version**
+(the usual case, since step 10 left it there), there is nothing to bump:
+`release-bump.sh` exits 1 rather than no-op, steps 3–5 do not apply, and the
+PR is changelog-only. Move the `[Unreleased]` entries and open it. Step 6's
+reasoning does not apply either — no version changed, so the compile cache is
+intact and the local gate runs at its normal cost.
 
 ### Step 6 — SKIP local pre-PR gate
 
@@ -165,7 +216,7 @@ git checkout -b release/begin-v<X>.<Y>.<Z+1>
 # commit, open PR "chore(release): begin <X>.<Y>.<Z+1> development", merge when green
 ```
 
-The nightly version comes from `Cargo.toml` (§3). Without this step, `main` still says the version just released, so the next nightly is `v<X>.<Y>.<Z>-nightly.<date>`. SemVer orders that **before** the stable `v<X>.<Y>.<Z>`, which makes a newer build look older (#1133). If the next release turns out to be a minor or major release, its own bump (Steps 3–5) moves past the patch version.
+The nightly version comes from `Cargo.toml` (§3). Without this step, `main` still says the version just released, so the next nightly is `v<X>.<Y>.<Z>-nightly.<date>`. SemVer orders that **before** the stable `v<X>.<Y>.<Z>`, which makes a newer build look older (#1133). If the next release turns out to be a minor or major release, its own bump (Steps 3–5) moves past the patch version — that decision is step 1's, and this sentence is not a substitute for making it there.
 
 ---
 
