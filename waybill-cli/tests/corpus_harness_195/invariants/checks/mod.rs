@@ -20,6 +20,7 @@ pub mod orphan_explained;
 pub mod root_edge_parity;
 pub mod scope_propagation;
 pub mod version_sentinels;
+pub mod versionless_explained;
 
 // -----------------------------------------------------------------------
 // CycloneDX walkers

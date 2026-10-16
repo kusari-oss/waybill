@@ -379,15 +379,94 @@ an annotation explaining why.** Measured across all 17 targets:
 
 | | |
 |---|---|
-| Applicable (≥1 versionless component) | 14 / 17 |
+| Applicable (>=1 versionless component) | 14 / 17 |
 | Failing | 6 |
-| Population | `pkg:generic/python-default?pants-namespace=python` and three sibling resolve anchors, `pkg:generic/ghc-9.10.3` and 8 sibling compiler pins, one `pkg:generic/gosu?file-sha256=…` |
+| Population | `pkg:generic/python-default?pants-namespace=python` and three sibling resolve anchors, `pkg:generic/ghc-9.10.3` and 8 sibling compiler pins, one `pkg:generic/gosu?file-sha256=...` |
 
-Not landed. FR-017 fixes the initial catalog at seven, and this
-assertion appears in one function rather than the two T052 scopes
-migration to. It is append-only work (FR-001a) and the numbers above are
-what a reviewer needs to decide: six more declared cells against one
-more class of defect made visible everywhere.
+Not landed in this milestone. It is append-only work (FR-001a) and the
+numbers above are what a reviewer needs to decide.
+
+> **Correction (2026-10-16, when I8 was landed).** The *failing* figure
+> and the population above do not reproduce. See the section below.
+
+### I8, landed — and a correction to the measurement above (2026-10-16)
+
+I8 is now in the catalog, and re-measuring it to write the declarations
+showed the figures above were wrong. Recorded here rather than quietly
+replaced, because the way they were wrong is the instructive part.
+
+**What did not reproduce.** The failing count and two thirds of the
+population. Re-measured over the same 17 committed goldens:
+
+| | first measurement | on landing |
+|---|---|---|
+| Applicable | 14 / 17 | 14 / 17 |
+| Failing targets | 6 | **5** |
+| Failing components | not recorded | **8** |
+| ghc compiler pins in the population | 9 | **0** |
+
+**Why.** The first measurement used a narrower set of annotations as
+"explaining the absence" — effectively I7's four markers. The ghc
+components carry `waybill:haskell-version-unresolved-reason`
+(`compiler-supplied`, `absent-from-package-set`) and, on
+`haskell-language-server`, `waybill:unresolved-reason` as well:
+
+```
+pkg:hackage/ghc-boot
+  waybill:haskell-version-unresolved-reason=compiler-supplied
+  waybill:unresolved-reason=declared in stack.yaml / .cabal; no stack.yaml.lock fallback
+```
+
+That annotation says, in as many words, why the component has no
+version. Any definition of I8 that counts it as unexplained is testing
+something other than what the invariant states. `pkg:generic/ghc-9.10.3`
+on `nix-closure-moat` is explained the same way by
+`waybill:closure-role`.
+
+The claimed population was also partly mis-identified: it named
+`pkg:generic/ghc-9.10.3` alongside "8 sibling compiler pins", but the
+nine components in question are `pkg:hackage/ghc*` on two Haskell
+targets, which is a different reader and a different annotation set
+from the single `pkg:generic/ghc-9.10.3` nix store path.
+
+**The lesson is the one CLAUDE.md states and this file already carries
+twice.** The number was produced while reasoning about what I8 *would*
+check, not by running what it *does* check — there was no checker yet to
+run. It then sat in a measurements file reading as data, and would have
+justified six declarations against a population that is explained. A
+figure describing a check that does not exist yet is a prediction;
+labelling it as such is the cheap fix, and re-deriving it once the check
+exists is the real one.
+
+**What landed.** Five declared cells, eight components, two populations
+with different fixes, tracked by #1216:
+
+| target | n | population |
+|---|---|---|
+| `pants-clojure-polyglot` | 4 | resolve anchors: `java17`, `java21` (jvm), `pants-2.30`, `pants-2.31` (python) |
+| `pants-example-django` | 1 | resolve anchor `python-default` |
+| `pants-example-python` | 1 | resolve anchor `python-default` |
+| `pants-example-jvm` | 1 | resolve anchor `jvm-default` |
+| `image-postgres16` | 1 | `pkg:generic/gosu?file-sha256=...`, an unstripped static Go ELF |
+
+Seven of the eight are Pants resolve anchors — inherently versionless,
+so the data is right and only the document's account of itself is
+incomplete. The eighth is the real gap: an **unstripped** Go binary
+annotated `detected-go=true` with neither a version nor a reason, where
+milestone 129's `.dep-v0` reader exists for exactly that shape.
+
+**One design decision worth recording.** `waybill:component-kind =
+lockfile-resolve` is *not* accepted as an explanation, which is what
+keeps those seven cells failing. It would have been easy to accept it —
+`component-tier = file` is accepted on the same reasoning, that the
+marker's meaning is "this is not a package". The difference is that the
+file tier's meaning is frozen and says exactly that, whereas
+`component-kind` (milestone 1064) describes resolve *ownership* and is
+silent about versions. Accepting it would have left a consumer unable to
+tell an anchor from a failed resolution while reporting the invariant as
+satisfied — a vacuous pass of the kind FR-006 exists to prevent. The
+choice is stated at `is_explained` in the checker so the next person
+reads a decision rather than discovers a gap.
 
 ## The corpus lane, dispatched (2026-10-16)
 

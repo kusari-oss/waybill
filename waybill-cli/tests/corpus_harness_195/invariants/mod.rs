@@ -170,6 +170,14 @@ pub static REGISTRY: &[Invariant] = &[
         kinds: checks::orphan_explained::KINDS,
         checker: checks::orphan_explained::check,
     },
+    Invariant {
+        id: "I8",
+        statement: "A component with no version carries an annotation explaining why \
+                    it has none",
+        precondition: "at least one component has an absent or empty version",
+        kinds: checks::versionless_explained::KINDS,
+        checker: checks::versionless_explained::check,
+    },
 ];
 
 pub fn invariant(id: &str) -> Option<&'static Invariant> {

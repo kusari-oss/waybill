@@ -42,6 +42,7 @@ For the per-annotation wire shapes these invariants read, see
 | I5 | A `complete` graph-completeness verdict implies nothing was excluded from the judgement | document-scope completeness verdict is `complete` | `complete-with-unreachable` | Active |
 | I6 | A package does not appear under several different unknown-version spellings | at least one component carries an unknown-version sentinel | `mixed-unknown-version-spelling` | Active |
 | I7 | A component not reachable from the subject by any dependency edge carries a marker explaining why | subject resolvable and at least one non-subject component | `unreachable-and-unexplained` | Active |
+| I8 | A component with no version carries an annotation explaining why it has none | at least one component has an absent or empty version | `versionless-and-unexplained` | Active |
 
 ### I1
 
@@ -159,3 +160,36 @@ is usually a reader that was added after those passes.
 
 **Boundary with I3**: see I3 above. I7's population is the unreachable
 one; I3's is reachable-but-only-non-runtime.
+
+### I8
+
+**Catches**: a component whose `version` is absent or empty with nothing
+saying why. Two very different situations produce an empty version field
+— the component has no version to have (a file, a synthetic resolve
+anchor), or waybill looked for one and failed — and the field alone
+cannot distinguish them. The first is complete information; the second
+is a gap a consumer should act on.
+
+**When it fires**: identify which of the two populations it is. If the
+component is inherently versionless, it needs a marker that says so —
+the existing ones are `waybill:component-tier` = `file`,
+`waybill:closure-role` for a Nix store path, and for the Haskell reader
+`waybill:haskell-version-unresolved-reason`. If resolution was attempted
+and failed, the annotation is `waybill:unresolved-reason` (C151,
+milestone 236), which exists precisely for this.
+
+Note that `waybill:component-kind` = `lockfile-resolve` is **not**
+accepted as an explanation, though a Pants resolve anchor is inherently
+versionless. `component-kind` (milestone 1064) describes resolve
+ownership, not version absence, and reading it as an explanation would
+silence the population this invariant reports while leaving a consumer
+unable to tell an anchor from a failed resolution. The fix is a marker
+that states the anchor is versionless, not a wider accepted set here.
+
+**Boundary with I6**: I6's population is components carrying an
+unknown-version *sentinel* (`unknown`, `v0.0.0-unknown`, `NOASSERTION`),
+and it asks whether one package appears under several spellings of
+unknown. I8's population is the narrower absent-or-empty case and it
+asks whether the absence is accounted for at all. A sentinel is a
+statement on the wire — a poor one, but a statement; an empty field says
+nothing. A document can pass either and fail the other.
