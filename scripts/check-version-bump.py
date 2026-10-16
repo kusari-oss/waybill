@@ -18,6 +18,14 @@ CHANGELOG.md is prose and is not compared. A dependency that happens to be at
 version OLD makes this fail rather than pass, which leaves the bump for a
 human, never ships a wrong golden.
 
+A second pass then greps the fixture tree for the old version, to catch a
+golden the regen sweep never reached -- one that did not change at all cannot
+differ beyond the version, so the comparison above is silent about it. It
+greps BOTH forms, because each covers a different format: SPDX documents carry
+`waybill-OLD` in a creator or annotator string, CycloneDX documents carry
+`"version": "OLD"` under metadata.tools. Checking only the first left every
+CycloneDX golden outside this pass.
+
 The post-release workflow applies a patch produced by a job that ran the
 whole build, and uses this script as the boundary that patch must pass
 (#1133), so it must stay standard-library only and must be run from the
@@ -29,6 +37,13 @@ old, new = sys.argv[1], sys.argv[2]
 base = sys.argv[3] if len(sys.argv) > 3 else "HEAD"
 ALLOWED = ("Cargo.toml", "Cargo.lock", "waybill-ebpf/Cargo.lock", "CHANGELOG.md")
 FIXTURES = "waybill-cli/tests/fixtures/"
+# Fixtures a test reads as *input* rather than compares against. Nothing in
+# scripts/regen-goldens.sh rewrites them -- their README names the scan command
+# that does, to be run only when the scan's shape changes -- so the tool version
+# they carry is frozen test data, naming the build that emitted them, not a
+# claim about this one. They are exempt from the completeness grep alone; if one
+# does change in a bump, it is still compared like any other fixture.
+INPUT_FIXTURES = ("waybill-cli/tests/fixtures/sbom_edit/",)
 
 def git(*a):
     return subprocess.run(["git", *a], check=True, capture_output=True, text=True).stdout
@@ -84,10 +99,23 @@ for p in fixtures:
         mismatched.append(p)
 if mismatched:
     sys.exit(f"FAIL: {len(mismatched)} fixture(s) differ beyond the version: {mismatched[:10]}")
-leftover = subprocess.run(
-    ["git", "grep", "-l", f"waybill-{old}", "--", FIXTURES],
-    capture_output=True, text=True,
-).stdout.split()
+def grep_fixtures(pattern):
+    # Not git(): grep exits 1 when nothing matches, which is the passing case.
+    # -F because a version is dotted, and an unanchored regex `.` would match
+    # a fixture that merely looks like one.
+    return subprocess.run(
+        ["git", "grep", "-lF", pattern, "--", FIXTURES],
+        capture_output=True, text=True,
+    ).stdout.split()
+
+leftover = sorted(
+    {
+        path
+        for form in (f"waybill-{old}", f'"version": "{old}"')
+        for path in grep_fixtures(form)
+        if not path.startswith(INPUT_FIXTURES)
+    }
+)
 if leftover:
-    sys.exit(f"FAIL: waybill-{old} still present in {leftover[:10]}")
+    sys.exit(f"FAIL: version {old} still present in {leftover[:10]}")
 print(f"OK: {len(fixtures)} fixture(s) changed, all version-only ({old} -> {new})")

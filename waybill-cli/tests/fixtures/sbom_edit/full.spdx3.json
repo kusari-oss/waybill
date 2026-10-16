@@ -21,7 +21,7 @@
     },
     {
       "creationInfo": "_:creation-info",
-      "name": "waybill-0.11.0",
+      "name": "waybill-0.10.1",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-VGPRC4TNJCWYWZRVV63S46BC/tool/waybill",
       "type": "Tool"
     },
