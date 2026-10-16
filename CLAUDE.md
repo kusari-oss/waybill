@@ -1,6 +1,6 @@
 # waybill Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-10-12
+Auto-generated from all feature plans. Last updated: 2026-10-15
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -417,6 +417,8 @@ Auto-generated from all feature plans. Last updated: 2026-10-12
 - None. File in, file out; no state between runs, unlike bomctl's cache. (1071-sbom-edit)
 - Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. No nightly; `waybill-ebpf` untouched (no kernel-side change). + Existing only: `sha2` via `trace/hasher.rs`, `serde`/`serde_json`, `tracing`, `anyhow`, `clap` (one new flag); dev `tempfile`. **Zero new Cargo dependencies.** (1072-compiler-set-close-time)
 - N/A — one in-process traversal of the finalized `CompilerPipelineData`; nothing persists beyond the emitted attestation. (1072-compiler-set-close-time)
+- Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. Test-only code; the shipped `waybill` binary is untouched. + Existing only — `serde`/`serde_json` (document walking, artifact emission), `toml = "0.8"` (declarations file; already a direct dep used by `cargo.rs`, pip and pants readers), `regex` (catalog doc parsing; already direct since m013). **Zero new Cargo dependencies.** (1155-invariant-major-corpus)
+- One committed file, `waybill-cli/tests/corpus_harness_195/invariant-declarations.toml` (non-passing cells only). One uncommitted per-run artifact, `target/invariants/run-<sha>.json`. (1155-invariant-major-corpus)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -602,9 +604,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 1155-invariant-major-corpus: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. Test-only code; the shipped `waybill` binary is untouched. + Existing only — `serde`/`serde_json` (document walking, artifact emission), `toml = "0.8"` (declarations file; already a direct dep used by `cargo.rs`, pip and pants readers), `regex` (catalog doc parsing; already direct since m013). **Zero new Cargo dependencies.**
 - 1072-compiler-set-close-time: Added close-time facts for compiler read/write sets (#1144). Rust stable; `waybill-ebpf` untouched. + Existing only: `sha2` via `trace/hasher.rs`, `clap` (one new flag), dev `tempfile`. **Zero new Cargo dependencies.**
 - 1071-sbom-edit: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. No nightly; `waybill-ebpf` untouched. + Existing only:
-- 1070-trace-relative-source-reads: Added Rust stable (workspace toolchain, `rust-toolchain.toml`) for user space. The pinned nightly in `waybill-ebpf/rust-toolchain.toml` for the kernel crate. No new toolchain features. + Existing only: `aya` / `aya-ebpf` (kprobes, tracepoints, ring buffer, `HashMap`), `serde` / `serde_json`, `tracing`. **Zero new Cargo dependencies.**
 
 
 <!-- MANUAL ADDITIONS START -->

@@ -78,7 +78,7 @@ pub fn compare_golden(
     // machine.
     if !golden.exists() && !update_goldens_gate() {
         return Err(AssertionFailure {
-            invariant_name: "layer2-golden-missing",
+            check_name: "layer2-golden-missing",
             format: match format {
                 FailureFormat::Cdx => FailureFormat::Cdx,
                 FailureFormat::Spdx23 => FailureFormat::Spdx23,
@@ -134,7 +134,7 @@ pub fn compare_golden(
     );
 
     Err(AssertionFailure {
-        invariant_name: "layer2-golden-drift",
+        check_name: "layer2-golden-drift",
         format: fmt_kind,
         observed: format!("emitted (masked): {}", actual_sibling.display()),
         expected: format!("golden: {}", golden.display()),
@@ -472,7 +472,7 @@ mod m865_masking_tests {
         std::fs::remove_dir_all(&dir).ok();
         assert!(!written, "no golden may be written outside regen mode");
         let err = result.expect_err("a missing golden must not compare as a pass");
-        assert_eq!(err.invariant_name, "layer2-golden-missing");
+        assert_eq!(err.check_name, "layer2-golden-missing");
     }
 
     /// The defect: masking keyed on `spdxId`, so every other IRI-bearing

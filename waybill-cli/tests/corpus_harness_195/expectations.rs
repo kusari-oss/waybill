@@ -1,9 +1,57 @@
-//! Layer 1 — coarse per-target assertions with class-of-bug-oriented
-//! diagnostics. Research §R4.
+//! Per-target **expectations** — claims about one specific corpus
+//! target, with class-of-bug-oriented diagnostics. Research §R4.
+//!
+//! An *expectation* is a claim about one target: that `go-cobra` reports
+//! a `partial` verdict offline, that the nixpkgs moat closure has four
+//! populated roles. An *invariant* is a property expected of **any**
+//! emitted SBOM and lives in `invariants/` with a row in
+//! `docs/reference/sbom-invariants.md`. The distinction is FR-020 of
+//! milestone 1155 and it is the one a reviewer has to be able to make
+//! from a check's name alone (FR-020a).
 //!
 //! Each function returns the FIRST failure encountered; the
 //! `AssertionFailure` carries a `suggested_action` pointing at the
 //! milestone / module the maintainer should investigate.
+//!
+//! `layer0_document_integrity` is the exception in this file: it is a
+//! universal *structural* check, so by the rule above it is an
+//! invariant. It stays here because spec Assumption 6 of milestone 1155
+//! deliberately left it un-re-homed — moving it would have mixed a
+//! mechanical relocation into a feature that already renames 63 call
+//! sites. Its name says `layer0`, not a target, so FR-020a's
+//! name-alone test still passes; only its address is historical.
+
+//! ## Why the repeated assertions stay here (milestone 1155 US3)
+//!
+//! Three check names appear in more than one function, which is the
+//! signal US3 looks for. All three were examined and all three are
+//! genuinely target-specific:
+//!
+//! - **`graph-completeness`** (7 functions) — each asserts a *particular*
+//!   expected verdict for that target, and the expectation is the
+//!   target's circumstances, not a universal property. `go-cobra`
+//!   offline must report `partial`; `complete` there would mean edges
+//!   are being asserted that no go.mod declares. The universal part of
+//!   this property — that a `complete` verdict implies nothing was
+//!   excluded — is catalog row `I5`.
+//! - **`pypi-transitives-present`** (3 functions) — names specific
+//!   packages per target. A universal "transitives are present" has no
+//!   meaning without a population to expect.
+//! - **`pants-resolve-annotation-present`** (3 functions) — looks
+//!   universal and is not, for an instructive reason. Generalising it
+//!   needs a precondition identifying Pants-lockfile-sourced
+//!   components, and the only signal in the document for that is the
+//!   annotation itself, which makes the check vacuous: precondition and
+//!   conclusion become the same predicate. A `source-files` heuristic
+//!   was measured instead and matches `flake.lock`, `uv.lock` and
+//!   `Cargo.lock` too, so it cannot stand in. Recorded in
+//!   `specs/1155-invariant-major-corpus/measurements/findings.md`.
+//!
+//! So US3's migration set is empty, which is a finding rather than a
+//! shortfall: the per-target functions were already target-specific.
+//! The universal properties that *were* hiding in this file are the
+//! three inside `layer0_document_integrity`, which already run for
+//! every target.
 
 use super::harness::{AssertionFailure, EmittedSboms, FailureFormat};
 #[cfg(test)]
@@ -102,7 +150,7 @@ fn cdx_has_edge(
 // go-cobra (US1 MVP)
 // -----------------------------------------------------------------------
 
-pub fn go_cobra_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
+pub fn go_cobra_expectations(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
     // The corpus harness invokes waybill with `--root-name go-cobra
     // --root-version <sha7>`, so the manifest-derived Go mainmod
     // (`pkg:golang/github.com/spf13/cobra`) is dropped per m077 and
@@ -130,7 +178,7 @@ pub fn go_cobra_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
     let gc = cdx_graph_completeness(&sboms.cdx).unwrap_or_else(|| "<missing>".to_string());
     if gc != "partial" {
         return Err(AssertionFailure {
-            invariant_name: "graph-completeness",
+            check_name: "graph-completeness",
             format: FailureFormat::Cdx,
             observed: gc,
             expected: "partial".to_string(),
@@ -140,7 +188,7 @@ pub fn go_cobra_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
     // Assertion 2: stdlib component emitted.
     if !cdx_has_component_purl(&sboms.cdx, |p| p.starts_with("pkg:golang/stdlib@")) {
         return Err(AssertionFailure {
-            invariant_name: "stdlib-component-present",
+            check_name: "stdlib-component-present",
             format: FailureFormat::Cdx,
             observed: "no pkg:golang/stdlib@v* component".to_string(),
             expected: "at least one pkg:golang/stdlib@v<gover> component".to_string(),
@@ -156,7 +204,7 @@ pub fn go_cobra_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
     );
     if !has_stdlib_edge {
         return Err(AssertionFailure {
-            invariant_name: "stdlib-edge-present",
+            check_name: "stdlib-edge-present",
             format: FailureFormat::Cdx,
             observed: "no edge from operator-override root (go-cobra@*) to pkg:golang/stdlib@v*".to_string(),
             expected: "at least one such edge (m194 US1 synthetic stdlib link + m192 pre-rewrite re-anchor)".to_string(),
@@ -166,7 +214,7 @@ pub fn go_cobra_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
     // Assertion 4: canonical cobra transitive dep present (pflag).
     if !cdx_has_component_purl(&sboms.cdx, |p| p.starts_with("pkg:golang/github.com/spf13/pflag")) {
         return Err(AssertionFailure {
-            invariant_name: "cobra-transitive-pflag-present",
+            check_name: "cobra-transitive-pflag-present",
             format: FailureFormat::Cdx,
             observed: "no pkg:golang/github.com/spf13/pflag component".to_string(),
             expected: "at least one pkg:golang/github.com/spf13/pflag@vX.Y.Z component".to_string(),
@@ -196,7 +244,7 @@ fn go_sum_occurrences(c: &serde_json::Value) -> usize {
         .unwrap_or(0)
 }
 
-pub fn go_opentelemetry_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
+pub fn go_opentelemetry_expectations(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
     let empty = Vec::new();
     let components = sboms
         .cdx
@@ -224,7 +272,7 @@ pub fn go_opentelemetry_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFail
         .collect();
     if modules.len() < 2 {
         return Err(AssertionFailure {
-            invariant_name: "multi-module-tree",
+            check_name: "multi-module-tree",
             format: FailureFormat::Cdx,
             observed: format!("{} Go module(s)", modules.len()),
             expected: "at least 2 — the target exists to exercise several modules".to_string(),
@@ -248,7 +296,7 @@ pub fn go_opentelemetry_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFail
         .unwrap_or(0);
     if widest != modules.len() {
         return Err(AssertionFailure {
-            invariant_name: "shared-module-records-every-go-sum",
+            check_name: "shared-module-records-every-go-sum",
             format: FailureFormat::Cdx,
             observed: format!("widest dependency records {widest} go.sum files"),
             expected: format!("{} — testify is declared by every module", modules.len()),
@@ -267,7 +315,7 @@ pub fn go_opentelemetry_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFail
         .collect();
     if !unlinked.is_empty() {
         return Err(AssertionFailure {
-            invariant_name: "every-module-links-stdlib",
+            check_name: "every-module-links-stdlib",
             format: FailureFormat::Cdx,
             observed: format!(
                 "{} of {} modules lack a stdlib edge: {:?}",
@@ -286,9 +334,9 @@ pub fn go_opentelemetry_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFail
 // nix-closure-moat — the `--nix-closure` target
 // -----------------------------------------------------------------------
 
-fn nix_fail(invariant_name: &'static str, observed: String, expected: &str, suggested_action: &'static str) -> AssertionFailure {
+fn nix_fail(check_name: &'static str, observed: String, expected: &str, suggested_action: &'static str) -> AssertionFailure {
     AssertionFailure {
-        invariant_name,
+        check_name,
         format: FailureFormat::Cdx,
         observed,
         expected: expected.to_string(),
@@ -299,7 +347,7 @@ fn nix_fail(invariant_name: &'static str, observed: String, expected: &str, sugg
 /// Structural invariants only; exact counts are the goldens' job, and the
 /// closure is per-system (CI's x86_64-linux closure is not the one measured
 /// on aarch64-darwin when the target was added).
-pub fn nix_closure_moat_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
+pub fn nix_closure_moat_expectations(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
     let doc = |name: &str| -> Option<serde_json::Value> {
         cdx_doc_property(&sboms.cdx, name).and_then(|v| serde_json::from_str(&v).ok())
     };
@@ -403,7 +451,7 @@ pub fn nix_closure_moat_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFail
 // rust-ripgrep (US2)
 // -----------------------------------------------------------------------
 
-pub fn rust_ripgrep_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
+pub fn rust_ripgrep_expectations(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
     // m196 reconciliation (US3): ripgrep-14.1.1 pinned scan under
     // `--root-name rust-ripgrep --root-version 0e8390a` observes:
     //   - graph-completeness = `partial` (m195 R8 seed had `complete`
@@ -435,7 +483,7 @@ pub fn rust_ripgrep_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure>
     let gc = cdx_graph_completeness(&sboms.cdx).unwrap_or_else(|| "<missing>".to_string());
     if gc != "complete" {
         return Err(AssertionFailure {
-            invariant_name: "graph-completeness",
+            check_name: "graph-completeness",
             format: FailureFormat::Cdx,
             observed: gc,
             expected: "complete (#892: every component reachable from the operator-override root once OptionalDependsOn counts as an edge)".to_string(),
@@ -444,7 +492,7 @@ pub fn rust_ripgrep_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure>
     }
     if !cdx_has_component_purl(&sboms.cdx, |p| p.starts_with("pkg:cargo/")) {
         return Err(AssertionFailure {
-            invariant_name: "cargo-transitives-present",
+            check_name: "cargo-transitives-present",
             format: FailureFormat::Cdx,
             observed: "no pkg:cargo/* components at all".to_string(),
             expected: "at least one pkg:cargo/* transitive (aho-corasick, anyhow, etc.)".to_string(),
@@ -458,7 +506,7 @@ pub fn rust_ripgrep_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure>
 // npm-express (US2)
 // -----------------------------------------------------------------------
 
-pub fn npm_express_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
+pub fn npm_express_expectations(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
     // m196 reconciliation (US3): express-v5.1.0 scan under
     // `--root-name npm-express --root-version e996498` observes:
     //   - graph-completeness = `partial` with reason
@@ -474,7 +522,7 @@ pub fn npm_express_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure> 
     let gc = cdx_graph_completeness(&sboms.cdx).unwrap_or_else(|| "<missing>".to_string());
     if gc != "partial" {
         return Err(AssertionFailure {
-            invariant_name: "graph-completeness",
+            check_name: "graph-completeness",
             format: FailureFormat::Cdx,
             observed: gc,
             expected: "partial (m196-empirical: m177 transitive-edges-unresolvable: npm)".to_string(),
@@ -483,7 +531,7 @@ pub fn npm_express_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure> 
     }
     if !cdx_has_component_purl(&sboms.cdx, |p| p.starts_with("pkg:npm/")) {
         return Err(AssertionFailure {
-            invariant_name: "npm-transitives-present",
+            check_name: "npm-transitives-present",
             format: FailureFormat::Cdx,
             observed: "no pkg:npm/* components at all".to_string(),
             expected: "at least one pkg:npm/* transitive (accepts, body-parser, cookie, etc.)".to_string(),
@@ -497,7 +545,7 @@ pub fn npm_express_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure> 
 // python-flask (US2)
 // -----------------------------------------------------------------------
 
-pub fn python_flask_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
+pub fn python_flask_expectations(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
     // m196 reconciliation (US3): flask-3.1.2 scan under
     // `--root-name python-flask --root-version 80be49b` observes:
     //   - graph-completeness = `partial` with 94 BFS-orphans (no specific
@@ -514,7 +562,7 @@ pub fn python_flask_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure>
     let gc = cdx_graph_completeness(&sboms.cdx).unwrap_or_else(|| "<missing>".to_string());
     if gc != "partial" {
         return Err(AssertionFailure {
-            invariant_name: "graph-completeness",
+            check_name: "graph-completeness",
             format: FailureFormat::Cdx,
             observed: gc,
             expected: "partial (m196-empirical: BFS-orphans from operator-override root, requirements/*.txt transitive fan-out)".to_string(),
@@ -523,7 +571,7 @@ pub fn python_flask_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure>
     }
     if !cdx_has_component_purl(&sboms.cdx, |p| p.starts_with("pkg:pypi/")) {
         return Err(AssertionFailure {
-            invariant_name: "pypi-transitives-present",
+            check_name: "pypi-transitives-present",
             format: FailureFormat::Cdx,
             observed: "no pkg:pypi/* components at all".to_string(),
             expected: "at least one pkg:pypi/* transitive (alabaster, anyio, babel, etc.)".to_string(),
@@ -537,7 +585,7 @@ pub fn python_flask_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure>
 // maven-guice (US2)
 // -----------------------------------------------------------------------
 
-pub fn maven_guice_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
+pub fn maven_guice_expectations(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
     // m196 reconciliation (US3): guice-7.0.0 scan under
     // `--root-name maven-guice --root-version b0e1d0f` observes:
     //   - graph-completeness = `partial` with mixed reasons:
@@ -557,7 +605,7 @@ pub fn maven_guice_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure> 
     let gc = cdx_graph_completeness(&sboms.cdx).unwrap_or_else(|| "<missing>".to_string());
     if gc != "partial" {
         return Err(AssertionFailure {
-            invariant_name: "graph-completeness",
+            check_name: "graph-completeness",
             format: FailureFormat::Cdx,
             observed: gc,
             expected: "partial (m196-empirical: mixed orphan-count + m177 transitive-edges-unresolvable: maven)".to_string(),
@@ -566,7 +614,7 @@ pub fn maven_guice_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure> 
     }
     if !cdx_has_component_purl(&sboms.cdx, |p| p.starts_with("pkg:maven/")) {
         return Err(AssertionFailure {
-            invariant_name: "maven-transitives-present",
+            check_name: "maven-transitives-present",
             format: FailureFormat::Cdx,
             observed: "no pkg:maven/* components at all".to_string(),
             expected: "at least one pkg:maven/* transitive (aopalliance, jsr305, dagger, etc.)".to_string(),
@@ -580,14 +628,14 @@ pub fn maven_guice_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure> 
 // pants-example-python — m673 US1 (repo-root `python-default.lock`)
 // -----------------------------------------------------------------------
 
-pub fn pants_example_python_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
+pub fn pants_example_python_expectations(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
     // pantsbuild/example-python at pinned SHA has a `python-default.lock`
     // at the repo root — this is Pants 2.31+ default layout. Pre-m673
     // waybill emitted 0 components from this shape (the pants reader
     // only walked `3rdparty/python/*.lock`); post-m673 it emits ≥ 8.
     if !cdx_has_component_purl(&sboms.cdx, |p| p.starts_with("pkg:pypi/")) {
         return Err(AssertionFailure {
-            invariant_name: "pypi-transitives-present",
+            check_name: "pypi-transitives-present",
             format: FailureFormat::Cdx,
             observed: "no pkg:pypi/* components at all".to_string(),
             expected: "at least one pkg:pypi/* transitive from the root python-default.lock".to_string(),
@@ -612,7 +660,7 @@ pub fn pants_example_python_layer1(sboms: &EmittedSboms) -> Result<(), Assertion
             .unwrap_or(false)
     }) {
         return Err(AssertionFailure {
-            invariant_name: "pants-resolve-annotation-present",
+            check_name: "pants-resolve-annotation-present",
             format: FailureFormat::Cdx,
             observed: "no component carries waybill:pants-resolve=python-default".to_string(),
             expected: "at least one component carries waybill:pants-resolve=python-default (m223 C143)".to_string(),
@@ -626,14 +674,14 @@ pub fn pants_example_python_layer1(sboms: &EmittedSboms) -> Result<(), Assertion
 // pants-example-django — m673 US2 (`lockfiles/python-default.lock`)
 // -----------------------------------------------------------------------
 
-pub fn pants_example_django_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
+pub fn pants_example_django_expectations(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
     // pantsbuild/example-django at pinned SHA has its lockfile under
     // `lockfiles/python-default.lock` — the Pants `lockfiles/` convention.
     // Pre-m673 waybill emitted 0 components; post-m673 it emits Django's
     // full transitive closure (typically 20-50 pypi components).
     if !cdx_has_component_purl(&sboms.cdx, |p| p.starts_with("pkg:pypi/")) {
         return Err(AssertionFailure {
-            invariant_name: "pypi-transitives-present",
+            check_name: "pypi-transitives-present",
             format: FailureFormat::Cdx,
             observed: "no pkg:pypi/* components at all".to_string(),
             expected: "at least one pkg:pypi/* transitive from lockfiles/python-default.lock".to_string(),
@@ -649,7 +697,7 @@ pub fn pants_example_django_layer1(sboms: &EmittedSboms) -> Result<(), Assertion
     });
     if !has_django {
         return Err(AssertionFailure {
-            invariant_name: "django-component-present",
+            check_name: "django-component-present",
             format: FailureFormat::Cdx,
             observed: "no pkg:pypi/django@* (or Django@*) component".to_string(),
             expected: "at least one pkg:pypi/django@X.Y.Z component from the lockfile".to_string(),
@@ -674,7 +722,7 @@ pub fn pants_example_django_layer1(sboms: &EmittedSboms) -> Result<(), Assertion
             .unwrap_or(false)
     }) {
         return Err(AssertionFailure {
-            invariant_name: "pants-resolve-annotation-present",
+            check_name: "pants-resolve-annotation-present",
             format: FailureFormat::Cdx,
             observed: "no component carries waybill:pants-resolve=python-default".to_string(),
             expected: "at least one component carries waybill:pants-resolve=python-default (m223 C143)".to_string(),
@@ -688,7 +736,7 @@ pub fn pants_example_django_layer1(sboms: &EmittedSboms) -> Result<(), Assertion
 // pants-example-golang — m226 (Pants Go enricher) + m053/m055 (Go reader)
 // -----------------------------------------------------------------------
 
-pub fn pants_example_golang_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
+pub fn pants_example_golang_expectations(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
     // pantsbuild/example-golang at pinned SHA is a standard go.mod + go.sum
     // layout with `pants.toml` declaring `[golang]`. The Go reader emits
     // the components; the m226 pants_go enricher decorates them with
@@ -697,7 +745,7 @@ pub fn pants_example_golang_layer1(sboms: &EmittedSboms) -> Result<(), Assertion
     // Go-reader-emitted ones).
     if !cdx_has_component_purl(&sboms.cdx, |p| p.starts_with("pkg:golang/")) {
         return Err(AssertionFailure {
-            invariant_name: "golang-components-present",
+            check_name: "golang-components-present",
             format: FailureFormat::Cdx,
             observed: "no pkg:golang/* components at all".to_string(),
             expected: "at least one pkg:golang/* component from go.sum".to_string(),
@@ -711,7 +759,7 @@ pub fn pants_example_golang_layer1(sboms: &EmittedSboms) -> Result<(), Assertion
     // `BUILD` files.
     if !cdx_has_component_property(&sboms.cdx, "waybill:pants-target", |_| true) {
         return Err(AssertionFailure {
-            invariant_name: "pants-target-annotation-present",
+            check_name: "pants-target-annotation-present",
             format: FailureFormat::Cdx,
             observed: "no component carries waybill:pants-target=<any>".to_string(),
             expected: "at least one component carries waybill:pants-target=<pants-target-address> (m226 enrichment)".to_string(),
@@ -735,7 +783,7 @@ pub fn pants_example_golang_layer1(sboms: &EmittedSboms) -> Result<(), Assertion
 //      `pantsbuild.pants`; without PEP 503 matching (#1100) the edge is lost.
 // -----------------------------------------------------------------------
 
-pub fn pants_clojure_polyglot_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
+pub fn pants_clojure_polyglot_expectations(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
     let components: Vec<&serde_json::Value> = sboms
         .cdx
         .get("components")
@@ -759,7 +807,7 @@ pub fn pants_clojure_polyglot_layer1(sboms: &EmittedSboms) -> Result<(), Asserti
         .collect();
     if !(namespaces.contains("python") && namespaces.contains("jvm")) {
         return Err(AssertionFailure {
-            invariant_name: "both-pants-namespaces-present",
+            check_name: "both-pants-namespaces-present",
             format: FailureFormat::Cdx,
             observed: format!("namespaces {namespaces:?}"),
             expected: "components in both the python and jvm Pants namespaces".to_string(),
@@ -785,7 +833,7 @@ pub fn pants_clojure_polyglot_layer1(sboms: &EmittedSboms) -> Result<(), Asserti
         .collect();
     if !missing.is_empty() {
         return Err(AssertionFailure {
-            invariant_name: "all-four-resolves-present",
+            check_name: "all-four-resolves-present",
             format: FailureFormat::Cdx,
             observed: format!("resolves {resolves:?}"),
             expected: format!("pants-2.30, pants-2.31, java17 and java21 (missing {missing:?})"),
@@ -817,7 +865,7 @@ pub fn pants_clojure_polyglot_layer1(sboms: &EmittedSboms) -> Result<(), Asserti
     };
     if !reaches {
         return Err(AssertionFailure {
-            invariant_name: "resolve-anchor-reaches-pants",
+            check_name: "resolve-anchor-reaches-pants",
             format: FailureFormat::Cdx,
             observed: format!("anchor {anchor:?}, pantsbuild-pants {pants:?}, edge present: false"),
             expected: "pkg:generic/pants-2.31?pants-namespace=python dependsOn pkg:pypi/pantsbuild-pants@2.31.0".to_string(),
@@ -830,7 +878,7 @@ pub fn pants_clojure_polyglot_layer1(sboms: &EmittedSboms) -> Result<(), Asserti
     let want = serde_json::json!(["jvm:java17", "jvm:java21", "python:pants-2.30", "python:pants-2.31"]);
     if declared.as_ref() != Some(&want) {
         return Err(AssertionFailure {
-            invariant_name: "ownership-covers-both-namespaces",
+            check_name: "ownership-covers-both-namespaces",
             format: FailureFormat::Cdx,
             observed: format!("waybill:resolve-ownership declared = {declared:?}"),
             expected: format!("declared = {want}"),
@@ -866,7 +914,7 @@ fn cdx_resolve_ownership(cdx: &serde_json::Value) -> Option<serde_json::Value> {
 //      carries waybill:pants-resolve (m223 C143 catalog row)
 // -----------------------------------------------------------------------
 
-pub fn pants_example_jvm_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
+pub fn pants_example_jvm_expectations(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
     // Invariant 1 — maven-transitives-present-at-scale.
     let maven_count = sboms
         .cdx
@@ -884,7 +932,7 @@ pub fn pants_example_jvm_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFai
         .unwrap_or(0);
     if maven_count < 20 {
         return Err(AssertionFailure {
-            invariant_name: "maven-transitives-present-at-scale",
+            check_name: "maven-transitives-present-at-scale",
             format: FailureFormat::Cdx,
             observed: format!("{maven_count} pkg:maven/* components"),
             expected: "at least 20 pkg:maven/* components (observed baseline 27 at pinned SHA)".to_string(),
@@ -895,7 +943,7 @@ pub fn pants_example_jvm_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFai
     // Invariant 2 — top-level-guava-present.
     if !cdx_has_component_purl(&sboms.cdx, |p| p.starts_with("pkg:maven/com.google.guava/guava@")) {
         return Err(AssertionFailure {
-            invariant_name: "top-level-guava-present",
+            check_name: "top-level-guava-present",
             format: FailureFormat::Cdx,
             observed: "no pkg:maven/com.google.guava/guava@* component".to_string(),
             expected: "at least one pkg:maven/com.google.guava/guava@* component (top-level coord declared in fixture)".to_string(),
@@ -908,7 +956,7 @@ pub fn pants_example_jvm_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFai
         p.starts_with("pkg:maven/org.scala-lang/scala-library@")
     }) {
         return Err(AssertionFailure {
-            invariant_name: "top-level-scala-library-present",
+            check_name: "top-level-scala-library-present",
             format: FailureFormat::Cdx,
             observed: "no pkg:maven/org.scala-lang/scala-library@* component".to_string(),
             expected: "at least one pkg:maven/org.scala-lang/scala-library@* component (top-level coord declared in fixture)".to_string(),
@@ -919,7 +967,7 @@ pub fn pants_example_jvm_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFai
     // Invariant 4 — pants-resolve-annotation-present on maven surface.
     if !cdx_has_component_property(&sboms.cdx, "waybill:pants-resolve", |_| true) {
         return Err(AssertionFailure {
-            invariant_name: "pants-resolve-annotation-present",
+            check_name: "pants-resolve-annotation-present",
             format: FailureFormat::Cdx,
             observed: "no component carries waybill:pants-resolve=<any>".to_string(),
             expected: "at least one component carries waybill:pants-resolve=<resolve-name> (m224 reuses m223 C143)".to_string(),
@@ -940,7 +988,7 @@ pub fn pants_example_jvm_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFai
         || !cdx_has_component_purl(&sboms.cdx, |p| p == "pkg:generic/jvm-default?pants-namespace=jvm")
     {
         return Err(AssertionFailure {
-            invariant_name: "jvm-default-owned",
+            check_name: "jvm-default-owned",
             format: FailureFormat::Cdx,
             observed: format!("waybill:resolve-ownership = {ownership:?}"),
             expected: format!("{want} and an owning component pkg:generic/jvm-default?pants-namespace=jvm"),
@@ -970,7 +1018,7 @@ pub fn pants_example_jvm_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFai
 // 675 FR-006.
 // -----------------------------------------------------------------------
 
-pub fn pants_example_javascript_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
+pub fn pants_example_javascript_expectations(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
     // Invariant 1 — npm-transitives-present-at-scale.
     let npm_count = sboms
         .cdx
@@ -988,7 +1036,7 @@ pub fn pants_example_javascript_layer1(sboms: &EmittedSboms) -> Result<(), Asser
         .unwrap_or(0);
     if npm_count < 250 {
         return Err(AssertionFailure {
-            invariant_name: "npm-transitives-present-at-scale",
+            check_name: "npm-transitives-present-at-scale",
             format: FailureFormat::Cdx,
             observed: format!("{npm_count} pkg:npm/* components"),
             expected: "at least 250 pkg:npm/* components (observed baseline 302 at pinned SHA)".to_string(),
@@ -999,7 +1047,7 @@ pub fn pants_example_javascript_layer1(sboms: &EmittedSboms) -> Result<(), Asser
     // Invariant 2 — top-level-devdep-esbuild-present.
     if !cdx_has_component_purl(&sboms.cdx, |p| p.starts_with("pkg:npm/esbuild@")) {
         return Err(AssertionFailure {
-            invariant_name: "top-level-devdep-esbuild-present",
+            check_name: "top-level-devdep-esbuild-present",
             format: FailureFormat::Cdx,
             observed: "no pkg:npm/esbuild@* component".to_string(),
             expected: "at least one pkg:npm/esbuild@X.Y.Z component (top-level devDep declared in package.json)".to_string(),
@@ -1010,7 +1058,7 @@ pub fn pants_example_javascript_layer1(sboms: &EmittedSboms) -> Result<(), Asser
     // Invariant 3 — top-level-devdep-jest-present.
     if !cdx_has_component_purl(&sboms.cdx, |p| p.starts_with("pkg:npm/jest@")) {
         return Err(AssertionFailure {
-            invariant_name: "top-level-devdep-jest-present",
+            check_name: "top-level-devdep-jest-present",
             format: FailureFormat::Cdx,
             observed: "no pkg:npm/jest@* component".to_string(),
             expected: "at least one pkg:npm/jest@X.Y.Z component (top-level devDep declared in package.json)".to_string(),
@@ -1053,7 +1101,7 @@ pub fn pants_example_javascript_layer1(sboms: &EmittedSboms) -> Result<(), Asser
         .unwrap_or_default();
     if !offenders.is_empty() {
         return Err(AssertionFailure {
-            invariant_name: "no-accidental-pants-annotations-on-npm",
+            check_name: "no-accidental-pants-annotations-on-npm",
             format: FailureFormat::Cdx,
             observed: format!(
                 "{} pkg:npm/* components carry unexpected Pants annotations (sample: {:?})",
@@ -1072,13 +1120,13 @@ pub fn pants_example_javascript_layer1(sboms: &EmittedSboms) -> Result<(), Asser
 // image-postgres16 (US2)
 // -----------------------------------------------------------------------
 
-pub fn image_postgres16_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
+pub fn image_postgres16_expectations(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
     // Per research §R8: postgres:16 is expected `partial` with m177
     // reason. Assert the expected shape rather than `complete`.
     let gc = cdx_graph_completeness(&sboms.cdx).unwrap_or_else(|| "<missing>".to_string());
     if gc != "partial" {
         return Err(AssertionFailure {
-            invariant_name: "graph-completeness",
+            check_name: "graph-completeness",
             format: FailureFormat::Cdx,
             observed: gc,
             expected: "partial (m177 TransitiveEdgesUnresolvable)".to_string(),
@@ -1087,7 +1135,7 @@ pub fn image_postgres16_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFail
     }
     if !cdx_has_component_purl(&sboms.cdx, |p| p.starts_with("pkg:deb/")) {
         return Err(AssertionFailure {
-            invariant_name: "deb-components-present",
+            check_name: "deb-components-present",
             format: FailureFormat::Cdx,
             observed: "no pkg:deb/* components".to_string(),
             expected: "at least one pkg:deb/* (Debian base package)".to_string(),
@@ -1096,7 +1144,7 @@ pub fn image_postgres16_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFail
     }
     if !cdx_has_component_purl(&sboms.cdx, |p| p.starts_with("pkg:golang/")) {
         return Err(AssertionFailure {
-            invariant_name: "golang-bin-components-present",
+            check_name: "golang-bin-components-present",
             format: FailureFormat::Cdx,
             observed: "no pkg:golang/* components".to_string(),
             expected: "at least one pkg:golang/* (from gosu Go binary BuildInfo)".to_string(),
@@ -1130,12 +1178,12 @@ pub fn image_postgres16_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFail
 ///     unavailable rather than merely unattempted
 ///   - six `*.cabal` manifests across six directories, one of them reached
 ///     through a `benchmarks/examples -> ../examples` symlink
-pub fn haskell_aeson_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
+pub fn haskell_aeson_expectations(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
     // Tripwire 1 — the reader produces Hackage identifiers at all. Any
     // regression that breaks `.cabal` parsing outright lands here first.
     if !cdx_has_component_purl(&sboms.cdx, |p| p.starts_with("pkg:hackage/")) {
         return Err(AssertionFailure {
-            invariant_name: "hackage-components-present",
+            check_name: "hackage-components-present",
             format: FailureFormat::Cdx,
             observed: "no pkg:hackage/* components at all".to_string(),
             expected: "61 pkg:hackage/* components from six *.cabal manifests".to_string(),
@@ -1151,7 +1199,7 @@ pub fn haskell_aeson_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure
     // thing in the corpus that would notice.
     if !cdx_has_component_purl(&sboms.cdx, |p| p == "pkg:hackage/QuickCheck") {
         return Err(AssertionFailure {
-            invariant_name: "hackage-purl-case-preserved",
+            check_name: "hackage-purl-case-preserved",
             format: FailureFormat::Cdx,
             observed: "pkg:hackage/QuickCheck absent (check for pkg:hackage/quickcheck)".to_string(),
             expected: "pkg:hackage/QuickCheck, byte-for-byte as declared in aeson.cabal".to_string(),
@@ -1192,7 +1240,7 @@ pub fn haskell_aeson_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure
         .unwrap_or(false);
     if !base_multi_manifest {
         return Err(AssertionFailure {
-            invariant_name: "cross-manifest-declarations-unioned",
+            check_name: "cross-manifest-declarations-unioned",
             format: FailureFormat::Cdx,
             observed: "`base` cites at most one source manifest".to_string(),
             expected: "`base` cites all six *.cabal manifests that declare it".to_string(),
@@ -1206,7 +1254,7 @@ pub fn haskell_aeson_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure
     // check and tier is the right one.
     if !cdx_has_component_property(&sboms.cdx, "waybill:sbom-tier", |v| v == "design") {
         return Err(AssertionFailure {
-            invariant_name: "design-tier-emission-not-suppressed",
+            check_name: "design-tier-emission-not-suppressed",
             format: FailureFormat::Cdx,
             observed: "no design-tier components".to_string(),
             expected: "61 design-tier components — the repository has no cabal.project.freeze and no stack.yaml.lock".to_string(),
@@ -1220,7 +1268,7 @@ pub fn haskell_aeson_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure
     let gc = cdx_graph_completeness(&sboms.cdx).unwrap_or_else(|| "<missing>".to_string());
     if gc != "partial" {
         return Err(AssertionFailure {
-            invariant_name: "graph-completeness",
+            check_name: "graph-completeness",
             format: FailureFormat::Cdx,
             observed: gc,
             expected: "partial (reason `transitive-edges-unresolvable: hackage` — no freeze file, no stack lockfile)".to_string(),
@@ -1236,7 +1284,7 @@ pub fn haskell_aeson_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure
 /// Every tripwire below guards something that fails SILENTLY: a wrong version,
 /// a missing package, a fabricated coordinate. None of them would show up in a
 /// component count, which is what makes them worth asserting.
-pub fn haskell_security_advisories_layer1(
+pub fn haskell_security_advisories_expectations(
     sboms: &EmittedSboms,
 ) -> Result<(), AssertionFailure> {
     let components = sboms.cdx["components"].as_array().map(Vec::as_slice).unwrap_or(&[]);
@@ -1255,7 +1303,7 @@ pub fn haskell_security_advisories_layer1(
         .count();
     if resolved < 150 {
         return Err(AssertionFailure {
-            invariant_name: "nixpkgs-resolution-engaged",
+            check_name: "nixpkgs-resolution-engaged",
             format: FailureFormat::Cdx,
             observed: format!("{resolved} components carry waybill:nixpkgs-component-origin"),
             expected: "at least 150 (measured 248: 59 declared + 189 transitive)".to_string(),
@@ -1275,7 +1323,7 @@ pub fn haskell_security_advisories_layer1(
         .count();
     if transitive < 100 {
         return Err(AssertionFailure {
-            invariant_name: "nixpkgs-transitive-closure-walked",
+            check_name: "nixpkgs-transitive-closure-walked",
             format: FailureFormat::Cdx,
             observed: format!("{transitive} transitive components"),
             expected: "at least 100 (measured 189)".to_string(),
@@ -1293,7 +1341,7 @@ pub fn haskell_security_advisories_layer1(
         let want = format!("pkg:hackage/{pkg}");
         if !cdx_has_component_purl(&sboms.cdx, |p| p == want || p.starts_with(&format!("{want}@"))) {
             return Err(AssertionFailure {
-                invariant_name: "cabal-project-glob-packages-present",
+                check_name: "cabal-project-glob-packages-present",
                 format: FailureFormat::Cdx,
                 observed: format!("{want} absent"),
                 expected: "the six packages `cabal.project` declares via `code/*/*.cabal`"
@@ -1318,7 +1366,7 @@ pub fn haskell_security_advisories_layer1(
         .count();
     if versionless_declared > 10 {
         return Err(AssertionFailure {
-            invariant_name: "no-unresolved-hackage-residue",
+            check_name: "no-unresolved-hackage-residue",
             format: FailureFormat::Cdx,
             observed: format!("{versionless_declared} pkg:hackage/* components nixpkgs never saw"),
             expected: "at most 10 — every real dependency resolves through the pinned package set"
@@ -1410,7 +1458,7 @@ fn hackage_components(
 /// The floors below sit well above the pre-fix baseline (43 versioned, 0
 /// resolved) so a gate regression cannot squeak past, while leaving room for
 /// nixpkgs content to drift — layer 2's golden pins the exact numbers.
-pub fn haskell_language_server_layer1(
+pub fn haskell_language_server_expectations(
     sboms: &EmittedSboms,
 ) -> Result<(), AssertionFailure> {
     // Tripwire 1 — the pass ran and named the revision it resolved through.
@@ -1428,7 +1476,7 @@ pub fn haskell_language_server_layer1(
         .filter(|r| !r.is_empty());
     if revision_named.as_deref() != Some("cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73") {
         return Err(AssertionFailure {
-            invariant_name: "nixpkgs-revision-resolved",
+            check_name: "nixpkgs-revision-resolved",
             format: FailureFormat::Cdx,
             observed: format!("waybill:nixpkgs-haskell-resolution = {c174:?}"),
             expected: "revision cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73, as pinned by the target's own flake.lock".to_string(),
@@ -1448,7 +1496,7 @@ pub fn haskell_language_server_layer1(
     // cannot be met by accident and cannot be met at all by a degraded pass.
     if resolved.len() < 80 {
         return Err(AssertionFailure {
-            invariant_name: "nixpkgs-resolution-scale",
+            check_name: "nixpkgs-resolution-scale",
             format: FailureFormat::Cdx,
             observed: format!("{} components resolved through nixpkgs", resolved.len()),
             expected: "at least 80 (measured 97 at the pinned revision)".to_string(),
@@ -1476,7 +1524,7 @@ pub fn haskell_language_server_layer1(
         .count();
     if missing_version > 0 || missing_hash > 0 {
         return Err(AssertionFailure {
-            invariant_name: "nixpkgs-resolution-is-complete-per-component",
+            check_name: "nixpkgs-resolution-is-complete-per-component",
             format: FailureFormat::Cdx,
             observed: format!(
                 "{missing_version} components claim nixpkgs provenance with no version; \
@@ -1502,7 +1550,7 @@ pub fn haskell_language_server_layer1(
         .collect();
     if !unreasoned.is_empty() {
         return Err(AssertionFailure {
-            invariant_name: "every-versionless-haskell-component-has-a-reason",
+            check_name: "every-versionless-haskell-component-has-a-reason",
             format: FailureFormat::Cdx,
             observed: format!(
                 "{} versionless component(s) with no reason, e.g. {:?}",
@@ -1531,7 +1579,7 @@ pub fn haskell_language_server_layer1(
         .count();
     if boot < 15 {
         return Err(AssertionFailure {
-            invariant_name: "boot-libraries-remain-compiler-supplied",
+            check_name: "boot-libraries-remain-compiler-supplied",
             format: FailureFormat::Cdx,
             observed: format!("{boot} components classified compiler-supplied"),
             expected: "at least 15 (measured 24 at the pinned revision)".to_string(),
@@ -1546,7 +1594,7 @@ pub fn haskell_language_server_layer1(
 // Layer 0 — document integrity, applied to EVERY target (#980)
 // -----------------------------------------------------------------------
 
-/// Invariant I2: every edge endpoint must resolve to a component present in
+/// Layer-0 check **L2**: every edge endpoint must resolve to a component present in
 /// the document.
 ///
 /// I2 is not new. It is named in `generate::graph_completeness` (m860,
@@ -1566,6 +1614,19 @@ pub fn haskell_language_server_layer1(
 /// This runs for every target, before the per-target tripwires, because the
 /// defect it catches is not ecosystem-specific — any pass that rewrites a
 /// component identity after edges are built reintroduces it.
+///
+/// **Numbering**: layer 0's checks are `L<n>` and are *not* catalog rows.
+/// They used to be written "invariant I2" / "invariant I3", which
+/// collided with `docs/reference/sbom-invariants.md` once that catalog
+/// existed: its `I2` is identity uniqueness and its `I3` is non-runtime
+/// scope propagation, neither of which is what these check. The `I<n>`
+/// namespace belongs to the catalog alone (FR-001a), so a maintainer
+/// following a diagnostic lands on the right row.
+///
+/// These three are universal properties and so are invariants by the
+/// milestone-1155 definition. They stay here because spec Assumption 6
+/// deliberately left layer 0 un-re-homed; migrating them into the
+/// catalog is follow-up work, not a rename.
 pub fn layer0_document_integrity(
     target: &str,
     sboms: &EmittedSboms,
@@ -1603,7 +1664,7 @@ pub fn layer0_document_integrity(
     if !dangling.is_empty() {
         let shown: Vec<&String> = dangling.iter().take(5).collect();
         return Err(AssertionFailure {
-            invariant_name: "i2-no-dangling-edge-endpoint",
+            check_name: "l2-no-dangling-edge-endpoint",
             format: FailureFormat::Cdx,
             observed: format!(
                 "{} dependsOn target(s) match no component bom-ref, e.g. {:?}",
@@ -1612,7 +1673,7 @@ pub fn layer0_document_integrity(
             ),
             expected: "0 — every edge endpoint resolves to a component in the document".to_string(),
             suggested_action:
-                "invariant I2 (m860 FR-001 / C-3.3). Something rewrote a component's identity after the \
+                "layer-0 check L2 (m860 FR-001 / C-3.3). Something rewrote a component's identity after the \
                  dependency edges were built, so the edges point at the old bom-ref. #980 was exactly \
                  this: the nixpkgs Haskell pass assigned a version, which changed the PURL, and PURLs \
                  are what `Relationship::from`/`::to` hold. Whatever changed an identity must rewrite \
@@ -1646,12 +1707,12 @@ pub fn layer0_document_integrity(
     }
     if unknown > 0 {
         return Err(AssertionFailure {
-            invariant_name: "i2-no-unknown-spdx-relationship-endpoint",
+            check_name: "l2-no-unknown-spdx-relationship-endpoint",
             format: FailureFormat::Spdx23,
             observed: format!("{unknown} relationship endpoint(s) name no package in the document"),
             expected: "0 — every relationship endpoint is a declared SPDXID".to_string(),
             suggested_action:
-                "invariant I2 in SPDX 2.3. Note the failure mode differs from CycloneDX: SPDX usually \
+                "layer-0 check L2 in SPDX 2.3. Note the failure mode differs from CycloneDX: SPDX usually \
                  DROPS such a relationship rather than dangling it, so a clean result here does not by \
                  itself prove the edges survived — compare root out-edge counts across formats too",
         });
@@ -1687,12 +1748,12 @@ pub fn layer0_document_integrity(
     let disagrees = a != b || a != c;
     if disagrees {
         return Err(AssertionFailure {
-            invariant_name: "i3-root-out-edge-count-agrees-across-formats",
+            check_name: "l3-root-out-edge-count-agrees-across-formats",
             format: FailureFormat::Cdx,
             observed: format!("root out-edges: CycloneDX={a}, SPDX 2.3={b}, SPDX 3={c}"),
             expected: "all three equal — one scan, one dependency graph".to_string(),
             suggested_action:
-                "invariant I3. A consumer diffing waybill's CycloneDX against its SPDX 2.3 for the                  same scan must not see a dependency appear or disappear depending on which file                  they opened. Two directions are possible and they want opposite fixes: a format                  is dropping an edge it should carry, or a format is asserting an edge nothing                  declares (the class milestone 866 exists to remove). Establish which before                  changing an emitter — and check the count against an emitted document, never a                  JS-filtered golden, per issue #881",
+                "layer-0 check L3. A consumer diffing waybill's CycloneDX against its SPDX 2.3 for the                  same scan must not see a dependency appear or disappear depending on which file                  they opened. Two directions are possible and they want opposite fixes: a format                  is dropping an edge it should carry, or a format is asserting an edge nothing                  declares (the class milestone 866 exists to remove). Establish which before                  changing an emitter — and check the count against an emitted document, never a                  JS-filtered golden, per issue #881",
         });
     }
 
@@ -1805,7 +1866,7 @@ fn spdx3_root_out_edges(spdx3: &serde_json::Value) -> usize {
 }
 
 // ------------------------------------------------------------------
-// Invariant I3 counters — validated against committed goldens, which are
+// Layer-0 L3 counters — validated against committed goldens, which are
 // real emitted documents (masked, but masking does not change edge
 // counts). Synthetic fixtures are deliberately NOT the primary evidence
 // here: issue #881's whole cause was a filter validated only against
@@ -1889,7 +1950,7 @@ mod i3_tests {
         };
         let err = layer0_document_integrity("synthetic", &sboms)
             .expect_err("I3 did not fire on a 0-vs-1 root-edge disagreement");
-        assert_eq!(err.invariant_name, "i3-root-out-edge-count-agrees-across-formats");
+        assert_eq!(err.check_name, "l3-root-out-edge-count-agrees-across-formats");
         assert!(err.observed.contains("CycloneDX=0"), "{}", err.observed);
         assert!(err.observed.contains("SPDX 2.3=1"), "{}", err.observed);
     }

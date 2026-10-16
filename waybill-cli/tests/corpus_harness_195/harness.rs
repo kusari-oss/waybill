@@ -33,7 +33,7 @@ pub struct EmittedPaths {
 
 #[derive(Debug)]
 pub struct AssertionFailure {
-    pub invariant_name: &'static str,
+    pub check_name: &'static str,
     pub format: FailureFormat,
     pub observed: String,
     pub expected: String,
@@ -65,7 +65,7 @@ impl std::fmt::Display for AssertionFailure {
         writeln!(f, "✗ corpus target FAILED")?;
         writeln!(f, "--------------------------------------------------------------------------------")?;
         writeln!(f, "class:     waybill-regression")?;
-        writeln!(f, "invariant: {}", self.invariant_name)?;
+        writeln!(f, "invariant: {}", self.check_name)?;
         writeln!(f, "format:    {}", self.format)?;
         writeln!(f, "observed:  {}", self.observed)?;
         writeln!(f, "expected:  {}", self.expected)?;

@@ -4,6 +4,8 @@
 
 This document is the contract that the SPDX 2.3 serializer (and the SPDX 3 stub) MUST honor. Per FR-013, FR-014, FR-015, every data element waybill emits in CycloneDX has a row here naming its target location in each format and a one-line justification.
 
+For the **semantic invariants** the corpus harness asserts over every emitted document — one catalogue row per property, gated against a checker registry exactly as this file's C-rows are gated against `EXTRACTORS` — see [`sbom-invariants.md`](sbom-invariants.md).
+
 For the broader **component-tier model** (package-tier vs binary-tier vs file-tier, content-shape allowlist, full-mode override, behavior across `--file-inventory` modes), see `docs/reference/component-tiers.md`. That doc cites this catalog for per-annotation wire-shape details; this doc cites the tier model for behavior questions.
 
 ## Conventions
