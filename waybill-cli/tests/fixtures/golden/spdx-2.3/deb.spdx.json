@@ -4,61 +4,61 @@
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.11.0",
+      "annotator": "Tool: waybill-0.11.1",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:generation-context\",\"value\":\"filesystem-scan\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.11.0",
+      "annotator": "Tool: waybill-0.11.1",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cisa-2026-lifecycle\",\"value\":\"after-build\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.11.0",
+      "annotator": "Tool: waybill-0.11.1",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness\",\"value\":\"complete\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.11.0",
+      "annotator": "Tool: waybill-0.11.1",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspaces-detected\",\"value\":\"[\\\".\\\"]\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.11.0",
+      "annotator": "Tool: waybill-0.11.1",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep-count\",\"value\":\"0\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.11.0",
+      "annotator": "Tool: waybill-0.11.1",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-ring-buffer-overflows\",\"value\":\"0\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.11.0",
+      "annotator": "Tool: waybill-0.11.1",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-events-dropped\",\"value\":\"0\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.11.0",
+      "annotator": "Tool: waybill-0.11.1",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-uprobe-attach-failures\",\"value\":\"[]\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.11.0",
+      "annotator": "Tool: waybill-0.11.1",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-kprobe-attach-failures\",\"value\":\"[]\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.11.0",
+      "annotator": "Tool: waybill-0.11.1",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"compositions\",\"value\":{\"complete_ecosystems\":[\"deb\"],\"target_aggregate\":\"incomplete_first_party_only\"}}"
     }
   ],
@@ -66,19 +66,19 @@
     "comment": "Scope: manifest (declared transitives included). Observed lifecycle phases: operations. Per-component scope detail in waybill:sbom-tier annotations.",
     "created": "1970-01-01T00:00:00Z",
     "creators": [
-      "Tool: waybill-0.11.0",
+      "Tool: waybill-0.11.1",
       "Organization: waybill contributors"
     ]
   },
   "dataLicense": "CC0-1.0",
   "documentDescribes": [
-    "SPDXRef-DocumentRoot-2NQ373JBST3KO7JH"
+    "SPDXRef-DocumentRoot-Q57EECIKIPUOXZ43"
   ],
-  "documentNamespace": "https://waybill.kusari.dev/spdx/2HUBUNL6LAJNTKF5Q5RLYOMPQIS74MSG",
+  "documentNamespace": "https://waybill.kusari.dev/spdx/R37UAX7SL2IF4B4T4GMQLVDVWDXIEVYM",
   "name": "Waybill source scan (identity unavailable)",
   "packages": [
     {
-      "SPDXID": "SPDXRef-DocumentRoot-2NQ373JBST3KO7JH",
+      "SPDXID": "SPDXRef-DocumentRoot-Q57EECIKIPUOXZ43",
       "downloadLocation": "NOASSERTION",
       "externalRefs": [
         {
@@ -105,31 +105,31 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.11.0",
+          "annotator": "Tool: waybill-0.11.1",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"deployed\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.11.0",
+          "annotator": "Tool: waybill-0.11.1",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"var/lib/dpkg/status\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.11.0",
+          "annotator": "Tool: waybill-0.11.1",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:debian:libc6:2.36-9:*:*:*:*:*:*:*\",\"cpe:2.3:a:libc6:libc6:2.36-9:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.11.0",
+          "annotator": "Tool: waybill-0.11.1",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.11.0",
+          "annotator": "Tool: waybill-0.11.1",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -159,31 +159,31 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.11.0",
+          "annotator": "Tool: waybill-0.11.1",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"deployed\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.11.0",
+          "annotator": "Tool: waybill-0.11.1",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"var/lib/dpkg/status\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.11.0",
+          "annotator": "Tool: waybill-0.11.1",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:debian:zlib1g:1.2.13.dfsg-1:*:*:*:*:*:*:*\",\"cpe:2.3:a:zlib1g:zlib1g:1.2.13.dfsg-1:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.11.0",
+          "annotator": "Tool: waybill-0.11.1",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: waybill-0.11.0",
+          "annotator": "Tool: waybill-0.11.1",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -210,19 +210,19 @@
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-2NQ373JBST3KO7JH",
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-Q57EECIKIPUOXZ43",
       "relationshipType": "DESCRIBES",
       "spdxElementId": "SPDXRef-DOCUMENT"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-B4LWOOIZZFVGZUVY",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-2NQ373JBST3KO7JH"
+      "spdxElementId": "SPDXRef-DocumentRoot-Q57EECIKIPUOXZ43"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-ZKB4GX3JBL66K2UG",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-2NQ373JBST3KO7JH"
+      "spdxElementId": "SPDXRef-DocumentRoot-Q57EECIKIPUOXZ43"
     }
   ],
   "spdxVersion": "SPDX-2.3"
