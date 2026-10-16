@@ -154,6 +154,7 @@
         }
       ],
       "name": "tox",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/cf/01/321c98e3cc584fd101d869c85be2a8236a41a84842bc6af5c078b10c2126/tox-4.28.4.tar.gz",
       "software_packageUrl": "pkg:pypi/tox@4.28.4",
       "software_packageVersion": "4.28.4",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-2Q7O4CPCBVQMV2BJ",
@@ -192,6 +193,7 @@
         }
       ],
       "name": "greenlet",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/03/b8/704d753a5a45507a7aab61f18db9509302ed3d0a27ac7e0359ec2905b1a6/greenlet-3.2.4.tar.gz",
       "software_packageUrl": "pkg:pypi/greenlet@3.2.4",
       "software_packageVersion": "3.2.4",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-2V3CDDMEZQEDV5QK",
@@ -490,6 +492,7 @@
         }
       ],
       "name": "distlib",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/96/8e/709914eb2b5749865801041647dc7f4e6d00b549cfe88b65ca192995f07c/distlib-0.4.0.tar.gz",
       "software_packageUrl": "pkg:pypi/distlib@0.4.0",
       "software_packageVersion": "0.4.0",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3ELIHFTEYCTNYCHW",
@@ -528,6 +531,7 @@
         }
       ],
       "name": "gha-update",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/46/e8/eb710e08998a22b314cc068f14805cfdd12e3934a5496c8916c5a164c65a/gha_update-0.2.0.tar.gz",
       "software_packageUrl": "pkg:pypi/gha-update@0.2.0",
       "software_packageVersion": "0.2.0",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3HJ6UX7E3PWLKFXK",
@@ -566,6 +570,7 @@
         }
       ],
       "name": "httpcore",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/06/94/82699a10bca87a5556c9c59b5963f2d039dbd239f25bc2a63907a05a14cb/httpcore-1.0.9.tar.gz",
       "software_packageUrl": "pkg:pypi/httpcore@1.0.9",
       "software_packageVersion": "1.0.9",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3LOVUJU6VZ6PMULZ",
@@ -604,6 +609,7 @@
         }
       ],
       "name": "nodeenv",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/43/16/fc88b08840de0e0a72a2f9d8c6bae36be573e475a6326ae854bcc549fc45/nodeenv-1.9.1.tar.gz",
       "software_packageUrl": "pkg:pypi/nodeenv@1.9.1",
       "software_packageVersion": "1.9.1",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3MEDRACPW2X3E7UV",
@@ -642,6 +648,7 @@
         }
       ],
       "name": "python-dotenv",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/f6/b0/4bc07ccd3572a2f9df7e6782f52b0c6c90dcbb803ac4a167702d7d0dfe1e/python_dotenv-1.1.1.tar.gz",
       "software_packageUrl": "pkg:pypi/python-dotenv@1.1.1",
       "software_packageVersion": "1.1.1",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3PQJMONW2YWT5NPP",
@@ -680,6 +687,7 @@
         }
       ],
       "name": "uv",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/c1/4f/1a670b2b6473282b36894c22612f76d7fec81d67f5794081d0240a2d960a/uv-0.8.12.tar.gz",
       "software_packageUrl": "pkg:pypi/uv@0.8.12",
       "software_packageVersion": "0.8.12",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3QIOII7LGCXCWUZD",
@@ -829,6 +837,7 @@
         }
       ],
       "name": "sphinx",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/38/ad/4360e50ed56cb483667b8e6dadf2d3fda62359593faabbe749a27c4eaca6/sphinx-8.2.3.tar.gz",
       "software_packageUrl": "pkg:pypi/sphinx@8.2.3",
       "software_packageVersion": "8.2.3",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-4PHT7OHK2K5SWN4O",
@@ -893,6 +902,7 @@
         }
       ],
       "name": "werkzeug",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/9f/69/83029f1f6300c5fb2471d621ab06f6ec6b3324685a2ce0f9777fd4a8b71e/werkzeug-3.1.3.tar.gz",
       "software_packageUrl": "pkg:pypi/werkzeug@3.1.3",
       "software_packageVersion": "3.1.3",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-55A4LK6WRXM425ST",
@@ -931,6 +941,7 @@
         }
       ],
       "name": "roman-numerals-py",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/30/76/48fd56d17c5bdbdf65609abbc67288728a98ed4c02919428d4f52d23b24b/roman_numerals_py-3.1.0.tar.gz",
       "software_packageUrl": "pkg:pypi/roman-numerals-py@3.1.0",
       "software_packageVersion": "3.1.0",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5PEFRI2WODRTWFFY",
@@ -969,6 +980,7 @@
         }
       ],
       "name": "certifi",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/dc/67/960ebe6bf230a96cda2e0abcf73af550ec4f090005363542f0765df162e0/certifi-2025.8.3.tar.gz",
       "software_packageUrl": "pkg:pypi/certifi@2025.8.3",
       "software_packageVersion": "2025.8.3",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-66LHHQMJNIDXBYTZ",
@@ -1007,6 +1019,7 @@
         }
       ],
       "name": "sniffio",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/a2/87/a6771e1546d97e7e041b6ae58d80074f81b7d5121207425c964ddf5cfdbd/sniffio-1.3.1.tar.gz",
       "software_packageUrl": "pkg:pypi/sniffio@1.3.1",
       "software_packageVersion": "1.3.1",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-6BPA3KLTTWXHUBUX",
@@ -1045,6 +1058,7 @@
         }
       ],
       "name": "pycparser",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/1d/b2/31537cf4b1ca988837256c910a668b553fceb8f069bedc4b1c826024b52c/pycparser-2.22.tar.gz",
       "software_packageUrl": "pkg:pypi/pycparser@2.22",
       "software_packageVersion": "2.22",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-724VZR6EDYVAP5TA",
@@ -1083,6 +1097,7 @@
         }
       ],
       "name": "iniconfig",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/f2/97/ebf4da567aa6827c909642694d71c9fcf53e5b504f2d96afea02718862f3/iniconfig-2.1.0.tar.gz",
       "software_packageUrl": "pkg:pypi/iniconfig@2.1.0",
       "software_packageVersion": "2.1.0",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-7PGGREEYPN52BKXA",
@@ -1147,6 +1162,7 @@
         }
       ],
       "name": "sphinx-notfound-page",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/6a/b2/67603444a8ee97b4a8ea71b0a9d6bab1727ed65e362c87e02f818ee57b8a/sphinx_notfound_page-1.1.0.tar.gz",
       "software_packageUrl": "pkg:pypi/sphinx-notfound-page@1.1.0",
       "software_packageVersion": "1.1.0",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ALQJGMN5NO43M2UX",
@@ -1185,6 +1201,7 @@
         }
       ],
       "name": "sphinx",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/5b/be/50e50cb4f2eff47df05673d361095cafd95521d2a22521b920c67a372dcb/sphinx-7.4.7.tar.gz",
       "software_packageUrl": "pkg:pypi/sphinx@7.4.7",
       "software_packageVersion": "7.4.7",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-AVCVX43M2SANNYHQ",
@@ -1249,6 +1266,7 @@
         }
       ],
       "name": "idna",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/f1/70/7703c29685631f5a7590aa73f1f1d3fa9a380e654b86af429e0934a32f7d/idna-3.10.tar.gz",
       "software_packageUrl": "pkg:pypi/idna@3.10",
       "software_packageVersion": "3.10",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-C3GW2XWP7Z4WYQHU",
@@ -1313,6 +1331,7 @@
         }
       ],
       "name": "watchfiles",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/2a/9a/d451fcc97d029f5812e898fd30a53fd8c15c7bbd058fd75cfc6beb9bd761/watchfiles-1.1.0.tar.gz",
       "software_packageUrl": "pkg:pypi/watchfiles@1.1.0",
       "software_packageVersion": "1.1.0",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-CIEJCZX5LZEKBYPT",
@@ -1871,6 +1890,7 @@
         }
       ],
       "name": "pyyaml",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/54/ed/79a089b6be93607fa5cdaedf301d7dfb23af5f25c398d5ead2525b063e17/pyyaml-6.0.2.tar.gz",
       "software_packageUrl": "pkg:pypi/pyyaml@6.0.2",
       "software_packageVersion": "6.0.2",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-CYYCZOSVVVOEYWXM",
@@ -2129,6 +2149,7 @@
         }
       ],
       "name": "pyproject-api",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/19/fd/437901c891f58a7b9096511750247535e891d2d5a5a6eefbc9386a2b41d5/pyproject_api-1.9.1.tar.gz",
       "software_packageUrl": "pkg:pypi/pyproject-api@1.9.1",
       "software_packageVersion": "1.9.1",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-D53IUJDLZG5R62UD",
@@ -2167,6 +2188,7 @@
         }
       ],
       "name": "docutils",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/ae/ed/aefcc8cd0ba62a0560c3c18c33925362d46c6075480bfa4df87b28e169a9/docutils-0.21.2.tar.gz",
       "software_packageUrl": "pkg:pypi/docutils@0.21.2",
       "software_packageVersion": "0.21.2",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-DNBRVPWORZ7456NW",
@@ -2205,6 +2227,7 @@
         }
       ],
       "name": "pathspec",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/ca/bc/f35b8446f4531a7cb215605d100cd88b7ac6f44ab3fc94870c120ab3adbf/pathspec-0.12.1.tar.gz",
       "software_packageUrl": "pkg:pypi/pathspec@0.12.1",
       "software_packageVersion": "0.12.1",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-DOM7F6NZSIXQTJP6",
@@ -2269,6 +2292,7 @@
         }
       ],
       "name": "tomli",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/18/87/302344fed471e44a87289cf4967697d07e532f2421fdaf868a303cbae4ff/tomli-2.2.1.tar.gz",
       "software_packageUrl": "pkg:pypi/tomli@2.2.1",
       "software_packageVersion": "2.2.1",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-E6CNMXCHNWAT77DO",
@@ -2509,6 +2533,7 @@
         }
       ],
       "name": "types-dataclasses",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/4b/6a/dec8fbc818b1e716cb2d9424f1ea0f6f3b1443460eb6a70d00d9d8527360/types-dataclasses-0.6.6.tar.gz",
       "software_packageUrl": "pkg:pypi/types-dataclasses@0.6.6",
       "software_packageVersion": "0.6.6",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EGW2TY2DR73RY2HC",
@@ -2573,6 +2598,7 @@
         }
       ],
       "name": "pre-commit",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/ff/29/7cf5bbc236333876e4b41f56e06857a87937ce4bf91e117a6991a2dbb02a/pre_commit-4.3.0.tar.gz",
       "software_packageUrl": "pkg:pypi/pre-commit@4.3.0",
       "software_packageVersion": "4.3.0",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EZSK4BIHUZTA7OFO",
@@ -2611,6 +2637,7 @@
         }
       ],
       "name": "pallets-sphinx-themes",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/3b/08/c57dd89e45dbc976930200a2cb7826ed76f3c9791454a9fcd1cde3f17177/pallets_sphinx_themes-2.3.0.tar.gz",
       "software_packageUrl": "pkg:pypi/pallets-sphinx-themes@2.3.0",
       "software_packageVersion": "2.3.0",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FK3CORYC2337QRFT",
@@ -2649,6 +2676,7 @@
         }
       ],
       "name": "uvicorn",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/5e/42/e0e305207bb88c6b8d3061399c6a961ffe5fbb7e2aa63c9234df7259e9cd/uvicorn-0.35.0.tar.gz",
       "software_packageUrl": "pkg:pypi/uvicorn@0.35.0",
       "software_packageVersion": "0.35.0",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FOAHULHWNRLP2F7K",
@@ -2687,6 +2715,7 @@
         }
       ],
       "name": "requests",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/c9/74/b3ff8e6c8446842c3f5c837e9c3dfcfe2018ea6ecef224c710c85ef728f4/requests-2.32.5.tar.gz",
       "software_packageUrl": "pkg:pypi/requests@2.32.5",
       "software_packageVersion": "2.32.5",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FPZWIH6CAOYU3T7P",
@@ -2751,6 +2780,7 @@
         }
       ],
       "name": "colorama",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/d8/53/6f443c9a4a8358a93a6792e2acffb9d9d5cb0a5cfd8802644b7b1c9a02e4/colorama-0.4.6.tar.gz",
       "software_packageUrl": "pkg:pypi/colorama@0.4.6",
       "software_packageVersion": "0.4.6",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-G4JMNHEBU7VSK3RV",
@@ -2789,6 +2819,7 @@
         }
       ],
       "name": "zipp",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/e3/02/0f2892c661036d50ede074e376733dca2ae7c6eb617489437771209d4180/zipp-3.23.0.tar.gz",
       "software_packageUrl": "pkg:pypi/zipp@3.23.0",
       "software_packageVersion": "3.23.0",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GUO7F4HCXR42DIAG",
@@ -2827,6 +2858,7 @@
         }
       ],
       "name": "click",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/b9/2e/0090cbf739cee7d23781ad4b89a9894a41538e4fcf4c31dcdd705b78eb8b/click-8.1.8.tar.gz",
       "software_packageUrl": "pkg:pypi/click@8.1.8",
       "software_packageVersion": "8.1.8",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GWOUGWA7HAXMFBCI",
@@ -2865,6 +2897,7 @@
         }
       ],
       "name": "jinja2",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/df/bf/f7da0350254c0ed7c72f3e33cef02e048281fec7ecec5f032d4aac52226b/jinja2-3.1.6.tar.gz",
       "software_packageUrl": "pkg:pypi/jinja2@3.1.6",
       "software_packageVersion": "3.1.6",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-HAPP47HHUQLHTEUD",
@@ -2903,6 +2936,7 @@
         }
       ],
       "name": "pre-commit-uv",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/b1/6c/c3c1d01698c8abb0b546defc0304971fa7fb2ba84ad35587b9dad095d73f/pre_commit_uv-4.1.4.tar.gz",
       "software_packageUrl": "pkg:pypi/pre-commit-uv@4.1.4",
       "software_packageVersion": "4.1.4",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-HJYRSEOK3MOQ7QQK",
@@ -2967,6 +3001,7 @@
         }
       ],
       "name": "sphinxcontrib-log-cabinet",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/75/26/0687391e10c605a4d0c7ebe118c57c51ecc687128bcdae5803d9b96def81/sphinxcontrib-log-cabinet-1.0.1.tar.gz",
       "software_packageUrl": "pkg:pypi/sphinxcontrib-log-cabinet@1.0.1",
       "software_packageVersion": "1.0.1",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ILWSOUQDRS33SBY7",
@@ -3005,6 +3040,7 @@
         }
       ],
       "name": "pygments",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/b0/77/a5b8c569bf593b0140bde72ea885a803b82086995367bf2037de0159d924/pygments-2.19.2.tar.gz",
       "software_packageUrl": "pkg:pypi/pygments@2.19.2",
       "software_packageVersion": "2.19.2",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-INYEPPGPVSI54ME5",
@@ -3043,6 +3079,7 @@
         }
       ],
       "name": "markupsafe",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/b2/97/5d42485e71dfc078108a86d6de8fa46db44a1a9295e89c5d6d4a06e23a62/markupsafe-3.0.2.tar.gz",
       "software_packageUrl": "pkg:pypi/markupsafe@3.0.2",
       "software_packageVersion": "3.0.2",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-IQCPMZACZUBHWXBK",
@@ -3376,6 +3413,7 @@
         }
       ],
       "name": "cryptography",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/d6/0d/d13399c94234ee8f3df384819dc67e0c5ce215fb751d567a55a1f4b028c7/cryptography-45.0.6.tar.gz",
       "software_packageUrl": "pkg:pypi/cryptography@45.0.6",
       "software_packageVersion": "45.0.6",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-IQS7F7HXUQG5YV5O",
@@ -3615,6 +3653,7 @@
         }
       ],
       "name": "asgiref",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/90/61/0aa957eec22ff70b830b22ff91f825e70e1ef732c06666a805730f28b36b/asgiref-3.9.1.tar.gz",
       "software_packageUrl": "pkg:pypi/asgiref@3.9.1",
       "software_packageVersion": "3.9.1",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-JGFRNCEBLF3BNVVK",
@@ -3653,6 +3692,7 @@
         }
       ],
       "name": "sphinxcontrib-serializinghtml",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/3b/44/6716b257b0aa6bfd51a1b31665d1c205fb12cb5ad56de752dfa15657de2f/sphinxcontrib_serializinghtml-2.0.0.tar.gz",
       "software_packageUrl": "pkg:pypi/sphinxcontrib-serializinghtml@2.0.0",
       "software_packageVersion": "2.0.0",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-K44MJPZ7FNH6SDJ7",
@@ -3691,6 +3731,7 @@
         }
       ],
       "name": "websockets",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/21/e6/26d09fab466b7ca9c7737474c52be4f76a40301b08362eb2dbc19dcc16c1/websockets-15.0.1.tar.gz",
       "software_packageUrl": "pkg:pypi/websockets@15.0.1",
       "software_packageVersion": "15.0.1",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-KD652JI6MVHRRISG",
@@ -4064,6 +4105,7 @@
         }
       ],
       "name": "alabaster",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/c9/3e/13dd8e5ed9094e734ac430b5d0eb4f2bb001708a8b7856cbf8e084e001ba/alabaster-0.7.16.tar.gz",
       "software_packageUrl": "pkg:pypi/alabaster@0.7.16",
       "software_packageVersion": "0.7.16",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-KN7VFU355J55S4MD",
@@ -4128,6 +4170,7 @@
         }
       ],
       "name": "sphinxcontrib-qthelp",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/68/bc/9104308fc285eb3e0b31b67688235db556cd5b0ef31d96f30e45f2e51cae/sphinxcontrib_qthelp-2.0.0.tar.gz",
       "software_packageUrl": "pkg:pypi/sphinxcontrib-qthelp@2.0.0",
       "software_packageVersion": "2.0.0",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-LCP5FNC2ULJMEBVR",
@@ -4166,6 +4209,7 @@
         }
       ],
       "name": "types-contextvars",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/6c/20/6a0271fe78050f15eaad21f94a4efebbddcfd0cadac0d35b056e8d32b40f/types-contextvars-2.4.7.3.tar.gz",
       "software_packageUrl": "pkg:pypi/types-contextvars@2.4.7.3",
       "software_packageVersion": "2.4.7.3",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-LEKQYBX2WWSIKQR6",
@@ -4204,6 +4248,7 @@
         }
       ],
       "name": "blinker",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/21/28/9b3f50ce0e048515135495f198351908d99540d69bfdc8c1d15b73dc55ce/blinker-1.9.0.tar.gz",
       "software_packageUrl": "pkg:pypi/blinker@1.9.0",
       "software_packageVersion": "1.9.0",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-LMTVQZFBFBRFX6DD",
@@ -4268,6 +4313,7 @@
         }
       ],
       "name": "sphinxcontrib-devhelp",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/f6/d2/5beee64d3e4e747f316bae86b55943f51e82bb86ecd325883ef65741e7da/sphinxcontrib_devhelp-2.0.0.tar.gz",
       "software_packageUrl": "pkg:pypi/sphinxcontrib-devhelp@2.0.0",
       "software_packageVersion": "2.0.0",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-N34KBSAMR2PZ7PIS",
@@ -4306,6 +4352,7 @@
         }
       ],
       "name": "exceptiongroup",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/0b/9f/a65090624ecf468cdca03533906e7c69ed7588582240cfe7cc9e770b50eb/exceptiongroup-1.3.0.tar.gz",
       "software_packageUrl": "pkg:pypi/exceptiongroup@1.3.0",
       "software_packageVersion": "1.3.0",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-N4M5EOAI4XSZMC2S",
@@ -4344,6 +4391,7 @@
         }
       ],
       "name": "ruff",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/4a/45/2e403fa7007816b5fbb324cb4f8ed3c7402a927a0a0cb2b6279879a8bfdc/ruff-0.12.9.tar.gz",
       "software_packageUrl": "pkg:pypi/ruff@0.12.9",
       "software_packageVersion": "0.12.9",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-NTQOZ7VZTQI4DH24",
@@ -4493,6 +4541,7 @@
         }
       ],
       "name": "chardet",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/f3/0d/f7b6ab21ec75897ed80c17d79b15951a719226b9fababf1e40ea74d69079/chardet-5.2.0.tar.gz",
       "software_packageUrl": "pkg:pypi/chardet@5.2.0",
       "software_packageVersion": "5.2.0",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-O7ISR4QRIUXOBGDN",
@@ -4531,6 +4580,7 @@
         }
       ],
       "name": "virtualenv",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/1c/14/37fcdba2808a6c615681cd216fecae00413c9dab44fb2e57805ecf3eaee3/virtualenv-20.34.0.tar.gz",
       "software_packageUrl": "pkg:pypi/virtualenv@20.34.0",
       "software_packageVersion": "20.34.0",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-OAGFSXON4ZT66U3K",
@@ -4595,6 +4645,7 @@
         }
       ],
       "name": "sphinxcontrib-jsmath",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/b2/e8/9ed3830aeed71f17c026a07a5097edcf44b692850ef215b161b8ad875729/sphinxcontrib-jsmath-1.0.1.tar.gz",
       "software_packageUrl": "pkg:pypi/sphinxcontrib-jsmath@1.0.1",
       "software_packageVersion": "1.0.1",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-QDZLPO6PZJVUK727",
@@ -4633,6 +4684,7 @@
         }
       ],
       "name": "sphinxcontrib-applehelp",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/ba/6e/b837e84a1a704953c62ef8776d45c3e8d759876b4a84fe14eba2859106fe/sphinxcontrib_applehelp-2.0.0.tar.gz",
       "software_packageUrl": "pkg:pypi/sphinxcontrib-applehelp@2.0.0",
       "software_packageVersion": "2.0.0",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-QGIAENPIZEO22ALE",
@@ -4671,6 +4723,7 @@
         }
       ],
       "name": "sphinx-tabs",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/6a/53/a9a91995cb365e589f413b77fc75f1c0e9b4ac61bfa8da52a779ad855cc0/sphinx-tabs-3.4.7.tar.gz",
       "software_packageUrl": "pkg:pypi/sphinx-tabs@3.4.7",
       "software_packageVersion": "3.4.7",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-QU6IFIUX53U5ZKGT",
@@ -4709,6 +4762,7 @@
         }
       ],
       "name": "cfgv",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/11/74/539e56497d9bd1d484fd863dd69cbbfa653cd2aa27abfe35653494d85e94/cfgv-3.4.0.tar.gz",
       "software_packageUrl": "pkg:pypi/cfgv@3.4.0",
       "software_packageVersion": "3.4.0",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-R6C2SQIDP2LJFXVP",
@@ -4747,6 +4801,7 @@
         }
       ],
       "name": "platformdirs",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/fe/8b/3c73abc9c759ecd3f1f7ceff6685840859e8070c4d947c93fae71f6a0bf2/platformdirs-4.3.8.tar.gz",
       "software_packageUrl": "pkg:pypi/platformdirs@4.3.8",
       "software_packageVersion": "4.3.8",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RGNFEDCP67HORUGK",
@@ -4785,6 +4840,7 @@
         }
       ],
       "name": "charset-normalizer",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/83/2d/5fd176ceb9b2fc619e63405525573493ca23441330fcdaee6bef9460e924/charset_normalizer-3.4.3.tar.gz",
       "software_packageUrl": "pkg:pypi/charset-normalizer@3.4.3",
       "software_packageVersion": "3.4.3",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RH6PH5HTHCMBZECS",
@@ -5153,6 +5209,7 @@
         }
       ],
       "name": "pytest",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/08/ba/45911d754e8eba3d5a841a5ce61a65a685ff1798421ac054f85aa8747dfb/pytest-8.4.1.tar.gz",
       "software_packageUrl": "pkg:pypi/pytest@8.4.1",
       "software_packageVersion": "8.4.1",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RQQY5T4254RIL2OG",
@@ -5191,6 +5248,7 @@
         }
       ],
       "name": "urllib3",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/15/22/9ee70a2574a4f4599c47dd506532914ce044817c7752a79b6a51286319bc/urllib3-2.5.0.tar.gz",
       "software_packageUrl": "pkg:pypi/urllib3@2.5.0",
       "software_packageVersion": "2.5.0",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RRIUYEPR6T43LWT4",
@@ -5229,6 +5287,7 @@
         }
       ],
       "name": "tox-uv",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/f9/9a/f4b675ebcbd623854129891e87045f80c1d8e91b2957496f1fe6e463f291/tox_uv-1.28.0.tar.gz",
       "software_packageUrl": "pkg:pypi/tox-uv@1.28.0",
       "software_packageVersion": "1.28.0",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-SGRNALK5IJQHGE5P",
@@ -5267,6 +5326,7 @@
         }
       ],
       "name": "cffi",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/fc/97/c783634659c2920c3fc70419e3af40972dbaf758daa229a7d6ea6135c90d/cffi-1.17.1.tar.gz",
       "software_packageUrl": "pkg:pypi/cffi@1.17.1",
       "software_packageVersion": "1.17.1",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-SNCIZJPKATYLM2VQ",
@@ -5590,6 +5650,7 @@
         }
       ],
       "name": "sphinxcontrib-htmlhelp",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/43/93/983afd9aa001e5201eab16b5a444ed5b9b0a7a010541e0ddfbbfd0b2470c/sphinxcontrib_htmlhelp-2.1.0.tar.gz",
       "software_packageUrl": "pkg:pypi/sphinxcontrib-htmlhelp@2.1.0",
       "software_packageVersion": "2.1.0",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-SYPKVYFVHMJUGW4R",
@@ -5628,6 +5689,7 @@
         }
       ],
       "name": "imagesize",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/a7/84/62473fb57d61e31fef6e36d64a179c8781605429fd927b5dd608c997be31/imagesize-1.4.1.tar.gz",
       "software_packageUrl": "pkg:pypi/imagesize@1.4.1",
       "software_packageVersion": "1.4.1",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-T5SBYG2O6VGHV3R7",
@@ -5666,6 +5728,7 @@
         }
       ],
       "name": "mypy-extensions",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/a2/6e/371856a3fb9d31ca8dac321cda606860fa4548858c0cc45d9d1d4ca2628b/mypy_extensions-1.1.0.tar.gz",
       "software_packageUrl": "pkg:pypi/mypy-extensions@1.1.0",
       "software_packageVersion": "1.1.0",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-TIMXRDWKC3YJTFQH",
@@ -5704,6 +5767,7 @@
         }
       ],
       "name": "typing-extensions",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/98/5a/da40306b885cc8c09109dc2e1abd358d5684b1425678151cdaed4731c822/typing_extensions-4.14.1.tar.gz",
       "software_packageUrl": "pkg:pypi/typing-extensions@4.14.1",
       "software_packageVersion": "4.14.1",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-TQHAJQFBY7VS6TDN",
@@ -5768,6 +5832,7 @@
         }
       ],
       "name": "h11",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/01/ee/02a2c011bdab74c6fb3c75474d40b3052059d95df7e73351460c8588d963/h11-0.16.0.tar.gz",
       "software_packageUrl": "pkg:pypi/h11@0.16.0",
       "software_packageVersion": "0.16.0",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-UI6DRVDCU5I6T4EL",
@@ -5806,6 +5871,7 @@
         }
       ],
       "name": "filelock",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/40/bb/0ab3e58d22305b6f5440629d20683af28959bf793d98d11950e305c1c326/filelock-3.19.1.tar.gz",
       "software_packageUrl": "pkg:pypi/filelock@3.19.1",
       "software_packageVersion": "3.19.1",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-UOYI5ALLN7KK6VFZ",
@@ -5844,6 +5910,7 @@
         }
       ],
       "name": "cachetools",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/8a/89/817ad5d0411f136c484d535952aef74af9b25e0d99e90cdffbe121e6d628/cachetools-6.1.0.tar.gz",
       "software_packageUrl": "pkg:pypi/cachetools@6.1.0",
       "software_packageVersion": "6.1.0",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-USLUUW6LXGRYNMUH",
@@ -5882,6 +5949,7 @@
         }
       ],
       "name": "pyright",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/fe/f6/35f885264ff08c960b23d1542038d8da86971c5d8c955cfab195a4f672d7/pyright-1.1.403.tar.gz",
       "software_packageUrl": "pkg:pypi/pyright@1.1.403",
       "software_packageVersion": "1.1.403",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-UTSNVV6YJ7S3DDK2",
@@ -5920,6 +5988,7 @@
         }
       ],
       "name": "click",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/60/6c/8ca2efa64cf75a977a0d7fac081354553ebe483345c734fb6b6515d96bbc/click-8.2.1.tar.gz",
       "software_packageUrl": "pkg:pypi/click@8.2.1",
       "software_packageVersion": "8.2.1",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-VEXI56BXHYGQBNP4",
@@ -6010,6 +6079,7 @@
         }
       ],
       "name": "starlette",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/04/57/d062573f391d062710d4088fa1369428c38d51460ab6fedff920efef932e/starlette-0.47.2.tar.gz",
       "software_packageUrl": "pkg:pypi/starlette@0.47.2",
       "software_packageVersion": "0.47.2",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-VRB47QNNXJ4MNMEO",
@@ -6048,6 +6118,7 @@
         }
       ],
       "name": "sphinx-autobuild",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/a5/2c/155e1de2c1ba96a72e5dba152c509a8b41e047ee5c2def9e9f0d812f8be7/sphinx_autobuild-2024.10.3.tar.gz",
       "software_packageUrl": "pkg:pypi/sphinx-autobuild@2024.10.3",
       "software_packageVersion": "2024.10.3",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-VUL4WSA5R3L2BFZZ",
@@ -6086,6 +6157,7 @@
         }
       ],
       "name": "babel",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/7d/6b/d52e42361e1aa00709585ecc30b3f9684b3ab62530771402248b1b1d6240/babel-2.17.0.tar.gz",
       "software_packageUrl": "pkg:pypi/babel@2.17.0",
       "software_packageVersion": "2.17.0",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-WKG6BBCCN7AMNV5B",
@@ -6124,6 +6196,7 @@
         }
       ],
       "name": "mypy",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/8e/22/ea637422dedf0bf36f3ef238eab4e455e2a0dcc3082b5cc067615347ab8e/mypy-1.17.1.tar.gz",
       "software_packageUrl": "pkg:pypi/mypy@1.17.1",
       "software_packageVersion": "1.17.1",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-WYD5WDXU3SFSR64A",
@@ -6394,6 +6467,7 @@
         }
       ],
       "name": "anyio",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/f1/b4/636b3b65173d3ce9a38ef5f0522789614e590dab6a8d505340a4efe4c567/anyio-4.10.0.tar.gz",
       "software_packageUrl": "pkg:pypi/anyio@4.10.0",
       "software_packageVersion": "4.10.0",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-XO5H2O4DJA6OB7MD",
@@ -6432,6 +6506,7 @@
         }
       ],
       "name": "identify",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/82/ca/ffbabe3635bb839aa36b3a893c91a9b0d368cb4d8073e03a12896970af82/identify-2.6.13.tar.gz",
       "software_packageUrl": "pkg:pypi/identify@2.6.13",
       "software_packageVersion": "2.6.13",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-XUFQAA44XNPF6HGW",
@@ -6470,6 +6545,7 @@
         }
       ],
       "name": "itsdangerous",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/9c/cb/8ac0172223afbccb63986cc25049b154ecfb5e85932587206f42317be31d/itsdangerous-2.2.0.tar.gz",
       "software_packageUrl": "pkg:pypi/itsdangerous@2.2.0",
       "software_packageVersion": "2.2.0",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-XXXJA4WVW5NR22DW",
@@ -6508,6 +6584,7 @@
         }
       ],
       "name": "alabaster",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/a6/f8/d9c74d0daf3f742840fd818d69cfae176fa332022fd44e3469487d5a9420/alabaster-1.0.0.tar.gz",
       "software_packageUrl": "pkg:pypi/alabaster@1.0.0",
       "software_packageVersion": "1.0.0",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-YBFCOBY7QEBNIKRQ",
@@ -6598,6 +6675,7 @@
         }
       ],
       "name": "importlib-metadata",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/76/66/650a33bd90f786193e4de4b3ad86ea60b53c89b669a5c7be931fac31cdb0/importlib_metadata-8.7.0.tar.gz",
       "software_packageUrl": "pkg:pypi/importlib-metadata@8.7.0",
       "software_packageVersion": "8.7.0",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-YG5WXBXA5YHDLCHN",
@@ -6636,6 +6714,7 @@
         }
       ],
       "name": "pluggy",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/f9/e2/3e91f31a7d2b083fe6ef3fa267035b518369d9511ffab804f839851d2779/pluggy-1.6.0.tar.gz",
       "software_packageUrl": "pkg:pypi/pluggy@1.6.0",
       "software_packageVersion": "1.6.0",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-YZ2MIPQWGEB5UZRZ",
@@ -6674,6 +6753,7 @@
         }
       ],
       "name": "snowballstemmer",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/75/a7/9810d872919697c9d01295633f5d574fb416d47e535f258272ca1f01f447/snowballstemmer-3.0.1.tar.gz",
       "software_packageUrl": "pkg:pypi/snowballstemmer@3.0.1",
       "software_packageVersion": "3.0.1",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZAOOBCAS2XFOSPO3",
@@ -6712,6 +6792,7 @@
         }
       ],
       "name": "packaging",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/a1/d4/1fc4078c65507b51b96ca8f8c3ba19e6a61c8253c72794544580a7b6c24d/packaging-25.0.tar.gz",
       "software_packageUrl": "pkg:pypi/packaging@25.0",
       "software_packageVersion": "25.0",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZIBQF5WBZHCXASVC",
@@ -6750,6 +6831,7 @@
         }
       ],
       "name": "httpx",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/b1/df/48c586a5fe32a0f01324ee087459e112ebb7224f646c0b5023f5e79e9956/httpx-0.28.1.tar.gz",
       "software_packageUrl": "pkg:pypi/httpx@0.28.1",
       "software_packageVersion": "0.28.1",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZN73XBX3XV5K337W",
@@ -6788,6 +6870,7 @@
         }
       ],
       "name": "sphinx",
+      "software_downloadLocation": "https://files.pythonhosted.org/packages/6f/6d/be0b61178fe2cdcb67e2a92fc9ebb488e3c51c4f74a36a7824c0adf23425/sphinx-8.1.3.tar.gz",
       "software_packageUrl": "pkg:pypi/sphinx@8.1.3",
       "software_packageVersion": "8.1.3",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZZM3NBYM763DY5CR",
