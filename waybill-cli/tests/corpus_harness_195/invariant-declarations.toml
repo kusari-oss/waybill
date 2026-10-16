@@ -168,6 +168,27 @@ issue = 1209
 
 [[declaration]]
 invariant = "I5"
+target = "pants-example-javascript"
+kind = "complete-with-unreachable"
+count_at_declaration = 1
+reason = """
+Same defect as the rust-ripgrep entry below and tracked by the same issue:
+the completeness classifier excludes file-tier components as edgeless, so an
+unreachable `pants_from_sources` script does not count against a `complete`
+verdict.
+
+Worth noting how this one was found, because it is the case for running the
+matrix in both places. This target's golden is filtered to the `pkg:npm/*`
+surface (feature 675 FR-008, to stay inside the goldens budget), and the
+filter removes the file-tier component — so the golden's npm-only graph
+really is complete and the hermetic matrix reports I5 as passing here. Only
+the corpus lane, which evaluates the unfiltered emitted document, can see
+it. A filtered golden is not a smaller truth; it is a different document.
+"""
+issue = 1207
+
+[[declaration]]
+invariant = "I5"
 target = "rust-ripgrep"
 kind = "complete-with-unreachable"
 count_at_declaration = 7

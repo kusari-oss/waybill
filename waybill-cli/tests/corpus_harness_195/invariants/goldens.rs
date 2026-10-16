@@ -48,10 +48,30 @@ pub fn load(target: &str) -> Option<EmittedSboms> {
     })
 }
 
-/// Every manifest target that has committed goldens, in manifest order.
+/// Targets whose committed goldens are **not** the emitted document.
+///
+/// `pants-example-javascript`'s goldens are filtered to the `pkg:npm/*`
+/// surface before layer 2 compares them (feature 675 FR-008), purely to
+/// keep the three goldens inside SC-004's size budget. The filter drops
+/// every non-npm component — including the file-tier `pants_from_sources`
+/// script — so the filtered graph is complete and fully reachable while
+/// the emitted one is not.
+///
+/// Evaluating invariants against that artifact answers a question about
+/// a filtered document rather than about waybill's output, and the two
+/// answers genuinely differ: `I5` passes on the golden and fails on the
+/// emission. A declaration cannot be right for both, so the hermetic
+/// matrix leaves this target to the corpus lane, which evaluates the
+/// unfiltered document. A filtered golden is not a smaller truth; it is
+/// a different document.
+pub const GOLDENS_ARE_FILTERED: &[&str] = &["pants-example-javascript"];
+
+/// Every manifest target whose goldens are a faithful copy of the
+/// emitted documents, in manifest order.
 pub fn load_all() -> Vec<(String, EmittedSboms)> {
     super::super::manifest::TARGETS
         .iter()
+        .filter(|t| !GOLDENS_ARE_FILTERED.contains(&t.name))
         .filter_map(|t| load(t.name).map(|s| (t.name.to_string(), s)))
         .collect()
 }

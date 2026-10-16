@@ -104,18 +104,14 @@ fn run_target(name: &str) {
                 errors.join("\n  ")
             );
         }
-        let report = invariants::report::build(cells, &declarations);
+        // `build_for_target`, not `build`: FR-006a's applicability floor
+        // is a corpus-wide rule, and an invariant can legitimately be
+        // not-applicable here while applying elsewhere. Reporting it
+        // per-target printed "N lane failure(s)" for targets that had
+        // none, on every target.
+        let report = invariants::report::build_for_target(cells, &declarations);
         println!("{}", report.console());
-        // FR-006a is a corpus-wide rule, not a per-target one: an
-        // invariant can legitimately be not-applicable on this target
-        // while applying elsewhere. The golden-matrix test enforces it
-        // over the whole corpus; here only per-cell verdicts gate.
-        let failures: Vec<String> = report
-            .verdicts
-            .iter()
-            .filter(|(_, v)| v.fails_lane())
-            .map(|((inv, tgt), v)| format!("{inv} / {tgt}: {v:?}"))
-            .collect();
+        let failures = report.lane_failures();
         if !failures.is_empty() {
             panic!(
                 "{} invariant cell(s) failed for {}:\n  {}\n\nEach is either a defect to fix \

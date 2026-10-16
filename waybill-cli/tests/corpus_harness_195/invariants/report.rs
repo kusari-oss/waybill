@@ -88,7 +88,28 @@ pub fn coverage() -> (BTreeSet<String>, BTreeSet<String>) {
 // The report
 // -----------------------------------------------------------------------
 
+/// What a report is reporting on, which decides whether the FR-006a
+/// applicability floor applies.
+///
+/// FR-006a is a **corpus-wide** rule: an invariant not applicable on any
+/// target is unfalsifiable. It says nothing about one target, where
+/// not-applicable is the ordinary case — `I5` is n/a wherever the
+/// completeness verdict is `partial`, which is most targets.
+///
+/// Conflating the two made the lane print "4 lane failure(s)" for a
+/// target that had none, on every target, while the gate correctly
+/// ignored it. An operator-facing false alarm on every run is how a
+/// gate stops being read.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Scope {
+    /// Every corpus target was evaluated; the applicability floor applies.
+    Corpus,
+    /// One target was evaluated; the floor does not apply.
+    SingleTarget,
+}
+
 pub struct MatrixReport {
+    pub scope: Scope,
     pub cells: Vec<Cell>,
     pub verdicts: BTreeMap<(String, String), Verdict>,
     pub applicability: BTreeMap<&'static str, usize>,
@@ -98,6 +119,20 @@ pub struct MatrixReport {
 }
 
 pub fn build(cells: Vec<Cell>, declarations: &DeclarationsFile) -> MatrixReport {
+    build_scoped(cells, declarations, Scope::Corpus)
+}
+
+/// One target's cells — used by the corpus lane, which evaluates target
+/// by target.
+pub fn build_for_target(cells: Vec<Cell>, declarations: &DeclarationsFile) -> MatrixReport {
+    build_scoped(cells, declarations, Scope::SingleTarget)
+}
+
+pub fn build_scoped(
+    cells: Vec<Cell>,
+    declarations: &DeclarationsFile,
+    scope: Scope,
+) -> MatrixReport {
     let verdicts = cells
         .iter()
         .map(|c| {
@@ -107,8 +142,12 @@ pub fn build(cells: Vec<Cell>, declarations: &DeclarationsFile) -> MatrixReport 
         .collect();
     let (covered, uncovered) = coverage();
     MatrixReport {
+        scope,
         applicability: applicability(&cells),
-        unfalsifiable: super::unfalsifiable_invariants(&cells),
+        unfalsifiable: match scope {
+            Scope::Corpus => super::unfalsifiable_invariants(&cells),
+            Scope::SingleTarget => Vec::new(),
+        },
         ecosystems_covered: covered,
         ecosystems_uncovered: uncovered,
         verdicts,
@@ -331,5 +370,52 @@ mod tests {
              that the corpus sees everything"
         );
         assert!(uncovered.contains("gem"), "expected gem uncovered, got {uncovered:?}");
+    }
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod scope_tests {
+    use super::*;
+    use super::super::declarations::DeclarationsFile;
+    use super::super::{Cell, CellOutcome};
+
+    fn na_cells(target: &str) -> Vec<Cell> {
+        super::super::REGISTRY
+            .iter()
+            .map(|i| Cell {
+                invariant: i.id,
+                target: target.to_string(),
+                outcome: CellOutcome::NotApplicable { reason: "precondition unmet".into() },
+            })
+            .collect()
+    }
+
+    /// A single-target report must not report FR-006a unfalsifiability.
+    /// Not-applicable on one target is the ordinary case; the floor is a
+    /// corpus-wide rule. Reporting it per-target made the lane print
+    /// "N lane failure(s)" for targets that had none, on every target.
+    #[test]
+    fn a_single_target_report_does_not_cry_wolf_about_applicability() {
+        let decls = DeclarationsFile::default();
+        let rep = build_for_target(na_cells("go-cobra"), &decls);
+        assert_eq!(rep.scope, Scope::SingleTarget);
+        assert!(rep.unfalsifiable.is_empty(), "{:?}", rep.unfalsifiable);
+        assert!(
+            rep.lane_failures().is_empty(),
+            "a target on which every invariant is n/a fails nothing: {:?}",
+            rep.lane_failures()
+        );
+    }
+
+    /// And the corpus-wide report still enforces it, so the fix did not
+    /// simply delete the rule.
+    #[test]
+    fn a_corpus_report_still_enforces_the_applicability_floor() {
+        let decls = DeclarationsFile::default();
+        let rep = build(na_cells("go-cobra"), &decls);
+        assert_eq!(rep.scope, Scope::Corpus);
+        assert_eq!(rep.unfalsifiable.len(), super::super::REGISTRY.len());
+        assert!(!rep.lane_failures().is_empty());
     }
 }

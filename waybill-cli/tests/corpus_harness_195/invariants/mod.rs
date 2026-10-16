@@ -344,8 +344,8 @@ mod tests {
         let documents = goldens::load_all();
         assert_eq!(
             documents.len(),
-            super::super::manifest::TARGETS.len(),
-            "every corpus target should have committed goldens"
+            super::super::manifest::TARGETS.len() - goldens::GOLDENS_ARE_FILTERED.len(),
+            "every corpus target whose goldens are unfiltered should have them committed;              the filtered ones are the corpus lane's business (see goldens::GOLDENS_ARE_FILTERED)"
         );
         let cells = evaluate_matrix(&documents);
         assert_eq!(cells.len(), REGISTRY.len() * documents.len());
