@@ -282,11 +282,20 @@ issue = 1214
 
 # ---------------------------------------------------------------------
 # I8 — a component with no version and no annotation explaining why.
-# Tracked by #1216. Two populations in one invariant: Pants resolve
-# anchors, which are inherently versionless and need a marker saying so,
-# and one Go binary whose version was never read. They are declared
-# separately because the fixes are different and #1216 may close them in
-# different changes.
+#
+# Tracked by #1216, which had two populations in one invariant. The
+# first — Pants resolve anchors, inherently versionless — is CLOSED:
+# milestone 1156 gave them `waybill:version-absence = by-construction`
+# (C197) and the four declarations that stood here are gone. Those four
+# cells are now held by a named-target positive control,
+# `mutation_tests::i8_applies_and_passes_on_each_named_pants_target`,
+# because `Pass` and `NotApplicable` both pass the lane and only the
+# first is what the fix achieved.
+#
+# What remains is the second population: one Go binary whose version was
+# never read. It is a resolution gap rather than a labelling one, which
+# is why the two were declared separately and why one closed without the
+# other.
 # ---------------------------------------------------------------------
 
 [[declaration]]
@@ -305,54 +314,3 @@ and found nothing" from "never looked".
 """
 issue = 1216
 
-[[declaration]]
-invariant = "I8"
-target = "pants-clojure-polyglot"
-kind = "versionless-and-unexplained"
-count_at_declaration = 4
-reason = """
-Four Pants resolve anchors — two jvm (`java17`, `java21`) and two python
-(`pants-2.30`, `pants-2.31`). A resolve is a lockfile, not a package, so there
-is no version to find; the data is right and only the document's account of
-itself is incomplete. They carry `waybill:component-kind = lockfile-resolve`,
-which I8 deliberately does not accept: it describes resolve ownership
-(milestone 1064), not version absence, so a consumer still cannot tell an
-anchor from a package whose resolution failed. See #1216 for why the fix is a
-marker meaning "not versioned" rather than a wider accepted set here.
-"""
-issue = 1216
-
-[[declaration]]
-invariant = "I8"
-target = "pants-example-django"
-kind = "versionless-and-unexplained"
-count_at_declaration = 1
-reason = """
-One Pants resolve anchor, `pkg:generic/python-default?pants-namespace=python`.
-Same defect as pants-clojure-polyglot; kept as its own row so #1216's
-per-target reach is readable from this file's diff.
-"""
-issue = 1216
-
-[[declaration]]
-invariant = "I8"
-target = "pants-example-jvm"
-kind = "versionless-and-unexplained"
-count_at_declaration = 1
-reason = """
-One Pants resolve anchor, `pkg:generic/jvm-default?pants-namespace=jvm`. Same
-defect as pants-clojure-polyglot, on the jvm namespace.
-"""
-issue = 1216
-
-[[declaration]]
-invariant = "I8"
-target = "pants-example-python"
-kind = "versionless-and-unexplained"
-count_at_declaration = 1
-reason = """
-One Pants resolve anchor, `pkg:generic/python-default?pants-namespace=python`.
-Same defect and the same anchor name as pants-example-django, in a second
-Pants target.
-"""
-issue = 1216

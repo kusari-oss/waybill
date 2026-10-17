@@ -356,8 +356,38 @@ pub fn namespace_conflict(existing: &Value, incoming: &Value) -> Option<Value> {
     None
 }
 
+// -------------------------------------------------------------------
+// Version absence — milestone 1156 (#1216 population 1)
+// -------------------------------------------------------------------
 
+/// Per-component annotation key. Catalogue row C197.
+///
+/// An empty `version` has two causes, and a document that does not say
+/// which leaves a consumer unable to tell them apart. C151
+/// (`waybill:unresolved-reason`) covers the second: waybill looked for a
+/// version and did not find one. This key covers the first: there was
+/// never a version to find.
+///
+/// **Mutually exclusive with C151.** The two make opposite claims about
+/// the same component, so one carrying both would say its resolution
+/// failed and could not have been attempted. Nothing emits both, and a
+/// resolve anchor is not a failed resolution.
+///
+/// Deliberately NOT inferred from `waybill:component-kind =
+/// lockfile-resolve` (C160). That key names what KIND of thing a
+/// component is and reserves enum extension; binding "has no version" to
+/// its presence would make every future kind inherit a promise its name
+/// does not make.
+pub(crate) const VERSION_ABSENCE_KEY: &str = "waybill:version-absence";
 
+/// The only value `VERSION_ABSENCE_KEY` currently takes: no version
+/// exists to be found for this component, which is a property of the
+/// thing rather than a failure to look for one.
+///
+/// The invariant checkers key acceptance to this exact string rather than
+/// to the key's presence, so an unrecognised value fails instead of
+/// passing on the strength of the key alone.
+pub(crate) const BY_CONSTRUCTION: &str = "by-construction";
 
 
 

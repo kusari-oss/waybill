@@ -7,6 +7,28 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Added
+
+- **`waybill:version-absence`** (catalogue row C197) states that a component
+  has no version to have, as distinct from a version waybill looked for and
+  did not find. Emitted with the single value `by-construction` on the
+  synthetic Pants resolve anchors from both the Python and the JVM lockfile
+  readers: a resolve is a lockfile, not a package, so there was never a
+  version to find. Mutually exclusive with `waybill:unresolved-reason`
+  (C151), which makes the opposite claim. Absent on every package, so a
+  scan without Pants resolves is byte-identical. #1216 population 1.
+
+### Changed
+
+- Invariant **I8** (a component with no version carries an annotation
+  explaining why) accepts `waybill:version-absence = by-construction`, so
+  the four Pants corpus targets pass it and their declarations are gone.
+  One I8 declaration remains, for a Go binary whose build info was never
+  read — a resolution gap rather than a labelling one. **I7** accepts the
+  same marker forward-lookingly: the anchors are reachable today, so no
+  cell moves. Acceptance is keyed to the pinned value, not the key's
+  presence, so an unrecognised value fails rather than passing.
+
 ## [0.11.0] - 2026-10-16
 
 A minor release, not a patch. It adds two subcommands, and five things a

@@ -506,6 +506,12 @@ pub(crate) fn resolve_component_entry(
     let mut extra_annotations: std::collections::BTreeMap<String, serde_json::Value> =
         Default::default();
     extra_annotations.insert("waybill:component-kind".to_string(), json!("lockfile-resolve"));
+    // m1156 (#1216 population 1) — same marker and same value as the Python
+    // reader. The claim is about the anchor's nature, not its namespace.
+    extra_annotations.insert(
+        pants_resolve::VERSION_ABSENCE_KEY.to_string(),
+        json!(pants_resolve::BY_CONSTRUCTION),
+    );
     extra_annotations.insert(
         pants_resolve::ANNOTATION_KEY.to_string(),
         pants_resolve::write([resolve_name]),
@@ -633,6 +639,34 @@ fingerprint = "0000000000000000000000000000000000000000000000000000000000000001"
             Some(&json!("lockfile-resolve"))
         );
         assert!(resolve_component_entry(&lock, Path::new("x.lock"), " ", false).is_none());
+    }
+
+    /// Milestone 1156 (#1216 population 1) — FR-002: the JVM anchor carries
+    /// the SAME key and the SAME value as the Python anchor. The claim is
+    /// about the anchor's nature, not its language namespace, so a consumer
+    /// reading one Pants document must not have to learn two spellings.
+    ///
+    /// Both readers take the pair from `pants_resolve`, so this test is the
+    /// evidence that the shared constants reached this site rather than a
+    /// literal having been pasted and then drifted.
+    #[test]
+    fn jvm_resolve_anchor_declares_its_version_absence() {
+        let lock = lock_with_requirements(&["org.a:a:1.0"]);
+        let anchor =
+            resolve_component_entry(&lock, Path::new("3rdparty/jvm/java17.lock"), "java17", false)
+                .unwrap();
+        assert_eq!(anchor.version, "");
+        assert_eq!(
+            anchor
+                .extra_annotations
+                .get(crate::scan_fs::package_db::pants_resolve::VERSION_ABSENCE_KEY),
+            Some(&json!(crate::scan_fs::package_db::pants_resolve::BY_CONSTRUCTION))
+        );
+        assert_eq!(
+            crate::scan_fs::package_db::pants_resolve::VERSION_ABSENCE_KEY,
+            "waybill:version-absence"
+        );
+        assert_eq!(crate::scan_fs::package_db::pants_resolve::BY_CONSTRUCTION, "by-construction");
     }
 
     #[test]

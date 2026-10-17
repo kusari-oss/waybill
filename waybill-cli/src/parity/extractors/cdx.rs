@@ -998,6 +998,9 @@ cdx_anno!(c193_cdx, "waybill:vex-claims-omitted", document);
 cdx_anno!(c194_cdx_raw, "waybill:derivation", document);
 cdx_anno!(c195_cdx, "waybill:go-mod-why", document);
 cdx_anno!(c196_cdx, "waybill:go-mod-why-reason", document);
+// Milestone 1156 (#1216 population 1): C197 per-component version-absence
+// marker. Emitted only on Pants resolve anchors.
+cdx_anno!(c197_cdx, "waybill:version-absence", component);
 
 /// C194 — compared by projection only (milestone 1071).
 pub(super) fn c194_cdx(doc: &Value) -> BTreeSet<String> {

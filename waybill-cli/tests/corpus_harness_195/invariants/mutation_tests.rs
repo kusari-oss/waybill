@@ -258,7 +258,7 @@ fn i7_can_be_made_to_fail() {
 fn i8_can_be_made_to_fail() {
     let target = first_passing("I8");
     let out = mutate("I8", &target, |cdx| {
-        // A component with an empty version and none of the four
+        // A component with an empty version and none of the five
         // annotations that would account for the absence.
         cdx["components"].as_array_mut().expect("components").push(serde_json::json!({
             "bom-ref": "pkg:generic/mutation-versionless",
@@ -293,6 +293,7 @@ fn i8_does_not_flag_explained_absences_or_sentinel_versions() {
                 "compiler-supplied",
             ),
             ("mutation-closure", "waybill:closure-role", "runtime"),
+            ("mutation-absence", "waybill:version-absence", "by-construction"),
         ] {
             arr.push(serde_json::json!({
                 "bom-ref": format!("pkg:generic/{reference}"),
@@ -411,4 +412,115 @@ fn a_matrix_diff_shows_which_targets_a_change_reached() {
         base_path.display(),
         mut_path.display()
     );
+}
+
+// ---------------------------------------------------------------------
+// Milestone 1156 — the version-absence marker (#1216 population 1).
+// ---------------------------------------------------------------------
+
+/// The four targets whose I8 cell milestone 1156 moved from failing to
+/// passing. Named LITERALLY, which is the whole point — see the doc
+/// comment on the positive control below.
+const PANTS_I8_TARGETS: &[&str] = &[
+    "pants-clojure-polyglot",
+    "pants-example-django",
+    "pants-example-jvm",
+    "pants-example-python",
+];
+
+/// FR-012 / SC-001 — the positive control.
+///
+/// `Pass` and `NotApplicable` both pass the lane, so "I8 is green on
+/// these four" is not the claim worth making; "I8 APPLIES here and
+/// passes" is. Collapsing the two is the vacuity trap this layer exists
+/// to close (feature 1155 FR-003), and `unfalsifiable_invariants` cannot
+/// see it per-cell: I8 would stay falsifiable corpus-wide via
+/// image-postgres16 even if all seven anchors disappeared.
+///
+/// Deliberately NOT `first_passing("I8")`. That helper returns whichever
+/// target passes first, so if the anchors vanished the search would
+/// silently pick another target and every assertion here would stay
+/// green — a test measuring nothing, which is the failure mode this
+/// repository has recorded three times over.
+///
+/// This test is also, for now, the only protection those four cells
+/// have. The general form — a committed registry of cells whose `Pass`
+/// is load-bearing, failing the lane for any of the 136 — is deferred to
+/// its own spec (see `specs/1156-version-absence-marker/tasks.md`). Until
+/// it lands, no other cell is covered against going quiet.
+#[test]
+fn i8_applies_and_passes_on_each_named_pants_target() {
+    let inv = registry_entry("I8");
+    for target in PANTS_I8_TARGETS {
+        let sboms = goldens::load(target)
+            .unwrap_or_else(|| panic!("{target} must have committed goldens"));
+        let outcome = (inv.checker)(&sboms);
+        assert_eq!(
+            outcome,
+            CellOutcome::Pass,
+            "I8 on {target} must be Pass — not NotApplicable, which would mean the resolve \
+             anchors are no longer in the document and the version-absence marker has \
+             become unread code. Got {outcome:?}"
+        );
+    }
+}
+
+/// FR-013 / SC-004 — removing the marker from ONE anchor on each of the
+/// four targets makes that target's I8 cell fail with the pinned kind.
+///
+/// Per target, not on one of them: the four differ in anchor count and in
+/// which other populations they carry, and a mutation proven on a
+/// one-anchor target says nothing about the four-anchor one.
+#[test]
+fn removing_the_marker_from_one_anchor_fails_i8() {
+    for target in PANTS_I8_TARGETS {
+        let out = mutate("I8", target, |cdx| {
+            let props = first_anchor_properties_mut(cdx);
+            let before = props.len();
+            props.retain(|p| p["name"].as_str() != Some("waybill:version-absence"));
+            assert_eq!(before - 1, props.len(), "exactly one property must be removed");
+        });
+        assert_fails_with(&out, checks::versionless_explained::KIND_VERSIONLESS_AND_UNEXPLAINED);
+    }
+}
+
+/// US2 scenario 3 — acceptance is keyed to the pinned value, not to the
+/// key's presence. A value this build cannot read is not an explanation,
+/// so a later enum member cannot silence a cell on the strength of the
+/// key alone.
+#[test]
+fn an_unrecognised_marker_value_does_not_explain_an_absence() {
+    for target in PANTS_I8_TARGETS {
+        let out = mutate("I8", target, |cdx| {
+            let props = first_anchor_properties_mut(cdx);
+            let p = props
+                .iter_mut()
+                .find(|p| p["name"].as_str() == Some("waybill:version-absence"))
+                .expect("the anchor carries the marker");
+            p["value"] = serde_json::json!("by-construction-v2");
+        });
+        assert_fails_with(&out, checks::versionless_explained::KIND_VERSIONLESS_AND_UNEXPLAINED);
+    }
+}
+
+/// The `properties` array of the first resolve anchor in document order,
+/// selected by its C160 property rather than by a name or a substring.
+///
+/// A plain `grep lockfile-resolve` over a golden also matches
+/// `npm-express`, whose C151 value string contains the phrase "no
+/// lockfile-resolved version". That is why this is a property lookup.
+fn first_anchor_properties_mut(cdx: &mut serde_json::Value) -> &mut Vec<serde_json::Value> {
+    let components = cdx["components"].as_array_mut().expect("components");
+    let anchor = components
+        .iter_mut()
+        .find(|c| {
+            c["properties"].as_array().is_some_and(|ps| {
+                ps.iter().any(|p| {
+                    p["name"].as_str() == Some("waybill:component-kind")
+                        && p["value"].as_str() == Some("lockfile-resolve")
+                })
+            })
+        })
+        .expect("target carries at least one resolve anchor");
+    anchor["properties"].as_array_mut().expect("properties")
 }
