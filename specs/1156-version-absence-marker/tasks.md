@@ -78,10 +78,10 @@ documents, and no other component carries it.
 
 ### Goldens
 
-- [ ] T016 [US1] Dispatch the regen: `gh workflow run "Public corpus regression" -f branch=1156-version-absence-marker -f regen_goldens=true`. Use `-f branch=`, NEVER `--ref` — `--ref` silently runs against main and reports success (#1223). Budget ~5 min warm (measured: last three runs 5m04s / 5m02s / 4m36s)
-- [ ] T017 [US1] Download the artifact and review with `cargo run -p xtask -- corpus-diff` before committing. The review tool SORTS ARRAYS; the lane compares byte-for-byte after masking and does not tolerate reordering, so a clean review can still fail the lane — if it does, the fix belongs in `mask_nondeterministic`, not the review tool
-- [ ] T018 [US1] Commit exactly 12 files under `waybill-cli/tests/fixtures/public_corpus/{pants-clojure-polyglot,pants-example-django,pants-example-jvm,pants-example-python}/{cdx,spdx-2.3,spdx-3}.json`, verifying the only change within them is the marker on the 7 anchors (FR-015, SC-006). Any other difference is a finding to explain, not to absorb
-- [ ] T019 [US1] Dispatch the verify run with `-f regen_goldens=false`, then run `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`. Confirm `invariant-declarations.toml` is untouched and all five I8 rows still report `AcceptedKnownFailure` — the cells have not moved, which is what makes change one shippable alone
+- [X] T016 [US1] Dispatch the regen: `gh workflow run "Public corpus regression" -f branch=1156-version-absence-marker -f regen_goldens=true`. Use `-f branch=`, NEVER `--ref` — `--ref` silently runs against main and reports success (#1223). Budget ~5 min warm (measured: last three runs 5m04s / 5m02s / 4m36s)
+- [X] T017 [US1] Download the artifact and review with `cargo run -p xtask -- corpus-diff` before committing. The review tool SORTS ARRAYS; the lane compares byte-for-byte after masking and does not tolerate reordering, so a clean review can still fail the lane — if it does, the fix belongs in `mask_nondeterministic`, not the review tool
+- [X] T018 [US1] Commit exactly 12 files under `waybill-cli/tests/fixtures/public_corpus/{pants-clojure-polyglot,pants-example-django,pants-example-jvm,pants-example-python}/{cdx,spdx-2.3,spdx-3}.json`, verifying the only change within them is the marker on the 7 anchors (FR-015, SC-006). Any other difference is a finding to explain, not to absorb
+- [X] T019 [US1] Dispatch the verify run with `-f regen_goldens=false`, then run `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`. Confirm `invariant-declarations.toml` is untouched and all five I8 rows still report `AcceptedKnownFailure` — the cells have not moved, which is what makes change one shippable alone
 
 **Checkpoint**: CHANGE ONE COMPLETE. The marker is on the wire, nothing reads it yet, the lane is green.
 
@@ -103,12 +103,12 @@ independently shippable *before* US1, and the spec does not claim it is.
 
 ### Acceptance
 
-- [ ] T020 [US2] Extend `is_explained` in `waybill-cli/tests/corpus_harness_195/invariants/checks/versionless_explained.rs:64` to accept `cdx_prop(component, "waybill:version-absence") == Some("by-construction")` — keyed to the pinned value, not the key's presence (FR-006)
-- [ ] T021 [US2] Rewrite the doc comment above `is_explained` in the same file. It currently argues that a resolve anchor is NOT explained and that widening the set is the wrong move; that reasoning was correct before the marker existed and is wrong after it. State instead why `component-kind` remains rejected (FR-009) and why this marker is not it
-- [ ] T022 [US2] Add the fifth accepted annotation to the loop in `i8_does_not_flag_explained_absences_or_sentinel_versions` in `waybill-cli/tests/corpus_harness_195/invariants/mutation_tests.rs:283`, which enumerates the accepted set as `("mutation-tier-file", …)` tuples
-- [ ] T023 [US2] Rewrite the note at `docs/reference/sbom-invariants.md:181`. It says `component-kind` is not accepted and "the fix is a marker that states the anchor is versionless" — the fix now exists, so the note must name C197 and keep the `component-kind` rejection. Prose outside the fields `catalog.rs` parses, so untested; FR-008 requires it anyway because it pre-specifies the fix and is the first thing a reader checks
-- [ ] T024 [US2] Delete the four I8 declarations for `pants-clojure-polyglot`, `pants-example-django`, `pants-example-jvm` and `pants-example-python` from `waybill-cli/tests/corpus_harness_195/invariant-declarations.toml`, keeping `image-postgres16` (FR-011). Update the I8 section's header comment, which currently describes two populations in the present tense
-- [ ] T025 [US2] Run the matrix and confirm the four cells now report `Pass` and the lane is green with one I8 declaration remaining (SC-001, SC-002, SC-003)
+- [X] T020 [US2] Extend `is_explained` in `waybill-cli/tests/corpus_harness_195/invariants/checks/versionless_explained.rs:64` to accept `cdx_prop(component, "waybill:version-absence") == Some("by-construction")` — keyed to the pinned value, not the key's presence (FR-006)
+- [X] T021 [US2] Rewrite the doc comment above `is_explained` in the same file. It currently argues that a resolve anchor is NOT explained and that widening the set is the wrong move; that reasoning was correct before the marker existed and is wrong after it. State instead why `component-kind` remains rejected (FR-009) and why this marker is not it
+- [X] T022 [US2] Add the fifth accepted annotation to the loop in `i8_does_not_flag_explained_absences_or_sentinel_versions` in `waybill-cli/tests/corpus_harness_195/invariants/mutation_tests.rs:283`, which enumerates the accepted set as `("mutation-tier-file", …)` tuples
+- [X] T023 [US2] Rewrite the note at `docs/reference/sbom-invariants.md:181`. It says `component-kind` is not accepted and "the fix is a marker that states the anchor is versionless" — the fix now exists, so the note must name C197 and keep the `component-kind` rejection. Prose outside the fields `catalog.rs` parses, so untested; FR-008 requires it anyway because it pre-specifies the fix and is the first thing a reader checks
+- [X] T024 [US2] Delete the four I8 declarations for `pants-clojure-polyglot`, `pants-example-django`, `pants-example-jvm` and `pants-example-python` from `waybill-cli/tests/corpus_harness_195/invariant-declarations.toml`, keeping `image-postgres16` (FR-011). Update the I8 section's header comment, which currently describes two populations in the present tense
+- [X] T025 [US2] Run the matrix and confirm the four cells now report `Pass` and the lane is green with one I8 declaration remaining (SC-001, SC-002, SC-003)
 
 ### The must-pass registry — **DEFERRED to a follow-up spec**
 
@@ -142,9 +142,9 @@ populations.
 
 ### Proof the gates have teeth
 
-- [ ] T032 [P] [US2] Positive control in `mutation_tests.rs`: for each of `pants-clojure-polyglot`, `pants-example-django`, `pants-example-jvm`, `pants-example-python` NAMED LITERALLY, assert I8 reports `CellOutcome::Pass` and specifically not `NotApplicable`. Do not use `first_passing("I8")` — that anchor floats, so if all seven anchors vanished it would silently pick another target and stay green (FR-012, SC-001)
-- [ ] T033 [P] [US2] Mutation in `mutation_tests.rs`: remove the `waybill:version-absence` property from exactly one anchor on one Pants target; assert I8 on that target fails with `KIND_VERSIONLESS_AND_UNEXPLAINED` (FR-013, SC-004)
-- [ ] T034 [P] [US2] Mutation in `mutation_tests.rs`: replace one anchor's marker value with an unrecognised string; assert I8 fails — proving acceptance is keyed to the pinned value, not the key's presence (US2 scenario 3)
+- [X] T032 [P] [US2] Positive control in `mutation_tests.rs`: for each of `pants-clojure-polyglot`, `pants-example-django`, `pants-example-jvm`, `pants-example-python` NAMED LITERALLY, assert I8 reports `CellOutcome::Pass` and specifically not `NotApplicable`. Do not use `first_passing("I8")` — that anchor floats, so if all seven anchors vanished it would silently pick another target and stay green (FR-012, SC-001)
+- [X] T033 [P] [US2] Mutation in `mutation_tests.rs`: remove the `waybill:version-absence` property from exactly one anchor on one Pants target; assert I8 on that target fails with `KIND_VERSIONLESS_AND_UNEXPLAINED` (FR-013, SC-004)
+- [X] T034 [P] [US2] Mutation in `mutation_tests.rs`: replace one anchor's marker value with an unrecognised string; assert I8 fails — proving acceptance is keyed to the pinned value, not the key's presence (US2 scenario 3)
 - [ ] T035 **[DEFERRED — next spec]** [US2] Mutation for the registry itself in `must_pass.rs`'s tests: force a registered cell to report `NotApplicable` and assert the lane fails and names the cell. This is SC-011 and the ONLY evidence the registry does anything — a registry that cannot fail is the same vacuity one level up
 - [ ] T036 **[DEFERRED — next spec]** [P] [US2] Validation unit tests in `must_pass.rs` covering each of the six rules independently, including the overlap rule with a fixture entry present in both files (FR-012b)
 - [ ] T037 **[DEFERRED — next spec]** [P] [US2] Line-stability tests in `must_pass.rs` mirroring `line_stability.rs`: inserting an entry sorts into position without moving any other entry's rendered content, and removing it restores the rendering exactly. Note that `line_stability.rs` tests the parsed model through a `render()` helper rather than the file's bytes — mirror that approach (FR-012d)
@@ -166,9 +166,9 @@ exhibiting it.
 **CHANGE TWO.** Genuinely independent of US2: nothing in it touches the
 registry or I8.
 
-- [ ] T039 [US3] Extend `is_explained` in `waybill-cli/tests/corpus_harness_195/invariants/checks/orphan_explained.rs` to accept `waybill:version-absence` = `by-construction`, and document in the doc comment that this is forward-looking — the anchors are reachable today, so no current cell moves (FR-007)
-- [ ] T040 [P] [US3] Unit test in `waybill-cli/tests/corpus_harness_195/invariants/checks/orphan_explained.rs` tests module: a synthetic component with no edges, an empty version and the marker is accepted by I7 as explained
-- [ ] T041 [P] [US3] Test that I7's outcome is unchanged on all 17 targets relative to before this feature, confirming the arm adds acceptance without moving a cell (SC-007). All five current I7 declarations belong to #1214's population and must still report `AcceptedKnownFailure`
+- [X] T039 [US3] Extend `is_explained` in `waybill-cli/tests/corpus_harness_195/invariants/checks/orphan_explained.rs` to accept `waybill:version-absence` = `by-construction`, and document in the doc comment that this is forward-looking — the anchors are reachable today, so no current cell moves (FR-007)
+- [X] T040 [P] [US3] Unit test in `waybill-cli/tests/corpus_harness_195/invariants/checks/orphan_explained.rs` tests module: a synthetic component with no edges, an empty version and the marker is accepted by I7 as explained
+- [X] T041 [P] [US3] Test that I7's outcome is unchanged on all 17 targets relative to before this feature, confirming the arm adds acceptance without moving a cell (SC-007). All five current I7 declarations belong to #1214's population and must still report `AcceptedKnownFailure`
 
 **Checkpoint**: I7 insured, nothing observable changed.
 
@@ -177,9 +177,9 @@ registry or I8.
 ## Phase 6: Polish & Cross-Cutting
 
 - [ ] T042 **[DEFERRED — next spec, with the registry]** [P] Update the doc comment in `waybill-cli/tests/corpus_harness_195/invariants/no_new_io.rs:28` which enumerates the permitted repository-file reads ("the catalog, the declarations file, the ecosystems doc and the committed goldens") to name the must-pass file too. `std::fs::read` is already permitted so the gate passes either way; the comment is the thing that would be wrong. Deferred because without the registry there is no must-pass file to name — the comment is correct as it stands
-- [ ] T043 [P] Add a CHANGELOG.md entry per change: the emission change under Added (a new wire annotation is consumer-visible), the acceptance change under Changed or Fixed
-- [ ] T044 Final verification: run `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh` on each change in isolation and confirm both are green independently (FR-018, SC-012). Checking the gate's own exit status, not a pipeline's
-- [ ] T045 Confirm every success criterion: SC-001 (4 targets Pass), SC-002 (5→1 failing I8 cells), SC-003 (1 declaration), SC-005 (21 component records, one value), SC-006 (12 files), SC-008 (the `no_new_io` gate still passes and the matrix needs no network — automatic under `cargo test`, so name it here or nobody checks it deliberately), SC-009 (catalogue gate both directions). **SC-010 and SC-011 are deferred with the registry** and must be reported as deferred, not as met
+- [X] T043 [P] Add a CHANGELOG.md entry per change: the emission change under Added (a new wire annotation is consumer-visible), the acceptance change under Changed or Fixed
+- [X] T044 Final verification: run `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh` on each change in isolation and confirm both are green independently (FR-018, SC-012). Checking the gate's own exit status, not a pipeline's
+- [X] T045 Confirm every success criterion: SC-001 (4 targets Pass), SC-002 (5→1 failing I8 cells), SC-003 (1 declaration), SC-005 (21 component records, one value), SC-006 (12 files), SC-008 (the `no_new_io` gate still passes and the matrix needs no network — automatic under `cargo test`, so name it here or nobody checks it deliberately), SC-009 (catalogue gate both directions). **SC-010 and SC-011 are deferred with the registry** and must be reported as deferred, not as met
 
 ---
 

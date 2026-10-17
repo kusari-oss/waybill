@@ -18,6 +18,17 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   (C151), which makes the opposite claim. Absent on every package, so a
   scan without Pants resolves is byte-identical. #1216 population 1.
 
+### Changed
+
+- Invariant **I8** (a component with no version carries an annotation
+  explaining why) accepts `waybill:version-absence = by-construction`, so
+  the four Pants corpus targets pass it and their declarations are gone.
+  One I8 declaration remains, for a Go binary whose build info was never
+  read — a resolution gap rather than a labelling one. **I7** accepts the
+  same marker forward-lookingly: the anchors are reachable today, so no
+  cell moves. Acceptance is keyed to the pinned value, not the key's
+  presence, so an unrecognised value fails rather than passing.
+
 ## [0.11.0] - 2026-10-16
 
 A minor release, not a patch. It adds two subcommands, and five things a

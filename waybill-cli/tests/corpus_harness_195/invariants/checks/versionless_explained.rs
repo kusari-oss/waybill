@@ -5,7 +5,10 @@
 //! two things happened: the component has no version to have (a file, a
 //! synthetic anchor), or waybill looked for one and failed. Those have
 //! opposite consequences — the first is complete information, the second
-//! is a gap — and an empty `version` field renders them identical.
+//! is a gap — and an empty `version` field renders them identical. Since
+//! milestone 1156 both causes have a marker: C197
+//! `waybill:version-absence` for the first, C151
+//! `waybill:unresolved-reason` for the second.
 //!
 //! **Boundary with I6**: I6's population is components carrying an
 //! unknown-version *sentinel*, and it asks whether one package appears
@@ -39,30 +42,40 @@ fn is_versionless(component: &serde_json::Value) -> bool {
 
 /// Annotations that account for a missing version.
 ///
+/// - `waybill:version-absence` = `by-construction` — C197, milestone
+///   1156's marker meaning "there was never a version to find". Keyed to
+///   the **pinned value**, not the key's presence: a value this build
+///   does not recognise is not an explanation, so a later enum member
+///   cannot silence a cell on a checker that cannot read it.
 /// - `component-tier = file` — a file is identified by its path and
 ///   hash; it has no version to carry. Same reasoning as I7's.
 /// - `waybill:unresolved-reason` — C151, milestone 236's universal
 ///   "why could this not be resolved" annotation. This is the one
-///   designed for the job.
+///   designed for the opposite case.
 /// - `waybill:haskell-version-unresolved-reason` — the Haskell reader's
 ///   more specific form of the same statement (`compiler-supplied`,
 ///   `absent-from-package-set`).
 /// - `waybill:closure-role` — a Nix store path's role; the store path
 ///   is the identity and the version is not separable from it.
 ///
-/// Deliberately **not** included: `waybill:component-kind =
-/// lockfile-resolve`. A Pants resolve anchor is inherently versionless,
-/// so it is tempting to read its kind as self-explanatory the way
-/// `component-tier = file` is. The difference is that the file tier is a
-/// frozen vocabulary whose meaning is "this is not a package", whereas
-/// `component-kind` (milestone 1064) describes resolve ownership and
-/// says nothing about versions. Treating it as an explanation would
-/// silence the five cells this invariant exists to report, and a
-/// consumer still could not tell an anchor from a failed resolution.
-/// If the project decides a resolve anchor needs no explanation, the
-/// right move is to add a marker that says so, not to widen this set.
+/// C197 and C151 are the two halves of the question this invariant asks,
+/// and they are mutually exclusive on one component: the first says no
+/// version exists, the second says one was looked for and not found.
+/// Accepting both is not a widening of this set — it is the reason the
+/// set can stay narrow.
+///
+/// Still deliberately **not** included: `waybill:component-kind =
+/// lockfile-resolve`. It is co-present on exactly the components C197
+/// now explains, which makes it tempting as a free substitute. It is not
+/// one. `component-kind` (milestone 1064) names what KIND of thing a
+/// component is and reserves enum extension, so binding "has no version"
+/// to its presence would make every future kind inherit a promise its
+/// name does not make — and a consumer reading only `component-kind`
+/// would still be unable to tell an anchor from a failed resolution.
+/// C197 says the one thing; this set accepts the one thing.
 fn is_explained(component: &serde_json::Value) -> bool {
-    cdx_prop(component, "waybill:component-tier") == Some("file")
+    cdx_prop(component, "waybill:version-absence") == Some("by-construction")
+        || cdx_prop(component, "waybill:component-tier") == Some("file")
         || cdx_prop(component, "waybill:unresolved-reason").is_some()
         || cdx_prop(component, "waybill:haskell-version-unresolved-reason").is_some()
         || cdx_prop(component, "waybill:closure-role").is_some()

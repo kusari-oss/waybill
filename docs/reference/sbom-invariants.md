@@ -171,20 +171,40 @@ cannot distinguish them. The first is complete information; the second
 is a gap a consumer should act on.
 
 **When it fires**: identify which of the two populations it is. If the
-component is inherently versionless, it needs a marker that says so —
-the existing ones are `waybill:component-tier` = `file`,
-`waybill:closure-role` for a Nix store path, and for the Haskell reader
+component is inherently versionless, it needs a marker that says so. The
+general one is `waybill:version-absence` = `by-construction` (C197,
+milestone 1156), meaning there was never a version to find; the narrower
+ones are `waybill:component-tier` = `file`, `waybill:closure-role` for a
+Nix store path, and for the Haskell reader
 `waybill:haskell-version-unresolved-reason`. If resolution was attempted
 and failed, the annotation is `waybill:unresolved-reason` (C151,
-milestone 236), which exists precisely for this.
+milestone 236), which exists precisely for that. C197 and C151 are
+mutually exclusive on one component: they are the two halves of the
+question this invariant asks.
 
-Note that `waybill:component-kind` = `lockfile-resolve` is **not**
-accepted as an explanation, though a Pants resolve anchor is inherently
-versionless. `component-kind` (milestone 1064) describes resolve
-ownership, not version absence, and reading it as an explanation would
-silence the population this invariant reports while leaving a consumer
-unable to tell an anchor from a failed resolution. The fix is a marker
-that states the anchor is versionless, not a wider accepted set here.
+Acceptance of C197 is keyed to the **pinned value**, not to the key's
+presence. A value this build does not recognise is not an explanation, so
+a later enum member cannot silence a cell on a checker that cannot read
+it.
+
+Note that `waybill:component-kind` = `lockfile-resolve` is still **not**
+accepted as an explanation, even though it is co-present on exactly the
+components C197 now explains. `component-kind` (milestone 1064) names
+what KIND of thing a component is and reserves enum extension, so
+binding "has no version" to its presence would make every future kind
+inherit a promise its name does not make — and a consumer reading only
+`component-kind` would still be unable to tell an anchor from a failed
+resolution.
+
+The four Pants cells milestone 1156 closed are held by a named-target
+positive control rather than by a declaration, because `Pass` and
+`NotApplicable` both pass the lane and only the first is what the fix
+achieved. A cell going `NotApplicable` is invisible to
+`unfalsifiable_invariants` whenever the invariant stays falsifiable on
+some other target, which I8 does via `image-postgres16`. The general fix
+for that — a committed registry of cells whose `Pass` is load-bearing —
+is deferred to its own spec; until it lands, these four are the only
+cells protected, and by a test that names them.
 
 **Boundary with I6**: I6's population is components carrying an
 unknown-version *sentinel* (`unknown`, `v0.0.0-unknown`, `NOASSERTION`),
