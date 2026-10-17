@@ -422,6 +422,14 @@ pub(crate) fn resolve_component_entry(
         "waybill:component-kind".to_string(),
         json!("lockfile-resolve"),
     );
+    // m1156 (#1216 population 1) — the anchor's empty `version` is by
+    // construction: a resolve is a lockfile, not a package, so there is no
+    // version to find. Without this the document cannot distinguish an
+    // anchor from a package whose resolution failed.
+    extra_annotations.insert(
+        super::super::pants_resolve::VERSION_ABSENCE_KEY.to_string(),
+        json!(super::super::pants_resolve::BY_CONSTRUCTION),
+    );
     // #911 — membership is a lex-sorted JSON array, even for one resolve.
     extra_annotations.insert(
         super::super::pants_resolve::ANNOTATION_KEY.to_string(),
@@ -1079,5 +1087,125 @@ mod tests {
         assert_eq!(ArtifactSourceType::Pypi.as_annotation_str(), "pypi");
         assert_eq!(ArtifactSourceType::Git.as_annotation_str(), "git");
         assert_eq!(ArtifactSourceType::Local.as_annotation_str(), "local");
+    }
+
+    // -----------------------------------------------------------------
+    // Milestone 1156 (#1216 population 1) — the version-absence marker.
+    // -----------------------------------------------------------------
+
+    /// FR-001: the anchor's empty version is accompanied by the marker
+    /// that says the emptiness is by construction. The two assertions
+    /// belong together — the marker without the empty version would be a
+    /// claim about nothing, and the empty version without the marker is
+    /// exactly the defect.
+    #[test]
+    fn python_resolve_anchor_declares_its_version_absence() {
+        let lock = lock_with(&["django"], &[("django", &[])]);
+        let anchor = resolve_component_entry(
+            &lock,
+            Path::new("3rdparty/python/default.lock"),
+            "python-default",
+            false,
+        )
+        .unwrap();
+        assert_eq!(anchor.version, "", "an anchor has no version to carry");
+        assert_eq!(
+            anchor
+                .extra_annotations
+                .get(crate::scan_fs::package_db::pants_resolve::VERSION_ABSENCE_KEY),
+            Some(&json!(crate::scan_fs::package_db::pants_resolve::BY_CONSTRUCTION))
+        );
+    }
+
+    /// FR-004: a package entry from the same reader is byte-identical to
+    /// its pre-feature shape. The marker is a claim about anchors, and a
+    /// pinned package has a version, so carrying it there would be false.
+    #[test]
+    fn a_locked_package_entry_does_not_carry_the_version_absence_marker() {
+        let lock = lock_with(&["django"], &[("django", &[])]);
+        let resolve = &lock.locked_resolves[0];
+        let active = active_extras(&lock, resolve);
+        let entry = locked_req_to_entry(
+            &resolve.locked_requirements[0],
+            Path::new("3rdparty/python/default.lock"),
+            "python-default",
+            false,
+            &active,
+        )
+        .unwrap();
+        assert_eq!(entry.version, "1.0.0");
+        assert!(
+            !entry
+                .extra_annotations
+                .contains_key(crate::scan_fs::package_db::pants_resolve::VERSION_ABSENCE_KEY),
+            "a versioned package must not claim its version is absent by construction"
+        );
+    }
+
+    /// The C151 mutual exclusion (US1 acceptance scenario 3,
+    /// data-model.md §1 invariant 1). `waybill:unresolved-reason` says
+    /// waybill looked for a version and did not find one; this marker says
+    /// there was never one to find. A component carrying both would assert
+    /// that its resolution failed and could not have been attempted.
+    ///
+    /// Scoped honestly: this reader emits no C151 at all, so what is
+    /// checkable here is that nothing it emits carries both keys and that
+    /// the anchor in particular does not claim a failed resolution. The
+    /// cross-reader case — a design-tier `pkg:pypi/*` with C151 beside an
+    /// anchor with C197 in one document — is live on `pants-example-django`,
+    /// where the pip reader supplies twelve such components, and is what
+    /// I8's acceptance reads.
+    #[test]
+    fn no_entry_carries_both_version_absence_and_unresolved_reason() {
+        const UNRESOLVED_REASON: &str = "waybill:unresolved-reason";
+        let lock = lock_with(&["django", "requests"], &[("django", &[]), ("requests", &[])]);
+        let resolve = &lock.locked_resolves[0];
+        let active = active_extras(&lock, resolve);
+
+        let anchor = resolve_component_entry(
+            &lock,
+            Path::new("3rdparty/python/default.lock"),
+            "python-default",
+            false,
+        )
+        .unwrap();
+        let mut entries = vec![anchor];
+        for req in &resolve.locked_requirements {
+            entries.push(
+                locked_req_to_entry(
+                    req,
+                    Path::new("3rdparty/python/default.lock"),
+                    "python-default",
+                    false,
+                    &active,
+                )
+                .unwrap(),
+            );
+        }
+
+        for e in &entries {
+            let absence = e
+                .extra_annotations
+                .contains_key(crate::scan_fs::package_db::pants_resolve::VERSION_ABSENCE_KEY);
+            let unresolved = e.extra_annotations.contains_key(UNRESOLVED_REASON);
+            assert!(
+                !(absence && unresolved),
+                "{} claims both that its version is absent by construction and that \
+                 resolving it failed",
+                e.name
+            );
+        }
+        // The positive half: exactly one of the three is the anchor, and it
+        // is the one carrying the marker. Without this the assertion above
+        // would also hold of a reader that emitted neither key.
+        assert_eq!(
+            entries
+                .iter()
+                .filter(|e| e
+                    .extra_annotations
+                    .contains_key(crate::scan_fs::package_db::pants_resolve::VERSION_ABSENCE_KEY))
+                .count(),
+            1
+        );
     }
 }

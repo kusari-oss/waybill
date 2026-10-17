@@ -7,6 +7,17 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Added
+
+- **`waybill:version-absence`** (catalogue row C197) states that a component
+  has no version to have, as distinct from a version waybill looked for and
+  did not find. Emitted with the single value `by-construction` on the
+  synthetic Pants resolve anchors from both the Python and the JVM lockfile
+  readers: a resolve is a lockfile, not a package, so there was never a
+  version to find. Mutually exclusive with `waybill:unresolved-reason`
+  (C151), which makes the opposite claim. Absent on every package, so a
+  scan without Pants resolves is byte-identical. #1216 population 1.
+
 ## [0.11.0] - 2026-10-16
 
 A minor release, not a patch. It adds two subcommands, and five things a

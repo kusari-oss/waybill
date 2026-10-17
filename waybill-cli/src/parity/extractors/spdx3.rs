@@ -784,6 +784,8 @@ spdx3_anno!(c42_spdx3, "waybill:lifecycle-scope", component);
 spdx3_anno!(c194_spdx3_raw, "waybill:derivation", document);
 spdx3_anno!(c195_spdx3, "waybill:go-mod-why", document);
 spdx3_anno!(c196_spdx3, "waybill:go-mod-why-reason", document);
+// Milestone 1156: C197 per-component version-absence marker.
+spdx3_anno!(c197_spdx3, "waybill:version-absence", component);
 
 /// C194 — compared by projection only (milestone 1071).
 pub(super) fn c194_spdx3(doc: &Value) -> BTreeSet<String> {

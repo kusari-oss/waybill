@@ -1,6 +1,6 @@
 # waybill Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-10-15
+Auto-generated from all feature plans. Last updated: 2026-10-16
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -419,6 +419,8 @@ Auto-generated from all feature plans. Last updated: 2026-10-15
 - N/A — one in-process traversal of the finalized `CompilerPipelineData`; nothing persists beyond the emitted attestation. (1072-compiler-set-close-time)
 - Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. Test-only code; the shipped `waybill` binary is untouched. + Existing only — `serde`/`serde_json` (document walking, artifact emission), `toml = "0.8"` (declarations file; already a direct dep used by `cargo.rs`, pip and pants readers), `regex` (catalog doc parsing; already direct since m013). **Zero new Cargo dependencies.** (1155-invariant-major-corpus)
 - One committed file, `waybill-cli/tests/corpus_harness_195/invariant-declarations.toml` (non-passing cells only). One uncommitted per-run artifact, `target/invariants/run-<sha>.json`. (1155-invariant-major-corpus)
+- Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. No nightly; `waybill-ebpf` untouched. + Existing only — `serde`/`serde_json` (annotation values, document walking), `toml = "0.8"` (the new registry file; already parses the declarations file). **Zero new Cargo dependencies.** (1156-version-absence-marker)
+- Two committed TOML files under `waybill-cli/tests/corpus_harness_195/` — the existing `invariant-declarations.toml` (four rows removed) and the new `invariant-must-pass.toml`. Twelve refreshed golden documents. No runtime state. (1156-version-absence-marker)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -612,9 +614,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 1156-version-absence-marker: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. No nightly; `waybill-ebpf` untouched. + Existing only — `serde`/`serde_json` (annotation values, document walking), `toml = "0.8"` (the new registry file; already parses the declarations file). **Zero new Cargo dependencies.**
 - 1155-invariant-major-corpus: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. Test-only code; the shipped `waybill` binary is untouched. + Existing only — `serde`/`serde_json` (document walking, artifact emission), `toml = "0.8"` (declarations file; already a direct dep used by `cargo.rs`, pip and pants readers), `regex` (catalog doc parsing; already direct since m013). **Zero new Cargo dependencies.**
 - 1072-compiler-set-close-time: Added close-time facts for compiler read/write sets (#1144). Rust stable; `waybill-ebpf` untouched. + Existing only: `sha2` via `trace/hasher.rs`, `clap` (one new flag), dev `tempfile`. **Zero new Cargo dependencies.**
-- 1071-sbom-edit: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. No nightly; `waybill-ebpf` untouched. + Existing only:
 
 
 <!-- MANUAL ADDITIONS START -->
