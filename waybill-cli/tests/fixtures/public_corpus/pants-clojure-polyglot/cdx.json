@@ -50,6 +50,10 @@
           "value": "heuristic-or-default"
         },
         {
+          "name": "waybill:version-absence",
+          "value": "by-construction"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"locks/jvm\"]"
         }
@@ -104,6 +108,10 @@
         {
           "name": "waybill:resolve-classification-source",
           "value": "heuristic-or-default"
+        },
+        {
+          "name": "waybill:version-absence",
+          "value": "by-construction"
         },
         {
           "name": "waybill:workspace-member",
@@ -162,6 +170,10 @@
           "value": "heuristic-or-default"
         },
         {
+          "name": "waybill:version-absence",
+          "value": "by-construction"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"3rdparty/python\"]"
         }
@@ -216,6 +228,10 @@
         {
           "name": "waybill:resolve-classification-source",
           "value": "heuristic-or-default"
+        },
+        {
+          "name": "waybill:version-absence",
+          "value": "by-construction"
         },
         {
           "name": "waybill:workspace-member",

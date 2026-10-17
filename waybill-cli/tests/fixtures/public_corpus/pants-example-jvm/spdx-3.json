@@ -2073,6 +2073,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-DOCIZ5XJV6NHSHTG",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:version-absence\",\"value\":\"by-construction\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-JWUE4DTNQQTOJZUH",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-DOPHBNYDGOJG2BUF",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve-namespace\",\"value\":\"jvm\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-VQ73KXVMACPHGHIR",

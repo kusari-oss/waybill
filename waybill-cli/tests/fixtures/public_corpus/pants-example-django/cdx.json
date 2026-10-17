@@ -50,6 +50,10 @@
           "value": "heuristic-or-default"
         },
         {
+          "name": "waybill:version-absence",
+          "value": "by-construction"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"lockfiles\"]"
         }
