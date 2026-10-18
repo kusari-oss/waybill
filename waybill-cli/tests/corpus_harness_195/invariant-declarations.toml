@@ -292,10 +292,10 @@ issue = 1214
 # because `Pass` and `NotApplicable` both pass the lane and only the
 # first is what the fix achieved.
 #
-# What remains is the second population: one Go binary whose version was
-# never read. It is a resolution gap rather than a labelling one, which
-# is why the two were declared separately and why one closed without the
-# other.
+# What remains is the second population: one Go binary whose version is
+# read and then discarded. It is a resolution gap rather than a labelling
+# one, which is why the two were declared separately and why one closed
+# without the other.
 # ---------------------------------------------------------------------
 
 [[declaration]]
@@ -306,11 +306,22 @@ count_at_declaration = 1
 reason = """
 `pkg:generic/gosu?file-sha256=…` is a statically-linked, UNSTRIPPED Go ELF at
 `usr/local/bin/gosu`, annotated `detected-go=true`, with no version and no
-reason for not having one. Unlike the Pants rows below, this is a real
-resolution gap rather than a labelling one: the Go build info that carries a
-module version is plausibly present and unread, which is what milestone 129's
-`.dep-v0` section reader exists for. The document cannot distinguish "read it
-and found nothing" from "never looked".
+reason for not having one. Unlike the Pants population this invariant used to
+also hold, this is a real resolution gap rather than a labelling one.
+
+The version is read and then discarded, which is not what this row first
+said. `go version -m` on the binary reports `mod github.com/tianon/gosu
+v1.19.0`, and waybill's own BuildInfo reader parses it: the scan logs
+`extracted Go binary BuildInfo components … entries=4 main_modules=1`, then
+`G5 filter: dropped main-module self-references dropped=1`, leaving three
+golang components. The entry deleted is the one carrying the version.
+
+The mechanism is the milestone-053 FR-009 main-module filter at
+`scan_fs/package_db/mod.rs:926`: for a name in `main_modules` it retains only
+an entry tagged `waybill:component-role = main-module`, which is built from a
+`go.mod`. `gosu` in the image has no source tree, so the tagged counterpart
+was never created and the dedup drops the only carrier of the module
+identity. A reproduction that needs no container image is inlined in #1216.
 """
 issue = 1216
 
