@@ -840,6 +840,29 @@ mod tests {
         );
     }
 
+    /// Feature 1218 — mechanism D against the exact production shape of a
+    /// flake input, as the corpus run at `af246692` emitted it.
+    #[test]
+    fn m1218_d_fires_on_the_production_flake_input_shape() {
+        let mut c = mk("pkg:github/numtide/flake-utils@11707dc2f618dd54ca8739b309ec4fc024de578b");
+        c.evidence.source_file_paths =
+            vec!["/home/runner/work/waybill/repo/flake.lock".to_string()];
+        c.sbom_tier = Some("source".to_string());
+        c.source_type = Some("nix-flake-input".to_string());
+        c.extra_annotations.insert(
+            "waybill:workspace-member".to_string(),
+            json!("[\".\"]"),
+        );
+        let mut comps = vec![c];
+        classify_orphans(&mut comps, &HashSet::new());
+        assert_eq!(
+            reason_of(&comps[0]),
+            Some("unreferenced-lock-node"),
+            "the production shape must classify; source_file_paths={:?}",
+            comps[0].evidence.source_file_paths,
+        );
+    }
+
     /// Feature 1218 T018/T020 — mechanism C: a component from a foreign
     /// build system's manifest, whose ecosystem has no reachable component.
     /// Modelled on `maven-guice`'s two `pkg:bazel/*` WORKSPACE entries and

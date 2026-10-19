@@ -47,8 +47,19 @@ gap**:
 | **A1** | `requirements.txt`-sourced components are emitted with **zero out-edges**, so a declaring module's transitive closure dangles | 13 | python-flask | **deferred — #1234** |
 | **A2** | The maven dual-key insert emits **both** the declared and the workspace-resolved coordinate and wires only the resolved one | 3 | maven-guice | **deferred — #1235** |
 
-10 + 3 + 3 + 2 + 13 + 3 = 34. This feature explains **18**; sixteen remain
-reported, in two targets, by design.
+10 + 3 + 3 + 2 + 13 + 3 = 34. This feature explains **15**; nineteen remain
+reported, in three targets, by design.
+
+**Mechanism D ships but moves no cell, and that was discovered at implement
+time.** Its `unreferenced-lock-node` value is correct and unit-tested, and
+it cannot reach its own population: `nix::attach_inputs_to_projects` adds
+main-module-to-root-input *relationships*, so the emit-time classifier's BFS
+sees those three flake inputs as **reachable** and skips them, while the
+emitted `dependencies[]` carries no such edge and invariant I7 — which reads
+the document — sees them as **unreachable**. The classifier and the document
+disagree, which is a waybill defect rather than a missing word, so the cell
+keeps reporting it (**#1237**) and the value is accepted forward-lookingly,
+the posture C197 already established in this harness.
 
 **Every offender is `waybill:sbom-tier = source` except mechanism E's two,
 which are `design`.** This is load-bearing. C151
@@ -461,21 +472,26 @@ and run the hermetic lane; the cell reports `Pass`.
 ### Measurable Outcomes
 
 - **SC-001**: The corpus-wide count of unreachable-and-unexplained
-  components falls from **34** to **16** — thirteen from #1234 and three
-  from #1235, and nothing else.
-- **SC-002**: I7 reports `Pass` on **15** of 17 targets, up from 12. The
-  two that still fail are `python-flask` and `maven-guice`.
-- **SC-003**: `go-opentelemetry`, `haskell-language-server` and
-  `haskell-security-advisories` report `Pass`; `python-flask` falls 23 → 13
-  and `maven-guice` 5 → 3.
-- **SC-004**: Every one of #1234's thirteen and #1235's three still fails
-  I7, verified by name. A feature that accidentally explained them would
-  show as a better SC-001 number and a worse outcome.
+  components falls from **34** to **19** — thirteen from #1234, three from
+  #1235, three from #1237, and nothing else. *(Measured on the corpus run at
+  `af246692`. An earlier draft said 16, before #1237 was found: mechanism D's
+  three flake inputs cannot be reached by any vocabulary because the
+  classifier's BFS and the emitted document disagree about whether they are
+  reachable at all.)*
+- **SC-002**: I7 reports `Pass` on **14** of 17 targets, up from 12. The
+  three that still fail are `python-flask` (#1234), `maven-guice` (#1235) and
+  `haskell-security-advisories` (#1237).
+- **SC-003**: `go-opentelemetry` and `haskell-language-server` report
+  `Pass`; `python-flask` falls 23 → 13 and `maven-guice` 5 → 3.
+  `haskell-security-advisories` stays at 3, blocked by #1237.
+- **SC-004**: Every one of #1234's thirteen, #1235's three and #1237's three
+  still fails I7, verified by name. A feature that accidentally explained any
+  of them would show as a better SC-001 number and a worse outcome.
 - **SC-005**: In `python-flask`, for each of the **nine** names appearing
   more than once, every copy sourced from `uv.lock` is either reachable or
   marked. Measured today: nine names, ten unexplained `uv.lock` copies.
-- **SC-006**: `invariant-declarations.toml` contains exactly **two** `I7`
-  entries, citing #1234 and #1235, with counts 13 and 3.
+- **SC-006**: `invariant-declarations.toml` contains exactly **three** `I7`
+  entries, citing #1234, #1235 and #1237, with counts 13, 3 and 3.
 - **SC-007**: The catalog gains **zero** new rows and the extractor set
   gains **zero** new entries; C45's row text is updated in place, and the
   parity suite plus `every_catalog_row_has_an_extractor` pass. Every new
