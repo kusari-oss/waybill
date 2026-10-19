@@ -127,7 +127,7 @@ Box::new(resolvers::nuget::NugetResolver),
 ### Step 3 — verify
 
 ```sh
-cargo +stable build -p waybill
+cargo build -p waybill
 ```
 
 If you accidentally reused an existing priority, `cargo build` fails
@@ -136,7 +136,7 @@ and the panic message points at `resolver_chain.rs`. Pick an unused
 priority; try again.
 
 ```sh
-cargo +stable test -p waybill -- resolve::resolvers::nuget
+cargo test -p waybill -- resolve::resolvers::nuget
 ```
 
 Runs only your new resolver's unit tests in isolation.

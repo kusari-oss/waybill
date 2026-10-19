@@ -4,7 +4,7 @@
 //!
 //! Per data-model.md § Entity 4 + contracts/perf-bench.md:
 //! - `#[ignore]`d in default `cargo test` invocation
-//! - Opt-in via `cargo +stable test --test exclude_path_perf -- --ignored`
+//! - Opt-in via `cargo test --test exclude_path_perf -- --ignored`
 //! - Median-of-5 sampling per condition
 //! - Linux: strict assertion; macOS: measurement-only print (milestone-094
 //!   thermal-noise rationale)

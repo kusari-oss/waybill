@@ -17,7 +17,7 @@
 //
 // Run them with:
 //
-//   cargo +stable test -p waybill --bin waybill \
+//   cargo test -p waybill --bin waybill \
 //     scan_fs::package_db::golang::graph_resolver::wiremock_integration
 
 #[test]
