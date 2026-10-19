@@ -349,6 +349,39 @@ mod tests {
     /// carry everything the invariants read.
     #[test]
     fn golden_matrix_is_evaluable_and_gated() {
+        // #1238 — stand down in regen mode, the way the sibling gates at
+        // `harness::update_goldens_gate` call sites already do
+        // (`manifest.rs::every_target_has_committed_goldens`,
+        // `layer2_golden.rs`).
+        //
+        // This gate reads the COMMITTED goldens. In regen mode those are
+        // stale by definition — replacing them is the entire point of the
+        // run — so without this guard the gate measures the thing the run
+        // exists to change, and any change that moves a cell deadlocks:
+        //
+        //   declarations left as-is  → this gate passes, the live lane
+        //                              fails with StaleDeclaration
+        //   declarations updated     → the live lane passes, this gate
+        //                              fails with UndeclaredFailure
+        //
+        // No declaration state satisfies both, so no regen run can be
+        // green, so the workflow's upload step — which is ANDed with an
+        // implicit `success()` — never fires, so the goldens can never be
+        // installed and the two can never be made to agree. Feature 1218
+        // hit this and could not refresh its goldens at all.
+        //
+        // Verify runs (the PR lane, nightly, and every local
+        // `cargo test --workspace`) are unaffected and remain the place
+        // this gate does its work.
+        if super::super::harness::update_goldens_gate() {
+            eprintln!(
+                "#1238 guard skipped: regen mode is replacing the committed \
+                 goldens this gate reads, so evaluating them would gate the \
+                 run against the state it exists to change. Fires on every \
+                 verify run."
+            );
+            return;
+        }
         let documents = goldens::load_all();
         assert_eq!(
             documents.len(),

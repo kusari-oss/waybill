@@ -243,8 +243,17 @@ jobs:
       # pass/fail — regen mode writes goldens on Layer 1 pass; Layer 1
       # failures still surface useful state via the emitted-SBOMs
       # artifact above.
+      #
+      # #1238: `always()` is what makes the comment above true. A step
+      # whose `if:` contains no status function is ANDed with an implicit
+      # `success()`, so this never fired on a failing run — exactly the
+      # run whose goldens a maintainer needs in order to fix it. Feature
+      # 1218 dispatched three times, saw regen mode engage every time
+      # ("#978 guard skipped: regen mode writes the goldens this test
+      # requires"), and got `Upload regenerated goldens: skipped` each
+      # time, because a later gate failed.
       - name: Upload regenerated goldens
-        if: ${{ inputs.regen_goldens == true }}
+        if: ${{ always() && inputs.regen_goldens == true }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: corpus-goldens-regen

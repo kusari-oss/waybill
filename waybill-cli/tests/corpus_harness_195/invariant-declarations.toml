@@ -217,47 +217,6 @@ issue = 1207
 
 [[declaration]]
 invariant = "I7"
-target = "go-opentelemetry"
-kind = "unreachable-and-unexplained"
-count_at_declaration = 1
-reason = """
-INTERIM, pending #1238 — delete when the goldens refresh.
-
-Feature 1218 FIXED this cell: `pkg:pypi/codespell` now carries
-`waybill:orphan-reason = foreign-build-system`, confirmed on the corpus run
-at `af246692`, and the lane reported `StaleDeclaration - holds` for this
-entry. The committed goldens still predate that change, and the hermetic
-`golden_matrix_is_evaluable_and_gated` gate reads them, so with this entry
-deleted the gate sees an undeclared failure and `cargo test --workspace`
-goes red.
-
-The goldens cannot be refreshed: the regen path is deadlocked by #1238 —
-that gate has no regen-mode guard, so it evaluates the very goldens a regen
-run exists to replace, no declaration state satisfies both it and the live
-lane at once, and the upload step never fires. This entry describes the
-committed goldens accurately and is the smaller of two wrongs; the
-alternative leaves the whole workspace suite failing.
-"""
-issue = 1238
-
-[[declaration]]
-invariant = "I7"
-target = "haskell-language-server"
-kind = "unreachable-and-unexplained"
-count_at_declaration = 2
-reason = """
-INTERIM, pending #1238 — delete when the goldens refresh.
-
-Feature 1218 FIXED this cell: both `pkg:generic/ghc-*@unspecified`
-components now carry `waybill:orphan-reason = build-toolchain`, confirmed on
-the corpus run at `af246692`, and the lane reported
-`StaleDeclaration - holds` for this entry. See the go-opentelemetry entry
-above for why it is restored rather than deleted.
-"""
-issue = 1238
-
-[[declaration]]
-invariant = "I7"
 target = "haskell-security-advisories"
 kind = "unreachable-and-unexplained"
 count_at_declaration = 3
