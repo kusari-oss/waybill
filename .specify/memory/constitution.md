@@ -2,6 +2,85 @@
   ============================================================
   SYNC IMPACT REPORT
   ============================================================
+  Version change: 4.0.0 → 4.0.1
+  Bump rationale: PATCH — no principle is added, removed or
+  redefined, and no guidance is materially expanded. The
+  Pre-PR Verification table printed two commands that were
+  not the commands it claimed to print. Correcting them is a
+  wording fix against the clause's own normative content:
+  "These are the exact commands CI executes."
+
+  Why (issue #1189): both rows carried a `+stable` toolchain
+  argument. `cargo +stable` is a rustup dispatch that
+  overrides the pin in `rust-toolchain.toml`, so the gate ran
+  on whatever the stable channel resolved to that day rather
+  than on the compiler CI uses. In #1189 that was 1.99.0
+  locally and in CI while the pin said 1.98.1 — three
+  doctest targets failed with `error[E0514]: found crate ...
+  compiled by an incompatible version of rustc` and the tree
+  had to be cleaned and rebuilt. `.github/workflows/ci.yml`
+  (lines 348, 351, 454, 457, 525, 553, 615, 618) and
+  `scripts/pre-pr.sh` (lines 51-52) have named no toolchain
+  since that fix; the constitution's table is the last place
+  that still did.
+
+  Step 2 also gains `--no-fail-fast`, which `scripts/pre-pr.sh`
+  and every CI lane pass. Without it cargo stops after the
+  first failing test binary, so the row's own passing
+  condition — "Every suite reports `ok. N passed; 0 failed`"
+  — is not observable for the suites that never ran.
+
+  Modified sections:
+    - Development Workflow → Pre-PR Verification (MANDATORY):
+      both table rows; a paragraph naming #1189 and
+      forbidding the reintroduction of a `+toolchain`
+      argument.
+
+  Added sections: none.
+  Removed sections: none.
+  Principles: unchanged.
+
+  Templates requiring updates:
+    - .specify/templates/plan-template.md        ✅ no update needed
+    - .specify/templates/spec-template.md        ✅ no update needed
+    - .specify/templates/tasks-template.md       ✅ no update needed
+    - .specify/templates/agent-file-template.md  ✅ no update needed
+    - .specify/templates/checklist-template.md   ✅ no update needed
+
+  Live documents corrected in the same change (step 3 of the
+  amendment procedure — every artifact that hands a reader a
+  command to run):
+    - CONTRIBUTING.md                            ✅ the pre-PR contract
+    - README.md                                  ✅ incl. the claim about
+      what CI enforces
+    - docs/TESTING.md                            ✅
+    - docs/architecture/resolvers.md             ✅
+    - docs/cisa-2026-coverage.md                 ✅
+    - four `#[test]` file headers carrying copy-paste
+      opt-in invocations                         ✅
+
+  Deliberately NOT rewritten:
+    - `specs/**` for merged milestones (≈590 files). They
+      record what was run at the time, and #1189's lesson is
+      that the pin moved under those runs. Falsifying them
+      would delete the evidence.
+    - `CHANGELOG.md`, `docs/audits/**`, and CLAUDE.md's
+      auto-generated Active Technologies lines — dated
+      records, same reason.
+    - `rust-toolchain.toml:19`, which describes the problem
+      correctly and is not an instruction.
+
+  Follow-up TODOs:
+    - specs/1217-must-pass-registry/plan.md: its Constitution
+      Check row records this deviation as open. Once this
+      merges, that row should cite the amendment instead.
+      Tracked on PR #1231.
+  ============================================================
+-->
+<!--
+  ============================================================
+  SYNC IMPACT REPORT
+  ============================================================
   Version change: 3.0.0 → 4.0.0
   Bump rationale: MAJOR — Principles II, III and XII and Strict
   Boundary 1 are REDEFINED: they now apply to trace mode only.
@@ -889,11 +968,23 @@ one, not a subset, BOTH:
 
 | Step | Command | Passing condition |
 |------|---------|-------------------|
-| 1 | `cargo +stable clippy --workspace --all-targets -- -D warnings` | Zero errors and zero warnings |
-| 2 | `cargo +stable test --workspace` | Every suite reports `ok. N passed; 0 failed` |
+| 1 | `cargo clippy --workspace --all-targets -- -D warnings` | Zero errors and zero warnings |
+| 2 | `cargo test --workspace --no-fail-fast` | Every suite reports `ok. N passed; 0 failed` |
 
-These are the exact commands CI executes (`.github/workflows/ci.yml`).
-Note that the Build & Test Commands quick-reference at line 346 above
+These are the exact commands CI executes (`.github/workflows/ci.yml`),
+on the exact compiler. **Neither row names a toolchain**, so both
+resolve through `rust-toolchain.toml`. They carried `+stable` until
+issue #1189: `cargo +stable` is a rustup dispatch that overrides the
+pin, so the gate ran on whatever the stable channel resolved to that
+day — 1.99.0 locally and in CI while the pin said 1.98.1. Three
+doctest targets failed with `error[E0514]: found crate ... compiled by
+an incompatible version of rustc`, and the tree had to be cleaned and
+rebuilt. A `+toolchain` argument in either row MUST NOT be
+reintroduced; it is the one edit that can make the first sentence of
+this paragraph false again. Step 2 carries `--no-fail-fast` because
+without it cargo stops at the first failing test binary, and the
+row's passing condition cannot be observed for suites that never ran.
+Note that the Build & Test Commands quick-reference immediately above
 documents a related-but-not-identical clippy invocation
 (`cargo clippy --all-targets --all-features -- -D warnings`) intended
 for thorough local linting that exercises feature-gated code. Both
@@ -955,4 +1046,4 @@ changes do not violate any principle. Violations require
 either a code fix or a constitution amendment — never silent
 deviation.
 
-**Version**: 4.0.0 | **Ratified**: 2026-04-15 | **Last Amended**: 2026-10-04
+**Version**: 4.0.1 | **Ratified**: 2026-04-15 | **Last Amended**: 2026-10-18

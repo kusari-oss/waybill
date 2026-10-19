@@ -4,7 +4,7 @@
 //! Gated behind `WAYBILL_FINGERPRINTS_NETWORK_TESTS=1`. When the env
 //! var is unset (the default CI lane), the test exits zero with a
 //! `println!("skipped: ...")` message — preserves the offline-by-default
-//! posture of `cargo +stable test --workspace`.
+//! posture of `cargo test --workspace`.
 //!
 //! When enabled, the test:
 //!
@@ -22,7 +22,7 @@
 //!
 //! ```sh
 //! WAYBILL_FINGERPRINTS_NETWORK_TESTS=1 \
-//!     cargo +stable test -p waybill \
+//!     cargo test -p waybill \
 //!         --test scan_fingerprint_corpus_external
 //! ```
 

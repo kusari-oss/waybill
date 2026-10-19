@@ -483,7 +483,7 @@ changes any cell:
 
 1. Update the affected row's cell (verdict / slot / file:line).
 2. Update `last-verified` in the front-matter to the current date.
-3. Run `cargo +stable test --workspace --test cisa_2026_coverage_matrix`
+3. Run `cargo test --workspace --test cisa_2026_coverage_matrix`
    locally to confirm every recipe still resolves to a non-empty
    value.
 4. If a CISA element itself was added/removed, bump the section

@@ -139,9 +139,11 @@ cargo build --release
 ```
 
 **Rust toolchain.** Scan, verify, enrich, parity-check, policy, and
-attestation subcommands build under the **stable** toolchain (CI runs
-`cargo +stable`). Trace subcommands additionally need nightly for the
-eBPF target — see
+attestation subcommands build under the **stable** toolchain, pinned to
+an exact version in [`rust-toolchain.toml`](rust-toolchain.toml) so that
+local builds and CI resolve the same compiler. Do not pass a
+`+toolchain` argument; it overrides the pin (#1189). Trace subcommands
+additionally need nightly for the eBPF target — see
 [`docs/user-guide/installation.md`](docs/user-guide/installation.md).
 
 **Platform support.**
@@ -449,9 +451,10 @@ tests/fixtures/   Real + synthetic fixtures consumed by integration tests
 
 Open an issue or PR at
 [github.com/kusari-sandbox/waybill](https://github.com/kusari-sandbox/waybill).
-CI enforces `cargo +stable clippy --workspace --all-targets` and
-`cargo +stable test --workspace` on every PR; run both locally before
-opening one.
+CI enforces `cargo clippy --workspace --all-targets -- -D warnings` and
+`cargo test --workspace --no-fail-fast` on every PR; run both locally
+before opening one, or run [`scripts/pre-pr.sh`](scripts/pre-pr.sh),
+which runs them in order with the same flags.
 
 ## License
 
