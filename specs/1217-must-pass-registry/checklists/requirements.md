@@ -73,3 +73,38 @@ settles it.
 overlaps this feature's seed exactly. A spec that added the registry without
 saying what happens to the narrower test would leave a reviewer unable to
 tell duplication from redundancy-by-design.
+
+**Post-plan (2026-10-18).** Plan-time measurement corrected one premise and
+added one requirement. The spec had claimed all four seeded targets would flip
+to `NotApplicable` if the anchors left; measured, that is true of one, and the
+spec now carries the table, FR-013a and the probe. FR-019/FR-019a were added
+after a second measurement found the complementary assertion already exists
+for two of seven anchors, making the gap a five-line fill-in rather than the
+separate mechanism the first draft deferred (#1230). Re-checked: all items
+still pass, and both new requirements carry success criteria (SC-014) rather
+than prose.
+
+**Post-clarify (2026-10-18).** Three clarifications were integrated and all
+items were re-checked against the amended spec; all still pass. FR-010 is now
+enforced by validation rather than asserted by a test that could not fail,
+FR-012 names the grid and marks the commitment rather than the breach, and
+FR-017's open choice is closed as removal. Each added a demonstrable success
+criterion (SC-004 counts seven rules, SC-008, SC-014, SC-015), so no
+clarification landed as prose alone.
+
+**Post-analyze (2026-10-18).** `/speckit.analyze` found one HIGH coverage gap
+and three smaller ones; all are closed above rather than noted. The HIGH one
+was the plan's own first risk row: that the must-pass pass must run under the
+single-target report scope was stated in research, in the contract and in a
+module header, and nowhere as a requirement or a test — while the lane that
+would notice its loss is network-gated. That is this feature's own argument
+turned on itself, so it became FR-008a and SC-017 with a task (T038). Also
+added: the unreadable half of FR-011 (a malformed file, not only a missing
+one), the removal proof for the two anchors nobody is editing, and the finding
+that the `pants-2.31` anchor's existing guard is a *reachability* check whose
+diagnostic sends a reader to #1100 rather than to a vanished anchor — recorded
+in the task rather than left for whoever next reads a `yes` row in the probe's
+table. One CRITICAL finding was raised against the **constitution**, not this
+feature: its MANDATORY pre-PR table still prints the pre-#1189 `+stable` form.
+It needs its own amendment; the plan's Constitution Check now carries the
+stale-clause note so the deviation is visible rather than silent.
