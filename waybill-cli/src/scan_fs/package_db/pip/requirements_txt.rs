@@ -294,6 +294,25 @@ impl RequirementsTxtEntry {
             String,
             serde_json::Value,
         > = Default::default();
+        // Feature 1218 (#1214) T022 — C55 `waybill:source-mechanism`,
+        // unconditionally on every entry this reader emits.
+        //
+        // Why a reader-level annotation for a three-component problem:
+        // invariant I7's mechanism-C population contains one pypi
+        // component (`go-opentelemetry`'s `codespell`, from a root
+        // `requirements.txt` in a Go repository) beside two
+        // `pkg:bazel/*` components that already carry
+        // `bazel-http-archive`. A consumer could identify the bazel pair
+        // machine-readably and had to parse the string
+        // `"requirements.txt"` to identify the pip one. Annotating only
+        // that component would be worse than annotating none — a reader
+        // that labels some of its own output and not the rest cannot be
+        // relied on either way — so this fires for all of them. Measured
+        // radius: 41 components across five corpus targets.
+        extra_annotations.insert(
+            "waybill:source-mechanism".to_string(),
+            serde_json::json!("pip-requirements-txt"),
+        );
         if tier == "design" {
             // Milestone 670 T012: differentiate the m236 reason for PEP
             // 508 direct-URL entries — the resolution boundary is "URL
@@ -854,6 +873,42 @@ urllib3>=2 \\
             !pdb.extra_annotations.contains_key("waybill:unresolved-reason"),
             "source-tier components MUST NOT carry C151 annotation",
         );
+    }
+
+    /// Feature 1218 (#1214) T023 — every entry this reader emits carries
+    /// C55 `waybill:source-mechanism`, regardless of tier or scope.
+    ///
+    /// Uniform by design. Invariant I7's mechanism-C population needs it on
+    /// one component, but a reader that annotates part of its own output is
+    /// not something a consumer can rely on either way. Mirrors the
+    /// equivalent assertion in `scan_fs/package_db/bazel.rs`.
+    #[test]
+    fn m1218_every_requirements_entry_carries_source_mechanism() {
+        for (version, range, scope) in [
+            ("2.28.0", "requests==2.28.0", RequirementsScope::Main),
+            ("", "requests>=2", RequirementsScope::Main),
+        ] {
+            let entry = RequirementsTxtEntry {
+                name: "requests".into(),
+                version: version.into(),
+                range_spec: range.into(),
+                source_type: None,
+                direct_url: None,
+                hashes: Vec::new(),
+            };
+            let pdb = entry
+                .into_package_db_entry("/req.txt", scope)
+                .expect("converts");
+            assert_eq!(
+                pdb.extra_annotations
+                    .get("waybill:source-mechanism")
+                    .and_then(|v| v.as_str()),
+                Some("pip-requirements-txt"),
+                "every requirements.txt entry identifies its build system \
+                 machine-readably; got {:?}",
+                pdb.extra_annotations.get("waybill:source-mechanism"),
+            );
+        }
     }
 
     #[test]

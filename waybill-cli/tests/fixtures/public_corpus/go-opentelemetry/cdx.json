@@ -26088,6 +26088,14 @@
           "value": "source"
         },
         {
+          "name": "waybill:orphan-reason",
+          "value": "foreign-build-system"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }

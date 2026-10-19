@@ -7,6 +7,31 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Test infrastructure / SBOM emission
+
+- **`waybill:orphan-reason` now covers every ecosystem** (#1214). The
+  emit-time classifier short-circuited anything that was not Go or npm, and
+  all five milestone-167 codes were Go/npm-specific in meaning, so 34
+  unreachable components across five corpus targets could not be explained
+  even in principle. Adds three C45 values — `build-toolchain`,
+  `foreign-build-system`, `unreferenced-lock-node` — removes both ecosystem
+  guards, and widens `dead-lockfile-entry` to the pypi multi-version case,
+  whose name already described it. No new catalog row and no new parity
+  extractor; invariant I7's `is_explained` still has exactly five arms.
+- Implements FR-008 of that feature, which had no implementation: the
+  classifier now declines a component already explained by another I7
+  marker, instead of overwriting it.
+- **Sixteen components are deliberately left failing invariant I7**, with
+  their declarations rewritten to say why. They are reader defects, not
+  properties of the scanned artifact: 13 `requirements.txt` components
+  emitted with no out-edges (#1234) and 3 maven coordinates emitted twice
+  with only the resolved copy wired (#1235). Explaining them would close the
+  cells that report them.
+- The pip `requirements.txt` reader now emits C55
+  `waybill:source-mechanism` (`pip-requirements-txt`), so every component
+  in the foreign-build-system population identifies its build system
+  machine-readably rather than requiring a consumer to parse a path.
+
 ### Added
 
 - **`waybill:version-absence`** (catalogue row C197) states that a component

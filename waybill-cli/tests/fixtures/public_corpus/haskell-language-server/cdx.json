@@ -36,6 +36,10 @@
           "value": "stack-yaml-lock"
         },
         {
+          "name": "waybill:orphan-reason",
+          "value": "build-toolchain"
+        },
+        {
           "name": "waybill:stackage-resolver",
           "value": "ghc-9.6.5"
         }
@@ -77,6 +81,10 @@
         {
           "name": "waybill:evidence-kind",
           "value": "stack-yaml-lock"
+        },
+        {
+          "name": "waybill:orphan-reason",
+          "value": "build-toolchain"
         },
         {
           "name": "waybill:stackage-resolver",
@@ -9772,6 +9780,10 @@
           "value": "docs"
         },
         {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
+        },
+        {
           "name": "waybill:unresolved-reason",
           "value": "no version specifier in requirements.txt; no uv.lock / poetry.lock fallback"
         },
@@ -9830,6 +9842,10 @@
         {
           "name": "waybill:python-req-file-scope",
           "value": "docs"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -9892,6 +9908,10 @@
           "value": "docs"
         },
         {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
+        },
+        {
           "name": "waybill:unresolved-reason",
           "value": "no version specifier in requirements.txt; no uv.lock / poetry.lock fallback"
         },
@@ -9950,6 +9970,10 @@
         {
           "name": "waybill:python-req-file-scope",
           "value": "docs"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
         },
         {
           "name": "waybill:unresolved-reason",

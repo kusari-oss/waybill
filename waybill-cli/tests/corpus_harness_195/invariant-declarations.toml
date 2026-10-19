@@ -217,68 +217,57 @@ issue = 1207
 
 [[declaration]]
 invariant = "I7"
-target = "go-opentelemetry"
-kind = "unreachable-and-unexplained"
-count_at_declaration = 1
-reason = """
-`pkg:pypi/codespell` comes from a requirements.txt in a Go repository's
-tooling directory. It is a real declared dependency of the repo's lint
-setup, has no edge to the Go subject, and carries no orphan-reason. Either
-it is a build-tooling component and should say so, or the pip reader should
-not attach it to this subject at all.
-"""
-issue = 1214
-
-[[declaration]]
-invariant = "I7"
-target = "haskell-language-server"
-kind = "unreachable-and-unexplained"
-count_at_declaration = 2
-reason = """
-Two `pkg:generic/ghc-*@unspecified` toolchain components with no edge and no
-orphan-reason. A compiler pin is build tooling, not a dependency of the
-subject; it needs the marker that says so.
-"""
-issue = 1214
-
-[[declaration]]
-invariant = "I7"
 target = "haskell-security-advisories"
 kind = "unreachable-and-unexplained"
 count_at_declaration = 3
 reason = """
-Three `pkg:github/*` flake inputs from flake.lock with no edge and no
-orphan-reason. The milestone-925 lockfile reader emits flake inputs as
-components but only wires edges between lockfile nodes, so an input that is
-not itself depended on by another node ends up unexplained.
+Three `pkg:github/*` flake inputs with no edge and no orphan-reason.
+Feature 1218 added an `unreferenced-lock-node` code for exactly this
+population and it cannot reach them: `nix::attach_inputs_to_projects`
+adds main-module-to-root-input RELATIONSHIPS, so the emit-time
+classifier's BFS sees these as reachable and skips them, while the
+emitted `dependencies[]` carries no such edge and invariant I7 — which
+reads the document — sees them as unreachable. The classifier and the
+document disagree about reachability, which is a waybill defect rather
+than a missing word, so the cell keeps reporting it.
 """
-issue = 1214
+issue = 1237
 
 [[declaration]]
 invariant = "I7"
 target = "maven-guice"
 kind = "unreachable-and-unexplained"
-count_at_declaration = 5
+count_at_declaration = 3
 reason = """
-Five `pkg:bazel/*` components read from WORKSPACE, source-tier, with no edge
-and no orphan-reason. guice builds with both Maven and Bazel; the bazel
-reader emits archives it found but never relates them to the subject.
+Three `pkg:maven/*` components with no edge and no orphan-reason. The
+maven dual-key insert emits BOTH the coordinate a submodule declared
+and the version the workspace resolved, and wires only the resolved
+one: `examples/guice-demo/pom.xml` asks for `guice@5.1.0`, the edge
+points at `guice@7.0.0`, and the 5.1.0 component is left unreferenced.
+One coordinate, two components, the one a consumer would look up being
+the orphan. A duplicate-identity defect, not an explanation gap.
+Feature 1218 explained the two `pkg:bazel/*` WORKSPACE components that
+shared this cell and deliberately left these.
 """
-issue = 1214
+issue = 1235
 
 [[declaration]]
 invariant = "I7"
 target = "python-flask"
 kind = "unreachable-and-unexplained"
-count_at_declaration = 23
+count_at_declaration = 13
 reason = """
-Twenty-three uv.lock-resolved packages with no edge and no orphan-reason,
-including a second `alabaster` at 0.7.16 alongside the reachable 1.0.0. These
-are uv's alternate resolution forks: real entries in the lockfile that the
-chosen resolution does not use. They need a marker saying so, or they read as
-part of the artifact.
+Thirteen `examples/celery/requirements.txt` components with no edge
+and no orphan-reason. The `requirements.txt` path emits components with
+ZERO out-edges, so the member main module is wired to `celery` and the
+whole transitive closure below it dangles — the edges are in the
+lockfile, the emitter never wrote them. A missing edge, not a missing
+explanation: a marker here would record a waybill defect as a property
+of the flask repository and close the cell reporting it. Feature 1218
+explained the ten `uv.lock` resolution forks that shared this cell and
+deliberately left these.
 """
-issue = 1214
+issue = 1234
 
 # ---------------------------------------------------------------------
 # I8 — a component with no version and no annotation explaining why.

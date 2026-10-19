@@ -55,6 +55,10 @@
           "value": "source"
         },
         {
+          "name": "waybill:orphan-reason",
+          "value": "dead-lockfile-entry"
+        },
+        {
           "name": "waybill:python-lockfile-format",
           "value": "uv"
         },
@@ -179,6 +183,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
         },
         {
           "name": "waybill:workspace-member",
@@ -381,6 +389,10 @@
           "value": "source"
         },
         {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"examples/celery\"]"
         }
@@ -503,6 +515,10 @@
           "value": "source"
         },
         {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"examples/celery\"]"
         }
@@ -554,6 +570,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
         },
         {
           "name": "waybill:workspace-member",
@@ -619,6 +639,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:orphan-reason",
+          "value": "dead-lockfile-entry"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -745,6 +769,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
         },
         {
           "name": "waybill:workspace-member",
@@ -1637,6 +1665,10 @@
           "value": "source"
         },
         {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"examples/celery\"]"
         }
@@ -1688,6 +1720,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
         },
         {
           "name": "waybill:workspace-member",
@@ -1743,6 +1779,10 @@
           "value": "source"
         },
         {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"examples/celery\"]"
         }
@@ -1794,6 +1834,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
         },
         {
           "name": "waybill:workspace-member",
@@ -1859,6 +1903,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:orphan-reason",
+          "value": "dead-lockfile-entry"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -1928,6 +1976,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:orphan-reason",
+          "value": "dead-lockfile-entry"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -2595,6 +2647,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
         },
         {
           "name": "waybill:workspace-member",
@@ -3682,6 +3738,10 @@
           "value": "source"
         },
         {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"examples/celery\"]"
         }
@@ -3747,6 +3807,10 @@
           "value": "source"
         },
         {
+          "name": "waybill:orphan-reason",
+          "value": "dead-lockfile-entry"
+        },
+        {
           "name": "waybill:python-lockfile-format",
           "value": "uv"
         },
@@ -3802,6 +3866,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
         },
         {
           "name": "waybill:workspace-member",
@@ -3867,6 +3935,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:orphan-reason",
+          "value": "dead-lockfile-entry"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -3973,6 +4045,10 @@
           "value": "source"
         },
         {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"examples/celery\"]"
         }
@@ -4024,6 +4100,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
         },
         {
           "name": "waybill:workspace-member",
@@ -4325,6 +4405,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:orphan-reason",
+          "value": "dead-lockfile-entry"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -5254,6 +5338,10 @@
           "value": "source"
         },
         {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"examples/celery\"]"
         }
@@ -5748,6 +5836,10 @@
           "value": "source"
         },
         {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"examples/celery\"]"
         }
@@ -6044,6 +6136,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
         },
         {
           "name": "waybill:workspace-member",
@@ -6381,6 +6477,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
         },
         {
           "name": "waybill:workspace-member",
@@ -6819,6 +6919,10 @@
           "value": "pep-735-dependency-groups:docs"
         },
         {
+          "name": "waybill:orphan-reason",
+          "value": "dead-lockfile-entry"
+        },
+        {
           "name": "waybill:python-lockfile-format",
           "value": "uv"
         },
@@ -6895,6 +6999,10 @@
         {
           "name": "waybill:optional-derivation",
           "value": "pep-735-dependency-groups:docs"
+        },
+        {
+          "name": "waybill:orphan-reason",
+          "value": "dead-lockfile-entry"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -8439,6 +8547,10 @@
           "value": "source"
         },
         {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"examples/celery\"]"
         }
@@ -9046,6 +9158,10 @@
           "value": "source"
         },
         {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"examples/celery\"]"
         }
@@ -9436,6 +9552,10 @@
           "value": "source"
         },
         {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\"examples/celery\"]"
         }
@@ -9499,6 +9619,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:orphan-reason",
+          "value": "dead-lockfile-entry"
         },
         {
           "name": "waybill:python-lockfile-format",

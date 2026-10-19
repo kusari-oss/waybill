@@ -30173,6 +30173,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-L6RH5BXNMYBHD4ET",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-mechanism\",\"value\":\"pip-requirements-txt\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-UYLJ6OYBCAPGEINM",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-L6W4FMO4QUGGO7RG",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"internal/tools\\\"]\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-UUNQQ7E5G66CVH3W",
@@ -38696,6 +38704,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-VFUOV6NE2KOXZTID",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"internal/tools/go.sum\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3QYRQ4EDMSVDNP7U",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-VGFKSFCTIS6DSKII",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:orphan-reason\",\"value\":\"foreign-build-system\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-UYLJ6OYBCAPGEINM",
       "type": "Annotation"
     },
     {

@@ -98,6 +98,10 @@
           "value": "design"
         },
         {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
+        },
+        {
           "name": "waybill:unresolved-reason",
           "value": "no version specifier in requirements.txt; no uv.lock / poetry.lock fallback"
         },
@@ -540,6 +544,10 @@
           "value": "design"
         },
         {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
+        },
+        {
           "name": "waybill:unresolved-reason",
           "value": "no version specifier in requirements.txt; no uv.lock / poetry.lock fallback"
         },
@@ -589,6 +597,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "design"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -711,6 +723,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "design"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -979,6 +995,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "design"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -1565,6 +1585,10 @@
           "value": ">=3.9"
         },
         {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
+        },
+        {
           "name": "waybill:unresolved-declared-dep",
           "value": "tomli"
         },
@@ -1830,6 +1854,10 @@
           "value": "design"
         },
         {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
+        },
+        {
           "name": "waybill:unresolved-reason",
           "value": "no version specifier in requirements.txt; no uv.lock / poetry.lock fallback"
         },
@@ -2035,6 +2063,10 @@
           "value": "design"
         },
         {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
+        },
+        {
           "name": "waybill:unresolved-reason",
           "value": "no version specifier in requirements.txt; no uv.lock / poetry.lock fallback"
         },
@@ -2084,6 +2116,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "design"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -2350,6 +2386,10 @@
           "value": "design"
         },
         {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
+        },
+        {
           "name": "waybill:unresolved-reason",
           "value": "no version specifier in requirements.txt; no uv.lock / poetry.lock fallback"
         },
@@ -2470,6 +2510,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "design"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -2663,6 +2707,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "design"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
         },
         {
           "name": "waybill:unresolved-reason",
@@ -2923,6 +2971,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "design"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
         },
         {
           "name": "waybill:unresolved-reason",

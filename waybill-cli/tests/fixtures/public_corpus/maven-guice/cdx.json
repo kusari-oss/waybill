@@ -48,6 +48,10 @@
           "value": "https://github.com/google/bazel-common/archive/bf8e5ef95b118d1716b0cb4982cf15b6ed1c896f.zip"
         },
         {
+          "name": "waybill:orphan-reason",
+          "value": "foreign-build-system"
+        },
+        {
           "name": "waybill:source-mechanism",
           "value": "bazel-http-archive"
         },
@@ -99,6 +103,10 @@
         {
           "name": "waybill:download-url",
           "value": "https://github.com/bazelbuild/rules_jvm_external/archive/%s.zip"
+        },
+        {
+          "name": "waybill:orphan-reason",
+          "value": "foreign-build-system"
         },
         {
           "name": "waybill:source-mechanism",

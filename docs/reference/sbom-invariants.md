@@ -158,6 +158,33 @@ resolver missed it, or it genuinely has no edge and needs a
 milestone 194 anchored several populations; a new unexplained population
 is usually a reader that was added after those passes.
 
+**The vocabulary spans every ecosystem since feature 1218.** Until then
+`generate/orphan_reason.rs` skipped anything that was not Go or npm, so an
+unreachable maven, pypi, bazel, github or generic component could not be
+explained even in principle — there was no code to assign. Feature 1218
+removed both guards and added `build-toolchain`, `foreign-build-system` and
+`unreferenced-lock-node` to C45 (#1214).
+
+**Two populations deliberately still fail I7**, and their declarations are
+the record of it rather than an oversight. Both are waybill's own defects,
+so a marker on them would assert a property of the scanned repository that
+is really a property of waybill, and would close the cell reporting it:
+
+- `python-flask` (13) — `requirements.txt` components are emitted with no
+  out-edges, so a declaring module's transitive closure dangles. The edges
+  are in the lockfile; the emitter never wrote them. **#1234.**
+- `maven-guice` (3) — the maven dual-key insert emits both the declared and
+  the workspace-resolved coordinate and wires only the resolved one, so an
+  older coordinate sits unreferenced beside the version the build uses.
+  **#1235.**
+
+So a fresh I7 failure is worth triaging in two directions before reaching
+for vocabulary: *is this a class nothing can describe yet*, or *is this an
+edge a reader should have written*? Feature 1218's measurements
+(`specs/1218-explain-every-orphan/measurements/i7-populations.md`) found the
+split was 18 to 16 on a population that had been read as entirely the
+first.
+
 **Boundary with I3**: see I3 above. I7's population is the unreachable
 one; I3's is reachable-but-only-non-runtime.
 

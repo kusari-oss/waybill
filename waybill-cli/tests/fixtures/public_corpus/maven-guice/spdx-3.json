@@ -2661,6 +2661,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-3QR74DOA45R5X2XK",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:orphan-reason\",\"value\":\"foreign-build-system\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ED2B4WTII7E6M5TE",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-3WL3KTE64EVQ7ZZ3",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"bom\\\"]\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-D2GSYF2BT6R626KU",
@@ -5080,6 +5088,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-SQUKLT5PMVAPQHTU",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"util/generate-latest-docs.sh\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-74B4INTHXMMBOCFJ",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-SSTG2T5NLCXM6UTF",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:orphan-reason\",\"value\":\"foreign-build-system\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-N7GN5WSGN2DT7HRF",
       "type": "Annotation"
     },
     {
