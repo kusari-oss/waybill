@@ -1,6 +1,6 @@
 # waybill Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-10-18
+Auto-generated from all feature plans. Last updated: 2026-10-19
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -423,6 +423,8 @@ Auto-generated from all feature plans. Last updated: 2026-10-18
 - Two committed TOML files under `waybill-cli/tests/corpus_harness_195/` — the existing `invariant-declarations.toml` (four rows removed) and the new `invariant-must-pass.toml`. Twelve refreshed golden documents. No runtime state. (1156-version-absence-marker)
 - Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. No nightly. No `+toolchain` argument when running the gate — #1189. + Existing only — `toml = "0.8"` (already parses the declarations file), `serde`/`serde_json`, and dev-only `tempfile` for the missing/empty-file fixtures. **Zero new Cargo dependencies.** (1217-must-pass-registry)
 - One committed TOML file, `waybill-cli/tests/corpus_harness_195/invariant-must-pass.toml`. No runtime state and no per-run artifact of its own — the existing `target/invariants/run-<id>.json` gains fields. (1217-must-pass-registry)
+- Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. No nightly; `waybill-ebpf` untouched. + Existing only — `serde_json` (annotation values) and `std::collections::{HashMap, HashSet}`, both already imported by `generate/orphan_reason.rs`. **Zero new Cargo dependencies.** (1218-explain-every-orphan)
+- None. Annotations are emitted into the SBOM and never read back; two committed TOML edits in `invariant-declarations.toml`, no runtime state. (1218-explain-every-orphan)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -616,9 +618,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 1218-explain-every-orphan: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. No nightly. + Existing only — `serde_json` and `std::collections`, both already imported by the module changed. **Zero new Cargo dependencies.**
 - 1217-must-pass-registry: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. No nightly. + Existing only — `toml = "0.8"` (already parses the declarations file), `serde`/`serde_json`, and dev-only `tempfile`. **Zero new Cargo dependencies.**
 - 1156-version-absence-marker: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. No nightly; `waybill-ebpf` untouched. + Existing only — `serde`/`serde_json` (annotation values, document walking), `toml = "0.8"` (the new registry file; already parses the declarations file). **Zero new Cargo dependencies.**
-- 1155-invariant-major-corpus: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. Test-only code; the shipped `waybill` binary is untouched. + Existing only — `serde`/`serde_json` (document walking, artifact emission), `toml = "0.8"` (declarations file; already a direct dep used by `cargo.rs`, pip and pants readers), `regex` (catalog doc parsing; already direct since m013). **Zero new Cargo dependencies.**
 
 
 <!-- MANUAL ADDITIONS START -->
