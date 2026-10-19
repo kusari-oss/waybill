@@ -24,13 +24,13 @@
 //! To run locally:
 //!
 //! ```sh
-//! WAYBILL_OCI_NETWORK_TESTS=1 cargo +stable test \
+//! WAYBILL_OCI_NETWORK_TESTS=1 cargo test \
 //!     -p waybill --features oci-registry --test oci_registry_smoke
 //!
 //! WAYBILL_OCI_NETWORK_TESTS=1 \
 //! WAYBILL_OCI_AUTH_TESTS=1 \
 //! WAYBILL_OCI_AUTH_PRIVATE_IMAGE_REF=ghcr.io/<you>/<priv>:tag \
-//!     cargo +stable test \
+//!     cargo test \
 //!     -p waybill --features oci-registry --test oci_registry_smoke
 //! ```
 

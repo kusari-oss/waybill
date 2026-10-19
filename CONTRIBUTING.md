@@ -51,7 +51,7 @@ Full walkthrough: [`specs/770-sbom-quality-corpus/quickstart.md`](specs/770-sbom
 ```bash
 git clone https://github.com/kusari-sandbox/waybill.git
 cd waybill
-cargo +stable build --release
+cargo build --release
 ```
 
 The `sbom`, `policy`, `attestation`, and related subcommands build
@@ -79,9 +79,9 @@ This single script runs, in order:
 1. `python3 scripts/check-homoglyphs.py` — no confusable characters.
 2. `bash scripts/check-walker-audit.sh` — the walker allow-list is current
    (see [Walker-audit CI gate](#walker-audit-ci-gate) below).
-3. `cargo +stable clippy --workspace --all-targets -- -D warnings` — zero
+3. `cargo clippy --workspace --all-targets -- -D warnings` — zero
    clippy warnings (warnings become errors).
-4. `cargo +stable test --workspace --no-fail-fast` — every test suite must
+4. `cargo test --workspace --no-fail-fast` — every test suite must
    report `N passed; 0 failed`.
 
 These are what CI enforces; running the script locally first saves a CI
@@ -339,10 +339,10 @@ absorb runner-noise spikes. It is NOT required for PR merge.
 To run perf benchmarks locally:
 
 ```bash
-cargo +stable test --workspace -- --ignored --test-threads=1
+cargo test --workspace -- --ignored --test-threads=1
 ```
 
-`./scripts/pre-pr.sh` and the default `cargo +stable test --workspace`
+`./scripts/pre-pr.sh` and the default `cargo test --workspace`
 skip `#[ignore]`'d tests automatically, matching CI default-lane
 behavior.
 
