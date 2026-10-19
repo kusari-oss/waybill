@@ -193,6 +193,36 @@ Milestone 236 shipped across 4 PRs. Every design-tier-emitting reader now carrie
 
 Total emission call-sites: 21 (some readers modified at 2 sites — maven, scala, yocto, elixir, erlang, haskell).
 
+#### Three readers this inventory never enumerated (feature 1218, #1214)
+
+`bazel.rs`, `cmake.rs` and `nix/lockfile.rs` emit design-tier components
+and are absent from the seventeen above — and from the four readers Q2
+explicitly trimmed (cargo, gem, `kotlin_dsl/mod`, `npm/mod`). They were
+never considered: bazel and cmake predate milestone 236, the nix readers
+postdate it. This milestone's own closing note anticipated the shape —
+*"If future work adds design-tier paths to any of these readers, apply the
+m236 pattern via `quickstart.md`"* — and three readers then did exactly
+that without the pattern.
+
+| Reader | Status | Why |
+|---|---|---|
+| `bazel.rs` | **covered** by feature 1218 | two `pkg:bazel/*` components in the corpus |
+| `nix/lockfile.rs` | **covered** by feature 1218 | three `pkg:github/*` flake inputs in the corpus |
+| `cmake.rs` | **deliberately not covered** | see below |
+
+`cmake.rs` is left alone, and the reason is measured rather than assumed:
+across all seventeen committed corpus goldens there are exactly **two**
+components carrying a `waybill:source-mechanism`, both
+`bazel-http-archive`, and **nothing** sourced from a cmake manifest. So
+extending C151 there would be a change no lane could verify — the "a
+passing test may exercise nothing" shape. A corpus target that builds with
+cmake is the cheaper prerequisite, and is the thing to add first.
+
+Worth recording for whoever picks that up: extending C151 to these readers
+closes **no** invariant-I7 cell. C151 attaches only to `design`-tier
+components, and every I7 offender from bazel and nix is `source`-tier. The
+two are independent pieces of work that look like one.
+
 ### Deviations from the plan
 
 - **Scope trim (Q2 clarification, 2026-08-16)** — 4 readers listed in issue #659 do NOT emit design-tier today: **cargo, gem, kotlin_dsl/mod, npm/mod** (only source-tier emission). Documented in the Clarifications section. If future work adds design-tier paths to any of these readers, apply the m236 pattern via `quickstart.md`.
