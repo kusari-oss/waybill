@@ -503,6 +503,120 @@ fn an_unrecognised_marker_value_does_not_explain_an_absence() {
     }
 }
 
+/// Feature 1218 T038 — strip the `waybill:orphan-reason` values this feature
+/// emits, and the cell they fixed must fail again.
+///
+/// `mutate` asserts the invariant PASSES before the mutation, so each of
+/// these is a control as well as a mutation: a value that cannot be shown to
+/// move a cell is the vacuity feature 1218 exists to remove, one level up.
+fn strip_orphan_reason(cdx: &mut serde_json::Value, purl_prefix: &str) -> usize {
+    let mut stripped = 0usize;
+    for c in cdx["components"].as_array_mut().expect("components") {
+        if !c["purl"].as_str().unwrap_or_default().starts_with(purl_prefix) {
+            continue;
+        }
+        if let Some(props) = c["properties"].as_array_mut() {
+            let before = props.len();
+            props.retain(|p| p["name"].as_str() != Some("waybill:orphan-reason"));
+            stripped += before - props.len();
+        }
+    }
+    stripped
+}
+
+#[test]
+fn m1218_build_toolchain_can_be_made_to_fail() {
+    let out = mutate("I7", "haskell-language-server", |cdx| {
+        let n = strip_orphan_reason(cdx, "pkg:generic/");
+        assert_eq!(n, 2, "the two toolchain pins must carry the marker");
+    });
+    assert_fails_with(&out, checks::orphan_explained::KIND_UNREACHABLE_AND_UNEXPLAINED);
+}
+
+#[test]
+fn m1218_foreign_build_system_can_be_made_to_fail() {
+    let out = mutate("I7", "go-opentelemetry", |cdx| {
+        let n = strip_orphan_reason(cdx, "pkg:pypi/");
+        assert_eq!(n, 1, "codespell must carry the marker");
+    });
+    assert_fails_with(&out, checks::orphan_explained::KIND_UNREACHABLE_AND_UNEXPLAINED);
+}
+
+/// `dead-lockfile-entry` needs a count-based mutation rather than
+/// `mutate`, because `python-flask`'s I7 cell legitimately still FAILS —
+/// thirteen `requirements.txt` components are issue #1234's and are
+/// deliberately unexplained. So the control is the residual count, not the
+/// verdict: withholding the ten markers must take it from 13 to 23.
+#[test]
+fn m1218_dead_lockfile_entry_withheld_raises_the_residual_count() {
+    let inv = registry_entry("I7");
+    let mut sboms = goldens::load("python-flask").expect("golden triple");
+
+    let before = (inv.checker)(&sboms);
+    let before_count = match &before {
+        CellOutcome::Fail(vs) => vs[0].count,
+        other => panic!("python-flask I7 should fail with #1234's thirteen, got {other:?}"),
+    };
+    assert_eq!(
+        before_count, 13,
+        "the residual must be issue #1234's thirteen before the mutation",
+    );
+
+    let stripped = strip_orphan_reason(&mut sboms.cdx, "pkg:pypi/");
+    assert_eq!(stripped, 10, "the ten uv.lock resolution forks carry the marker");
+
+    let after = (inv.checker)(&sboms);
+    match &after {
+        CellOutcome::Fail(vs) => assert_eq!(
+            vs[0].count, 23,
+            "withholding the ten must restore the pre-feature count of 23",
+        ),
+        other => panic!("expected Fail, got {other:?}"),
+    }
+}
+
+/// Feature 1218 T037 — the positive control required by FR-017.
+///
+/// A document whose ONLY unexplained orphans are in a non-Go/npm ecosystem
+/// must be distinguishable from a document with none. Asserting the absence
+/// of offenders proves nothing on its own, because a document with no
+/// components has none either — which is how a feature that never fires
+/// passes its own suite.
+///
+/// Both halves are real corpus targets rather than a synthetic fixture:
+/// `haskell-security-advisories` carries three `pkg:github/*` flake inputs
+/// that no vocabulary can reach (issue #1237), and `go-cobra` carries no
+/// unexplained orphan at all.
+#[test]
+fn m1218_a_non_go_npm_orphan_population_is_distinguishable_from_none() {
+    let inv = registry_entry("I7");
+
+    let with_population = (inv.checker)(&goldens::load("haskell-security-advisories").expect("golden"));
+    let without = (inv.checker)(&goldens::load("go-cobra").expect("golden"));
+
+    match &with_population {
+        CellOutcome::Fail(vs) => {
+            assert_eq!(vs[0].kind, checks::orphan_explained::KIND_UNREACHABLE_AND_UNEXPLAINED);
+            assert_eq!(vs[0].count, 3, "issue #1237's three flake inputs");
+            assert!(
+                vs[0].example.as_deref().unwrap_or_default().starts_with("pkg:github/"),
+                "the population is non-Go/npm; got {:?}",
+                vs[0].example,
+            );
+        }
+        other => panic!("expected a non-Go/npm population to be reported, got {other:?}"),
+    }
+    assert_eq!(
+        without,
+        CellOutcome::Pass,
+        "a target with no unexplained orphan must read differently from one with three",
+    );
+    assert_ne!(
+        with_population, without,
+        "the two must be distinguishable — this is the whole point of the control",
+    );
+}
+
 /// The `properties` array of the first resolve anchor in document order,
 /// selected by its C160 property rather than by a name or a substring.
 ///

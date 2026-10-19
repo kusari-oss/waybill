@@ -125,6 +125,10 @@
           "value": "python"
         },
         {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -557,6 +561,10 @@
         {
           "name": "waybill:requires-python",
           "value": ">=3.7"
+        },
+        {
+          "name": "waybill:source-mechanism",
+          "value": "pip-requirements-txt"
         },
         {
           "name": "waybill:unresolved-declared-dep",
