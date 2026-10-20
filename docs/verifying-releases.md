@@ -1,12 +1,25 @@
 # Verifying waybill releases
 
-Every waybill release (stable + nightly) is published with a verifiable **SLSA build provenance attestation** proving the artifact came from the official `kusari-oss/waybill` build pipeline. This page is your copy-paste-ready recipe for verifying any release artifact.
+Waybill releases **v0.4.0 and later** (stable + nightly) are published with a verifiable **SLSA build provenance attestation** proving the artifact came from the official `kusari-oss/waybill` build pipeline. This page is your copy-paste-ready recipe for verifying any release artifact.
 
 **Audience**: downstream consumer of waybill — distro packager, compliance auditor, air-gapped operator, or first-time verifier.
 
+## Which recipe applies to your release
+
+Provenance attestation started with **v0.4.0**. Pick your column:
+
+| Your release | Binary tarball / zip | OCI image | Source SBOM sidecar |
+|---|---|---|---|
+| **v0.4.0 and later** | `gh attestation verify` — [Step 2](#step-2--verify-a-downloaded-tarball) | `gh attestation verify oci://…` — [Step 3](#step-3--verify-the-multi-arch-oci-image) | `cosign verify-blob` — [Step 4](#step-4--verify-the-source-sbom-sidecar) |
+| **v0.3.0 and earlier** | `SHA256SUMS` only — no provenance exists. [See below](#releases-before-v040) | image exists, but carries no attestation | `cosign verify-blob` — [Step 4](#step-4--verify-the-source-sbom-sidecar) |
+
+`gh attestation verify` against a pre-v0.4.0 artifact returns `HTTP 404: Not
+Found` from the attestation API, because no attestation was ever created for
+that digest. That is expected, not a verification failure.
+
 ## What each release ships
 
-Every release carries SLSA provenance attestations for:
+Every release from **v0.4.0** onward carries SLSA provenance attestations for:
 
 | Artifact | Example filename | How to verify |
 |---|---|---|
@@ -53,6 +66,20 @@ The following policy criteria were satisfied:
 
 The trailing message lines out the SLSA Provenance predicate URI (`https://slsa.dev/provenance/v1`), the source repo (`kusari-oss/waybill`), and — with `--format json` — the source commit SHA plus the workflow run URL that produced the tarball.
 
+> **Scripting this? `gh attestation verify` writes that summary only to a
+> terminal.** Redirected to a pipe or a file it prints *nothing at all* and
+> still exits 0 on success, so a script that greps its output sees an empty
+> string whether verification passed or was never attempted. In CI, assert on
+> `--format json` content — a non-empty array with the expected
+> `predicateType` — and treat an empty document as a failure:
+>
+> ```bash
+> gh attestation verify "$ARTIFACT" --repo kusari-oss/waybill --format json > att.json
+> test -s att.json || { echo "no attestation document returned"; exit 1; }
+> jq -e '.[0].verificationResult.statement.predicateType
+>        == "https://slsa.dev/provenance/v1"' att.json > /dev/null
+> ```
+
 ## Step 3 — Verify the multi-arch OCI image
 
 ```bash
@@ -65,6 +92,11 @@ gh attestation verify "oci://$IMAGE_REF" --repo kusari-oss/waybill
 **Expected output**: same shape as Step 2, but the loaded digest is the image's manifest digest (visible via `docker inspect "$IMAGE_REF" | jq '.[0].RepoDigests'`).
 
 ## Step 4 — Verify the source SBOM sidecar
+
+> **On v0.3.0 or earlier?** Skip the `gh attestation verify` call below — it
+> will return `HTTP 404` because no attestation exists. The `cosign
+> verify-blob` recipe further down *does* work on those releases: the signed
+> SBOM sidecar reaches back to v0.3.0.
 
 Download the source SBOM (published as a release asset alongside the binary tarballs):
 
@@ -146,22 +178,31 @@ If the tarball has been re-published into your own artifact registry (Artifactor
 **On the mirror-publish side** (once, at release-publish time):
 
 ```bash
-gh attestation download waybill-${VERSION}-${TARGET}.tar.gz \
-    --repo kusari-oss/waybill \
-    --output waybill-${VERSION}-${TARGET}.bundle.jsonl
+gh attestation download "waybill-${VERSION}-${TARGET}.tar.gz" \
+    --repo kusari-oss/waybill
 
+# The bundle is written to the current directory as
+#   sha256:<artifact-digest>.jsonl
+# There is no --output flag; rename it if your mirror needs a stable name.
 # Publish the bundle alongside the tarball in your mirror.
 ```
 
 **On the consumer side** (any time later, no network egress to github.com required):
 
 ```bash
-gh attestation verify \
-    --bundle waybill-${VERSION}-${TARGET}.bundle.jsonl \
-    waybill-${VERSION}-${TARGET}.tar.gz
+gh attestation verify "waybill-${VERSION}-${TARGET}.tar.gz" \
+    --bundle "sha256:<artifact-digest>.jsonl" \
+    --repo kusari-oss/waybill
 ```
 
-**Expected output**: same shape as Step 2, but the bundle bytes carry the verification material end-to-end — no GitHub-side API call, no live Rekor query.
+**Expected output**: same shape as Step 2, read out of the bundle bytes rather
+than the attestation API.
+
+> **On air-gapped use**: `--bundle` supplies the attestation itself, so no
+> attestation-API lookup is needed. `gh` 2.102.0 has **no `--offline` flag**,
+> and this recipe has only been exercised on a host with network access, so
+> treat "works with zero egress" as untested rather than guaranteed — validate
+> it inside your own isolated environment before depending on it.
 
 ## Tamper-detection sanity check
 
@@ -176,24 +217,54 @@ printf '\x00' | dd of=tampered.tar.gz bs=1 seek=100 count=1 conv=notrunc
 gh attestation verify tampered.tar.gz --repo kusari-oss/waybill
 ```
 
-**Expected output**:
+**Expected output**: a non-zero exit and a 404 from the attestation API —
 
 ```text
-✘ Verification failed: subject digest sha256:<hex-of-tampered> does not match
-  any subject in the emitted attestations for kusari-oss/waybill
+Error: HTTP 404: Not Found (https://api.github.com/repos/kusari-oss/waybill/attestations/sha256:<hex-of-tampered>?...)
 ```
 
-Exit code is non-zero.
+Attestations are looked up **by artifact digest**, so a modified file simply
+has no attestation record. The failure therefore surfaces as "not found"
+rather than as a digest-mismatch message. Either way the exit code is
+non-zero, which is what a gate must key on.
 
-## Historical releases (before m668 landed)
+## Releases before v0.4.0
 
-Releases produced BEFORE the SLSA provenance feature (milestone 668) shipped do NOT have SLSA provenance. Running `gh attestation verify` against them will report:
+Provenance emission shipped in milestone 668, which landed on `main` on
+2026-08-28 — after v0.3.0 (2026-08-27) and before v0.4.0 (2026-08-31).
+**v0.4.0 is the first release with a SLSA provenance attestation.** For
+anything earlier, `gh attestation verify` returns:
 
 ```text
-✘ Loaded 0 attestations from GitHub API. The artifact must have been built with SLSA attestation emission enabled.
+Error: HTTP 404: Not Found (https://api.github.com/repos/kusari-oss/waybill/attestations/sha256:<digest>?...)
 ```
 
-This is expected. Older releases still carry the pre-existing cosign-keyless signature (m222) — verify those via `cosign verify-blob` instead. See [RELEASING.md](../RELEASING.md) for the cosign recipe.
+That is the expected answer for those releases, not a tampering signal.
+
+What you can still check on a pre-v0.4.0 release:
+
+**1. Tarball integrity against the published checksums.** Note the limit: on
+these releases `SHA256SUMS` is itself unsigned, so this proves the file matches
+what the release page lists — it does not prove who built it.
+
+```bash
+VERSION=v0.3.0
+TARGET=aarch64-apple-darwin
+curl -LO "https://github.com/kusari-oss/waybill/releases/download/${VERSION}/SHA256SUMS"
+curl -LO "https://github.com/kusari-oss/waybill/releases/download/${VERSION}/waybill-${VERSION}-${TARGET}.tar.gz"
+
+grep "${TARGET}" SHA256SUMS | shasum -a 256 -c -
+# waybill-v0.3.0-aarch64-apple-darwin.tar.gz: OK
+```
+
+**2. The source SBOM's keyless signature**, which *is* cryptographic and
+reaches back to v0.3.0 — use [Step 4](#step-4--verify-the-source-sbom-sidecar).
+The identity in a v0.3.0 bundle is
+`https://github.com/kusari-oss/waybill/.github/workflows/release.yml@refs/tags/v0.3.0`,
+issued by `https://token.actions.githubusercontent.com`.
+
+If you need build provenance for a historical version, rebuild from the tag and
+use a current release instead — provenance cannot be issued retroactively.
 
 ## Troubleshooting
 
@@ -225,11 +296,110 @@ The full data model — SLSA Provenance predicate shape, subject shape, Sigstore
 - Waybill milestone 668 spec: [`specs/668-slsa-provenance/spec.md`](../specs/668-slsa-provenance/spec.md)
 - Waybill release-workflow source: [`.github/workflows/release.yml`](../.github/workflows/release.yml)
 
-## Also-supported verification tools
+## Other tools
 
-`gh attestation verify` is the recommended path. The same Sigstore bundle also verifies via:
+`gh attestation verify` is the recommended path for provenance, and
+`cosign verify-blob` is the path for the signed source SBOM (Step 4). One
+third-party tool also verifies waybill provenance end to end, and two tools
+that look like they should work do not:
 
-- **cosign**: `cosign verify-attestation --certificate-oidc-issuer https://token.actions.githubusercontent.com --certificate-identity-regexp '^https://github\.com/kusari-oss/waybill/' <artifact>`
-- **slsa-verifier** (reference SLSA verifier): `slsa-verifier verify-artifact --source-uri github.com/kusari-oss/waybill <artifact>`
+**`cosign verify-attestation` does not accept a file.** It resolves its
+argument as an OCI reference, so pointing it at a tarball fails before any
+verification happens:
 
-These are longer recipes with more configuration; use `gh attestation verify` unless you have a specific reason to prefer the alternatives.
+```text
+Error: could not parse reference: waybill-v0.11.0-aarch64-apple-darwin.tar.gz
+```
+
+Use `gh attestation verify` for release files, or `cosign verify-blob` with a
+published `.bundle` for the source SBOM.
+
+### `slsa-verifier` — which one matters
+
+Two different projects ship a binary called `slsa-verifier`. One verifies
+waybill provenance; the other cannot.
+
+**Works: `slsa-framework/verifier` v0.1.0 or later.** Download a binary from
+its [releases](https://github.com/slsa-framework/verifier/releases), then
+verify a downloaded tarball against its attestation bundle (obtain the bundle
+as in [Step 5](#step-5--verify-a-mirrored-artifact-offline--third-party-registry)):
+
+```bash
+slsa-verifier build \
+  --param expected_source:github.com/kusari-oss/waybill \
+  --param 'trusted_builders:[https://github.com/kusari-oss/waybill/.github/workflows/release.yml@refs/tags/v0.11.0]' \
+  --param expected_tag:v0.11.0 \
+  "sha256:<digest>.jsonl" waybill-v0.11.0-aarch64-apple-darwin.tar.gz
+```
+
+It prints a legible result and exits non-zero on failure — unlike
+`gh attestation verify`, it is not TTY-gated, so the same output appears in a
+pipe:
+
+```text
+PASS
+SLSA Level: 3 (spec v1.0)
+
+Core controls:
+  [PASS]  L1  source-repo-match                     Source Repository Matches Expected URI
+  [PASS]  L2  builder-id-trusted                    Builder Is in the Trusted Builders Allowlist
+  [PASS]  L2  builder-identity-bound                Provenance Signed by Its Builder
+  [PASS]  L2  provenance-l2-complete                Provenance Has the L2-Required Fields Populated
+  [PASS]  L3  provenance-has-invocation-id          Provenance Records a Build Invocation ID
+  [PASS]  L3  provenance-has-resolved-dependencies  Provenance Records Resolved Dependencies
+```
+
+`builder-identity-bound` passes because the tool's builder registry has an
+entry for any GitHub Actions workflow that signs its own provenance: it checks
+that the signing certificate names the same workflow `builder.id` claims.
+Whether to trust that workflow is your decision, expressed in
+`trusted_builders` — which is why that parameter is required, and why naming a
+different builder fails the run and caps the reported level at L1.
+
+The reported level describes this tool's assessment of one attestation against
+its own controls. Waybill makes no SLSA Build level claim of its own: milestone
+668 FR-014 forbids it, on the grounds that a formal level claim requires
+ongoing conformance verification. A passing run here is evidence about one
+artifact, not a programme-level claim.
+
+**Does not work: `slsa-framework/slsa-verifier` v2.7.1, the older project.**
+It trusts exactly one builder repository, a hardcoded constant naming
+`slsa-framework/slsa-github-generator` (plus its own end-to-end test
+repository). Waybill's provenance is signed by its own release workflow, so the
+builder ID is rejected:
+
+```text
+FAILED: SLSA verification failed: untrusted reusable workflow:
+  https://github.com/kusari-oss/waybill/.github/workflows/release.yml
+  with builderID provided: false
+```
+
+Supplying `--builder-id` does not help — it is refused as invalid, because the
+value is not a recognised builder. That tool additionally requires a builder
+ref of the form `refs/tags/vX.Y.Z`, so no branch or commit-SHA pin satisfies
+it. Use `slsa-framework/verifier` instead.
+
+## Standard of evidence for this page
+
+The recipes in [Which recipe applies to your release](#which-recipe-applies-to-your-release),
+Steps 2-5, the tamper check and [Other tools](#other-tools) were executed
+against published `kusari-oss/waybill` releases on 2026-10-19 and 2026-10-20
+with `gh` 2.102.0, `cosign` v3.1.3, `slsa-framework/verifier` v0.1.0 and
+`slsa-framework/slsa-verifier` v2.7.1 — on v0.11.0 and v0.4.0 for the
+provenance paths and on v0.3.0 for the pre-provenance paths. Quoted output is
+copied from those runs. The `slsa-framework/verifier` recipe was additionally
+checked for teeth: a tampered artifact and a wrong `trusted_builders` value
+each exit non-zero, the latter capping the reported level at L1.
+
+Two things on this page are *not* covered by that run, and are called out so
+nobody mistakes them for measured:
+
+- the zero-egress property of the `--bundle` path in Step 5 (reasoned from how
+  `--bundle` works, not observed on an isolated host);
+- [Verifying a waybill-produced keyless signature](#verifying-a-waybill-produced-keyless-signature),
+  which documents `waybill sbom scan --sign` output rather than release assets
+  and was not re-exercised in this pass.
+
+If you change a recipe here, run it. The two recipes this section replaced were
+plausible, documented, and non-functional — one failed on its first argument,
+the other could never have worked at all.
