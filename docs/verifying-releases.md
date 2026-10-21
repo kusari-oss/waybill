@@ -80,6 +80,42 @@ The trailing message lines out the SLSA Provenance predicate URI (`https://slsa.
 >        == "https://slsa.dev/provenance/v1"' att.json > /dev/null
 > ```
 
+### Tightening the identity you enforce
+
+`--repo` validates the certificate's source repository and owner — not which
+workflow signed. Any provenance attestation for that digest produced by any
+workflow in `kusari-oss/waybill` satisfies it. `gh`'s own help says to go
+further: *"Ideally, the path of the signer workflow is also validated using
+the `--signer-workflow` or `--cert-identity` flags."*
+
+For releases built by `release.yml` — every tarball, the image and the source
+SBOM — that is:
+
+```bash
+gh attestation verify "waybill-${VERSION}-${TARGET}.tar.gz" \
+  --repo kusari-oss/waybill \
+  --signer-workflow kusari-oss/waybill/.github/workflows/release.yml \
+  --deny-self-hosted-runners
+```
+
+Adding `--source-ref` is tighter still, but mind which channel you are
+verifying: a **stable** release signs at its tag (`refs/tags/v0.11.0`), while
+a **nightly** signs at `refs/heads/main`, because `nightly.yml` tags the
+commit and then dispatches `release.yml` against `main`. A `--source-ref`
+that assumes the tag will reject every nightly. If you want one invocation
+for both channels, use `--cert-identity-regex` instead:
+
+```bash
+--cert-identity-regex '^https://github\.com/kusari-oss/waybill/\.github/workflows/release\.yml@refs/(tags/v.+|heads/main)$'
+```
+
+which is the same identity the release's own cosign self-check enforces.
+
+The release workflow applies all of this to itself: see
+[`.github/actions/verify-attestation`](../.github/actions/verify-attestation/action.yml)
+and the measurements behind it in
+[`specs/668-slsa-provenance/measurements/`](../specs/668-slsa-provenance/measurements/selfverify-identity.md).
+
 ## Step 3 — Verify the multi-arch OCI image
 
 ```bash

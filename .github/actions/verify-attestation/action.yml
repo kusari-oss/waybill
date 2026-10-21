@@ -1,0 +1,86 @@
+name: Verify a release subject's provenance
+description: >-
+  Verify the SLSA build provenance attestation for one release subject,
+  enforcing the workflow that signed it and the source ref and commit it was
+  signed at, and leave the verified identity in the run log. Milestone 668
+  FR-015; contract specs/668-slsa-provenance/contracts/workflow-step.md
+  C-4/C-5/C-6. Issue #1240.
+
+inputs:
+  subject:
+    description: >-
+      The artifact to verify: a path to a file, or `oci://<image-ref>` for a
+      container image (the job must already be authenticated to the registry).
+    required: true
+  token:
+    description: Token used to fetch the attestation from the GitHub API.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    # Context expressions are bound to env: here rather than interpolated into
+    # the run: block, per contract C-6.
+    - name: Verify provenance, and record what was verified
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        SUBJECT: ${{ inputs.subject }}
+      run: |
+        set -euo pipefail
+
+        # `--repo` alone — which is all the six self-verify steps passed before
+        # #1240 — validates only the certificate's SourceRepository and
+        # SourceRepositoryOwner, so it is satisfied by a provenance attestation
+        # for this digest produced by ANY workflow in this repository. `gh`'s own help says so: "Ideally, the
+        # path of the signer workflow is also validated using the
+        # --signer-workflow or --cert-identity flags." The signer workflow plus
+        # the source ref and commit are what pin it to this run.
+        #
+        # All of those are derived from the run itself rather than written out,
+        # so they cannot drift from the workflow that signs:
+        #
+        #   GITHUB_WORKFLOW_REF  <owner>/<repo>/.github/workflows/release.yml@<ref>
+        #   ${...%@*}            strips the ref, which is exactly
+        #                        --signer-workflow's format
+        #   GITHUB_REF           refs/tags/v<X>.<Y>.<Z> for a stable release;
+        #                        refs/heads/main for a nightly, which nightly.yml
+        #                        dispatches with `--ref main`. Both lanes were
+        #                        measured against real published attestations:
+        #                        specs/668-slsa-provenance/measurements/
+        #                        selfverify-identity.md, reproducible with the
+        #                        probe script beside it.
+        SIGNER_WORKFLOW="${GITHUB_WORKFLOW_REF%@*}"
+
+        # `gh attestation verify` writes its human-readable summary ONLY to a
+        # terminal. Through a pipe — which is how Actions captures step output —
+        # it prints nothing on either stream and still exits 0, so before #1240
+        # every one of these steps left an empty log section on a successful
+        # release. `--format json` is the only scriptable output, and `--jq` is
+        # applied by gh's own built-in jq, so this needs no `jq` on the runner.
+        # Held in a variable rather than a temp file: on windows-latest
+        # $RUNNER_TEMP is a backslash path (`D:\a\_temp`), which bash does not
+        # take in a redirect, and the release job packages files out of the
+        # workspace so a scratch file does not belong there either.
+        summary="$(gh attestation verify "$SUBJECT" \
+          --repo "$GITHUB_REPOSITORY" \
+          --signer-workflow "$SIGNER_WORKFLOW" \
+          --source-ref "$GITHUB_REF" \
+          --source-digest "$GITHUB_SHA" \
+          --predicate-type https://slsa.dev/provenance/v1 \
+          --deny-self-hosted-runners \
+          --format json \
+          --jq '.[].verificationResult | "  subject:   \(.statement.subject[0].name)\n  digest:    sha256:\(.statement.subject[0].digest.sha256)\n  predicate: \(.statement.predicateType)\n  signer:    \(.signature.certificate.buildSignerURI)\n  source:    \(.signature.certificate.sourceRepositoryURI)@\(.signature.certificate.sourceRepositoryRef)\n  commit:    \(.signature.certificate.sourceRepositoryDigest)\n  runner:    \(.signature.certificate.runnerEnvironment)"')"
+
+        # Assert on a positive signal, never on absence (CLAUDE.md): a verify
+        # that returned no attestation at all must not read like one that
+        # returned a good one. `set -e` already fails the step on a non-zero
+        # exit from the substitution above; this covers exit 0 with an empty
+        # array, which would otherwise be indistinguishable from success.
+        if [ -z "$summary" ]; then
+          echo "::error::gh attestation verify exited 0 but returned no attestation for $SUBJECT"
+          exit 1
+        fi
+
+        echo "verified provenance for $SUBJECT:"
+        printf '%s\n' "$summary"
