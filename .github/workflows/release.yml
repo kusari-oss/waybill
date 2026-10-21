@@ -252,15 +252,15 @@ jobs:
       # Milestone 668 FR-015 + contract workflow-step.md C-4/C-5/C-6.
       # Self-verify the just-emitted attestation before publication so
       # emission bugs surface inside the same job, not at consumer time.
-      # Context expressions bound via env: per C-6 (no direct ${{ }}
-      # interpolation into shell blocks).
+      # The composite action enforces the signer workflow and the source
+      # ref and commit, and prints what it verified: `--repo` alone, which
+      # all six steps passed before #1240, accepts provenance from any
+      # workflow in this repository and prints nothing through a pipe.
       - name: Self-verify tarball provenance (m668 FR-015)
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ARTIFACT_PATH: waybill-${{ env.TAG_NAME }}-${{ env.TARGET }}.tar.gz
-          REPO_NAME: ${{ github.repository }}
-        run: |
-          gh attestation verify "$ARTIFACT_PATH" --repo "$REPO_NAME"
+        uses: ./.github/actions/verify-attestation
+        with:
+          subject: waybill-${{ env.TAG_NAME }}-${{ env.TARGET }}.tar.gz
+          token: ${{ secrets.GITHUB_TOKEN }}
 
   build-linux-aarch64:
     name: Build — linux-aarch64
@@ -391,12 +391,10 @@ jobs:
 
       # Milestone 668 FR-015 + contract workflow-step.md C-4/C-5/C-6.
       - name: Self-verify tarball provenance (m668 FR-015)
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ARTIFACT_PATH: waybill-${{ env.TAG_NAME }}-${{ env.TARGET }}.tar.gz
-          REPO_NAME: ${{ github.repository }}
-        run: |
-          gh attestation verify "$ARTIFACT_PATH" --repo "$REPO_NAME"
+        uses: ./.github/actions/verify-attestation
+        with:
+          subject: waybill-${{ env.TAG_NAME }}-${{ env.TARGET }}.tar.gz
+          token: ${{ secrets.GITHUB_TOKEN }}
 
   build-macos-aarch64:
     name: Build — macos-aarch64
@@ -494,12 +492,10 @@ jobs:
 
       # Milestone 668 FR-015 + contract workflow-step.md C-4/C-5/C-6.
       - name: Self-verify tarball provenance (m668 FR-015)
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ARTIFACT_PATH: waybill-${{ env.TAG_NAME }}-${{ env.TARGET }}.tar.gz
-          REPO_NAME: ${{ github.repository }}
-        run: |
-          gh attestation verify "$ARTIFACT_PATH" --repo "$REPO_NAME"
+        uses: ./.github/actions/verify-attestation
+        with:
+          subject: waybill-${{ env.TAG_NAME }}-${{ env.TARGET }}.tar.gz
+          token: ${{ secrets.GITHUB_TOKEN }}
 
   # Milestone 100 — Windows x86_64 release artifact. Produces a .zip
   # containing waybill.exe + README + (if present) LICENSE, matching
@@ -602,17 +598,14 @@ jobs:
           subject-path: waybill-${{ env.TAG_NAME }}-${{ env.TARGET }}.zip
 
       # Milestone 668 FR-015 + contract workflow-step.md C-4/C-5/C-6.
-      # Windows runners default to pwsh; `gh attestation verify`'s
-      # subject-path argument works either shell but we force bash for
-      # env-var quoting parity with the Linux/macOS jobs (contract C-6).
+      # Windows runners default to pwsh; the composite action declares
+      # `shell: bash` on its own step, so this job verifies through the
+      # same shell, and the same quoting, as the Linux and macOS jobs.
       - name: Self-verify zip provenance (m668 FR-015)
-        shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ARTIFACT_PATH: waybill-${{ env.TAG_NAME }}-${{ env.TARGET }}.zip
-          REPO_NAME: ${{ github.repository }}
-        run: |
-          gh attestation verify "$ARTIFACT_PATH" --repo "$REPO_NAME"
+        uses: ./.github/actions/verify-attestation
+        with:
+          subject: waybill-${{ env.TAG_NAME }}-${{ env.TARGET }}.zip
+          token: ${{ secrets.GITHUB_TOKEN }}
 
   # Issue #234 — multi-arch production container image. Reuses the
   # per-arch tarballs uploaded by build-linux-x86_64 and
@@ -744,13 +737,15 @@ jobs:
           push-to-registry: true
 
       # Milestone 668 FR-015 + contract workflow-step.md C-4/C-5/C-6.
+      # The subject is the image manifest digest rather than a file, and
+      # the attestation records it as `ghcr.io/<owner>/waybill` at that
+      # digest. `oci://` lookup needs a registry login, which the push
+      # step above already performed.
       - name: Self-verify OCI image provenance (m668 FR-015)
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          IMAGE_REF: ghcr.io/${{ github.repository_owner }}/waybill@${{ steps.build.outputs.digest }}
-          REPO_NAME: ${{ github.repository }}
-        run: |
-          gh attestation verify "oci://$IMAGE_REF" --repo "$REPO_NAME"
+        uses: ./.github/actions/verify-attestation
+        with:
+          subject: oci://ghcr.io/${{ github.repository_owner }}/waybill@${{ steps.build.outputs.digest }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install cosign
         uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
@@ -847,12 +842,10 @@ jobs:
 
       # Milestone 668 FR-015 + contract workflow-step.md C-4/C-5/C-6.
       - name: Self-verify source SBOM provenance (m668 FR-015)
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ARTIFACT_PATH: waybill-source.cdx.json
-          REPO_NAME: ${{ github.repository }}
-        run: |
-          gh attestation verify "$ARTIFACT_PATH" --repo "$REPO_NAME"
+        uses: ./.github/actions/verify-attestation
+        with:
+          subject: waybill-source.cdx.json
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       # Self-check the signature exactly as a consumer would (RELEASING.md
       # Step 9). Stable tags sign as release.yml at the tag; nightlies are
@@ -914,11 +907,18 @@ jobs:
             attestation. Verify any artifact with:
 
             ```bash
-            gh attestation verify <artifact> --repo kusari-oss/waybill
+            gh attestation verify <artifact> --repo kusari-oss/waybill \
+              --signer-workflow kusari-oss/waybill/.github/workflows/release.yml \
+              --deny-self-hosted-runners
             ```
 
+            `--repo` on its own validates only the source repository, so it
+            would accept provenance from any workflow here;
+            `--signer-workflow` is what pins it to the release pipeline.
+
             Full recipes (tarball / OCI image / source SBOM sidecar / mirrored
-            artifact): [docs/verifying-releases.md](https://github.com/kusari-oss/waybill/blob/main/docs/verifying-releases.md).
+            artifact), and how to pin the ref as well:
+            [docs/verifying-releases.md](https://github.com/kusari-oss/waybill/blob/main/docs/verifying-releases.md).
 
             ---
           files: |

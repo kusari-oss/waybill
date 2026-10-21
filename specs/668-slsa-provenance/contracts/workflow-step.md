@@ -16,7 +16,7 @@ Every provenance-emission site in the release + nightly workflows MUST conform t
 
 - **Attestation bundle** uploaded to `https://api.github.com/repos/kusari-oss/waybill/attestations`.
 - **Bundle mirror** in Sigstore Rekor at `rekor.sigstore.dev`.
-- **Self-verify result** printed in the workflow log — exit code 0 iff verification succeeded.
+- **Self-verify result** printed in the workflow log — exit code 0 iff verification succeeded. Printing is part of the contract, and the shape that shipped did not satisfy it: `gh attestation verify` writes its human-readable summary only to a terminal, so through the pipe Actions captures step output with, it printed nothing on either stream and still exited 0 (#1240).
 
 ## Behavioral contracts
 
@@ -49,7 +49,7 @@ The release workflow MUST have EXACTLY 6 emission sites — one per subject enum
 | Multi-arch OCI image | `publish-container-image` | via `subject-digest` from `docker/build-push-action` output |
 | Source SBOM sidecar | `release` (final job) | `${{ env.SOURCE_SBOM_PATH }}` |
 
-Nightly workflow MUST have EXACTLY 5 emission sites (same shape minus source SBOM if the nightly doesn't emit one; verify at task time from `nightly.yml`).
+Nightly workflow MUST have EXACTLY 0 emission sites. Checked after the fact (#1240): `nightly.yml` tags the commit and then dispatches `release.yml` with `gh workflow run release.yml -f tag=<tag> --ref main`, so a nightly's six subjects are emitted by the six sites above, in a run whose `GITHUB_REF` is `refs/heads/main`. Nothing in `nightly.yml` references `attest-build-provenance`.
 
 ### C-3: Fail-closed emission
 
@@ -67,9 +67,9 @@ Every emission step MUST NOT set `continue-on-error: true`. Emission failure fai
   # No continue-on-error; default is `false`.
 ```
 
-### C-4: Self-verify immediately follows emission (FR-015)
+### C-4: Self-verify immediately follows emission, and enforces this run's identity (FR-015)
 
-Every emission step MUST be followed (in the same job, in order) by a `gh attestation verify` step against the same artifact. No other steps may run between them.
+Every emission step MUST be followed (in the same job, in order) by a verify step against the same subject. No other steps may run between them.
 
 ```yaml
 - name: Emit SLSA provenance for tarball
@@ -78,14 +78,28 @@ Every emission step MUST be followed (in the same job, in order) by a `gh attest
     subject-path: ${{ env.TARBALL_PATH }}
 
 - name: Self-verify tarball provenance (FR-015)
-  env:
-    GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    ARTIFACT_PATH: ${{ env.TARBALL_PATH }}
-  run: |
-    gh attestation verify "$ARTIFACT_PATH" --repo ${{ github.repository }}
+  uses: ./.github/actions/verify-attestation
+  with:
+    subject: ${{ env.TARBALL_PATH }}
+    token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-Rationale: interposing steps (esp. artifact-upload steps) risks a race where the emission is queued but Rekor hasn't yet accepted it. Ordering pairs the two steps as a unit.
+Rationale for the ordering: interposing steps (esp. artifact-upload steps) risks a race where the emission is queued but Rekor hasn't yet accepted it. Ordering pairs the two steps as a unit.
+
+The verify step MUST go through `./.github/actions/verify-attestation` rather than calling `gh attestation verify` inline, so that the identity it enforces is defined in one place. That identity is, at minimum:
+
+| Enforced | How | Why not weaker |
+|---|---|---|
+| source repository | `--repo "$GITHUB_REPOSITORY"` | — |
+| signer workflow | `--signer-workflow "${GITHUB_WORKFLOW_REF%@*}"` | `--repo` alone validates only SourceRepository and SourceRepositoryOwner, so it is satisfied by provenance for that digest from *any* workflow in the repository (#1240) |
+| source ref | `--source-ref "$GITHUB_REF"` | pins the attestation to the tag being released — `refs/tags/v<X>.<Y>.<Z>` on a stable release, `refs/heads/main` for a nightly, which `nightly.yml` dispatches with `--ref main` |
+| source commit | `--source-digest "$GITHUB_SHA"` | pins it to this run's commit |
+| runner class | `--deny-self-hosted-runners` | waybill releases only from GitHub-hosted runners |
+| predicate type | `--predicate-type https://slsa.dev/provenance/v1` | already the command's default; passed explicitly so the gate does not depend on a `gh` default holding |
+
+The four values that name an identity are read from the run's own default environment rather than written out, so they cannot drift from the workflow that signs. The remaining two are constants.
+
+Evidence is part of the contract (see Output, above): the step MUST emit the verified subject, digest, predicate type, signer URI, source ref, commit and runner class into the log, and MUST fail if verification returned no attestation at all — asserting on a positive signal rather than on the absence of an error.
 
 ### C-5: Fail-closed self-verify
 
@@ -117,7 +131,7 @@ The pre-existing cosign-keyless signature steps at `release.yml:701` (source SBO
 | `publish-container-image` | Yes (already has id-token: write for cosign) | Yes (post-docker-push) | Yes |
 | `release` | Yes (post-source-SBOM-generation) | Yes | Yes |
 
-**Nightly workflow**: same shape as release minus any jobs that don't ship a subject in the nightly cadence (verify at task time).
+**Nightly workflow**: no changes — it dispatches `release.yml`, so it inherits every row above (see C-2).
 
 ## Non-contracts
 
