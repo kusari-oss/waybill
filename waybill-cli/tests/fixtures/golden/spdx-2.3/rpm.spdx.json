@@ -4,55 +4,55 @@
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.12.0",
+      "annotator": "Tool: waybill-0.12.1",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:generation-context\",\"value\":\"filesystem-scan\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.12.0",
+      "annotator": "Tool: waybill-0.12.1",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cisa-2026-lifecycle\",\"value\":\"after-build\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.12.0",
+      "annotator": "Tool: waybill-0.12.1",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:os-release-missing-fields\",\"value\":\"[\\\"ID\\\",\\\"VERSION_ID\\\"]\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.12.0",
+      "annotator": "Tool: waybill-0.12.1",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness\",\"value\":\"complete\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.12.0",
+      "annotator": "Tool: waybill-0.12.1",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-declared-dep-count\",\"value\":\"0\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.12.0",
+      "annotator": "Tool: waybill-0.12.1",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-ring-buffer-overflows\",\"value\":\"0\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.12.0",
+      "annotator": "Tool: waybill-0.12.1",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-events-dropped\",\"value\":\"0\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.12.0",
+      "annotator": "Tool: waybill-0.12.1",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-uprobe-attach-failures\",\"value\":\"[]\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: waybill-0.12.0",
+      "annotator": "Tool: waybill-0.12.1",
       "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-kprobe-attach-failures\",\"value\":\"[]\"}"
     }
   ],
@@ -60,19 +60,19 @@
     "comment": "Scope: manifest (declared transitives included). Observed lifecycle phases: no lifecycle phases observed. Per-component scope detail in waybill:sbom-tier annotations.",
     "created": "1970-01-01T00:00:00Z",
     "creators": [
-      "Tool: waybill-0.12.0",
+      "Tool: waybill-0.12.1",
       "Organization: waybill contributors"
     ]
   },
   "dataLicense": "CC0-1.0",
   "documentDescribes": [
-    "SPDXRef-DocumentRoot-ETP45PT5DDIGB34I"
+    "SPDXRef-DocumentRoot-UFZ2QCEVIBSBC3R5"
   ],
-  "documentNamespace": "https://waybill.kusari.dev/spdx/7OQDRZ4WYGNMFKLTCBXDURSPW2VASTAB",
+  "documentNamespace": "https://waybill.kusari.dev/spdx/T3L36GJ7KR7DPKWL6YKZB6OX3WZTRS7F",
   "name": "Waybill source scan (identity unavailable)",
   "packages": [
     {
-      "SPDXID": "SPDXRef-DocumentRoot-ETP45PT5DDIGB34I",
+      "SPDXID": "SPDXRef-DocumentRoot-UFZ2QCEVIBSBC3R5",
       "downloadLocation": "NOASSERTION",
       "externalRefs": [
         {
@@ -96,7 +96,7 @@
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-ETP45PT5DDIGB34I",
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-UFZ2QCEVIBSBC3R5",
       "relationshipType": "DESCRIBES",
       "spdxElementId": "SPDXRef-DOCUMENT"
     }
