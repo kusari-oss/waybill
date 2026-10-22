@@ -502,6 +502,31 @@ fn component_to_package(
         }]
     };
 
+    // #1248 — the source package this binary package was built
+    // from, as a second `PACKAGE-MANAGER / purl` row. SPDX 2.3
+    // §7.21 places no cardinality limit on `externalRefs[]`, and the
+    // two rows are told apart by the `arch=source` qualifier that
+    // purl-spec defines for exactly this purpose, plus the comment
+    // below for a human reader. Emitted natively here rather than as
+    // an annotation, so the generic pass-through in `annotations.rs`
+    // skips the key (see `ANN_SOURCE_PACKAGE` there) — CycloneDX has
+    // no second-identifier slot and keeps the property instead.
+    if let Some(source_purl) = c
+        .extra_annotations
+        .get(waybill::os_source_package::ANN_SOURCE_PACKAGE)
+        .and_then(|v| v.as_str())
+    {
+        external_refs.push(SpdxExternalRef {
+            category: SpdxExternalRefCategory::PackageManager,
+            ref_type: "purl".to_string(),
+            locator: source_purl.to_string(),
+            comment: Some(
+                waybill::os_source_package::SOURCE_PACKAGE_COMMENT
+                    .to_string(),
+            ),
+        });
+    }
+
     // A12: primary CPE. The first entry in `c.cpes` is the
     // highest-signal synthesized candidate; the full set lives in
     // the `waybill:cpe-candidates` annotation (C19).

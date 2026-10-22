@@ -124,8 +124,8 @@ fn walk_cdx_components(doc: &serde_json::Value) -> Vec<&serde_json::Value> {
 /// Build a PURL → SPDX Package lookup for an SPDX 2.3 document.
 /// A package is indexed by the `referenceLocator` of each
 /// `externalRefs[]` entry whose `referenceType` is `"purl"` (there is
-/// exactly one such entry per Package in our current emitter — the
-/// PackageManager externalRef from T023).
+/// exactly one such entry per Package once the #1248 source-package
+/// row is excluded — the PackageManager externalRef from T023).
 fn index_spdx_by_purl(doc: &serde_json::Value) -> HashMap<String, &serde_json::Value> {
     let mut map: HashMap<String, &serde_json::Value> = HashMap::new();
     let Some(pkgs) = doc.get("packages").and_then(|v| v.as_array()) else {
@@ -137,6 +137,20 @@ fn index_spdx_by_purl(doc: &serde_json::Value) -> HashMap<String, &serde_json::V
         };
         for r in refs {
             if r.get("referenceType").and_then(|v| v.as_str()) != Some("purl") {
+                continue;
+            }
+            // #1248 added a second identifier carrying the SOURCE
+            // package an OS binary package was built from. It is not
+            // this package's own PURL, so it must not index the
+            // package — indexing it made every deb package appear
+            // twice, once under a phantom `arch=source` identity with
+            // no CycloneDX counterpart. Any reader asking "what is
+            // this package's PURL" has to make the same exclusion;
+            // the `comment` is the discriminator waybill emits for
+            // it, and `arch=source` is the spec-defined one.
+            if r.get("comment").and_then(|v| v.as_str())
+                == Some(waybill::os_source_package::SOURCE_PACKAGE_COMMENT)
+            {
                 continue;
             }
             let Some(loc) = r.get("referenceLocator").and_then(|v| v.as_str()) else {

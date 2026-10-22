@@ -200,13 +200,18 @@ pub fn build_packages(
             pkg.insert("externalRef".to_string(), json!(ext_refs));
         }
 
-        // externalIdentifier[] — PURL (always one entry) plus any
-        // fully-resolved CPE vectors. Delegated to
+        // externalIdentifier[] — the installed PURL, the source
+        // package's PURL when the OS metadata recorded one (#1248),
+        // plus any fully-resolved CPE vectors. Delegated to
         // v3_external_ids::build_external_identifiers_for so the
         // shape is owned by one module.
         let mut ext_ids = build_external_identifiers_for(c);
-        // Milestone 133 US1.C: filter out the `packageUrl` entry
-        // for file-tier components per FR-009. CPE entries (and any
+        // Milestone 133 US1.C: filter out the `packageUrl` entries
+        // for file-tier components per FR-009. This now also covers
+        // the #1248 source-package entry, correctly: a file-tier
+        // component is never an OS package, so it never carries one,
+        // and if one ever appeared it would be as bogus as the
+        // placeholder PURL this drops. CPE entries (and any
         // operator-supplied identifiers) stay; only the placeholder
         // PURL is suppressed.
         if is_file_tier {

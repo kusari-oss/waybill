@@ -91,6 +91,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/zlib1g@1.2.13.dfsg-1?arch=amd64&distro=debian-12&epoch=1",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/zlib1g@1.2.13.dfsg-1?arch=source&distro=debian-12&epoch=1",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "zlib1g",
@@ -116,6 +122,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libc6@2.36-9?arch=amd64&distro=debian-12",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/libc6@2.36-9?arch=source&distro=debian-12",
           "type": "ExternalIdentifier"
         }
       ],

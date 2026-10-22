@@ -129,7 +129,7 @@ Edge cases: if the rubric yields exactly N=3 on a marginal signal, prefer DEPTH 
 
 #### Worked-example table — every depth-covered signal scored
 
-The 18 entries §3 currently depth-covers (covering 21 unique catalog keys — 3 paired entries collapse two keys each: duplicate-purl-divergent + purl-collisions-detected, graph-completeness + …-reason, depends-unresolved + …-rdepends-unresolved). Each scores ≥3 on the rubric:
+The 21 entries §3 currently depth-covers (covering 25 unique catalog keys — 4 paired entries collapse two keys each: duplicate-purl-divergent + purl-collisions-detected, graph-completeness + …-reason, go-cache-warming-mode + …-failed, depends-unresolved + …-rdepends-unresolved). Each scores ≥3 on the rubric. The counts here were stale before #1248 — milestones 172 and 173 added rows without updating them, and 173's is itself a paired row — so they were recounted from the table rather than incremented:
 
 | Signal | Cluster | C1 | C2 | C3 | C4 | C5 | YES | Verdict |
 |--------|---------|:--:|:--:|:--:|:--:|:--:|:---:|:-------:|
@@ -138,6 +138,7 @@ The 18 entries §3 currently depth-covers (covering 21 unique catalog keys — 3
 | `waybill:duplicate-purl-divergent` + `…-purl-collisions-detected` | 3.1 | Y | Y | Y | Y (paired) | Y | 5 | DEPTH ✓ |
 | `waybill:linkage-kind` (new in 151) | 3.1 | Y | Y | Y | N | Y | 4 | DEPTH ✓ |
 | `waybill:not-linked` (new in 151) | 3.1 | Y | Y (Go-essential) | Y | N | Y | 4 | DEPTH ✓ |
+| `waybill:source-package` (new in 1248) | 3.1 | Y | Y (apk + dpkg + rpm) | Y | N | Y | 4 | DEPTH ✓ |
 | `waybill:license-concluded-source` | 3.2 | Y | Y | Y | N | Y | 4 | DEPTH ✓ |
 | `waybill:component-tier` (file value) | 3.2 | Y | Y | N | N | Y | 3 | DEPTH ✓ |
 | `waybill:demoted-from-main-module` | 3.2 | Y | Y | Y | N | Y | 4 | DEPTH ✓ |
@@ -379,6 +380,80 @@ jq '[.components[] | select(.properties[]? | .name == "waybill:component-tier" a
 ```
 
 ---
+
+#### `waybill:source-package`
+
+> **What it is**: the PURL of the **source package an OS binary package was built from**, carrying the `arch=source` qualifier that purl-spec defines for the purpose. Emitted by the apk, dpkg and rpm readers, which read it from `o:` (origin), the `Source:` control field, and the `SOURCERPM` tag respectively. **This is the identifier OS advisory feeds are actually keyed by.** A container image has no apk package called `openssl` — it has `libcrypto3` and `libssl3`, both with origin `openssl` — and querying a feed for either installed name returns nothing. Measured against OSV: `libcrypto3` 3.5.6-r0 → 0 advisories, origin `openssl` 3.5.6-r0 → 25, including a Critical the image is in range for. Same shape on deb (`libssl3` → 0, `openssl` → 52) and rpm (`openssl-libs` → 0, `openssl` → 12).
+> **Where it lives**:
+> - **CDX 1.6**: `components[].properties[]` entry `{name: "waybill:source-package", value: "<purl>"}`. CycloneDX has no second-identifier slot — `component.purl` is single-valued and every `externalReference` type is URL-shaped — so this is the one signal in §3.1 where CDX carries a property while both SPDX versions use a native field.
+> - **SPDX 2.3**: a **native second** `Package.externalRefs[]` row — `referenceCategory: "PACKAGE-MANAGER"`, `referenceType: "purl"` — distinguished from the installed package's own row by its `comment`. No annotation is emitted.
+> - **SPDX 3**: a **native second** `externalIdentifier[]` entry, `externalIdentifierType: "packageUrl"`, same `comment`. The single-valued `software_packageUrl` field keeps the installed PURL. No annotation is emitted.
+> **What to do with it**: query OS advisory feeds with this, not with the component's own PURL. Note that OSV does not resolve `pkg:apk/alpine` PURLs at all — its Alpine data answers only to the ecosystem form (`{"ecosystem": "Alpine:v3.23", "name": "openssl", "version": "3.5.6-r0"}`), and the release in that key changes the answer, so take the source PURL's name and version and the image's `/etc/alpine-release` minor version. Debian and rpm feeds do resolve by PURL.
+> **Two-state interpretation rule** — the distinction consumers must honour:
+> - **Present and different from the component's own PURL name** — a subpackage. Match on this.
+> - **Present and equal** — the package genuinely is its own source package, which is the common case (`zlib`, `busybox`, `musl`). Match on either; they agree.
+> - **Absent** — the packaging metadata recorded nothing, and a consumer therefore **may not** assume the installed name is also the source name. This is why the equal case is still emitted: suppressing it would collapse "built from itself" and "unknown" into one wire state, and only the first licenses the fallback.
+>
+> A component that is not an OS package never carries it. In particular a statically-linked or vendored library found inside a binary has no OS package at all, so it has no source package either — those are identified by CPE, not by this.
+> **Milestone**: #1248.
+> **Catalog**: [C198](sbom-format-mapping.md)
+
+```jq
+# CDX — the installed-to-source map, which is what you feed a matcher:
+jq -r '.components[]
+    | {purl, src: (.properties[]? | select(.name=="waybill:source-package") | .value)}
+    | select(.src != null)
+    | "\(.purl)  ->  \(.src)"
+' your.cdx.json
+```
+
+Expected output (one line per OS package; note `libcrypto3` and `libssl3` collapsing onto one origin):
+
+```text
+pkg:apk/alpine/alpine-release@3.23.4-r0?arch=x86_64  ->  pkg:apk/alpine/alpine-base@3.23.4-r0?arch=source
+pkg:apk/alpine/libcrypto3@3.5.6-r0?arch=x86_64       ->  pkg:apk/alpine/openssl@3.5.6-r0?arch=source
+pkg:apk/alpine/libssl3@3.5.6-r0?arch=x86_64          ->  pkg:apk/alpine/openssl@3.5.6-r0?arch=source
+```
+
+```jq
+# CDX — the deduplicated set of source packages to query, which is
+# smaller than the component count whenever subpackages share an origin:
+jq -r '[.components[].properties[]?
+        | select(.name=="waybill:source-package") | .value]
+       | unique | .[]
+' your.cdx.json
+```
+
+```jq
+# SPDX 2.3 — read the native second purl externalRef:
+jq -r '.packages[]
+    | select(.externalRefs[]? | .comment == "source package this binary package was built from")
+    | "\(.name)  ->  \(.externalRefs[]
+          | select(.comment=="source package this binary package was built from")
+          | .referenceLocator)"
+' your.spdx.json
+```
+
+```jq
+# SPDX 3 — same, from the native second packageUrl identifier:
+jq -r '.["@graph"][]
+    | select(.type=="software_Package")
+    | select(.externalIdentifier[]? | .comment == "source package this binary package was built from")
+    | "\(.name)  ->  \(.externalIdentifier[]
+          | select(.comment=="source package this binary package was built from")
+          | .identifier)"
+' your.spdx3.json
+```
+
+```jq
+# CDX — the audit query: OS packages whose metadata recorded NO source
+# package, where you may not fall back to the installed name.
+jq -r '.components[]
+    | select(.purl | test("^pkg:(apk|deb|rpm)/"))
+    | select([.properties[]? | select(.name=="waybill:source-package")] | length == 0)
+    | .purl
+' your.cdx.json
+```
 
 ### 3.2 Compliance auditing
 
@@ -1282,6 +1357,7 @@ Alphabetical order. Each entry links to the FIRST catalog row that mentions the 
 - **`waybill:source-files`** — milestone-145 JSON-array of source file paths backing this component (canonicalized via `c.evidence.source_file_paths`). ([C18](sbom-format-mapping.md))
 - **`waybill:source-mechanism`** — for cross-tier-attribution components, the mechanism used to bind source ↔ build (e.g., `cmake-fetchcontent-git` / `binary-symbol-fingerprint`). ([C55](sbom-format-mapping.md))
 - **`waybill:source-tier`** — companion to `waybill:sbom-tier` identifying the source-tier when relevant. ([C65](sbom-format-mapping.md))
+- **`waybill:source-package`** — the PURL, carrying `arch=source`, of the source package an OS binary package was built from (apk `o:`, dpkg `Source:`, rpm `SOURCERPM`). The identifier OS advisory feeds are keyed by; the installed name usually matches nothing. See [§3.1](#31-vulnerability-scanning) for depth coverage. ([C198](sbom-format-mapping.md))
 - **`waybill:source-type`** — discovery-provenance tag. See [§3.3](#33-build-provenance) for depth coverage. ([C1](sbom-format-mapping.md))
 - **`waybill:src-uri`** — Yocto / Bitbake recipe `SRC_URI` value carrying the upstream source URL(s). ([C71](sbom-format-mapping.md))
 - **`waybill:src-uri-local-only`** — boolean signaling all `SRC_URI` entries were `file://` (no external upstream). ([C82](sbom-format-mapping.md))
@@ -1323,6 +1399,7 @@ Each depth-covered signal cites the milestone that introduced or stabilized it. 
 | `waybill:evidence-kind` | 002-era | added (foundational discovery / enrichment infrastructure); depth coverage added in 151 |
 | `waybill:confidence` | 002-era | added (foundational; carries qualitative `"heuristic"` value — distinct from milestone-110's numeric `waybill:fingerprint-confidence`); depth coverage added in 151 |
 | `waybill:linkage-kind` | 005-era | added (binary tier readers landed); enum stabilized in milestone 104 (binary-role classification); depth coverage added in 151 |
+| `waybill:source-package` | #1248 | added; the one §3.1 signal that is native in both SPDX versions and a property in CycloneDX |
 | `waybill:not-linked` | 050 | added (Go binary-vs-source comparison G3 redesign); depth coverage added in 151 |
 | `waybill:assertion-conflict` | 119 | added (supplement-CDX merge FR-008 / FR-009); depth coverage added in 151 |
 | `waybill:depends-unresolved` + `waybill:rdepends-unresolved` | 128 | added (Yocto recipe enrichment FR-009 — currently Yocto-only emission, key namespace reserved); depth coverage added in 151 |

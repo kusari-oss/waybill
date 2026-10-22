@@ -52,6 +52,11 @@ pub const TAG_VENDOR: u32 = 1006;
 pub const TAG_PACKAGER: u32 = 1007;
 pub const TAG_LICENSE: u32 = 1014;
 pub const TAG_ARCH: u32 = 1022;
+/// Filename of the source rpm this binary rpm was built from, e.g.
+/// `openssl-3.5.6-1.fc43.src.rpm`. RPM advisory feeds are published
+/// against the source package: OSV answers for `openssl` and not for
+/// the installed `openssl-libs`. See #1248.
+pub const TAG_SOURCERPM: u32 = 1044;
 pub const TAG_REQUIRENAME: u32 = 1049;
 pub const TAG_DIRINDEXES: u32 = 1116;
 pub const TAG_BASENAMES: u32 = 1117;

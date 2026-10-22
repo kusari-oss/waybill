@@ -411,6 +411,19 @@ pub fn annotate_component(
             // above) — re-emitting from the bag double-stamps.
             continue;
         }
+        if key == waybill::os_source_package::ANN_SOURCE_PACKAGE {
+            // #1248: SPDX 2.3 carries this in a native second
+            // `externalRefs[PACKAGE-MANAGER/purl]` row (see
+            // `packages.rs`), so re-emitting the annotation here would
+            // state the same identifier twice in one document.
+            // CycloneDX has no second-identifier slot and does keep the
+            // property — the same capability asymmetry m1035 hit from
+            // the other direction with `pedigree.patches[]`. It cannot
+            // use `is_field_owned_annotation_key`, which the CDX
+            // pass-through also consults and which would drop it there
+            // too.
+            continue;
+        }
         if emitted_fields.contains(key.as_str()) {
             // Already emitted from a typed field (#940). Conditional rather
             // than a hardcoded skip-list, so a key the bag is the ONLY source

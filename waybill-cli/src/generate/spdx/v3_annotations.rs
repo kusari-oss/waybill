@@ -435,6 +435,14 @@ fn push_component_fields(
             // above) — re-emitting from the bag double-stamps.
             continue;
         }
+        if key == waybill::os_source_package::ANN_SOURCE_PACKAGE {
+            // #1248: carried natively as a second
+            // `externalIdentifier[packageUrl]` entry (see
+            // `v3_external_ids.rs`), mirroring the SPDX 2.3 emission.
+            // CycloneDX has no second-identifier slot and keeps the
+            // property instead.
+            continue;
+        }
         push(out, key, value.clone());
     }
 

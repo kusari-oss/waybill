@@ -143,6 +143,20 @@ fn index_spdx3_by_purl(
             {
                 continue;
             }
+            // #1248 added a second identifier carrying the SOURCE
+            // package an OS binary package was built from. It is not
+            // this package's own PURL, so it must not index the
+            // package — indexing it made every deb package appear
+            // twice, once under a phantom `arch=source` identity with
+            // no CycloneDX counterpart. Any reader asking "what is
+            // this package's PURL" has to make the same exclusion;
+            // the `comment` is the discriminator waybill emits for
+            // it, and `arch=source` is the spec-defined one.
+            if entry.get("comment").and_then(|v| v.as_str())
+                == Some(waybill::os_source_package::SOURCE_PACKAGE_COMMENT)
+            {
+                continue;
+            }
             let Some(id) = entry.get("identifier").and_then(|v| v.as_str()) else {
                 continue;
             };

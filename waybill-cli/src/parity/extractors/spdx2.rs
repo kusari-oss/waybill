@@ -46,6 +46,25 @@ pub(super) fn spdx23_purl(doc: &Value) -> BTreeSet<String> {
                 .unwrap_or(&[])
                 .iter()
                 .filter(|r| r.get("referenceType").and_then(|v| v.as_str()) == Some("purl"))
+                // #1248 added a SECOND `purl` externalRef carrying the
+                // source package an OS binary package was built from.
+                // Row A1 compares this against CDX `component.purl`,
+                // which is single-valued, so without this filter every
+                // OS package would contribute two entries here against
+                // one there and A1 would fail on any image scan. SPDX 3
+                // is unaffected: `spdx3_purl` reads the single-valued
+                // `software_packageUrl` field, not the identifier array.
+                // Keyed on the comment waybill emits rather than on
+                // `arch=source`, because the comment is ours and cannot
+                // appear by coincidence; a consumer telling the two
+                // apart should use `arch=source`, which is what
+                // purl-spec defines it for. C198 reads this entry.
+                .filter(|r| {
+                    r.get("comment").and_then(|v| v.as_str())
+                        != Some(
+                            crate::os_source_package::SOURCE_PACKAGE_COMMENT,
+                        )
+                })
                 .filter_map(|r| {
                     r.get("referenceLocator")
                         .and_then(|v| v.as_str())
@@ -702,6 +721,41 @@ spdx23_anno!(c195_spdx23, "waybill:go-mod-why", document);
 spdx23_anno!(c196_spdx23, "waybill:go-mod-why-reason", document);
 // Milestone 1156: C197 per-component version-absence marker.
 spdx23_anno!(c197_spdx23, "waybill:version-absence", component);
+
+/// C198 — the source package, read back out of the native second
+/// `externalRefs[PACKAGE-MANAGER/purl]` row rather than an
+/// annotation, because SPDX 2.3 carries it there (#1248). Normalises
+/// to the same PURL string the CycloneDX property holds, which is why
+/// the row stays `SymmetricEqual` across a wire shape that differs
+/// per format.
+pub(super) fn c198_spdx23(doc: &Value) -> BTreeSet<String> {
+    walk_spdx23_packages(doc)
+        .iter()
+        .flat_map(|p| {
+            p.get("externalRefs")
+                .and_then(|v| v.as_array())
+                .map(|arr| arr.as_slice())
+                .unwrap_or(&[])
+                .iter()
+                .filter(|r| {
+                    r.get("comment").and_then(|v| v.as_str())
+                        == Some(
+                            crate::os_source_package::SOURCE_PACKAGE_COMMENT,
+                        )
+                })
+                .filter_map(|r| r.get("referenceLocator"))
+                // Through the same canonicaliser the CycloneDX and
+                // annotation-based extractors use. Returning the raw
+                // string here made the CDX side read `"\"pkg:...\""`
+                // (the canonical form of a JSON string) against this
+                // side's bare `pkg:...`, so the row failed on the
+                // first document that carried any data -- and would
+                // have passed forever on the shared fixtures, which
+                // carry none.
+                .flat_map(super::common::canonicalize_atomic_values)
+        })
+        .collect()
+}
 
 /// C194 — compared by projection only (milestone 1071).
 pub(super) fn c194_spdx23(doc: &Value) -> BTreeSet<String> {

@@ -71,6 +71,15 @@ pub mod binding;
 /// pure-function code lives here; no I/O, no state.
 pub mod identifiers;
 
+/// #1248: the source package an OS binary package was built from.
+/// Exposed at lib root for the same reason as `identifiers` above:
+/// both the bin-side OS readers and emitters AND the lib-side parity
+/// extractors need the two wire constants, and a duplicated string
+/// literal between an emitter and the extractor that checks it would
+/// make both sides read empty in step — which a parity row scores as
+/// agreement. Pure-function only, per Constitution Principle VI.
+pub mod os_source_package;
+
 /// Internal testing utilities shared between src-side `#[cfg(test)]`
 /// blocks and integration test binaries under `tests/`. Currently
 /// exposes `testing::EnvGuard`, a save-and-restore RAII guard that

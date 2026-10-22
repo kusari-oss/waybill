@@ -238,6 +238,7 @@ fn parse_stanza(
     let mut version = None;
     let mut arch = None;
     let mut depends_raw: Option<String> = None;
+    let mut origin: Option<String> = None;
     let mut maintainer: Option<String> = None;
     let mut license_raw: Option<String> = None;
     for line in stanza.lines() {
@@ -251,6 +252,14 @@ fn parse_stanza(
             b'V' => version = Some(val),
             b'A' => arch = Some(val),
             b'D' => depends_raw = Some(val),
+            // `o:` (lowercase) — origin, the aport this package was
+            // built from. Alpine advisories are published against it
+            // rather than the installed name: `libcrypto3` and
+            // `libssl3` both carry `o:openssl`, and OSV answers for
+            // `openssl` only. Subpackages always share their aport's
+            // version, so the `V:` field above is also the origin's
+            // version — apk records no separate one. See #1248.
+            b'o' => origin = Some(val),
             // `m:` (lowercase) — package maintainer, e.g.
             // `Natanael Copa <ncopa@alpinelinux.org>`. Note: Alpine
             // uses lowercase for this field; capital M is unused in
@@ -284,6 +293,21 @@ fn parse_stanza(
         .as_deref()
         .map(parse_depends)
         .unwrap_or_default();
+
+    // #1248 — the origin's own PURL, distinguished from this
+    // package's by `arch=source` per purl-spec's deb/apk type
+    // definitions. Built with the same builder, so the `distro` and
+    // `epoch` qualifiers stay consistent with the installed entry.
+    let mut extra_annotations: std::collections::BTreeMap<String, serde_json::Value> =
+        Default::default();
+    if let Some(origin) = origin
+        .as_deref()
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+    {
+        let source_purl = build_apk_purl(origin, &version, Some("source"), distro_version, epoch);
+        waybill::os_source_package::annotate(&mut extra_annotations, &source_purl);
+    }
 
     let licenses: Vec<SpdxExpression> = license_raw
         .as_deref()
@@ -323,7 +347,7 @@ fn parse_stanza(
         hashes: Vec::new(),
         sbom_tier: Some("deployed".to_string()),
         shade_relocation: None,
-        extra_annotations: Default::default(),
+        extra_annotations,
         binary_role: None,
     })
 }
@@ -549,6 +573,71 @@ D:so:libc.musl-aarch64.so.1
         let dir = tempfile::tempdir().unwrap();
         let out = read(dir.path(), None).unwrap();
         assert!(out.is_empty());
+    }
+
+    /// #1248 — the non-equal case this feature exists for:
+    /// `libcrypto3` is built from the `openssl` aport, and OSV answers
+    /// only for the latter.
+    #[test]
+    fn origin_differing_from_name_emits_a_source_package_purl() {
+        // Synthetic coordinates, real shape: a subpackage whose
+        // origin differs from its own name. Real ones (`libcrypto3`
+        // built from `openssl`) trip Kusari Inspector's advisory scan
+        // — see PRs #285 and #640.
+        let stanza = "P:waybill-fixture-libcrypto\nV:1.2.3-r0\nA:x86_64\no:waybill-fixture-ssl\nL:Apache-2.0";
+        let e = parse_stanza(stanza, "/lib/apk/db/installed", Some("3.23.4")).unwrap();
+        assert_eq!(
+            e.purl.as_str(),
+            "pkg:apk/alpine/waybill-fixture-libcrypto@1.2.3-r0?arch=x86_64&distro=alpine-3.23.4"
+        );
+        assert_eq!(
+            e.extra_annotations
+                .get(waybill::os_source_package::ANN_SOURCE_PACKAGE)
+                .and_then(|v| v.as_str()),
+            Some("pkg:apk/alpine/waybill-fixture-ssl@1.2.3-r0?arch=source&distro=alpine-3.23.4"),
+            "the origin's PURL must carry arch=source and the same distro qualifier"
+        );
+    }
+
+    /// The common case. Emitted deliberately: see
+    /// `os_source_package::annotate` for why the equal case is not
+    /// suppressed.
+    #[test]
+    fn origin_equal_to_name_still_emits() {
+        let stanza = "P:waybill-fixture-z\nV:1.3.2-r0\nA:x86_64\no:waybill-fixture-z";
+        let e = parse_stanza(stanza, "/lib/apk/db/installed", Some("3.23.4")).unwrap();
+        assert_eq!(
+            e.extra_annotations
+                .get(waybill::os_source_package::ANN_SOURCE_PACKAGE)
+                .and_then(|v| v.as_str()),
+            Some("pkg:apk/alpine/waybill-fixture-z@1.3.2-r0?arch=source&distro=alpine-3.23.4")
+        );
+    }
+
+    /// Negative control. A stanza with no `o:` must not have one
+    /// synthesized from the package name — that would assert
+    /// something the packaging metadata never said, and would make
+    /// the annotation useless as a signal of whether a consumer may
+    /// fall back to the installed name.
+    #[test]
+    fn absent_origin_synthesizes_nothing() {
+        let stanza = "P:waybill-fixture-keys\nV:2.5-r0\nA:x86_64";
+        let e = parse_stanza(stanza, "/lib/apk/db/installed", Some("3.23.4")).unwrap();
+        assert!(
+            !e.extra_annotations
+                .contains_key(waybill::os_source_package::ANN_SOURCE_PACKAGE),
+            "no o: field means no source package, not the package's own name"
+        );
+    }
+
+    /// An empty `o:` is the same as absent, not an origin named "".
+    #[test]
+    fn blank_origin_synthesizes_nothing() {
+        let stanza = "P:waybill-fixture-keys\nV:2.5-r0\nA:x86_64\no:   ";
+        let e = parse_stanza(stanza, "/lib/apk/db/installed", Some("3.23.4")).unwrap();
+        assert!(!e
+            .extra_annotations
+            .contains_key(waybill::os_source_package::ANN_SOURCE_PACKAGE));
     }
 
     #[test]

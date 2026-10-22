@@ -178,7 +178,18 @@ fn spdx_annotation_fields(spdx: &serde_json::Value) -> BTreeSet<String> {
 /// `DEV/BUILD/TEST_DEPENDENCY_OF` relationships + SPDX 3
 /// `lifecycleScope` on `dependsOn`). Same pattern as the C42
 /// `Directionality::CdxOnly` carve-out in the parity-extractor table.
-const CDX_ONLY_PROPERTIES: &[&str] = &["waybill:lifecycle-scope"];
+/// #1248 adds the second entry, for the same documented reason: the
+/// source package an OS binary package was built from rides a native
+/// second identifier on both SPDX sides — `externalRefs[PACKAGE-MANAGER/
+/// purl]` in 2.3 and `externalIdentifier[packageUrl]` in 3 — and the
+/// CycloneDX property exists only because CycloneDX has no
+/// second-identifier slot at all. Cross-format agreement is still
+/// enforced, by catalog row C198, whose three extractors normalise all
+/// three wire shapes to the same PURL string; it just cannot be
+/// enforced by comparing annotation-key sets, which is all this test
+/// does.
+const CDX_ONLY_PROPERTIES: &[&str] =
+    &["waybill:lifecycle-scope", "waybill:source-package"];
 
 fn check_fidelity(case: &EcosystemCase) {
     let s = run_dual_scan(case);
