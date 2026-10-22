@@ -7,6 +7,34 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-10-22
+
+A minor release, not the `0.11.1` patch the placeholder held. Nothing new
+appears on the command line, but four things a consumer can observe on the
+wire change, and the first of them can break a pipeline that reads SPDX:
+
+- **Every OS package now carries a second PURL identifier** — a
+  `externalRefs[PACKAGE-MANAGER/purl]` row in SPDX 2.3 and an
+  `externalIdentifier[packageUrl]` entry in SPDX 3, for the source package
+  it was built from. A consumer that indexes packages by PURL, or that
+  assumes one `purl` entry per package, will double-count or index a
+  package under an identity that is not its own. Tell them apart by the
+  `arch=source` qualifier, which purl-spec defines for exactly this. Four
+  of waybill's own readers assumed one-per-package and had to be fixed, so
+  this is expected to bite others. The single-valued CycloneDX
+  `component.purl` and SPDX 3 `software_packageUrl` fields are unchanged
+  and still hold the installed package's own identity (#1248).
+- `waybill:orphan-reason` (C45) fires on every ecosystem rather than Go and
+  npm alone, and gains three values — `build-toolchain`,
+  `foreign-build-system`, `unreferenced-lock-node`. A consumer holding a
+  closed enum of C45 values, or expecting the annotation only on Go and npm
+  components, sees both changes (#1214).
+- pip `requirements.txt` components carry C55 `waybill:source-mechanism`
+  (`pip-requirements-txt`), which they did not before (#1214).
+- Pants resolve anchors carry `waybill:version-absence` (C198's sibling
+  C197) where they previously carried nothing. Absent on every package, so
+  any scan without Pants resolves is byte-identical (#1216).
+
 ### Test infrastructure / SBOM emission
 
 - **`waybill:orphan-reason` now covers every ecosystem** (#1214). The
@@ -33,6 +61,24 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   machine-readably rather than requiring a consumer to parse a path.
 
 ### Added
+
+- **`waybill:source-package`** (catalogue row C198) records the source
+  package an OS binary package was built from, as a PURL carrying the
+  `arch=source` qualifier that purl-spec defines for the purpose. The apk,
+  dpkg and rpm readers take it from `o:` (origin), the `Source:` control
+  field and the `SOURCERPM` tag respectively. It exists because OS advisory
+  feeds are published against the *source* name and not the installed one:
+  an image has no apk package called `openssl`, it has `libcrypto3` and
+  `libssl3` both built from `openssl`, and querying OSV for either installed
+  name returns nothing while the origin returns 25 advisories including a
+  Critical one the image is in range for. The same holds on deb (`libssl3`
+  0, `openssl` 52) and rpm (`openssl-libs` 0, `openssl` 12). Emitted
+  natively in both SPDX versions and as a property in CycloneDX, which has
+  no second-identifier slot — the mirror of C185. Emitted also when the
+  source name equals the installed name, so that absence means "the
+  packaging metadata said nothing" rather than collapsing into "built from
+  itself". ipk/opkg are excluded: their `Source:` field is not reliably a
+  package name and OSV has no OpenWrt or Yocto ecosystem to serve. #1248.
 
 - **`waybill:version-absence`** (catalogue row C197) states that a component
   has no version to have, as distinct from a version waybill looked for and
@@ -6527,7 +6573,8 @@ per-release breakdown.
 
 ---
 
-[Unreleased]: https://github.com/kusari-oss/waybill/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/kusari-oss/waybill/compare/v0.12.0...HEAD
+[0.12.0]: https://github.com/kusari-oss/waybill/releases/tag/v0.12.0
 [0.11.0]: https://github.com/kusari-oss/waybill/releases/tag/v0.11.0
 [0.10.0]: https://github.com/kusari-oss/waybill/releases/tag/v0.10.0
 [0.10.0-alpha.2]: https://github.com/kusari-oss/waybill/releases/tag/v0.10.0-alpha.2
