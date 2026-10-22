@@ -411,6 +411,11 @@ fn build_entry_from_header(
     let name = header.string(rpm_header::TAG_NAME)?.to_string();
     let version = header.string(rpm_header::TAG_VERSION)?.to_string();
     let release = header.string(rpm_header::TAG_RELEASE)?.to_string();
+    // #1248 — read before the early returns below so the borrow ends
+    // here; applied to the assembled entry at the end of this fn.
+    let sourcerpm = header
+        .string(rpm_header::TAG_SOURCERPM)
+        .and_then(parse_sourcerpm);
     if name.is_empty() || version.is_empty() || release.is_empty() {
         return None;
     }
@@ -452,7 +457,7 @@ fn build_entry_from_header(
         .map(|s| s.to_string())
         .collect();
 
-    Some(assemble_entry(
+    let mut entry = assemble_entry(
         vendor,
         source_path,
         name,
@@ -464,7 +469,23 @@ fn build_entry_from_header(
         packager,
         depends,
         distro_version,
-    ))
+    );
+    // #1248 — applied here rather than inside `assemble_entry`,
+    // because the synthetic-fixture path that shares that function
+    // has no SOURCERPM column to read. Keeping it on the header path
+    // means a fixture-derived entry carries no source package, which
+    // is the truth about that input.
+    if let Some((src_name, src_version, src_release)) = sourcerpm {
+        let source_purl = build_rpm_source_purl(
+            vendor,
+            &src_name,
+            &src_version,
+            &src_release,
+            distro_version,
+        );
+        waybill::os_source_package::annotate(&mut entry.extra_annotations, &source_purl);
+    }
+    Some(entry)
 }
 
 /// Build a `PackageDbEntry` from discrete text columns (waybill's
@@ -538,6 +559,82 @@ fn build_entry_from_text_columns(
 /// Shared PURL construction + `PackageDbEntry` assembly. Both the
 /// header path and the fixture path end here so the output schema is
 /// identical regardless of source.
+/// Split an rpm `SOURCERPM` filename into (name, version, release).
+///
+/// The tag holds a filename — `openssl-3.5.6-1.fc43.src.rpm` — not a
+/// structured NEVRA. Parsing is right-to-left because rpm names
+/// contain hyphens freely (`perl-Text-Tabs+Wrap`,
+/// `rpm-build-libs`) while version and release do not: strip the
+/// `.src.rpm` suffix, then the last two hyphen-separated fields are
+/// release and version, and everything before is the name.
+///
+/// Returns `None` when the shape does not hold, rather than guessing.
+/// An srpm filename that cannot be split is more likely a tag waybill
+/// has misread than a package worth half-identifying.
+///
+/// # The ambiguity this format cannot resolve, and the guard for it
+///
+/// Because names may contain hyphens, a filename *missing* a field is
+/// not structurally distinguishable from a valid one:
+/// `some-pkg-1.2.3.src.rpm` splits just as cleanly into
+/// `("some", "pkg", "1.2.3")` as into the truth. rpm itself has the
+/// same ambiguity, which is why rpm tooling reads name, version and
+/// release from separate header tags — and `SOURCERPM` is the one
+/// place no separate tags exist.
+///
+/// The guard is that the version field must begin with a digit, which
+/// is true of essentially every rpm version and false of a name
+/// fragment. A source package whose version genuinely starts with a
+/// letter loses its annotation; that is the right direction to fail,
+/// since a wrong source name would be matched against an unrelated
+/// package's advisories.
+fn parse_sourcerpm(filename: &str) -> Option<(String, String, String)> {
+    let stem = filename.trim().strip_suffix(".src.rpm")?;
+    let (rest, release) = stem.rsplit_once('-')?;
+    let (name, version) = rest.rsplit_once('-')?;
+    if name.is_empty() || version.is_empty() || release.is_empty() {
+        return None;
+    }
+    if !version.starts_with(|c: char| c.is_ascii_digit()) {
+        tracing::debug!(
+            sourcerpm = filename,
+            parsed_version = version,
+            "SOURCERPM does not split into name-version-release; not emitting a source package"
+        );
+        return None;
+    }
+    Some((name.to_string(), version.to_string(), release.to_string()))
+}
+
+/// Assemble the source package's PURL for an rpm.
+///
+/// Distinguished from the binary package's by `arch=source`, the
+/// qualifier purl-spec defines for exactly this. Deliberately does
+/// NOT carry `epoch`: the `SOURCERPM` filename has no epoch field, so
+/// there is nothing to put there, and inheriting the binary
+/// package's would assert something the metadata never said.
+fn build_rpm_source_purl(
+    vendor: &str,
+    name: &str,
+    version: &str,
+    release: &str,
+    distro_version: Option<&str>,
+) -> String {
+    let mut qualifiers = String::from("?arch=source");
+    if let Some(dv) = distro_version {
+        if !dv.is_empty() {
+            qualifiers.push_str(&format!("&distro={vendor}-{dv}"));
+        }
+    }
+    let enc = waybill_common::types::purl::encode_purl_segment;
+    format!(
+        "pkg:rpm/{vendor}/{}@{}-{}{qualifiers}",
+        enc(name),
+        enc(version),
+        enc(release),
+    )
+}
+
 #[allow(clippy::too_many_arguments)]
 fn assemble_entry(
     vendor: &str,
@@ -972,6 +1069,64 @@ mod tests {
 
     /// T044 — `raw_version` is populated on every rpmdb-header entry
     /// and holds the verbatim `VERSION-RELEASE` string.
+    // ---- #1248 source package ----
+
+    #[test]
+    fn sourcerpm_splits_right_to_left() {
+        assert_eq!(
+            parse_sourcerpm("waybill-fixture-ssl-1.2.3-1.fc43.src.rpm"),
+            Some(("waybill-fixture-ssl".into(), "1.2.3".into(), "1.fc43".into()))
+        );
+    }
+
+    /// rpm names contain hyphens freely while version and release do
+    /// not, which is the whole reason the split runs right-to-left. A
+    /// left-to-right split would name this package `perl`.
+    #[test]
+    fn sourcerpm_keeps_hyphenated_names_whole() {
+        assert_eq!(
+            parse_sourcerpm("waybill-fixture-Text-Tabs+Wrap-2021.0814-480.fc40.src.rpm"),
+            Some((
+                "waybill-fixture-Text-Tabs+Wrap".into(),
+                "2021.0814".into(),
+                "480.fc40".into()
+            ))
+        );
+    }
+
+    #[test]
+    fn sourcerpm_rejects_shapes_it_cannot_split() {
+        assert_eq!(parse_sourcerpm("waybill-fixture-ssl-1.2.3-1.fc43.rpm"), None, "no .src.rpm suffix");
+        assert_eq!(parse_sourcerpm("waybill-fixture-ssl.src.rpm"), None, "no version or release");
+        // A hyphenated name makes a missing field structurally
+        // ambiguous: this splits cleanly into
+        // ("waybill-fixture", "ssl", "1.2.3"). Rejected only because
+        // the version field must start with a digit.
+        assert_eq!(
+            parse_sourcerpm("waybill-fixture-ssl-1.2.3.src.rpm"),
+            None,
+            "release present but version is a name fragment"
+        );
+        assert_eq!(
+            parse_sourcerpm("waybill-fixture-ssl-v1.2.3-1.fc43.src.rpm"),
+            None,
+            "a letter-initial version is declined rather than guessed at"
+        );
+        assert_eq!(parse_sourcerpm(""), None);
+    }
+
+    #[test]
+    fn rpm_source_purl_carries_arch_source_and_no_epoch() {
+        assert_eq!(
+            build_rpm_source_purl("rocky", "waybill-fixture-ssl", "1.2.3", "24.el9", Some("9.3")),
+            "pkg:rpm/rocky/waybill-fixture-ssl@1.2.3-24.el9?arch=source&distro=rocky-9.3"
+        );
+        assert_eq!(
+            build_rpm_source_purl("fedora", "waybill-fixture-Text-Tabs+Wrap", "2021.0814", "480.fc40", None),
+            "pkg:rpm/fedora/waybill-fixture-Text-Tabs%2BWrap@2021.0814-480.fc40?arch=source"
+        );
+    }
+
     #[test]
     fn assemble_entry_populates_raw_version() {
         let blob = build_test_header(&[

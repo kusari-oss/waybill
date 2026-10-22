@@ -293,6 +293,31 @@ fn parse_stanza_inner(
     let purl_str = build_deb_purl(&name, &version, arch.as_deref(), namespace, distro_version, epoch);
     let purl = Purl::new(&purl_str).ok()?;
 
+    // #1248 — the source package, from the `Source:` control field.
+    // Debian advisories are published against it, not the installed
+    // name: `libssl3` returns nothing from OSV and `openssl` returns
+    // 52. Absent when source name and version both equal the binary
+    // package's, per Debian Policy §5.6.1, so the fallback is the
+    // binary package's own identity rather than nothing.
+    let mut extra_annotations: std::collections::BTreeMap<String, serde_json::Value> =
+        Default::default();
+    {
+        let (src_name, src_raw_version) = match get("source") {
+            Some(field) => parse_deb_source_field(field, &raw_version),
+            None => (name.clone(), raw_version.clone()),
+        };
+        let (src_epoch, src_version) = parse_deb_version_with_epoch(&src_raw_version);
+        let source_purl = build_deb_purl(
+            &src_name,
+            &src_version,
+            Some("source"),
+            namespace,
+            distro_version,
+            src_epoch,
+        );
+        waybill::os_source_package::annotate(&mut extra_annotations, &source_purl);
+    }
+
     let depends = get("depends")
         .map(parse_depends)
         .unwrap_or_default();
@@ -339,7 +364,7 @@ fn parse_stanza_inner(
         hashes: Vec::new(),
         sbom_tier: Some("deployed".to_string()),
         shade_relocation: None,
-        extra_annotations: Default::default(),
+        extra_annotations,
         binary_role: None,
     })
 }
@@ -409,6 +434,33 @@ fn build_deb_purl(
 /// Mirrors the m190 opkg-side helper at
 /// `ipk_file.rs::parse_opkg_version_with_epoch` — the deb / opkg /
 /// apk version grammars all inherit the same epoch shape.
+/// Split a dpkg `Source:` control field into (name, version).
+///
+/// Debian Policy §5.6.1: the field is the source package name,
+/// optionally followed by the source version in parentheses when it
+/// differs from the binary package's version — `openssl` or
+/// `openssl (3.0.11-1)`. An omitted version means "same as the binary
+/// package", so `binary_version` is the fallback rather than an
+/// absent version, which would produce a versionless PURL that no
+/// advisory feed can range-match.
+fn parse_deb_source_field(field: &str, binary_version: &str) -> (String, String) {
+    let field = field.trim();
+    match field.split_once('(') {
+        Some((name, rest)) => {
+            let version = rest.trim_end().trim_end_matches(')').trim();
+            let name = name.trim();
+            if name.is_empty() || version.is_empty() {
+                // Malformed — fall back to treating the whole field as
+                // a name, which `Purl::new` then validates.
+                (field.to_string(), binary_version.to_string())
+            } else {
+                (name.to_string(), version.to_string())
+            }
+        }
+        None => (field.to_string(), binary_version.to_string()),
+    }
+}
+
 fn parse_deb_version_with_epoch(raw: &str) -> (Option<u32>, String) {
     if let Some(colon_pos) = raw.find(':') {
         let (prefix, rest) = raw.split_at(colon_pos);
@@ -469,6 +521,80 @@ mod tests {
     use super::*;
 
     const SOURCE: &str = "/var/lib/dpkg/status";
+
+    // ---- #1248 source package ----
+
+    #[test]
+    fn source_field_bare_name_inherits_the_binary_version() {
+        assert_eq!(
+            parse_deb_source_field("waybill-fixture-ssl", "1.2.3-1~deb12u2"),
+            ("waybill-fixture-ssl".to_string(), "1.2.3-1~deb12u2".to_string())
+        );
+    }
+
+    #[test]
+    fn source_field_parenthesised_version_wins() {
+        assert_eq!(
+            parse_deb_source_field("waybill-fixture-ssl (1.2.3-1)", "1.2.3-1~deb12u2"),
+            ("waybill-fixture-ssl".to_string(), "1.2.3-1".to_string())
+        );
+    }
+
+    #[test]
+    fn source_field_malformed_falls_back_rather_than_guessing() {
+        // No name before the paren, and no version inside it: both
+        // degrade to the whole field as a name, which `Purl::new`
+        // then rejects, so nothing is emitted.
+        assert_eq!(
+            parse_deb_source_field("()", "1.0"),
+            ("()".to_string(), "1.0".to_string())
+        );
+    }
+
+    /// The measured case: `libssl3` returns nothing from OSV, its
+    /// source `openssl` returns 52.
+    #[test]
+    fn subpackage_emits_its_source_package_purl() {
+        let text = "\
+Package: waybill-fixture-libssl
+Status: install ok installed
+Version: 1.2.3-1~deb12u2
+Architecture: amd64
+Source: waybill-fixture-ssl
+";
+        let entries = parse(text, SOURCE, "debian", Some("12"));
+        assert_eq!(entries.len(), 1);
+        assert_eq!(
+            entries[0]
+                .extra_annotations
+                .get(waybill::os_source_package::ANN_SOURCE_PACKAGE)
+                .and_then(|v| v.as_str()),
+            Some("pkg:deb/debian/waybill-fixture-ssl@1.2.3-1~deb12u2?arch=source&distro=debian-12")
+        );
+    }
+
+    /// Debian Policy §5.6.1 omits `Source:` when the source name AND
+    /// version both match the binary package. The fallback is the
+    /// package's own identity, so the annotation is still present and
+    /// still correct — unlike apk, where an absent `o:` means the
+    /// metadata genuinely said nothing.
+    #[test]
+    fn absent_source_field_falls_back_to_the_package_itself() {
+        let text = "\
+Package: waybill-fixture-tool
+Status: install ok installed
+Version: 1.6-2.1
+Architecture: amd64
+";
+        let entries = parse(text, SOURCE, "debian", Some("12"));
+        assert_eq!(
+            entries[0]
+                .extra_annotations
+                .get(waybill::os_source_package::ANN_SOURCE_PACKAGE)
+                .and_then(|v| v.as_str()),
+            Some("pkg:deb/debian/waybill-fixture-tool@1.6-2.1?arch=source&distro=debian-12")
+        );
+    }
 
     #[test]
     fn parses_single_installed_package() {

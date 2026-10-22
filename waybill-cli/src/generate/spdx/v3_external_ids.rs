@@ -30,7 +30,9 @@ use waybill_common::resolution::ResolvedComponent;
 pub fn build_external_identifiers_for(component: &ResolvedComponent) -> Vec<Value> {
     let mut entries: Vec<Value> = Vec::new();
 
-    // PURL — always exactly one entry. SPDX 3 vocabulary names the
+    // PURL — the installed package's own, always present. A second
+    // `packageUrl` entry follows for OS packages that record a source
+    // package (#1248). SPDX 3 vocabulary names the
     // PURL externalIdentifierType `"packageUrl"` (per
     // `prop_ExternalIdentifier_externalIdentifierType` enum in the
     // bundled schema); "purl" is not a valid value.
@@ -39,6 +41,27 @@ pub fn build_external_identifiers_for(component: &ResolvedComponent) -> Vec<Valu
         "externalIdentifierType": "packageUrl",
         "identifier": component.purl.as_str(),
     }));
+
+    // #1248 — the source package this binary package was built
+    // from, as a second `packageUrl` entry. SPDX 3 places no
+    // cardinality limit on `externalIdentifier[]` (unlike the
+    // single-valued `software_packageUrl` field, which keeps the
+    // installed PURL). The two are told apart by the `arch=source`
+    // qualifier purl-spec defines for the purpose, and by the
+    // comment, which also keeps them deterministically ordered under
+    // the `(type, identifier, comment)` sort below.
+    if let Some(source_purl) = component
+        .extra_annotations
+        .get(waybill::os_source_package::ANN_SOURCE_PACKAGE)
+        .and_then(|v| v.as_str())
+    {
+        entries.push(json!({
+            "type": "ExternalIdentifier",
+            "externalIdentifierType": "packageUrl",
+            "identifier": source_purl,
+            "comment": waybill::os_source_package::SOURCE_PACKAGE_COMMENT,
+        }));
+    }
 
     // CPE 2.3 — one entry per fully-resolved candidate. A "fully
     // resolved" CPE 2.3 vector has no wildcards (`*` or `-`) in

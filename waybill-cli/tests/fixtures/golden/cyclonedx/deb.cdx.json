@@ -33,6 +33,10 @@
           "value": "deployed"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/libc6@2.36-9?arch=source&distro=debian-12"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -74,6 +78,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "deployed"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/zlib1g@1.2.13.dfsg-1?arch=source&distro=debian-12&epoch=1"
         },
         {
           "name": "waybill:workspace-member",

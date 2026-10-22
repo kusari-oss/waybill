@@ -787,6 +787,33 @@ spdx3_anno!(c196_spdx3, "waybill:go-mod-why-reason", document);
 // Milestone 1156: C197 per-component version-absence marker.
 spdx3_anno!(c197_spdx3, "waybill:version-absence", component);
 
+/// C198 — the source package, read back out of the native second
+/// `externalIdentifier[packageUrl]` entry (#1248). Mirror of
+/// `c198_spdx23`; both normalise to the string the CycloneDX property
+/// holds.
+pub(super) fn c198_spdx3(doc: &Value) -> BTreeSet<String> {
+    walk_spdx3_packages(doc)
+        .iter()
+        .flat_map(|p| {
+            p.get("externalIdentifier")
+                .and_then(|v| v.as_array())
+                .map(|arr| arr.as_slice())
+                .unwrap_or(&[])
+                .iter()
+                .filter(|e| {
+                    e.get("comment").and_then(|v| v.as_str())
+                        == Some(
+                            crate::os_source_package::SOURCE_PACKAGE_COMMENT,
+                        )
+                })
+                .filter_map(|e| e.get("identifier"))
+                // See the note in `c198_spdx23`: canonicalised so all
+                // three formats produce byte-identical strings.
+                .flat_map(super::common::canonicalize_atomic_values)
+        })
+        .collect()
+}
+
 /// C194 — compared by projection only (milestone 1071).
 pub(super) fn c194_spdx3(doc: &Value) -> BTreeSet<String> {
     super::common::derivation_projections(c194_spdx3_raw(doc))
