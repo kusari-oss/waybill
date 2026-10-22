@@ -7,6 +7,16 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+## [0.12.1] - 2026-10-22
+
+A patch. One wire-observable change, scoped to apk-based images that are
+not Alpine: their PURL namespace was wrong in every release up to and
+including 0.12.0, so a Wolfi or Chainguard SBOM matched no advisories.
+Sized as a patch rather than a minor because no consumer is known to have
+read waybill's apk output for a non-Alpine distro — the defect was found
+while regenerating a test corpus, which is plausibly its first such use.
+Alpine output is unchanged.
+
 ### Fixed
 
 - The apk reader derives its PURL namespace from `/etc/os-release`'s `ID`
@@ -6591,7 +6601,8 @@ per-release breakdown.
 
 ---
 
-[Unreleased]: https://github.com/kusari-oss/waybill/compare/v0.12.0...HEAD
+[Unreleased]: https://github.com/kusari-oss/waybill/compare/v0.12.1...HEAD
+[0.12.1]: https://github.com/kusari-oss/waybill/releases/tag/v0.12.1
 [0.12.0]: https://github.com/kusari-oss/waybill/releases/tag/v0.12.0
 [0.11.0]: https://github.com/kusari-oss/waybill/releases/tag/v0.11.0
 [0.10.0]: https://github.com/kusari-oss/waybill/releases/tag/v0.10.0
