@@ -7,6 +7,24 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Fixed
+
+- The apk reader derives its PURL namespace from `/etc/os-release`'s `ID`
+  instead of hardcoding `alpine`, so a Wolfi or Chainguard rootfs emits
+  `pkg:apk/wolfi/...?distro=wolfi-<VERSION_ID>` rather than an `alpine`
+  spelling no vulnerability database resolves. **Consumer-visible**: apk
+  PURLs change namespace on every non-Alpine apk image, including the
+  `arch=source` identifier added in 0.12.0. Measured end to end on
+  `cgr.dev/chainguard/wolfi-base:latest` — all 19 apk packages and all 19
+  source PURLs move to `pkg:apk/wolfi/...?distro=wolfi-20230201`, and OSV
+  answers them with **20 distinct advisories where the 0.12.0 output
+  returned 0**, so a Wolfi SBOM previously read as having no OS
+  vulnerabilities at all. `alpine:latest` is unchanged (16/16 still
+  `pkg:apk/alpine/...?distro=alpine-3.24.3`), and a rootfs with no `ID`
+  still falls back to `alpine` with the missing field recorded in
+  diagnostics, as dpkg does. The namespace is passed through verbatim with
+  no allowlist, so derivative distros need no code change (#1253).
+
 ## [0.12.0] - 2026-10-22
 
 A minor release, not the `0.11.1` patch the placeholder held. Nothing new

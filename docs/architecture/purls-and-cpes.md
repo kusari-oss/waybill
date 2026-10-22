@@ -92,8 +92,9 @@ NVD matching.
   Module-prefix is url-encoded in ClearlyDefined coords but literal in PURL.
 - **cargo**: `pkg:cargo/<name>@<version>`. No namespace (crates.io is flat).
 - **gem**: `pkg:gem/<name>@<version>`.
-- **apk**: `pkg:apk/alpine/<name>@<version>?arch=<arch>&distro=alpine-<version>`
-  (e.g., `distro=alpine-3.19`).
+- **apk**: `pkg:apk/<id>/<name>@<version>?arch=<arch>&distro=<id>-<version>`,
+  where `<id>` is `/etc/os-release`'s `ID` and defaults to `alpine`
+  (e.g., `distro=alpine-3.19`, `distro=wolfi-20230201`).
 
 ## CPEs — multi-candidate emission
 
