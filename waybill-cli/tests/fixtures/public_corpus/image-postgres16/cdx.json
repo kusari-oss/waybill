@@ -91,6 +91,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/adduser@3.152?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -364,6 +368,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/apt@3.0.3?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -565,6 +573,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/base-files@13.8%2Bdeb13u6?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -664,6 +676,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/base-passwd@3.6.7?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -869,6 +885,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/bash@5.2.37-2?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -1146,6 +1166,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/util-linux@2.41-5?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -1717,6 +1741,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/coreutils@9.7-3?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -1824,6 +1852,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/dash@0.5.12-12?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -2379,6 +2411,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/debconf@1.5.91?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -2532,6 +2568,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/debian-archive-keyring@2025.1?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -2667,6 +2707,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/debianutils@5.23.2?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -2914,6 +2958,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/diffutils@3.10-4?arch=source&distro=debian-13&epoch=1"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -3139,6 +3187,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/gnupg2@2.4.7-21%2Bdeb13u1?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -3330,6 +3382,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/dpkg@1.22.22?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -3705,6 +3761,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/findutils@4.10.0-3?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -3836,6 +3896,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/gcc-14@14.2.0-19?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -4155,6 +4219,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/gnupg2@2.4.7-21%2Bdeb13u1?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -4358,6 +4426,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/gnupg2@2.4.7-21%2Bdeb13u1?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -4609,6 +4681,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/gnupg2@2.4.7-21%2Bdeb13u1?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:unresolved-declared-dep",
           "value": "pinentry"
         },
@@ -4834,6 +4910,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/gnupg2@2.4.7-21%2Bdeb13u1?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -5051,6 +5131,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/gnupg2@2.4.7-21%2Bdeb13u1?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -5260,6 +5344,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/gnupg2@2.4.7-21%2Bdeb13u1?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -5347,6 +5435,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/grep@3.11-4?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -5498,6 +5590,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/gzip@1.13-1?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -5573,6 +5669,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/hostname@3.25?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -5682,6 +5782,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/init-system-helpers@1.69~deb13u1?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -5849,6 +5953,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/less@668-1?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -5936,6 +6044,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/acl@2.3.2-2?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -6073,6 +6185,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/apt@3.0.3?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -6284,6 +6400,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/libassuan@3.0.2-2?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -6377,6 +6497,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/attr@2.5.2-3?arch=source&distro=debian-13&epoch=1"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -6466,6 +6590,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/audit@4.0.2-2?arch=source&distro=debian-13&epoch=1"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -6553,6 +6681,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/audit@4.0.2-2?arch=source&distro=debian-13&epoch=1"
         },
         {
           "name": "waybill:workspace-member",
@@ -6786,6 +6918,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/util-linux@2.41-5?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -7033,6 +7169,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/libbsd@0.12.2-2?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -7120,6 +7260,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/bzip2@1.0.8-6?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -7829,6 +7973,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/glibc@2.41-12%2Bdeb13u3?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -8574,6 +8722,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/glibc@2.41-12%2Bdeb13u3?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -10273,6 +10425,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/glibc@2.41-12%2Bdeb13u3?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -10376,6 +10532,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/libcap-ng@0.8.5-4?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -10505,6 +10665,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/libcap2@2.75-10%2Bdeb13u1?arch=source&distro=debian-13&epoch=1"
         },
         {
           "name": "waybill:workspace-member",
@@ -10740,6 +10904,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/e2fsprogs@1.47.2-3?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -10815,6 +10983,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/libxcrypt@4.4.38-1?arch=source&distro=debian-13&epoch=1"
         },
         {
           "name": "waybill:workspace-member",
@@ -11038,6 +11210,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/db5.3@5.3.28%2Bdfsg2-9?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -11127,6 +11303,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/cdebconf@0.280?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -11202,6 +11382,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/libedit@3.1-20250104-1?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -11353,6 +11537,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/libffi@3.4.8-2?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -11486,6 +11674,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/gcc-14@14.2.0-19?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -11591,6 +11783,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/libgcrypt20@1.11.0-7%2Bdeb13u1?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -11692,6 +11888,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/gdbm@1.24-2?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -11791,6 +11991,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/gdbm@1.24-2?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -11918,6 +12122,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/gmp@6.3.0%2Bdfsg-3?arch=source&distro=debian-13&epoch=2"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -11979,6 +12187,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/gnutls28@3.8.9-3%2Bdeb13u4?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -12106,6 +12318,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/libgpg-error@1.51-4?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -12167,6 +12383,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/krb5@1.21.3-5%2Bdeb13u1?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -12342,6 +12562,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/nettle@3.10.1-1?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -12449,6 +12673,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/icu@76.1-4?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -12588,6 +12816,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/libidn2@2.3.8-2?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -12705,6 +12937,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/libjson-perl@4.10000-1?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -12766,6 +13002,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/krb5@1.21.3-5%2Bdeb13u1?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -12857,6 +13097,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/keyutils@1.6.3-6?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -12924,6 +13168,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/krb5@1.21.3-5%2Bdeb13u1?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -12985,6 +13233,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/krb5@1.21.3-5%2Bdeb13u1?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -13158,6 +13410,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/libksba@1.6.7-2?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -13391,6 +13647,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/util-linux@2.41-5?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -13906,6 +14166,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/openldap@2.6.10%2Bdfsg-1?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -14031,6 +14295,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/llvm-toolchain-19@19.1.7-3?arch=source&distro=debian-13&epoch=1"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -14130,6 +14398,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/lz4@1.10.0-4?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -14329,6 +14601,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/xz-utils@5.8.1-1%2Bdeb13u1?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -14500,6 +14776,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/libmd@1.1.0-2?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -14735,6 +15015,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/util-linux@2.41-5?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -14842,6 +15126,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/ncurses@6.5%2B20250216-2?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -15017,6 +15305,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/nettle@3.10.1-1?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -15092,6 +15384,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/npth@1.8-3?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -15181,6 +15477,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/nss-wrapper@1.1.16-1?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -15378,6 +15678,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/p11-kit@0.25.5-3?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -15579,6 +15883,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/pam@1.7.0-5?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -15970,6 +16278,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/pam@1.7.0-5?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -16199,6 +16511,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/pam@1.7.0-5?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:unresolved-declared-dep",
           "value": "[\"cdebconf\",\"debconf-2.0\"]"
         },
@@ -16384,6 +16700,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/pam@1.7.0-5?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:unresolved-declared-dep",
           "value": "debconf-2.0"
         },
@@ -16511,6 +16831,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/pcre2@10.46-1~deb13u1?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -18506,6 +18830,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/perl@5.40.1-6?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -18763,6 +19091,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/postgresql-18@18.4-1.pgdg13%2B1?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -18862,6 +19194,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/procps@4.0.4-9?arch=source&distro=debian-13&epoch=2"
         },
         {
           "name": "waybill:workspace-member",
@@ -18991,6 +19327,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/readline@8.2-6?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -19322,6 +19662,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/cyrus-sasl2@2.1.28%2Bdfsg1-9?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -19651,6 +19995,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/cyrus-sasl2@2.1.28%2Bdfsg1-9?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -19726,6 +20074,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/libseccomp@2.6.0-2?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -19821,6 +20173,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/libselinux@3.8.1-1?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -19910,6 +20266,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/libsemanage@3.8.1-1?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -19997,6 +20357,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/libsemanage@3.8.1-1?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -20110,6 +20474,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/libsepol@3.8.1-1?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -20345,6 +20713,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/util-linux@2.41-5?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -20432,6 +20804,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/sqlite3@3.46.1-7%2Bdeb13u1?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -20561,6 +20937,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/openssl@3.5.6-1~deb13u2?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -20716,6 +21096,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/gcc-14@14.2.0-19?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -20851,6 +21235,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/systemd@257.13-1~deb13u1?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -20990,6 +21378,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/libtasn1-6@4.20.0-2%2Bdeb13u1?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -21093,6 +21485,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/libtext-charwidth-perl@0.04-11?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:unresolved-declared-dep",
@@ -21200,6 +21596,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/libtext-wrapi18n-perl@0.06-10?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -21303,6 +21703,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/ncurses@6.5%2B20250216-2?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -21440,6 +21844,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/systemd@257.13-1~deb13u1?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -21771,6 +22179,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/libunistring@1.3-2?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -22004,6 +22416,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/util-linux@2.41-5?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -22093,6 +22509,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/libxml2@2.12.7%2Bdfsg%2Breally2.9.14-2.1%2Bdeb13u3?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -22158,6 +22578,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/libxslt@1.1.35-1.2%2Bdeb13u3?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -22261,6 +22685,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/xxhash@0.8.3-2?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -22348,6 +22776,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/z3@4.13.3-1?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -22473,6 +22905,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/libzstd@1.5.7%2Bdfsg-1?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -25500,6 +25936,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/glibc@2.41-12%2Bdeb13u3?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:unresolved-declared-dep",
           "value": "debconf-2.0"
         },
@@ -25603,6 +26043,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/shadow@4.17.4-2?arch=source&distro=debian-13&epoch=1"
         },
         {
           "name": "waybill:workspace-member",
@@ -25854,6 +26298,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/util-linux@2.41-5?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -25953,6 +26401,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/mawk@1.3.4.20250131-1?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -26222,6 +26674,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/util-linux@2.41-5?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -26505,6 +26961,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/ncurses@6.5%2B20250216-2?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -26630,6 +27090,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/ncurses@6.5%2B20250216-2?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -26717,6 +27181,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/netbase@6.5?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -26830,6 +27298,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/openssl@3.5.6-1~deb13u2?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -26959,6 +27431,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/openssl@3.5.6-1~deb13u2?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -27176,6 +27652,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/shadow@4.17.4-2?arch=source&distro=debian-13&epoch=1"
         },
         {
           "name": "waybill:workspace-member",
@@ -30089,6 +30569,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/perl@5.40.1-6?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -35864,6 +36348,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/perl@5.40.1-6?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -36429,6 +36917,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/perl@5.40.1-6?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -36552,6 +37044,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/pinentry@1.3.1-2?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -42923,6 +43419,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/postgresql-16@16.14-1.pgdg13%2B1?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:unresolved-declared-dep",
           "value": "[\"debconf-2.0\",\"locales-all\"]"
         },
@@ -44536,6 +45036,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/postgresql-16@16.14-1.pgdg13%2B1?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -44635,6 +45139,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/postgresql-common@291.pgdg13%2B1?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -44836,6 +45344,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/postgresql-common@291.pgdg13%2B1?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:unresolved-declared-dep",
@@ -45063,6 +45575,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/procps@4.0.4-9?arch=source&distro=debian-13&epoch=2"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -45186,6 +45702,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/readline@8.2-6?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -45349,6 +45869,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/sed@4.9-2%2Bdeb13u1?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -45482,6 +46006,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/sensible-utils@0.0.25?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -45571,6 +46099,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/rust-sequoia-sqv@1.3.0-3?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -45650,6 +46182,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/ssl-cert@1.1.3?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:unresolved-declared-dep",
@@ -45789,6 +46325,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/sysvinit@3.14-4?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -45924,6 +46464,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/tar@1.35%2Bdfsg-3.1?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",
@@ -47771,6 +48315,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/tzdata@2026b-0%2Bdeb13u1?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:unresolved-declared-dep",
           "value": "debconf-2.0"
         },
@@ -47866,6 +48414,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/ucf@3.0052?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:unresolved-declared-dep",
@@ -48609,6 +49161,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/util-linux@2.41-5?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -48926,6 +49482,10 @@
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
         },
         {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/xz-utils@5.8.1-1%2Bdeb13u1?arch=source&distro=debian-13"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -49001,6 +49561,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/zlib@1.3.dfsg%2Breally1.3.1-1?arch=source&distro=debian-13&epoch=1"
         },
         {
           "name": "waybill:workspace-member",
@@ -49138,6 +49702,10 @@
         {
           "name": "waybill:layer-digest",
           "value": "sha256:3ce18cb308c1717fc170f061e3b098b182bd24b99b4a895663987926fa56b9ce"
+        },
+        {
+          "name": "waybill:source-package",
+          "value": "pkg:deb/debian/libzstd@1.5.7%2Bdfsg-1?arch=source&distro=debian-13"
         },
         {
           "name": "waybill:workspace-member",

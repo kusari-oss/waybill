@@ -100,6 +100,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libcap-ng0@0.8.5-4%2Bb1?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/libcap-ng@0.8.5-4?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "libcap-ng0",
@@ -133,6 +139,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libsepol2@3.8.1-1?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/libsepol@3.8.1-1?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "libsepol2",
@@ -165,6 +177,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libcrypt1@4.4.38-1?arch=amd64&distro=debian-13&epoch=1",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/libxcrypt@4.4.38-1?arch=source&distro=debian-13&epoch=1",
           "type": "ExternalIdentifier"
         }
       ],
@@ -232,6 +250,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libedit2@3.1-20250104-1?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/libedit@3.1-20250104-1?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "libedit2",
@@ -291,6 +315,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libgcrypt20@1.11.0-7%2Bdeb13u1?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/libgcrypt20@1.11.0-7%2Bdeb13u1?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "libgcrypt20",
@@ -323,6 +353,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libtasn1-6@4.20.0-2%2Bdeb13u1?arch=amd64&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/libtasn1-6@4.20.0-2%2Bdeb13u1?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         }
       ],
@@ -357,6 +393,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/bash@5.2.37-2%2Bb9?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/bash@5.2.37-2?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "bash",
@@ -390,6 +432,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libxxhash0@0.8.3-2?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/xxhash@0.8.3-2?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "libxxhash0",
@@ -417,6 +465,12 @@
         {
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:libc-l10n:libc-l10n:2.41-12\\+deb13u3:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/glibc@2.41-12%2Bdeb13u3?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         },
         {
@@ -455,6 +509,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libtext-wrapi18n-perl@0.06-10?arch=all&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/libtext-wrapi18n-perl@0.06-10?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         }
       ],
@@ -502,6 +562,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/dirmngr@2.4.7-21%2Bdeb13u1%2Bb4?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/gnupg2@2.4.7-21%2Bdeb13u1?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "dirmngr",
@@ -534,6 +600,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libudev1@257.13-1~deb13u1?arch=amd64&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/systemd@257.13-1~deb13u1?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         }
       ],
@@ -578,6 +650,12 @@
           "type": "ExternalIdentifier"
         },
         {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/gdbm@1.24-2?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libgdbm-compat4t64@1.24-2?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
@@ -608,6 +686,12 @@
         {
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:gpg:gpg:2.4.7-21\\+deb13u1\\+b4:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/gnupg2@2.4.7-21%2Bdeb13u1?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         },
         {
@@ -657,6 +741,12 @@
           "type": "ExternalIdentifier"
         },
         {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/gnupg2@2.4.7-21%2Bdeb13u1?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/gpgconf@2.4.7-21%2Bdeb13u1%2Bb4?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
@@ -692,6 +782,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/util-linux@2.41-5?arch=amd64&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/util-linux@2.41-5?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         }
       ],
@@ -739,6 +835,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/tzdata@2026b-0%2Bdeb13u1?arch=all&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/tzdata@2026b-0%2Bdeb13u1?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "tzdata",
@@ -785,6 +887,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/ncurses-base@6.5%2B20250216-2?arch=all&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/ncurses@6.5%2B20250216-2?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "ncurses-base",
@@ -828,6 +936,12 @@
           "type": "ExternalIdentifier"
         },
         {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/cdebconf@0.280?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libdebconfclient0@0.280?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
@@ -863,6 +977,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/sensible-utils@0.0.25?arch=all&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/sensible-utils@0.0.25?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         }
       ],
@@ -909,6 +1029,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libp11-kit0@0.25.5-3?arch=amd64&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/p11-kit@0.25.5-3?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         }
       ],
@@ -982,6 +1108,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/liblastlog2-2@2.41-5?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/util-linux@2.41-5?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "liblastlog2-2",
@@ -1009,6 +1141,12 @@
         {
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:zstd:zstd:1.5.7\\+dfsg-1:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/libzstd@1.5.7%2Bdfsg-1?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         },
         {
@@ -1061,6 +1199,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/postgresql-client-common@291.pgdg13%2B1?arch=all&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/postgresql-common@291.pgdg13%2B1?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "postgresql-client-common",
@@ -1107,6 +1251,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libsmartcols1@2.41-5?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/util-linux@2.41-5?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "libsmartcols1",
@@ -1139,6 +1289,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libzstd1@1.5.7%2Bdfsg-1?arch=amd64&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/libzstd@1.5.7%2Bdfsg-1?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         }
       ],
@@ -1222,6 +1378,12 @@
           "type": "ExternalIdentifier"
         },
         {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/icu@76.1-4?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libicu76@76.1-4?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
@@ -1258,6 +1420,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libsemanage2@3.8.1-1?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/libsemanage@3.8.1-1?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "libsemanage2",
@@ -1290,6 +1458,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/liblz4-1@1.10.0-4?arch=amd64&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/lz4@1.10.0-4?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         }
       ],
@@ -1344,6 +1518,12 @@
         {
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:libgdbm6t64:libgdbm6t64:1.24-2:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/gdbm@1.24-2?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         },
         {
@@ -1422,6 +1602,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libpam0g@1.7.0-5?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/pam@1.7.0-5?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "libpam0g",
@@ -1454,6 +1640,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libblkid1@2.41-5?arch=amd64&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/util-linux@2.41-5?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         }
       ],
@@ -1500,6 +1692,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/gzip@1.13-1?arch=amd64&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/gzip@1.13-1?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         }
       ],
@@ -1560,6 +1758,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/ncurses-bin@6.5%2B20250216-2?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/ncurses@6.5%2B20250216-2?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "ncurses-bin",
@@ -1593,6 +1797,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libffi8@3.4.8-2?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/libffi@3.4.8-2?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "libffi8",
@@ -1620,6 +1830,12 @@
         {
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:gpgsm:gpgsm:2.4.7-21\\+deb13u1\\+b4:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/gnupg2@2.4.7-21%2Bdeb13u1?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         },
         {
@@ -1653,6 +1869,12 @@
         {
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:libaudit-common:libaudit-common:4.0.2-2:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/audit@4.0.2-2?arch=source&distro=debian-13&epoch=1",
           "type": "ExternalIdentifier"
         },
         {
@@ -1715,6 +1937,12 @@
           "type": "ExternalIdentifier"
         },
         {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/rust-sequoia-sqv@1.3.0-3?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/sqv@1.3.0-3%2Bb2?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
@@ -1771,6 +1999,12 @@
         {
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:libc6:libc6:2.41-12\\+deb13u3:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/glibc@2.41-12%2Bdeb13u3?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         },
         {
@@ -1849,6 +2083,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/openssl@3.5.6-1~deb13u2?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/openssl@3.5.6-1~deb13u2?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "openssl",
@@ -1892,6 +2132,12 @@
           "type": "ExternalIdentifier"
         },
         {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/cyrus-sasl2@2.1.28%2Bdfsg1-9?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libsasl2-modules-db@2.1.28%2Bdfsg1-9?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
@@ -1928,6 +2174,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/sysvinit-utils@3.14-4?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/sysvinit@3.14-4?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "sysvinit-utils",
@@ -1961,6 +2213,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libz3-4@4.13.3-1?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/z3@4.13.3-1?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "libz3-4",
@@ -1988,6 +2246,12 @@
         {
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:libgcc-s1:libgcc-s1:14.2.0-19:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/gcc-14@14.2.0-19?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         },
         {
@@ -2027,6 +2291,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libnpth0t64@1.8-3?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/npth@1.8-3?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "libnpth0t64",
@@ -2059,6 +2329,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libssl3t64@3.5.6-1~deb13u2?arch=amd64&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/openssl@3.5.6-1~deb13u2?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         }
       ],
@@ -2093,6 +2369,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/readline-common@8.2-6?arch=all&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/readline@8.2-6?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "readline-common",
@@ -2120,6 +2402,12 @@
         {
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:libc-bin:libc-bin:2.41-12\\+deb13u3:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/glibc@2.41-12%2Bdeb13u3?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         },
         {
@@ -2159,6 +2447,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/adduser@3.152?arch=all&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/adduser@3.152?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "adduser",
@@ -2192,6 +2486,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libpam-runtime@1.7.0-5?arch=all&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/pam@1.7.0-5?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "libpam-runtime",
@@ -2224,6 +2524,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libpam-modules@1.7.0-5?arch=amd64&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/pam@1.7.0-5?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         }
       ],
@@ -2270,6 +2576,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/findutils@4.10.0-3?arch=amd64&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/findutils@4.10.0-3?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         }
       ],
@@ -2330,6 +2642,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/openssl-provider-legacy@3.5.6-1~deb13u2?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/openssl@3.5.6-1~deb13u2?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "openssl-provider-legacy",
@@ -2362,6 +2680,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libunistring5@1.3-2?arch=amd64&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/libunistring@1.3-2?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         }
       ],
@@ -2422,6 +2746,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libxslt1.1@1.1.35-1.2%2Bdeb13u3?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/libxslt@1.1.35-1.2%2Bdeb13u3?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "libxslt1.1",
@@ -2449,6 +2779,12 @@
         {
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:libcom-err2:libcom-err2:1.47.2-3\\+b11:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/e2fsprogs@1.47.2-3?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         },
         {
@@ -2487,6 +2823,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libxml2@2.12.7%2Bdfsg%2Breally2.9.14-2.1%2Bdeb13u3?arch=amd64&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/libxml2@2.12.7%2Bdfsg%2Breally2.9.14-2.1%2Bdeb13u3?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         }
       ],
@@ -2531,6 +2873,12 @@
           "type": "ExternalIdentifier"
         },
         {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/gnupg2@2.4.7-21%2Bdeb13u1?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/gnupg@2.4.7-21%2Bdeb13u1?arch=all&distro=debian-13",
           "type": "ExternalIdentifier"
@@ -2564,6 +2912,12 @@
           "type": "ExternalIdentifier"
         },
         {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/apt@3.0.3?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libapt-pkg7.0@3.0.3?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
@@ -2594,6 +2948,12 @@
         {
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:libdb5.3t64:libdb5.3t64:5.3.28\\+dfsg2-9:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/db5.3@5.3.28%2Bdfsg2-9?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         },
         {
@@ -2659,6 +3019,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libassuan9@3.0.2-2?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/libassuan@3.0.2-2?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "libassuan9",
@@ -2691,6 +3057,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/ssl-cert@1.1.3?arch=all&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/ssl-cert@1.1.3?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         }
       ],
@@ -2738,6 +3110,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/tar@1.35%2Bdfsg-3.1?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/tar@1.35%2Bdfsg-3.1?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "tar",
@@ -2783,6 +3161,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/perl-modules-5.40@5.40.1-6?arch=all&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/perl@5.40.1-6?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         }
       ],
@@ -2830,6 +3214,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/login.defs@4.17.4-2?arch=all&distro=debian-13&epoch=1",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/shadow@4.17.4-2?arch=source&distro=debian-13&epoch=1",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "login.defs",
@@ -2873,6 +3263,12 @@
           "type": "ExternalIdentifier"
         },
         {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/gnupg2@2.4.7-21%2Bdeb13u1?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/gpg-agent@2.4.7-21%2Bdeb13u1%2Bb4?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
@@ -2908,6 +3304,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/debianutils@5.23.2?arch=amd64&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/debianutils@5.23.2?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         }
       ],
@@ -2968,6 +3370,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/mount@2.41-5?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/util-linux@2.41-5?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "mount",
@@ -3024,6 +3432,12 @@
           "type": "ExternalIdentifier"
         },
         {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/gnutls28@3.8.9-3%2Bdeb13u4?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libgnutls30t64@3.8.9-3%2Bdeb13u4?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
@@ -3054,6 +3468,12 @@
         {
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:locales:locales:2.41-12\\+deb13u3:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/glibc@2.41-12%2Bdeb13u3?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         },
         {
@@ -3105,6 +3525,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libreadline8t64@8.2-6?arch=amd64&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/readline@8.2-6?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         }
       ],
@@ -3178,6 +3604,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/init-system-helpers@1.69~deb13u1?arch=all&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/init-system-helpers@1.69~deb13u1?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "init-system-helpers",
@@ -3210,6 +3642,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libncursesw6@6.5%2B20250216-2?arch=amd64&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/ncurses@6.5%2B20250216-2?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         }
       ],
@@ -3283,6 +3721,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/base-passwd@3.6.7?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/base-passwd@3.6.7?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "base-passwd",
@@ -3328,6 +3772,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libbsd0@0.12.2-2?arch=amd64&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/libbsd@0.12.2-2?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         }
       ],
@@ -3414,6 +3864,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libidn2-0@2.3.8-2?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/libidn2@2.3.8-2?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "libidn2-0",
@@ -3446,6 +3902,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libmount1@2.41-5?arch=amd64&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/util-linux@2.41-5?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         }
       ],
@@ -3519,6 +3981,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/grep@3.11-4?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/grep@3.11-4?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "grep",
@@ -3577,6 +4045,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/coreutils@9.7-3?arch=amd64&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/coreutils@9.7-3?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         }
       ],
@@ -3663,6 +4137,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libpq5@18.4-1.pgdg13%2B1?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/postgresql-18@18.4-1.pgdg13%2B1?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "libpq5",
@@ -3695,6 +4175,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libuuid1@2.41-5?arch=amd64&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/util-linux@2.41-5?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         }
       ],
@@ -3804,6 +4290,12 @@
           "type": "ExternalIdentifier"
         },
         {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/krb5@1.21.3-5%2Bdeb13u1?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libgssapi-krb5-2@1.21.3-5%2Bdeb13u1?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
@@ -3840,6 +4332,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libcap2@2.75-10%2Bdeb13u1%2Bb1?arch=amd64&distro=debian-13&epoch=1",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/libcap2@2.75-10%2Bdeb13u1?arch=source&distro=debian-13&epoch=1",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "libcap2",
@@ -3872,6 +4370,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/sed@4.9-2%2Bdeb13u1?arch=amd64&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/sed@4.9-2%2Bdeb13u1?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         }
       ],
@@ -3906,6 +4410,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/gcc-14-base@14.2.0-19?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/gcc-14@14.2.0-19?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "gcc-14-base",
@@ -3938,6 +4448,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/diffutils@3.10-4?arch=amd64&distro=debian-13&epoch=1",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/diffutils@3.10-4?arch=source&distro=debian-13&epoch=1",
           "type": "ExternalIdentifier"
         }
       ],
@@ -3972,6 +4488,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/zlib1g@1.3.dfsg%2Breally1.3.1-1%2Bb1?arch=amd64&distro=debian-13&epoch=1",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/zlib@1.3.dfsg%2Breally1.3.1-1?arch=source&distro=debian-13&epoch=1",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "zlib1g",
@@ -4005,6 +4527,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libsqlite3-0@3.46.1-7%2Bdeb13u1?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/sqlite3@3.46.1-7%2Bdeb13u1?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "libsqlite3-0",
@@ -4037,6 +4565,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/apt@3.0.3?arch=amd64&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/apt@3.0.3?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         }
       ],
@@ -4083,6 +4617,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libseccomp2@2.6.0-2?arch=amd64&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/libseccomp@2.6.0-2?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         }
       ],
@@ -4143,6 +4683,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libgpg-error0@1.51-4?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/libgpg-error@1.51-4?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "libgpg-error0",
@@ -4175,6 +4721,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libldap2@2.6.10%2Bdfsg-1?arch=amd64&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/openldap@2.6.10%2Bdfsg-1?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         }
       ],
@@ -4209,6 +4761,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/pinentry-curses@1.3.1-2?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/pinentry@1.3.1-2?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "pinentry-curses",
@@ -4236,6 +4794,12 @@
         {
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:libsasl2-2:libsasl2-2:2.1.28\\+dfsg1-9:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/cyrus-sasl2@2.1.28%2Bdfsg1-9?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         },
         {
@@ -4275,6 +4839,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libtinfo6@6.5%2B20250216-2?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/ncurses@6.5%2B20250216-2?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "libtinfo6",
@@ -4307,6 +4877,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/login@4.16.0-2%2Breally2.41-5?arch=amd64&distro=debian-13&epoch=1",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/util-linux@2.41-5?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         }
       ],
@@ -4354,6 +4930,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/netbase@6.5?arch=all&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/netbase@6.5?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "netbase",
@@ -4381,6 +4963,12 @@
         {
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:libk5crypto3:libk5crypto3:1.21.3-5\\+deb13u1:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/krb5@1.21.3-5%2Bdeb13u1?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         },
         {
@@ -4420,6 +5008,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libpam-modules-bin@1.7.0-5?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/pam@1.7.0-5?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "libpam-modules-bin",
@@ -4452,6 +5046,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/mawk@1.3.4.20250131-1?arch=amd64&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/mawk@1.3.4.20250131-1?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         }
       ],
@@ -4486,6 +5086,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/less@668-1?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/less@668-1?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "less",
@@ -4519,6 +5125,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/debian-archive-keyring@2025.1?arch=all&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/debian-archive-keyring@2025.1?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "debian-archive-keyring",
@@ -4546,6 +5158,12 @@
         {
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:libkeyutils1:libkeyutils1:1.6.3-6:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/keyutils@1.6.3-6?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         },
         {
@@ -4598,6 +5216,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libjson-perl@4.10000-1?arch=all&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/libjson-perl@4.10000-1?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "libjson-perl",
@@ -4631,6 +5255,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libnettle8t64@3.10.1-1?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/nettle@3.10.1-1?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "libnettle8t64",
@@ -4658,6 +5288,12 @@
         {
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:postgresql-client-16:postgresql-client-16:16.14-1.pgdg13\\+1:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/postgresql-16@16.14-1.pgdg13%2B1?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         },
         {
@@ -4746,6 +5382,12 @@
           "type": "ExternalIdentifier"
         },
         {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/audit@4.0.2-2?arch=source&distro=debian-13&epoch=1",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libaudit1@4.0.2-2%2Bb2?arch=amd64&distro=debian-13&epoch=1",
           "type": "ExternalIdentifier"
@@ -4808,6 +5450,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libtext-charwidth-perl@0.04-11%2Bb4?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/libtext-charwidth-perl@0.04-11?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "libtext-charwidth-perl",
@@ -4848,6 +5496,12 @@
         {
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:libkrb5-3:libkrb5-3:1.21.3-5\\+deb13u1:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/krb5@1.21.3-5%2Bdeb13u1?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         },
         {
@@ -4913,6 +5567,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/postgresql-16@16.14-1.pgdg13%2B1?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/postgresql-16@16.14-1.pgdg13%2B1?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "postgresql-16",
@@ -4972,6 +5632,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libhogweed6t64@3.10.1-1?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/nettle@3.10.1-1?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "libhogweed6t64",
@@ -5019,6 +5685,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libselinux1@3.8.1-1?arch=amd64&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/libselinux@3.8.1-1?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         }
       ],
@@ -5079,6 +5751,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/perl@5.40.1-6?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/perl@5.40.1-6?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "perl",
@@ -5125,6 +5803,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/gnupg-l10n@2.4.7-21%2Bdeb13u1?arch=all&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/gnupg2@2.4.7-21%2Bdeb13u1?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "gnupg-l10n",
@@ -5157,6 +5841,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libksba8@1.6.7-2%2Bb1?arch=amd64&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/libksba@1.6.7-2?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         }
       ],
@@ -5204,6 +5894,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/xz-utils@5.8.1-1%2Bdeb13u1?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/xz-utils@5.8.1-1%2Bdeb13u1?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "xz-utils",
@@ -5249,6 +5945,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/ucf@3.0052?arch=all&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/ucf@3.0052?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         }
       ],
@@ -5306,6 +6008,12 @@
           "type": "ExternalIdentifier"
         },
         {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/acl@2.3.2-2?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libacl1@2.3.2-2%2Bb1?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
@@ -5342,6 +6050,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libproc2-0@4.0.4-9?arch=amd64&distro=debian-13&epoch=2",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/procps@4.0.4-9?arch=source&distro=debian-13&epoch=2",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "libproc2-0",
@@ -5374,6 +6088,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/procps@4.0.4-9?arch=amd64&distro=debian-13&epoch=2",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/procps@4.0.4-9?arch=source&distro=debian-13&epoch=2",
           "type": "ExternalIdentifier"
         }
       ],
@@ -5421,6 +6141,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libnss-wrapper@1.1.16-1?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/nss-wrapper@1.1.16-1?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "libnss-wrapper",
@@ -5454,6 +6180,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/postgresql-common@291.pgdg13%2B1?arch=all&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/postgresql-common@291.pgdg13%2B1?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "postgresql-common",
@@ -5481,6 +6213,12 @@
         {
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:libbz2-1.0:libbz2-1.0:1.0.8-6:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/bzip2@1.0.8-6?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         },
         {
@@ -5519,6 +6257,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/liblzma5@5.8.1-1%2Bdeb13u1?arch=amd64&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/xz-utils@5.8.1-1%2Bdeb13u1?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         }
       ],
@@ -5618,6 +6362,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/base-files@13.8%2Bdeb13u6?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/base-files@13.8%2Bdeb13u6?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "base-files",
@@ -5650,6 +6400,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/hostname@3.25?arch=amd64&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/hostname@3.25?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         }
       ],
@@ -5684,6 +6440,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/debconf@1.5.91?arch=all&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/debconf@1.5.91?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "debconf",
@@ -5716,6 +6478,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libsystemd0@257.13-1~deb13u1?arch=amd64&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/systemd@257.13-1~deb13u1?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         }
       ],
@@ -5750,6 +6518,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libpcre2-8-0@10.46-1~deb13u1?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/pcre2@10.46-1~deb13u1?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "libpcre2-8-0",
@@ -5777,6 +6551,12 @@
         {
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:libstdc\\+\\+6:libstdc\\+\\+6:14.2.0-19:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/gcc-14@14.2.0-19?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         },
         {
@@ -5829,6 +6609,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/bsdutils@2.41-5?arch=amd64&distro=debian-13&epoch=1",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/util-linux@2.41-5?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "bsdutils",
@@ -5862,6 +6648,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/dpkg@1.22.22?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/dpkg@1.22.22?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "dpkg",
@@ -5894,6 +6686,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/perl-base@5.40.1-6?arch=amd64&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/perl@5.40.1-6?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         }
       ],
@@ -5954,6 +6752,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libllvm19@19.1.7-3%2Bb1?arch=amd64&distro=debian-13&epoch=1",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/llvm-toolchain-19@19.1.7-3?arch=source&distro=debian-13&epoch=1",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "libllvm19",
@@ -5981,6 +6785,12 @@
         {
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:libkrb5support0:libkrb5support0:1.21.3-5\\+deb13u1:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/krb5@1.21.3-5%2Bdeb13u1?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         },
         {
@@ -6040,6 +6850,12 @@
         {
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:libattr1:libattr1:2.5.2-3:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/attr@2.5.2-3?arch=source&distro=debian-13&epoch=1",
           "type": "ExternalIdentifier"
         },
         {
@@ -6118,6 +6934,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libsemanage-common@3.8.1-1?arch=all&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/libsemanage@3.8.1-1?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "libsemanage-common",
@@ -6145,6 +6967,12 @@
         {
           "externalIdentifierType": "cpe23",
           "identifier": "cpe:2.3:a:libgmp10:libgmp10:6.3.0\\+dfsg-3:*:*:*:*:*:*:*",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/gmp@6.3.0%2Bdfsg-3?arch=source&distro=debian-13&epoch=2",
           "type": "ExternalIdentifier"
         },
         {
@@ -6196,6 +7024,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libperl5.40@5.40.1-6?arch=amd64&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/perl@5.40.1-6?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         }
       ],
@@ -6257,6 +7091,12 @@
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/libmd0@1.1.0-2%2Bb1?arch=amd64&distro=debian-13",
           "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/libmd@1.1.0-2?arch=source&distro=debian-13",
+          "type": "ExternalIdentifier"
         }
       ],
       "name": "libmd0",
@@ -6289,6 +7129,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/passwd@4.17.4-2?arch=amd64&distro=debian-13&epoch=1",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/shadow@4.17.4-2?arch=source&distro=debian-13&epoch=1",
           "type": "ExternalIdentifier"
         }
       ],
@@ -6361,6 +7207,12 @@
         {
           "externalIdentifierType": "packageUrl",
           "identifier": "pkg:deb/debian/dash@0.5.12-12?arch=amd64&distro=debian-13",
+          "type": "ExternalIdentifier"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:deb/debian/dash@0.5.12-12?arch=source&distro=debian-13",
           "type": "ExternalIdentifier"
         }
       ],

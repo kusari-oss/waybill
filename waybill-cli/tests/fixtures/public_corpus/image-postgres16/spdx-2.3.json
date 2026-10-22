@@ -426,6 +426,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/adduser@3.152?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:adduser:3.152:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -495,6 +501,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/apt@3.0.3?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/apt@3.0.3?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -570,6 +582,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/base-files@13.8%2Bdeb13u6?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:base-files:13.8\\+deb13u6:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -639,6 +657,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/base-passwd@3.6.7?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/base-passwd@3.6.7?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -714,6 +738,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/bash@5.2.37-2?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:bash:5.2.37-2\\+b9:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -783,6 +813,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/bsdutils@2.41-5?arch=amd64&distro=debian-13&epoch=1",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/util-linux@2.41-5?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -858,6 +894,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/coreutils@9.7-3?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:coreutils:9.7-3:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -927,6 +969,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/dash@0.5.12-12?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/dash@0.5.12-12?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -1002,6 +1050,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/debconf@1.5.91?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:debconf:1.5.91:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -1071,6 +1125,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/debian-archive-keyring@2025.1?arch=all&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/debian-archive-keyring@2025.1?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -1146,6 +1206,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/debianutils@5.23.2?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:debianutils:5.23.2:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -1215,6 +1281,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/diffutils@3.10-4?arch=amd64&distro=debian-13&epoch=1",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/diffutils@3.10-4?arch=source&distro=debian-13&epoch=1",
           "referenceType": "purl"
         },
         {
@@ -1290,6 +1362,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/gnupg2@2.4.7-21%2Bdeb13u1?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:dirmngr:2.4.7-21\\+deb13u1\\+b4:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -1359,6 +1437,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/dpkg@1.22.22?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/dpkg@1.22.22?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -1434,6 +1518,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/findutils@4.10.0-3?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:findutils:4.10.0-3:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -1503,6 +1593,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/gcc-14-base@14.2.0-19?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/gcc-14@14.2.0-19?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -1578,6 +1674,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/gnupg2@2.4.7-21%2Bdeb13u1?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:gnupg-l10n:2.4.7-21\\+deb13u1:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -1647,6 +1749,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/gnupg@2.4.7-21%2Bdeb13u1?arch=all&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/gnupg2@2.4.7-21%2Bdeb13u1?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -1728,6 +1836,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/gnupg2@2.4.7-21%2Bdeb13u1?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:gpg-agent:2.4.7-21\\+deb13u1\\+b4:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -1797,6 +1911,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/gpg@2.4.7-21%2Bdeb13u1%2Bb4?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/gnupg2@2.4.7-21%2Bdeb13u1?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -1872,6 +1992,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/gnupg2@2.4.7-21%2Bdeb13u1?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:gpgconf:2.4.7-21\\+deb13u1\\+b4:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -1941,6 +2067,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/gpgsm@2.4.7-21%2Bdeb13u1%2Bb4?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/gnupg2@2.4.7-21%2Bdeb13u1?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -2016,6 +2148,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/grep@3.11-4?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:grep:3.11-4:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -2085,6 +2223,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/gzip@1.13-1?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/gzip@1.13-1?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -2160,6 +2304,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/hostname@3.25?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:hostname:3.25:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -2229,6 +2379,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/init-system-helpers@1.69~deb13u1?arch=all&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/init-system-helpers@1.69~deb13u1?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -2304,6 +2460,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/less@668-1?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:less:668-1:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -2373,6 +2535,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/libacl1@2.3.2-2%2Bb1?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/acl@2.3.2-2?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -2448,6 +2616,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/apt@3.0.3?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:libapt-pkg7.0:3.0.3:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -2517,6 +2691,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/libassuan9@3.0.2-2?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/libassuan@3.0.2-2?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -2592,6 +2772,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/attr@2.5.2-3?arch=source&distro=debian-13&epoch=1",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:libattr1:2.5.2-3:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -2661,6 +2847,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/libaudit-common@4.0.2-2?arch=all&distro=debian-13&epoch=1",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/audit@4.0.2-2?arch=source&distro=debian-13&epoch=1",
           "referenceType": "purl"
         },
         {
@@ -2736,6 +2928,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/audit@4.0.2-2?arch=source&distro=debian-13&epoch=1",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:libaudit1:4.0.2-2\\+b2:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -2805,6 +3003,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/libblkid1@2.41-5?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/util-linux@2.41-5?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -2880,6 +3084,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/libbsd@0.12.2-2?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:libbsd0:0.12.2-2:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -2949,6 +3159,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/libbz2-1.0@1.0.8-6?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/bzip2@1.0.8-6?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -3024,6 +3240,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/glibc@2.41-12%2Bdeb13u3?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:libc-bin:2.41-12\\+deb13u3:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -3093,6 +3315,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/libc-l10n@2.41-12%2Bdeb13u3?arch=all&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/glibc@2.41-12%2Bdeb13u3?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -3168,6 +3396,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/glibc@2.41-12%2Bdeb13u3?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:libc6:2.41-12\\+deb13u3:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -3237,6 +3471,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/libcap-ng0@0.8.5-4%2Bb1?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/libcap-ng@0.8.5-4?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -3312,6 +3552,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/libcap2@2.75-10%2Bdeb13u1?arch=source&distro=debian-13&epoch=1",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:libcap2:2.75-10\\+deb13u1\\+b1:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -3381,6 +3627,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/libcom-err2@1.47.2-3%2Bb11?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/e2fsprogs@1.47.2-3?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -3456,6 +3708,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/libxcrypt@4.4.38-1?arch=source&distro=debian-13&epoch=1",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:libcrypt1:4.4.38-1:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -3525,6 +3783,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/libdb5.3t64@5.3.28%2Bdfsg2-9?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/db5.3@5.3.28%2Bdfsg2-9?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -3600,6 +3864,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/cdebconf@0.280?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:libdebconfclient0:0.280:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -3669,6 +3939,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/libedit2@3.1-20250104-1?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/libedit@3.1-20250104-1?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -3744,6 +4020,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/libffi@3.4.8-2?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:libffi8:3.4.8-2:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -3813,6 +4095,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/libgcc-s1@14.2.0-19?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/gcc-14@14.2.0-19?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -3888,6 +4176,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/libgcrypt20@1.11.0-7%2Bdeb13u1?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:libgcrypt20:1.11.0-7\\+deb13u1:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -3957,6 +4251,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/libgdbm-compat4t64@1.24-2?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/gdbm@1.24-2?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -4032,6 +4332,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/gdbm@1.24-2?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:libgdbm6t64:1.24-2:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -4101,6 +4407,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/libgmp10@6.3.0%2Bdfsg-3?arch=amd64&distro=debian-13&epoch=2",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/gmp@6.3.0%2Bdfsg-3?arch=source&distro=debian-13&epoch=2",
           "referenceType": "purl"
         },
         {
@@ -4176,6 +4488,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/gnutls28@3.8.9-3%2Bdeb13u4?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:libgnutls30t64:3.8.9-3\\+deb13u4:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -4245,6 +4563,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/libgpg-error0@1.51-4?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/libgpg-error@1.51-4?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -4320,6 +4644,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/krb5@1.21.3-5%2Bdeb13u1?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:libgssapi-krb5-2:1.21.3-5\\+deb13u1:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -4389,6 +4719,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/libhogweed6t64@3.10.1-1?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/nettle@3.10.1-1?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -4464,6 +4800,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/icu@76.1-4?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:libicu76:76.1-4:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -4533,6 +4875,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/libidn2-0@2.3.8-2?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/libidn2@2.3.8-2?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -4608,6 +4956,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/libjson-perl@4.10000-1?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:libjson-perl:4.10000-1:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -4677,6 +5031,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/libk5crypto3@1.21.3-5%2Bdeb13u1?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/krb5@1.21.3-5%2Bdeb13u1?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -4752,6 +5112,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/keyutils@1.6.3-6?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:libkeyutils1:1.6.3-6:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -4821,6 +5187,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/libkrb5-3@1.21.3-5%2Bdeb13u1?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/krb5@1.21.3-5%2Bdeb13u1?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -4896,6 +5268,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/krb5@1.21.3-5%2Bdeb13u1?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:libkrb5support0:1.21.3-5\\+deb13u1:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -4965,6 +5343,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/libksba8@1.6.7-2%2Bb1?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/libksba@1.6.7-2?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -5040,6 +5424,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/util-linux@2.41-5?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:liblastlog2-2:2.41-5:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -5109,6 +5499,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/libldap2@2.6.10%2Bdfsg-1?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/openldap@2.6.10%2Bdfsg-1?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -5184,6 +5580,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/llvm-toolchain-19@19.1.7-3?arch=source&distro=debian-13&epoch=1",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:libllvm19:19.1.7-3\\+b1:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -5253,6 +5655,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/liblz4-1@1.10.0-4?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/lz4@1.10.0-4?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -5328,6 +5736,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/xz-utils@5.8.1-1%2Bdeb13u1?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:liblzma5:5.8.1-1\\+deb13u1:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -5397,6 +5811,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/libmd0@1.1.0-2%2Bb1?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/libmd@1.1.0-2?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -5472,6 +5892,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/util-linux@2.41-5?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:libmount1:2.41-5:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -5541,6 +5967,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/libncursesw6@6.5%2B20250216-2?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/ncurses@6.5%2B20250216-2?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -5616,6 +6048,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/nettle@3.10.1-1?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:libnettle8t64:3.10.1-1:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -5685,6 +6123,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/libnpth0t64@1.8-3?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/npth@1.8-3?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -5760,6 +6204,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/nss-wrapper@1.1.16-1?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:libnss-wrapper:1.1.16-1:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -5829,6 +6279,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/libp11-kit0@0.25.5-3?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/p11-kit@0.25.5-3?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -5904,6 +6360,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/pam@1.7.0-5?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:libpam-modules-bin:1.7.0-5:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -5973,6 +6435,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/libpam-modules@1.7.0-5?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/pam@1.7.0-5?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -6054,6 +6522,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/pam@1.7.0-5?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:libpam-runtime:1.7.0-5:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -6132,6 +6606,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/pam@1.7.0-5?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:libpam0g:1.7.0-5:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -6201,6 +6681,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/libpcre2-8-0@10.46-1~deb13u1?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/pcre2@10.46-1~deb13u1?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -6276,6 +6762,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/perl@5.40.1-6?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:libperl5.40:5.40.1-6:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -6345,6 +6837,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/libpq5@18.4-1.pgdg13%2B1?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/postgresql-18@18.4-1.pgdg13%2B1?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -6420,6 +6918,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/procps@4.0.4-9?arch=source&distro=debian-13&epoch=2",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:libproc2-0:4.0.4-9:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -6489,6 +6993,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/libreadline8t64@8.2-6?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/readline@8.2-6?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -6564,6 +7074,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/cyrus-sasl2@2.1.28%2Bdfsg1-9?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:libsasl2-2:2.1.28\\+dfsg1-9:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -6633,6 +7149,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/libsasl2-modules-db@2.1.28%2Bdfsg1-9?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/cyrus-sasl2@2.1.28%2Bdfsg1-9?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -6708,6 +7230,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/libseccomp@2.6.0-2?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:libseccomp2:2.6.0-2:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -6777,6 +7305,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/libselinux1@3.8.1-1?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/libselinux@3.8.1-1?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -6852,6 +7386,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/libsemanage@3.8.1-1?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:libsemanage-common:3.8.1-1:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -6921,6 +7461,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/libsemanage2@3.8.1-1?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/libsemanage@3.8.1-1?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -6996,6 +7542,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/libsepol@3.8.1-1?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:libsepol2:3.8.1-1:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -7065,6 +7617,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/libsmartcols1@2.41-5?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/util-linux@2.41-5?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -7140,6 +7698,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/sqlite3@3.46.1-7%2Bdeb13u1?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:libsqlite3-0:3.46.1-7\\+deb13u1:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -7209,6 +7773,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/libssl3t64@3.5.6-1~deb13u2?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/openssl@3.5.6-1~deb13u2?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -7284,6 +7854,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/gcc-14@14.2.0-19?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:libstdc\\+\\+6:14.2.0-19:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -7356,6 +7932,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/systemd@257.13-1~deb13u1?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:libsystemd0:257.13-1\\~deb13u1:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -7425,6 +8007,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/libtasn1-6@4.20.0-2%2Bdeb13u1?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/libtasn1-6@4.20.0-2%2Bdeb13u1?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -7506,6 +8094,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/libtext-charwidth-perl@0.04-11?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:libtext-charwidth-perl:0.04-11\\+b4:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -7575,6 +8169,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/libtext-wrapi18n-perl@0.06-10?arch=all&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/libtext-wrapi18n-perl@0.06-10?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -7650,6 +8250,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/ncurses@6.5%2B20250216-2?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:libtinfo6:6.5\\+20250216-2:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -7719,6 +8325,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/libudev1@257.13-1~deb13u1?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/systemd@257.13-1~deb13u1?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -7794,6 +8406,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/libunistring@1.3-2?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:libunistring5:1.3-2:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -7863,6 +8481,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/libuuid1@2.41-5?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/util-linux@2.41-5?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -7938,6 +8562,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/libxml2@2.12.7%2Bdfsg%2Breally2.9.14-2.1%2Bdeb13u3?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:libxml2:2.12.7\\+dfsg\\+really2.9.14-2.1\\+deb13u3:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -8007,6 +8637,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/libxslt1.1@1.1.35-1.2%2Bdeb13u3?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/libxslt@1.1.35-1.2%2Bdeb13u3?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -8082,6 +8718,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/xxhash@0.8.3-2?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:libxxhash0:0.8.3-2:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -8154,6 +8796,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/z3@4.13.3-1?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:libz3-4:4.13.3-1:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -8223,6 +8871,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/libzstd1@1.5.7%2Bdfsg-1?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/libzstd@1.5.7%2Bdfsg-1?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -8304,6 +8958,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/glibc@2.41-12%2Bdeb13u3?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:locales:2.41-12\\+deb13u3:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -8373,6 +9033,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/login.defs@4.17.4-2?arch=all&distro=debian-13&epoch=1",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/shadow@4.17.4-2?arch=source&distro=debian-13&epoch=1",
           "referenceType": "purl"
         },
         {
@@ -8448,6 +9114,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/util-linux@2.41-5?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:login:4.16.0-2\\+really2.41-5:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -8517,6 +9189,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/mawk@1.3.4.20250131-1?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/mawk@1.3.4.20250131-1?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -8592,6 +9270,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/util-linux@2.41-5?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:mount:2.41-5:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -8661,6 +9345,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/ncurses-base@6.5%2B20250216-2?arch=all&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/ncurses@6.5%2B20250216-2?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -8736,6 +9426,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/ncurses@6.5%2B20250216-2?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:ncurses-bin:6.5\\+20250216-2:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -8805,6 +9501,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/netbase@6.5?arch=all&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/netbase@6.5?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -8880,6 +9582,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/openssl@3.5.6-1~deb13u2?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:openssl-provider-legacy:3.5.6-1\\~deb13u2:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -8949,6 +9657,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/openssl@3.5.6-1~deb13u2?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/openssl@3.5.6-1~deb13u2?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -9024,6 +9738,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/shadow@4.17.4-2?arch=source&distro=debian-13&epoch=1",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:passwd:4.17.4-2:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -9093,6 +9813,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/perl-base@5.40.1-6?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/perl@5.40.1-6?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -9168,6 +9894,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/perl@5.40.1-6?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:perl-modules-5.40:5.40.1-6:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -9240,6 +9972,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/perl@5.40.1-6?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:perl:5.40.1-6:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -9309,6 +10047,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/pinentry-curses@1.3.1-2?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/pinentry@1.3.1-2?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -9390,6 +10134,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/postgresql-16@16.14-1.pgdg13%2B1?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:postgresql-16:16.14-1.pgdg13\\+1:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -9462,6 +10212,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/postgresql-16@16.14-1.pgdg13%2B1?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:postgresql-client-16:16.14-1.pgdg13\\+1:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -9531,6 +10287,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/postgresql-client-common@291.pgdg13%2B1?arch=all&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/postgresql-common@291.pgdg13%2B1?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -9612,6 +10374,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/postgresql-common@291.pgdg13%2B1?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:postgresql-common:291.pgdg13\\+1:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -9681,6 +10449,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/procps@4.0.4-9?arch=amd64&distro=debian-13&epoch=2",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/procps@4.0.4-9?arch=source&distro=debian-13&epoch=2",
           "referenceType": "purl"
         },
         {
@@ -9756,6 +10530,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/readline@8.2-6?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:readline-common:8.2-6:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -9825,6 +10605,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/sed@4.9-2%2Bdeb13u1?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/sed@4.9-2%2Bdeb13u1?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -9900,6 +10686,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/sensible-utils@0.0.25?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:sensible-utils:0.0.25:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -9969,6 +10761,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/sqv@1.3.0-3%2Bb2?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/rust-sequoia-sqv@1.3.0-3?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -10050,6 +10848,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/ssl-cert@1.1.3?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:ssl-cert:1.1.3:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -10122,6 +10926,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/sysvinit@3.14-4?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:sysvinit-utils:3.14-4:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -10191,6 +11001,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/tar@1.35%2Bdfsg-3.1?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/tar@1.35%2Bdfsg-3.1?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -10272,6 +11088,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/tzdata@2026b-0%2Bdeb13u1?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:tzdata:2026b-0\\+deb13u1:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -10350,6 +11172,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/ucf@3.0052?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:ucf:3.0052:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -10419,6 +11247,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/util-linux@2.41-5?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/util-linux@2.41-5?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
@@ -10494,6 +11328,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/xz-utils@5.8.1-1%2Bdeb13u1?arch=source&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:xz-utils:5.8.1-1\\+deb13u1:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -10566,6 +11406,12 @@
           "referenceType": "purl"
         },
         {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/zlib@1.3.dfsg%2Breally1.3.1-1?arch=source&distro=debian-13&epoch=1",
+          "referenceType": "purl"
+        },
+        {
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:debian:zlib1g:1.3.dfsg\\+really1.3.1-1\\+b1:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
@@ -10635,6 +11481,12 @@
         {
           "referenceCategory": "PACKAGE-MANAGER",
           "referenceLocator": "pkg:deb/debian/zstd@1.5.7%2Bdfsg-1?arch=amd64&distro=debian-13",
+          "referenceType": "purl"
+        },
+        {
+          "comment": "source package this binary package was built from",
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:deb/debian/libzstd@1.5.7%2Bdfsg-1?arch=source&distro=debian-13",
           "referenceType": "purl"
         },
         {
