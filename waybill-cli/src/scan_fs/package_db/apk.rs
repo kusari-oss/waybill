@@ -40,11 +40,21 @@ pub struct ApkFileEntry {
 /// when the file is absent (typical for Debian/Ubuntu rootfs); errors
 /// only on present-but-malformed.
 ///
+/// `namespace` is the PURL namespace, derived by the dispatcher from
+/// `/etc/os-release::ID` (`alpine`, `wolfi`, `chainguard`, …) — see
+/// #1253. It was hardcoded to `alpine` until then, which put every
+/// Wolfi and Chainguard package under a namespace no vulnerability
+/// database resolves.
+///
 /// v6 Phase E: `distro_version` — when `Some`, stamp
-/// `&distro=alpine-<VERSION_ID>` on every PURL, matching the
+/// `&distro=<namespace>-<VERSION_ID>` on every PURL, matching the
 /// packaging-purl convention for apk. Callers typically pass the
 /// value of `/etc/os-release::VERSION_ID` read by the dispatcher.
-pub fn read(rootfs: &Path, distro_version: Option<&str>) -> Result<Vec<PackageDbEntry>> {
+pub fn read(
+    rootfs: &Path,
+    namespace: &str,
+    distro_version: Option<&str>,
+) -> Result<Vec<PackageDbEntry>> {
     let path = rootfs.join(APK_INSTALLED_PATH);
     if !path.is_file() {
         return Ok(Vec::new());
@@ -52,7 +62,7 @@ pub fn read(rootfs: &Path, distro_version: Option<&str>) -> Result<Vec<PackageDb
     let text = std::fs::read_to_string(&path)
         .with_context(|| format!("reading {}", path.display()))?;
     let source = path.to_string_lossy().into_owned();
-    Ok(parse(&text, &source, distro_version))
+    Ok(parse(&text, &source, namespace, distro_version))
 }
 
 /// Parse `/lib/apk/db/installed` a second time in scan-claim mode —
@@ -216,13 +226,18 @@ fn parse_apk_z_value(z_value: &str) -> Option<String> {
     Some(decoded.iter().map(|b| format!("{b:02x}")).collect())
 }
 
-fn parse(text: &str, source_path: &str, distro_version: Option<&str>) -> Vec<PackageDbEntry> {
+fn parse(
+    text: &str,
+    source_path: &str,
+    namespace: &str,
+    distro_version: Option<&str>,
+) -> Vec<PackageDbEntry> {
     let mut out = Vec::new();
     for stanza in text.split("\n\n") {
         if stanza.trim().is_empty() {
             continue;
         }
-        if let Some(entry) = parse_stanza(stanza, source_path, distro_version) {
+        if let Some(entry) = parse_stanza(stanza, source_path, namespace, distro_version) {
             out.push(entry);
         }
     }
@@ -232,6 +247,7 @@ fn parse(text: &str, source_path: &str, distro_version: Option<&str>) -> Vec<Pac
 fn parse_stanza(
     stanza: &str,
     source_path: &str,
+    namespace: &str,
     distro_version: Option<&str>,
 ) -> Option<PackageDbEntry> {
     let mut name = None;
@@ -286,7 +302,8 @@ fn parse_stanza(
     // `?epoch=<N>` qualifier per purl-spec.
     let (epoch, version) = parse_apk_version_with_epoch(&raw_version);
 
-    let purl_str = build_apk_purl(&name, &version, arch.as_deref(), distro_version, epoch);
+    let purl_str =
+        build_apk_purl(namespace, &name, &version, arch.as_deref(), distro_version, epoch);
     let purl = Purl::new(&purl_str).ok()?;
 
     let depends = depends_raw
@@ -305,7 +322,14 @@ fn parse_stanza(
         .map(str::trim)
         .filter(|s| !s.is_empty())
     {
-        let source_purl = build_apk_purl(origin, &version, Some("source"), distro_version, epoch);
+        let source_purl = build_apk_purl(
+            namespace,
+            origin,
+            &version,
+            Some("source"),
+            distro_version,
+            epoch,
+        );
         waybill::os_source_package::annotate(&mut extra_annotations, &source_purl);
     }
 
@@ -354,14 +378,20 @@ fn parse_stanza(
 
 /// Assemble an apk PURL.
 ///
-/// Shape: `pkg:apk/alpine/<name>@<version>[?arch=<arch>][{&|?}distro=alpine-<ver>]`.
+/// Shape:
+/// `pkg:apk/<namespace>/<name>@<version>[?arch=<arch>][{&|?}distro=<namespace>-<ver>]`.
 ///
+/// - `namespace`: the distro's `/etc/os-release::ID`, lowercased by the
+///   dispatcher — `alpine`, `wolfi`, `chainguard`. Fills both the PURL
+///   namespace and the `distro=` prefix, exactly as `build_deb_purl`
+///   does for deb (#1253).
 /// - `arch`: Optional `arch` qualifier stamped first.
 /// - `distro_version`: Optional raw `VERSION_ID` (e.g. `3.20.9`) — when
-///   present, emitted as `distro=alpine-<version_id>` per the purl-spec
-///   apk convention. Prefix-delimited by `?` or `&` depending on
-///   whether arch already opened the qualifier list.
+///   present, emitted as `distro=<namespace>-<version_id>` per the
+///   purl-spec apk convention. Prefix-delimited by `?` or `&` depending
+///   on whether arch already opened the qualifier list.
 fn build_apk_purl(
+    namespace: &str,
     name: &str,
     version: &str,
     arch: Option<&str>,
@@ -372,7 +402,8 @@ fn build_apk_purl(
     // percent-encoded strings. `+` in apk names (e.g. `libxml++`) and
     // versions (e.g. `3.2.0+alpine1`) MUST encode to `%2B`.
     let mut s = format!(
-        "pkg:apk/alpine/{}@{}",
+        "pkg:apk/{}/{}@{}",
+        namespace,
         encode_purl_segment(name),
         encode_purl_segment(version),
     );
@@ -386,7 +417,9 @@ fn build_apk_purl(
     if let Some(dv) = distro_version {
         if !dv.is_empty() {
             s.push(if qualifier_open { '&' } else { '?' });
-            s.push_str("distro=alpine-");
+            s.push_str("distro=");
+            s.push_str(namespace);
+            s.push('-');
             s.push_str(dv);
             qualifier_open = true;
         }
@@ -461,7 +494,7 @@ V:1.2.4-r2
 A:aarch64
 T:the musl c library (libc) implementation
 ";
-        let entries = parse(text, SOURCE, None);
+        let entries = parse(text, SOURCE, "alpine", None);
         assert_eq!(entries.len(), 1);
         let e = &entries[0];
         assert_eq!(e.name, "musl");
@@ -485,7 +518,7 @@ A:aarch64
 m:Timo Teras <timo.teras@iki.fi>
 L:MIT
 ";
-        let entries = parse(text, SOURCE, None);
+        let entries = parse(text, SOURCE, "alpine", None);
         assert_eq!(entries.len(), 1);
         let e = &entries[0];
         assert_eq!(e.maintainer.as_deref(), Some("Timo Teras <timo.teras@iki.fi>"));
@@ -501,7 +534,7 @@ V:1.0-r0
 A:x86_64
 L:GPL-2.0-only OR GPL-3.0-only
 ";
-        let entries = parse(text, SOURCE, None);
+        let entries = parse(text, SOURCE, "alpine", None);
         assert_eq!(entries.len(), 1);
         assert_eq!(
             entries[0].licenses[0].as_str(),
@@ -520,7 +553,7 @@ V:1.0-r0
 A:x86_64
 L:custom internal license see LICENSE file
 ";
-        let entries = parse(text, SOURCE, None);
+        let entries = parse(text, SOURCE, "alpine", None);
         assert_eq!(entries.len(), 1);
         assert!(entries[0].licenses.is_empty());
     }
@@ -538,7 +571,7 @@ V:1.36.1-r5
 A:aarch64
 D:so:libc.musl-aarch64.so.1
 ";
-        let entries = parse(text, SOURCE, None);
+        let entries = parse(text, SOURCE, "alpine", None);
         assert_eq!(entries.len(), 2);
         assert_eq!(entries[0].depends, vec!["alpine-baselayout-data"]);
         // so:... and /bin/sh are pseudo-deps; both filtered out.
@@ -564,14 +597,14 @@ D:so:libc.musl-aarch64.so.1
     #[test]
     fn missing_required_fields_skip_entry() {
         let text = "C:hash\nV:1.0\n";
-        let entries = parse(text, SOURCE, None);
+        let entries = parse(text, SOURCE, "alpine", None);
         assert!(entries.is_empty());
     }
 
     #[test]
     fn read_function_returns_empty_when_file_missing() {
         let dir = tempfile::tempdir().unwrap();
-        let out = read(dir.path(), None).unwrap();
+        let out = read(dir.path(), "alpine", None).unwrap();
         assert!(out.is_empty());
     }
 
@@ -585,7 +618,7 @@ D:so:libc.musl-aarch64.so.1
         // built from `openssl`) trip Kusari Inspector's advisory scan
         // — see PRs #285 and #640.
         let stanza = "P:waybill-fixture-libcrypto\nV:1.2.3-r0\nA:x86_64\no:waybill-fixture-ssl\nL:Apache-2.0";
-        let e = parse_stanza(stanza, "/lib/apk/db/installed", Some("3.23.4")).unwrap();
+        let e = parse_stanza(stanza, "/lib/apk/db/installed", "alpine", Some("3.23.4")).unwrap();
         assert_eq!(
             e.purl.as_str(),
             "pkg:apk/alpine/waybill-fixture-libcrypto@1.2.3-r0?arch=x86_64&distro=alpine-3.23.4"
@@ -605,7 +638,7 @@ D:so:libc.musl-aarch64.so.1
     #[test]
     fn origin_equal_to_name_still_emits() {
         let stanza = "P:waybill-fixture-z\nV:1.3.2-r0\nA:x86_64\no:waybill-fixture-z";
-        let e = parse_stanza(stanza, "/lib/apk/db/installed", Some("3.23.4")).unwrap();
+        let e = parse_stanza(stanza, "/lib/apk/db/installed", "alpine", Some("3.23.4")).unwrap();
         assert_eq!(
             e.extra_annotations
                 .get(waybill::os_source_package::ANN_SOURCE_PACKAGE)
@@ -622,7 +655,7 @@ D:so:libc.musl-aarch64.so.1
     #[test]
     fn absent_origin_synthesizes_nothing() {
         let stanza = "P:waybill-fixture-keys\nV:2.5-r0\nA:x86_64";
-        let e = parse_stanza(stanza, "/lib/apk/db/installed", Some("3.23.4")).unwrap();
+        let e = parse_stanza(stanza, "/lib/apk/db/installed", "alpine", Some("3.23.4")).unwrap();
         assert!(
             !e.extra_annotations
                 .contains_key(waybill::os_source_package::ANN_SOURCE_PACKAGE),
@@ -634,7 +667,7 @@ D:so:libc.musl-aarch64.so.1
     #[test]
     fn blank_origin_synthesizes_nothing() {
         let stanza = "P:waybill-fixture-keys\nV:2.5-r0\nA:x86_64\no:   ";
-        let e = parse_stanza(stanza, "/lib/apk/db/installed", Some("3.23.4")).unwrap();
+        let e = parse_stanza(stanza, "/lib/apk/db/installed", "alpine", Some("3.23.4")).unwrap();
         assert!(!e
             .extra_annotations
             .contains_key(waybill::os_source_package::ANN_SOURCE_PACKAGE));
@@ -642,26 +675,93 @@ D:so:libc.musl-aarch64.so.1
 
     #[test]
     fn build_apk_purl_stamps_distro_qualifier_after_arch() {
-        let p = build_apk_purl("busybox", "1.36.1-r31", Some("aarch64"), Some("3.20.9"), None);
+        let p = build_apk_purl(
+            "alpine",
+            "busybox",
+            "1.36.1-r31",
+            Some("aarch64"),
+            Some("3.20.9"),
+            None,
+        );
         assert_eq!(p, "pkg:apk/alpine/busybox@1.36.1-r31?arch=aarch64&distro=alpine-3.20.9");
     }
 
     #[test]
     fn build_apk_purl_stamps_distro_when_no_arch() {
-        let p = build_apk_purl("busybox", "1.36.1-r31", None, Some("3.20.9"), None);
+        let p = build_apk_purl("alpine", "busybox", "1.36.1-r31", None, Some("3.20.9"), None);
         assert_eq!(p, "pkg:apk/alpine/busybox@1.36.1-r31?distro=alpine-3.20.9");
+    }
+
+    /// #1253 — the namespace fills BOTH slots. Asserting only the
+    /// `pkg:apk/wolfi/` prefix would pass with the `distro=` prefix still
+    /// hardcoded, and a consumer that maps the qualifier to an advisory
+    /// ecosystem reads that half, not the namespace.
+    #[test]
+    fn build_apk_purl_uses_the_namespace_for_both_slots() {
+        let p = build_apk_purl(
+            "wolfi",
+            "waybill-fixture-ssl",
+            "3.0.0-r1",
+            Some("x86_64"),
+            Some("20230201"),
+            None,
+        );
+        assert_eq!(
+            p,
+            "pkg:apk/wolfi/waybill-fixture-ssl@3.0.0-r1?arch=x86_64&distro=wolfi-20230201"
+        );
+    }
+
+    /// #1253 — and with no `VERSION_ID` the namespace still moves, since
+    /// that is the half OSV resolves by PURL at all.
+    #[test]
+    fn build_apk_purl_honours_the_namespace_without_a_distro_version() {
+        let p = build_apk_purl(
+            "chainguard",
+            "waybill-fixture-ssl",
+            "3.0.0-r1",
+            Some("x86_64"),
+            None,
+            None,
+        );
+        assert_eq!(
+            p,
+            "pkg:apk/chainguard/waybill-fixture-ssl@3.0.0-r1?arch=x86_64"
+        );
+    }
+
+    /// #1253 — the `arch=source` PURL from #1248 goes through the same
+    /// builder, so it must carry the namespace too. A Wolfi SBOM whose
+    /// source rows still said `alpine` would reintroduce the whole bug
+    /// for exactly the identifier OS advisory feeds are keyed by.
+    #[test]
+    fn parse_threads_the_namespace_to_the_source_purl() {
+        let text = "P:waybill-fixture-libssl\nV:1.2.3-r0\nA:x86_64\no:waybill-fixture-ssl\n";
+        let entries = parse(text, SOURCE, "wolfi", Some("20230201"));
+        assert_eq!(entries.len(), 1);
+        assert_eq!(
+            entries[0].purl.as_str(),
+            "pkg:apk/wolfi/waybill-fixture-libssl@1.2.3-r0?arch=x86_64&distro=wolfi-20230201"
+        );
+        assert_eq!(
+            entries[0]
+                .extra_annotations
+                .get(waybill::os_source_package::ANN_SOURCE_PACKAGE)
+                .and_then(|v| v.as_str()),
+            Some("pkg:apk/wolfi/waybill-fixture-ssl@1.2.3-r0?arch=source&distro=wolfi-20230201"),
+        );
     }
 
     #[test]
     fn build_apk_purl_without_distro_unchanged() {
-        let p = build_apk_purl("busybox", "1.36.1-r31", Some("aarch64"), None, None);
+        let p = build_apk_purl("alpine", "busybox", "1.36.1-r31", Some("aarch64"), None, None);
         assert_eq!(p, "pkg:apk/alpine/busybox@1.36.1-r31?arch=aarch64");
     }
 
     #[test]
     fn parse_threads_distro_version_to_stanza_purls() {
         let text = "P:busybox\nV:1.36.1-r31\nA:aarch64\n";
-        let entries = parse(text, SOURCE, Some("3.20.9"));
+        let entries = parse(text, SOURCE, "alpine", Some("3.20.9"));
         assert_eq!(entries.len(), 1);
         assert_eq!(
             entries[0].purl.as_str(),
@@ -681,7 +781,7 @@ D:so:libc.musl-aarch64.so.1
             "P:zlib\nV:1.3-r0\nA:x86_64\n",
         )
         .unwrap();
-        let out = read(dir.path(), None).unwrap();
+        let out = read(dir.path(), "alpine", None).unwrap();
         assert_eq!(out.len(), 1);
         assert_eq!(out[0].name, "zlib");
         assert!(out[0].source_path.ends_with("/lib/apk/db/installed"));
@@ -889,13 +989,15 @@ D:so:libc.musl-aarch64.so.1
 
     #[test]
     fn build_apk_purl_emits_epoch_qualifier_when_nonzero() {
-        let p = build_apk_purl("test-pkg", "2.0-r0", Some("amd64"), Some("3.20.9"), Some(1));
+        let p =
+            build_apk_purl("alpine", "test-pkg", "2.0-r0", Some("amd64"), Some("3.20.9"), Some(1));
         assert_eq!(p, "pkg:apk/alpine/test-pkg@2.0-r0?arch=amd64&distro=alpine-3.20.9&epoch=1");
     }
 
     #[test]
     fn build_apk_purl_omits_epoch_qualifier_when_zero() {
-        let p = build_apk_purl("test-pkg", "1.0", Some("amd64"), Some("3.20.9"), Some(0));
+        let p =
+            build_apk_purl("alpine", "test-pkg", "1.0", Some("amd64"), Some("3.20.9"), Some(0));
         assert_eq!(p, "pkg:apk/alpine/test-pkg@1.0?arch=amd64&distro=alpine-3.20.9");
     }
 
@@ -905,7 +1007,7 @@ D:so:libc.musl-aarch64.so.1
         // V:1:2.0-r0 must emit pkg:apk/alpine/test-pkg@2.0-r0?arch=amd64&distro=alpine-3.20.9&epoch=1.
         // Regression test for m197 US2 / #563.
         let text = "P:test-pkg\nV:1:2.0-r0\nA:amd64\n";
-        let entries = parse(text, SOURCE, Some("3.20.9"));
+        let entries = parse(text, SOURCE, "alpine", Some("3.20.9"));
         assert_eq!(entries.len(), 1);
         assert_eq!(
             entries[0].purl.as_str(),

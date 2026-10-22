@@ -675,9 +675,16 @@ example, and troubleshooting matrix.
 **Detection:** stanza parser over `/lib/apk/db/installed`. Reads `P:`
 (name), `V:` (version), `A:` (arch), `D:` (direct dependencies).
 
-**PURL format:** `pkg:apk/alpine/<name>@<version>?arch=<arch>&distro=alpine-<VERSION_ID>`
-(e.g., `distro=alpine-3.19`). Same `<namespace>-<VERSION_ID>` shape as
-deb and rpm.
+**PURL format:**
+`pkg:apk/<namespace>/<name>@<version>?arch=<arch>&distro=<namespace>-<VERSION_ID>`.
+The namespace is `/etc/os-release`'s `ID`, lowercased, falling back to
+`alpine` when the file or the field is absent — so an Alpine rootfs reads
+`pkg:apk/alpine/musl@1.2.4-r2?arch=x86_64&distro=alpine-3.19` and a Wolfi
+one reads `pkg:apk/wolfi/glibc@2.38-r0?arch=x86_64&distro=wolfi-20230201`.
+Same `<namespace>-<VERSION_ID>` shape, and same derivation, as deb and
+rpm. This matters for lookups rather than cosmetics: OSV answers
+`pkg:apk/wolfi/glibc@2.38-r0` with 44 advisories and the `alpine`
+spelling of the same package with 0 (#1253).
 
 **Evidence:** `PackageDatabase` / `manifest-analysis` at confidence 0.85.
 

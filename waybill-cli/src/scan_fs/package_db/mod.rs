@@ -1669,6 +1669,17 @@ pub fn read_all(
         Some(id) if !id.is_empty() => id.to_ascii_lowercase(),
         _ => "arch".to_string(),
     };
+    // #1253 — apk PURL namespace derived from the same `ID`, defaulting
+    // to `alpine` when absent. Hardcoded to `alpine` before this, which
+    // put Wolfi and Chainguard packages under a namespace OSV does not
+    // resolve: `pkg:apk/wolfi/openssl@3.0.0` returns 150 advisories
+    // where the `alpine` spelling of the same package returns 0.
+    // Verbatim pass-through with no allowlist, matching `alpm_namespace`
+    // above (m135 FR-010), so derivative distros need no code change.
+    let apk_namespace: String = match &id_raw {
+        Some(id) if !id.is_empty() => id.to_ascii_lowercase(),
+        _ => "alpine".to_string(),
+    };
     if distro_version.is_none() {
         diagnostics.record_missing_os_release_field("VERSION_ID");
     }
@@ -1689,7 +1700,7 @@ pub fn read_all(
         }
         Err(e) => tracing::debug!(error = %e, "dpkg db read failed (expected if no dpkg)"),
     }
-    match apk::read(rootfs, distro_version.as_deref()) {
+    match apk::read(rootfs, &apk_namespace, distro_version.as_deref()) {
         Ok(entries) => {
             out.extend(entries);
             // Milestone 004 post-ship: collect apk-owned file paths.
@@ -3357,6 +3368,139 @@ Architecture: arm64
                 .iter()
                 .any(|f| f == "VERSION_ID"),
             "expected diagnostics to record missing VERSION_ID"
+        );
+    }
+
+    /// #1253 — the apk namespace comes from `/etc/os-release::ID`, so a
+    /// Wolfi rootfs gets `pkg:apk/wolfi/...`, not `pkg:apk/alpine/...`.
+    ///
+    /// This has to run through `read_all` rather than `apk::read` to mean
+    /// anything: the bug was that the dispatcher never *derived* a
+    /// namespace, so a unit test handing `apk::read` the string `"wolfi"`
+    /// passes against the broken dispatcher too. Mutation check: restore
+    /// the `"pkg:apk/alpine/{}@{}"` literal in `build_apk_purl`, or pass
+    /// `"alpine"` here instead of `&apk_namespace`, and this fails while
+    /// every apk unit test stays green.
+    #[test]
+    fn read_all_derives_the_apk_namespace_from_os_release_id() {
+        let dir = tempfile::tempdir().unwrap();
+        let rootfs = dir.path();
+        std::fs::create_dir_all(rootfs.join("etc")).unwrap();
+        std::fs::write(
+            rootfs.join("etc/os-release"),
+            "ID=wolfi\nNAME=\"Wolfi\"\nVERSION_ID=20230201\n",
+        )
+        .unwrap();
+        let apk_dir = rootfs.join("lib/apk/db");
+        std::fs::create_dir_all(&apk_dir).unwrap();
+        // `o:` differs from `P:`, so this also covers the #1248
+        // `arch=source` PURL, which is built by the same builder.
+        std::fs::write(
+            apk_dir.join("installed"),
+            "\
+P:waybill-fixture-libssl
+V:1.2.3-r0
+A:x86_64
+o:waybill-fixture-ssl
+",
+        )
+        .unwrap();
+
+        let result = read_all(
+            rootfs,
+            None,
+            false,
+            false,
+            crate::scan_fs::ScanMode::Path,
+            true,
+            None,
+            &Default::default(),
+            None,
+        )
+        .unwrap();
+
+        let apk_entries: Vec<_> = result
+            .entries
+            .iter()
+            .filter(|e| e.purl.as_str().starts_with("pkg:apk/"))
+            .collect();
+        // Non-emptiness first: an apk reader that returned nothing would
+        // satisfy every assertion below vacuously.
+        assert_eq!(
+            apk_entries.len(),
+            1,
+            "expected exactly one apk entry, got {:?}",
+            apk_entries
+                .iter()
+                .map(|e| e.purl.as_str())
+                .collect::<Vec<_>>()
+        );
+        assert_eq!(
+            apk_entries[0].purl.as_str(),
+            "pkg:apk/wolfi/waybill-fixture-libssl@1.2.3-r0?arch=x86_64&distro=wolfi-20230201"
+        );
+        // The source PURL mirrors the namespace, not just the installed
+        // one — both halves of what a consumer maps to an advisory feed.
+        assert_eq!(
+            apk_entries[0]
+                .extra_annotations
+                .get(waybill::os_source_package::ANN_SOURCE_PACKAGE)
+                .and_then(|v| v.as_str()),
+            Some("pkg:apk/wolfi/waybill-fixture-ssl@1.2.3-r0?arch=source&distro=wolfi-20230201"),
+        );
+    }
+
+    /// #1253 — a rootfs with no `ID` keeps the historical `alpine`
+    /// namespace, and the missing field is recorded in diagnostics. The
+    /// companion to the test above: the fix must not move Alpine output,
+    /// which is what every committed apk golden depends on.
+    #[test]
+    fn read_all_falls_back_to_the_alpine_apk_namespace_when_id_missing() {
+        let dir = tempfile::tempdir().unwrap();
+        let rootfs = dir.path();
+        // /etc/os-release intentionally absent.
+        let apk_dir = rootfs.join("lib/apk/db");
+        std::fs::create_dir_all(&apk_dir).unwrap();
+        std::fs::write(
+            apk_dir.join("installed"),
+            "\
+P:waybill-fixture-libssl
+V:1.2.3-r0
+A:x86_64
+",
+        )
+        .unwrap();
+
+        let result = read_all(
+            rootfs,
+            None,
+            false,
+            false,
+            crate::scan_fs::ScanMode::Path,
+            true,
+            None,
+            &Default::default(),
+            None,
+        )
+        .unwrap();
+
+        let apk_entries: Vec<_> = result
+            .entries
+            .iter()
+            .filter(|e| e.purl.as_str().starts_with("pkg:apk/"))
+            .collect();
+        assert_eq!(apk_entries.len(), 1, "expected exactly one apk entry");
+        assert_eq!(
+            apk_entries[0].purl.as_str(),
+            "pkg:apk/alpine/waybill-fixture-libssl@1.2.3-r0?arch=x86_64"
+        );
+        assert!(
+            result
+                .diagnostics
+                .os_release_missing_fields
+                .iter()
+                .any(|f| f == "ID"),
+            "expected diagnostics to record missing ID"
         );
     }
 
