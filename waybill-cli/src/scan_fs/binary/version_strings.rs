@@ -55,6 +55,12 @@ pub enum CuratedLibrary {
     LibreSsl,
     Llvm,
     OpenJdk,
+    // #1258 — the PHP interpreter. Unlike every entry above it this is a
+    // runtime rather than a linked library, and it is here for the same
+    // reason: the official `php:*` images compile it into `/usr/local`,
+    // so no OS package reader claims it and the binary walker had nothing
+    // to version it by.
+    Php,
 }
 
 impl CuratedLibrary {
@@ -71,6 +77,7 @@ impl CuratedLibrary {
             CuratedLibrary::LibreSsl => "libressl",
             CuratedLibrary::Llvm => "llvm",
             CuratedLibrary::OpenJdk => "openjdk",
+            CuratedLibrary::Php => "php",
         }
     }
 }
@@ -217,6 +224,22 @@ fn match_prefix(
         if let Some(v) = parse_openjdk_version(tail) {
             return Some(EmbeddedVersionMatch {
                 library: CuratedLibrary::OpenJdk,
+                version: v,
+            });
+        }
+    }
+    // PHP — `X-Powered-By: PHP/` (#1258). PHP's compiled-in response
+    // header, and the whole prefix is the anchor rather than just `PHP/`:
+    // a bare `8.3.35` occurs twice more in the same binary, and `PHP ` on
+    // its own appears in diagnostics and INI comments. Measured on
+    // `php:8.3.35-fpm` and `php:8.3.35-fpm-alpine`, glibc and musl alike,
+    // this exact string occurs once per binary in `/usr/local/bin/php`
+    // and `/usr/local/sbin/php-fpm`, NUL-delimited in `.rodata`.
+    if window.starts_with(b"X-Powered-By: PHP/") {
+        let tail = &region[pos + 18..];
+        if let Some(v) = parse_semver_triple(tail) {
+            return Some(EmbeddedVersionMatch {
+                library: CuratedLibrary::Php,
                 version: v,
             });
         }
@@ -697,6 +720,39 @@ mod tests {
         assert_eq!(hits.len(), 1);
         assert_eq!(hits[0].library, CuratedLibrary::OpenJdk);
         assert_eq!(hits[0].version, "17.0.5");
+    }
+
+    /// #1258 — the shape measured in the official images.
+    #[test]
+    fn php_x_powered_by_header_yields_the_interpreter_version() {
+        let r = region(b"X-Powered-By: PHP/8.3.35");
+        let hits = scan(&r);
+        assert_eq!(hits.len(), 1, "got {hits:?}");
+        assert_eq!(hits[0].library, CuratedLibrary::Php);
+        assert_eq!(hits[0].version, "8.3.35");
+    }
+
+    /// A bare version must not match. This is not a hypothetical: the real
+    /// `/usr/local/bin/php` carries `8.3.35` twice over besides the header,
+    /// so a prefix-less matcher would have two other things to latch onto.
+    #[test]
+    fn php_bare_version_without_the_header_does_not_match() {
+        let r = region(b"8.3.35");
+        assert!(scan(&r).is_empty(), "got {:?}", scan(&r));
+    }
+
+    /// The header with nothing parseable after it must not match either.
+    #[test]
+    fn php_header_without_a_version_does_not_match() {
+        let r = region(b"X-Powered-By: PHP/");
+        assert!(scan(&r).is_empty(), "got {:?}", scan(&r));
+    }
+
+    /// `PHP/` alone is too weak to be the anchor — the full header is.
+    #[test]
+    fn php_slash_version_alone_does_not_match() {
+        let r = region(b"PHP/8.3.35");
+        assert!(scan(&r).is_empty(), "got {:?}", scan(&r));
     }
 
     #[test]

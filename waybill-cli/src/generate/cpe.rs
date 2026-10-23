@@ -55,6 +55,10 @@ const GENERIC_LIBRARY_CPES: &[(&str, &[(&str, &str)])] = &[
     ("pcre", &[("pcre", "pcre")]),
     // PCRE 10.x — same vendor, different product.
     ("pcre2", &[("pcre", "pcre2")]),
+    // PHP — NVD files every interpreter CVE under `php:php`; verified
+    // against the configurations on CVE-2026-109618, whose cpeMatch
+    // criteria are `cpe:2.3:a:php:php:*`. #1258.
+    ("php", &[("php", "php")]),
     // SQLite — NVD canonical.
     ("sqlite", &[("sqlite", "sqlite")]),
     // zlib — NVD canonical.
