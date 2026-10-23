@@ -296,3 +296,193 @@ fn an_expected_signal_is_not_satisfied_by_the_gates_own_footer() {
         "the summary must not claim to have found it: {stdout}"
     );
 }
+
+// ---------------------------------------------------------------------------
+// scripts/check-version-bump.py — the completeness pass
+// ---------------------------------------------------------------------------
+
+/// A throwaway git repo holding one fixture, so the completeness pass has a
+/// base revision to diff against. The script shells out to `git diff`,
+/// `git show` and `git grep`, and must run from the base revision (#1133), so
+/// there is no way to exercise it without one.
+struct BumpRepo {
+    dir: tempfile::TempDir,
+}
+
+impl BumpRepo {
+    /// Commit `fixtures` at the old version, then overwrite them with the
+    /// post-bump content, leaving the tree in the state the script inspects.
+    fn new(before: &[(&str, &str)], after: &[(&str, &str)], old: &str, new: &str) -> Self {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let root = dir.path();
+        let git = |args: &[&str]| {
+            let st = Command::new("git")
+                .args(args)
+                .current_dir(root)
+                .output()
+                .expect("git is on PATH");
+            assert!(st.status.success(), "git {args:?}: {}", stderr_of(&st));
+        };
+        git(&["init", "-q"]);
+        git(&["config", "user.email", "t@example.invalid"]);
+        git(&["config", "user.name", "t"]);
+        // The script only inspects Cargo.toml when it is among the changed
+        // files, so the bump itself is represented by the fixtures alone.
+        std::fs::write(
+            root.join("Cargo.toml"),
+            format!("[workspace.package]\nversion = \"{old}\"\n"),
+        )
+        .expect("write Cargo.toml");
+        for (path, body) in before {
+            let p = root.join(path);
+            std::fs::create_dir_all(p.parent().expect("fixture has a parent"))
+                .expect("mkdir fixture dir");
+            std::fs::write(&p, body).expect("write fixture");
+        }
+        git(&["add", "-A"]);
+        git(&["commit", "-qm", "base"]);
+        for (path, body) in after {
+            std::fs::write(root.join(path), body).expect("overwrite fixture");
+        }
+        std::fs::write(
+            root.join("Cargo.toml"),
+            format!("[workspace.package]\nversion = \"{new}\"\n"),
+        )
+        .expect("rewrite Cargo.toml");
+        Self { dir }
+    }
+
+    fn check(&self, old: &str, new: &str) -> Output {
+        Command::new("python3")
+            .arg(repo_root().join("scripts/check-version-bump.py"))
+            .args([old, new])
+            .current_dir(self.dir.path())
+            .output()
+            .expect("python3 is on PATH")
+    }
+}
+
+/// One CycloneDX golden: waybill's own entry under `metadata.tools`, plus a
+/// dependency pinned at `dep_version`.
+fn cdx_golden(tool_version: &str, dep_version: &str) -> String {
+    format!(
+        r#"{{
+  "bomFormat": "CycloneDX",
+  "metadata": {{
+    "tools": {{
+      "components": [
+        {{ "type": "application", "name": "waybill", "version": "{tool_version}" }}
+      ]
+    }}
+  }},
+  "components": [
+    {{ "type": "library", "name": "pathspec", "version": "{dep_version}",
+       "purl": "pkg:pypi/pathspec@{dep_version}" }}
+  ]
+}}
+"#
+    )
+}
+
+/// #1251. The bump after v0.12.1 failed on `pkg:pypi/pathspec@0.12.1` in two
+/// corpus goldens: a real dependency the regen sweep correctly left alone,
+/// read as a golden the sweep had missed. The v0.12.0 cut failed the same way
+/// on `pkg:hackage/tasty-quickcheck@0.11.1`. Corpus goldens mask the tool
+/// version, so they never change in a bump and never reach the comparison
+/// pass — the completeness grep was the only thing looking at them, and it
+/// could not tell a dependency from the tool.
+#[test]
+fn a_dependency_sitting_at_the_released_version_does_not_fail_the_bump() {
+    // The dependency stays at 0.12.1 on both sides, as a real one would.
+    let repo = BumpRepo::new(
+        &[(
+            "waybill-cli/tests/fixtures/public_corpus/flask/cdx.json",
+            &cdx_golden("0.12.1", "0.12.1"),
+        )],
+        &[(
+            "waybill-cli/tests/fixtures/public_corpus/flask/cdx.json",
+            &cdx_golden("0.12.2", "0.12.1"),
+        )],
+        "0.12.1",
+        "0.12.2",
+    );
+    let out = repo.check("0.12.1", "0.12.2");
+    assert!(
+        out.status.success(),
+        "a dependency at the old version must not be read as a stale golden:\n{}\n{}",
+        stdout_of(&out),
+        stderr_of(&out)
+    );
+}
+
+/// The other half, and the one that matters more: the pass must still catch
+/// what #1221 wrote it for. A fixture that did not change at all cannot
+/// "differ beyond the version", so the comparison pass is silent about it;
+/// only this grep sees it. A fix that merely silenced the false positive
+/// would leave the gate unable to fail, which is the vacuity this file exists
+/// to rule out.
+#[test]
+fn a_golden_the_regen_sweep_never_reached_still_fails_the_bump() {
+    let stale = cdx_golden("0.12.1", "1.0.0");
+    let repo = BumpRepo::new(
+        &[
+            (
+                "waybill-cli/tests/fixtures/golden/cyclonedx/apk.cdx.json",
+                &cdx_golden("0.12.1", "1.0.0"),
+            ),
+            (
+                "waybill-cli/tests/fixtures/golden/cyclonedx/deb.cdx.json",
+                &cdx_golden("0.12.1", "1.0.0"),
+            ),
+        ],
+        &[
+            (
+                "waybill-cli/tests/fixtures/golden/cyclonedx/apk.cdx.json",
+                &cdx_golden("0.12.2", "1.0.0"),
+            ),
+            // deb.cdx.json left at the old tool version: the missed golden.
+            (
+                "waybill-cli/tests/fixtures/golden/cyclonedx/deb.cdx.json",
+                &stale,
+            ),
+        ],
+        "0.12.1",
+        "0.12.2",
+    );
+    let out = repo.check("0.12.1", "0.12.2");
+    assert!(
+        !out.status.success(),
+        "a golden still carrying the old tool version must fail:\n{}",
+        stdout_of(&out)
+    );
+    assert!(
+        stderr_of(&out).contains("deb.cdx.json"),
+        "the failure must name the stale golden: {}",
+        stderr_of(&out)
+    );
+}
+
+/// Fails closed. The pass exists to catch a fixture the sweep never reached,
+/// and one the structural check cannot parse is that case unexamined — so it
+/// is reported rather than skipped.
+#[test]
+fn a_fixture_the_structural_check_cannot_parse_is_reported() {
+    let repo = BumpRepo::new(
+        &[(
+            "waybill-cli/tests/fixtures/golden/cyclonedx/truncated.cdx.json",
+            "{ \"metadata\": { \"version\": \"0.12.1\"",
+        )],
+        &[(
+            "waybill-cli/tests/fixtures/golden/cyclonedx/truncated.cdx.json",
+            "{ \"metadata\": { \"version\": \"0.12.1\"",
+        )],
+        "0.12.1",
+        "0.12.2",
+    );
+    let out = repo.check("0.12.1", "0.12.2");
+    assert!(
+        !out.status.success(),
+        "an unparseable fixture carrying the old version must not pass silently:\n{}",
+        stdout_of(&out)
+    );
+}
