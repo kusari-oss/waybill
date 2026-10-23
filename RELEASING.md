@@ -223,7 +223,28 @@ git checkout -b release/begin-v<X>.<Y>.<Z+1>
 # commit, open PR "chore(release): begin <X>.<Y>.<Z+1> development", merge when green
 ```
 
-The nightly version comes from `Cargo.toml` (§3). Without this step, `main` still says the version just released, so the next nightly is `v<X>.<Y>.<Z>-nightly.<date>`. SemVer orders that **before** the stable `v<X>.<Y>.<Z>`, which makes a newer build look older (#1133). If the next release turns out to be a minor or major release, its own bump (Steps 3–5) moves past the patch version — that decision is step 1's, and this sentence is not a substitute for making it there.
+**This step no longer gates the nightly channel.** It used to: the nightly
+read its baseline from `Cargo.toml`, so skipping this step left `main` at
+the version just released and the next nightly came out as
+`v<X>.<Y>.<Z>-nightly.<date>`, which SemVer orders **before** the stable
+`v<X>.<Y>.<Z>` — a newer build looking older (#1133). That is not a
+hypothetical: it happened on 2026-10-23, when this step was skipped after
+v0.12.1 and `v0.12.1-nightly.20261023` published ahead of its own release.
+Nothing detected it.
+
+Since #1263 the nightly derives its baseline from the latest stable **tag**
+instead (§3), so skipping this step can no longer invert the channel.
+
+What it still does, and why it is worth keeping: it keeps `main`'s version
+ahead of every released version, so a build from `main` is distinguishable
+from the release it descends from. Without it, a local build and the
+shipped artifact both report the same number while having different
+contents. That is hygiene rather than correctness — a missed step is now a
+confusing `--version`, not a broken release channel.
+
+If the next release turns out to be a minor or major release, its own bump
+(Steps 3–5) moves past the patch version — that decision is step 1's, and
+this sentence is not a substitute for making it there.
 
 ---
 
@@ -237,11 +258,16 @@ Behavior:
 1. Checks `main`'s HEAD SHA against the last nightly tag's SHA.
 2. If identical → no-op with log line "no new commits since last
    nightly at `<tag>`".
-3. If different → tags `v<X>.<Y>.<Z>-nightly.YYYYMMDD` (baseline
-   `<X>.<Y>.<Z>` read from `Cargo.toml`, with any pre-release suffix
-   removed: `0.10.0-alpha.2` gives `v0.10.0-nightly.YYYYMMDD`, so a
-   bridge pre-release never pauses the nightly channel) + `gh workflow run release.yml`
-   to build + sign artifacts.
+3. If different → tags `v<X>.<Y>.<Z>-nightly.YYYYMMDD` + `gh workflow run
+   release.yml` to build + sign artifacts. The baseline is the **latest
+   stable tag's patch plus one**, computed by `scripts/nightly-baseline.sh`
+   from `git tag -l 'v*'` — not from `Cargo.toml` (#1263). Only bare
+   `vX.Y.Z` tags seed it, so neither a prior nightly nor an `-alpha.`
+   bridge pre-release can, and the baseline is always at least one patch
+   ahead of anything released. That makes `v<released>-nightly.<date>`
+   unmintable rather than merely unlikely; the script also asserts its own
+   result outranks the latest stable, and is covered by
+   `waybill-cli/tests/release_gates.rs`.
 4. Cleanup step deletes nightly prereleases + tags older than 30 days
    (Q1 clarification). **Only** nightly tags (regex-anchored) — stables
    and bridge pre-releases are preserved forever.
