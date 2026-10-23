@@ -83,23 +83,26 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          VERSION=$(grep '^version' Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
-          # The nightly baseline is <X>.<Y>.<Z> with any pre-release or build
-          # suffix removed. A bridge pre-release (RELEASING.md §4) bumps
-          # Cargo.toml to e.g. 0.10.0-alpha.2; that must not pause the nightly
-          # channel. It did, from 2026-09-23 to 2026-10-05, because a guard
-          # written for the one-time v0.2.0 transition no-op'd on any -alpha.
-          # baseline while the run still reported success.
-          # SemVer orders v0.10.0-alpha.2 < v0.10.0-nightly.YYYYMMDD < v0.10.0.
-          BASELINE="${VERSION%%[-+]*}"
-          if ! [[ "$BASELINE" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "::error::Cannot derive an X.Y.Z nightly baseline from Cargo.toml version '$VERSION'."
-            exit 1
-          fi
+          # #1263 — the baseline comes from the repository's stable TAGS,
+          # not from Cargo.toml. Reading it from the tree made this
+          # channel's ordering depend on `main` having been bumped off the
+          # version just released, which is a human-opened PR
+          # (RELEASING.md step 10). That window is open on every release
+          # and on 2026-10-23 it stayed open: v0.12.1-nightly.20261023
+          # published while v0.12.1 was the latest stable, and SemVer
+          # orders a prerelease BEFORE its release, so a newer build
+          # sorted older. Nothing detected it.
+          #
+          # The script is a separate file so it can be tested without a
+          # workflow run — see waybill-cli/tests/release_gates.rs. It also
+          # asserts its own result outranks the latest stable, and does
+          # NOT use `sort -V`, which disagrees with SemVer on prereleases
+          # and would have blessed the inverted tag.
+          BASELINE=$(git tag -l 'v*' | ./scripts/nightly-baseline.sh)
           DATE=$(date -u +%Y%m%d)
           TAG="v${BASELINE}-nightly.${DATE}"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "Will tag: $TAG (version=$VERSION, baseline=$BASELINE, date=$DATE)"
+          echo "Will tag: $TAG (baseline=$BASELINE from stable tags, date=$DATE)"
 
       - name: Create and push nightly tag
         if: steps.skip.outputs.skip != 'true'

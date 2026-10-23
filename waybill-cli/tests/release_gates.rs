@@ -486,3 +486,99 @@ fn a_fixture_the_structural_check_cannot_parse_is_reported() {
         stdout_of(&out)
     );
 }
+
+// ---------------------------------------------------------------------------
+// scripts/nightly-baseline.sh
+// ---------------------------------------------------------------------------
+
+/// Pipe a tag list into the baseline script, the way `nightly.yml` pipes
+/// `git tag -l 'v*'` into it.
+fn nightly_baseline(tags: &[&str]) -> Output {
+    use std::io::Write;
+    use std::process::Stdio;
+    let mut child = Command::new(repo_root().join("scripts/nightly-baseline.sh"))
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .expect("nightly-baseline.sh is executable");
+    child
+        .stdin
+        .as_mut()
+        .expect("stdin piped")
+        .write_all(format!("{}\n", tags.join("\n")).as_bytes())
+        .expect("write tag list");
+    child.wait_with_output().expect("collect output")
+}
+
+/// #1263 — the case that published an inverted nightly. With `v0.12.1` the
+/// latest stable, the baseline must be `0.12.2`, never `0.12.1`: a
+/// `v0.12.1-nightly.<date>` tag sorts BEFORE `v0.12.1` under SemVer, so a
+/// newer build would look older. Before this the baseline came from
+/// `Cargo.toml`, which still said `0.12.1` because the step-10 bump had
+/// not merged.
+#[test]
+fn the_nightly_baseline_outranks_the_latest_stable() {
+    let out = nightly_baseline(&["v0.12.0", "v0.12.1", "v0.12.1-nightly.20261023"]);
+    assert!(out.status.success(), "{}", stderr_of(&out));
+    assert_eq!(stdout_of(&out).trim(), "0.12.2");
+}
+
+/// Prerelease tags must not seed a baseline. A nightly built off the last
+/// nightly would ratchet the version forward every day, and an `-alpha.`
+/// bridge pre-release (RELEASING.md §4) is not a release either.
+#[test]
+fn prerelease_tags_do_not_seed_the_nightly_baseline() {
+    let out = nightly_baseline(&[
+        "v0.12.1",
+        "v0.13.0-nightly.20261024",
+        "v0.14.0-alpha.1",
+        "v0.99.0-rc.1",
+    ]);
+    assert!(out.status.success(), "{}", stderr_of(&out));
+    assert_eq!(
+        stdout_of(&out).trim(),
+        "0.12.2",
+        "only the bare vX.Y.Z tag may seed the baseline"
+    );
+}
+
+/// Numeric comparison, not lexical: `v0.10.0` outranks `v0.9.0`, and
+/// `sort` without numeric keys would disagree.
+#[test]
+fn the_nightly_baseline_compares_versions_numerically() {
+    let out = nightly_baseline(&["v0.9.0", "v0.10.0", "v0.2.0"]);
+    assert!(out.status.success(), "{}", stderr_of(&out));
+    assert_eq!(stdout_of(&out).trim(), "0.10.1");
+}
+
+/// A repository with no stable release yet still has to produce a usable
+/// baseline — the nightly channel predates the first stable tag.
+#[test]
+fn a_repository_with_no_stable_tag_still_gets_a_baseline() {
+    let out = nightly_baseline(&["v0.1.0-alpha.3"]);
+    assert!(out.status.success(), "{}", stderr_of(&out));
+    assert_eq!(stdout_of(&out).trim(), "0.0.1");
+}
+
+/// The baseline has to sort after the latest stable under SemVer, not just
+/// under whatever `sort` does. This is the comparison the fix turns on, and
+/// `sort -V` gets it wrong — it places `v0.12.1-nightly.20261023` AFTER
+/// `v0.12.1`, which is how an inverted tag could look correct to a guard
+/// built on it. Asserted here against the real tool so the claim in
+/// `nightly-baseline.sh`'s header cannot rot.
+#[test]
+fn sort_v_disagrees_with_semver_on_prereleases() {
+    let out = Command::new("sh")
+        .arg("-c")
+        .arg("printf 'v0.12.1\\nv0.12.1-nightly.20261023\\n' | sort -V | tail -1")
+        .output()
+        .expect("sh is on PATH");
+    assert_eq!(
+        stdout_of(&out).trim(),
+        "v0.12.1-nightly.20261023",
+        "if sort -V ever becomes SemVer-aware, nightly-baseline.sh's \
+         rationale needs rewriting — not its behaviour, which is correct \
+         either way"
+    );
+}
