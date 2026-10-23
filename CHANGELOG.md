@@ -7,6 +7,53 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-10-23
+
+A minor, not the `0.12.2` patch the placeholder held. One thing a consumer
+can observe on the wire: an apk-based image that is not Alpine, and a PHP
+image built the official way, each gain a component identity they did not
+have — and in the PHP case a component that was not in the document at all.
+
+- **The PHP runtime is identified and matchable.** The official `php:*`
+  images compile PHP into `/usr/local`, so no OS package reader claims it
+  and the binary walker had nothing to version it by: both interpreters
+  emitted as `pkg:generic/php?file-sha256=…` and
+  `pkg:generic/php-fpm?file-sha256=…`, with no version and no CPE, which no
+  scanner can match a CVE against. The binary scanner now reads PHP's
+  compiled-in `X-Powered-By: PHP/<semver>` header and emits one
+  `pkg:generic/php@<X.Y.Z>` per image, carrying
+  `cpe:2.3:a:php:php:<X.Y.Z>:*:*:*:*:*:*:*` — the identity NVD itself uses
+  for interpreter CVEs. **Consumer-visible**: a PHP image's SBOM gains a
+  component. The two versionless rows above are unchanged and still
+  present; collapsing them needs a different design than first proposed,
+  because claiming their paths would switch off the very scan that versions
+  them (#1258, partial).
+
+### Added
+
+- `CuratedLibrary::Php` in the binary version-string scanner, anchored on
+  the full `X-Powered-By: PHP/` prefix rather than a bare `PHP/`: the
+  version triple occurs twice more in the same binary, so a looser anchor
+  had two wrong matches available. Measured once per binary in
+  `/usr/local/bin/php` and `/usr/local/sbin/php-fpm` on both
+  `php:8.3.35-fpm` and `php:8.3.35-fpm-alpine`, so glibc and musl behave
+  alike. The `php:php` CPE vendor/product pair joins the curated table
+  (#1258).
+
+### Fixed
+
+- `check-version-bump.py` no longer reads a dependency as a golden the
+  regen sweep missed. It greps fixtures for `"version": "<old>"`, which is
+  the shape every CycloneDX component uses, so a dependency sitting at the
+  version being released failed the release: `pkg:hackage/tasty-quickcheck@0.11.1`
+  broke the v0.12.0 cut and `pkg:pypi/pathspec@0.12.1` broke the automated
+  bump after v0.12.1. A hit now counts only when its object carries both the
+  version and a `waybill` name. The comparison pass above it had the same
+  defect, latent — it masked each side's own version, so a fixture holding a
+  dependency at the old version compared unequal; both versions are now
+  masked on both sides. Release tooling only; no change to the binary or its
+  output (#1251).
+
 ## [0.12.1] - 2026-10-22
 
 A patch. One wire-observable change, scoped to apk-based images that are
@@ -6601,7 +6648,8 @@ per-release breakdown.
 
 ---
 
-[Unreleased]: https://github.com/kusari-oss/waybill/compare/v0.12.1...HEAD
+[Unreleased]: https://github.com/kusari-oss/waybill/compare/v0.13.0...HEAD
+[0.13.0]: https://github.com/kusari-oss/waybill/releases/tag/v0.13.0
 [0.12.1]: https://github.com/kusari-oss/waybill/releases/tag/v0.12.1
 [0.12.0]: https://github.com/kusari-oss/waybill/releases/tag/v0.12.0
 [0.11.0]: https://github.com/kusari-oss/waybill/releases/tag/v0.11.0
