@@ -262,14 +262,22 @@ jobs:
           triage: |
             After a stable release, `post-release.yml` moves `main` to the next
             development version (#1133). It failed, so `main` may still carry
-            the released version, and the next nightly would be named after a
-            release that is already out.
+            the released version, and a build from `main` is indistinguishable
+            from the release itself.
+
+            This no longer affects the nightly channel: since #1263 the nightly
+            version is derived from the latest stable tag, not from `Cargo.toml`
+            (`scripts/nightly-baseline.sh`). Ordering does not depend on this
+            step succeeding.
 
             ## Triage
 
             - **`prepare` failed**: the bump or its version-only check failed.
               Run `./scripts/release-bump.sh <next>` locally (RELEASING.md §2
-              step 10) and read what `check-version-bump.py` reports.
+              step 10) and read what `check-version-bump.py` reports. Run it
+              from a clean tree: it refuses otherwise, and reports your own
+              uncommitted paths as `changes outside the version bump`, which
+              reads like a finding rather than a precondition.
             - **`land` failed at the re-check**: the patch from `prepare` was not
               version-only when applied to `main`. Treat this as suspicious:
               `prepare` runs the whole build, and `land` exists to catch a
