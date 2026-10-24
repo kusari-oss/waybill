@@ -42,6 +42,12 @@ pub struct EmbeddedVersionMatch {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+// `EnumIter` is test-only (#1246): the whole-set checks over this enum
+// must not be able to miss a variant added after they were written, and
+// a hand-written list of variants always can — that is the defect
+// #1246 was filed against. `strum::iter()` is derived from the enum
+// itself, so there is no list to forget.
+#[cfg_attr(test, derive(strum::EnumIter))]
 pub enum CuratedLibrary {
     OpenSsl,
     BoringSsl,
@@ -501,6 +507,38 @@ fn parse_git_sha(tail: &[u8]) -> Option<String> {
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
     use super::*;
+
+    /// Two variants sharing a slug would make the slug ambiguous as a
+    /// mapping-table key, and `GENERIC_LIBRARY_CPES` is keyed by slug.
+    ///
+    /// `CuratedLibrary::iter()` rather than any list of variants: see
+    /// the derive's comment above the enum, and
+    /// `generate::cpe::tests::mappings_cover_all_curated_libraries`,
+    /// which is the check #1246 is actually about.
+    #[test]
+    fn slugs_are_unique_and_lowercase() {
+        use strum::IntoEnumIterator;
+
+        let mut slugs: Vec<&str> = CuratedLibrary::iter().map(|l| l.slug()).collect();
+        assert!(!slugs.is_empty(), "CuratedLibrary::iter() yielded nothing");
+        let before = slugs.len();
+        slugs.sort_unstable();
+        slugs.dedup();
+        assert_eq!(
+            slugs.len(),
+            before,
+            "two CuratedLibrary variants share a slug"
+        );
+        for slug in &slugs {
+            assert!(
+                !slug.is_empty()
+                    && slug
+                        .chars()
+                        .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit()),
+                "slug {slug:?} is not a lowercase ASCII table key"
+            );
+        }
+    }
 
     fn region(inner: &[u8]) -> Vec<u8> {
         // Pad with a leading NUL so the first embed starts at a

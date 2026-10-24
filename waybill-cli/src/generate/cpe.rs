@@ -38,10 +38,12 @@ const GENERIC_LIBRARY_CPES: &[(&str, &[(&str, &str)])] = &[
     ("curl", &[("haxx", "curl"), ("curl", "curl")]),
     // GnuTLS — NVD canonical.
     ("gnutls", &[("gnu", "gnutls")]),
-    // LibreSSL: most CVEs filed under `openbsd:libressl` (LibreSSL is an
-    // OpenBSD project). Secondary `libressl:libressl` for records that
-    // use the project namespace directly.
-    ("libressl", &[("openbsd", "libressl"), ("libressl", "libressl")]),
+    // LibreSSL — `openbsd:libressl` (LibreSSL is an OpenBSD project).
+    // A second `libressl:libressl` candidate was emitted here until
+    // #1246: the vendor does not exist. All 110 libressl entries in
+    // NVD's dictionary are `openbsd:libressl` and none use a `libressl`
+    // vendor, so the candidate could only ever return zero.
+    ("libressl", &[("openbsd", "libressl")]),
     // LLVM umbrella project. Sub-projects (clang, lld) are out of scope
     // for v1 — the version-string scanner doesn't distinguish them.
     ("llvm", &[("llvm", "llvm")]),
@@ -63,6 +65,45 @@ const GENERIC_LIBRARY_CPES: &[(&str, &[(&str, &str)])] = &[
     ("sqlite", &[("sqlite", "sqlite")]),
     // zlib — NVD canonical.
     ("zlib", &[("zlib", "zlib")]),
+];
+
+/// What NVD's CPE dictionary held for every pair in
+/// `GENERIC_LIBRARY_CPES`, as `(vendor, product, entries)`.
+///
+/// Produced by `scripts/probe-cpe-dictionary.sh` on 2026-10-24 and
+/// recorded here so `every_table_pair_exists_in_the_nvd_dictionary` can
+/// enforce it without a network call. A row may be added to the table
+/// above only once it has been probed and added here (#1246).
+///
+/// WHY. A wrong vendor or product fails *silently*: the matcher finds
+/// nothing, which is indistinguishable from a component with no known
+/// vulnerabilities. Upstream ships this defect regularly — syft derived
+/// `expat:expat` from a Conan recipe name where NVD files the records
+/// under `libexpat` (anchore/syft#4788), and built Apple-bundle CPEs
+/// from display names, so `Google Chrome` matched nothing where
+/// `google:chrome` matches thousands (anchore/syft#5429). The first run
+/// of the probe found one here: `libressl:libressl`, removed above.
+///
+/// The counts are the observation, not an invariant — NVD's dictionary
+/// grows, and the test asserts only that a pair was seen at all. What
+/// the test deliberately does NOT assert is that a pair carries any
+/// advisories: dictionary presence and advisory coverage are different
+/// questions, and treating a zero as an answer to the second is the trap
+/// recorded in #1245. `probe-cpe-dictionary.sh --cves` asks that one.
+#[cfg(test)]
+const NVD_DICTIONARY_OBSERVED: &[(&str, &str, u32)] = &[
+    ("curl", "curl", 2),
+    ("gnu", "gnutls", 366),
+    ("haxx", "curl", 228),
+    ("llvm", "llvm", 55),
+    ("openbsd", "libressl", 110),
+    ("openssl", "openssl", 368),
+    ("oracle", "openjdk", 241),
+    ("pcre", "pcre", 91),
+    ("pcre", "pcre2", 25),
+    ("php", "php", 1641),
+    ("sqlite", "sqlite", 372),
+    ("zlib", "zlib", 84),
 ];
 
 /// Build the set of CPE 2.3 candidate strings for a resolved component.
@@ -555,28 +596,19 @@ mod tests {
     #[test]
     fn mappings_cover_all_curated_libraries() {
         use crate::scan_fs::binary::version_strings::CuratedLibrary;
+        use strum::IntoEnumIterator;
 
         // Documented-omission allowlist per spec Edge Cases.
         const OMITTED: &[&str] = &["boringssl"];
 
-        // Walk every variant of CuratedLibrary and assert each slug
-        // is either in the mapping table OR on the omission allowlist.
-        // Update this list when adding library variants.
-        let all_curated: &[CuratedLibrary] = &[
-            CuratedLibrary::OpenSsl,
-            CuratedLibrary::BoringSsl,
-            CuratedLibrary::Zlib,
-            CuratedLibrary::Sqlite,
-            CuratedLibrary::Curl,
-            CuratedLibrary::Pcre,
-            CuratedLibrary::Pcre2,
-            CuratedLibrary::GnuTls,
-            CuratedLibrary::LibreSsl,
-            CuratedLibrary::Llvm,
-            CuratedLibrary::OpenJdk,
-        ];
-
-        for lib in all_curated {
+        // `CuratedLibrary::iter()`, never a list of variants. This test
+        // kept its own hand-written list until #1246, and by then `Php`
+        // had been added to the enum, to `slug()` and to the table but
+        // not to that list — so the newest variant, the one the check
+        // existed for, was the one variant exempt from it. A derived
+        // iterator cannot drift from the enum it is derived from, which
+        // a number or a list next to the enum always can.
+        for lib in CuratedLibrary::iter() {
             let slug = lib.slug();
             let in_table = GENERIC_LIBRARY_CPES.iter().any(|(s, _)| *s == slug);
             let omitted = OMITTED.contains(&slug);
@@ -587,6 +619,87 @@ mod tests {
                  Add a mapping row OR extend the allowlist with a documented rationale."
             );
         }
+    }
+
+    /// #1246: every `(vendor, product)` the table emits must be one NVD
+    /// actually has. A pair NVD has never heard of returns zero from any
+    /// CPE matcher, which reads as "no known vulnerabilities" — the
+    /// failure is silent and on the safe-looking side.
+    ///
+    /// Hermetic: it compares the table against
+    /// `NVD_DICTIONARY_OBSERVED`, which records a probe run rather than
+    /// querying NVD here. So what this enforces is "no row without a
+    /// recorded observation", and `scripts/probe-cpe-dictionary.sh` is
+    /// how the observation is obtained.
+    #[test]
+    fn every_table_pair_exists_in_the_nvd_dictionary() {
+        for (slug, pairs) in GENERIC_LIBRARY_CPES {
+            for (vendor, product) in *pairs {
+                let observed = NVD_DICTIONARY_OBSERVED
+                    .iter()
+                    .find(|(v, p, _)| v == vendor && p == product);
+                let Some((_, _, entries)) = observed else {
+                    panic!(
+                        "GENERIC_LIBRARY_CPES row {slug:?} emits \
+                         {vendor}:{product}, which has no entry in \
+                         NVD_DICTIONARY_OBSERVED. Run \
+                         `scripts/probe-cpe-dictionary.sh {vendor}:{product}` \
+                         and record the result — a pair NVD does not have \
+                         can only ever match zero advisories."
+                    );
+                };
+                assert!(
+                    *entries > 0,
+                    "{vendor}:{product} (row {slug:?}) was probed and NVD's \
+                     dictionary has no such pair, so the candidate is dead. \
+                     Remove it, or correct the vendor/product."
+                );
+            }
+        }
+    }
+
+    /// The converse: an observation left behind after its row changed
+    /// would make the check above vacuous for a pair nothing emits, and
+    /// would misrepresent the probe as covering the current table.
+    #[test]
+    fn no_dictionary_observation_is_stale() {
+        for (vendor, product, _) in NVD_DICTIONARY_OBSERVED {
+            let emitted = GENERIC_LIBRARY_CPES
+                .iter()
+                .any(|(_, pairs)| pairs.iter().any(|(v, p)| v == vendor && p == product));
+            assert!(
+                emitted,
+                "NVD_DICTIONARY_OBSERVED carries {vendor}:{product}, which no \
+                 GENERIC_LIBRARY_CPES row emits. Drop the observation with the row."
+            );
+        }
+
+        let mut keys: Vec<(&str, &str)> = NVD_DICTIONARY_OBSERVED
+            .iter()
+            .map(|(v, p, _)| (*v, *p))
+            .collect();
+        let before = keys.len();
+        keys.sort_unstable();
+        keys.dedup();
+        assert_eq!(keys.len(), before, "NVD_DICTIONARY_OBSERVED has a duplicate pair");
+
+        let sorted: Vec<(&str, &str)> = {
+            let mut s: Vec<(&str, &str)> = NVD_DICTIONARY_OBSERVED
+                .iter()
+                .map(|(v, p, _)| (*v, *p))
+                .collect();
+            s.sort_unstable();
+            s
+        };
+        let actual: Vec<(&str, &str)> = NVD_DICTIONARY_OBSERVED
+            .iter()
+            .map(|(v, p, _)| (*v, *p))
+            .collect();
+        assert_eq!(
+            actual, sorted,
+            "NVD_DICTIONARY_OBSERVED is not sorted by (vendor, product); \
+             keep it sorted for diff-friendliness, as GENERIC_LIBRARY_CPES is."
+        );
     }
 
     /// T015 — FR-004 / SC-003: a component with `pkg:generic/<lib>`
