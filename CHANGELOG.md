@@ -9,6 +9,21 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **A dead CPE candidate is no longer emitted for LibreSSL, and a new
+  curated library can no longer ship without one.**
+  `GENERIC_LIBRARY_CPES` emitted `libressl:libressl` alongside
+  `openbsd:libressl`; the first vendor does not exist in NVD's CPE
+  dictionary, where all 110 libressl entries use `openbsd`, so the
+  candidate could only ever match zero. **Consumer-visible**: components
+  for the `libressl` slug now carry one CPE candidate rather than two,
+  and the one removed never matched anything. Two guards were added so
+  neither defect recurs: every `(vendor, product)` in the table must have
+  a recorded NVD dictionary observation (`NVD_DICTIONARY_OBSERVED`,
+  produced by `scripts/probe-cpe-dictionary.sh`), and the coverage test
+  now enumerates `CuratedLibrary` by a derived iterator instead of a
+  hand-written list — the list had already stopped covering `Php`, the
+  newest variant and the one it existed for (#1246).
+
 - **`ghcr.io/kusari-oss/waybill:latest` no longer moves to a nightly.**
   `release.yml`'s `Compute image tags` step emitted `:latest`
   unconditionally from the tag name, and `publish-container-image` had no
