@@ -212,6 +212,16 @@ oci-spec = { version = "0.9", default-features = false, features = ["distributio
 [dev-dependencies]
 serde_json.workspace = true
 tempfile = "3"
+# #1246 — `EnumIter` for test-only enumeration of `CuratedLibrary`, so a
+# whole-set check cannot silently stop covering a variant added after it
+# was written. Rust cannot count an enum's variants without a derive or
+# an unstable intrinsic, and every list-based alternative keeps one
+# hand-maintained number that a new variant can leave untouched (which
+# is the defect #1246 was filed against, and which a first attempt at
+# the fix reproduced). Dev-only and `cfg(test)`-gated at the derive
+# site, so nothing reaches the shipped binary; 0.27 is the version
+# `oci-spec 0.9` already resolves, so this adds no package to Cargo.lock.
+strum = { version = "0.27", features = ["derive"] }
 # Milestone 010 — pure-Rust JSON Schema validator used in tests to check
 # produced SPDX 2.3 / SPDX 3.0.1 / OpenVEX output against the vendored
 # upstream schemas under `tests/fixtures/schemas/`. Supports both Draft 7
