@@ -696,13 +696,24 @@ jobs:
           # Strip leading 'v' for the version-only tag — both forms are
           # common in the ecosystem, ship both.
           ver="${ref#v}"
+          # Issue #1266: `:latest` is a mutable pointer, so only a stable
+          # release may move it. This step used to emit it unconditionally,
+          # which meant every 06:00Z nightly took `:latest` off the newest
+          # stable and `docker pull ghcr.io/<owner>/waybill` served a
+          # nightly until the next release published. The two
+          # version-pinned tags are emitted for both channels — they name
+          # exactly what they are, and a nightly needs to be pullable.
+          channel=$(./scripts/release-channel.sh "$ref")
           {
             echo "tags<<EOF"
             echo "ghcr.io/${REPO_OWNER}/waybill:${ref}"
             echo "ghcr.io/${REPO_OWNER}/waybill:${ver}"
-            echo "ghcr.io/${REPO_OWNER}/waybill:latest"
+            if [ "$channel" = "stable" ]; then
+              echo "ghcr.io/${REPO_OWNER}/waybill:latest"
+            fi
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
+          echo "channel=${channel}"
 
       - name: Build & push multi-arch image
         id: build
@@ -875,7 +886,14 @@ jobs:
           # full releases; anything else with a pre-release suffix is a
           # prerelease. This matters for GitHub's "Latest release" badge —
           # only full releases can be "Latest".
-          if [[ "$REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          #
+          # Issue #1266: the predicate now lives in
+          # `scripts/release-channel.sh`, which `Compute image tags` calls
+          # too. It was inline here, and the container job never consulted
+          # it — so a nightly was correctly kept off the Latest-release
+          # badge while it moved the `:latest` container tag onto itself.
+          channel=$(./scripts/release-channel.sh "$REF_NAME")
+          if [ "$channel" = "stable" ]; then
             echo "prerelease=false" >> "$GITHUB_OUTPUT"
             echo "Stable tag detected — full release"
           else

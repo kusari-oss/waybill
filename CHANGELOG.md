@@ -7,6 +7,24 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Fixed
+
+- **`ghcr.io/kusari-oss/waybill:latest` no longer moves to a nightly.**
+  `release.yml`'s `Compute image tags` step emitted `:latest`
+  unconditionally from the tag name, and `publish-container-image` had no
+  channel gating, so every 06:00Z nightly took the mutable pointer off the
+  newest stable: on 2026-10-23 `:latest` resolved to
+  `0.12.1-nightly.20261023` from 06:37Z until v0.13.0 published at 18:55Z.
+  **Consumer-visible**: `docker pull ghcr.io/kusari-oss/waybill` with no
+  tag now stays on the latest stable release. The two version-pinned tags
+  are unchanged and still published on both channels, so a nightly remains
+  pullable by name. The channel test moved into
+  `scripts/release-channel.sh`, which the prerelease-flag step calls too —
+  it had the correct predicate inline all along and the container job
+  simply never consulted it, which is why a release could be marked a
+  prerelease on the Releases page while publishing itself as `:latest`
+  (#1266).
+
 ## [0.13.0] - 2026-10-23
 
 A minor, not the `0.12.2` patch the placeholder held. One thing a consumer
