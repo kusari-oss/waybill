@@ -561,6 +561,141 @@ fn a_repository_with_no_stable_tag_still_gets_a_baseline() {
     assert_eq!(stdout_of(&out).trim(), "0.0.1");
 }
 
+// ---------------------------------------------------------------------------
+// scripts/release-channel.sh
+// ---------------------------------------------------------------------------
+
+/// Classify one tag, the way both `release.yml` steps call the script.
+fn release_channel(tag: &str) -> Output {
+    Command::new(repo_root().join("scripts/release-channel.sh"))
+        .arg(tag)
+        .output()
+        .expect("release-channel.sh is executable")
+}
+
+fn channel_of(tag: &str) -> String {
+    let out = release_channel(tag);
+    assert!(out.status.success(), "{tag}: {}", stderr_of(&out));
+    stdout_of(&out).trim().to_string()
+}
+
+/// #1266 — the tag shapes that must NOT move `:latest`. The container job
+/// emitted it unconditionally, so every 06:00Z nightly took
+/// `ghcr.io/kusari-oss/waybill:latest` off the newest stable; measured on
+/// 2026-10-23, `:latest` pointed at `0.12.1-nightly.20261023` from 06:37Z
+/// until v0.13.0 published at 18:55Z.
+#[test]
+fn only_a_bare_semver_tag_is_the_stable_channel() {
+    for stable in ["v0.13.0", "v1.0.0", "v0.0.1", "v10.20.30"] {
+        assert_eq!(channel_of(stable), "stable", "{stable} is a stable tag");
+    }
+    for prerelease in [
+        "v0.12.1-nightly.20261023",
+        "v0.14.0-alpha.1",
+        "v0.99.0-rc.1",
+        "v0.1.0+build.5",
+        "v0.13.0-0",
+    ] {
+        assert_eq!(
+            channel_of(prerelease),
+            "prerelease",
+            "{prerelease} must never move `:latest`"
+        );
+    }
+}
+
+/// A tag that is not SemVer at all is not a stable release either. The
+/// classifier must not fall through to `stable` on a shape it does not
+/// recognise — that is the direction that republishes `:latest`.
+#[test]
+fn an_unrecognised_tag_shape_is_not_stable() {
+    for odd in ["0.13.0", "v0.13", "v0.13.0.1", "main", "latest", "v0.13.0 "] {
+        assert_eq!(
+            channel_of(odd),
+            "prerelease",
+            "{odd:?} is not a bare vX.Y.Z tag"
+        );
+    }
+}
+
+/// A missing or empty tag is a caller bug, and must not be answered with a
+/// channel. Exiting non-zero under `set -euo pipefail` fails the step; a
+/// silent `prerelease` would hide a workflow that lost `TAG_NAME`.
+#[test]
+fn a_missing_tag_is_an_error_not_a_channel() {
+    for argv in [vec![], vec![""], vec!["v0.13.0", "extra"]] {
+        let out = Command::new(repo_root().join("scripts/release-channel.sh"))
+            .args(&argv)
+            .output()
+            .expect("release-channel.sh is executable");
+        assert!(
+            !out.status.success(),
+            "argv {argv:?} must not produce a channel: {}",
+            stdout_of(&out)
+        );
+        assert!(
+            stdout_of(&out).trim().is_empty(),
+            "argv {argv:?} printed a channel on the error path: {}",
+            stdout_of(&out)
+        );
+    }
+}
+
+/// Both callers run the script by a repository-relative path, so both jobs
+/// must check the repository out and the file must be executable. A
+/// workflow that calls a path that is not there fails the release, not the
+/// nightly only, so assert the shape here rather than discovering it at
+/// tag-push time.
+#[test]
+fn both_release_yml_steps_call_the_one_channel_script() {
+    let yml = std::fs::read_to_string(repo_root().join(".github/workflows/release.yml"))
+        .expect("release.yml is readable");
+    assert_eq!(
+        yml.matches("./scripts/release-channel.sh").count(),
+        2,
+        "`Compute image tags` and `Compute prerelease flag from tag` must \
+         both consult the shared classifier; a third inline copy of the \
+         bare-SemVer regex is how #1266 happened"
+    );
+    // Every line that emits `:latest` must sit inside the stable branch.
+    // Walk back from it to the nearest `if`/`fi` and assert which one it is
+    // — a grep for the two strings anywhere in the file would pass even if
+    // the guard moved off this echo, which is the exact mistake #1266 was.
+    let lines: Vec<&str> = yml.lines().collect();
+    let latest_lines: Vec<usize> = lines
+        .iter()
+        .enumerate()
+        .filter(|(_, l)| l.contains("waybill:latest"))
+        .map(|(i, _)| i)
+        .collect();
+    assert_eq!(
+        latest_lines.len(),
+        1,
+        "exactly one step may emit the `:latest` tag"
+    );
+    let guard = lines[..latest_lines[0]]
+        .iter()
+        .rev()
+        .find(|l| {
+            let s = l.trim_start();
+            s.starts_with("if ") || s.starts_with("fi")
+        })
+        .copied()
+        .unwrap_or("<no enclosing conditional>");
+    assert_eq!(
+        guard.trim(),
+        "if [ \"$channel\" = \"stable\" ]; then",
+        "`:latest` is emitted outside the stable-channel guard"
+    );
+    let meta = std::fs::metadata(repo_root().join("scripts/release-channel.sh"))
+        .expect("release-channel.sh exists");
+    use std::os::unix::fs::PermissionsExt;
+    assert!(
+        meta.permissions().mode() & 0o111 != 0,
+        "release-channel.sh must be executable; the workflow invokes it directly"
+    );
+}
+
 /// The baseline has to sort after the latest stable under SemVer, not just
 /// under whatever `sort` does. This is the comparison the fix turns on, and
 /// `sort -V` gets it wrong — it places `v0.12.1-nightly.20261023` AFTER
