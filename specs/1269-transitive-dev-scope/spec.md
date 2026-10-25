@@ -345,7 +345,20 @@ synthetic fixture.
 - **FR-017**: The standards-native audit for the derivation marker MUST
   be performed against the vendored schemas under
   `waybill-cli/tests/fixtures/schemas/`, not from memory, and its
-  method and quotations recorded.
+  method and quotations recorded. **Result (Principle V citation):
+  KEEP-NO-NATIVE in all three formats.** CycloneDX 1.6's
+  `evidence.identity[].field` enumerates
+  `group,name,version,purl,cpe,omniborId,swhid,swid,hash` — `scope` is
+  absent, so identity evidence cannot describe a scope claim, and
+  `component.scope` carries the classification with no sibling
+  expressing how it was reached. SPDX 2.3 relationships carry only
+  `comment` beside the `*_DEPENDENCY_OF` type, and `Package` has no
+  scope-provenance field. SPDX 3.0.1's `LifecycleScopedRelationship.scope`
+  carries the scope, and `RelationshipCompleteness` grades whether a
+  relationship set is complete rather than how a scope was derived.
+  Method and quotations: `research.md` R6; per-format table:
+  `contracts/c199-annotation.md`. The scope *itself* stays on the
+  native constructs, which is what FR-006 exists to preserve.
 - **FR-018**: The feature MUST NOT claim any reduction in
   `orphaned-components-detected`. Scope marking does not change
   reachability, and that count is derived from reachability alone.
@@ -379,12 +392,18 @@ synthetic fixture.
 ### Measurable Outcomes
 
 - **SC-001**: Zero components reachable only through non-runtime
-  components are emitted without a non-runtime marker, across all 17
+  components are emitted without a non-runtime **scope**, across all 17
   corpus targets and all three formats — excepting only components in an
   ecosystem for which no root seed could be resolved, which FR-012
   deliberately declines to touch and which any such exception MUST name.
   Expressed as a count of zero rather than as a reduction, so it cannot
   be satisfied by partial progress.
+  **How the three-format clause is verified**: invariant I3 reads
+  CycloneDX only, and C42 `waybill:lifecycle-scope` is a
+  `SymmetricEqual` parity row, so the value it checks must be identical
+  in SPDX 2.3 and SPDX 3 or the parity suite fails. The coverage is
+  therefore I3 plus C42 rather than three independent checks, and is
+  stated here because an unstated chain is one that rots.
 - **SC-002**: All five I3 declarations are deleted and the corpus
   invariant lane is green with none re-added.
 - **SC-003**: A positive control exists as a synthetic fixture in which
@@ -427,6 +446,11 @@ synthetic fixture.
   not a second notion of reachability.
 - The pass runs where the component set is final — after de-duplication
   and design/source reconciliation — and edge typing is re-established
-  afterwards so FR-010 holds. The four existing unit tests that call the
-  edge-typing function directly pin it to its current position and will
-  need to move with it.
+  afterwards so FR-010 holds. Re-establishing it moves nothing: the
+  edge-typing function rewrites only relationships still typed as a
+  plain dependency and skips anything already typed, so it is
+  idempotent and the caller simply runs it a second time after the
+  pass. Its four existing unit tests therefore stay where they are.
+  (An earlier draft of this assumption said they would have to move
+  with it; `research.md` R4 measured the idempotence and supersedes
+  that.)
