@@ -74,6 +74,15 @@ genuinely unattached. Reducing that count is an anchoring question
 (I7's), filed separately. Conflating the two would let this feature
 claim a number it did not move.
 
+## Clarifications
+
+### Session 2026-10-25
+
+- Q: Do synthetic anchoring edges confer runtime immunity in Phase A? → A: No — declared paths only. The immunity BFS traverses only edges a reader read from a manifest or lockfile; edges introduced by an anchoring pass are excluded from it, while remaining in the emitted document.
+- Q: Does the derivation marker appear on declared scopes, or only on inferred ones? → A: Only on inferred ones. The marker is emitted iff this pass assigned the scope; its absence alongside a non-runtime scope means a reader declared it. Follows the C197 `waybill:version-absence` precedent of marking only the anomalous population.
+- Q: In population B, is one non-runtime inbound path enough, or must every inbound path be non-runtime? → A: One is enough — an unscoped component is transparent to propagation. Only positive runtime reachability (FR-002, by declared paths per FR-002a) blocks marking; the absence of a scope on a neighbour is not evidence that a component ships.
+- Q: Which edges does propagation flow along? → A: The same declared-edge set the immunity traversal uses. An edge waybill inferred — anchoring or experimental cross-ecosystem — neither protects a component from marking nor propagates a scope to it. Symmetric by design, so nothing a heuristic produced can demote a component.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - A consumer filtering to runtime components stops seeing dev tooling (Priority: P1)
@@ -95,10 +104,10 @@ other story required.
 
 **Acceptance Scenarios**:
 
-1. **Given** a component whose every inbound path crosses a component
-   carrying a non-runtime scope, **When** the SBOM is emitted, **Then**
-   that component carries a non-runtime scope in CycloneDX, SPDX 2.3 and
-   SPDX 3.
+1. **Given** a component reachable by declared edges from a component
+   carrying a non-runtime scope, and not runtime-reachable, **When** the
+   SBOM is emitted, **Then** that component carries a non-runtime scope
+   in CycloneDX, SPDX 2.3 and SPDX 3.
 2. **Given** `python-flask`, `haskell-language-server`,
    `haskell-security-advisories`, `nix-closure-moat` and `rust-ripgrep`,
    **When** the corpus invariant lane runs with their I3 declarations
@@ -171,16 +180,20 @@ component properties in all three formats.
 
 **Acceptance Scenarios**:
 
-1. **Given** a component whose scope came from a reader, **When** the
-   SBOM is emitted, **Then** it carries a derivation marker valued
-   `declared`.
-2. **Given** a component whose scope came from this pass, **When** the
+1. **Given** a component whose scope came from this pass, **When** the
    SBOM is emitted, **Then** it carries a derivation marker valued
    `transitive`.
+2. **Given** a component whose scope came from a reader, **When** the
+   SBOM is emitted, **Then** it carries no derivation marker, and a
+   consumer reads it as declared from the marker's absence alongside its
+   non-runtime scope.
 3. **Given** a component with no non-runtime scope, **When** the SBOM is
    emitted, **Then** it carries no derivation marker at all — the marker
    explains a scope, it does not assert one.
-4. **Given** all three formats, **When** the parity suite runs, **Then**
+4. **Given** a target whose reader already marked every transitive,
+   **When** the SBOM is emitted, **Then** no component gains a marker
+   and the document is byte-identical.
+5. **Given** all three formats, **When** the parity suite runs, **Then**
    the marker round-trips with equal values in each and the catalog row
    and its extractor land together.
 
@@ -241,6 +254,10 @@ synthetic fixture.
   resolve that: it is a reader/declaration conflict, not a graph
   question, and a graph pass silently overriding a reader's declaration
   is a worse outcome than the inconsistency. Filed separately.
+- **An unscoped component on an inbound path.** Transparent: it neither
+  blocks nor contributes a scope. A component fed by one declared dev
+  member and one unscoped orphan is marked, because only runtime
+  reachability immunizes (FR-001, FR-002).
 - **An empty or single-component graph** — no seeds, no edges, no
   change, no diagnostic noise.
 - **Documents with no non-runtime component at all** — byte-identical
@@ -250,11 +267,38 @@ synthetic fixture.
 
 ### Functional Requirements
 
-- **FR-001**: A component whose every inbound path crosses a component
-  carrying a non-runtime scope MUST be emitted with a non-runtime scope.
+- **FR-001**: A component that is reachable from a declared non-runtime
+  component and is not runtime-reachable MUST be emitted with a
+  non-runtime scope. "Not runtime-reachable" is the whole of the
+  precondition: an unscoped component on an inbound path is
+  **transparent** — propagation flows through it, and its lack of a
+  scope is not evidence that the component it feeds ships. Only the
+  positive signal of FR-002 blocks marking. Requiring instead that
+  every inbound path positively cross a non-runtime component would
+  leave population B unmarked, since in an orphan subgraph almost
+  nothing carries a scope at all.
 - **FR-002**: A component reachable from any root seed by at least one
   path containing no non-runtime component MUST keep its existing scope.
   Runtime reachability is absolute immunity from propagation.
+- **FR-002a**: Immunity under FR-002 MUST rest on a **declared**
+  dependency path only. Edges introduced by an anchoring pass — those
+  waybill synthesizes from the subject to make an otherwise-unreachable
+  component connected, identifiable by their recorded provenance — MUST
+  be excluded from the immunity traversal. They remain in the emitted
+  document and consumers still traverse them; they are simply not
+  evidence that a component ships. Counting them would grant immunity to
+  exactly the orphaned non-runtime transitives of population B, so the
+  feature would no-op where it matters most while passing every
+  reachable-population check.
+- **FR-002b**: Propagation MUST traverse the same declared-edge set the
+  immunity traversal uses. An inferred edge — an anchoring edge, or an
+  experimental cross-ecosystem edge matched by name rather than
+  declared — MUST neither confer immunity nor carry a scope. The two
+  directions hold the same evidentiary standard on purpose: were
+  propagation to travel edges that cannot protect, a heuristic name
+  match could demote a component with no declared relationship to the
+  dependency whose scope it inherited, which is the under-reporting
+  failure US2 exists to prevent.
 - **FR-003**: The pass MUST be strictly additive: it assigns a scope
   only to a component that carries none, and MUST NOT change,
   strengthen or weaken a scope assigned by a reader.
@@ -267,12 +311,18 @@ synthetic fixture.
 - **FR-006**: The pass MUST propagate the same scope variant rather than
   introducing a new one, so that every existing consumer-side filter and
   every format's native scope mapping keeps working unchanged.
-- **FR-007**: Components emitted with a non-runtime scope MUST carry a
-  derivation marker distinguishing a reader-declared scope from one this
-  pass inferred, with exactly two values in v1: `declared` and
-  `transitive`.
-- **FR-008**: A component with no non-runtime scope MUST NOT carry the
-  derivation marker.
+- **FR-007**: A component whose non-runtime scope was assigned by this
+  pass MUST carry a derivation marker, valued `transitive`. The marker
+  has exactly one value in v1; future values may extend the enum.
+- **FR-008**: Every other component MUST NOT carry the marker — one
+  whose scope a reader declared, and one with no non-runtime scope
+  alike. A non-runtime scope with no marker therefore means "declared",
+  and the two fields are read together: absence alone is not a claim,
+  because a component outside the non-runtime population is not in the
+  marker's domain at all. This is the C197 `waybill:version-absence`
+  posture: mark the anomalous population, leave every untouched
+  component byte-identical, which is what makes FR-013 hold by
+  construction rather than by exception.
 - **FR-009**: The derivation marker MUST be emitted in CycloneDX, SPDX
   2.3 and SPDX 3 with equal values, and its catalog row and parity
   extractor MUST land in the same change — a row without an extractor
@@ -310,12 +360,19 @@ synthetic fixture.
   measured from. Already derived for the existing completeness
   reporting; this feature consumes it rather than defining it.
 - **Runtime-reachable set** — components reachable from a seed by a path
-  containing no non-runtime component. The immunity set of FR-002.
+  of **declared** dependency edges containing no non-runtime component.
+  The immunity set of FR-002, bounded by FR-002a.
+- **Anchoring edge** — a dependency edge waybill synthesizes from the
+  subject so that an otherwise-unreachable component is connected, as
+  opposed to one a reader read from a manifest or lockfile.
+  Distinguishable by its recorded provenance.
 - **Declared non-runtime member** — a component a reader assigned a
   non-runtime scope to. The propagation seeds, independent of
   reachability.
-- **Scope derivation** — per-component provenance of the scope:
-  `declared` by a reader, or `transitive` by this pass.
+- **Scope derivation** — per-component provenance of a non-runtime
+  scope. Recorded on the wire only when this pass inferred it
+  (`transitive`); a reader-declared scope is identified by the marker's
+  absence.
 
 ## Success Criteria *(mandatory)*
 
@@ -339,7 +396,8 @@ synthetic fixture.
 - **SC-005**: Every ecosystem in FR-015's list has a recorded outcome
   citing named evidence; no row reads "assumed".
 - **SC-006**: A consumer can separate declared from inferred scope for
-  every non-runtime component in all three formats.
+  every non-runtime component in all three formats, and no component
+  whose scope this pass did not assign gains any new field.
 - **SC-007**: Golden churn is accounted for: every changed golden is
   explained by a propagated scope or a derivation marker, and any other
   change is treated as a regression rather than as churn.
