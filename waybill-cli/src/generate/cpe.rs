@@ -24,13 +24,48 @@ use waybill_common::resolution::ResolvedComponent;
 /// Sorted alphabetically by library_slug for diff-friendliness per FR-002.
 /// Adding a library is a one-line PR; new entries must keep the sort.
 ///
-/// BoringSSL (the 11th library identified by the version-string scanner)
-/// is intentionally omitted — Google's BoringSSL has no NVD-tracked CPE
-/// namespace. BoringSSL-rooted vulnerabilities flow through
-/// `openssl:openssl` records when the issue exists upstream, but
-/// BoringSSL-specific issues lack a usable CPE. Components for the
-/// `boringssl` slug emit a PURL with no CPE field — an explicit
-/// "we don't know" per Constitution X transparency.
+/// BoringSSL is intentionally omitted, and the reason is **not** that
+/// NVD has no namespace for it. It does: probed on 2026-10-24,
+/// `cpe:2.3:a:google:boringssl` matched 2 dictionary entries, a keyword
+/// search for `boringssl` returned those same 2 and nothing else, and
+/// `virtualMatchString=cpe:2.3:a:google:boringssl:*:*:*:*:*:*:*:*`
+/// returned one advisory, CVE-2018-12440 (positive control:
+/// `openssl:openssl:3.0.11` returned 41). This comment claimed the
+/// opposite until #1268.
+///
+/// The reason is that BoringSSL has no release versioning. Its
+/// signature is `BoringSSL <40-char-sha>`, so the version waybill
+/// extracts is a git revision (`parse_git_sha` in
+/// `scan_fs/binary/version_strings.rs` accepts exactly 40 lowercase hex
+/// bytes and nothing else). A CPE's version component is a release
+/// string that a matcher orders against advisory ranges; a git SHA
+/// cannot be ordered against anything, so a `google:boringssl` CPE
+/// built from one matches either nothing or arbitrarily. That is the
+/// same hazard this table already refuses when it declines
+/// wildcard-version CPEs, which match a library's whole history.
+///
+/// **The general rule this row stands for**: a library whose only
+/// observable version is not a release identifier gets no CPE,
+/// whether or not a namespace exists for it. The namespace question is
+/// settled by `scripts/probe-cpe-dictionary.sh`; it is necessary and
+/// not sufficient. The inverse reading — "I could not find an NVD
+/// namespace, so I left it out" — is the unverified assumption the
+/// probe exists to prevent, and is how upstream shipped `expat:expat`
+/// (anchore/syft#4788) and display-name CPEs (anchore/syft#5429).
+///
+/// Components for the `boringssl` slug therefore emit a PURL with no
+/// CPE field — an explicit "we don't know" per Constitution X
+/// transparency. BoringSSL-rooted vulnerabilities still reach a
+/// consumer through `openssl:openssl` records where the issue exists
+/// upstream.
+///
+/// The distinction is not carried in the SBOM, and #1268 asked whether
+/// `waybill:unresolved-reason` (C151) should carry it. It cannot: C151
+/// is emitted if and only if the component carries
+/// `waybill:sbom-tier: "design"`, and a version-string-scanner
+/// component is binary tier. Saying "this product's versioning cannot
+/// key a CPE" on the wire needs a carrier that applies to a resolved
+/// component, which is a separate question from this row's rationale.
 const GENERIC_LIBRARY_CPES: &[(&str, &[(&str, &str)])] = &[
     // libcurl: historical `haxx:curl` dominates pre-2023 NVD records;
     // modern `curl:curl` also appears. Both emitted — primary goes to
@@ -585,10 +620,11 @@ mod tests {
     /// T013 — FR-002 / A1: the v1 mapping table must cover every
     /// curated-library slug emitted by the milestone-096 / earlier
     /// version-string scanner, EXCEPT for the documented-omission
-    /// allowlist (currently just `boringssl` — no NVD-tracked CPE
-    /// namespace). Future milestones extending the scanner must
-    /// either add a row here or extend the allowlist with a
-    /// documented rationale.
+    /// allowlist (currently just `boringssl`, whose extracted version is
+    /// a git SHA and so cannot key a CPE — see the rationale on
+    /// `GENERIC_LIBRARY_CPES` and `boringssl_has_no_release_version`
+    /// below). Future milestones extending the scanner must either add
+    /// a row here or extend the allowlist with a documented rationale.
     ///
     /// The cross-module dependency on `version_strings::CuratedLibrary`
     /// is permitted because the latter is `pub` and lives in the same
@@ -598,7 +634,12 @@ mod tests {
         use crate::scan_fs::binary::version_strings::CuratedLibrary;
         use strum::IntoEnumIterator;
 
-        // Documented-omission allowlist per spec Edge Cases.
+        // Documented-omission allowlist per spec Edge Cases. An entry
+        // here needs a reason that survives being checked: `boringssl`
+        // is on it because its only observable version is a git SHA,
+        // which `boringssl_has_no_release_version` asserts — not
+        // because a namespace could not be found, which was this
+        // allowlist's stated reason until #1268 and was false.
         const OMITTED: &[&str] = &["boringssl"];
 
         // `CuratedLibrary::iter()`, never a list of variants. This test
@@ -619,6 +660,56 @@ mod tests {
                  Add a mapping row OR extend the allowlist with a documented rationale."
             );
         }
+    }
+
+    /// #1268: the reason `boringssl` sits on the omission allowlist,
+    /// checked rather than written down. The row's rationale is that the
+    /// only version waybill can observe for BoringSSL is a git revision,
+    /// which no CPE version component can be built from — so if the
+    /// scanner ever starts extracting a release string, the omission
+    /// loses its justification and this test is what says so.
+    ///
+    /// Its predecessor rationale ("no NVD-tracked CPE namespace") was
+    /// prose only, was false, and went unchallenged for eleven
+    /// libraries. A claim that can be asserted should be.
+    #[test]
+    fn boringssl_has_no_release_version() {
+        use crate::scan_fs::binary::version_strings::{CuratedLibrary, scan};
+
+        // A leading NUL puts the embed at a C-string boundary, which is
+        // what the scanner requires.
+        let mut region = vec![0u8];
+        region.extend_from_slice(b"BoringSSL aaaabbbbccccddddeeeeffff0000111122223333");
+        region.push(0);
+
+        let hits = scan(&region);
+        let boringssl: Vec<_> = hits
+            .iter()
+            .filter(|h| h.library == CuratedLibrary::BoringSsl)
+            .collect();
+        assert_eq!(
+            boringssl.len(),
+            1,
+            "expected one BoringSSL hit from the scanner, got {}",
+            boringssl.len()
+        );
+
+        let version = &boringssl[0].version;
+        assert!(
+            version.len() == 40
+                && version
+                    .bytes()
+                    .all(|b| b.is_ascii_hexdigit() && !b.is_ascii_uppercase()),
+            "BoringSSL's extracted version {version:?} is no longer a git SHA. \
+             The `boringssl` omission in GENERIC_LIBRARY_CPES rests on it being one; \
+             if the scanner now yields a release identifier, decide whether \
+             `google:boringssl` (2 NVD dictionary entries, CVE-2018-12440 as of \
+             2026-10-24) should get a mapping row instead (#1268)."
+        );
+        assert!(
+            !version.contains('.'),
+            "BoringSSL's extracted version {version:?} looks release-shaped; see above (#1268)"
+        );
     }
 
     /// #1246: every `(vendor, product)` the table emits must be one NVD
