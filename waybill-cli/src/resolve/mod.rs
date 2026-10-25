@@ -7,6 +7,7 @@ pub mod pipeline;
 #[cfg(test)]
 pub mod pipeline_legacy_reference;
 pub mod reconciler;
+pub mod scope_propagation;
 pub mod resolver_chain;
 pub mod resolver_trait;
 pub mod resolvers;

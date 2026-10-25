@@ -28,7 +28,11 @@ use crate::generate::root_selector::{ResolvedRootSubject, RootSelectionResult};
 pub mod bfs;
 pub mod reason_codes;
 #[cfg(test)]
-mod test_support;
+// `pub(crate)` since #1209: `resolve::scope_propagation`'s tests build
+// the same `ResolvedComponent` fixtures, and one helper is better than
+// two that can drift apart. `#[cfg(test)]`-gated inside the file, so
+// nothing reaches the shipped binary.
+pub(crate) mod test_support;
 
 pub use reason_codes::{join_reason_codes, ReasonCode};
 

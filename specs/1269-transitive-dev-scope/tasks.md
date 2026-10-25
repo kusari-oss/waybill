@@ -42,8 +42,8 @@ before adding plumbing.
 
 **Purpose**: the module exists and compiles before anything fills it.
 
-- [ ] T001 Create `waybill-cli/src/resolve/scope_propagation.rs` with the module doc comment stating the two-phase contract, the lattice, and that it is strictly additive, citing `specs/1269-transitive-dev-scope/contracts/propagation-algorithm.md`
-- [ ] T002 Register the module in `waybill-cli/src/resolve/mod.rs` beside `reconciler`
+- [X] T001 Create `waybill-cli/src/resolve/scope_propagation.rs` with the module doc comment stating the two-phase contract, the lattice, and that it is strictly additive, citing `specs/1269-transitive-dev-scope/contracts/propagation-algorithm.md`
+- [X] T002 Register the module in `waybill-cli/src/resolve/mod.rs` beside `reconciler`
 
 **Checkpoint**: `cargo build -p waybill --all-targets` compiles with an empty module.
 
@@ -53,12 +53,12 @@ before adding plumbing.
 
 **⚠️ CRITICAL**: no user story work begins until this phase is complete — every story reads the lattice and the traversal edge set.
 
-- [ ] T003 Add `LifecycleScope::strength(&self) -> u8` to `waybill-common/src/resolution.rs` as an **exhaustive match** (FR-004) (`Runtime 4 > Optional 3 > Build 2 > Test 1 > Development 0`), with the doc comment recording why `Optional` outranks `Development` (optional may ship; development does not — the weaker claim about production is the safer one to publish) and why this is not `#[derive(Ord)]` (declaration order is invisible and silently wrong when a variant is inserted mid-list)
-- [ ] T004 [P] Add a unit test in `waybill-common/src/resolution.rs` asserting `strength()` is injective over all five variants (FR-004) (five distinct values) — a tie would make "strongest wins" ambiguous in a way the pass cannot detect
-- [ ] T005 Change `apply_lifecycle_scope_to_edges` in `waybill-cli/src/scan_fs/mod.rs:1904` from private to `pub(crate)`, leaving its body and its four tests at `:2663`–`:2721` untouched (research R4: it is idempotent, so it is re-run rather than moved)
-- [ ] T006 Implement the traversal edge-set predicate in `waybill-cli/src/resolve/scope_propagation.rs`: a dependency relation whose `provenance.data_type` is neither `cross-ecosystem-bridge` nor `cross-ecosystem-bridge-ambiguous` (FR-002b, research R3 — note `provenance.source` is NOT the discriminator, it holds the manifest path)
-- [ ] T007 Implement the P2 precondition assertion in `waybill-cli/src/resolve/scope_propagation.rs`: the input carries no relationship whose `provenance.source` is `milestone-868-resolve-ownership`, `milestone-860-retained-main-module`, or `milestone-158-workspace-peer-linkage`. FR-002a holds by placement today (every anchoring site is inside a format builder); this is what makes a future change that moves anchoring upstream fail loudly instead of silently immunizing population B
-- [ ] T008 [P] Unit tests in `waybill-cli/src/resolve/scope_propagation.rs` for T006 and T007: both bridge `data_type` values are excluded from the edge set, a manifest-path `source` is not, and a planted anchoring-provenance edge trips the assertion
+- [X] T003 Add `LifecycleScope::strength(&self) -> u8` to `waybill-common/src/resolution.rs` as an **exhaustive match** (FR-004) (`Runtime 4 > Optional 3 > Build 2 > Test 1 > Development 0`), with the doc comment recording why `Optional` outranks `Development` (optional may ship; development does not — the weaker claim about production is the safer one to publish) and why this is not `#[derive(Ord)]` (declaration order is invisible and silently wrong when a variant is inserted mid-list)
+- [X] T004 [P] Add a unit test in `waybill-common/src/resolution.rs` asserting `strength()` is injective over all five variants (FR-004) (five distinct values) — a tie would make "strongest wins" ambiguous in a way the pass cannot detect
+- [X] T005 Change `apply_lifecycle_scope_to_edges` in `waybill-cli/src/scan_fs/mod.rs:1904` from private to `pub(crate)`, leaving its body and its four tests at `:2663`–`:2721` untouched (research R4: it is idempotent, so it is re-run rather than moved)
+- [X] T006 Implement the traversal edge-set predicate in `waybill-cli/src/resolve/scope_propagation.rs`: a dependency relation whose `provenance.data_type` is neither `cross-ecosystem-bridge` nor `cross-ecosystem-bridge-ambiguous` (FR-002b, research R3 — note `provenance.source` is NOT the discriminator, it holds the manifest path)
+- [X] T007 Implement the P2 precondition assertion in `waybill-cli/src/resolve/scope_propagation.rs`: the input carries no relationship whose `provenance.source` is `milestone-868-resolve-ownership`, `milestone-860-retained-main-module`, or `milestone-158-workspace-peer-linkage`. FR-002a holds by placement today (every anchoring site is inside a format builder); this is what makes a future change that moves anchoring upstream fail loudly instead of silently immunizing population B
+- [X] T008 [P] Unit tests in `waybill-cli/src/resolve/scope_propagation.rs` for T006 and T007: both bridge `data_type` values are excluded from the edge set, a manifest-path `source` is not, and a planted anchoring-provenance edge trips the assertion
 
 **Checkpoint**: the lattice and the edge set are testable; no behaviour has changed in any emitted document.
 
@@ -72,18 +72,18 @@ before adding plumbing.
 
 ### Tests for User Story 2
 
-- [ ] T009 [US2] Add the mixed-reachability positive control to `waybill-cli/src/resolve/scope_propagation.rs` tests: `root → shared`, `root → devtool` (declared `Development`), `devtool → shared`; assert `shared` keeps `lifecycle_scope: None` and carries no C199 marker (FR-002, SC-003)
-- [ ] T010 [P] [US2] Add a test asserting a reader-assigned scope is never changed — a declared `Optional` component reachable from a `Development` seed stays `Optional` (FR-003)
-- [ ] T011 [P] [US2] Add a test asserting no assignment happens in an ecosystem with no root seed (FR-012) — immunity cannot be established there, and the failure direction is demotion
+- [X] T009 [US2] Add the mixed-reachability positive control to `waybill-cli/src/resolve/scope_propagation.rs` tests: `root → shared`, `root → devtool` (declared `Development`), `devtool → shared`; assert `shared` keeps `lifecycle_scope: None` and carries no C199 marker (FR-002, SC-003)
+- [X] T010 [P] [US2] Add a test asserting a reader-assigned scope is never changed — a declared `Optional` component reachable from a `Development` seed stays `Optional` (FR-003)
+- [X] T011 [P] [US2] Add a test asserting no assignment happens in an ecosystem with no root seed (FR-012) — immunity cannot be established there, and the failure direction is demotion
 
 ### Implementation for User Story 2
 
-- [ ] T012 [US2] Implement Phase A in `waybill-cli/src/resolve/scope_propagation.rs`: BFS from the root seed set over T006's edge set, never traversing *into* a component whose `lifecycle_scope` is `Some(s)` where `s != Runtime`; returns the immunity set
-- [ ] T013 [US2] Thread the per-ecosystem root seed set into the pass from the same source the emitters' completeness reporting uses (P3 in the algorithm contract), so immunity is computed from the root the document declares
+- [X] T012 [US2] Implement Phase A in `waybill-cli/src/resolve/scope_propagation.rs`: BFS from the root seed set over T006's edge set, never traversing *into* a component whose `lifecycle_scope` is `Some(s)` where `s != Runtime`; returns the immunity set
+- [X] T013 [US2] Thread the per-ecosystem root seed set into the pass from the same source the emitters' completeness reporting uses (P3 in the algorithm contract), so immunity is computed from the root the document declares
 
 ### Mutation evidence for User Story 2
 
-- [ ] T014 [US2] Delete the immunity check from the pass, re-run T009, and record the result in `specs/1269-transitive-dev-scope/measurements/mutation-evidence.md` — including the restored-green run. If T009 passes with the check deleted it is not exercising the guard and SC-003 is unmet; the test is the deliverable, not the assertion count
+- [X] T014 [US2] Delete the immunity check from the pass, re-run T009, and record the result in `specs/1269-transitive-dev-scope/measurements/mutation-evidence.md` — including the restored-green run. If T009 passes with the check deleted it is not exercising the guard and SC-003 is unmet; the test is the deliverable, not the assertion count
 
 **Checkpoint**: immunity works and is proven to be load-bearing. Nothing is marked yet, so every document is still byte-identical.
 
@@ -97,22 +97,22 @@ before adding plumbing.
 
 ### Tests for User Story 1
 
-- [ ] T015 [P] [US1] Add a cycle test to `waybill-cli/src/resolve/scope_propagation.rs`: a dependency cycle among non-runtime components terminates and every member is assigned (FR-011)
-- [ ] T016 [P] [US1] Add a population-B test: a component unreachable from the root but reachable from a declared non-runtime component IS marked (FR-005) — the case `pydantic`'s 103 live in, which root-seeded reachability alone would miss
-- [ ] T017 [P] [US1] Add a strongest-wins test: a component reached from both an `Optional` and a `Development` seed is assigned `Optional`, in both seed orders, proving the result is order-independent (FR-004, Q6). Assert the assigned value is an existing `LifecycleScope` variant equal to the seed's, not a new "transitively optional" one (FR-006) — the variant is what every consumer-side filter and every format's native scope mapping already keys on
-- [ ] T018 [P] [US1] Add an unscoped-transparency test: a component fed by one declared dev member and one unscoped orphan IS marked (FR-001 as clarified — only positive runtime reachability blocks marking)
+- [X] T015 [P] [US1] Add a cycle test to `waybill-cli/src/resolve/scope_propagation.rs`: a dependency cycle among non-runtime components terminates and every member is assigned (FR-011)
+- [X] T016 [P] [US1] Add a population-B test: a component unreachable from the root but reachable from a declared non-runtime component IS marked (FR-005) — the case `pydantic`'s 103 live in, which root-seeded reachability alone would miss
+- [X] T017 [P] [US1] Add a strongest-wins test: a component reached from both an `Optional` and a `Development` seed is assigned `Optional`, in both seed orders, proving the result is order-independent (FR-004, Q6). Assert the assigned value is an existing `LifecycleScope` variant equal to the seed's, not a new "transitively optional" one (FR-006) — the variant is what every consumer-side filter and every format's native scope mapping already keys on
+- [X] T018 [P] [US1] Add an unscoped-transparency test: a component fed by one declared dev member and one unscoped orphan IS marked (FR-001 as clarified — only positive runtime reachability blocks marking)
 
 ### Implementation for User Story 1
 
-- [ ] T019 [US1] Implement Phase B in `waybill-cli/src/resolve/scope_propagation.rs`: for each non-runtime scope strongest-first (`Optional, Build, Test, Development`), BFS from that scope's declared members over T006's edge set, recording an assignment for each reached component that is not immune and carries no scope. The assignment is the seed's own variant — no new variant is introduced (FR-006)
-- [ ] T020 [US1] Apply the assignments: set `lifecycle_scope` and write `waybill:lifecycle-scope-derivation = "transitive"` into `extra_annotations`, after all BFS passes complete so no component is read mid-mutation (FR-007, data-model "Apply")
-- [ ] T021 [US1] Return the `PropagationSummary` (`immune`, `assigned_by_scope`, `seeded_from`) and emit one INFO line when `assigned_by_scope` is non-empty, silent otherwise (research R9)
-- [ ] T022 [US1] Call the pass from `waybill-cli/src/cli/scan_cmd.rs` immediately after the second-pass m191 reconciler (`:4022`) and **before** the `--exclude-scope` filter (`:4034`), with a comment recording all three placement constraints from research R1
-- [ ] T023 [US1] Re-run `apply_lifecycle_scope_to_edges` at the same site, immediately after the pass, so edges into newly-marked components carry the typed relationship in every format (FR-010)
+- [X] T019 [US1] Implement Phase B in `waybill-cli/src/resolve/scope_propagation.rs`: for each non-runtime scope strongest-first (`Optional, Build, Test, Development`), BFS from that scope's declared members over T006's edge set, recording an assignment for each reached component that is not immune and carries no scope. The assignment is the seed's own variant — no new variant is introduced (FR-006)
+- [X] T020 [US1] Apply the assignments: set `lifecycle_scope` and write `waybill:lifecycle-scope-derivation = "transitive"` into `extra_annotations`, after all BFS passes complete so no component is read mid-mutation (FR-007, data-model "Apply")
+- [X] T021 [US1] Return the `PropagationSummary` (`immune`, `assigned_by_scope`, `seeded_from`) and emit one INFO line when `assigned_by_scope` is non-empty, silent otherwise (research R9)
+- [X] T022 [US1] Call the pass from `waybill-cli/src/cli/scan_cmd.rs` immediately after the second-pass m191 reconciler (`:4022`) and **before** the `--exclude-scope` filter (`:4034`), with a comment recording all three placement constraints from research R1
+- [X] T023 [US1] Re-run `apply_lifecycle_scope_to_edges` at the same site, immediately after the pass, so edges into newly-marked components carry the typed relationship in every format (FR-010)
 
 ### Verification for User Story 1
 
-- [ ] T024 [US1] Run quickstart check 1 against freshly emitted documents for `python-flask`, `rust-ripgrep`, `haskell-language-server` and `npm-express`; expect `0 / 0 / 0 / 0` where the committed goldens read `51 / 2 / 26 / 0`, and record the before/after in `specs/1269-transitive-dev-scope/measurements/`
+- [X] T024 [US1] Run quickstart check 1 against freshly emitted documents for `python-flask`, `rust-ripgrep`, `haskell-language-server` and `npm-express`; expect `0 / 0 / 0 / 0` where the committed goldens read `51 / 2 / 26 / 0`, and record the before/after in `specs/1269-transitive-dev-scope/measurements/`
 
 **Checkpoint**: the defect is fixed in-memory and measurable; goldens have not yet moved.
 
