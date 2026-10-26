@@ -52,11 +52,21 @@ pub enum CargoError {
 
 /// Failure classes from `cargo metadata --format-version 1 --offline
 /// --locked` shell-out. Every variant maps to the FR-004 fallback
-/// path: emit a WARN log naming the workspace + reason, then populate
-/// `activated_names` with the full `optional_names` set (safe over-
-/// inclusion — every optional dep flips to Runtime so downstream vuln-
-/// scanners never miss shipped deps). Display strings are wire-
-/// stable per data-model E1 (tests grep stderr for them).
+/// path: emit a WARN log naming the workspace + reason, then record
+/// the activation set as [`FeatureActivation::Unknown`] — safe over-
+/// inclusion, every optional dep classifying Runtime so downstream
+/// vuln-scanners never miss shipped deps.
+///
+/// Until #1272 this comment described the right behaviour and the
+/// code did the opposite: the fallback left an empty `HashSet`, which
+/// the classifier read as "nothing is activated", so every optional
+/// dep classified `Optional` and was emitted `scope: "excluded"`.
+/// Three places described the intent and the one place that executed
+/// contradicted them. The mechanism is now a type that cannot express
+/// the confusion — see [`FeatureActivation`].
+///
+/// Display strings are wire-stable per data-model E1 (tests grep
+/// stderr for them).
 #[derive(Debug, thiserror::Error)]
 pub(super) enum CargoMetadataResolveFailure {
     #[error("`cargo` binary not found on $PATH")]
@@ -69,6 +79,60 @@ pub(super) enum CargoMetadataResolveFailure {
     ParseError { source: serde_json::Error },
     #[error("`cargo metadata` I/O error: {0}")]
     IoError(#[from] std::io::Error),
+}
+
+/// What is known about which optional dependencies Cargo's resolved
+/// feature set actually activates.
+///
+/// Three-valued on purpose, and the distinction between the first two
+/// values is the whole reason this type exists. `Known(set)` with an
+/// empty set means `cargo metadata` ran and activated nothing;
+/// `Unknown` means waybill never found out. A bare `HashSet<String>`
+/// expressed both as "empty", and the classifier read "empty" as
+/// "nothing is activated".
+///
+/// That conflation is #1272. Under it, every declared-optional
+/// dependency classified [`LifecycleScope::Optional`] — emitted
+/// `scope: "excluded"` — whenever the subprocess was skipped or
+/// failed, which is the common case: `--offline` skips it outright
+/// (#771) and a cold registry cache fails it. On the `rust-ripgrep`
+/// corpus target that labelled three dependencies the binary actually
+/// ships — `log`, `serde` and `serde_json`, two of them declared
+/// non-optionally in the workspace root's own `[dependencies]` — as
+/// excluded from the build.
+///
+/// `Unknown` therefore answers "treat as activated" for every name.
+/// That is the direction milestone 205's own FR-004 documented, in
+/// the words of the module doc above: *safe over-inclusion — every
+/// optional dep flips to Runtime so downstream vuln-scanners never
+/// miss shipped deps*. The two directions are not symmetric. Over-
+/// including a dependency that does not ship costs a false positive
+/// in a downstream scanner; under-including one that does ship costs
+/// a false negative, and a false negative is the failure this field
+/// exists to prevent.
+#[derive(Debug, Clone)]
+pub(super) enum FeatureActivation {
+    /// `cargo metadata` resolved the feature set; these dep names are
+    /// activated. An empty set is meaningful: nothing is activated.
+    Known(HashSet<String>),
+    /// The subprocess was skipped or failed, so there is no activation
+    /// information at all. Distinct from `Known(empty)`.
+    Unknown,
+}
+
+impl FeatureActivation {
+    /// Whether `name` is to be treated as activated — i.e. as shipping.
+    ///
+    /// `Unknown` answers `true` for every name, so the caller's
+    /// "declared optional AND not activated" test cannot fire without
+    /// evidence. See the type's documentation for why that direction
+    /// and not the other.
+    fn treats_as_activated(&self, name: &str) -> bool {
+        match self {
+            FeatureActivation::Known(activated) => activated.contains(name),
+            FeatureActivation::Unknown => true,
+        }
+    }
 }
 
 /// Milestone 205 (FR-002 / FR-006): read `WAYBILL_CARGO_METADATA_TIMEOUT_SECS`
@@ -1427,7 +1491,7 @@ fn parse_lockfile(
     prod_set: &HashSet<(String, String)>,
     build_set: &HashSet<(String, String)>,
     optional_names: &HashSet<String>,
-    activated_names: &HashSet<String>,
+    activation: &FeatureActivation,
     root_names: &HashSet<String>,
 ) -> Result<Vec<PackageDbEntry>, CargoError> {
     let text = match std::fs::read_to_string(path) {
@@ -1507,19 +1571,37 @@ fn parse_lockfile(
                     entry.lifecycle_scope = Some(LifecycleScope::Runtime);
                 } else if prod_set.contains(&key)
                     && optional_names.contains(&pkg.name)
-                    && !activated_names.contains(&pkg.name)
+                    && !activation.treats_as_activated(&pkg.name)
                 {
                     // Milestone 205 (#593): dep is TRULY Optional iff
                     // declared `optional = true` in some workspace
                     // manifest AND NOT activated by the resolved
                     // feature set (per `cargo metadata --format-
                     // version 1 --offline --locked`
-                    // `resolve.nodes[].deps[]`). When cargo metadata
-                    // failed, the CALLER at `read` has already WARNed
-                    // (FR-004) and populated `activated_names` with
-                    // ALL `optional_names` — making this branch
-                    // unreachable (safe over-inclusion so vuln-
-                    // scanners never miss shipped deps).
+                    // `resolve.nodes[].deps[]`).
+                    //
+                    // Both halves are now required to be *known*.
+                    // When cargo metadata was skipped or failed the
+                    // caller passes `FeatureActivation::Unknown`,
+                    // which treats every name as activated, so this
+                    // branch does not fire — the safe over-inclusion
+                    // FR-004 always described. #1272 is what happened
+                    // while this comment claimed that and the code
+                    // left an empty set instead: the branch fired for
+                    // every declared-optional dep on every `--offline`
+                    // scan, emitting `scope: "excluded"` for
+                    // dependencies the artifact ships.
+                    //
+                    // The other half is still name-only: `optional_names`
+                    // is a union across every workspace manifest, so one
+                    // member declaring `optional = true` taints that name
+                    // for members that declare it non-optionally. On
+                    // `rust-ripgrep` that is how `log` and `serde_json`
+                    // reached this branch at all, both being plain
+                    // `[dependencies]` of the workspace root. Tracked
+                    // separately; this branch no longer fires without
+                    // activation evidence, which is what made the taint
+                    // observable.
                     entry.lifecycle_scope = Some(LifecycleScope::Optional);
                     entry.extra_annotations.insert(
                         "waybill:optional-derivation".to_string(),
@@ -1661,22 +1743,28 @@ pub(crate) fn finalize(
         // Milestone 205 (#593): resolve Cargo's actual feature-
         // activation set via `cargo metadata --format-version 1
         // --offline`. Fallback per FR-004: on failure (cargo absent,
-        // timeout, non-zero exit, missing Cargo.toml), preserve
-        // pre-m205 name-only classification (activated_names stays
-        // empty → classifier's `!activated_names.contains(&pkg.name)`
-        // always evaluates true → optional deps classify as Optional
-        // per manifest declaration). WARN log names the workspace +
-        // failure class so operators see when they're in reduced-
-        // fidelity mode.
+        // timeout, non-zero exit, missing Cargo.toml), record
+        // `FeatureActivation::Unknown` — no evidence, so the
+        // classifier's "declared optional AND not activated" test
+        // cannot fire and declared-optional deps classify Runtime.
+        // WARN log names the workspace + failure class so operators
+        // see when they're in reduced-fidelity mode.
         //
-        // Rationale for fallback semantics: preserving pre-m205
-        // classification is strictly zero-regression — nobody who
-        // worked before m205 is broken by the fallback. The reporter's
-        // case (#593, `test-vaultwarden`) has a warm cargo cache, so
+        // #1272 corrected the direction of this fallback. It used to
+        // leave an empty set, which the classifier could not tell from
+        // "cargo metadata ran and activated nothing", so the degraded
+        // path emitted `scope: "excluded"` for dependencies that ship.
+        // The goal stated here was "strictly zero-regression — nobody
+        // who worked before m205 is broken by the fallback", and that
+        // goal is what displaced FR-004's own stated goal of safe
+        // over-inclusion. Matching pre-m205 output is not worth
+        // asserting that a shipped dependency is excluded; the two
+        // error directions are not symmetric. The reporter's case
+        // (#593, `test-vaultwarden`) has a warm cargo cache, so
         // `cargo metadata --offline` succeeds → fix applies. Cold-
         // cache environments (fresh CI runners, lockfile-only test
-        // fixtures) get pre-m205 behavior + a WARN log naming the
-        // reason. The WARN is the operator-visible signal of reduced
+        // fixtures) classify declared-optional deps Runtime, with a
+        // WARN log naming the reason. The WARN is the operator-visible signal of reduced
         // fidelity per Constitution Principle X (transparency).
         //
         // Skip-gate: if no Cargo.toml exists in workspace_root,
@@ -1699,35 +1787,43 @@ pub(crate) fn finalize(
         let workspace_root = lock_path.parent().unwrap_or(&lock_path);
         let cargo_metadata_timeout = resolve_cargo_metadata_timeout();
         let offline = std::env::var("WAYBILL_OFFLINE").is_ok();
-        let activated_names: HashSet<String> = if !workspace_root
+        let activation: FeatureActivation = if !workspace_root
             .join("Cargo.toml")
             .exists()
         {
-            HashSet::new()
+            // Lockfile with no manifest beside it — a legitimate
+            // test-fixture shape, not a failure, so no log. There is
+            // no manifest to read features from, hence no evidence.
+            FeatureActivation::Unknown
         } else if offline {
             tracing::info!(
                 workspace = %workspace_root.display(),
-                "cargo metadata skipped under --offline; using name-only optional \
-                 classification (feature-activated optional deps may be misclassified \
-                 as scope=excluded)"
+                "cargo metadata skipped under --offline; no feature-activation \
+                 evidence, so declared-optional dependencies classify Runtime \
+                 (safe over-inclusion — run without --offline for the resolved \
+                 feature set)"
             );
-            HashSet::new()
+            FeatureActivation::Unknown
         } else {
             match resolve_activated_deps_via_cargo_metadata(
                 workspace_root,
                 cargo_metadata_timeout,
             ) {
-                Ok(names) => names,
+                Ok(names) => FeatureActivation::Known(names),
                 Err(e) => {
                     tracing::warn!(
                         workspace = %workspace_root.display(),
                         reason = %e,
-                        "cargo metadata failed; falling back to pre-m205 name-only \
-                         optional classification (reduced fidelity — feature-activated \
-                         optional deps may be misclassified as scope=excluded; install \
-                         cargo binary + populate registry cache for full-fidelity)"
+                        // "cargo metadata" and "falling back" are both
+                        // asserted by the FR-004 test (data-model E5
+                        // wording); keep them if this is reworded.
+                        "cargo metadata failed; falling back to safe over-inclusion \
+                         — no feature-activation evidence, so declared-optional \
+                         dependencies classify Runtime (install cargo binary + \
+                         populate registry cache to distinguish activated from \
+                         non-activated optionals)"
                     );
-                    HashSet::new()
+                    FeatureActivation::Unknown
                 }
             }
         };
@@ -1737,7 +1833,7 @@ pub(crate) fn finalize(
             &prod_set,
             &build_set,
             &workspace_sections.optional_deps,
-            &activated_names,
+            &activation,
             &workspace_sections.root_names,
         )?;
         for entry in entries {
@@ -2330,7 +2426,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0000000000000000000000000000000000000000000000000000000000000001"
 "#;
         let path = write_lockfile(dir.path(), body);
-        let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new()).unwrap();
+        let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &FeatureActivation::Unknown, &HashSet::new()).unwrap();
         assert_eq!(entries.len(), 2);
         assert!(entries.iter().any(|e| e.name == "serde"));
         let serde = entries.iter().find(|e| e.name == "serde").unwrap();
@@ -2352,7 +2448,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5ad32ce52e4161730f7098c077cd2ed6229b5804ccf99e5366be1ab72a98b4e1"
 "#;
         let path = write_lockfile(dir.path(), body);
-        let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new()).unwrap();
+        let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &FeatureActivation::Unknown, &HashSet::new()).unwrap();
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].name, "anyhow");
     }
@@ -2369,7 +2465,7 @@ version = "0.1.0"
 source = "git+https://github.com/me/my-fork?branch=main#abc123"
 "#;
         let path = write_lockfile(dir.path(), body);
-        let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new()).unwrap();
+        let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &FeatureActivation::Unknown, &HashSet::new()).unwrap();
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].source_type.as_deref(), Some("git"));
     }
@@ -2410,7 +2506,7 @@ source = "git+https://example.com/fork#abc123"
         let doc = parse_lockfile_doc(&path).unwrap().unwrap();
         let prod = compute_cargo_prod_set(&doc, &HashSet::from(["app".to_string()]));
         assert_eq!(prod.len(), 3, "legacy root participates in transitive traversal");
-        let entries = parse_lockfile(&path, &prod, &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new()).unwrap();
+        let entries = parse_lockfile(&path, &prod, &HashSet::new(), &HashSet::new(), &FeatureActivation::Unknown, &HashSet::new()).unwrap();
         assert_eq!(entries.len(), 4);
         let app = entries.iter().find(|e| e.name == "app").unwrap();
         assert_eq!(app.depends, ["x 0.1.0"]);
@@ -2440,7 +2536,7 @@ checksum = "0000000000000000000000000000000000000000000000000000000000000000"
 "#;
         for header in ["", "version = 1\n", "version = 2\n"] {
             let path = write_lockfile(dir.path(), &format!("{header}{body}"));
-            let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new()).unwrap();
+            let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &FeatureActivation::Unknown, &HashSet::new()).unwrap();
             assert_eq!(entries.len(), 1);
             assert_eq!(entries[0].purl.as_str(), "pkg:cargo/x@0.1.0");
             assert_eq!(entries[0].hashes, vec![ContentHash::sha256(&"0".repeat(64)).unwrap()]);
@@ -2480,7 +2576,7 @@ source = "registry+https://example.com/index"
 "checksum wrong-version 2.0.0 (registry+https://example.com/index)" = "0000000000000000000000000000000000000000000000000000000000000003"
 "#;
         let path = write_lockfile(dir.path(), body);
-        let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new()).unwrap();
+        let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &FeatureActivation::Unknown, &HashSet::new()).unwrap();
         assert_eq!(entries.len(), 4);
         assert_eq!(entries[0].hashes, vec![ContentHash::sha256(&format!("{:0>64}", "1")).unwrap()]);
         assert!(entries[1..].iter().all(|entry| entry.hashes.is_empty()));
@@ -2493,7 +2589,7 @@ source = "registry+https://example.com/index"
             let path = write_lockfile(dir.path(), &format!("version = {version}\n"));
             for err in [
                 parse_lockfile_doc(&path).unwrap_err(),
-                parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new()).unwrap_err(),
+                parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &FeatureActivation::Unknown, &HashSet::new()).unwrap_err(),
             ] {
                 assert!(err.to_string().contains(&path.display().to_string()));
                 assert!(matches!(err, CargoError::LockfileUnsupportedVersion { version: actual, .. } if actual == version));
@@ -3852,5 +3948,122 @@ version = "0.1.0"
         let bytes = b"line1\nline2\nline3\nline4\nline5";
         assert_eq!(cargo_metadata_cap_stderr_lines(bytes, 3), "line1\nline2\nline3");
         assert_eq!(cargo_metadata_cap_stderr_lines(b"only", 20), "only");
+    }
+
+    // ---------------------------------------------------------------
+    // #1272 — Unknown activation is not "nothing is activated"
+    // ---------------------------------------------------------------
+
+    use waybill_common::resolution::LifecycleScope;
+
+    /// A workspace with one declared-optional dependency that pulls one
+    /// exclusive transitive. `shipped` stands for a dependency declared
+    /// `optional = true`; `shipped-core` is reachable only through it,
+    /// which is the `ryu`/`itoa` shape from #1272.
+    fn optional_dep_lockfile(dir: &Path) -> PathBuf {
+        write_lockfile(
+            dir,
+            r#"
+version = 3
+
+[[package]]
+name = "app"
+version = "0.1.0"
+dependencies = ["shipped 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)"]
+
+[[package]]
+name = "shipped"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = ["shipped-core 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)"]
+
+[[package]]
+name = "shipped-core"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+"#,
+        )
+    }
+
+    /// Classify `optional_dep_lockfile` under a given activation state,
+    /// returning `(scope of shipped, scope of shipped-core)`.
+    fn classify_under(
+        activation: &FeatureActivation,
+    ) -> (Option<LifecycleScope>, Option<LifecycleScope>) {
+        let dir = tempfile::tempdir().unwrap();
+        let path = optional_dep_lockfile(dir.path());
+        let doc = parse_lockfile_doc(&path).unwrap().unwrap();
+        let prod = compute_cargo_prod_set(&doc, &HashSet::from(["app".to_string()]));
+        let optional_names = HashSet::from(["shipped".to_string()]);
+        let entries = parse_lockfile(
+            &path,
+            &prod,
+            &HashSet::new(),
+            &optional_names,
+            activation,
+            &HashSet::from(["app".to_string()]),
+        )
+        .unwrap();
+        let scope_of = |name: &str| {
+            entries
+                .iter()
+                .find(|e| e.name == name)
+                .unwrap_or_else(|| panic!("{name} present in {entries:?}"))
+                .lifecycle_scope
+        };
+        (scope_of("shipped"), scope_of("shipped-core"))
+    }
+
+    /// #1272: with no activation evidence, a declared-optional
+    /// dependency must classify `Runtime`, not `Optional`.
+    ///
+    /// This is the defect's direction. `--offline` skips the cargo
+    /// metadata subprocess (#771) and a cold registry cache fails it,
+    /// so this is the common path, not an edge case — and under it
+    /// `rust-ripgrep` emitted `scope: "excluded"` for three
+    /// dependencies the binary ships.
+    #[test]
+    fn unknown_activation_classifies_a_declared_optional_dep_runtime() {
+        let (shipped, core) = classify_under(&FeatureActivation::Unknown);
+        assert_eq!(
+            shipped,
+            Some(LifecycleScope::Runtime),
+            "with no activation evidence a declared-optional dep must not be \
+             asserted non-runtime; that assertion is a false negative for every \
+             downstream scanner"
+        );
+        assert_eq!(
+            core,
+            Some(LifecycleScope::Runtime),
+            "its exclusive transitive follows it"
+        );
+    }
+
+    /// The control, and the reason [`FeatureActivation`] exists rather
+    /// than an `Option`-free set: `Known` with an empty set is real
+    /// evidence that nothing is activated, and must still classify
+    /// `Optional`.
+    ///
+    /// Without this test, `treats_as_activated` could return `true`
+    /// unconditionally and nothing above would notice — the fix would
+    /// have deleted the branch rather than gated it.
+    #[test]
+    fn known_empty_activation_still_classifies_it_optional() {
+        let (shipped, _core) = classify_under(&FeatureActivation::Known(HashSet::new()));
+        assert_eq!(
+            shipped,
+            Some(LifecycleScope::Optional),
+            "an empty Known set is evidence, not absence of evidence"
+        );
+    }
+
+    /// m205 US1 at unit level: named in the activation set, so it
+    /// ships, so `Runtime`.
+    #[test]
+    fn known_activation_naming_the_dep_classifies_it_runtime() {
+        let (shipped, _core) = classify_under(&FeatureActivation::Known(HashSet::from([
+            "shipped".to_string(),
+        ])));
+        assert_eq!(shipped, Some(LifecycleScope::Runtime));
     }
 }

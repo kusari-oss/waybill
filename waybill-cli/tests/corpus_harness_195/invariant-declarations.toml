@@ -117,19 +117,45 @@ target = "rust-ripgrep"
 kind = "unmarked-non-runtime-reachable"
 count_at_declaration = 2
 reason = """
-Not #1209's defect, and not fixable by the pass that closed it. The cargo
-reader scopes `serde_json` `optional` — declared `optional = true` and not
-activated by the resolved feature set — and then scopes its two exclusive
-transitives `ryu` and `itoa` `Runtime`, because the prod-set BFS walks
-THROUGH a non-activated optional dependency without consulting the
-activation set milestone 205 already computed. So the reader asserts both
-"ryu is a runtime component" and "the only thing that depends on ryu is
-not runtime".
+Not #1209's defect, and not fixable by the pass that closed it. The fix
+belongs in the reader. #1272.
 
-Milestone 1269's propagation pass reaches both crates and declines to mark
-them, correctly: FR-003 makes it strictly additive, and overwriting an
-explicit `Runtime` is the one direction its mutation evidence exists to
-prevent. The fix belongs in the reader. #1272.
+The reason recorded here when the entry was written named the wrong
+component, and is corrected rather than carried, because a declaration
+whose reason names the wrong defect is what this file's rule exists to
+prevent. It said `serde_json` was "declared `optional = true` and not
+activated by the resolved feature set", and that its two exclusive
+transitives `ryu` and `itoa` were therefore wrongly `Runtime`. Measured
+against ripgrep's own manifests, the opposite holds:
+
+  * the workspace root's `[dependencies]` declares `serde_json = "1.0.23"`
+    plainly and non-optionally — ripgrep links it for `--json` output;
+  * `crates/printer` declares it `optional = true` but sets
+    `default = ["serde"]` with `serde = ["dep:serde", "dep:serde_json"]`,
+    so the default feature set activates it;
+  * `cargo metadata` on the pinned checkout confirms it resolves.
+
+So `serde_json` ships, `ryu` and `itoa` scoped `Runtime` are correct, and
+the wrongly-scoped component is `serde_json` itself — emitted
+`scope: "excluded"`, along with `serde` and `log`, the latter also a plain
+non-optional `[dependencies]` entry of the root. Three dependencies the
+binary ships, marked excluded from the build.
+
+Two causes, and the first is what made the second observable. The corpus
+lane scans `--offline`, which skips the milestone-205 cargo-metadata
+subprocess (#771), and the empty activation set left behind was
+indistinguishable from "cargo metadata ran and activated nothing" — so
+every declared-optional name classified `Optional`. Separately,
+`optional_names` is a name-only union across workspace manifests, so
+`crates/printer` saying `optional = true` taints the name for the root's
+own non-optional declaration of it.
+
+Had the originally proposed fix been applied — refuse to walk the prod-set
+BFS through a non-activated optional — it would have demoted `ryu` and
+`itoa` to `Development` under that same empty set, turning two correct
+scopes into wrong ones to resolve an inconsistency caused by a third. It
+would also have satisfied this entry's acceptance criterion while doing
+so, since the I3 count reaches zero either way.
 """
 issue = 1272
 
