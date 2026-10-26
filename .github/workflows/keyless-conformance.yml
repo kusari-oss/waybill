@@ -70,7 +70,7 @@ jobs:
           # +2m18s linux, +5m43s macOS, +6m03s windows.
           toolchain: "1.98.1"
 
-      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
 
       # Staging verification needs the sigstore CLI: cosign has no
       # built-in staging mode and would need a trusted-root file.
