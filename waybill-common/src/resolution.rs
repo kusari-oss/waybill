@@ -496,6 +496,48 @@ impl LifecycleScope {
     pub fn is_non_runtime(&self) -> bool {
         !matches!(self, LifecycleScope::Runtime)
     }
+
+    /// Every variant, once. Exists so that callers which need to
+    /// reason about the whole lattice — rather than about one scope
+    /// they were handed — can be checked against it instead of
+    /// against a second hand-written list of their own.
+    ///
+    /// #1275 is what this is for. `--exclude-scope` mirrors this enum
+    /// minus `Runtime` in a separate `ValueEnum`, and when `Optional`
+    /// was added here by m179 the flag's copy was not extended, so
+    /// for four milestones the flag silently could not name a scope
+    /// waybill assigns. Nothing failed, because nothing compared the
+    /// two lists.
+    ///
+    /// A hand-written list that mirrors an enum is exactly the thing
+    /// that goes stale, so this one does not stand on its own:
+    /// [`LifecycleScope::index`] is an exhaustive match, and
+    /// `all_holds_every_variant_in_index_order` asserts the two
+    /// agree. Adding a sixth variant fails to compile in `index`; the
+    /// index the author then writes fails the test until `ALL` grows
+    /// to hold it.
+    pub const ALL: [LifecycleScope; 5] = [
+        LifecycleScope::Runtime,
+        LifecycleScope::Optional,
+        LifecycleScope::Build,
+        LifecycleScope::Test,
+        LifecycleScope::Development,
+    ];
+
+    /// This variant's position in [`LifecycleScope::ALL`].
+    ///
+    /// Exhaustive by construction: it is the compile-time half of the
+    /// guard described on `ALL`, and has no other caller. Not a claim
+    /// about ordering — [`LifecycleScope::strength`] is the lattice.
+    pub fn index(&self) -> usize {
+        match self {
+            LifecycleScope::Runtime => 0,
+            LifecycleScope::Optional => 1,
+            LifecycleScope::Build => 2,
+            LifecycleScope::Test => 3,
+            LifecycleScope::Development => 4,
+        }
+    }
 }
 
 /// Milestone 104 — role classification for binary-reader-discovered
@@ -617,13 +659,7 @@ mod tests {
     /// pass's choice arbitrary in a way it could not detect.
     #[test]
     fn lifecycle_scope_strength_is_injective_and_ordered() {
-        let all = [
-            LifecycleScope::Runtime,
-            LifecycleScope::Optional,
-            LifecycleScope::Build,
-            LifecycleScope::Test,
-            LifecycleScope::Development,
-        ];
+        let all = LifecycleScope::ALL;
         let mut strengths: Vec<u8> = all.iter().map(LifecycleScope::strength).collect();
         let before = strengths.len();
         strengths.sort_unstable();
@@ -643,6 +679,42 @@ mod tests {
         // Optional outranks Development — see the doc comment.
         assert!(
             LifecycleScope::Optional.strength() > LifecycleScope::Development.strength()
+        );
+    }
+
+    /// #1275: `ALL` is a hand-written list that mirrors the enum, and
+    /// a hand-written list that mirrors an enum is the thing that
+    /// goes stale — it is how `--exclude-scope` came to be missing
+    /// `Optional` for four milestones.
+    ///
+    /// This is the half of the guard that runs. The other half is
+    /// that `index` is an exhaustive match: a sixth variant cannot
+    /// compile without being given an index there, and the index it
+    /// is given then fails here until `ALL` holds it. Neither half
+    /// works alone — a test over `ALL` alone never sees a variant
+    /// `ALL` omits.
+    #[test]
+    fn all_holds_every_variant_in_index_order() {
+        for (position, scope) in LifecycleScope::ALL.iter().enumerate() {
+            assert_eq!(
+                scope.index(), position,
+                "{} sits at ALL[{position}] but indexes itself {};                  ALL and index() disagree",
+                scope.as_str(), scope.index(),
+            );
+        }
+        // Catches the other direction: an index assigned in the
+        // exhaustive match that ALL has no room for. A variant added
+        // to `index` as `=> 5` leaves nothing at ALL[5], so some
+        // position in 0..ALL.len() is claimed twice and the loop
+        // above fires — unless the author also grew ALL, which is the
+        // point.
+        let mut seen: Vec<usize> =
+            LifecycleScope::ALL.iter().map(LifecycleScope::index).collect();
+        seen.sort_unstable();
+        seen.dedup();
+        assert_eq!(
+            seen.len(), LifecycleScope::ALL.len(),
+            "two variants in ALL share an index"
         );
     }
 

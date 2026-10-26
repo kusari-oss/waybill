@@ -1197,7 +1197,7 @@ For the full per-row wire-shape detail across all 100+ catalog rows, see [`sbom-
 
 | Flag | Effect on emission |
 |---|---|
-| `--exclude-scope <dev,build,test>` | Default waybill scans INCLUDE dev/build/test-scoped components (and emit `waybill:lifecycle-scope` annotations for non-runtime entries). This flag DROPS the listed scopes from `components[]` — operator-side opt-out for production-only views. |
+| `--exclude-scope <dev,build,test,optional>` | Default waybill scans INCLUDE dev/build/test/optional-scoped components (and emit `waybill:lifecycle-scope` annotations for non-runtime entries). This flag DROPS the listed scopes from `components[]` — operator-side opt-out for production-only views. Scopes waybill inferred transitively (`waybill:lifecycle-scope-derivation = transitive`) are dropped on the same footing as reader-declared ones. |
 | `--file-inventory=full` | Bypasses milestone-133 hybrid dedup; emits `waybill:file-inventory-mode = "full"` as a transparency marker. Default `orphan` mode does not emit this marker. |
 | `--file-inventory=off` | Disables file-tier emission entirely. `waybill:component-tier = "file"` components do not appear. |
 | `--preserve-manifest-main-module` | Enables `waybill:demoted-from-main-module` annotations when used with `--root-name` / `--root-version` / `--root-purl` overrides. |

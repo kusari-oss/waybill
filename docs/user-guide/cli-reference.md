@@ -44,7 +44,7 @@ noun on every subcommand (clap's flag-position-tolerant parser).
 | Flag | Type | Default | Description |
 |---|---|---|---|
 | `--offline` | bool | off | Disable all outbound network calls (deps.dev, ClearlyDefined). |
-| `--exclude-scope <SCOPE>` | enum (repeatable, comma-separated) | (none) | Drop components whose lifecycle scope matches any listed value. Valid: `dev`, `build`, `test`. Runtime scope is always retained. |
+| `--exclude-scope <SCOPE>` | enum (repeatable, comma-separated) | (none) | Drop components whose lifecycle scope matches any listed value. Valid: `dev`, `build`, `test`, `optional`. Runtime scope is always retained. |
 | `--include-declared-deps` | bool | off (`--image`) / on (`--path`) | Include declared-but-not-on-disk dependencies (manifest SBOM mode). |
 | `--include-legacy-rpmdb` | bool | off | Read legacy Berkeley-DB rpmdb on pre-RHEL-8 / CentOS-7 / Amazon-Linux-2 images. Also enabled via `WAYBILL_INCLUDE_LEGACY_RPMDB=1`. |
 | `--timeout <SECONDS>` | u64 | disabled | Wall-clock time limit for the entire waybill invocation. Exits with status 124 (POSIX `timeout(1)` convention) when exceeded. Set to `0` (or omit) to disable. |
@@ -79,8 +79,8 @@ See also: [Configuration](configuration.md) for the full offline-mode contract.
 ### `--exclude-scope <SCOPE[,SCOPE...]>`
 
 Drop components whose lifecycle scope matches any of the listed values. Comma-
-separated. Valid values: `dev`, `build`, `test`. Runtime-scope is always
-retained — excluding all of runtime would produce an empty SBOM.
+separated. Valid values: `dev`, `build`, `test`, `optional`. Runtime-scope is
+always retained — excluding all of runtime would produce an empty SBOM.
 
 `--exclude-scope dev,build,test` produces the strict "what shipped to production"
 view. `--exclude-scope test` drops only test deps; `--exclude-scope dev,build`
@@ -90,7 +90,20 @@ keeps test deps for security-audit workflows.
 waybill sbom scan --path . --exclude-scope dev,build,test --output runtime.cdx.json
 ```
 
-When omitted, waybill emits all scopes (Runtime + Development + Build + Test).
+`optional` is deliberately not part of the "what shipped" set above. An
+optional dependency is one the consumer MAY install, so a document
+filtered with `optional` describes a build that declined every optional
+— a different claim from one that excludes dependencies which do not
+ship at all. Name it when that is the question you are asking (#1275).
+
+Scopes waybill inferred rather than read are dropped on the same footing
+as the declared members they came from. Those components carry
+`waybill:lifecycle-scope-derivation = transitive`; see
+[reading a waybill SBOM](../reference/reading-a-mikebom-sbom.md) for what
+that marker distinguishes.
+
+When omitted, waybill emits all scopes (Runtime + Development + Build +
+Test + Optional).
 
 ### `--include-declared-deps`
 

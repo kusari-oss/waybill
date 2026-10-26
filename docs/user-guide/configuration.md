@@ -18,7 +18,7 @@ Global flags apply to every subcommand. They can be passed before the noun
 | Flag | Env var | Description |
 |---|---|---|
 | `--offline` | — | Disables all outbound HTTP calls (deps.dev, ClearlyDefined). The scanner still produces a complete SBOM from local sources. |
-| `--exclude-scope <SCOPE>` | — | Drop components whose lifecycle scope matches any listed value. Valid: `dev`, `build`, `test`. Comma-separated; runtime always retained. |
+| `--exclude-scope <SCOPE>` | — | Drop components whose lifecycle scope matches any listed value. Valid: `dev`, `build`, `test`, `optional`. Comma-separated; runtime always retained. |
 | `--include-declared-deps` | — | Include declared-but-not-on-disk dependencies (manifest SBOM mode). Auto-on for `--path`; explicit for `--image`. |
 | `--include-legacy-rpmdb` | `WAYBILL_INCLUDE_LEGACY_RPMDB=1` | Read legacy Berkeley-DB rpmdb on pre-RHEL-8 / CentOS-7 / Amazon-Linux-2 images. |
 

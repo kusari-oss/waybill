@@ -9,16 +9,30 @@
 use clap::{Parser, Subcommand, ValueEnum};
 use tracing_subscriber::EnvFilter;
 
-/// Lifecycle-scope variants the `--exclude-scope` flag accepts.
-/// Maps to `waybill_common::resolution::LifecycleScope` non-Runtime
-/// variants — `Runtime` is intentionally not exposed (excluding it
-/// would produce an empty SBOM). Milestone 052/part-3.
+/// Lifecycle-scope variants the `--exclude-scope` flag accepts:
+/// every `waybill_common::resolution::LifecycleScope` except
+/// `Runtime`, which is deliberately not exposed because excluding it
+/// would produce an empty SBOM. Milestone 052/part-3; `Optional`
+/// added by #1275.
+///
+/// This enum mirrors a lattice that lives in another crate, and
+/// `Optional` is why it carries [`ExcludeScopeArg::from_lifecycle_scope`]
+/// rather than only the forward map. m179 added `Optional` to
+/// `LifecycleScope` four milestones after this flag shipped and did
+/// not extend this list, so the flag could not name a scope waybill
+/// assigns — including the one the #1209 propagation pass infers on
+/// the only hermetic fixture where it does the work. Nothing failed:
+/// both enums were internally consistent and nothing compared them.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ValueEnum)]
 #[clap(rename_all = "lowercase")]
 pub enum ExcludeScopeArg {
     Dev,
     Build,
     Test,
+    /// A dependency the consumer may or may not install. Excluding it
+    /// answers a different question from excluding `dev`: a dev
+    /// dependency does not ship, an optional one may.
+    Optional,
 }
 
 impl ExcludeScopeArg {
@@ -28,6 +42,30 @@ impl ExcludeScopeArg {
             ExcludeScopeArg::Dev => LifecycleScope::Development,
             ExcludeScopeArg::Build => LifecycleScope::Build,
             ExcludeScopeArg::Test => LifecycleScope::Test,
+            ExcludeScopeArg::Optional => LifecycleScope::Optional,
+        }
+    }
+
+    /// The flag value that excludes `scope`, or `None` for a scope
+    /// the flag deliberately does not expose.
+    ///
+    /// The reverse direction exists for its exhaustiveness, not for
+    /// its callers: a sixth `LifecycleScope` variant fails to compile
+    /// here, where the forward map above would have accepted it in
+    /// silence. Whoever adds it must then say which this is —
+    /// a droppable scope, or another `Runtime`-style exception — and
+    /// `the_flag_covers_every_scope_but_runtime` holds them to it.
+    pub fn from_lifecycle_scope(
+        scope: waybill_common::resolution::LifecycleScope,
+    ) -> Option<Self> {
+        use waybill_common::resolution::LifecycleScope;
+        match scope {
+            LifecycleScope::Development => Some(ExcludeScopeArg::Dev),
+            LifecycleScope::Build => Some(ExcludeScopeArg::Build),
+            LifecycleScope::Test => Some(ExcludeScopeArg::Test),
+            LifecycleScope::Optional => Some(ExcludeScopeArg::Optional),
+            // Excluding runtime would empty the document.
+            LifecycleScope::Runtime => None,
         }
     }
 }
@@ -122,7 +160,7 @@ Flag or env var — either one disables. Milestone 112.\
 
     /// Drop components whose lifecycle scope matches any of the
     /// listed values. Comma-separated. Valid values: `dev`,
-    /// `build`, `test`. Runtime-scope is always retained
+    /// `build`, `test`, `optional`. Runtime-scope is always retained
     /// (excluding all runtime would produce an empty SBOM).
     ///
     /// Example: `--exclude-scope dev,build,test` produces the
@@ -131,8 +169,21 @@ Flag or env var — either one disables. Milestone 112.\
     /// `--exclude-scope dev,build` keeps test for security-audit
     /// workflows.
     ///
+    /// `optional` is not a fourth flavor of "does not ship": an
+    /// optional dependency is one the consumer MAY install, so
+    /// dropping it answers a different question from dropping a dev
+    /// dependency, and a document filtered with it describes a build
+    /// that declined every optional. Name it deliberately rather
+    /// than reaching for it as part of "everything but runtime".
+    ///
+    /// Components the #1209 propagation pass scoped carry
+    /// `waybill:lifecycle-scope-derivation = transitive`, and this
+    /// flag drops them on the same footing as the declared members
+    /// they were inferred from.
+    ///
     /// When omitted, waybill emits all scopes (Runtime +
-    /// Development + Build + Test) — the milestone-052 default.
+    /// Development + Build + Test + Optional) — the milestone-052
+    /// default.
     #[arg(long, global = true, value_delimiter = ',')]
     exclude_scope: Vec<ExcludeScopeArg>,
 
@@ -413,5 +464,77 @@ async fn main() -> anyhow::Result<std::process::ExitCode> {
         }
         Commands::Fingerprints(cmd) => cli::fingerprints_cmd::execute(cmd).await,
         Commands::Repo(cmd) => cli::report_cmd::execute(cmd),
+    }
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod tests {
+    use super::ExcludeScopeArg;
+    use clap::ValueEnum;
+    use waybill_common::resolution::LifecycleScope;
+
+    /// #1275. The flag's enum and the lattice it mirrors live in
+    /// different crates, and for four milestones they disagreed by
+    /// one variant with nothing saying so. This is the test that
+    /// would have said so.
+    ///
+    /// It asserts the *intended* difference rather than equality,
+    /// because there is a real exception: `Runtime` is not exposed on
+    /// purpose. Asserting "the difference is exactly {Runtime}" is
+    /// what makes a second exception a decision someone has to come
+    /// here and write down.
+    #[test]
+    fn the_flag_covers_every_scope_but_runtime() {
+        let unexposed: Vec<&'static str> = LifecycleScope::ALL
+            .iter()
+            .filter(|scope| ExcludeScopeArg::from_lifecycle_scope(**scope).is_none())
+            .map(LifecycleScope::as_str)
+            .collect();
+        assert_eq!(
+            unexposed,
+            vec!["runtime"],
+            "--exclude-scope should name every scope but runtime. \
+             A scope listed here beyond `runtime` is one waybill can \
+             assign and an operator cannot filter, which is #1275."
+        );
+    }
+
+    /// The two maps are written by hand in opposite directions, so
+    /// they can disagree. `value_variants()` is clap's own list, which
+    /// means neither side of this round-trip is a list this file
+    /// maintains.
+    #[test]
+    fn the_flag_round_trips_through_the_lattice() {
+        for arg in ExcludeScopeArg::value_variants() {
+            let scope = arg.as_lifecycle_scope();
+            assert_eq!(
+                ExcludeScopeArg::from_lifecycle_scope(scope),
+                Some(*arg),
+                "{arg:?} maps to {} but {} maps back elsewhere",
+                scope.as_str(),
+                scope.as_str(),
+            );
+            assert_ne!(
+                scope,
+                LifecycleScope::Runtime,
+                "{arg:?} maps to Runtime; excluding it would empty the document",
+            );
+        }
+    }
+
+    /// The flag has to keep accepting `optional` as a word, not just
+    /// as a variant: the value is what an operator types and what
+    /// #1275's repro showed being rejected.
+    #[test]
+    fn optional_is_an_accepted_flag_value() {
+        assert_eq!(
+            ExcludeScopeArg::from_str("optional", false).unwrap(),
+            ExcludeScopeArg::Optional,
+        );
+        assert_eq!(
+            ExcludeScopeArg::Optional.as_lifecycle_scope(),
+            LifecycleScope::Optional,
+        );
     }
 }
