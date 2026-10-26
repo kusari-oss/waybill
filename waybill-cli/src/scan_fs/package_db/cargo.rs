@@ -3030,6 +3030,75 @@ foo = { package = "real-name", version = "1" }
         assert!(manifests[0].ends_with("Cargo.toml"));
     }
 
+    /// #1284 — manifest discovery follows the root manifest's
+    /// `[workspace] members`, and does not walk the tree.
+    ///
+    /// This is load-bearing in a way the function itself does not
+    /// advertise. `CargoTomlSections` unions `optional_deps` by name
+    /// across every manifest this returns, with no record of which
+    /// manifest declared what, so a member saying `optional = true`
+    /// makes that name a candidate for `LifecycleScope::Optional`
+    /// workspace-wide. What keeps that from mislabelling a dependency
+    /// something else depends on unconditionally is that the
+    /// classifier also requires the name to be absent from the
+    /// activation set — and the activation set comes from `cargo
+    /// metadata` run at this same root, which resolves exactly the
+    /// manifests this function returns.
+    ///
+    /// Union a manifest cargo's resolve does not cover and that
+    /// argument breaks: its plain declaration would not reach the
+    /// activation set, while its `optional = true` sibling would still
+    /// taint the name. Tree-walking discovery is the obvious way to
+    /// introduce that, which is why it is pinned here rather than left
+    /// to be true by accident.
+    ///
+    /// The end-to-end half is
+    /// `issue_1284_a_plain_declaration_in_another_member_keeps_it_runtime`
+    /// in `tests/cargo_optional_feature_resolve.rs`.
+    #[test]
+    fn discover_workspace_manifests_is_scoped_to_the_declared_workspace() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("Cargo.toml"),
+            "[workspace]\nmembers = [\"a\"]\n",
+        )
+        .unwrap();
+        std::fs::write(dir.path().join("Cargo.lock"), "version = 3\n").unwrap();
+        std::fs::create_dir_all(dir.path().join("a")).unwrap();
+        std::fs::write(
+            dir.path().join("a/Cargo.toml"),
+            "[package]\nname = \"a\"\nversion = \"0.1.0\"\n",
+        )
+        .unwrap();
+        // A crate sitting in the tree that the workspace does not
+        // declare. Cargo would not resolve it from this root, so its
+        // declarations must not be unioned either.
+        std::fs::create_dir_all(dir.path().join("unrelated")).unwrap();
+        std::fs::write(
+            dir.path().join("unrelated/Cargo.toml"),
+            "[package]\nname = \"unrelated\"\nversion = \"0.1.0\"\n\n\
+             [dependencies]\nonce_cell = \"1\"\n",
+        )
+        .unwrap();
+
+        let manifests = discover_workspace_manifests(&dir.path().join("Cargo.lock"));
+        let names: Vec<String> = manifests
+            .iter()
+            .map(|m| m.to_string_lossy().into_owned())
+            .collect();
+        assert!(
+            names.iter().any(|n| n.ends_with("a/Cargo.toml")),
+            "the declared member is discovered: {names:?}"
+        );
+        assert!(
+            !names.iter().any(|n| n.contains("unrelated")),
+            "a manifest the workspace does not declare MUST NOT be unioned, or the \
+             optional-name union can outrun what cargo metadata resolves (#1284): \
+             {names:?}"
+        );
+        assert_eq!(manifests.len(), 2, "root + one declared member: {names:?}");
+    }
+
     #[test]
     fn discover_workspace_manifests_expands_glob_members() {
         let dir = tempfile::tempdir().unwrap();
