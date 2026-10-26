@@ -82,3 +82,34 @@ SC-002 requires all five I3 declarations deleted. `rust-ripgrep`'s
 cannot be, as the feature is specified. Three others are unmeasured.
 Resolving this is a decision about FR-003, not an implementation
 detail — recorded here rather than worked around.
+
+## Resolution (2026-10-25)
+
+`rust-ripgrep` is split out as **#1272** — "cargo reader: transitives of
+a non-activated optional dependency are scoped Runtime". FR-003 stands
+unchanged; the pass correctly declines, and the fix belongs in the
+reader, which already has the data (milestone 205's `activated_names`)
+and does not use it when building `prod_set`.
+
+Consequences recorded in the spec rather than carried implicitly:
+
+- **SC-001** gains a second named exception, population (b): components
+  carrying a reader-assigned `Runtime`. It names `pkg:cargo/ryu@1.0.18`
+  and `pkg:cargo/itoa@1.0.11` by coordinate, so the carve-out cannot
+  quietly widen.
+- **SC-002** and **FR-014** drop from five declarations to four.
+  `rust-ripgrep`'s is retained, its `reason` rewritten to the measured
+  cause and its `issue` re-pointed to #1272 — in this change, not a
+  follow-up.
+- The first spec assumption's escape clause ("if implementation finds
+  any of them to be a different defect, that one is split out rather
+  than silently carried") is what fired here, and now records the
+  outcome.
+
+The three unmeasurable-on-this-host targets (`haskell-language-server`,
+`haskell-security-advisories`, `nix-closure-moat`) remain unmeasured
+until the corpus lane runs under T037. If any of them turns out to be
+ripgrep-shaped rather than flask-shaped, it joins #1272's population
+and its declaration is re-pointed the same way — which is why T038
+checks each cell individually rather than checking that the lane is
+green.

@@ -82,6 +82,7 @@ claim a number it did not move.
 - Q: Does the derivation marker appear on declared scopes, or only on inferred ones? → A: Only on inferred ones. The marker is emitted iff this pass assigned the scope; its absence alongside a non-runtime scope means a reader declared it. Follows the C197 `waybill:version-absence` precedent of marking only the anomalous population.
 - Q: In population B, is one non-runtime inbound path enough, or must every inbound path be non-runtime? → A: One is enough — an unscoped component is transparent to propagation. Only positive runtime reachability (FR-002, by declared paths per FR-002a) blocks marking; the absence of a scope on a neighbour is not evidence that a component ships.
 - Q: Which edges does propagation flow along? → A: The same declared-edge set the immunity traversal uses. An edge waybill inferred — anchoring or experimental cross-ecosystem — neither protects a component from marking nor propagates a scope to it. Symmetric by design, so nothing a heuristic produced can demote a component.
+- Q: `rust-ripgrep`'s two violators carry a reader-assigned `Runtime`, so FR-003 forbids this pass from marking them. Relax FR-003, or leave the target to a reader fix? → A: Leave it to a reader fix. FR-003 stands unchanged; the cargo reader defect is filed as **#1272** and `rust-ripgrep`'s I3 declaration is retained and re-pointed at it. Relaxing FR-003 would permit demoting an explicit `Runtime`, which is the one direction US2's mutation evidence exists to prevent.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -336,8 +337,16 @@ synthetic fixture.
   no root seed could be resolved.
 - **FR-013**: An ecosystem whose reader already marks transitives MUST
   produce byte-identical output. `npm-express` is the named control.
-- **FR-014**: Deleting the five I3 declarations MUST happen in the same
-  change as the fix, per the declarations file's stale-entry rule.
+- **FR-014**: Deleting the **four** I3 declarations this feature fixes
+  MUST happen in the same change as the fix, per the declarations file's
+  stale-entry rule: `python-flask`, `haskell-language-server`,
+  `haskell-security-advisories`, `nix-closure-moat`. `rust-ripgrep`'s is
+  **retained** with its `reason` rewritten and its `issue` re-pointed to
+  **#1272** — its two violators carry a reader-assigned `Runtime`, which
+  FR-003 forbids this pass from overwriting, so the declaration is not
+  stale after this change. Re-pointing it is part of this change, not a
+  follow-up, because a declaration whose reason names the wrong defect is
+  the failure mode the file's rule exists to prevent.
 - **FR-015**: The feature MUST produce a per-ecosystem record of
   outcomes (*fixed* / *already correct* / *not reached*), each citing a
   corpus target or a named synthetic fixture.
@@ -393,9 +402,17 @@ synthetic fixture.
 
 - **SC-001**: Zero components reachable only through non-runtime
   components are emitted without a non-runtime **scope**, across all 17
-  corpus targets and all three formats — excepting only components in an
-  ecosystem for which no root seed could be resolved, which FR-012
-  deliberately declines to touch and which any such exception MUST name.
+  corpus targets and all three formats — excepting exactly two named
+  populations, each of which any exception MUST identify by component:
+  (a) components in an ecosystem for which no root seed could be
+  resolved, which FR-012 deliberately declines to touch; and (b)
+  components carrying a reader-assigned `Runtime` scope, which FR-003
+  forbids this pass from overwriting. Population (b) is `rust-ripgrep`'s
+  `pkg:cargo/ryu@1.0.18` and `pkg:cargo/itoa@1.0.11`, tracked by
+  **#1272**; it is a carve-out for a reader defect, not a tolerance, and
+  any component appearing in it that is not scoped `Runtime` by a reader
+  is a failure of this criterion rather than an instance of the
+  exception.
   Expressed as a count of zero rather than as a reduction, so it cannot
   be satisfied by partial progress.
   **How the three-format clause is verified**: invariant I3 reads
@@ -404,8 +421,15 @@ synthetic fixture.
   in SPDX 2.3 and SPDX 3 or the parity suite fails. The coverage is
   therefore I3 plus C42 rather than three independent checks, and is
   stated here because an unstated chain is one that rots.
-- **SC-002**: All five I3 declarations are deleted and the corpus
-  invariant lane is green with none re-added.
+- **SC-002**: **Four** of the five I3 declarations are deleted —
+  `python-flask`, `haskell-language-server`,
+  `haskell-security-advisories`, `nix-closure-moat` — and the corpus
+  invariant lane is green with none re-added. The fifth,
+  `rust-ripgrep`, is retained with its reason rewritten and its issue
+  re-pointed to **#1272** per FR-014; the lane must show it still
+  declared and still at its declared `kind`, because a lane that passes
+  with a deleted declaration and a lane that passes with a correct one
+  are different results.
 - **SC-003**: A positive control exists as a synthetic fixture in which
   a component reachable by both a runtime and a dev path keeps runtime
   scope, and it fails if propagation is made unconditional. Mutation-
@@ -426,9 +450,20 @@ synthetic fixture.
 
 ## Assumptions
 
-- The five I3 declarations describe one defect class. Their reasons say
-  so explicitly; if implementation finds any of them to be a different
-  defect, that one is split out rather than silently carried.
+- The five I3 declarations were assumed to describe one defect class —
+  their reasons said so explicitly — and the assumption's own escape
+  clause fired: *if implementation finds any of them to be a different
+  defect, that one is split out rather than silently carried.*
+  `rust-ripgrep` is a different defect and **is** split out, as #1272.
+  Measured, not reasoned: its two violators are reached by Phase B and
+  are not immune, and are skipped only because the cargo reader already
+  assigned them `Runtime` while marking their sole dependant
+  non-runtime. The emitted documents cannot distinguish that population
+  from the unscoped one — `waybill:lifecycle-scope` is emitted only for
+  non-runtime scopes, so all 101 violators read as "no scope property"
+  in their goldens — which is why the split was invisible until the
+  pass ran. Recorded in
+  `measurements/t024-before-after.md`.
 - Counts in `invariant-declarations.toml` are context, not targets, by
   that file's own rule. SC-001 is therefore count-of-zero rather than a
   delta against 101.
