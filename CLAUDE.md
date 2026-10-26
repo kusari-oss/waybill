@@ -1,6 +1,6 @@
 # waybill Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-10-19
+Auto-generated from all feature plans. Last updated: 2026-10-25
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -425,6 +425,8 @@ Auto-generated from all feature plans. Last updated: 2026-10-19
 - One committed TOML file, `waybill-cli/tests/corpus_harness_195/invariant-must-pass.toml`. No runtime state and no per-run artifact of its own — the existing `target/invariants/run-<id>.json` gains fields. (1217-must-pass-registry)
 - Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. No nightly; `waybill-ebpf` untouched. + Existing only — `serde_json` (annotation values) and `std::collections::{HashMap, HashSet}`, both already imported by `generate/orphan_reason.rs`. **Zero new Cargo dependencies.** (1218-explain-every-orphan)
 - None. Annotations are emitted into the SBOM and never read back; two committed TOML edits in `invariant-declarations.toml`, no runtime state. (1218-explain-every-orphan)
+- Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. No nightly. `waybill-ebpf` untouched. + Existing only — `std::collections::{HashMap, HashSet, VecDeque, BTreeMap}`, `serde_json` (annotation value), `tracing` (one INFO summary). **Zero new Cargo dependencies** (FR-016). (1269-transitive-dev-scope)
+- N/A — the pass is a pure in-memory transform over the component and relationship slices; nothing persists beyond the emitted SBOM. (1269-transitive-dev-scope)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -618,9 +620,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 1269-transitive-dev-scope: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. No nightly. `waybill-ebpf` untouched. + Existing only — `std::collections::{HashMap, HashSet, VecDeque, BTreeMap}`, `serde_json` (annotation value), `tracing` (one INFO summary). **Zero new Cargo dependencies** (FR-016).
 - 1218-explain-every-orphan: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. No nightly. + Existing only — `serde_json` and `std::collections`, both already imported by the module changed. **Zero new Cargo dependencies.**
 - 1217-must-pass-registry: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. No nightly. + Existing only — `toml = "0.8"` (already parses the declarations file), `serde`/`serde_json`, and dev-only `tempfile`. **Zero new Cargo dependencies.**
-- 1156-version-absence-marker: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. No nightly; `waybill-ebpf` untouched. + Existing only — `serde`/`serde_json` (annotation values, document walking), `toml = "0.8"` (the new registry file; already parses the declarations file). **Zero new Cargo dependencies.**
 
 
 <!-- MANUAL ADDITIONS START -->

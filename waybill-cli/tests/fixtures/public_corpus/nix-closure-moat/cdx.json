@@ -1629,12 +1629,20 @@
       "name": "HUnit",
       "properties": [
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
           "name": "waybill:closure-role",
           "value": "artifact-input"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
@@ -1646,6 +1654,7 @@
         }
       ],
       "purl": "pkg:hackage/HUnit@1.6.2.0",
+      "scope": "excluded",
       "type": "library",
       "version": "1.6.2.0"
     },
@@ -1674,12 +1683,20 @@
       "name": "QuickCheck",
       "properties": [
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
           "name": "waybill:closure-role",
           "value": "artifact-input"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
@@ -1691,6 +1708,7 @@
         }
       ],
       "purl": "pkg:hackage/QuickCheck@2.15.0.1",
+      "scope": "excluded",
       "type": "library",
       "version": "2.15.0.1"
     },
@@ -1803,6 +1821,10 @@
       "name": "array",
       "properties": [
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "design"
         },
@@ -1811,11 +1833,16 @@
           "value": "compiler-supplied"
         },
         {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
+        },
+        {
           "name": "waybill:nixpkgs-component-origin",
           "value": "transitive"
         }
       ],
       "purl": "pkg:hackage/array",
+      "scope": "excluded",
       "type": "library"
     },
     {
@@ -1884,12 +1911,20 @@
       },
       "properties": [
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
           "name": "waybill:closure-role",
           "value": "artifact-input"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
@@ -1901,6 +1936,7 @@
         }
       ],
       "purl": "pkg:hackage/call-stack@0.4.0",
+      "scope": "excluded",
       "type": "library",
       "version": "0.4.0"
     },
@@ -2002,6 +2038,10 @@
       "name": "directory",
       "properties": [
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "design"
         },
@@ -2010,11 +2050,16 @@
           "value": "compiler-supplied"
         },
         {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
+        },
+        {
           "name": "waybill:nixpkgs-component-origin",
           "value": "transitive"
         }
       ],
       "purl": "pkg:hackage/directory",
+      "scope": "excluded",
       "type": "library"
     },
     {
@@ -2155,12 +2200,20 @@
       "name": "haskell-lexer",
       "properties": [
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
           "name": "waybill:closure-role",
           "value": "artifact-input"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
@@ -2172,6 +2225,7 @@
         }
       ],
       "purl": "pkg:hackage/haskell-lexer@1.2.1",
+      "scope": "excluded",
       "type": "library",
       "version": "1.2.1"
     },
@@ -2200,12 +2254,20 @@
       "name": "hspec-core",
       "properties": [
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
           "name": "waybill:closure-role",
           "value": "artifact-input"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
@@ -2217,6 +2279,7 @@
         }
       ],
       "purl": "pkg:hackage/hspec-core@2.11.17",
+      "scope": "excluded",
       "type": "library",
       "version": "2.11.17"
     },
@@ -2245,12 +2308,20 @@
       "name": "hspec-expectations",
       "properties": [
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
           "name": "waybill:closure-role",
           "value": "artifact-input"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
@@ -2262,6 +2333,7 @@
         }
       ],
       "purl": "pkg:hackage/hspec-expectations@0.8.4",
+      "scope": "excluded",
       "type": "library",
       "version": "0.8.4"
     },
@@ -2534,12 +2606,20 @@
       "name": "quickcheck-io",
       "properties": [
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
           "name": "waybill:closure-role",
           "value": "artifact-input"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
@@ -2551,6 +2631,7 @@
         }
       ],
       "purl": "pkg:hackage/quickcheck-io@0.2.0",
+      "scope": "excluded",
       "type": "library",
       "version": "0.2.0"
     },

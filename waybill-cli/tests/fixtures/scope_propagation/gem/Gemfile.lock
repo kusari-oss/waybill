@@ -1,0 +1,19 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    waybill-fixture-devtool (2.0.0)
+      waybill-fixture-devtool-core (= 3.0.0)
+    waybill-fixture-devtool-core (3.0.0)
+    waybill-fixture-runtime (1.5.0)
+      waybill-fixture-runtime-core (>= 1.0.0)
+    waybill-fixture-runtime-core (1.0.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  waybill-fixture-devtool (~> 2.0)
+  waybill-fixture-runtime (~> 1.5)
+
+BUNDLED WITH
+   2.5.3

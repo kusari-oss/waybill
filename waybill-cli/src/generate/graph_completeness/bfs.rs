@@ -84,11 +84,21 @@ fn pick_ecosystem_top<'a>(
 /// `metadata.component.bom-ref`, SPDX 2.3 root Package SPDXID, SPDX 3
 /// root `software_Package.spdxId`). Passed in from
 /// `compute_graph_completeness` at `mod.rs:156`.
-pub(super) fn build_ecosystem_root_set(
+/// The part of the seed set derived from `components[]` alone: the
+/// milestone-127 primary root plus one "top" main-module per
+/// remaining ecosystem. Returns `(roots, per_ecosystem_root)`.
+///
+/// Extracted from `build_ecosystem_root_set` for #1209 so the
+/// transitive scope-propagation pass seeds its reachability from the
+/// *same* implementation rather than a second notion of what the root
+/// is. The pass runs before the format builders, where `target_ref`
+/// does not exist yet and where the operator-override synthesis below
+/// would seed a document subject that has no edges in the in-memory
+/// graph — so the pass needs exactly this much and no more.
+pub(crate) fn component_root_seeds(
     components: &[ResolvedComponent],
     selection: &RootSelectionResult,
-    target_ref: &str,
-) -> EcosystemRootSet {
+) -> (HashSet<String>, HashMap<String, String>) {
     let mut roots: HashSet<String> = HashSet::new();
     let mut per_ecosystem_root: HashMap<String, String> = HashMap::new();
 
@@ -129,6 +139,16 @@ pub(super) fn build_ecosystem_root_set(
             per_ecosystem_root.insert(ecosystem.clone(), key);
         }
     }
+
+    (roots, per_ecosystem_root)
+}
+
+pub(super) fn build_ecosystem_root_set(
+    components: &[ResolvedComponent],
+    selection: &RootSelectionResult,
+    target_ref: &str,
+) -> EcosystemRootSet {
+    let (roots, mut per_ecosystem_root) = component_root_seeds(components, selection);
 
     // Milestone 192 (spec FR-001 / FR-002): operator-override
     // synthesis. When the primary selection subject is NOT a

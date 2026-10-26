@@ -210,6 +210,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -229,6 +235,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -363,6 +375,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -382,6 +400,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -609,6 +633,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -628,6 +658,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -921,6 +957,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -940,6 +982,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1074,6 +1122,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -1093,6 +1147,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1155,6 +1215,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -1174,6 +1240,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1464,6 +1536,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -1483,6 +1561,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1545,6 +1629,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -1564,6 +1654,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1626,6 +1722,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -1645,6 +1747,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -2433,6 +2541,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -2452,6 +2566,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -2747,6 +2867,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -2766,6 +2892,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -2828,6 +2960,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -2847,6 +2985,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -2909,6 +3053,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -2928,6 +3078,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -2990,6 +3146,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -3009,6 +3171,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3735,6 +3903,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -3754,6 +3928,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3816,6 +3996,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -3835,6 +4021,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3897,6 +4089,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -3916,6 +4114,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3978,6 +4182,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -3997,6 +4207,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -4059,6 +4275,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -4078,6 +4300,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -4140,6 +4368,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -4159,6 +4393,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -4302,6 +4542,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -4321,6 +4567,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -5228,6 +5480,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -5247,6 +5505,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -5546,6 +5810,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -5565,6 +5835,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -5627,6 +5903,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -5646,6 +5928,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -5801,6 +6089,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -5820,6 +6114,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -5882,6 +6182,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -5901,6 +6207,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -5963,6 +6275,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -5982,6 +6300,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -6302,6 +6626,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -6321,6 +6651,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -6383,6 +6719,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -6402,6 +6744,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -6464,6 +6812,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -6483,6 +6837,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -6896,6 +7256,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -6915,6 +7281,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -7225,6 +7597,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -7244,6 +7622,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -7306,6 +7690,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -7325,6 +7715,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -7620,6 +8016,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -7639,6 +8041,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -7701,6 +8109,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -7720,6 +8134,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -7875,6 +8295,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -7894,6 +8320,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -8340,6 +8772,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -8359,6 +8797,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -8421,6 +8865,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -8440,6 +8890,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -8502,6 +8958,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -8521,6 +8983,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -8583,6 +9051,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -8602,6 +9076,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -8757,6 +9237,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -8776,6 +9262,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -8838,6 +9330,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -8857,6 +9355,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -8919,6 +9423,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -8938,6 +9448,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -9000,6 +9516,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -9019,6 +9541,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -9573,6 +10101,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -9592,6 +10126,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -9654,6 +10194,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -9673,6 +10219,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -9735,6 +10287,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -9754,6 +10312,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -9884,6 +10448,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -9903,6 +10473,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -10037,6 +10613,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -10056,6 +10638,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -10118,6 +10706,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -10137,6 +10731,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -10687,6 +11287,12 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}"
         },
         {
@@ -10706,6 +11312,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-<masked>",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -11291,61 +11903,6 @@
       "spdxElementId": "SPDXRef-DocumentRoot-<masked>"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-D53IUJDLZG5R62UD",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-2Q7O4CPCBVQMV2BJ"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-E6CNMXCHNWAT77DO",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-2Q7O4CPCBVQMV2BJ"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-G4JMNHEBU7VSK3RV",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-2Q7O4CPCBVQMV2BJ"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-O7ISR4QRIUXOBGDN",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-2Q7O4CPCBVQMV2BJ"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-OAGFSXON4ZT66U3K",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-2Q7O4CPCBVQMV2BJ"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-RGNFEDCP67HORUGK",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-2Q7O4CPCBVQMV2BJ"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-TQHAJQFBY7VS6TDN",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-2Q7O4CPCBVQMV2BJ"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-UOYI5ALLN7KK6VFZ",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-2Q7O4CPCBVQMV2BJ"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-USLUUW6LXGRYNMUH",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-2Q7O4CPCBVQMV2BJ"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-YZ2MIPQWGEB5UZRZ",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-2Q7O4CPCBVQMV2BJ"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-ZIBQF5WBZHCXASVC",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-2Q7O4CPCBVQMV2BJ"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-2Q7O4CPCBVQMV2BJ"
@@ -11361,34 +11918,49 @@
       "spdxElementId": "SPDXRef-Package-2V3CDDMEZQEDV5QK"
     },
     {
+      "relatedSpdxElement": "SPDXRef-Package-OAGFSXON4ZT66U3K",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-3ELIHFTEYCTNYCHW"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-VJ4B64HRTZD3ENXV",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-3HJ6UX7E3PWLKFXK"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-ZN73XBX3XV5K337W",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-3HJ6UX7E3PWLKFXK"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-3HJ6UX7E3PWLKFXK"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-66LHHQMJNIDXBYTZ",
-      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-Package-ZN73XBX3XV5K337W",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-3LOVUJU6VZ6PMULZ"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-UI6DRVDCU5I6T4EL",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-3LOVUJU6VZ6PMULZ"
+      "relatedSpdxElement": "SPDXRef-Package-EZSK4BIHUZTA7OFO",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-3MEDRACPW2X3E7UV"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-UTSNVV6YJ7S3DDK2",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-3MEDRACPW2X3E7UV"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-3PQJMONW2YWT5NPP"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-HJYRSEOK3MOQ7QQK",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-3QIOII7LGCXCWUZD"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-SGRNALK5IJQHGE5P",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-3QIOII7LGCXCWUZD"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-E4V5BJ6OLPTANZIS",
@@ -11401,87 +11973,7 @@
       "spdxElementId": "SPDXRef-Package-4NAE2LK4YBLHHTRB"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-5PEFRI2WODRTWFFY",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-4PHT7OHK2K5SWN4O"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-DNBRVPWORZ7456NW",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-4PHT7OHK2K5SWN4O"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-E7GW44NAPCTLSLSL",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-4PHT7OHK2K5SWN4O"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-FPZWIH6CAOYU3T7P",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-4PHT7OHK2K5SWN4O"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-G4JMNHEBU7VSK3RV",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-4PHT7OHK2K5SWN4O"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-INYEPPGPVSI54ME5",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-4PHT7OHK2K5SWN4O"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-K44MJPZ7FNH6SDJ7",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-4PHT7OHK2K5SWN4O"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-LCP5FNC2ULJMEBVR",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-4PHT7OHK2K5SWN4O"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-N34KBSAMR2PZ7PIS",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-4PHT7OHK2K5SWN4O"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-QDZLPO6PZJVUK727",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-4PHT7OHK2K5SWN4O"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-QGIAENPIZEO22ALE",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-4PHT7OHK2K5SWN4O"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-SYPKVYFVHMJUGW4R",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-4PHT7OHK2K5SWN4O"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-T5SBYG2O6VGHV3R7",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-4PHT7OHK2K5SWN4O"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-WKG6BBCCN7AMNV5B",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-4PHT7OHK2K5SWN4O"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-YBFCOBY7QEBNIKRQ",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-4PHT7OHK2K5SWN4O"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-ZAOOBCAS2XFOSPO3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-4PHT7OHK2K5SWN4O"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-ZIBQF5WBZHCXASVC",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-4PHT7OHK2K5SWN4O"
     },
@@ -11571,77 +12063,47 @@
       "spdxElementId": "SPDXRef-Package-55A4LK6WRXM425ST"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-DNBRVPWORZ7456NW",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-AVCVX43M2SANNYHQ"
+      "relatedSpdxElement": "SPDXRef-Package-4PHT7OHK2K5SWN4O",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-5PEFRI2WODRTWFFY"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-E6CNMXCHNWAT77DO",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-AVCVX43M2SANNYHQ"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-E7GW44NAPCTLSLSL",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-AVCVX43M2SANNYHQ"
+      "relatedSpdxElement": "SPDXRef-Package-3LOVUJU6VZ6PMULZ",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-66LHHQMJNIDXBYTZ"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-FPZWIH6CAOYU3T7P",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-AVCVX43M2SANNYHQ"
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-66LHHQMJNIDXBYTZ"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-G4JMNHEBU7VSK3RV",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-AVCVX43M2SANNYHQ"
+      "relatedSpdxElement": "SPDXRef-Package-ZN73XBX3XV5K337W",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-66LHHQMJNIDXBYTZ"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-INYEPPGPVSI54ME5",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-AVCVX43M2SANNYHQ"
+      "relatedSpdxElement": "SPDXRef-Package-XO5H2O4DJA6OB7MD",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-6BPA3KLTTWXHUBUX"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-K44MJPZ7FNH6SDJ7",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-AVCVX43M2SANNYHQ"
+      "relatedSpdxElement": "SPDXRef-Package-SNCIZJPKATYLM2VQ",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-724VZR6EDYVAP5TA"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-LCP5FNC2ULJMEBVR",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-AVCVX43M2SANNYHQ"
+      "relatedSpdxElement": "SPDXRef-Package-RQQY5T4254RIL2OG",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-7PGGREEYPN52BKXA"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-N34KBSAMR2PZ7PIS",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-AVCVX43M2SANNYHQ"
+      "relatedSpdxElement": "SPDXRef-Package-FK3CORYC2337QRFT",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-ALQJGMN5NO43M2UX"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-QDZLPO6PZJVUK727",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-AVCVX43M2SANNYHQ"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-QGIAENPIZEO22ALE",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-AVCVX43M2SANNYHQ"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-SYPKVYFVHMJUGW4R",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-AVCVX43M2SANNYHQ"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-T5SBYG2O6VGHV3R7",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-AVCVX43M2SANNYHQ"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-WKG6BBCCN7AMNV5B",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-AVCVX43M2SANNYHQ"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-YBFCOBY7QEBNIKRQ",
+      "relatedSpdxElement": "SPDXRef-Package-E7GW44NAPCTLSLSL",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-AVCVX43M2SANNYHQ"
     },
@@ -11651,64 +12113,104 @@
       "spdxElementId": "SPDXRef-Package-AVCVX43M2SANNYHQ"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-ZAOOBCAS2XFOSPO3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-AVCVX43M2SANNYHQ"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-ZIBQF5WBZHCXASVC",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-AVCVX43M2SANNYHQ"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-E4V5BJ6OLPTANZIS",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-B5EHXR7Q6P6G4JFC"
     },
     {
+      "relatedSpdxElement": "SPDXRef-Package-FPZWIH6CAOYU3T7P",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-C3GW2XWP7Z4WYQHU"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-XO5H2O4DJA6OB7MD",
-      "relationshipType": "DEPENDS_ON",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-C3GW2XWP7Z4WYQHU"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ZN73XBX3XV5K337W",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-C3GW2XWP7Z4WYQHU"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-VUL4WSA5R3L2BFZZ",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-CIEJCZX5LZEKBYPT"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-E6CNMXCHNWAT77DO",
-      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-Package-EZSK4BIHUZTA7OFO",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-CYYCZOSVVVOEYWXM"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-2Q7O4CPCBVQMV2BJ",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-D53IUJDLZG5R62UD"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-ZIBQF5WBZHCXASVC",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-D53IUJDLZG5R62UD"
+      "relatedSpdxElement": "SPDXRef-Package-4PHT7OHK2K5SWN4O",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-DNBRVPWORZ7456NW"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-AVCVX43M2SANNYHQ",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-DNBRVPWORZ7456NW"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-QU6IFIUX53U5ZKGT",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-DNBRVPWORZ7456NW"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ZZM3NBYM763DY5CR",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-DNBRVPWORZ7456NW"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-WYD5WDXU3SFSR64A",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-DOM7F6NZSIXQTJP6"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-2Q7O4CPCBVQMV2BJ",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-E6CNMXCHNWAT77DO"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-AVCVX43M2SANNYHQ",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-E6CNMXCHNWAT77DO"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-D53IUJDLZG5R62UD",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-E6CNMXCHNWAT77DO"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-RQQY5T4254RIL2OG",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-E6CNMXCHNWAT77DO"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-SGRNALK5IJQHGE5P",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-E6CNMXCHNWAT77DO"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-WYD5WDXU3SFSR64A",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-E6CNMXCHNWAT77DO"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ZZM3NBYM763DY5CR",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-E6CNMXCHNWAT77DO"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-EGW2TY2DR73RY2HC"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-3MEDRACPW2X3E7UV",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-EZSK4BIHUZTA7OFO"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-CYYCZOSVVVOEYWXM",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-EZSK4BIHUZTA7OFO"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-OAGFSXON4ZT66U3K",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-EZSK4BIHUZTA7OFO"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-R6C2SQIDP2LJFXVP",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-EZSK4BIHUZTA7OFO"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-XUFQAA44XNPF6HGW",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-EZSK4BIHUZTA7OFO"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-HJYRSEOK3MOQ7QQK",
@@ -11721,31 +12223,11 @@
       "spdxElementId": "SPDXRef-Package-EZSK4BIHUZTA7OFO"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-ALQJGMN5NO43M2UX",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-FK3CORYC2337QRFT"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-ZIBQF5WBZHCXASVC",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-FK3CORYC2337QRFT"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-FK3CORYC2337QRFT"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-TQHAJQFBY7VS6TDN",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-FOAHULHWNRLP2F7K"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-UI6DRVDCU5I6T4EL",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-FOAHULHWNRLP2F7K"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-VJ4B64HRTZD3ENXV",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-FOAHULHWNRLP2F7K"
@@ -11756,39 +12238,69 @@
       "spdxElementId": "SPDXRef-Package-FOAHULHWNRLP2F7K"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-66LHHQMJNIDXBYTZ",
-      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-Package-VUL4WSA5R3L2BFZZ",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-FOAHULHWNRLP2F7K"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-4PHT7OHK2K5SWN4O",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-FPZWIH6CAOYU3T7P"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-C3GW2XWP7Z4WYQHU",
-      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-Package-AVCVX43M2SANNYHQ",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-FPZWIH6CAOYU3T7P"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-RH6PH5HTHCMBZECS",
-      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-Package-ZZM3NBYM763DY5CR",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-FPZWIH6CAOYU3T7P"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-RRIUYEPR6T43LWT4",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-FPZWIH6CAOYU3T7P"
+      "relatedSpdxElement": "SPDXRef-Package-2Q7O4CPCBVQMV2BJ",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-G4JMNHEBU7VSK3RV"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-G4JMNHEBU7VSK3RV",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-GWOUGWA7HAXMFBCI"
+      "relatedSpdxElement": "SPDXRef-Package-4PHT7OHK2K5SWN4O",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-G4JMNHEBU7VSK3RV"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-AVCVX43M2SANNYHQ",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-G4JMNHEBU7VSK3RV"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-GWOUGWA7HAXMFBCI",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-G4JMNHEBU7VSK3RV"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-RQQY5T4254RIL2OG",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-G4JMNHEBU7VSK3RV"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-VEXI56BXHYGQBNP4",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-G4JMNHEBU7VSK3RV"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-VUL4WSA5R3L2BFZZ",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-G4JMNHEBU7VSK3RV"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ZZM3NBYM763DY5CR",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-G4JMNHEBU7VSK3RV"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-XA3VRQJORFO3XKSR",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-HAPP47HHUQLHTEUD"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-3QIOII7LGCXCWUZD",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-HJYRSEOK3MOQ7QQK"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ",
@@ -11841,9 +12353,29 @@
       "spdxElementId": "SPDXRef-Package-ILWSOUQDRS33SBY7"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-SNCIZJPKATYLM2VQ",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-IQS7F7HXUQG5YV5O"
+      "relatedSpdxElement": "SPDXRef-Package-4PHT7OHK2K5SWN4O",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-INYEPPGPVSI54ME5"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-AVCVX43M2SANNYHQ",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-INYEPPGPVSI54ME5"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-QU6IFIUX53U5ZKGT",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-INYEPPGPVSI54ME5"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-RQQY5T4254RIL2OG",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-INYEPPGPVSI54ME5"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ZZM3NBYM763DY5CR",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-INYEPPGPVSI54ME5"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ",
@@ -11851,14 +12383,44 @@
       "spdxElementId": "SPDXRef-Package-IQS7F7HXUQG5YV5O"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-TQHAJQFBY7VS6TDN",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-JGFRNCEBLF3BNVVK"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-JGFRNCEBLF3BNVVK"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-4PHT7OHK2K5SWN4O",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-K44MJPZ7FNH6SDJ7"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-AVCVX43M2SANNYHQ",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-K44MJPZ7FNH6SDJ7"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ZZM3NBYM763DY5CR",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-K44MJPZ7FNH6SDJ7"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-VUL4WSA5R3L2BFZZ",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-KD652JI6MVHRRISG"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-4PHT7OHK2K5SWN4O",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-LCP5FNC2ULJMEBVR"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-AVCVX43M2SANNYHQ",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-LCP5FNC2ULJMEBVR"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ZZM3NBYM763DY5CR",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-LCP5FNC2ULJMEBVR"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ",
@@ -11866,8 +12428,28 @@
       "spdxElementId": "SPDXRef-Package-LEKQYBX2WWSIKQR6"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-TQHAJQFBY7VS6TDN",
-      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-Package-4PHT7OHK2K5SWN4O",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-N34KBSAMR2PZ7PIS"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-AVCVX43M2SANNYHQ",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-N34KBSAMR2PZ7PIS"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ZZM3NBYM763DY5CR",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-N34KBSAMR2PZ7PIS"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-RQQY5T4254RIL2OG",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-N4M5EOAI4XSZMC2S"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-XO5H2O4DJA6OB7MD",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-N4M5EOAI4XSZMC2S"
     },
     {
@@ -11876,34 +12458,49 @@
       "spdxElementId": "SPDXRef-Package-NTQOZ7VZTQI4DH24"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-3ELIHFTEYCTNYCHW",
-      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-Package-2Q7O4CPCBVQMV2BJ",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-O7ISR4QRIUXOBGDN"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-2Q7O4CPCBVQMV2BJ",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-OAGFSXON4ZT66U3K"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-RGNFEDCP67HORUGK",
-      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-Package-EZSK4BIHUZTA7OFO",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-OAGFSXON4ZT66U3K"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-TQHAJQFBY7VS6TDN",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-OAGFSXON4ZT66U3K"
+      "relatedSpdxElement": "SPDXRef-Package-4PHT7OHK2K5SWN4O",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-QDZLPO6PZJVUK727"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-UOYI5ALLN7KK6VFZ",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-OAGFSXON4ZT66U3K"
+      "relatedSpdxElement": "SPDXRef-Package-AVCVX43M2SANNYHQ",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-QDZLPO6PZJVUK727"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-DNBRVPWORZ7456NW",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-QU6IFIUX53U5ZKGT"
+      "relatedSpdxElement": "SPDXRef-Package-ZZM3NBYM763DY5CR",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-QDZLPO6PZJVUK727"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-INYEPPGPVSI54ME5",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-QU6IFIUX53U5ZKGT"
+      "relatedSpdxElement": "SPDXRef-Package-4PHT7OHK2K5SWN4O",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-QGIAENPIZEO22ALE"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-AVCVX43M2SANNYHQ",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-QGIAENPIZEO22ALE"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ZZM3NBYM763DY5CR",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-QGIAENPIZEO22ALE"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ",
@@ -11911,39 +12508,24 @@
       "spdxElementId": "SPDXRef-Package-QU6IFIUX53U5ZKGT"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-7PGGREEYPN52BKXA",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-RQQY5T4254RIL2OG"
+      "relatedSpdxElement": "SPDXRef-Package-EZSK4BIHUZTA7OFO",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-R6C2SQIDP2LJFXVP"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-E6CNMXCHNWAT77DO",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-RQQY5T4254RIL2OG"
+      "relatedSpdxElement": "SPDXRef-Package-2Q7O4CPCBVQMV2BJ",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-RGNFEDCP67HORUGK"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-G4JMNHEBU7VSK3RV",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-RQQY5T4254RIL2OG"
+      "relatedSpdxElement": "SPDXRef-Package-OAGFSXON4ZT66U3K",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-RGNFEDCP67HORUGK"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-INYEPPGPVSI54ME5",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-RQQY5T4254RIL2OG"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-N4M5EOAI4XSZMC2S",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-RQQY5T4254RIL2OG"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-YZ2MIPQWGEB5UZRZ",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-RQQY5T4254RIL2OG"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-ZIBQF5WBZHCXASVC",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-RQQY5T4254RIL2OG"
+      "relatedSpdxElement": "SPDXRef-Package-FPZWIH6CAOYU3T7P",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-RH6PH5HTHCMBZECS"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-B5EHXR7Q6P6G4JFC",
@@ -11961,24 +12543,9 @@
       "spdxElementId": "SPDXRef-Package-RQQY5T4254RIL2OG"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-3QIOII7LGCXCWUZD",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-SGRNALK5IJQHGE5P"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-E6CNMXCHNWAT77DO",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-SGRNALK5IJQHGE5P"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-TQHAJQFBY7VS6TDN",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-SGRNALK5IJQHGE5P"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-ZIBQF5WBZHCXASVC",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-SGRNALK5IJQHGE5P"
+      "relatedSpdxElement": "SPDXRef-Package-FPZWIH6CAOYU3T7P",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-RRIUYEPR6T43LWT4"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ",
@@ -11986,9 +12553,94 @@
       "spdxElementId": "SPDXRef-Package-SGRNALK5IJQHGE5P"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-724VZR6EDYVAP5TA",
-      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-Package-IQS7F7HXUQG5YV5O",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-SNCIZJPKATYLM2VQ"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-4PHT7OHK2K5SWN4O",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-SYPKVYFVHMJUGW4R"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-AVCVX43M2SANNYHQ",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-SYPKVYFVHMJUGW4R"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ZZM3NBYM763DY5CR",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-SYPKVYFVHMJUGW4R"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-4PHT7OHK2K5SWN4O",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-T5SBYG2O6VGHV3R7"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-AVCVX43M2SANNYHQ",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-T5SBYG2O6VGHV3R7"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ZZM3NBYM763DY5CR",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-T5SBYG2O6VGHV3R7"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-WYD5WDXU3SFSR64A",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-TIMXRDWKC3YJTFQH"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-2Q7O4CPCBVQMV2BJ",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-TQHAJQFBY7VS6TDN"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-FOAHULHWNRLP2F7K",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-TQHAJQFBY7VS6TDN"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-JGFRNCEBLF3BNVVK",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-TQHAJQFBY7VS6TDN"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-N4M5EOAI4XSZMC2S",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-TQHAJQFBY7VS6TDN"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-OAGFSXON4ZT66U3K",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-TQHAJQFBY7VS6TDN"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-SGRNALK5IJQHGE5P",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-TQHAJQFBY7VS6TDN"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-UTSNVV6YJ7S3DDK2",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-TQHAJQFBY7VS6TDN"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-VRB47QNNXJ4MNMEO",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-TQHAJQFBY7VS6TDN"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-WYD5WDXU3SFSR64A",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-TQHAJQFBY7VS6TDN"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-XO5H2O4DJA6OB7MD",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-TQHAJQFBY7VS6TDN"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-E4V5BJ6OLPTANZIS",
@@ -11996,109 +12648,99 @@
       "spdxElementId": "SPDXRef-Package-TUBIOX2YDGDATG5V"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-3MEDRACPW2X3E7UV",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-UTSNVV6YJ7S3DDK2"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-TQHAJQFBY7VS6TDN",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-UTSNVV6YJ7S3DDK2"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ",
+      "relatedSpdxElement": "SPDXRef-Package-3LOVUJU6VZ6PMULZ",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
-      "spdxElementId": "SPDXRef-Package-UTSNVV6YJ7S3DDK2"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-G4JMNHEBU7VSK3RV",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-VEXI56BXHYGQBNP4"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-TQHAJQFBY7VS6TDN",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-VRB47QNNXJ4MNMEO"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-XO5H2O4DJA6OB7MD",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-VRB47QNNXJ4MNMEO"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-CIEJCZX5LZEKBYPT",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-VUL4WSA5R3L2BFZZ"
+      "spdxElementId": "SPDXRef-Package-UI6DRVDCU5I6T4EL"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-FOAHULHWNRLP2F7K",
-      "relationshipType": "DEPENDS_ON",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-UI6DRVDCU5I6T4EL"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-2Q7O4CPCBVQMV2BJ",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-UOYI5ALLN7KK6VFZ"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-OAGFSXON4ZT66U3K",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-UOYI5ALLN7KK6VFZ"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-2Q7O4CPCBVQMV2BJ",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-USLUUW6LXGRYNMUH"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-UTSNVV6YJ7S3DDK2"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-VUL4WSA5R3L2BFZZ",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-VRB47QNNXJ4MNMEO"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-VUL4WSA5R3L2BFZZ"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-G4JMNHEBU7VSK3RV",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-VUL4WSA5R3L2BFZZ"
+      "relatedSpdxElement": "SPDXRef-Package-4PHT7OHK2K5SWN4O",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-WKG6BBCCN7AMNV5B"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-KD652JI6MVHRRISG",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-VUL4WSA5R3L2BFZZ"
+      "relatedSpdxElement": "SPDXRef-Package-AVCVX43M2SANNYHQ",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-WKG6BBCCN7AMNV5B"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ZZM3NBYM763DY5CR",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-WKG6BBCCN7AMNV5B"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-WYD5WDXU3SFSR64A"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-CIEJCZX5LZEKBYPT",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-XO5H2O4DJA6OB7MD"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-VRB47QNNXJ4MNMEO",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-VUL4WSA5R3L2BFZZ"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
-      "spdxElementId": "SPDXRef-Package-VUL4WSA5R3L2BFZZ"
+      "spdxElementId": "SPDXRef-Package-XO5H2O4DJA6OB7MD"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-DOM7F6NZSIXQTJP6",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-WYD5WDXU3SFSR64A"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-E6CNMXCHNWAT77DO",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-WYD5WDXU3SFSR64A"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-TIMXRDWKC3YJTFQH",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-WYD5WDXU3SFSR64A"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-TQHAJQFBY7VS6TDN",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-WYD5WDXU3SFSR64A"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-ICVLYQ3O4E2BDTHQ",
+      "relatedSpdxElement": "SPDXRef-Package-ZN73XBX3XV5K337W",
       "relationshipType": "OPTIONAL_DEPENDENCY_OF",
-      "spdxElementId": "SPDXRef-Package-WYD5WDXU3SFSR64A"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-6BPA3KLTTWXHUBUX",
-      "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-XO5H2O4DJA6OB7MD"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-C3GW2XWP7Z4WYQHU",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-XO5H2O4DJA6OB7MD"
+      "relatedSpdxElement": "SPDXRef-Package-EZSK4BIHUZTA7OFO",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-XUFQAA44XNPF6HGW"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-N4M5EOAI4XSZMC2S",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-XO5H2O4DJA6OB7MD"
+      "relatedSpdxElement": "SPDXRef-Package-4PHT7OHK2K5SWN4O",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-YBFCOBY7QEBNIKRQ"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-TQHAJQFBY7VS6TDN",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-XO5H2O4DJA6OB7MD"
+      "relatedSpdxElement": "SPDXRef-Package-AVCVX43M2SANNYHQ",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-YBFCOBY7QEBNIKRQ"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ZZM3NBYM763DY5CR",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-YBFCOBY7QEBNIKRQ"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-GUO7F4HCXR42DIAG",
@@ -12106,107 +12748,77 @@
       "spdxElementId": "SPDXRef-Package-YG5WXBXA5YHDLCHN"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-3LOVUJU6VZ6PMULZ",
-      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-Package-2Q7O4CPCBVQMV2BJ",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-YZ2MIPQWGEB5UZRZ"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-RQQY5T4254RIL2OG",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-YZ2MIPQWGEB5UZRZ"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-4PHT7OHK2K5SWN4O",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-ZAOOBCAS2XFOSPO3"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-AVCVX43M2SANNYHQ",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-ZAOOBCAS2XFOSPO3"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ZZM3NBYM763DY5CR",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-ZAOOBCAS2XFOSPO3"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-2Q7O4CPCBVQMV2BJ",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-ZIBQF5WBZHCXASVC"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-4PHT7OHK2K5SWN4O",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-ZIBQF5WBZHCXASVC"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-AVCVX43M2SANNYHQ",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-ZIBQF5WBZHCXASVC"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-D53IUJDLZG5R62UD",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-ZIBQF5WBZHCXASVC"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-FK3CORYC2337QRFT",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-ZIBQF5WBZHCXASVC"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-RQQY5T4254RIL2OG",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-ZIBQF5WBZHCXASVC"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-SGRNALK5IJQHGE5P",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-ZIBQF5WBZHCXASVC"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ZZM3NBYM763DY5CR",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-ZIBQF5WBZHCXASVC"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-3HJ6UX7E3PWLKFXK",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
       "spdxElementId": "SPDXRef-Package-ZN73XBX3XV5K337W"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-66LHHQMJNIDXBYTZ",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-ZN73XBX3XV5K337W"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-C3GW2XWP7Z4WYQHU",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-ZN73XBX3XV5K337W"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-XO5H2O4DJA6OB7MD",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-ZN73XBX3XV5K337W"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-DNBRVPWORZ7456NW",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-ZZM3NBYM763DY5CR"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-E6CNMXCHNWAT77DO",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-ZZM3NBYM763DY5CR"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-E7GW44NAPCTLSLSL",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-ZZM3NBYM763DY5CR"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-FPZWIH6CAOYU3T7P",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-ZZM3NBYM763DY5CR"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-G4JMNHEBU7VSK3RV",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-ZZM3NBYM763DY5CR"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-INYEPPGPVSI54ME5",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-ZZM3NBYM763DY5CR"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-K44MJPZ7FNH6SDJ7",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-ZZM3NBYM763DY5CR"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-LCP5FNC2ULJMEBVR",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-ZZM3NBYM763DY5CR"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-N34KBSAMR2PZ7PIS",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-ZZM3NBYM763DY5CR"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-QDZLPO6PZJVUK727",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-ZZM3NBYM763DY5CR"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-QGIAENPIZEO22ALE",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-ZZM3NBYM763DY5CR"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-SYPKVYFVHMJUGW4R",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-ZZM3NBYM763DY5CR"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-T5SBYG2O6VGHV3R7",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-ZZM3NBYM763DY5CR"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-WKG6BBCCN7AMNV5B",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-ZZM3NBYM763DY5CR"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-YBFCOBY7QEBNIKRQ",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-ZZM3NBYM763DY5CR"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-ZAOOBCAS2XFOSPO3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-ZZM3NBYM763DY5CR"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-ZIBQF5WBZHCXASVC",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-ZZM3NBYM763DY5CR"
     }

@@ -1,0 +1,35 @@
+{
+  "_readme": ["synthetic fixture for feature 1269; no real packages"],
+  "content-hash": "0000000000000000000000000000000000",
+  "packages": [
+    {
+      "name": "waybill-fixture/runtime",
+      "version": "1.5.0",
+      "type": "library",
+      "require": { "waybill-fixture/runtime-core": "^1.0" }
+    },
+    {
+      "name": "waybill-fixture/runtime-core",
+      "version": "1.0.0",
+      "type": "library",
+      "require": {}
+    }
+  ],
+  "packages-dev": [
+    {
+      "name": "waybill-fixture/devtool",
+      "version": "2.0.0",
+      "type": "library",
+      "require": { "waybill-fixture/devtool-core": "^3.0" }
+    },
+    {
+      "name": "waybill-fixture/devtool-core",
+      "version": "3.0.0",
+      "type": "library",
+      "require": {}
+    }
+  ],
+  "minimum-stability": "stable",
+  "prefer-stable": true,
+  "plugin-api-version": "2.6.0"
+}

@@ -8274,9 +8274,41 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-24FNV3AH77YPWATC",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-YZ2MIPQWGEB5UZRZ",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-24ZYKCG5GRMD2GWL",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-G4JMNHEBU7VSK3RV",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-26K6CRPFNNV6P5LT",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:watchfiles:watchfiles:1.1.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-watchfiles:watchfiles:1.1.0:*:*:*:*:*:*:*\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-CIEJCZX5LZEKBYPT",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-27ACDZW6V3GFWWD7",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-QDZLPO6PZJVUK727",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-27J33JBATQ62LAIQ",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-DNBRVPWORZ7456NW",
       "type": "Annotation"
     },
     {
@@ -8317,6 +8349,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-2CPUQXBXOGSTQHKS",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZAOOBCAS2XFOSPO3",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-2CSBKSPE3ZBGOCTM",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-KD652JI6MVHRRISG",
       "type": "Annotation"
     },
     {
@@ -8522,6 +8562,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-37SNBTAQGIAUMI77",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RGNFEDCP67HORUGK",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-37YM5WDDGDACOCGF",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"examples/celery/requirements.txt\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-VNDA4U5NABISVMCH",
@@ -8570,9 +8618,33 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-3DZUNGDM3VIAPQOJ",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-TIMXRDWKC3YJTFQH",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-3EUSYCV255WB3FIB",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-R6C2SQIDP2LJFXVP",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-3H6RG5OI3HATRO5J",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3LOVUJU6VZ6PMULZ",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-3J32ZVBYVTE7V7TL",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-724VZR6EDYVAP5TA",
       "type": "Annotation"
     },
     {
@@ -8618,6 +8690,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-3NSYPGCMDB4O4B2N",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-724VZR6EDYVAP5TA",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-3P76ID7PVNBP2MM7",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:h11:h11:0.16.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-h11:h11:0.16.0:*:*:*:*:*:*:*\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-UI6DRVDCU5I6T4EL",
@@ -8634,6 +8714,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-3RHNJJX7M4NZ4VLI",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-R6C2SQIDP2LJFXVP",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-3TJ43AQI4PCPF22V",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:python-lockfile-format\",\"value\":\"uv\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3HJ6UX7E3PWLKFXK",
@@ -8645,6 +8733,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-3WGXDJXGGQV5GHZR",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:python-lockfile-format\",\"value\":\"uv\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-WKG6BBCCN7AMNV5B",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-3X7BLAJJ6B5HYGAF",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-XO5H2O4DJA6OB7MD",
       "type": "Annotation"
     },
     {
@@ -8669,6 +8765,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-43DAIFNNYQ5XSHCH",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-XUFQAA44XNPF6HGW",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-44TKKW5OQBUMFKKM",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-O7ISR4QRIUXOBGDN",
       "type": "Annotation"
     },
     {
@@ -8730,6 +8834,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-4DFHIMBYFSX457KW",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ALQJGMN5NO43M2UX",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-4E4WNCOJ5ZG7HXLQ",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-66LHHQMJNIDXBYTZ",
@@ -8778,6 +8890,22 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-4JEVA7DA3SKYXDWE",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-INYEPPGPVSI54ME5",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-4JRAZMU3GYZ4MO6L",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-TQHAJQFBY7VS6TDN",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-4KLHNWG327CWA2IL",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"examples/javascript\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-B5EHXR7Q6P6G4JFC",
@@ -8802,6 +8930,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-4LOM7MKXXZVHR73W",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-DOM7F6NZSIXQTJP6",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-4LW7FASPHH6YWLWO",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:snowballstemmer:snowballstemmer:3.0.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-snowballstemmer:snowballstemmer:3.0.1:*:*:*:*:*:*:*\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZAOOBCAS2XFOSPO3",
@@ -8821,6 +8957,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-4MU4NQQJRHWJZEMX",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-WKG6BBCCN7AMNV5B",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-4OAHORFEWBZA27ZE",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-CIEJCZX5LZEKBYPT",
       "type": "Annotation"
     },
     {
@@ -8914,6 +9058,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-55ZVLHJGVZHYCM63",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-DNBRVPWORZ7456NW",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-573SDXJFZMFDLXYS",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-MYWIAUZWQB5X3VI5",
@@ -8962,6 +9114,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-5DQJPQFG5BGDKSK7",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-LCP5FNC2ULJMEBVR",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-5DU4I3PN4IXHWD3Q",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-T5SBYG2O6VGHV3R7",
@@ -8973,6 +9133,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-5EJRRXAZIQ6LJZYS",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-6BPA3KLTTWXHUBUX",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-5EMKAMNLI2V4QNCO",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-66LHHQMJNIDXBYTZ",
       "type": "Annotation"
     },
     {
@@ -9029,6 +9197,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-5ICEFYY4B2HAANFA",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FK3CORYC2337QRFT",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-5JUVUGQDGTQRPOPO",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-G4JMNHEBU7VSK3RV",
       "type": "Annotation"
     },
     {
@@ -9138,6 +9314,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-653Z6CW7TK2BRUOJ",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-XUFQAA44XNPF6HGW",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-654WJIFFLPX4O2YZ",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requirement-ranges\",\"value\":[\"click-didyoumean==0.3.0\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-53EEZEBC4V5X3IRI",
@@ -9149,6 +9333,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-65EQXUFHTPSVQDS7",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-CIEJCZX5LZEKBYPT",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-65Q4URTSQFV2QJN6",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-7PGGREEYPN52BKXA",
       "type": "Annotation"
     },
     {
@@ -9202,9 +9394,25 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-6E7C5Z5N7MKYM3EY",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZIBQF5WBZHCXASVC",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-6IDZI7EAUVDBCUPJ",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ICVLYQ3O4E2BDTHQ",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-6IINFWAWOOCCR7UY",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-UOYI5ALLN7KK6VFZ",
       "type": "Annotation"
     },
     {
@@ -9234,6 +9442,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-6LP2427367BU6RFX",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-YZ2MIPQWGEB5UZRZ",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-6LS2WS5D2R4OEXB7",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"examples/celery/requirements.txt\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-X2R7O4RMYULZMFCF",
@@ -9245,6 +9461,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-6LTNUULJTL6CPAS7",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-mechanism\",\"value\":\"pip-requirements-txt\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-E7GW44NAPCTLSLSL",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-6MVNEODFY2QU7SUT",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZN73XBX3XV5K337W",
       "type": "Annotation"
     },
     {
@@ -9530,6 +9754,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-7ZKES5OD7XACUWXA",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-CIEJCZX5LZEKBYPT",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-A2CB5CT2ZSTVKY6E",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"examples/celery/requirements.txt\",\"sha256\":\"<masked-sha256>\"}]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-A7WXYZE7GV2COYEV",
@@ -9541,6 +9773,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-A4YRQBR2Q6J7T342",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:click-didyoumean:click-didyoumean:0.3.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-click-didyoumean:click-didyoumean:0.3.0:*:*:*:*:*:*:*\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-53EEZEBC4V5X3IRI",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-A67IEAY6G2HWPCHX",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-VRB47QNNXJ4MNMEO",
       "type": "Annotation"
     },
     {
@@ -9570,9 +9810,33 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-AAS7BZE7I3CZGAFY",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-UOYI5ALLN7KK6VFZ",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-ABMTGWLAC5KZDMME",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-O7ISR4QRIUXOBGDN",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-ACZ3DDNS5JODGSEY",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-KD652JI6MVHRRISG",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-ADWVNKNZ5PGLUG7D",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RH6PH5HTHCMBZECS",
       "type": "Annotation"
     },
     {
@@ -9586,9 +9850,25 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-AEQA3MDJCLQ3XGV6",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3ELIHFTEYCTNYCHW",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-AFSLZL77W4NFJTFW",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:mypy-extensions:mypy-extensions:1.1.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-mypy-extensions:mypy-extensions:1.1.0:*:*:*:*:*:*:*\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-TIMXRDWKC3YJTFQH",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-AHJPGQD3C4THBNTT",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-6BPA3KLTTWXHUBUX",
       "type": "Annotation"
     },
     {
@@ -9786,6 +10066,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-BJAWY64RQZFOYPR5",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-N4M5EOAI4XSZMC2S",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-BJE7THJ32JQ6LTRE",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:pytest:pytest:8.4.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-pytest:pytest:8.4.1:*:*:*:*:*:*:*\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RQQY5T4254RIL2OG",
@@ -9797,6 +10085,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-BLH5QSPZLLFPLDNC",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-B5EHXR7Q6P6G4JFC",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-BLTAR4T7224BKYSU",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-66LHHQMJNIDXBYTZ",
       "type": "Annotation"
     },
     {
@@ -9869,6 +10165,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-BWG2BBIE5Z5SOXHV",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:python-lockfile-format\",\"value\":\"uv\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-O7ISR4QRIUXOBGDN",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-BXIFA7O3J7S7DZO7",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-E6CNMXCHNWAT77DO",
       "type": "Annotation"
     },
     {
@@ -10005,6 +10309,22 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-CCRMF6FCFEED4WBX",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-VNDA4U5NABISVMCH",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-CE6NZQ4PWW2QPNQA",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-CYYCZOSVVVOEYWXM",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-CF7KTIP6V3L3EBBW",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-UI6DRVDCU5I6T4EL",
       "type": "Annotation"
     },
     {
@@ -10202,6 +10522,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-D75F2E7ZWARR7TLJ",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3QIOII7LGCXCWUZD",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-DCJW4KNUPL33GA7L",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-YG5WXBXA5YHDLCHN",
@@ -10229,6 +10557,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-DG7O2ZWG5VGCGUJJ",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-LEKQYBX2WWSIKQR6",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-DGKFVHLFZ2LUFFLS",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-C3GW2XWP7Z4WYQHU",
       "type": "Annotation"
     },
     {
@@ -10370,6 +10706,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-DVNST3TGE523LQNV",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FPZWIH6CAOYU3T7P",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-DVV7PJTSMKIRJ7LQ",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-DNBRVPWORZ7456NW",
@@ -10469,6 +10813,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-ECZSQYG5525TBXEH",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:charset-normalizer:charset-normalizer:3.4.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-charset-normalizer:charset-normalizer:3.4.3:*:*:*:*:*:*:*\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RH6PH5HTHCMBZECS",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-EDJ5FM4UL6ZCYEFA",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-YBFCOBY7QEBNIKRQ",
       "type": "Annotation"
     },
     {
@@ -10834,6 +11186,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-GC4GIQPJQLNTYRJA",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-R6C2SQIDP2LJFXVP",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-GCKYWPSIEFMW7PYY",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ALQJGMN5NO43M2UX",
@@ -11058,6 +11418,22 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-HBTZ7BRABDYMFH5L",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3MEDRACPW2X3E7UV",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-HCGT2JFYM3KHLWIY",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-WKG6BBCCN7AMNV5B",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-HCZ473KJ7EZZ2BJR",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-WKG6BBCCN7AMNV5B",
@@ -11069,6 +11445,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-HDU6JDOOFDTGUBXT",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-JGFRNCEBLF3BNVVK",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-HEOPZFTQKV7M6JYA",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3ELIHFTEYCTNYCHW",
       "type": "Annotation"
     },
     {
@@ -11149,6 +11533,22 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-HQWP4RHBPLDONPKK",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:python-lockfile-format\",\"value\":\"uv\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RRIUYEPR6T43LWT4",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-HX2G6Y2QOHKFSUI5",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RGNFEDCP67HORUGK",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-HXJFZLTR3FN3EHIW",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-TQHAJQFBY7VS6TDN",
       "type": "Annotation"
     },
     {
@@ -11338,6 +11738,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-IXDPAMAMJ3YR5FUT",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-6BPA3KLTTWXHUBUX",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-IXWA3SKGNZ6B6J62",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-VRB47QNNXJ4MNMEO",
@@ -11418,9 +11826,41 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-JFXO4CYGL6JUC3MW",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-INYEPPGPVSI54ME5",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-JHKVZ5PH2KCLYGKA",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FOAHULHWNRLP2F7K",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-JINRPVWORQC4IR4I",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-USLUUW6LXGRYNMUH",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-JOLFSHWTNDKEL26V",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5PEFRI2WODRTWFFY",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-JPRYMFHBRBYWDMIN",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3QIOII7LGCXCWUZD",
       "type": "Annotation"
     },
     {
@@ -11533,6 +11973,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-K77ZWFKEPUZ4FKSA",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"examples/celery\\\"]\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-E7GW44NAPCTLSLSL",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-KACFJL66CLY4B63I",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-DOM7F6NZSIXQTJP6",
       "type": "Annotation"
     },
     {
@@ -11930,6 +12378,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-LSIGXCCA57EIVBPB",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-N4M5EOAI4XSZMC2S",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-LSJJY4ZMW6YSWXQH",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-N34KBSAMR2PZ7PIS",
@@ -12282,6 +12738,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-MYTV7FWR3JFBWT2D",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RRIUYEPR6T43LWT4",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-N23MU3ZDLOXTMQIE",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:billiard:billiard:3.6.4.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-billiard:billiard:3.6.4.0:*:*:*:*:*:*:*\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-A7WXYZE7GV2COYEV",
@@ -12370,6 +12834,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-NBZTGJY6NDV6FM4C",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5PEFRI2WODRTWFFY",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-NCC6BEHSXBZHN252",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-R6C2SQIDP2LJFXVP",
@@ -12429,6 +12901,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-NNPJPS6LMRUHHGSG",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-mechanism\",\"value\":\"pip-requirements-txt\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-EJMSOJLO44KYTQQW",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-NORVCZXHG2YPH7AG",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-N34KBSAMR2PZ7PIS",
       "type": "Annotation"
     },
     {
@@ -12570,9 +13050,25 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-ODXR33DEY4OAYBQN",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-QGIAENPIZEO22ALE",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-OFRPXWS2JB4MHGZP",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"examples/celery/requirements.txt\",\"sha256\":\"<masked-sha256>\"}]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-J6L6ZLQI4C5THKP7",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-OFYHCH23XOFD5AKK",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-KD652JI6MVHRRISG",
       "type": "Annotation"
     },
     {
@@ -12690,6 +13186,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-OUJR5O3LCPR3NULA",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3MEDRACPW2X3E7UV",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-OURHW7JLI5RRFSR7",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:redis:redis:4.5.4:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-redis:redis:4.5.4:*:*:*:*:*:*:*\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-2CMVCDWEQWV6NY4W",
@@ -12709,6 +13213,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-OW2FFNFAO2YNIIZ7",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requirement-ranges\",\"value\":[\"itsdangerous==2.1.2\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-CEGN46QWVZTT3J5T",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-OZ72MA6SDGXLL5MV",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-UI6DRVDCU5I6T4EL",
       "type": "Annotation"
     },
     {
@@ -12906,9 +13418,25 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-POIRQHK4V7HADYJV",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-5PEFRI2WODRTWFFY",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-PQFEYEOSLA2Y3FKS",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-IQCPMZACZUBHWXBK",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-PS4FS5KDUMFP246E",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-OAGFSXON4ZT66U3K",
       "type": "Annotation"
     },
     {
@@ -12949,6 +13477,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-PVAIBEVBS7NA4536",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requirement-ranges\",\"value\":[\"prompt-toolkit==3.0.38\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-PX4DPBN6BEGMW56P",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-PY3TSYJIE3T36VAZ",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZAOOBCAS2XFOSPO3",
       "type": "Annotation"
     },
     {
@@ -13045,6 +13581,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-QFX7O6NSC6P5XTG3",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-HJYRSEOK3MOQ7QQK",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-QFZBYKYAMV42MOVZ",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-C3GW2XWP7Z4WYQHU",
       "type": "Annotation"
     },
     {
@@ -13178,6 +13722,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-QZHFHBSSCO4CGJT4",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-K44MJPZ7FNH6SDJ7",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-QZK3JEXYS42LVBYD",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-2V3CDDMEZQEDV5QK",
@@ -13210,9 +13762,25 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-RA47NOLW3QHF6BE5",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-XUFQAA44XNPF6HGW",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-RAUMEE2N4MQGTKKM",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZZM3NBYM763DY5CR",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-RB66NIETZUFZFUY6",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-SYPKVYFVHMJUGW4R",
       "type": "Annotation"
     },
     {
@@ -13370,6 +13938,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-RTV6NP2NW6IDQPAT",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-D53IUJDLZG5R62UD",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-RU3VBK7SBHF7KMBK",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3HJ6UX7E3PWLKFXK",
@@ -13437,6 +14013,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-SAK4OR52NKIAH6FM",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:python-lockfile-format\",\"value\":\"uv\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-6BPA3KLTTWXHUBUX",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-SAZ2QNDNPNEPQMHA",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZAOOBCAS2XFOSPO3",
       "type": "Annotation"
     },
     {
@@ -13626,6 +14210,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-T5W6WSPILDIBJU6N",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-OAGFSXON4ZT66U3K",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-T6LJE27YSXJIOU6R",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-GUO7F4HCXR42DIAG",
@@ -13714,6 +14306,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-TO27AYPAGNYRJRNJ",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-SNCIZJPKATYLM2VQ",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-TQAZA7SLR5IFEXSY",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-SYPKVYFVHMJUGW4R",
@@ -13738,9 +14338,33 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-TTOZ4GS2RR4OLMYS",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RH6PH5HTHCMBZECS",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-TUTR47AFM7DCQI4C",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FOAHULHWNRLP2F7K",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-TVD45JB2YPBMYBSS",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-VRB47QNNXJ4MNMEO",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-TXDCFQ2323U3J3YM",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-D53IUJDLZG5R62UD",
       "type": "Annotation"
     },
     {
@@ -13802,6 +14426,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-U6SNKOYLYEBUE3MH",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-TIMXRDWKC3YJTFQH",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-UAWQRE6ID4SJZUGN",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-VUL4WSA5R3L2BFZZ",
@@ -13834,6 +14466,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-UFUJYQU2HE5JLHRL",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3LOVUJU6VZ6PMULZ",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-UHREA4ULQBVOCPIE",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-QGIAENPIZEO22ALE",
@@ -13853,6 +14493,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-ULKZHDINXRRIGJ65",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-USLUUW6LXGRYNMUH",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-UNFTD2G6IWV5RPGS",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-N34KBSAMR2PZ7PIS",
       "type": "Annotation"
     },
     {
@@ -13914,9 +14562,25 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-UUPCOCZN42IJDALW",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-LCP5FNC2ULJMEBVR",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-UVBFOR3HSBXDYMVS",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:python-lockfile-format\",\"value\":\"uv\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-C3GW2XWP7Z4WYQHU",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-UW2VS2XPWPPY7XOY",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-USLUUW6LXGRYNMUH",
       "type": "Annotation"
     },
     {
@@ -13957,6 +14621,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-VASA7XLKUZF4OVCW",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-mechanism\",\"value\":\"pip-requirements-txt\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-YDTE4UNKQGRHWOLT",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-VBRRIZJIDUL3OSTC",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-XO5H2O4DJA6OB7MD",
       "type": "Annotation"
     },
     {
@@ -14005,6 +14677,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-VFI4IOUKF7LPHMEP",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"uv.lock\",\"sha256\":\"<masked-sha256>\"}]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-UTSNVV6YJ7S3DDK2",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-VFILBTMO4QYIWZQ2",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FOAHULHWNRLP2F7K",
       "type": "Annotation"
     },
     {
@@ -14082,6 +14762,22 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-VUSBR2VZJFBVH2SB",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-QDZLPO6PZJVUK727",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-VUXTNL33KNENA2JE",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-QGIAENPIZEO22ALE",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-VVGEPBXNAK64YMGR",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:python-lockfile-format\",\"value\":\"uv\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZAOOBCAS2XFOSPO3",
@@ -14130,6 +14826,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-W2G3MCUPWIYLRQMH",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-T5SBYG2O6VGHV3R7",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-W36BE4GWK2WETEA7",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"examples/celery/requirements.txt\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-XA3VRQJORFO3XKSR",
@@ -14149,6 +14853,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-W3LFBM4ND3DUNOSW",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"examples/celery\\\"]\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FTNQUALZF2UE2G6Z",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-W45D24JTHPOPSQBC",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-WKG6BBCCN7AMNV5B",
       "type": "Annotation"
     },
     {
@@ -14197,6 +14909,22 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-WCE44PV4XP5BMD6P",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:python-lockfile-format\",\"value\":\"uv\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ICVLYQ3O4E2BDTHQ",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-WFDEZTY4LOSA7VD7",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZIBQF5WBZHCXASVC",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-WGUNAYHVSPH46AJU",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ZN73XBX3XV5K337W",
       "type": "Annotation"
     },
     {
@@ -14530,6 +15258,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-XS5VAP5JOTTGFBZ5",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-SNCIZJPKATYLM2VQ",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-XSUFE6CG6GGZVKHV",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-3ELIHFTEYCTNYCHW",
@@ -14549,6 +15285,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-XT5YFAOLNYVE2RTN",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-mechanism\",\"value\":\"pip-requirements-txt\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-MYWIAUZWQB5X3VI5",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-XTMLSJI4Q4EW4ICQ",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-RRIUYEPR6T43LWT4",
       "type": "Annotation"
     },
     {
@@ -14610,6 +15354,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-XZTA5UDJF2Q3CLTM",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-E6CNMXCHNWAT77DO",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-Y3I72MKV7ONCAT3C",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-MYWIAUZWQB5X3VI5",
@@ -14629,6 +15381,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-Y5RK2X73S5MT4BQW",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-2Q7O4CPCBVQMV2BJ",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-Y66IWUTVHZEJ2GL7",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-7PGGREEYPN52BKXA",
       "type": "Annotation"
     },
     {
@@ -14661,6 +15421,22 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-YEKI7BFRC7FOVLH6",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"uv.lock\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-DOM7F6NZSIXQTJP6",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-YEQ2Y67MT7GDNKPN",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-SYPKVYFVHMJUGW4R",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-YGLAVRNXVC5MFDPI",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-FPZWIH6CAOYU3T7P",
       "type": "Annotation"
     },
     {
@@ -14730,6 +15506,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-YVHCURTGGUUN7E3I",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-ALQJGMN5NO43M2UX",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-YVOJHFOBODIW3FM3",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-DOM7F6NZSIXQTJP6",
@@ -14781,6 +15565,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-Z4QTOGN2FL4POHTR",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requirement-ranges\",\"value\":[\"click==8.1.3\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-VJ4B64HRTZD3ENXV",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-Z5OL72DUZBE4OLXY",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-CYYCZOSVVVOEYWXM",
       "type": "Annotation"
     },
     {
@@ -14853,6 +15645,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-ZDP3G5KOOF5AS7Q7",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-mechanism\",\"value\":\"pip-requirements-txt\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-CEGN46QWVZTT3J5T",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-ZECN54UYT23TFPUR",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-T5SBYG2O6VGHV3R7",
       "type": "Annotation"
     },
     {
@@ -14978,9 +15778,25 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-ZUQAUTD5NEWSWXII",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-K44MJPZ7FNH6SDJ7",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-ZVJRZFYYR6KLYCWW",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-XUFQAA44XNPF6HGW",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-ZZDC2Y6WQXWZEB3U",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope-derivation\",\"value\":\"transitive\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-YBFCOBY7QEBNIKRQ",
       "type": "Annotation"
     },
     {

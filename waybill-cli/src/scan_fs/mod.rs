@@ -1901,7 +1901,15 @@ fn apply_go_cache_zip_filter(components: &mut Vec<waybill_common::resolution::Re
 /// Runs after all component-resolution and filtering steps so each
 /// target's `lifecycle_scope` is final by the time we type the edges.
 /// `Runtime` and `None` leave edges as `DependsOn`.
-fn apply_lifecycle_scope_to_edges(
+///
+/// `pub(crate)` since #1209: the transitive scope-propagation pass
+/// assigns scope to components this call has already walked past, so
+/// `cli/scan_cmd.rs` runs it a second time after that pass. Both
+/// passes below skip any edge that is no longer `DependsOn`, which
+/// makes the second call type exactly the newly-marked targets' edges
+/// and a no-op on everything the first call already typed — so the
+/// call did not need to move, and the tests below still pin it here.
+pub(crate) fn apply_lifecycle_scope_to_edges(
     components: &[waybill_common::resolution::ResolvedComponent],
     relationships: &mut [waybill_common::resolution::Relationship],
 ) {

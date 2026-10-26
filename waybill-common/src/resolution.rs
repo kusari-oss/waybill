@@ -449,6 +449,33 @@ pub enum LifecycleScope {
 }
 
 impl LifecycleScope {
+    /// Strength as a claim about production: a higher number is a
+    /// stronger claim that the component ships. Feature
+    /// `1269-transitive-dev-scope` (#1209) propagates scope across the
+    /// dependency graph and takes the *strongest* scope across all
+    /// inbound paths (FR-004), so this is a total order over the five
+    /// variants, not a preference list.
+    ///
+    /// `Optional` outranks `Development` deliberately: optional means
+    /// the component MAY ship, development means it does not, so when
+    /// two paths disagree the weaker claim about production is the
+    /// safer one to publish.
+    ///
+    /// An exhaustive match, not `#[derive(Ord)]`: a derive would bind
+    /// the ordering to declaration order, which is invisible at the
+    /// call site and silently wrong the first time a variant is
+    /// inserted in the middle. A sixth variant fails to compile here
+    /// instead of sorting last by accident.
+    pub fn strength(&self) -> u8 {
+        match self {
+            LifecycleScope::Runtime => 4,
+            LifecycleScope::Optional => 3,
+            LifecycleScope::Build => 2,
+            LifecycleScope::Test => 1,
+            LifecycleScope::Development => 0,
+        }
+    }
+
     /// Lower-cased serde-style variant name. Used for the new
     /// `waybill:lifecycle-scope` CDX property carry of the finer
     /// distinction the standards-native `scope: "excluded"` cannot
@@ -584,6 +611,40 @@ pub struct EnrichmentProvenance {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// #1209: "strongest scope wins" is only well-defined if no two
+    /// variants share a strength — a tie would make the propagation
+    /// pass's choice arbitrary in a way it could not detect.
+    #[test]
+    fn lifecycle_scope_strength_is_injective_and_ordered() {
+        let all = [
+            LifecycleScope::Runtime,
+            LifecycleScope::Optional,
+            LifecycleScope::Build,
+            LifecycleScope::Test,
+            LifecycleScope::Development,
+        ];
+        let mut strengths: Vec<u8> = all.iter().map(LifecycleScope::strength).collect();
+        let before = strengths.len();
+        strengths.sort_unstable();
+        strengths.dedup();
+        assert_eq!(
+            strengths.len(), before,
+            "two LifecycleScope variants share a strength; \
+             \"strongest wins\" would be ambiguous"
+        );
+        // Runtime must outrank everything: it is the immunity signal.
+        assert!(
+            all.iter()
+                .filter(|s| **s != LifecycleScope::Runtime)
+                .all(|s| s.strength() < LifecycleScope::Runtime.strength()),
+            "Runtime must be the strongest scope"
+        );
+        // Optional outranks Development — see the doc comment.
+        assert!(
+            LifecycleScope::Optional.strength() > LifecycleScope::Development.strength()
+        );
+    }
 
     #[test]
     fn resolution_technique_serde_snake_case() {

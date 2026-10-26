@@ -3044,6 +3044,85 @@ fn apply_tier_filter(
     }
 }
 
+/// Milestone 052/part-3 (#101), relocated by #1209 — apply the
+/// `--exclude-scope` opt-out filter. Drops components whose
+/// `lifecycle_scope` matches any element of `exclude`, plus any
+/// dependency edge referencing a dropped component. `Runtime` is never
+/// excluded: clap rejects it at parse time via `ExcludeScopeArg`, which
+/// has no `Runtime` variant. An empty `exclude` is a no-op.
+///
+/// Extracted from the inline block it had been since m052 so the
+/// behaviour this function names can be asserted without running a
+/// scan. The #1209 relocation is the reason it was worth extracting:
+/// the call site moved, and a call site is the one thing an end-to-end
+/// test cannot pin.
+///
+/// Returns both the total drop count and `inferred` — how many of the
+/// dropped components carried C62
+/// `waybill:lifecycle-scope-derivation = transitive`, i.e. a scope this
+/// filter could only see because `propagate_non_runtime_scope` had
+/// already run. That field is the ordering check in observable form:
+/// move this call back above the propagation pass and `inferred` reads
+/// 0 on every input, because the marker does not exist yet. Measured on
+/// `go-opentelemetry` with `--exclude-scope test`: 33 before the
+/// relocation (survived, unscoped, indistinguishable from runtime),
+/// 33 dropped after. See
+/// `specs/1269-transitive-dev-scope/measurements/t043-exclude-scope-ordering.md`.
+#[derive(Debug, Default, PartialEq, Eq)]
+struct ExcludeScopeDrops {
+    /// Components dropped, whatever assigned their scope.
+    total: usize,
+    /// Of those, the ones carrying C62 `transitive` — scopes this
+    /// feature's propagation pass inferred rather than a reader
+    /// declaring them.
+    inferred: usize,
+}
+
+fn apply_exclude_scope_filter(
+    components: &mut Vec<waybill_common::resolution::ResolvedComponent>,
+    relationships: &mut Vec<waybill_common::resolution::Relationship>,
+    exclude: &[waybill_common::resolution::LifecycleScope],
+) -> ExcludeScopeDrops {
+    if exclude.is_empty() {
+        return ExcludeScopeDrops::default();
+    }
+    let exclude_set: std::collections::HashSet<waybill_common::resolution::LifecycleScope> =
+        exclude.iter().copied().collect();
+    let mut inferred = 0usize;
+    let dropped_purls: std::collections::HashSet<String> = components
+        .iter()
+        .filter(|c| {
+            c.lifecycle_scope
+                .is_some_and(|s| exclude_set.contains(&s))
+        })
+        .map(|c| {
+            if c.extra_annotations
+                .get(crate::resolve::scope_propagation::ANN_SCOPE_DERIVATION)
+                .and_then(|v| v.as_str())
+                == Some(crate::resolve::scope_propagation::DERIVATION_TRANSITIVE)
+            {
+                inferred += 1;
+            }
+            c.purl.as_str().to_string()
+        })
+        .collect();
+    let pre_filter_count = components.len();
+    components.retain(|c| !dropped_purls.contains(c.purl.as_str()));
+    relationships.retain(|r| {
+        !dropped_purls.contains(&r.from) && !dropped_purls.contains(&r.to)
+    });
+    let total = pre_filter_count.saturating_sub(components.len());
+    if total > 0 {
+        tracing::info!(
+            dropped = total,
+            dropped_inferred = inferred,
+            exclude_scope = ?exclude,
+            "applied --exclude-scope filter",
+        );
+    }
+    ExcludeScopeDrops { total, inferred }
+}
+
 pub async fn execute(
     mut args: ScanArgs,
     offline: bool,
@@ -4024,46 +4103,21 @@ pub async fn execute(
         &mut relationships,
     );
 
-    // Milestone 052/part-3: apply the `--exclude-scope` opt-out
-    // filter as the final step before serialization. Drops
-    // components whose lifecycle_scope matches any element in the
-    // user's exclude list, plus any dependency edges referencing
-    // dropped components. `Runtime` is never excluded (clap rejects
-    // it at parse time via the ExcludeScopeArg enum). Default
-    // behavior (empty exclude_scope vec) is no-op: emit all scopes.
-    if !exclude_scope.is_empty() {
-        let exclude_set: std::collections::HashSet<waybill_common::resolution::LifecycleScope> =
-            exclude_scope.iter().copied().collect();
-        let pre_filter_count = components.len();
-        let dropped_purls: std::collections::HashSet<String> = components
-            .iter()
-            .filter(|c| {
-                c.lifecycle_scope
-                    .is_some_and(|s| exclude_set.contains(&s))
-            })
-            .map(|c| c.purl.as_str().to_string())
-            .collect();
-        components.retain(|c| !dropped_purls.contains(c.purl.as_str()));
-        relationships.retain(|r| {
-            !dropped_purls.contains(&r.from) && !dropped_purls.contains(&r.to)
-        });
-        let dropped = pre_filter_count.saturating_sub(components.len());
-        if dropped > 0 {
-            tracing::info!(
-                dropped,
-                exclude_scope = ?exclude_scope,
-                "applied --exclude-scope filter",
-            );
-        }
-    }
 
     // Milestone 232 (#660): `--tier=<mode>` output-filter flag.
-    // Runs AFTER --exclude-scope and BEFORE format-builder dispatch
-    // (SC-004: format builders' internal graph-completeness passes
-    // must observe the filtered slice). Sibling to the --exclude-scope
-    // filter above; same retain-on-predicate + drop-dangling-edges
-    // shape. See `specs/232-tier-filter-flag/data-model.md § New
-    // helper` for the FR-003/FR-004/FR-005/FR-006/FR-008 contract.
+    // Runs BEFORE format-builder dispatch (SC-004: format builders'
+    // internal graph-completeness passes must observe the filtered
+    // slice). Sibling to the `--exclude-scope` filter, which #1209
+    // moved far below this point — see the relocated call site for
+    // why. The two filters are independent retain-on-predicate passes
+    // over disjoint fields (`sbom_tier` vs `lifecycle_scope`) and
+    // neither predicate reads what the other dropped, so their
+    // relative order does not change the surviving set. The `--tier`
+    // filter has an ordering gap of its own, untouched here: it runs
+    // ABOVE the nixpkgs-haskell and m1035 nix-closure producers, so
+    // the components those tiers add are never tier-filtered. See
+    // `specs/232-tier-filter-flag/data-model.md § New helper` for the
+    // FR-003/FR-004/FR-005/FR-006/FR-008 contract.
     apply_tier_filter(&mut components, &mut relationships, args.tier);
 
     // Milestone 111 (issue #225 Option A): assemble the operator's
@@ -4389,47 +4443,6 @@ pub async fn execute(
         );
     }
 
-    // Milestone 776 (FR-014a + FR-014b + SC-009a): source-provenance
-    // reference summary.
-    //
-    // Emitted HERE, after every pass that can add or drop components,
-    // rather than adjacent to the enrichment call. Between enrichment
-    // and this point the component set is still mutated by
-    // `deduplicate()`, `reconcile_design_source_tiers()`, a retain
-    // drop pass, the supplement install, the layer-digest and
-    // workspace-member tag passes, and the m220 scope filter — any of
-    // which can remove a component carrying references. Counting
-    // earlier would OVERCOUNT relative to the emitted document, which
-    // SC-009a forbids. See specs/776-component-source-refs/research.md R9.
-    //
-    // Per-kind counts are derived by counting the final component set
-    // directly, so the reported numbers cannot drift from the document
-    // they describe. The skip counts come from enrichment because
-    // skipped links never reach the document and cannot be recovered
-    // by counting components.
-    {
-        let mut by_kind: std::collections::BTreeMap<&str, usize> =
-            std::collections::BTreeMap::new();
-        for c in components.iter() {
-            for r in &c.external_references {
-                *by_kind.entry(r.ref_type.as_str()).or_insert(0) += 1;
-            }
-        }
-        let total: usize = by_kind.values().sum();
-        let by_kind_str = by_kind
-            .iter()
-            .map(|(k, v)| format!("{k}={v}"))
-            .collect::<Vec<_>>()
-            .join(" ");
-        tracing::info!(
-            total_references = total,
-            by_kind = %by_kind_str,
-            skipped_unmapped_label = m776_skips.unmapped_label,
-            skipped_malformed_url = m776_skips.malformed_url,
-            "source-provenance references emitted"
-        );
-    }
-
     // Milestone 133 US1.B (FR-002 + FR-015): file-tier emission for
     // unattributed content (custom binaries, vendored libraries with
     // no manifest, embedded archives). Runs AFTER every package /
@@ -4690,6 +4703,107 @@ pub async fn execute(
         }
         None => {}
     }
+
+    // #1209 — propagate non-runtime lifecycle scope transitively.
+    //
+    // Three constraints pin this to exactly here (research R1):
+    //
+    //   1. The component set must be final. This is the constraint the
+    //      first placement got wrong, and the correction is why the
+    //      call sits here rather than beside the m191 reconciler.
+    //      "Final" was checked against `deduplicate()` and both
+    //      reconciler passes — all of which precede that earlier
+    //      site — and NOT against the component *producers*
+    //      downstream of it. The nixpkgs-haskell runtime-closure
+    //      resolver and the m1035 nix-closure tier both add
+    //      components and edges after the reconcilers; on
+    //      `haskell-language-server` they add 232 components and
+    //      2,126 edges, including every one of that target's 26
+    //      invariant-I3 violators. A pass placed before them saw a
+    //      set that was final only for the ecosystems with no
+    //      post-reconciler producer, which is why `python-flask`
+    //      worked and all three hackage targets silently did not.
+    //      Measured: relocating here took them 26→0, 13→0 and 9→0
+    //      with `python-flask`, `npm-express` and `rust-ripgrep`
+    //      unchanged. Anything added after this point — currently
+    //      only the file-tier walker — is outside the pass's view,
+    //      deliberately: a file-tier component is not a dependency
+    //      and has no scope to inherit.
+    //   2. It must run once, before all three format builders, or the
+    //      formats could disagree. One pass upstream is what makes the
+    //      cross-format requirements hold by construction rather than
+    //      by three parallel implementations.
+    //   3. It must see no anchoring edge, which the assertion below
+    //      enforces; see the paragraph after this list.
+    //
+    // `--exclude-scope` was ABOVE this call when the pass first
+    // landed, and has been moved BELOW it (see its own call site, and
+    // `measurements/t043-exclude-scope-ordering.md` for the before and
+    // after). While it was above, an operator excluding a scope got
+    // the declared members dropped and their exclusive transitives
+    // kept — and kept *unscoped*, because the filter had removed the
+    // seeds this pass propagates from. Measured on `go-opentelemetry`,
+    // `--exclude-scope test`: 33 survivors before, 0 after.
+    //
+    // That gap was reasoned from code position for two reviews before
+    // anyone measured it, and the measurement corrected the reasoning
+    // as well as confirming it: on `haskell-language-server` the old
+    // order already dropped all 37 development-scoped components, not
+    // because the filter was placed correctly but because removing the
+    // 11 declared dev members starved the nixpkgs-haskell closure
+    // resolver below it, so the 26 transitives were never produced.
+    // Same flag, same release, opposite behaviour per ecosystem.
+    //
+    // It also has to run before the builders for correctness, not just
+    // tidiness: every anchoring pass (m868 resolve-ownership, m860
+    // retained-main-module, m158 peer linkage, and the CDX
+    // "primary depends on every component nothing else depends on"
+    // fallback) synthesizes edges FROM the subject inside the
+    // builders. An anchoring edge here would make the orphaned
+    // non-runtime closure look runtime-reachable and silently exempt
+    // it from propagation — the population this pass exists to mark.
+    // The pass asserts it sees none of them.
+    {
+        let root_override_for_seeds = crate::generate::RootComponentOverride {
+            name: args.root_name.clone(),
+            version: args.root_version.clone(),
+            purl_type: args.root_purl_type.clone(),
+            omit_purl: args.no_root_purl,
+            full_purl: args.root_purl.clone(),
+            full_purl_name: None,
+            full_purl_version: None,
+        };
+        let selection = crate::generate::root_selector::select_root(
+            &components,
+            &root_override_for_seeds,
+            scan_target_coord.as_ref(),
+            &target_name,
+            "0.0.0",
+            scan_target_kind,
+        );
+        // Reuses the emitters' own seed derivation rather than forming
+        // a second notion of what the root is.
+        let (seeds, per_ecosystem_root) =
+            crate::generate::graph_completeness::bfs::component_root_seeds(
+                &components,
+                &selection,
+            );
+        let ecosystems_with_root: std::collections::HashSet<String> =
+            per_ecosystem_root.into_keys().collect();
+        crate::resolve::scope_propagation::propagate_non_runtime_scope(
+            &mut components,
+            &relationships,
+            &seeds,
+            &ecosystems_with_root,
+        );
+        // Re-type edges into anything the pass just marked. The
+        // function skips every edge that is no longer a plain
+        // `DependsOn`, so this types exactly the newly-marked targets'
+        // edges and is a no-op on everything the reader-side call
+        // already typed — which is why it is re-run here rather than
+        // moved from `scan_fs`.
+        crate::scan_fs::apply_lifecycle_scope_to_edges(&components, &mut relationships);
+    }
     // The document-scope record (FR-018). Built only on the success path, so
     // a degraded tier emits no counts rather than zeros -- a zero would read
     // as "the closure held nothing", which is a different claim.
@@ -4915,6 +5029,100 @@ pub async fn execute(
                 divergence_records.clone(),
             ))
         };
+
+    // `--exclude-scope` (m052/part-3, #101), relocated here by #1209.
+    //
+    // Its own comment used to call it "the final step before
+    // serialization", and that stopped being true when the
+    // nixpkgs-haskell and m1035 nix-closure tiers landed above it.
+    // Here it is true: nothing below this point adds, drops or
+    // re-scopes a component.
+    //
+    // Four properties pin it to exactly here, and each one is a
+    // position it must be *after*, not merely a tidiness preference:
+    //
+    //   1. **After `propagate_non_runtime_scope`** (~line 4700). This
+    //      is the reason for the move. A scope the pass inferred is
+    //      invisible to a filter that ran before the pass, so an
+    //      operator asking to drop a scope got the declared members
+    //      and kept their exclusive transitives. Worse than missing
+    //      them: running the filter first DESTROYS the information,
+    //      because dropping the declared members removes the seeds
+    //      Phase B would have walked from, so the transitives come out
+    //      carrying no scope at all — byte-identical on the wire to a
+    //      runtime dependency. Measured on `go-opentelemetry` with
+    //      `--exclude-scope test`: 33 of the 50 test-scoped
+    //      components survived the filter unscoped before this move.
+    //   2. **After the file-tier walker** (just above), which builds
+    //      its dedupe index from `components`. Filtering first shrinks
+    //      that index, so files covered by a dropped package stop
+    //      being deduped and reappear as file-tier entries — an
+    //      operator who asked for *less* would get more. Here the
+    //      index is the unfiltered one. This constraint is the one
+    //      argued from the code rather than measured: no available
+    //      input puts a file in the scanned tree that a dropped
+    //      package covers, and for Go it cannot, since module sources
+    //      live in `$GOMODCACHE`. File-tier output was confirmed
+    //      unchanged under the flag, which corroborates and does not
+    //      prove; the measurement says so in those words.
+    //   3. **Before the m167 orphan-reason classifier** (just below),
+    //      which must see the graph that will actually be emitted.
+    //      Dropping a component can orphan its neighbours; classified
+    //      first, those orphans would reach the document with no
+    //      reason, which is exactly what #1218 exists to prevent.
+    //   4. **Before all three format builders**, for the same reason
+    //      the propagation pass is: one filter upstream is what makes
+    //      the three formats agree by construction.
+    //
+    // The `--tier` filter is NOT moved with it. Doing so would newly
+    // subject the nixpkgs and nix-closure components to `--tier`,
+    // which is a change to a different operator-visible flag; the two
+    // filters commute, so leaving it above costs nothing here.
+    // The counts are logged by the callee and not otherwise consumed;
+    // they are returned so the unit tests can assert on them.
+    let _ = apply_exclude_scope_filter(&mut components, &mut relationships, &exclude_scope);
+
+    // Milestone 776 (FR-014a + FR-014b + SC-009a): source-provenance
+    // reference summary.
+    //
+    // Emitted HERE, after every pass that can add or drop components,
+    // rather than adjacent to the enrichment call. m776's SC-009a
+    // forbids this count from overcounting relative to the emitted
+    // document, and the count is taken by walking the final component
+    // set rather than tallying at enrichment time precisely so that
+    // the two cannot drift.
+    //
+    // **Moved by #1209**, from above the `--exclude-scope` filter to
+    // below it. The claim in this comment's first sentence was the
+    // reason: relocating the filter down here would otherwise have
+    // falsified it, and measurably so — on `go-opentelemetry` with
+    // `--exclude-scope test` the log read 244 against a document
+    // holding 224. The claim is now true of more passes than it was
+    // when written: the filter and the nixpkgs/nix-closure producers
+    // are both above this point.
+    {
+        let mut by_kind: std::collections::BTreeMap<&str, usize> =
+            std::collections::BTreeMap::new();
+        for c in components.iter() {
+            for r in &c.external_references {
+                *by_kind.entry(r.ref_type.as_str()).or_insert(0) += 1;
+            }
+        }
+        let total: usize = by_kind.values().sum();
+        let by_kind_str = by_kind
+            .iter()
+            .map(|(k, v)| format!("{k}={v}"))
+            .collect::<Vec<_>>()
+            .join(" ");
+        tracing::info!(
+            total_references = total,
+            by_kind = %by_kind_str,
+            skipped_unmapped_label = m776_skips.unmapped_label,
+            skipped_malformed_url = m776_skips.malformed_url,
+            "source-provenance references emitted"
+        );
+    }
+
 
     // Milestone 167 (T011) — emit-time `waybill:orphan-reason`
     // classifier. Stamps per-component annotations on BFS-unreachable
@@ -8240,5 +8448,176 @@ mod tests {
         apply_tier_filter(&mut components, &mut edges, TierMode::SourceOnly);
         assert_eq!(components.len(), 1);
         assert_eq!(components[0].sbom_tier.as_deref(), Some("source"));
+    }
+
+    // =========================================================
+    // Feature 1269 (#1209) — --exclude-scope, extracted + relocated
+    // =========================================================
+
+    fn mk_scoped(
+        purl_str: &str,
+        scope: waybill_common::resolution::LifecycleScope,
+        inferred: bool,
+    ) -> ResolvedComponent {
+        let mut c = make_component(purl_str);
+        c.lifecycle_scope = Some(scope);
+        if inferred {
+            c.extra_annotations.insert(
+                crate::resolve::scope_propagation::ANN_SCOPE_DERIVATION.to_string(),
+                serde_json::Value::String(
+                    crate::resolve::scope_propagation::DERIVATION_TRANSITIVE.to_string(),
+                ),
+            );
+        }
+        c
+    }
+
+    /// An empty exclude list changes nothing — the default for every
+    /// scan that does not pass the flag, so the no-op has to be exact
+    /// rather than merely cheap.
+    #[test]
+    fn exclude_scope_empty_list_is_a_no_op() {
+        use waybill_common::resolution::LifecycleScope;
+        let mut components = vec![
+            mk_scoped("pkg:cargo/dev@1.0.0", LifecycleScope::Development, false),
+            make_component("pkg:cargo/rt@1.0.0"),
+        ];
+        let mut edges = vec![mk_edge("pkg:cargo/rt@1.0.0", "pkg:cargo/dev@1.0.0")];
+        let drops = apply_exclude_scope_filter(&mut components, &mut edges, &[]);
+        assert_eq!(drops, ExcludeScopeDrops::default());
+        assert_eq!(components.len(), 2);
+        assert_eq!(edges.len(), 1);
+    }
+
+    /// The scope match is per-variant: excluding `Development` must not
+    /// take `Build` or `Test` with it. `apply_tier_filter`'s sibling
+    /// test asserts the same shape for tiers.
+    #[test]
+    fn exclude_scope_drops_only_the_named_variants() {
+        use waybill_common::resolution::LifecycleScope;
+        let mut components = vec![
+            mk_scoped("pkg:cargo/dev@1.0.0", LifecycleScope::Development, false),
+            mk_scoped("pkg:cargo/bld@1.0.0", LifecycleScope::Build, false),
+            mk_scoped("pkg:cargo/tst@1.0.0", LifecycleScope::Test, false),
+            mk_scoped("pkg:cargo/opt@1.0.0", LifecycleScope::Optional, false),
+            mk_scoped("pkg:cargo/run@1.0.0", LifecycleScope::Runtime, false),
+            make_component("pkg:cargo/none@1.0.0"),
+        ];
+        let mut edges: Vec<waybill_common::resolution::Relationship> = vec![];
+        let drops = apply_exclude_scope_filter(
+            &mut components,
+            &mut edges,
+            &[LifecycleScope::Development, LifecycleScope::Test],
+        );
+        assert_eq!(drops.total, 2);
+        let surviving: Vec<&str> =
+            components.iter().map(|c| c.name.as_str()).collect();
+        assert_eq!(surviving, vec!["bld", "opt", "run", "none"]);
+    }
+
+    /// FR-006's shape, inherited from m052: an edge whose source OR
+    /// target was dropped goes with it, so the document never carries a
+    /// reference to a component it does not hold.
+    #[test]
+    fn exclude_scope_drops_edges_on_either_endpoint() {
+        use waybill_common::resolution::LifecycleScope;
+        let mut components = vec![
+            mk_scoped("pkg:cargo/dev@1.0.0", LifecycleScope::Development, false),
+            make_component("pkg:cargo/root@1.0.0"),
+            make_component("pkg:cargo/leaf@1.0.0"),
+        ];
+        let mut edges = vec![
+            // dropped as target
+            mk_edge("pkg:cargo/root@1.0.0", "pkg:cargo/dev@1.0.0"),
+            // dropped as source
+            mk_edge("pkg:cargo/dev@1.0.0", "pkg:cargo/leaf@1.0.0"),
+            // survives: neither endpoint dropped
+            mk_edge("pkg:cargo/root@1.0.0", "pkg:cargo/leaf@1.0.0"),
+        ];
+        let drops = apply_exclude_scope_filter(
+            &mut components,
+            &mut edges,
+            &[LifecycleScope::Development],
+        );
+        assert_eq!(drops.total, 1);
+        assert_eq!(edges.len(), 1);
+        assert_eq!(edges[0].to, "pkg:cargo/leaf@1.0.0");
+        assert_eq!(edges[0].from, "pkg:cargo/root@1.0.0");
+    }
+
+    /// The ordering check in observable form (#1209).
+    ///
+    /// `inferred` counts dropped components carrying C62
+    /// `waybill:lifecycle-scope-derivation = transitive` — a scope that
+    /// exists only because `propagate_non_runtime_scope` ran first.
+    /// Move the call site back above that pass and this number is 0 on
+    /// every input, because no component carries the marker yet. It is
+    /// the one property of the relocation that a test can hold, since
+    /// the relocation itself is a call-site position.
+    #[test]
+    fn exclude_scope_counts_the_scopes_the_propagation_pass_inferred() {
+        use waybill_common::resolution::LifecycleScope;
+        let mut components = vec![
+            // declared by a reader
+            mk_scoped("pkg:cargo/dev@1.0.0", LifecycleScope::Development, false),
+            // inferred by the 1269 pass — two of them, so the count
+            // cannot pass by being accidentally 1
+            mk_scoped("pkg:cargo/t1@1.0.0", LifecycleScope::Development, true),
+            mk_scoped("pkg:cargo/t2@1.0.0", LifecycleScope::Development, true),
+            // inferred, but a scope that is NOT excluded: must not be
+            // counted, because it is not dropped
+            mk_scoped("pkg:cargo/t3@1.0.0", LifecycleScope::Test, true),
+            make_component("pkg:cargo/rt@1.0.0"),
+        ];
+        let mut edges: Vec<waybill_common::resolution::Relationship> = vec![];
+        let drops = apply_exclude_scope_filter(
+            &mut components,
+            &mut edges,
+            &[LifecycleScope::Development],
+        );
+        assert_eq!(
+            drops,
+            ExcludeScopeDrops {
+                total: 3,
+                inferred: 2
+            },
+            "3 development components dropped, 2 of them scoped by the \
+             propagation pass rather than by a reader"
+        );
+        let surviving: Vec<&str> =
+            components.iter().map(|c| c.name.as_str()).collect();
+        assert_eq!(surviving, vec!["t3", "rt"]);
+    }
+
+    /// C62's enum is open and shared: the Go readers write
+    /// `test-only-closure` and `go-mod-why` into the same key. Those
+    /// are reader-derived, so they must not be counted as `inferred` —
+    /// otherwise the ordering signal reads non-zero on a Go scan
+    /// whatever the call site's position, which is exactly the kind of
+    /// proxy that makes a check look like it passed when it never ran.
+    #[test]
+    fn exclude_scope_does_not_count_the_go_readers_own_derivations() {
+        use waybill_common::resolution::LifecycleScope;
+        let mut go_derived = make_component("pkg:golang/example.test/m@v1.0.0");
+        go_derived.lifecycle_scope = Some(LifecycleScope::Test);
+        go_derived.extra_annotations.insert(
+            crate::resolve::scope_propagation::ANN_SCOPE_DERIVATION.to_string(),
+            serde_json::Value::String("test-only-closure".to_string()),
+        );
+        let mut components = vec![go_derived];
+        let mut edges: Vec<waybill_common::resolution::Relationship> = vec![];
+        let drops = apply_exclude_scope_filter(
+            &mut components,
+            &mut edges,
+            &[LifecycleScope::Test],
+        );
+        assert_eq!(
+            drops,
+            ExcludeScopeDrops {
+                total: 1,
+                inferred: 0
+            },
+        );
+        assert!(components.is_empty());
     }
 }

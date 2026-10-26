@@ -9,6 +9,55 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **A transitive dependency of a development, test, build or optional
+  dependency is now marked non-runtime instead of reading as a runtime
+  dependency.** Readers assigned the scope to the declared member and
+  nothing propagated it, so on a uv project with PEP 735
+  `[dependency-groups]` the packages those groups pull in carried no
+  scope at all. A new emit-time pass seeds from every declared
+  non-runtime component and marks what is reachable from it along
+  declared edges, strongest scope winning
+  (`Runtime > Optional > Build > Test > Development`). Runtime
+  reachability from the subject is absolute immunity: a component on
+  both a runtime and a dev path keeps runtime, which is the failure
+  direction the pass is tested against by mutation rather than by
+  counting. The pass is strictly additive and never changes a scope a
+  reader assigned. Measured on `python-flask`: invariant-I3 violations
+  51 → 0, with 55 components newly marked. `npm-express` is unchanged in
+  every column — its reader already marked transitives.
+  **Consumer-visible, and the second half matters more than the first**:
+  `--exclude-scope` now drops the transitive closure it always promised
+  to drop, so an operator passing that flag gets strictly **less**
+  output than before. The filter used to run *above* the new pass, which
+  did not merely leave those transitives in the document — it removed
+  the declared members the pass seeds from, so the transitives were
+  emitted carrying **no scope at all**, byte-identical on the wire to a
+  runtime dependency. Measured: on `go-opentelemetry` with
+  `--exclude-scope test`, 33 of 50 test-scoped components survived the
+  filter and now do not (334 → 284 components, 1465 → 761 edges); on
+  `haskell-language-server` with `--exclude-scope dev` the leak was
+  smaller, 2 components (`QuickCheck`, `network-uri`), because dropping
+  the declared members had also starved the nixpkgs closure resolver
+  that runs below the old call site. A component that disappears was
+  always a non-runtime dependency; it was simply unlabelled. Output is
+  byte-identical for every scan that does not pass the flag. Nothing is
+  claimed about `orphaned-components-detected`, which is derived from
+  reachability alone and is unaffected by scope marking.
+  `--exclude-scope` still accepts only `dev`, `build` and `test`, so a
+  scope of `optional` cannot be excluded at all — unchanged here, and
+  the reason the uv fixture cannot serve as a regression test for the
+  above.
+  The existing catalog row **C62** `waybill:lifecycle-scope-derivation`
+  gains a third value, `transitive`, and distinguishes the two
+  provenances on the wire: present where waybill inferred the scope,
+  absent where a reader declared it. The row already carried
+  `test-only-closure` and `go-mod-why` for Go, so what widened is its
+  documented scope — from the test-scope discriminator for one
+  ecosystem to the derivation discriminator for any non-runtime scope in
+  any ecosystem. Nothing on the wire changed shape. Cargo is **not** fixed — `rust-ripgrep`'s two violators
+  carry a reader-assigned `Runtime` that this pass is forbidden to
+  overwrite, and the cargo-reader defect behind it is #1272 (#1209).
+
 - **A dead CPE candidate is no longer emitted for LibreSSL, and a new
   curated library can no longer ship without one.**
   `GENERIC_LIBRARY_CPES` emitted `libressl:libressl` alongside

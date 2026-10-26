@@ -124,8 +124,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -137,6 +145,7 @@
         }
       ],
       "purl": "pkg:pypi/alabaster@1.0.0",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -250,8 +259,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -263,6 +280,7 @@
         }
       ],
       "purl": "pkg:pypi/anyio@4.10.0",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -454,8 +472,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -467,6 +493,7 @@
         }
       ],
       "purl": "pkg:pypi/babel@2.17.0",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -710,8 +737,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -723,6 +758,7 @@
         }
       ],
       "purl": "pkg:pypi/cachetools@6.1.0",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -836,8 +872,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -849,6 +893,7 @@
         }
       ],
       "purl": "pkg:pypi/certifi@2025.8.3",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -1133,8 +1178,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -1146,6 +1199,7 @@
         }
       ],
       "purl": "pkg:pypi/cffi@1.17.1",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -1202,8 +1256,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -1215,6 +1277,7 @@
         }
       ],
       "purl": "pkg:pypi/cfgv@3.4.0",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -1271,8 +1334,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -1284,6 +1355,7 @@
         }
       ],
       "purl": "pkg:pypi/chardet@5.2.0",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -1604,8 +1676,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -1617,6 +1697,7 @@
         }
       ],
       "purl": "pkg:pypi/charset-normalizer@3.4.3",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -2047,8 +2128,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -2060,6 +2149,7 @@
         }
       ],
       "purl": "pkg:pypi/colorama@0.4.6",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -2334,8 +2424,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -2347,6 +2445,7 @@
         }
       ],
       "purl": "pkg:pypi/distlib@0.4.0",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -2403,8 +2502,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -2416,6 +2523,7 @@
         }
       ],
       "purl": "pkg:pypi/docutils@0.21.2",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -2472,8 +2580,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -2485,6 +2601,7 @@
         }
       ],
       "purl": "pkg:pypi/exceptiongroup@1.3.0",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -2541,8 +2658,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -2554,6 +2679,7 @@
         }
       ],
       "purl": "pkg:pypi/filelock@3.19.1",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -3194,8 +3320,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -3207,6 +3341,7 @@
         }
       ],
       "purl": "pkg:pypi/h11@0.16.0",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -3263,8 +3398,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -3276,6 +3419,7 @@
         }
       ],
       "purl": "pkg:pypi/httpcore@1.0.9",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -3332,8 +3476,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -3345,6 +3497,7 @@
         }
       ],
       "purl": "pkg:pypi/httpx@0.28.1",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -3401,8 +3554,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -3414,6 +3575,7 @@
         }
       ],
       "purl": "pkg:pypi/identify@2.6.13",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -3470,8 +3632,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -3483,6 +3653,7 @@
         }
       ],
       "purl": "pkg:pypi/idna@3.10",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -3539,8 +3710,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -3552,6 +3731,7 @@
         }
       ],
       "purl": "pkg:pypi/imagesize@1.4.1",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -3677,8 +3857,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -3690,6 +3878,7 @@
         }
       ],
       "purl": "pkg:pypi/iniconfig@2.1.0",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -4476,8 +4665,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -4489,6 +4686,7 @@
         }
       ],
       "purl": "pkg:pypi/mypy-extensions@1.1.0",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -4767,8 +4965,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -4780,6 +4986,7 @@
         }
       ],
       "purl": "pkg:pypi/nodeenv@1.9.1",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -4836,8 +5043,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -4849,6 +5064,7 @@
         }
       ],
       "purl": "pkg:pypi/packaging@25.0",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -4983,8 +5199,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -4996,6 +5220,7 @@
         }
       ],
       "purl": "pkg:pypi/pathspec@0.12.1",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -5052,8 +5277,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -5065,6 +5298,7 @@
         }
       ],
       "purl": "pkg:pypi/platformdirs@4.3.8",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -5121,8 +5355,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -5134,6 +5376,7 @@
         }
       ],
       "purl": "pkg:pypi/pluggy@1.6.0",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -5403,8 +5646,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -5416,6 +5667,7 @@
         }
       ],
       "purl": "pkg:pypi/pycparser@2.22",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -5472,8 +5724,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -5485,6 +5745,7 @@
         }
       ],
       "purl": "pkg:pypi/pygments@2.19.2",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -5541,8 +5802,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -5554,6 +5823,7 @@
         }
       ],
       "purl": "pkg:pypi/pyproject-api@1.9.1",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -6077,8 +6347,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -6090,6 +6368,7 @@
         }
       ],
       "purl": "pkg:pypi/pyyaml@6.0.2",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -6203,8 +6482,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -6216,6 +6503,7 @@
         }
       ],
       "purl": "pkg:pypi/requests@2.32.5",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -6272,8 +6560,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -6285,6 +6581,7 @@
         }
       ],
       "purl": "pkg:pypi/roman-numerals-py@3.1.0",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -6544,8 +6841,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -6557,6 +6862,7 @@
         }
       ],
       "purl": "pkg:pypi/sniffio@1.3.1",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -6613,8 +6919,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -6626,6 +6940,7 @@
         }
       ],
       "purl": "pkg:pypi/snowballstemmer@3.0.1",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -6760,8 +7075,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -6773,6 +7096,7 @@
         }
       ],
       "purl": "pkg:pypi/sphinx-notfound-page@1.1.0",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -7149,8 +7473,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -7162,6 +7494,7 @@
         }
       ],
       "purl": "pkg:pypi/sphinxcontrib-applehelp@2.0.0",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -7218,8 +7551,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -7231,6 +7572,7 @@
         }
       ],
       "purl": "pkg:pypi/sphinxcontrib-devhelp@2.0.0",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -7287,8 +7629,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -7300,6 +7650,7 @@
         }
       ],
       "purl": "pkg:pypi/sphinxcontrib-htmlhelp@2.1.0",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -7356,8 +7707,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -7369,6 +7728,7 @@
         }
       ],
       "purl": "pkg:pypi/sphinxcontrib-jsmath@1.0.1",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -7503,8 +7863,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -7516,6 +7884,7 @@
         }
       ],
       "purl": "pkg:pypi/sphinxcontrib-qthelp@2.0.0",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -7572,8 +7941,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -7585,6 +7962,7 @@
         }
       ],
       "purl": "pkg:pypi/sphinxcontrib-serializinghtml@2.0.0",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -7641,8 +8019,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -7654,6 +8040,7 @@
         }
       ],
       "purl": "pkg:pypi/starlette@0.47.2",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -7830,8 +8217,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -7843,6 +8238,7 @@
         }
       ],
       "purl": "pkg:pypi/tomli@2.2.1",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -8211,8 +8607,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -8224,6 +8628,7 @@
         }
       ],
       "purl": "pkg:pypi/typing-extensions@4.14.1",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -8280,8 +8685,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -8293,6 +8706,7 @@
         }
       ],
       "purl": "pkg:pypi/urllib3@2.5.0",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -8417,8 +8831,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -8430,6 +8852,7 @@
         }
       ],
       "purl": "pkg:pypi/uv@0.8.12",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -8486,8 +8909,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -8499,6 +8930,7 @@
         }
       ],
       "purl": "pkg:pypi/uvicorn@0.35.0",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -8612,8 +9044,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -8625,6 +9065,7 @@
         }
       ],
       "purl": "pkg:pypi/virtualenv@20.34.0",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -9097,8 +9538,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -9110,6 +9559,7 @@
         }
       ],
       "purl": "pkg:pypi/watchfiles@1.1.0",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
@@ -9491,8 +9941,16 @@
           "value": "[\"uv.lock\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "optional"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:python-lockfile-format",
@@ -9504,6 +9962,7 @@
         }
       ],
       "purl": "pkg:pypi/websockets@15.0.1",
+      "scope": "excluded",
       "supplier": {
         "name": "PyPI"
       },
