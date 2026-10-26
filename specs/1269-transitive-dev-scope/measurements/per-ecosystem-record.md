@@ -4,10 +4,12 @@
 correct* / *not reached* — each citing a corpus target or a named
 synthetic fixture. **SC-005** requires that no row read "assumed".
 
-Three rows below are **pending** rather than assumed: their evidence is
-a corpus-lane run that cannot happen before T037, because the lane
-fails on a stale declaration and the declarations are deleted in T035.
-Each names the task that closes it. A pending row is not a claim.
+**No row is pending.** Three were, until corpus-lane run #40251099255
+closed them — and closing them changed the feature rather than just
+recording it: the lane found that the pass had been placed before the
+nixpkgs component producers, so `cabal` and `nix` read as *not reached*
+when they were in fact *fixed* by a correctly placed pass. The
+account is in `measurements/t038-lane-and-placement.md`.
 
 ## Outcomes
 
@@ -21,9 +23,9 @@ Each names the task that closes it. A pending row is not a claim.
 | cargo | **not reached** — reader conflict, **#1272** | corpus target `rust-ripgrep`, `measurements/t024-before-after.md` | I3 violations 2 → 2. `pkg:cargo/ryu@1.0.18` and `pkg:cargo/itoa@1.0.11` are reached by Phase B and are not immune, but the cargo reader already assigned them `Runtime` while scoping their sole dependant `serde_json` `optional`. FR-003 forbids overwriting a reader's scope, so the pass declines. Filed as #1272; `rust-ripgrep`'s I3 declaration is retained and re-pointed there (FR-014). Cargo's *declared* dev-dependencies were already correct before this feature — what is unreached is the transitive closure of a **non-activated optional** dependency. |
 | mix (Elixir) | **not reached** — missing edges | synthetic fixture `.../scope_propagation/mix`, test `mix_transitive_is_not_reached_because_the_reader_emits_no_edges` | the mix reader *does* read `only: [:dev, :test]` for a declared dep (the member comes out `development`), but constructs every `mix.lock` entry with `depends: Vec::new()`. `mix.lock` records hashes, not a graph. The transitive therefore has **zero inbound edges** and the pass has no non-runtime path to follow. Upstream of this feature. |
 | rebar (Erlang) | **not reached** — profile lost at the lock tier | synthetic fixture `.../scope_propagation/rebar`, test `rebar_transitive_is_not_reached_because_the_lock_tier_loses_the_profile` | two independent blockers. (1) `erlang.rs`'s profile classifier (`Some("dev") \| Some("test") \| Some("doc")`) runs only on the **design-tier** path — deps with no `rebar.lock` match — so a `test`-profile dep that *is* locked comes out `Runtime` and there is no non-runtime seed in the document at all. (2) Lock entries are built with `depends: Vec::new()`, so there are no transitive edges either. Both upstream of this feature. |
-| maven / gradle (`optional`, `provided`, test scope) | **pending — closed by T038** | corpus target `maven-guice` | `maven-guice` carries **no** `unmarked-non-runtime-reachable` declaration in `invariant-declarations.toml`, so invariant I3 passes on it today. The claim to be confirmed is that it still passes and its goldens do not move — i.e. *already correct*. Not recorded as an outcome before the lane runs, because "the invariant has no declaration" and "the invariant passes after this change" are different statements. |
-| cabal / Haskell | **pending — closed by T038** | corpus targets `haskell-language-server` (declared 26), `haskell-security-advisories` (declared 13), `haskell-aeson` (undeclared) | **not measurable on this host.** `haskell-security-advisories` emits 62 components locally against its golden's 251, so a local before/after measures the environment rather than the change. Whether the violators are `python-flask`-shaped (unscoped, so fixable here) or `rust-ripgrep`-shaped (reader-assigned `Runtime`, so #1272's class) is unknown until the lane reports. |
-| nix | **pending — closed by T038** | corpus target `nix-closure-moat` (declared 9) | same as cabal: not measurable on this host, and the same two-way split applies. |
+| maven / gradle (`optional`, `provided`, test scope) | **already correct** | corpus target `maven-guice`, lane run #40251099255 | I3 passes (`.`) and all three goldens are **byte-identical**. Both halves matter: the invariant still holds, and the pass found nothing to mark, so the maven reader was already scoping transitives. |
+| cabal / Haskell | **fixed** | corpus targets `haskell-language-server` and `haskell-security-advisories`, lane run #40251099255; `measurements/t038-lane-and-placement.md` | I3 26 → **0** and 13 → **0**; 26 and 72 components marked `development` with the `transitive` marker. `haskell-aeson` passes I3 and is byte-identical. These were *not* fixed by the first placement of the pass — the nixpkgs-haskell closure resolver produces their components after the reconcilers, so the pass ran before they existed. The earlier "62 components, not measurable on this host" note was wrong: that came from an invocation missing `--root-name`/`--root-version`, and with the harness's own invocation this host emits 251, matching the golden. |
+| nix | **fixed** | corpus target `nix-closure-moat`, lane run #40251099255 | I3 9 → **0**, 9 components marked `development` with the `transitive` marker. Same placement cause and same correction as cabal. |
 
 ## Why five claims rest on synthetic fixtures
 

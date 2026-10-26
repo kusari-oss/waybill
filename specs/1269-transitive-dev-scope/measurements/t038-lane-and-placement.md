@@ -122,3 +122,100 @@ it apply to the nixpkgs and closure components it cannot currently see
 Left as-is and documented at the call site rather than widened
 silently. The filter's own comment claims it is "the final step before
 serialization", which has not been true since the nixpkgs tiers landed.
+
+---
+
+## The lane after the relocation: green
+
+**Run**: #40251099255, same dispatch form. `109 passed; 0 failed`,
+`no lane failures`.
+
+The I3 column of the final matrix, every target:
+
+| cell | targets |
+|---|---|
+| `.` pass | `python-flask`, `haskell-language-server`, `haskell-security-advisories`, `nix-closure-moat`, `go-opentelemetry`, `haskell-aeson`, `npm-express`, `pants-example-javascript` |
+| `d` declared | `rust-ripgrep` — #1272, retained deliberately |
+| `-` n/a | the remaining eight: no non-runtime dependency edge declared, so the invariant has no population |
+
+That is SC-002 as amended: four deleted, one retained and still
+reporting as declared. And SC-001 with exception (b) — a
+reader-assigned `Runtime` — as its only instance. Exception (a), the
+unrooted ecosystem, turned out to have **no** instances at all:
+`skipped_unrooted_ecosystem=0` on every target measured.
+
+`python-flask`, `haskell-security-advisories` and `maven-guice` keep
+their pre-existing **I7** declarations, untouched. That is FR-018
+holding in the data rather than in prose: scope marking does not change
+reachability, so no orphan count moved.
+
+## Golden churn, attributed (SC-007)
+
+Five of 17 targets changed, all three formats each. Twelve byte-identical.
+
+| target | CDX `scope` added | CDX properties added | scoped edges re-typed |
+|---|---|---|---|
+| `haskell-security-advisories` | 72 | 144 | 450 → `DEV_DEPENDENCY_OF` |
+| `python-flask` | 51 | 102 | 123 → `OPTIONAL_DEPENDENCY_OF` |
+| `haskell-language-server` | 26 | 52 | 52 → `DEV_DEPENDENCY_OF` |
+| `nix-closure-moat` | 9 | 18 | 20 → `DEV_DEPENDENCY_OF` |
+| `go-opentelemetry` | 5 | 10 | 37 → `TEST_DEPENDENCY_OF` |
+
+Properties are exactly 2× the scopes in every row —
+`waybill:lifecycle-scope` and `waybill:lifecycle-scope-derivation`,
+one each.
+
+**`go-opentelemetry` is the singleton the procedure warns about**: a
+change appearing once across the whole review is not a category and
+needs its own explanation. It has no I3 declaration and its I3 cell
+passed before and after, so its five components are population B —
+reachable from a declared non-runtime component but not from the
+subject, hence never I3's business. The pass marked them, which is the
+feature working on a target nobody had declared. Each of the five
+gained `test` scope plus the `transitive` marker; the document is
+strictly more informative and no invariant moved.
+
+### Verified semantically, not by eyeballing a normalised diff
+
+The raw diffs are dominated by content-addressed ID cascades — SPDX
+2.3 relationship IDs and SPDX 3 `spdxId`/`subject`/`statement` are
+hashes, so 102 new annotations move thousands of lines. Counting those
+lines proves nothing. Two checkers are committed beside this file:
+
+`spdx2check.py` compares annotation `(package, field, value)` multisets
+and relationship `(from, type, to)` multisets with SPDXIDs mapped back
+to PURLs:
+
+```
+python-flask:                 annotations +102 / -0   relationships +123 / -123
+haskell-language-server:      annotations  +52 / -0   relationships  +52 /  -52
+haskell-security-advisories:  annotations +144 / -0   relationships +450 / -450
+nix-closure-moat:             annotations  +18 / -0   relationships  +20 /  -20
+go-opentelemetry:             annotations  +10 / -0   relationships  +37 /  -37
+```
+
+Every target: **zero annotations removed**, and additions exactly one
+`lifecycle-scope` plus one `lifecycle-scope-derivation` per newly
+scoped component. Relationship additions equal removals exactly, and
+every pair is `DEPENDS_ON` → a scoped type.
+
+`spdx3flat.py` flattens SPDX 3's grouped `to[]` arrays, because
+regrouping makes an untouched relationship read as both added and
+removed:
+
+```
+endpoint pairs:  added-only 0   removed-only 0   retyped 450 / 52 / 20 / 37
+```
+
+**No edge was created or destroyed in any target, in any format.**
+Every edge change is a re-typing of an existing endpoint pair, which is
+FR-010.
+
+One asymmetry worth stating rather than leaving to be rediscovered:
+`python-flask` re-types 123 edges in SPDX 2.3 and **zero** in SPDX 3.
+Its propagated scope is `optional`, and SPDX 3's
+`LifecycleScopedRelationship.scope` vocabulary is
+`design|development|build|test|runtime|other` with no `optional`
+member. So the value rides the annotation alone there — the
+pre-existing C122 / m179 FR-017 behaviour, consistent with the
+catalog, not a parity gap introduced here.
