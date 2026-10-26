@@ -124,12 +124,12 @@ before adding plumbing.
 
 **Independent Test**: a document with both populations shows the marker on exactly the propagated components, identically in all three formats.
 
-- [ ] T025 [US3] Add the C199 row for `waybill:lifecycle-scope-derivation` to `docs/reference/sbom-format-mapping.md` with the three wire shapes, `SymmetricEqual` directionality, the closed one-value enum, and the KEEP-NO-NATIVE audit verdict copied from `contracts/c199-annotation.md` (FR-009, FR-017)
-- [ ] T026 [US3] Add `c199_cdx` to `waybill-cli/src/parity/extractors/cdx.rs` via the existing `cdx_anno!` macro at component scope
-- [ ] T027 [P] [US3] Add `c199_spdx23` to `waybill-cli/src/parity/extractors/spdx2.rs`
-- [ ] T028 [P] [US3] Add `c199_spdx3` to `waybill-cli/src/parity/extractors/spdx3.rs`
-- [ ] T029 [US3] Register the C199 `ParityExtractor` in `waybill-cli/src/parity/extractors/mod.rs` with `directional: Directionality::SymmetricEqual, order_sensitive: false` (depends on T026, T027, T028 — the row and its extractor must land together or `every_catalog_row_has_an_extractor` and `holistic_parity` fail)
-- [ ] T030 [US3] Add a test asserting the marker is absent on a declared non-runtime component and absent on a runtime component, so "absent means declared" is enforced rather than assumed (FR-008, SC-006)
+- [X] T025 [US3] Add the C199 row for `waybill:lifecycle-scope-derivation` to `docs/reference/sbom-format-mapping.md` with the three wire shapes, `SymmetricEqual` directionality, the closed one-value enum, and the KEEP-NO-NATIVE audit verdict copied from `contracts/c199-annotation.md` (FR-009, FR-017)
+- [X] T026 [US3] Add `c199_cdx` to `waybill-cli/src/parity/extractors/cdx.rs` via the existing `cdx_anno!` macro at component scope
+- [X] T027 [P] [US3] Add `c199_spdx23` to `waybill-cli/src/parity/extractors/spdx2.rs`
+- [X] T028 [P] [US3] Add `c199_spdx3` to `waybill-cli/src/parity/extractors/spdx3.rs`
+- [X] T029 [US3] Register the C199 `ParityExtractor` in `waybill-cli/src/parity/extractors/mod.rs` with `directional: Directionality::SymmetricEqual, order_sensitive: false` (depends on T026, T027, T028 — the row and its extractor must land together or `every_catalog_row_has_an_extractor` and `holistic_parity` fail)
+- [X] T030 [US3] Add a test asserting the marker is absent on a declared non-runtime component and absent on a runtime component, so "absent means declared" is enforced rather than assumed (FR-008, SC-006)
 
 **Checkpoint**: `cargo test -p waybill --bin waybill parity::` and `holistic_parity` green; the distinction is readable in all three formats.
 

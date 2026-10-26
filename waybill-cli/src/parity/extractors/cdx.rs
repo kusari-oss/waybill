@@ -1006,6 +1006,12 @@ cdx_anno!(c197_cdx, "waybill:version-absence", component);
 // are all URL-shaped), so unlike both SPDX versions it keeps the
 // property. The capability asymmetry runs the opposite way to C185's.
 cdx_anno!(c198_cdx, "waybill:source-package", component);
+// #1209: C199 scope derivation. Emitted iff the propagation pass
+// assigned this component's non-runtime scope; absence alongside a
+// non-runtime scope means a reader declared it. Plain property in
+// all three formats — the audit found no native carrier anywhere
+// (KEEP-NO-NATIVE; see the catalog row).
+cdx_anno!(c199_cdx, "waybill:lifecycle-scope-derivation", component);
 
 /// C194 — compared by projection only (milestone 1071).
 pub(super) fn c194_cdx(doc: &Value) -> BTreeSet<String> {

@@ -770,4 +770,76 @@ mod tests {
         assert_eq!(s.assigned_total(), 0);
         assert_eq!(s.seeded_from, 0);
     }
+
+    /// FR-007, FR-008, SC-006: the C199 marker's domain is exactly the
+    /// set this pass assigned.
+    ///
+    /// Absence is the load-bearing half of the contract. A consumer
+    /// reads a non-runtime scope with no marker as "a reader declared
+    /// this", so a marker that leaked onto a declared component would
+    /// not merely be noise — it would assert the opposite of the
+    /// truth. The three populations are checked in one test because
+    /// the claim is about the partition, not about any one of them:
+    /// declared non-runtime, runtime, and inferred non-runtime, all in
+    /// a single document so no population can be checked in isolation
+    /// and pass vacuously.
+    #[test]
+    fn the_derivation_marker_marks_only_what_this_pass_assigned() {
+        const DECLARED_DEV: &str = "pkg:npm/waybill-fixture-declared-dev@1.0.0";
+        const INFERRED_DEV: &str = "pkg:npm/waybill-fixture-inferred-dev@1.0.0";
+
+        let mut components = vec![
+            mk_component(ROOT),
+            // runtime by reachability from the root
+            mk_component(SHARED),
+            // non-runtime because a reader said so
+            scoped(DECLARED_DEV, LifecycleScope::Development),
+            // non-runtime because this pass infers it
+            mk_component(INFERRED_DEV),
+        ];
+        let relationships = vec![
+            mk_rel(ROOT, SHARED),
+            mk_rel(ROOT, DECLARED_DEV),
+            mk_rel(DECLARED_DEV, INFERRED_DEV),
+        ];
+
+        let summary = propagate_non_runtime_scope(
+            &mut components,
+            &relationships,
+            &seeds(&[ROOT]),
+            &ecosystems(&["npm"]),
+        );
+
+        assert_eq!(summary.assigned_total(), 1, "exactly one inference");
+
+        assert_eq!(
+            derivation_of(&components, INFERRED_DEV),
+            Some(DERIVATION_TRANSITIVE.to_string()),
+            "the inferred component carries the marker"
+        );
+        assert_eq!(
+            derivation_of(&components, DECLARED_DEV),
+            None,
+            "a reader-declared non-runtime scope carries NO marker — its              absence is what identifies it as declared (FR-008)"
+        );
+        assert_eq!(
+            derivation_of(&components, SHARED),
+            None,
+            "a runtime component is outside the marker's domain"
+        );
+        assert_eq!(
+            derivation_of(&components, ROOT),
+            None,
+            "the subject is outside the marker's domain"
+        );
+
+        // Stated as a set rather than per-component, so a future
+        // population cannot be added without this failing.
+        let marked: Vec<&str> = components
+            .iter()
+            .filter(|c| c.extra_annotations.contains_key(ANN_SCOPE_DERIVATION))
+            .map(|c| c.purl.as_str())
+            .collect();
+        assert_eq!(marked, vec![INFERRED_DEV]);
+    }
 }
