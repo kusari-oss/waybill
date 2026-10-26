@@ -786,8 +786,6 @@ spdx3_anno!(c195_spdx3, "waybill:go-mod-why", document);
 spdx3_anno!(c196_spdx3, "waybill:go-mod-why-reason", document);
 // Milestone 1156: C197 per-component version-absence marker.
 spdx3_anno!(c197_spdx3, "waybill:version-absence", component);
-// #1209: C199 scope derivation, same envelope as `c199_spdx23`.
-spdx3_anno!(c199_spdx3, "waybill:lifecycle-scope-derivation", component);
 
 /// C198 — the source package, read back out of the native second
 /// `externalIdentifier[packageUrl]` entry (#1248). Mirror of

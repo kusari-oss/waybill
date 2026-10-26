@@ -40,10 +40,18 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use waybill_common::resolution::{LifecycleScope, Relationship, ResolvedComponent};
 
 /// The annotation key recording that a scope was inferred by this pass
-/// rather than read from a declaration. Catalog row C199.
+/// rather than read from a declaration. Catalog row C62.
+/// Catalog row **C62**, not a new row. The key has carried
+/// `test-only-closure` and `go-mod-why` since the Go test-closure work;
+/// `transitive` is a third value on the same open enum, which is what
+/// that enum was documented as open for. See
+/// `specs/1269-transitive-dev-scope/contracts/scope-derivation-annotation.md`,
+/// including why the first draft of this feature wrongly specified a new
+/// row for an already-live key.
 pub(crate) const ANN_SCOPE_DERIVATION: &str = "waybill:lifecycle-scope-derivation";
 
-/// The only value the C199 vocabulary recognises in v1. A
+/// The only value this feature adds to C62's open enum, which
+/// already carries `test-only-closure` and `go-mod-why`. A
 /// reader-declared scope is identified by the key's *absence*, so
 /// there is deliberately no `"declared"` value to write: emitting one
 /// would add a field to every already-correct component and break the
@@ -285,6 +293,22 @@ pub(crate) fn propagate_non_runtime_scope(
 
     for component in components.iter_mut() {
         if let Some(scope) = assigned.get(component.purl.as_str()) {
+            // C62's enum is shared with the Go readers' two derivation
+            // values. They can never collide: both of those writers set
+            // the scope and the derivation together, and `assigned`
+            // holds only components whose `lifecycle_scope` was `None`.
+            // Asserted rather than reasoned about, because the argument
+            // lives in another module and would not travel with a
+            // change to it.
+            debug_assert!(
+                !component.extra_annotations.contains_key(ANN_SCOPE_DERIVATION),
+                "{}: would overwrite an existing scope derivation \
+                 ({:?}) — a reader assigned a derivation without a \
+                 scope, which breaks C62's one-value-per-component \
+                 contract",
+                component.purl.as_str(),
+                component.extra_annotations.get(ANN_SCOPE_DERIVATION),
+            );
             component.lifecycle_scope = Some(*scope);
             component.extra_annotations.insert(
                 ANN_SCOPE_DERIVATION.to_string(),
@@ -771,7 +795,7 @@ mod tests {
         assert_eq!(s.seeded_from, 0);
     }
 
-    /// FR-007, FR-008, SC-006: the C199 marker's domain is exactly the
+    /// FR-007, FR-008, SC-006: the C62 marker's domain is exactly the
     /// set this pass assigned.
     ///
     /// Absence is the load-bearing half of the contract. A consumer
@@ -841,5 +865,53 @@ mod tests {
             .map(|c| c.purl.as_str())
             .collect();
         assert_eq!(marked, vec![INFERRED_DEV]);
+    }
+
+    /// C62's enum is shared: the Go readers write `test-only-closure`
+    /// and `go-mod-why` into the same key. A component may carry at
+    /// most one value, and this pass must not be the one that breaks
+    /// that.
+    ///
+    /// It cannot, because both Go writers set the scope and the
+    /// derivation together and this pass assigns only where the scope
+    /// is absent. That argument lives in another module, so it is
+    /// pinned here instead of trusted.
+    #[test]
+    fn a_component_with_an_existing_derivation_is_not_touched() {
+        const GO_TEST_ONLY: &str = "pkg:golang/waybill-fixture/gotest@v1.0.0";
+
+        let mut go_component = mk_component(GO_TEST_ONLY);
+        go_component.lifecycle_scope = Some(LifecycleScope::Test);
+        go_component.extra_annotations.insert(
+            ANN_SCOPE_DERIVATION.to_string(),
+            serde_json::Value::String("test-only-closure".to_string()),
+        );
+
+        let mut components = vec![
+            mk_component(ROOT),
+            scoped(DEVTOOL, LifecycleScope::Development),
+            go_component,
+        ];
+        // The Go component is reached from a Development seed, so
+        // without the scope guard Phase B would claim it.
+        let relationships = vec![mk_rel(ROOT, DEVTOOL), mk_rel(DEVTOOL, GO_TEST_ONLY)];
+
+        propagate_non_runtime_scope(
+            &mut components,
+            &relationships,
+            &seeds(&[ROOT]),
+            &ecosystems(&["npm", "golang"]),
+        );
+
+        assert_eq!(
+            scope_of(&components, GO_TEST_ONLY),
+            Some(LifecycleScope::Test),
+            "FR-003: the reader's Test scope survives a Development seed"
+        );
+        assert_eq!(
+            derivation_of(&components, GO_TEST_ONLY).as_deref(),
+            Some("test-only-closure"),
+            "and so does the reader's C62 value — overwriting it with              `transitive` would relabel a Go test-closure inference as              this pass's work"
+        );
     }
 }

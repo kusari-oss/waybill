@@ -60,7 +60,7 @@ entry reads as declared.
 
 ## New catalog row
 
-**C199** — `waybill:lifecycle-scope-derivation`
+**C62** — `waybill:lifecycle-scope-derivation`
 
 | field | value |
 |---|---|
@@ -78,9 +78,9 @@ Mutual exclusions and neighbours:
   assert one.
 - Distinct from `waybill:optional-derivation` (C122), whose values name
   a reader's lockfile construct (`pep-735-dependency-groups:all`,
-  `npm-optional-dependencies`). C199 names *who decided*, C122 names
+  `npm-optional-dependencies`). C62 names *who decided*, C122 names
   *which declaration a reader read*. A component may carry C122 and
-  never C199, since C122 implies a declaration.
+  never C62, since C122 implies a declaration.
 - Same posture as C197 `waybill:version-absence`: mark the anomalous
   population only, so every untouched component stays byte-identical.
 
@@ -132,7 +132,7 @@ graph, once per scan:
 
 ```
 None ──(not runtime-reachable, reached from a declared
-         non-runtime seed)──▶ Some(strongest inbound)   + C199 marker
+         non-runtime seed)──▶ Some(strongest inbound)   + C62 marker
 None ──(runtime-reachable, or unreached)──────────────▶ None
 Some(_) ─────────────────────────────────────────────▶ Some(_)   unchanged
 ```

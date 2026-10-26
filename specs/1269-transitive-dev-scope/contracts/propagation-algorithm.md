@@ -65,7 +65,7 @@ immunity set.
 |---|---|---|
 | Q1 | Every component in `immune` has the `lifecycle_scope` it entered with | FR-002 |
 | Q2 | No component whose `lifecycle_scope` was `Some(_)` on entry changed | FR-003 |
-| Q3 | Every component in `assigned` carries the C199 marker; no other component does | FR-007, FR-008 |
+| Q3 | Every component in `assigned` carries the C62 marker; no other component does | FR-007, FR-008 |
 | Q4 | A component reachable over `E` from a declared non-runtime component and absent from `immune` has a non-runtime scope | FR-001, FR-005 |
 | Q5 | `assigned` is empty ⇒ no component and no annotation changed | FR-013 |
 | Q6 | The result is independent of the order of `components` and `relationships` | determinism |

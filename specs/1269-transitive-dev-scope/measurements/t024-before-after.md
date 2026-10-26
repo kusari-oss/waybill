@@ -11,7 +11,7 @@ have measured the environment.
 
 ## Comparable, same input both sides
 
-| target | components | marked | I3 violations | C199 `transitive` |
+| target | components | marked | I3 violations | C62 `transitive` |
 |---|---|---|---|---|
 | `python-flask` | 108 → 108 | 22 → **77** | 51 → **0** | 0 → **55** |
 | `rust-ripgrep` | 68 → 68 | 3 → 3 | 2 → **2** | 0 → **0** |

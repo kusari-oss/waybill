@@ -721,9 +721,6 @@ spdx23_anno!(c195_spdx23, "waybill:go-mod-why", document);
 spdx23_anno!(c196_spdx23, "waybill:go-mod-why-reason", document);
 // Milestone 1156: C197 per-component version-absence marker.
 spdx23_anno!(c197_spdx23, "waybill:version-absence", component);
-// #1209: C199 scope derivation, same envelope as every other
-// per-component annotation row.
-spdx23_anno!(c199_spdx23, "waybill:lifecycle-scope-derivation", component);
 
 /// C198 — the source package, read back out of the native second
 /// `externalRefs[PACKAGE-MANAGER/purl]` row rather than an

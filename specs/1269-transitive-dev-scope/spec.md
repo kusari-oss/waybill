@@ -314,7 +314,15 @@ synthetic fixture.
   every format's native scope mapping keeps working unchanged.
 - **FR-007**: A component whose non-runtime scope was assigned by this
   pass MUST carry a derivation marker, valued `transitive`. The marker
-  has exactly one value in v1; future values may extend the enum.
+  is the **existing** catalog row C62
+  `waybill:lifecycle-scope-derivation`, whose open enum already carries
+  `test-only-closure` and `go-mod-why` from the Go test-closure work and
+  which was documented as open for exactly this. `transitive` is a third
+  value on it, not a new key: see
+  `contracts/scope-derivation-annotation.md`, which also records why this
+  feature's first draft wrongly specified a new row for an already-live
+  key and how the collision was caught. A component carries at most one
+  value, which is asserted rather than assumed.
 - **FR-008**: Every other component MUST NOT carry the marker — one
   whose scope a reader declared, and one with no non-runtime scope
   alike. A non-runtime scope with no marker therefore means "declared",
@@ -325,9 +333,13 @@ synthetic fixture.
   component byte-identical, which is what makes FR-013 hold by
   construction rather than by exception.
 - **FR-009**: The derivation marker MUST be emitted in CycloneDX, SPDX
-  2.3 and SPDX 3 with equal values, and its catalog row and parity
-  extractor MUST land in the same change — a row without an extractor
-  fails the parity suite by design.
+  2.3 and SPDX 3 with equal values. Because the marker is C62, its three
+  parity extractors already exist and are already `SymmetricEqual`;
+  this feature adds **no** catalog row and **no** extractor, and what
+  must land in the same change is the row's enum entry and the prose
+  widening its scope from "the test-scope discriminator for Go" to "the
+  derivation discriminator for any non-runtime scope in any
+  ecosystem".
 - **FR-010**: Dependency edges MUST agree with component scope after
   the pass: an edge into a component the pass marked MUST carry the
   corresponding typed relationship in every format.

@@ -32,10 +32,14 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   always a development dependency; it was simply unlabelled. Nothing is
   claimed about `orphaned-components-detected`, which is derived from
   reachability alone and is unaffected by scope marking.
-  New catalog row **C199** `waybill:lifecycle-scope-derivation`
-  distinguishes the two provenances on the wire: present with value
-  `transitive` where waybill inferred the scope, absent where a reader
-  declared it. Cargo is **not** fixed — `rust-ripgrep`'s two violators
+  The existing catalog row **C62** `waybill:lifecycle-scope-derivation`
+  gains a third value, `transitive`, and distinguishes the two
+  provenances on the wire: present where waybill inferred the scope,
+  absent where a reader declared it. The row already carried
+  `test-only-closure` and `go-mod-why` for Go, so what widened is its
+  documented scope — from the test-scope discriminator for one
+  ecosystem to the derivation discriminator for any non-runtime scope in
+  any ecosystem. Nothing on the wire changed shape. Cargo is **not** fixed — `rust-ripgrep`'s two violators
   carry a reader-assigned `Runtime` that this pass is forbidden to
   overwrite, and the cargo-reader defect behind it is #1272 (#1209).
 

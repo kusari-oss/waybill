@@ -21,7 +21,10 @@ assigning that scope to unscoped, non-immune components. Strictly
 additive — a reader-assigned scope is never changed — so an ecosystem
 whose lockfile already stamps every transitive is byte-identical by
 construction. Components the pass marked carry one new annotation
-(C199) so a consumer can tell inference from declaration.
+(C62, a third value on an existing open enum — corrected at
+implementation time from a planned new row C199; see
+`contracts/scope-derivation-annotation.md`) so a consumer can tell
+inference from declaration.
 
 Research changed two things the spec had assumed. FR-002a (anchoring
 edges must not confer immunity) needs no provenance filtering: every
@@ -52,12 +55,12 @@ caller simply runs it again.
 | **I. Pure Rust, Statically Linked** | PASS. Zero new dependencies; std collections only. |
 | **III. Fail Closed** | PASS, and load-bearing. P2 in the algorithm contract is an assertion, not a tolerance: if an anchoring edge ever reaches the pass, it fails rather than silently immunizing the population the feature exists to mark. FR-012 likewise declines to act where immunity cannot be established, rather than guessing. |
 | **IV. Type-Driven Correctness** | PASS. The lattice is an exhaustive `match` in `LifecycleScope::strength()`, so a sixth variant fails to compile. Explicitly *not* `#[derive(Ord)]` (binds order to declaration order) and *not* a `matches!` predicate — the documented local failure mode (#1246, #892). |
-| **V. Specification Compliance** | PASS with a KEEP-NO-NATIVE finding for C199, audited against the vendored schemas in `waybill-cli/tests/fixtures/schemas/` with quotations recorded (research R6). CDX `evidence.identity[].field` cannot describe a scope claim — `scope` is absent from its enum; SPDX 2.3 relationships carry only `comment`; SPDX 3's `RelationshipCompleteness` grades a relationship set, not a derivation. The scope *itself* continues to use the native constructs (`component.scope`, `*_DEPENDENCY_OF`, `LifecycleScopedRelationship.scope`) — FR-006 keeps propagation on the existing variants precisely so this stays true. |
+| **V. Specification Compliance** | PASS with a KEEP-NO-NATIVE finding for C62, audited against the vendored schemas in `waybill-cli/tests/fixtures/schemas/` with quotations recorded (research R6). CDX `evidence.identity[].field` cannot describe a scope claim — `scope` is absent from its enum; SPDX 2.3 relationships carry only `comment`; SPDX 3's `RelationshipCompleteness` grades a relationship set, not a derivation. The scope *itself* continues to use the native constructs (`component.scope`, `*_DEPENDENCY_OF`, `LifecycleScopedRelationship.scope`) — FR-006 keeps propagation on the existing variants precisely so this stays true. |
 | **VI. Three-Crate Architecture** | PASS. `waybill-common` gains one accessor on an existing type; the pass lives in `waybill-cli`. |
 | **VII. Test Isolation** | PASS. No env-var mutation, no shared fixtures, no network. The positive control is a hand-built in-memory graph. |
 | **VIII. Completeness** | PASS. Nothing is dropped. The pass adds classification; it never removes a component. |
 | **IX. Accuracy** | PASS, and this is the principle the feature serves in both directions. Today's output over-reports the runtime surface (dev tooling reads as shipping). The failure mode of a careless fix is the inverse — demoting a component that ships — which is why FR-002 immunity is absolute, FR-002b withholds propagation from heuristic edges, and SC-003 demands a mutation-demonstrated positive control. |
-| **X. Transparency** | PASS. C199 is required by this principle, not merely permitted by it: a scope waybill inferred and a scope a reader read are otherwise indistinguishable, and a consumer cannot assess data it cannot tell apart. |
+| **X. Transparency** | PASS. C62's `transitive` value is required by this principle, not merely permitted by it: a scope waybill inferred and a scope a reader read are otherwise indistinguishable, and a consumer cannot assess data it cannot tell apart. |
 | **XI / XII. Enrichment** | N/A. No external data source; no network. |
 
 **Gate result**: PASS, no violations, Complexity Tracking not required.
@@ -95,13 +98,13 @@ waybill-cli/src/
 │   └── scan_cmd.rs                 # call site: after the 2nd m191 reconciler (:4022),
 │                                   #   before --exclude-scope (:4034) and the builders
 └── parity/extractors/
-    ├── mod.rs                      # C199 registration (FR-009)
+    ├── mod.rs                      # (no change — C62 is already registered)
     ├── cdx.rs                      # c199_cdx
     ├── spdx2.rs                    # c199_spdx23
     └── spdx3.rs                    # c199_spdx3
 
 docs/reference/
-└── sbom-format-mapping.md          # C199 row (FR-009, FR-017)
+└── sbom-format-mapping.md          # C62 enum entry (FR-009, FR-017)
 
 waybill-cli/tests/corpus_harness_195/
 └── invariant-declarations.toml     # five I3 entries DELETED (FR-014)
@@ -126,8 +129,8 @@ ship.
 | phase | content | stories | gate |
 |---|---|---|---|
 | 1 | `LifecycleScope::strength()` + the immunity BFS + the mixed-reachability positive control, with its mutation | US2 (P1) | the control fails when the immunity check is deleted |
-| 2 | Phase B propagation, the C199 marker, the re-typing call | US1, US3 (P1/P2) | check 1 in quickstart reads 0 on four targets |
-| 3 | C199 catalog row + three extractors + the native audit record | US3 (P2) | `every_catalog_row_has_an_extractor`, `holistic_parity` |
+| 2 | Phase B propagation, the C62 marker, the re-typing call | US1, US3 (P1/P2) | check 1 in quickstart reads 0 on four targets |
+| 3 | C62 enum entry + the native audit record (the three extractors already exist) | US3 (P2) | `every_catalog_row_has_an_extractor`, `holistic_parity` |
 | 4 | Delete the five I3 declarations; refresh goldens via the corpus lane; write the per-ecosystem record | US1, US4 | corpus lane green with no declaration re-added; `npm-express` byte-identical |
 
 Golden regeneration belongs to phase 4 and to the corpus lane, never to
@@ -140,5 +143,5 @@ a local machine.
 | Over-propagation demotes a shipping component | Under-reporting. Invisible in orphan counts, invisible in I3 counts, strictly worse than the bug | FR-002 absolute immunity; phase 1 before phase 2; SC-003's mutation-demonstrated control |
 | Anchoring moves upstream later | Would silently immunize the orphaned non-runtime closure and quietly un-fix the feature | P2 assertion in the algorithm contract fails loudly |
 | A heuristic cross-ecosystem edge propagates a scope | Demotion with no declared relationship behind it | FR-002b excludes both `cross-ecosystem-bridge` data types from both traversals |
-| Golden churn hides a second change | "Churn to regenerate" is how a regression gets committed | Every changed golden must be explained by a propagated scope or a C199 marker (SC-007); normalized, sorted diffs |
+| Golden churn hides a second change | "Churn to regenerate" is how a regression gets committed | Every changed golden must be explained by a propagated scope or a C62 derivation marker (SC-007); normalized, sorted diffs |
 | `--exclude-scope` behaviour change goes unremarked | An operator's output legitimately gets smaller | Changelog entry: the flag now drops the closure it already promised to drop |

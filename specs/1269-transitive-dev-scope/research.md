@@ -205,7 +205,17 @@ is **C198** (`waybill:source-package`); C195–C197 are
 `waybill:go-mod-why`, `waybill:go-mod-why-reason`,
 `waybill:version-absence`.
 
-**Decision**: **C199**, `waybill:lifecycle-scope-derivation`. Its
+**Decision (superseded)**: **C199**, `waybill:lifecycle-scope-derivation`.
+**Corrected at implementation time to the existing row C62**, which has
+owned that key since the Go test-closure work with an open enum of the
+same semantic. This research asked which row NUMBER was free (C198 was
+the highest) and never asked whether the KEY was taken — two different
+questions, one of them unasked. Caught by
+`parity::extractors::tests::extractors_have_unique_labels` on the first
+full gate run, which is the only check that looks ACROSS rows; each row
+was self-consistent and `every_catalog_row_has_an_extractor` passed.
+The audit verdict below is unaffected and was re-run against C62. See
+`contracts/scope-derivation-annotation.md`. Its
 extractor lands in the same change — a row without one fails
 `parity::extractors::tests::every_catalog_row_has_an_extractor` and
 `holistic_parity` by design.

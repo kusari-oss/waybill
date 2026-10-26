@@ -87,7 +87,7 @@ cargo test -p waybill --bin waybill parity::extractors::tests::every_catalog_row
 cargo test -p waybill --bin waybill holistic_parity
 ```
 
-Both fail if the C199 row lands in
+Both fail if the C62 enum entry lands in
 `docs/reference/sbom-format-mapping.md` without its extractor. Add the
 row and the extractor in one commit.
 

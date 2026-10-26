@@ -23,13 +23,13 @@
 //! Two outcomes are recorded here, and the distinction is the point:
 //!
 //! - **gem and composer are already correct**, and the evidence is
-//!   that the transitive carries a non-runtime scope with **no** C199
+//!   that the transitive carries a non-runtime scope with **no** C62
 //!   `waybill:lifecycle-scope-derivation` marker — i.e. the reader
 //!   declared it and the 1269 pass had nothing to do. That is the
 //!   FR-013 "byte-identical" shape, reproduced per ecosystem.
 //! - **uv is fixed**, and its test is the one that shows this feature
 //!   doing work: the dev-group member is `optional` because the uv
-//!   reader said so, its transitive is `optional` **with** the C199
+//!   reader said so, its transitive is `optional` **with** the C62
 //!   marker because this pass inferred it, and the runtime branch is
 //!   untouched. It is the `pydantic` shape from #1209 reproduced small
 //!   enough to assert on — the real pin is not a corpus target, which
@@ -169,7 +169,7 @@ fn gem_transitive_of_a_development_group_is_already_scoped_by_the_reader() {
     assert_eq!(
         property(core, DERIVATION_KEY),
         None,
-        "no C199 marker: the gem READER declared this scope, so gem's \
+        "no C62 marker: the gem READER declared this scope, so gem's \
          outcome is `already correct` and not `fixed`. A marker \
          appearing here would mean the reader stopped doing it and the \
          1269 pass started covering for it — a different world, \
@@ -219,7 +219,7 @@ fn composer_transitive_in_packages_dev_is_already_scoped_by_the_reader() {
     assert_eq!(
         property(core, DERIVATION_KEY),
         None,
-        "no C199 marker: declared by the composer reader, not inferred"
+        "no C62 marker: declared by the composer reader, not inferred"
     );
 
     assert_eq!(
@@ -333,7 +333,7 @@ fn rebar_transitive_is_not_reached_because_the_lock_tier_loses_the_profile() {
 /// observation (103 unscoped transitives on waybill 0.10.1) can never
 /// be a regression test; this can.
 ///
-/// It is also the only test in this file where C199 is **present**,
+/// It is also the only test in this file where C62 is **present**,
 /// which is what separates *fixed* from *already correct*: the marker
 /// says waybill inferred the scope rather than reading it.
 #[test]
@@ -368,7 +368,7 @@ fn uv_transitive_of_a_pep_735_dependency_group_is_marked_by_the_pass() {
     assert_eq!(
         property(core, DERIVATION_KEY).as_deref(),
         Some("transitive"),
-        "C199 present — this scope was INFERRED by the propagation \
+        "C62 present — this scope was INFERRED by the propagation \
          pass. The one place in this file where the marker appears, and \
          what makes uv's outcome `fixed` rather than `already correct`."
     );
