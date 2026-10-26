@@ -95,8 +95,9 @@ waybill-cli/src/
 ├── scan_fs/
 │   └── mod.rs                      # apply_lifecycle_scope_to_edges -> pub(crate) (FR-010)
 ├── cli/
-│   └── scan_cmd.rs                 # call site: after the 2nd m191 reconciler (:4022),
-│                                   #   before --exclude-scope (:4034) and the builders
+│   └── scan_cmd.rs                 # call site: after the m1035 nix-closure merge
+│                                   #   (T038), with --exclude-scope moved BELOW it
+│                                   #   as apply_exclude_scope_filter (T043)
 └── parity/extractors/
     ├── mod.rs                      # (no change — C62 is already registered)
     ├── cdx.rs                      # c199_cdx
@@ -144,4 +145,5 @@ a local machine.
 | Anchoring moves upstream later | Would silently immunize the orphaned non-runtime closure and quietly un-fix the feature | P2 assertion in the algorithm contract fails loudly |
 | A heuristic cross-ecosystem edge propagates a scope | Demotion with no declared relationship behind it | FR-002b excludes both `cross-ecosystem-bridge` data types from both traversals |
 | Golden churn hides a second change | "Churn to regenerate" is how a regression gets committed | Every changed golden must be explained by a propagated scope or a C62 derivation marker (SC-007); normalized, sorted diffs |
-| `--exclude-scope` behaviour change goes unremarked | An operator's output legitimately gets smaller | Changelog entry: the flag now drops the closure it already promised to drop |
+| `--exclude-scope` behaviour change goes unremarked | An operator's output legitimately gets smaller | Changelog entry with the measured per-target numbers, not the predicted behaviour: the prediction was wrong on `haskell-language-server` (measurements/t043) |
+| The filter's position is asserted rather than measured | A position claim reads like a code fact and is an empirical one; it was wrong twice here | `apply_exclude_scope_filter` logs `dropped_inferred`, which reads 0 if the call moves back above the pass; `measurements/t043-exclude-scope-ordering.md` holds the before/after and the probe |

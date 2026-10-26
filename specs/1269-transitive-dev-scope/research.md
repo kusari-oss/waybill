@@ -11,25 +11,47 @@ such.
 
 ## R1 — Where the pass runs
 
-**Decision**: `waybill-cli/src/cli/scan_cmd.rs`, immediately after the
-**second-pass** milestone-191 reconciler (`:4022`) and **before** the
-`--exclude-scope` filter (`:4034`), `apply_tier_filter` (`:4067`) and
-format-builder dispatch.
+**Decision (as implemented, after two corrections — see below)**:
+`waybill-cli/src/cli/scan_cmd.rs`, immediately after the m1035
+nix-closure merge, and the `--exclude-scope` filter **moved below it**.
 
 **Rationale**: three separate properties have to hold at the insertion
-point, and only that one position gives all three.
+point.
 
 1. The component set must be final. `scan_fs/mod.rs:1283` — where the
    issue pointed — runs before `deduplicate()` and before both
    reconciler passes, so components it sees can still be folded away.
-   The second reconciler pass at `scan_cmd.rs:4022` is the last mutation
-   of the set before serialization.
+   **Correction 1 (T038):** this originally concluded "the second
+   reconciler pass is the last mutation of the set", which was checked
+   against the transforms *above* that point and not against the
+   component *producers* below it. The nixpkgs-haskell runtime-closure
+   resolver and the m1035 nix-closure tier both add components and edges
+   after the reconcilers — on `haskell-language-server`, 232 components
+   and 2,126 edges including all 26 of its I3 violators. The call site
+   moved below both.
 2. It must run before `--exclude-scope`. That filter drops components
-   whose `lifecycle_scope` is in the operator's exclude list. Today an
-   operator asking to exclude `development` gets the declared members
-   dropped and their transitive closure kept — the same defect, surfaced
-   through a flag. Propagating first makes `--exclude-scope development`
-   drop the closure, which is what the flag already promises.
+   whose `lifecycle_scope` is in the operator's exclude list.
+   **Correction 2 (T043):** this was stated as a property of the call
+   site, but the filter sat *above* the corrected site, so after
+   correction 1 it no longer held. The fix is to move the filter rather
+   than the pass; it is now extracted as `apply_exclude_scope_filter`
+   and called below the pass, below the file-tier walker and above the
+   m167 orphan classifier, with the four ordering constraints recorded
+   at the call site.
+
+   The original wording ("an operator asking to exclude `development`
+   gets the declared members dropped and their transitive closure
+   kept") was also never measured, and measurement found it both
+   understated and wrong depending on the ecosystem. Understated: the
+   kept transitives come out carrying **no scope at all**, because
+   dropping the declared members removes the seeds Phase B propagates
+   from — so they are indistinguishable from runtime dependencies
+   rather than merely unmarked. Wrong: on `haskell-language-server` the
+   old order already dropped all 37 development-scoped components,
+   because removing the 11 declared members starved the nixpkgs closure
+   resolver below it. The real leak there was 2 components, and on
+   `go-opentelemetry` with `--exclude-scope test` it was 33. See
+   `measurements/t043-exclude-scope-ordering.md`.
 3. It must run once, before all three builders, or the formats can
    disagree. Each builder reads the same `components` / `relationships`
    slices, so one pass upstream is what makes FR-009 and FR-010 hold by
@@ -39,7 +61,16 @@ point, and only that one position gives all three.
 implementations, three chances to disagree); at
 `scan_fs/mod.rs:1283` (component set not final — the spec's own
 starting assumption, which is why the issue's root-cause pointer is a
-diagnosis and not a location).
+diagnosis and not a location); moving the `--tier` filter down with
+`--exclude-scope` (would newly subject the nixpkgs and nix-closure
+components to a different operator-visible flag, and the two filters
+commute, so leaving it above costs nothing).
+
+**What both corrections have in common**: each was a claim about
+pipeline position derived by reading the pipeline, and each was wrong
+in a way no test could see — the first found by the corpus lane, the
+second only by probing the flag. A position claim is an empirical
+claim.
 
 ---
 

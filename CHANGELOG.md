@@ -26,12 +26,27 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   51 → 0, with 55 components newly marked. `npm-express` is unchanged in
   every column — its reader already marked transitives.
   **Consumer-visible, and the second half matters more than the first**:
-  `--exclude-scope development` now drops the transitive closure it
-  always promised to drop, so an operator passing that flag gets
-  strictly **less** output than before. A component that disappears was
-  always a development dependency; it was simply unlabelled. Nothing is
+  `--exclude-scope` now drops the transitive closure it always promised
+  to drop, so an operator passing that flag gets strictly **less**
+  output than before. The filter used to run *above* the new pass, which
+  did not merely leave those transitives in the document — it removed
+  the declared members the pass seeds from, so the transitives were
+  emitted carrying **no scope at all**, byte-identical on the wire to a
+  runtime dependency. Measured: on `go-opentelemetry` with
+  `--exclude-scope test`, 33 of 50 test-scoped components survived the
+  filter and now do not (334 → 284 components, 1465 → 761 edges); on
+  `haskell-language-server` with `--exclude-scope dev` the leak was
+  smaller, 2 components (`QuickCheck`, `network-uri`), because dropping
+  the declared members had also starved the nixpkgs closure resolver
+  that runs below the old call site. A component that disappears was
+  always a non-runtime dependency; it was simply unlabelled. Output is
+  byte-identical for every scan that does not pass the flag. Nothing is
   claimed about `orphaned-components-detected`, which is derived from
   reachability alone and is unaffected by scope marking.
+  `--exclude-scope` still accepts only `dev`, `build` and `test`, so a
+  scope of `optional` cannot be excluded at all — unchanged here, and
+  the reason the uv fixture cannot serve as a regression test for the
+  above.
   The existing catalog row **C62** `waybill:lifecycle-scope-derivation`
   gains a third value, `transitive`, and distinguishes the two
   provenances on the wire: present where waybill inferred the scope,
