@@ -160,6 +160,30 @@ integration test: the five unit tests on `apply_exclude_scope_filter`
 (mutation-checked, below), the `dropped_inferred` log field, and this
 measurement with its two committed scripts.
 
+### Closed by #1275 — this section is now history
+
+`--exclude-scope` accepts `optional`, so the row above that reads "has
+no `optional` variant" no longer describes the flag, and the paragraph
+before this one no longer describes the coverage. The ordering now has
+the hermetic end-to-end test this section said it did not:
+`exclude_scope_optional_drops_what_the_pass_inferred` in
+`waybill-cli/tests/scope_propagation_ecosystems.rs`, which runs in the
+local gate.
+
+What that test asserts is shaped by this measurement's central finding,
+which is why it is worth recording here rather than only in the issue.
+It asserts the inferred transitive is **absent** *and* that the
+surviving set is **exactly** the runtime branch, because the old
+ordering did not leave a wrongly-scoped component behind — it left an
+*unscoped* one. "Is anything still scoped `optional`?" reads clean under
+both orderings. Only the pair separates them.
+
+Mutation-checked against a filter made blind to C62 `transitive`
+derivations, which is the pre-#1276 shape in miniature: the test fails
+naming the surviving component. The rest of the section stands as
+written — the four other fixtures still cannot carry the test, for the
+reasons given.
+
 ## The file-tier constraint, and the limit of what was shown
 
 Constraint 2 at the call site — the filter must run *below* the

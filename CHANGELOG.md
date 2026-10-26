@@ -9,6 +9,37 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **`--exclude-scope` accepts `optional`.** It previously took only
+  `dev`, `build` and `test`, so a scope waybill assigns could not be
+  filtered: `LifecycleScope::Optional` was added four milestones after
+  the flag shipped and the flag's own list was never extended. Nothing
+  failed, because both enums were internally consistent and nothing
+  compared them. Measured on the uv fixture — `--exclude-scope optional`
+  now drops 2 of 4 components, `dropped_inferred=1`, i.e. one of the two
+  is a scope the #1209 propagation pass inferred rather than a reader
+  declaring it.
+  `optional` is **not** folded into "everything but runtime": an
+  optional dependency is one the consumer MAY install, so excluding it
+  describes a build that declined every optional, which is a different
+  claim from excluding dependencies that do not ship. `--exclude-scope
+  dev,build,test` is unchanged and still does not drop optional
+  components.
+  The drift that caused this is now guarded rather than fixed in place:
+  a sixth `LifecycleScope` variant fails to compile in
+  `ExcludeScopeArg::from_lifecycle_scope`, and a test asserts the
+  intended difference between the lattice and the flag is exactly
+  `{Runtime}` — so the next variant cannot fall out of the flag in
+  silence the way this one did.
+  This also gives the `--exclude-scope` ordering fix below a regression
+  test that runs in the local gate. uv is the one hermetic fixture where
+  the propagation pass does the work, the scope it infers there is
+  `optional`, and `optional` was the one value the flag would not take,
+  which is why that fix shipped on corpus measurements alone. The new
+  test asserts both that the inferred transitive is absent and that the
+  surviving set is exactly the runtime branch — the pair, because the
+  old ordering left that component present carrying *no* scope, so an
+  absence-only or scope-only assertion reads clean under both (#1275).
+
 - **A transitive dependency of a development, test, build or optional
   dependency is now marked non-runtime instead of reading as a runtime
   dependency.** Readers assigned the scope to the declared member and
@@ -43,10 +74,6 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   byte-identical for every scan that does not pass the flag. Nothing is
   claimed about `orphaned-components-detected`, which is derived from
   reachability alone and is unaffected by scope marking.
-  `--exclude-scope` still accepts only `dev`, `build` and `test`, so a
-  scope of `optional` cannot be excluded at all — unchanged here, and
-  the reason the uv fixture cannot serve as a regression test for the
-  above.
   The existing catalog row **C62** `waybill:lifecycle-scope-derivation`
   gains a third value, `transitive`, and distinguishes the two
   provenances on the wire: present where waybill inferred the scope,

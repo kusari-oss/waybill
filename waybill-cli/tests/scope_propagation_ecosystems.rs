@@ -69,10 +69,20 @@ fn fixture(ecosystem: &str) -> PathBuf {
 }
 
 fn scan_cdx(ecosystem: &str) -> Value {
+    scan_cdx_with_global_flags(ecosystem, &[])
+}
+
+/// `scan_cdx`, with global flags inserted ahead of the `sbom scan`
+/// subcommand. `--exclude-scope` is declared `global = true` but clap
+/// still resolves it where it appears, and the pre-#1275 rejection
+/// #1275 reproduces came from the top-level parse — so the flag goes
+/// in the same position an operator types it.
+fn scan_cdx_with_global_flags(ecosystem: &str, global_flags: &[&str]) -> Value {
     let out_dir = tempfile::tempdir().unwrap();
     let cdx_path = out_dir.path().join("out.cdx.json");
     let output = Command::new(env!("CARGO_BIN_EXE_waybill"))
         .arg("--offline")
+        .args(global_flags)
         .arg("sbom")
         .arg("scan")
         .arg("--path")
@@ -391,5 +401,136 @@ fn uv_transitive_of_a_pep_735_dependency_group_is_marked_by_the_pass() {
             "{purl} is runtime-reachable and must keep runtime scope"
         );
         assert_eq!(property(c, DERIVATION_KEY), None, "{purl}");
+    }
+}
+
+/// **The ordering regression test for #1209, via #1275.**
+///
+/// `--exclude-scope` ran ~670 lines above the propagation pass until
+/// #1276 moved it below. A scope the pass inferred was therefore
+/// invisible to the filter, and worse: dropping the declared members
+/// first removed the seeds the pass propagates from, so their
+/// exclusive transitives were emitted carrying **no scope at all** —
+/// byte-identical on the wire to a runtime dependency.
+///
+/// That is why this test asserts two things and not one. "Is anything
+/// still scoped `optional`?" reads clean under both orderings, because
+/// the old one produced a surviving component with no scope rather
+/// than a surviving component with the wrong one. Absence of the
+/// component and absence of the scope are different claims, and only
+/// the pair separates the two worlds.
+///
+/// Until #1275 this test could not be written: `uv` is the one
+/// hermetic fixture where the pass does the work, the scope it infers
+/// there is `optional`, and `optional` was the one value
+/// `--exclude-scope` would not accept. #1276 therefore shipped its
+/// ordering fix on two corpus-target measurements
+/// (`go-opentelemetry --exclude-scope test`: 33 leaked before, 0
+/// after) rather than on anything that runs in the local gate. This
+/// runs in the local gate.
+#[test]
+fn exclude_scope_optional_drops_what_the_pass_inferred() {
+    const DEVTOOL: &str = "pkg:pypi/waybill-fixture-devtool@2.0.0";
+    const DEVTOOL_CORE: &str = "pkg:pypi/waybill-fixture-devtool-core@3.0.0";
+    const RUNTIME: &str = "pkg:pypi/waybill-fixture-runtime@1.5.0";
+    const RUNTIME_CORE: &str = "pkg:pypi/waybill-fixture-runtime-core@1.0.0";
+
+    let cdx = scan_cdx_with_global_flags("uv", &["--exclude-scope", "optional"]);
+    let mut purls: Vec<&str> = cdx["components"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter_map(|c| c.get("purl").and_then(Value::as_str))
+        .collect();
+    // Sorted because this asserts on the set, not on emission order:
+    // CDX component order is not part of this test's claim, and
+    // pinning it here would make an unrelated ordering change read as
+    // a scope-filter regression.
+    purls.sort_unstable();
+
+    assert!(
+        !purls.contains(&DEVTOOL),
+        "the reader-declared dev-group member survived --exclude-scope \
+         optional; document holds {purls:?}"
+    );
+    assert!(
+        !purls.contains(&DEVTOOL_CORE),
+        "the transitive the pass inferred survived --exclude-scope \
+         optional — the filter ran above the pass, or saw a set the \
+         pass had not touched yet; document holds {purls:?}"
+    );
+
+    // The half that catches the dangerous ordering specifically. Under
+    // the pre-#1276 order DEVTOOL_CORE came back with `lifecycle_scope
+    // = None`, so it would be counted here as a component carrying no
+    // scope — indistinguishable from the runtime pair below, which is
+    // the whole defect. Asserting the surviving set exactly, rather
+    // than asserting that nothing is scoped `optional`, is what makes
+    // that visible.
+    let mut expected = vec![RUNTIME, RUNTIME_CORE];
+    expected.sort_unstable();
+    assert_eq!(
+        purls, expected,
+        "the surviving set must be exactly the runtime branch: an \
+         extra entry is a component that outlived the scope it was \
+         assigned"
+    );
+    for purl in [RUNTIME, RUNTIME_CORE] {
+        let c = component(&cdx, purl);
+        assert_eq!(
+            property(c, SCOPE_KEY),
+            None,
+            "{purl} is runtime-reachable and must survive the filter \
+             unscoped"
+        );
+    }
+
+    // Edges to a dropped component go with it, or a consumer walking
+    // `dependencies[]` resolves a reference the document does not
+    // define.
+    let refs: Vec<&str> = cdx
+        .get("dependencies")
+        .and_then(Value::as_array)
+        .map(|deps| {
+            deps.iter()
+                .flat_map(|d| {
+                    d.get("dependsOn")
+                        .and_then(Value::as_array)
+                        .map(Vec::as_slice)
+                        .unwrap_or(&[])
+                })
+                .filter_map(Value::as_str)
+                .collect()
+        })
+        .unwrap_or_default();
+    for dropped in [DEVTOOL, DEVTOOL_CORE] {
+        assert!(
+            !refs.contains(&dropped),
+            "{dropped} was dropped from components[] but is still \
+             referenced by a dependsOn edge"
+        );
+    }
+}
+
+/// The control for the test above: with no flag, every one of those
+/// four components is present. Without it, a scan that silently
+/// emitted nothing — a broken fixture, a reader that stopped
+/// firing — would satisfy every assertion above.
+#[test]
+fn the_uv_fixture_holds_all_four_components_without_the_flag() {
+    let cdx = scan_cdx("uv");
+    let purls: Vec<&str> = cdx["components"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter_map(|c| c.get("purl").and_then(Value::as_str))
+        .collect();
+    for purl in [
+        "pkg:pypi/waybill-fixture-devtool@2.0.0",
+        "pkg:pypi/waybill-fixture-devtool-core@3.0.0",
+        "pkg:pypi/waybill-fixture-runtime@1.5.0",
+        "pkg:pypi/waybill-fixture-runtime-core@1.0.0",
+    ] {
+        assert!(purls.contains(&purl), "{purl} absent; document holds {purls:?}");
     }
 }
