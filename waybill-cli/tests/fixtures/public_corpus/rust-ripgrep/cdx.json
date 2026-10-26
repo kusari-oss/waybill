@@ -1730,16 +1730,8 @@
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "waybill:lifecycle-scope",
-          "value": "optional"
-        },
-        {
           "name": "waybill:sbom-tier",
           "value": "source"
-        },
-        {
-          "name": "waybill:optional-derivation",
-          "value": "cargo-optional-true"
         },
         {
           "name": "waybill:workspace-member",
@@ -1747,7 +1739,6 @@
         }
       ],
       "purl": "pkg:cargo/log@0.4.22",
-      "scope": "excluded",
       "supplier": {
         "name": "crates.io"
       },
@@ -2601,16 +2592,8 @@
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "waybill:lifecycle-scope",
-          "value": "optional"
-        },
-        {
           "name": "waybill:sbom-tier",
           "value": "source"
-        },
-        {
-          "name": "waybill:optional-derivation",
-          "value": "cargo-optional-true"
         },
         {
           "name": "waybill:workspace-member",
@@ -2618,7 +2601,6 @@
         }
       ],
       "purl": "pkg:cargo/serde@1.0.210",
-      "scope": "excluded",
       "supplier": {
         "name": "crates.io"
       },
@@ -2732,16 +2714,8 @@
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "waybill:lifecycle-scope",
-          "value": "optional"
-        },
-        {
           "name": "waybill:sbom-tier",
           "value": "source"
-        },
-        {
-          "name": "waybill:optional-derivation",
-          "value": "cargo-optional-true"
         },
         {
           "name": "waybill:workspace-member",
@@ -2749,7 +2723,6 @@
         }
       ],
       "purl": "pkg:cargo/serde_json@1.0.128",
-      "scope": "excluded",
       "supplier": {
         "name": "crates.io"
       },
