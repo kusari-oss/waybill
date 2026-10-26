@@ -305,36 +305,43 @@ default = ["serde"]
          found on $PATH'. stderr:\n{stderr}"
     );
 
-    // (d) FR-004 fallback preserves pre-m205 name-only classification.
-    // Under fallback, waybill can't verify feature activation via cargo,
-    // so it defers to the manifest's `optional = true` declaration.
-    // For `serde = { optional = true }` + `default = ["serde"]`, this
-    // means serde is classified Optional (scope: excluded) — this is
-    // the same behavior alpha.63 (pre-m205) would produce for this
-    // workspace. Zero regression from pre-m205.
+    // (d) FR-004's fallback is safe over-inclusion: with no activation
+    // evidence, serde classifies Runtime.
     //
-    // The correctness improvement (serde → Runtime) applies ONLY when
-    // cargo metadata succeeds. The WARN log above tells the operator
-    // to install cargo + warm the registry cache for the full-fidelity
-    // path.
+    // This assertion was inverted until #1272, and the inversion is
+    // visible in this test's own setup comment above, which says serde
+    // "flips to Runtime under fallback" — the intent FR-004 documented
+    // and this block then contradicted forty lines later. What
+    // displaced it was a different goal, stated here as "zero
+    // regression from pre-m205": matching alpha.63's output byte for
+    // byte, including where alpha.63 was wrong.
+    //
+    // The two goals conflict and only one of them is about
+    // correctness. Asserting `scope: "excluded"` for a dependency
+    // whose shipping status is unknown is a false negative for every
+    // downstream scanner, and on the `rust-ripgrep` corpus target it
+    // produced exactly that for three dependencies the binary ships.
+    // Over-inclusion costs a false positive instead, which is the
+    // direction FR-004 chose in prose and now also in code.
     let serde_comp = find_component_by_name(&cdx, "serde")
         .unwrap_or_else(|| panic!("serde component present. cdx: {cdx:#}"));
-    assert_eq!(
-        component_scope(serde_comp),
-        Some("excluded"),
-        "FR-004 pre-m205-preservation: serde MUST be scope=excluded under \
-         cargo-metadata-fallback (same as alpha.63 behavior). cdx: {cdx:#}"
+    let scope = component_scope(serde_comp);
+    assert!(
+        scope.is_none() || scope == Some("runtime"),
+        "FR-004 safe over-inclusion: with no activation evidence serde MUST be \
+         runtime (CDX omits the field for runtime), got {scope:?}. cdx: {cdx:#}"
     );
 
-    // (e) The `waybill:optional-derivation` annotation IS still emitted
-    // under fallback — it's set by the classifier's Optional branch,
-    // which now fires because activated_names is empty. This matches
-    // pre-m205 behavior.
+    // (e) The derivation annotation is set by the classifier's Optional
+    // branch, which must not fire without evidence. Its absence is how
+    // a reader of the document can tell that waybill did not classify
+    // this dependency as optional, rather than having classified it and
+    // not said so.
     assert_eq!(
         component_property(serde_comp, "waybill:optional-derivation"),
-        Some("cargo-optional-true"),
-        "FR-004 fallback: serde MUST carry waybill:optional-derivation \
-         (same as alpha.63 behavior). cdx: {cdx:#}"
+        None,
+        "FR-004 fallback: serde MUST NOT carry waybill:optional-derivation — \
+         the Optional branch requires activation evidence (#1272). cdx: {cdx:#}"
     );
 }
 
@@ -391,21 +398,30 @@ default = ["serde"]
          under --offline (subprocess is skipped, not failed). stderr:\n{stderr}"
     );
 
-    // (c) Safe over-inclusion semantic preserved: serde classified as
-    // Optional with the cargo-optional-true derivation annotation, same
-    // as the FR-004 fallback path (name-only classification).
+    // (c) Skipping the subprocess leaves no activation evidence, so
+    // serde classifies Runtime — the same safe over-inclusion as the
+    // FR-004 failure path.
+    //
+    // Until #1272 this block asserted `scope: "excluded"` under the
+    // heading "safe over-inclusion semantic preserved". Excluded is
+    // under-inclusion; the label and the assertion described opposite
+    // behaviours, and the assertion was copied forward from the
+    // FR-004 path where the same inversion already sat. #771's actual
+    // subject — that the subprocess is skipped rather than run and
+    // failed — is asserted by (a) and (b) above and is unaffected.
     let serde_comp = find_component_by_name(&cdx, "serde")
         .unwrap_or_else(|| panic!("serde component present. cdx: {cdx:#}"));
-    assert_eq!(
-        component_scope(serde_comp),
-        Some("excluded"),
-        "issue #771: under --offline, serde MUST be scope=excluded \
-         (name-only classification). cdx: {cdx:#}"
+    let scope = component_scope(serde_comp);
+    assert!(
+        scope.is_none() || scope == Some("runtime"),
+        "issue #771 + #1272: under --offline there is no activation evidence, so \
+         serde MUST be runtime (CDX omits the field for runtime), got {scope:?}. \
+         cdx: {cdx:#}"
     );
     assert_eq!(
         component_property(serde_comp, "waybill:optional-derivation"),
-        Some("cargo-optional-true"),
-        "issue #771: serde MUST carry waybill:optional-derivation \
-         (pre-m205 name-only classification). cdx: {cdx:#}"
+        None,
+        "issue #1272: serde MUST NOT carry waybill:optional-derivation under \
+         --offline — the Optional branch requires evidence. cdx: {cdx:#}"
     );
 }

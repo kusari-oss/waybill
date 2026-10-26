@@ -99,39 +99,35 @@ issue = 1208
 # ---------------------------------------------------------------------
 # I3 — non-runtime scope is not propagated transitively.
 #
-# Four of the five declarations here were deleted by milestone 1269,
-# which added the emit-time propagation pass #1209 asked for. The one
-# that remains is a different defect wearing the same symptom, and it
-# took running the fix to tell them apart: `waybill:lifecycle-scope` is
-# emitted only for non-runtime scopes, so a component the reader scoped
-# `Runtime` and a component with no scope at all are byte-identical in
-# the emitted document. All 101 violators across the five targets read
-# as "no scope property" in their goldens. Only the in-memory state
-# separates them, which is why the split was invisible to the analysis
-# that wrote these five entries as one class.
+# All five declarations that once stood here are gone. Four were
+# deleted by milestone 1269, which added the emit-time propagation pass
+# #1209 asked for. The fifth, `rust-ripgrep`, was deleted by #1272, and
+# the two causes are worth keeping apart because telling them apart
+# took running each fix.
+#
+# `waybill:lifecycle-scope` is emitted only for non-runtime scopes, so
+# a component the reader scoped `Runtime` and a component with no scope
+# at all are byte-identical in the emitted document. All 101 violators
+# across the five targets read as "no scope property" in their
+# goldens. Only the in-memory state separates them, which is why the
+# split was invisible to the analysis that wrote the five entries as
+# one class — and why this entry's recorded reason named the wrong
+# component for as long as it stood. It said `serde_json` was not
+# activated and its transitives `ryu` and `itoa` wrongly `Runtime`.
+# Measured against ripgrep's manifests the opposite held: `serde_json`
+# is a plain non-optional dependency of the workspace root and is
+# additionally activated by `crates/printer`'s default features, so it
+# ships, its transitives were right, and `serde_json` itself was the
+# component carrying the wrong scope.
+#
+# The cell is no longer applicable rather than merely passing:
+# ripgrep's document now declares no non-runtime dependency edges at
+# all, because without feature-activation evidence waybill declines to
+# call a cargo dependency optional and the corpus lane scans
+# `--offline`. I3 is still exercised by `python-flask` and
+# `nix-closure-moat`. That the only cargo target no longer exercises it
+# is a consequence of #1272 and an argument for #1284.
 # ---------------------------------------------------------------------
-
-[[declaration]]
-invariant = "I3"
-target = "rust-ripgrep"
-kind = "unmarked-non-runtime-reachable"
-count_at_declaration = 2
-reason = """
-Not #1209's defect, and not fixable by the pass that closed it. The cargo
-reader scopes `serde_json` `optional` — declared `optional = true` and not
-activated by the resolved feature set — and then scopes its two exclusive
-transitives `ryu` and `itoa` `Runtime`, because the prod-set BFS walks
-THROUGH a non-activated optional dependency without consulting the
-activation set milestone 205 already computed. So the reader asserts both
-"ryu is a runtime component" and "the only thing that depends on ryu is
-not runtime".
-
-Milestone 1269's propagation pass reaches both crates and declines to mark
-them, correctly: FR-003 makes it strictly additive, and overwriting an
-explicit `Runtime` is the one direction its mutation evidence exists to
-prevent. The fix belongs in the reader. #1272.
-"""
-issue = 1272
 
 # ---------------------------------------------------------------------
 # I5 — a `complete` verdict over a document with unreachable

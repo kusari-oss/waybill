@@ -9,6 +9,54 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **A cargo dependency that ships is no longer reported as excluded
+  from the build.** Milestone 205 distinguishes a dependency declared
+  `optional = true` that the resolved feature set activates from one it
+  does not, by reading `cargo metadata`. When that subprocess was
+  skipped or failed it left an empty activation set, which the
+  classifier could not tell apart from "cargo metadata ran and
+  activated nothing" — so *every* declared-optional dependency
+  classified `Optional` and was emitted CycloneDX `scope: "excluded"` /
+  SPDX `OPTIONAL_DEPENDENCY_OF`. The subprocess is skipped under
+  `--offline` by design (#771) and fails on a cold registry cache, so
+  this was the common path rather than an edge case.
+  Measured on the `rust-ripgrep` corpus target: `log`, `serde` and
+  `serde_json` were all emitted `scope: "excluded"`. Two of the three
+  are plain non-optional entries in the workspace root's own
+  `[dependencies]`, and `serde_json` is additionally activated by
+  `crates/printer`'s default feature set — ripgrep links it for `--json`
+  output. The document asserted that three dependencies the binary
+  ships are excluded from the build, which is a false negative for any
+  consumer matching components against advisories.
+  The activation set is now three-valued
+  (`FeatureActivation::{Known, Unknown}`), so an empty `Known` set still
+  means "nothing is activated" while `Unknown` means "no evidence", and
+  without evidence waybill declines to assert that a dependency is
+  non-runtime. **Consumer-visible**: a cargo scan with no activation
+  evidence — `--offline`, no `cargo` on PATH, or a cold registry cache —
+  now classifies declared-optional dependencies `Runtime` and emits
+  neither `scope: "excluded"` nor `waybill:optional-derivation` for
+  them. Over-including a dependency that does not ship costs a false
+  positive downstream; under-including one that does ship costs a false
+  negative. Scans where `cargo metadata` succeeds are byte-identical:
+  the `Known` path is untouched.
+  This is the direction milestone 205's FR-004 documented in three
+  places — "safe over-inclusion ... so downstream vuln-scanners never
+  miss shipped deps" — while the one place that executed did the
+  opposite. The inversion was visible inside a single test, whose setup
+  comment said the dependency "flips to Runtime under fallback" forty
+  lines above an assertion that it is `excluded`, justified by a
+  different goal: matching pre-m205 output byte for byte, including
+  where pre-m205 was wrong.
+  Not fixed here: `optional_names` is still a name-only union across
+  workspace manifests, so one member declaring a dependency
+  `optional = true` taints that name for members that declare it
+  non-optionally. That is why `log` and `serde_json` were candidates for
+  the branch at all. #1284 — and note it is now *harder* to observe, not
+  easier: with this fix the branch no longer fires without evidence, so
+  the remaining route to the same wrong answer is the full-fidelity path
+  where `cargo metadata` succeeds.
+
 - **`--exclude-scope` accepts `optional`.** It previously took only
   `dev`, `build` and `test`, so a scope waybill assigns could not be
   filtered: `LifecycleScope::Optional` was added four milestones after

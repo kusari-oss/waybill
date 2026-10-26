@@ -46,14 +46,28 @@ const FIXTURE_SUBPATH: &str = "cargo";
 // runtime edges. Verified deterministic across 3 consecutive runs.
 // See FR-002 / FR-003 in specs/200-*/spec.md.
 //
-// Milestone 205 (#593): count stays 321. The audit fixture is a
-// truncated clap workspace (no src/ dirs) — `cargo metadata` fails
-// with "can't find library" errors → m205's FR-004 fallback fires →
-// pre-m205 name-only optional classification preserved for this
-// scenario. Real clap workspaces with source trees would activate the
+// Milestone 205 (#593) predicted this number's next move and named the
+// cause: "Real clap workspaces with source trees would activate the
 // feature-resolved path and MAY show +1 edge for one feature-activated
-// optional dep; the audit fixture doesn't exercise that.
-const EXPECTED_WAYBILL_EDGE_COUNT: usize = 321;
+// optional dep; the audit fixture doesn't exercise that." It held the
+// count at 321 because the fixture is a truncated clap workspace with
+// no src/ dirs, so `cargo metadata` fails with "can't find library"
+// and the FR-004 fallback classified `clap_derive` — the workspace's
+// one `optional = true` declaration — as Optional.
+//
+// #1272 made that fallback agree with the feature-resolved path, so
+// the predicted +1 now arrives here. 321 -> 322, measured rather than
+// assumed: the new edge is `clap -> clap_derive`, retyped from
+// OPTIONAL_DEPENDENCY_OF to DEPENDS_ON, and this harness counts only
+// DEPENDS_ON (see `extract_edges_skips_non_depends_on` in
+// transitive_parity_common), which is why a retyping shows up as a
+// count change. The emitted document now carries zero
+// OPTIONAL_DEPENDENCY_OF edges, and clap_derive's four outgoing edges
+// pinned below by the m088 invariant are unchanged.
+//
+// The typing is the correct one: clap activates clap_derive through
+// its default `derive` feature, so clap_derive ships.
+const EXPECTED_WAYBILL_EDGE_COUNT: usize = 322;
 
 /// Representative edges that waybill **actually emits** today — pinning
 /// current behavior so future milestones can't silently regress.
