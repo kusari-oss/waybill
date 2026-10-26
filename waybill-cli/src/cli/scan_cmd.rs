@@ -4024,76 +4024,6 @@ pub async fn execute(
         &mut relationships,
     );
 
-    // #1209 — propagate non-runtime lifecycle scope transitively.
-    //
-    // Three constraints pin this to exactly here (research R1):
-    //
-    //   1. The component set must be final. The reader-side edge
-    //      typing at `scan_fs/mod.rs:1283` runs before `deduplicate()`
-    //      and before BOTH reconciler passes, so a component it saw
-    //      can still be folded away — which is why the issue's
-    //      root-cause pointer is a diagnosis and not a location.
-    //      The call above is the last mutation of the set.
-    //   2. It must run BEFORE `--exclude-scope` below. That filter
-    //      drops components by `lifecycle_scope`, so today an operator
-    //      asking to exclude `development` gets the declared members
-    //      dropped and their whole transitive closure kept. Marking
-    //      first is what makes the flag do what it already promises.
-    //   3. It must run once, before all three format builders, or the
-    //      formats could disagree. One pass upstream is what makes the
-    //      cross-format requirements hold by construction rather than
-    //      by three parallel implementations.
-    //
-    // It also has to run before the builders for correctness, not just
-    // tidiness: every anchoring pass (m868 resolve-ownership, m860
-    // retained-main-module, m158 peer linkage, and the CDX
-    // "primary depends on every component nothing else depends on"
-    // fallback) synthesizes edges FROM the subject inside the
-    // builders. An anchoring edge here would make the orphaned
-    // non-runtime closure look runtime-reachable and silently exempt
-    // it from propagation — the population this pass exists to mark.
-    // The pass asserts it sees none of them.
-    {
-        let root_override_for_seeds = crate::generate::RootComponentOverride {
-            name: args.root_name.clone(),
-            version: args.root_version.clone(),
-            purl_type: args.root_purl_type.clone(),
-            omit_purl: args.no_root_purl,
-            full_purl: args.root_purl.clone(),
-            full_purl_name: None,
-            full_purl_version: None,
-        };
-        let selection = crate::generate::root_selector::select_root(
-            &components,
-            &root_override_for_seeds,
-            scan_target_coord.as_ref(),
-            &target_name,
-            "0.0.0",
-            scan_target_kind,
-        );
-        // Reuses the emitters' own seed derivation rather than forming
-        // a second notion of what the root is.
-        let (seeds, per_ecosystem_root) =
-            crate::generate::graph_completeness::bfs::component_root_seeds(
-                &components,
-                &selection,
-            );
-        let ecosystems_with_root: std::collections::HashSet<String> =
-            per_ecosystem_root.into_keys().collect();
-        crate::resolve::scope_propagation::propagate_non_runtime_scope(
-            &mut components,
-            &relationships,
-            &seeds,
-            &ecosystems_with_root,
-        );
-        // Re-type edges into anything the pass just marked. The
-        // function skips every edge that is no longer a plain
-        // `DependsOn`, so this types exactly the newly-marked targets'
-        // edges and is a no-op on everything the reader-side call
-        // already typed — which is why it is re-run here rather than
-        // moved from `scan_fs`.
-        crate::scan_fs::apply_lifecycle_scope_to_edges(&components, &mut relationships);
-    }
 
     // Milestone 052/part-3: apply the `--exclude-scope` opt-out
     // filter as the final step before serialization. Drops
@@ -4760,6 +4690,100 @@ pub async fn execute(
             );
         }
         None => {}
+    }
+
+    // #1209 — propagate non-runtime lifecycle scope transitively.
+    //
+    // Three constraints pin this to exactly here (research R1):
+    //
+    //   1. The component set must be final. This is the constraint the
+    //      first placement got wrong, and the correction is why the
+    //      call sits here rather than beside the m191 reconciler.
+    //      "Final" was checked against `deduplicate()` and both
+    //      reconciler passes — all of which precede that earlier
+    //      site — and NOT against the component *producers*
+    //      downstream of it. The nixpkgs-haskell runtime-closure
+    //      resolver and the m1035 nix-closure tier both add
+    //      components and edges after the reconcilers; on
+    //      `haskell-language-server` they add 232 components and
+    //      2,126 edges, including every one of that target's 26
+    //      invariant-I3 violators. A pass placed before them saw a
+    //      set that was final only for the ecosystems with no
+    //      post-reconciler producer, which is why `python-flask`
+    //      worked and all three hackage targets silently did not.
+    //      Measured: relocating here took them 26→0, 13→0 and 9→0
+    //      with `python-flask`, `npm-express` and `rust-ripgrep`
+    //      unchanged. Anything added after this point — currently
+    //      only the file-tier walker — is outside the pass's view,
+    //      deliberately: a file-tier component is not a dependency
+    //      and has no scope to inherit.
+    //   2. It must run once, before all three format builders, or the
+    //      formats could disagree. One pass upstream is what makes the
+    //      cross-format requirements hold by construction rather than
+    //      by three parallel implementations.
+    //   3. It must see no anchoring edge, which the assertion below
+    //      enforces; see the paragraph after this list.
+    //
+    // **Known ordering gap, deliberately left rather than silently
+    // widened**: `--exclude-scope` runs ABOVE this call, so an
+    // operator excluding `development` still gets the transitive
+    // closure of a declared dev member. Fixing that means moving the
+    // filter below here — which also makes it apply to the
+    // nixpkgs/closure components it cannot currently see, i.e. a
+    // change to an operator-visible flag beyond this feature's
+    // scope. The filter's own comment already claims it is "the final
+    // step before serialization" and has not been true since the
+    // nixpkgs tiers landed.
+    //
+    // It also has to run before the builders for correctness, not just
+    // tidiness: every anchoring pass (m868 resolve-ownership, m860
+    // retained-main-module, m158 peer linkage, and the CDX
+    // "primary depends on every component nothing else depends on"
+    // fallback) synthesizes edges FROM the subject inside the
+    // builders. An anchoring edge here would make the orphaned
+    // non-runtime closure look runtime-reachable and silently exempt
+    // it from propagation — the population this pass exists to mark.
+    // The pass asserts it sees none of them.
+    {
+        let root_override_for_seeds = crate::generate::RootComponentOverride {
+            name: args.root_name.clone(),
+            version: args.root_version.clone(),
+            purl_type: args.root_purl_type.clone(),
+            omit_purl: args.no_root_purl,
+            full_purl: args.root_purl.clone(),
+            full_purl_name: None,
+            full_purl_version: None,
+        };
+        let selection = crate::generate::root_selector::select_root(
+            &components,
+            &root_override_for_seeds,
+            scan_target_coord.as_ref(),
+            &target_name,
+            "0.0.0",
+            scan_target_kind,
+        );
+        // Reuses the emitters' own seed derivation rather than forming
+        // a second notion of what the root is.
+        let (seeds, per_ecosystem_root) =
+            crate::generate::graph_completeness::bfs::component_root_seeds(
+                &components,
+                &selection,
+            );
+        let ecosystems_with_root: std::collections::HashSet<String> =
+            per_ecosystem_root.into_keys().collect();
+        crate::resolve::scope_propagation::propagate_non_runtime_scope(
+            &mut components,
+            &relationships,
+            &seeds,
+            &ecosystems_with_root,
+        );
+        // Re-type edges into anything the pass just marked. The
+        // function skips every edge that is no longer a plain
+        // `DependsOn`, so this types exactly the newly-marked targets'
+        // edges and is a no-op on everything the reader-side call
+        // already typed — which is why it is re-run here rather than
+        // moved from `scan_fs`.
+        crate::scan_fs::apply_lifecycle_scope_to_edges(&components, &mut relationships);
     }
     // The document-scope record (FR-018). Built only on the success path, so
     // a degraded tier emits no counts rather than zeros -- a zero would read

@@ -101,6 +101,19 @@ pub(crate) struct PropagationSummary {
     pub assigned_by_scope: std::collections::BTreeMap<&'static str, usize>,
     /// Declared non-runtime components used as propagation seeds.
     pub seeded_from: usize,
+    /// Reached by Phase B, not immune, unscoped — and skipped anyway
+    /// because FR-012 found no root seed for their ecosystem.
+    ///
+    /// This exists because the pass used to be silent when it
+    /// assigned nothing, and "the feature is a no-op here" and "the
+    /// feature declined here, deliberately, for a stated reason" then
+    /// looked identical from outside. Diagnosing three corpus targets
+    /// took reading the readers' source; with this it is one log line.
+    /// SC-001's exception (a) requires any such component be named, so
+    /// the pass has to be able to say which they were.
+    pub skipped_unrooted_ecosystem: usize,
+    /// Ecosystems that had a resolvable root seed, sorted.
+    pub rooted_ecosystems: Vec<String>,
 }
 
 impl PropagationSummary {
@@ -210,7 +223,7 @@ pub(crate) fn propagate_non_runtime_scope(
     // Phase A, and the borrow of `components` ends with it: the
     // assignment map below is keyed by owned PURL strings so the
     // mutation pass can take `&mut`.
-    let (immune, assigned): (usize, HashMap<String, LifecycleScope>) = {
+    let (immune, assigned, skipped_unrooted): (usize, HashMap<String, LifecycleScope>, usize) = {
         let immune = runtime_reachable(components, &adj, seeds);
 
         let scope_by_purl: HashMap<&str, LifecycleScope> = components
@@ -235,6 +248,7 @@ pub(crate) fn propagate_non_runtime_scope(
         ];
 
         let mut assigned: HashMap<String, LifecycleScope> = HashMap::new();
+        let mut skipped_unrooted: HashSet<&str> = HashSet::new();
         for scope in BY_DESCENDING_STRENGTH {
             let mut seen: HashSet<&str> = HashSet::new();
             let mut queue: VecDeque<&str> = VecDeque::new();
@@ -267,6 +281,7 @@ pub(crate) fn propagate_non_runtime_scope(
                     continue;
                 };
                 if !ecosystems_with_root.contains(*ecosystem) {
+                    skipped_unrooted.insert(purl);
                     continue; // FR-012
                 }
                 assigned
@@ -274,20 +289,36 @@ pub(crate) fn propagate_non_runtime_scope(
                     .or_insert_with(|| *scope); // FR-004, by iteration order
             }
         }
-        (immune.len(), assigned)
+        (immune.len(), assigned, skipped_unrooted.len())
     };
 
+    let mut rooted: Vec<String> = ecosystems_with_root.iter().cloned().collect();
+    rooted.sort();
     let mut summary = PropagationSummary {
         immune,
         seeded_from: components
             .iter()
             .filter(|c| c.lifecycle_scope.is_some_and(|s| s.is_non_runtime()))
             .count(),
+        skipped_unrooted_ecosystem: skipped_unrooted,
+        rooted_ecosystems: rooted,
         ..Default::default()
     };
     if assigned.is_empty() {
-        // FR-013: nothing to assign means nothing changes, including
-        // no annotation and no log line.
+        // FR-013: nothing to assign means nothing CHANGES — no scope,
+        // no annotation, byte-identical output. It does not mean
+        // nothing is worth saying. A pass that is silent when it
+        // declines is indistinguishable from a pass that found
+        // nothing to do, and the difference is the whole of a
+        // diagnosis: three corpus targets were declined under FR-012
+        // and the only way to learn that was to read the readers.
+        tracing::info!(
+            immune = summary.immune,
+            seeded_from = summary.seeded_from,
+            skipped_unrooted_ecosystem = summary.skipped_unrooted_ecosystem,
+            rooted_ecosystems = ?summary.rooted_ecosystems,
+            "non-runtime lifecycle scope propagation assigned nothing",
+        );
         return summary;
     }
 
@@ -326,6 +357,8 @@ pub(crate) fn propagate_non_runtime_scope(
         seeded_from = summary.seeded_from,
         assigned = summary.assigned_total(),
         by_scope = ?summary.assigned_by_scope,
+        skipped_unrooted_ecosystem = summary.skipped_unrooted_ecosystem,
+        rooted_ecosystems = ?summary.rooted_ecosystems,
         "propagated non-runtime lifecycle scope to transitive dependencies",
     );
     summary
@@ -782,7 +815,13 @@ mod tests {
             &seeds(&[ROOT]),
             &ecosystems(&["npm"]),
         );
-        assert_eq!(s, PropagationSummary::default());
+        assert_eq!(
+            s,
+            PropagationSummary {
+                rooted_ecosystems: vec!["npm".to_string()],
+                ..Default::default()
+            }
+        );
 
         let mut all_runtime = vec![mk_component(ROOT), mk_component(DEVDEP)];
         let s = propagate_non_runtime_scope(
