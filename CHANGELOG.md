@@ -52,8 +52,10 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   workspace manifests, so one member declaring a dependency
   `optional = true` taints that name for members that declare it
   non-optionally. That is why `log` and `serde_json` were candidates for
-  the branch at all. It needs real activation evidence to be observable
-  and is tracked separately.
+  the branch at all. #1284 — and note it is now *harder* to observe, not
+  easier: with this fix the branch no longer fires without evidence, so
+  the remaining route to the same wrong answer is the full-fidelity path
+  where `cargo metadata` succeeds.
 
 - **`--exclude-scope` accepts `optional`.** It previously took only
   `dev`, `build` and `test`, so a scope waybill assigns could not be

@@ -99,65 +99,35 @@ issue = 1208
 # ---------------------------------------------------------------------
 # I3 — non-runtime scope is not propagated transitively.
 #
-# Four of the five declarations here were deleted by milestone 1269,
-# which added the emit-time propagation pass #1209 asked for. The one
-# that remains is a different defect wearing the same symptom, and it
-# took running the fix to tell them apart: `waybill:lifecycle-scope` is
-# emitted only for non-runtime scopes, so a component the reader scoped
-# `Runtime` and a component with no scope at all are byte-identical in
-# the emitted document. All 101 violators across the five targets read
-# as "no scope property" in their goldens. Only the in-memory state
-# separates them, which is why the split was invisible to the analysis
-# that wrote these five entries as one class.
+# All five declarations that once stood here are gone. Four were
+# deleted by milestone 1269, which added the emit-time propagation pass
+# #1209 asked for. The fifth, `rust-ripgrep`, was deleted by #1272, and
+# the two causes are worth keeping apart because telling them apart
+# took running each fix.
+#
+# `waybill:lifecycle-scope` is emitted only for non-runtime scopes, so
+# a component the reader scoped `Runtime` and a component with no scope
+# at all are byte-identical in the emitted document. All 101 violators
+# across the five targets read as "no scope property" in their
+# goldens. Only the in-memory state separates them, which is why the
+# split was invisible to the analysis that wrote the five entries as
+# one class — and why this entry's recorded reason named the wrong
+# component for as long as it stood. It said `serde_json` was not
+# activated and its transitives `ryu` and `itoa` wrongly `Runtime`.
+# Measured against ripgrep's manifests the opposite held: `serde_json`
+# is a plain non-optional dependency of the workspace root and is
+# additionally activated by `crates/printer`'s default features, so it
+# ships, its transitives were right, and `serde_json` itself was the
+# component carrying the wrong scope.
+#
+# The cell is no longer applicable rather than merely passing:
+# ripgrep's document now declares no non-runtime dependency edges at
+# all, because without feature-activation evidence waybill declines to
+# call a cargo dependency optional and the corpus lane scans
+# `--offline`. I3 is still exercised by `python-flask` and
+# `nix-closure-moat`. That the only cargo target no longer exercises it
+# is a consequence of #1272 and an argument for #1284.
 # ---------------------------------------------------------------------
-
-[[declaration]]
-invariant = "I3"
-target = "rust-ripgrep"
-kind = "unmarked-non-runtime-reachable"
-count_at_declaration = 2
-reason = """
-Not #1209's defect, and not fixable by the pass that closed it. The fix
-belongs in the reader. #1272.
-
-The reason recorded here when the entry was written named the wrong
-component, and is corrected rather than carried, because a declaration
-whose reason names the wrong defect is what this file's rule exists to
-prevent. It said `serde_json` was "declared `optional = true` and not
-activated by the resolved feature set", and that its two exclusive
-transitives `ryu` and `itoa` were therefore wrongly `Runtime`. Measured
-against ripgrep's own manifests, the opposite holds:
-
-  * the workspace root's `[dependencies]` declares `serde_json = "1.0.23"`
-    plainly and non-optionally — ripgrep links it for `--json` output;
-  * `crates/printer` declares it `optional = true` but sets
-    `default = ["serde"]` with `serde = ["dep:serde", "dep:serde_json"]`,
-    so the default feature set activates it;
-  * `cargo metadata` on the pinned checkout confirms it resolves.
-
-So `serde_json` ships, `ryu` and `itoa` scoped `Runtime` are correct, and
-the wrongly-scoped component is `serde_json` itself — emitted
-`scope: "excluded"`, along with `serde` and `log`, the latter also a plain
-non-optional `[dependencies]` entry of the root. Three dependencies the
-binary ships, marked excluded from the build.
-
-Two causes, and the first is what made the second observable. The corpus
-lane scans `--offline`, which skips the milestone-205 cargo-metadata
-subprocess (#771), and the empty activation set left behind was
-indistinguishable from "cargo metadata ran and activated nothing" — so
-every declared-optional name classified `Optional`. Separately,
-`optional_names` is a name-only union across workspace manifests, so
-`crates/printer` saying `optional = true` taints the name for the root's
-own non-optional declaration of it.
-
-Had the originally proposed fix been applied — refuse to walk the prod-set
-BFS through a non-activated optional — it would have demoted `ryu` and
-`itoa` to `Development` under that same empty set, turning two correct
-scopes into wrong ones to resolve an inconsistency caused by a third. It
-would also have satisfied this entry's acceptance criterion while doing
-so, since the I3 count reaches zero either way.
-"""
-issue = 1272
 
 # ---------------------------------------------------------------------
 # I5 — a `complete` verdict over a document with unreachable

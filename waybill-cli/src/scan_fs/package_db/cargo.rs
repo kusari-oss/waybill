@@ -1601,7 +1601,7 @@ fn parse_lockfile(
                     // `[dependencies]` of the workspace root. Tracked
                     // separately; this branch no longer fires without
                     // activation evidence, which is what made the taint
-                    // observable.
+                    // observable. #1284.
                     entry.lifecycle_scope = Some(LifecycleScope::Optional);
                     entry.extra_annotations.insert(
                         "waybill:optional-derivation".to_string(),
