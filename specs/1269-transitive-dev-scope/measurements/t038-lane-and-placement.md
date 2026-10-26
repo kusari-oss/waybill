@@ -219,3 +219,65 @@ Its propagated scope is `optional`, and SPDX 3's
 member. So the value rides the annotation alone there — the
 pre-existing C122 / m179 FR-017 behaviour, consistent with the
 catalog, not a parity gap introduced here.
+
+## Reproducibility, before the commit
+
+Step 7 of `docs/development/refreshing-corpus-goldens.md`, in the order
+it insists on: a second regeneration of the same tree
+(run **#40251448066**) downloaded to a separate fresh directory, then
+
+```
+$ diff -r /…/regen /…/regen2 && echo REPRODUCIBLE
+REPRODUCIBLE: the two regen artifacts are byte-identical
+```
+
+Nothing unmasked is drifting. Run afterwards, a difference here would
+mean goldens containing nondeterminism had already been committed.
+
+Both downloads went into fresh empty directories, because
+`gh run download` merges into an existing one and a leftover file from
+the previous artifact would be silently compared against nothing.
+
+## Step 10 — can the lane still fail?
+
+The procedure requires proving this, because "skipping it is how a
+refresh becomes indistinguishable from a disable". It was proven twice
+in the course of this work, without a dedicated mutation run:
+
+1. **Lane run #40249731861** failed `3 of 109` — `corpus_haskell_language_server`,
+   `corpus_haskell_security_advisories`, `corpus_nix_closure_moat` —
+   naming the invariant, the kind, the count and an example component
+   each. That is the run that found the placement defect.
+2. **The pre-PR gate** failed on `4 undeclared or stale cell(s) in the
+   golden matrix`, naming each target and count, when the declarations
+   were deleted ahead of the goldens.
+
+Both are real failures of the gate on this branch, not simulated ones,
+and both named the target.
+
+**Stated limitation**: neither was a *golden-drift* failure, so neither
+exercised the "names all three formats" half of step 10's requirement.
+The drift comparison and the invariant matrix are different checks, and
+only the invariant half is demonstrated here. A dedicated mutation run
+would close that, at the cost of two more lane dispatches; recorded as
+not done rather than quietly counted as done.
+
+## T036 — the pre-PR gate, after the goldens landed
+
+```
+>>> all pre-PR checks passed.
+
+GATE_NAME=prepr
+GATE_EXIT=0
+GATE_RESULT=pass
+```
+
+`348 targets, 6919 passed, 0 failed`; zero `test result: FAILED` lines
+and zero `---- … stdout ----` blocks. Clippy clean. No `+toolchain`
+argument, so both halves resolved through `rust-toolchain.toml` (#1189).
+
+The positive signal is the `>>> all pre-PR checks passed.` line, which
+`--expect` requires: a gate that exits 0 without printing it fails
+here. The first run of this gate exited **101** and is recorded above —
+it is what found both the C62 label collision and the
+declaration/golden ordering error.
