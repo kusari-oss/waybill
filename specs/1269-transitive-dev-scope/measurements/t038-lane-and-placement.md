@@ -281,3 +281,18 @@ The positive signal is the `>>> all pre-PR checks passed.` line, which
 here. The first run of this gate exited **101** and is recorded above —
 it is what found both the C62 label collision and the
 declaration/golden ordering error.
+
+## Final verification: the lane, read-only, against the committed goldens
+
+**Run #40253083079**, `-f regen_goldens=false`.
+
+```
+test result: ok. 109 passed; 0 failed; 0 ignored
+no lane failures   (per-target, 17 targets + the aggregate)
+```
+
+This is the run that matters for acceptance. The green run that produced
+the goldens had `regen_goldens=true`, so it compared each document
+against bytes it had just written — a tautology by construction. This
+one compares against what is committed, which is what the nightly lane
+and every future PR will compare against.
