@@ -141,9 +141,9 @@ before adding plumbing.
 
 **Independent Test**: every ecosystem row cites a corpus target or a named fixture; no row reads "assumed".
 
-- [ ] T031 [US4] Add a gem fixture test (no corpus target exists — the 17 are listed in spec US4 scenario 2) covering `Gemfile` group members and their transitives, and state in the test's doc comment that gem evidence is synthetic
-- [ ] T032 [P] [US4] Add equivalent fixture coverage for any ecosystem in FR-015's list with no corpus target and no existing scope test: composer `require-dev`, mix, rebar
-- [ ] T033 [US4] Write `specs/1269-transitive-dev-scope/measurements/per-ecosystem-record.md`: one row per ecosystem with outcome *fixed* / *already correct* / *not reached*, each citing a corpus target or a named fixture, and a stated reason for every *not reached* (FR-015, SC-005)
+- [X] T031 [US4] Add a gem fixture test (no corpus target exists — the 17 are listed in spec US4 scenario 2) covering `Gemfile` group members and their transitives, and state in the test's doc comment that gem evidence is synthetic
+- [X] T032 [P] [US4] Add equivalent fixture coverage for any ecosystem in FR-015's list with no corpus target and no existing scope test: composer `require-dev`, mix, rebar — landed with T031 in one file, `waybill-cli/tests/scope_propagation_ecosystems.rs`, plus a **uv** fixture that was not in the task list and is the only one where C199 is present: it reproduces #1209's `pydantic` shape small enough to assert on, which the real pin cannot do because it is not a corpus target
+- [X] T033 [US4] Write `specs/1269-transitive-dev-scope/measurements/per-ecosystem-record.md`: one row per ecosystem with outcome *fixed* / *already correct* / *not reached*, each citing a corpus target or a named fixture, and a stated reason for every *not reached* (FR-015, SC-005)
 
 **Checkpoint**: the record exists and is citable; US4 is satisfiable independently of whether phase 7 has run.
 

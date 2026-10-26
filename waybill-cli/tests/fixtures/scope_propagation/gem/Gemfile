@@ -1,0 +1,7 @@
+source 'https://rubygems.org'
+
+gem 'waybill-fixture-runtime', '~> 1.5'
+
+group :development do
+  gem 'waybill-fixture-devtool', '~> 2.0'
+end

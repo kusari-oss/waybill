@@ -1,0 +1,9 @@
+{
+  "name": "waybill-fixture/app",
+  "require": {
+    "waybill-fixture/runtime": "^1.5"
+  },
+  "require-dev": {
+    "waybill-fixture/devtool": "^2.0"
+  }
+}
