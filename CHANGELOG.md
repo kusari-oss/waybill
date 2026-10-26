@@ -9,6 +9,36 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ### Fixed
 
+- **A transitive dependency of a development, test, build or optional
+  dependency is now marked non-runtime instead of reading as a runtime
+  dependency.** Readers assigned the scope to the declared member and
+  nothing propagated it, so on a uv project with PEP 735
+  `[dependency-groups]` the packages those groups pull in carried no
+  scope at all. A new emit-time pass seeds from every declared
+  non-runtime component and marks what is reachable from it along
+  declared edges, strongest scope winning
+  (`Runtime > Optional > Build > Test > Development`). Runtime
+  reachability from the subject is absolute immunity: a component on
+  both a runtime and a dev path keeps runtime, which is the failure
+  direction the pass is tested against by mutation rather than by
+  counting. The pass is strictly additive and never changes a scope a
+  reader assigned. Measured on `python-flask`: invariant-I3 violations
+  51 → 0, with 55 components newly marked. `npm-express` is unchanged in
+  every column — its reader already marked transitives.
+  **Consumer-visible, and the second half matters more than the first**:
+  `--exclude-scope development` now drops the transitive closure it
+  always promised to drop, so an operator passing that flag gets
+  strictly **less** output than before. A component that disappears was
+  always a development dependency; it was simply unlabelled. Nothing is
+  claimed about `orphaned-components-detected`, which is derived from
+  reachability alone and is unaffected by scope marking.
+  New catalog row **C199** `waybill:lifecycle-scope-derivation`
+  distinguishes the two provenances on the wire: present with value
+  `transitive` where waybill inferred the scope, absent where a reader
+  declared it. Cargo is **not** fixed — `rust-ripgrep`'s two violators
+  carry a reader-assigned `Runtime` that this pass is forbidden to
+  overwrite, and the cargo-reader defect behind it is #1272 (#1209).
+
 - **A dead CPE candidate is no longer emitted for LibreSSL, and a new
   curated library can no longer ship without one.**
   `GENERIC_LIBRARY_CPES` emitted `libressl:libressl` alongside
