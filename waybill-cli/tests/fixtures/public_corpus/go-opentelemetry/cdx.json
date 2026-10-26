@@ -10057,6 +10057,10 @@
           "value": "[\"bridge/opencensus/go.sum\",\"bridge/opencensus/test/go.sum\",\"bridge/opentracing/go.sum\",\"exporters/otlp/otlplog/otlploggrpc/go.sum\",\"exporters/otlp/otlplog/otlploghttp/go.sum\",\"exporters/otlp/otlpmetric/otlpmetricgrpc/go.sum\",\"exporters/otlp/otlpmetric/otlpmetrichttp/go.sum\",\"exporters/otlp/otlptrace/go.sum\",\"exporters/otlp/otlptrace/otlptracegrpc/go.sum\",\"exporters/otlp/otlptrace/otlptracehttp/go.sum\",\"exporters/prometheus/go.sum\",\"exporters/stdout/stdoutlog/go.sum\",\"exporters/stdout/stdoutmetric/go.sum\",\"exporters/stdout/stdouttrace/go.sum\",\"exporters/zipkin/go.sum\",\"sdk/go.sum\",\"sdk/log/go.sum\",\"sdk/log/logtest/go.sum\",\"sdk/metric/go.sum\",\"sdk/trace/x/go.sum\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "test"
+        },
+        {
           "name": "waybill:build-inclusion",
           "value": "unknown"
         },
@@ -10067,6 +10071,10 @@
         {
           "name": "waybill:go-transitive-source",
           "value": "go-sum-fallback"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:orphan-reason",
@@ -10082,6 +10090,7 @@
         }
       ],
       "purl": "pkg:golang/github.com/google/uuid@v1.6.0",
+      "scope": "excluded",
       "supplier": {
         "name": "github.com/google"
       },
@@ -22561,6 +22570,10 @@
           "value": "[\"sdk/log/go.mod\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "test"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
         },
@@ -22573,6 +22586,10 @@
           "value": "true"
         },
         {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
+        },
+        {
           "name": "waybill:orphan-reason",
           "value": "unresolved-indirect-require"
         },
@@ -22582,6 +22599,7 @@
         }
       ],
       "purl": "pkg:golang/go.opentelemetry.io/otel/sdk/log@v0.0.0-unknown",
+      "scope": "excluded",
       "supplier": {
         "name": "go.opentelemetry.io/otel"
       },
@@ -22622,6 +22640,10 @@
           "value": "[\"sdk/metric/go.mod\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "test"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
         },
@@ -22634,6 +22656,10 @@
           "value": "true"
         },
         {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
+        },
+        {
           "name": "waybill:orphan-reason",
           "value": "unresolved-indirect-require"
         },
@@ -22643,6 +22669,7 @@
         }
       ],
       "purl": "pkg:golang/go.opentelemetry.io/otel/sdk/metric@v0.0.0-unknown",
+      "scope": "excluded",
       "supplier": {
         "name": "go.opentelemetry.io/otel"
       },
@@ -22744,6 +22771,10 @@
           "value": "[\"sdk/go.mod\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "test"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
         },
@@ -22756,6 +22787,10 @@
           "value": "true"
         },
         {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
+        },
+        {
           "name": "waybill:orphan-reason",
           "value": "unresolved-indirect-require"
         },
@@ -22765,6 +22800,7 @@
         }
       ],
       "purl": "pkg:golang/go.opentelemetry.io/otel/sdk@v0.0.0-unknown",
+      "scope": "excluded",
       "supplier": {
         "name": "go.opentelemetry.io/otel"
       },
@@ -24348,6 +24384,10 @@
           "value": "[\"bridge/opencensus/go.sum\",\"bridge/opencensus/test/go.sum\",\"bridge/opentracing/go.sum\",\"exporters/otlp/otlplog/otlploggrpc/go.sum\",\"exporters/otlp/otlplog/otlploghttp/go.sum\",\"exporters/otlp/otlpmetric/otlpmetricgrpc/go.sum\",\"exporters/otlp/otlpmetric/otlpmetrichttp/go.sum\",\"exporters/otlp/otlptrace/go.sum\",\"exporters/otlp/otlptrace/otlptracegrpc/go.sum\",\"exporters/otlp/otlptrace/otlptracehttp/go.sum\",\"exporters/prometheus/go.sum\",\"exporters/stdout/stdoutlog/go.sum\",\"exporters/stdout/stdoutmetric/go.sum\",\"exporters/stdout/stdouttrace/go.sum\",\"exporters/zipkin/go.sum\",\"internal/tools/go.sum\",\"sdk/go.sum\",\"sdk/log/go.sum\",\"sdk/log/logtest/go.sum\",\"sdk/metric/go.sum\",\"sdk/trace/x/go.sum\"]"
         },
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "test"
+        },
+        {
           "name": "waybill:build-inclusion",
           "value": "unknown"
         },
@@ -24358,6 +24398,10 @@
         {
           "name": "waybill:go-transitive-source",
           "value": "go-sum-fallback"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:orphan-reason",
@@ -24373,6 +24417,7 @@
         }
       ],
       "purl": "pkg:golang/golang.org/x/sys@v0.48.0",
+      "scope": "excluded",
       "supplier": {
         "name": "golang.org/x"
       },

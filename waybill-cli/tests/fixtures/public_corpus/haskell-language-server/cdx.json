@@ -10139,8 +10139,16 @@
       "name": "HUnit",
       "properties": [
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
@@ -10152,6 +10160,7 @@
         }
       ],
       "purl": "pkg:hackage/HUnit@1.6.2.0",
+      "scope": "excluded",
       "type": "library",
       "version": "1.6.2.0"
     },
@@ -10385,8 +10394,16 @@
       "name": "MonadPrompt",
       "properties": [
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
@@ -10398,6 +10415,7 @@
         }
       ],
       "purl": "pkg:hackage/MonadPrompt@1.0.0.5",
+      "scope": "excluded",
       "type": "library",
       "version": "1.0.0.5"
     },
@@ -11082,8 +11100,16 @@
       "name": "base-compat-batteries",
       "properties": [
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
@@ -11095,6 +11121,7 @@
         }
       ],
       "purl": "pkg:hackage/base-compat-batteries@0.14.1",
+      "scope": "excluded",
       "type": "library",
       "version": "0.14.1"
     },
@@ -11779,8 +11806,16 @@
       "name": "cassava",
       "properties": [
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
@@ -11792,6 +11827,7 @@
         }
       ],
       "purl": "pkg:hackage/cassava@0.5.4.1",
+      "scope": "excluded",
       "type": "library",
       "version": "0.5.4.1"
     },
@@ -12189,8 +12225,16 @@
       "name": "code-page",
       "properties": [
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
@@ -12202,6 +12246,7 @@
         }
       ],
       "purl": "pkg:hackage/code-page@0.2.1",
+      "scope": "excluded",
       "type": "library",
       "version": "0.2.1"
     },
@@ -12681,8 +12726,16 @@
       "name": "criterion-measurement",
       "properties": [
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
@@ -12694,6 +12747,7 @@
         }
       ],
       "purl": "pkg:hackage/criterion-measurement@0.2.4.0",
+      "scope": "excluded",
       "type": "library",
       "version": "0.2.4.0"
     },
@@ -12927,8 +12981,16 @@
       "name": "dense-linear-algebra",
       "properties": [
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
@@ -12940,6 +13002,7 @@
         }
       ],
       "purl": "pkg:hackage/dense-linear-algebra@0.1.0.0",
+      "scope": "excluded",
       "type": "library",
       "version": "0.1.0.0"
     },
@@ -13542,8 +13605,16 @@
       "name": "erf",
       "properties": [
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
@@ -13555,6 +13626,7 @@
         }
       ],
       "purl": "pkg:hackage/erf@2.0.0.0",
+      "scope": "excluded",
       "type": "library",
       "version": "2.0.0.0"
     },
@@ -14293,8 +14365,16 @@
       "name": "ghc-tcplugins-extra",
       "properties": [
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
@@ -14306,6 +14386,7 @@
         }
       ],
       "purl": "pkg:hackage/ghc-tcplugins-extra@0.5",
+      "scope": "excluded",
       "type": "library",
       "version": "0.5"
     },
@@ -14334,8 +14415,16 @@
       "name": "ghc-typelits-natnormalise",
       "properties": [
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
@@ -14347,6 +14436,7 @@
         }
       ],
       "purl": "pkg:hackage/ghc-typelits-natnormalise@0.7.12",
+      "scope": "excluded",
       "type": "library",
       "version": "0.7.12"
     },
@@ -14416,8 +14506,16 @@
       "name": "haskell-lexer",
       "properties": [
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
@@ -14429,6 +14527,7 @@
         }
       ],
       "purl": "pkg:hackage/haskell-lexer@1.2.1",
+      "scope": "excluded",
       "type": "library",
       "version": "1.2.1"
     },
@@ -14696,8 +14795,16 @@
       "name": "hspec-api",
       "properties": [
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
@@ -14709,6 +14816,7 @@
         }
       ],
       "purl": "pkg:hackage/hspec-api@2.11.17",
+      "scope": "excluded",
       "type": "library",
       "version": "2.11.17"
     },
@@ -14737,8 +14845,16 @@
       "name": "hspec-core",
       "properties": [
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
@@ -14750,6 +14866,7 @@
         }
       ],
       "purl": "pkg:hackage/hspec-core@2.11.17",
+      "scope": "excluded",
       "type": "library",
       "version": "2.11.17"
     },
@@ -14778,8 +14895,16 @@
       "name": "hspec-expectations",
       "properties": [
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
@@ -14791,6 +14916,7 @@
         }
       ],
       "purl": "pkg:hackage/hspec-expectations@0.8.4",
+      "scope": "excluded",
       "type": "library",
       "version": "0.8.4"
     },
@@ -15222,8 +15348,16 @@
       "name": "js-chart",
       "properties": [
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
@@ -15235,6 +15369,7 @@
         }
       ],
       "purl": "pkg:hackage/js-chart@2.9.4.1",
+      "scope": "excluded",
       "type": "library",
       "version": "2.9.4.1"
     },
@@ -15550,8 +15685,16 @@
       "name": "math-functions",
       "properties": [
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
@@ -15563,6 +15706,7 @@
         }
       ],
       "purl": "pkg:hackage/math-functions@0.3.4.4",
+      "scope": "excluded",
       "type": "library",
       "version": "0.3.4.4"
     },
@@ -15837,8 +15981,16 @@
       "name": "microstache",
       "properties": [
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
@@ -15850,6 +16002,7 @@
         }
       ],
       "purl": "pkg:hackage/microstache@1.0.3.1",
+      "scope": "excluded",
       "type": "library",
       "version": "1.0.3.1"
     },
@@ -16001,8 +16154,16 @@
       "name": "monad-loops",
       "properties": [
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
@@ -16014,6 +16175,7 @@
         }
       ],
       "purl": "pkg:hackage/monad-loops@0.4.3",
+      "scope": "excluded",
       "type": "library",
       "version": "0.4.3"
     },
@@ -16206,8 +16368,16 @@
       "name": "mwc-random",
       "properties": [
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
@@ -16219,6 +16389,7 @@
         }
       ],
       "purl": "pkg:hackage/mwc-random@0.15.3.0",
+      "scope": "excluded",
       "type": "library",
       "version": "0.15.3.0"
     },
@@ -16848,8 +17019,16 @@
       "name": "quickcheck-io",
       "properties": [
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
@@ -16861,6 +17040,7 @@
         }
       ],
       "purl": "pkg:hackage/quickcheck-io@0.2.0",
+      "scope": "excluded",
       "type": "library",
       "version": "0.2.0"
     },
@@ -16889,8 +17069,16 @@
       "name": "random-shuffle",
       "properties": [
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
@@ -16902,6 +17090,7 @@
         }
       ],
       "purl": "pkg:hackage/random-shuffle@0.0.4",
+      "scope": "excluded",
       "type": "library",
       "version": "0.0.4"
     },
@@ -17217,8 +17406,16 @@
       "name": "rvar",
       "properties": [
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
@@ -17230,6 +17427,7 @@
         }
       ],
       "purl": "pkg:hackage/rvar@0.3.0.2",
+      "scope": "excluded",
       "type": "library",
       "version": "0.3.0.2"
     },
@@ -17545,8 +17743,16 @@
       "name": "smallcheck",
       "properties": [
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
@@ -17558,6 +17764,7 @@
         }
       ],
       "purl": "pkg:hackage/smallcheck@1.2.1.1",
+      "scope": "excluded",
       "type": "library",
       "version": "1.2.1.1"
     },
@@ -17750,8 +17957,16 @@
       "name": "statistics",
       "properties": [
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
@@ -17763,6 +17978,7 @@
         }
       ],
       "purl": "pkg:hackage/statistics@0.16.5.0",
+      "scope": "excluded",
       "type": "library",
       "version": "0.16.5.0"
     },
@@ -18037,8 +18253,16 @@
       "name": "tasty-smallcheck",
       "properties": [
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
@@ -18050,6 +18274,7 @@
         }
       ],
       "purl": "pkg:hackage/tasty-smallcheck@0.8.2",
+      "scope": "excluded",
       "type": "library",
       "version": "0.8.2"
     },
@@ -19308,8 +19533,16 @@
       "name": "vector-th-unbox",
       "properties": [
         {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:lifecycle-scope-derivation",
+          "value": "transitive"
         },
         {
           "name": "waybill:nixpkgs-component-origin",
@@ -19321,6 +19554,7 @@
         }
       ],
       "purl": "pkg:hackage/vector-th-unbox@0.2.2",
+      "scope": "excluded",
       "type": "library",
       "version": "0.2.2"
     },
