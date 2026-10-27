@@ -70,7 +70,6 @@ pub fn deduplicate(components: Vec<ResolvedComponent>) -> Vec<ResolvedComponent>
         });
 
         let mut best = group.remove(0);
-        let mut occurrences_grew = false;
 
         // Merge evidence from remaining entries.
         for other in group {
@@ -91,7 +90,6 @@ pub fn deduplicate(components: Vec<ResolvedComponent>) -> Vec<ResolvedComponent>
             for occ in other.occurrences {
                 if !best.occurrences.iter().any(|o| o.location == occ.location) {
                     best.occurrences.push(occ);
-                    occurrences_grew = true;
                 }
             }
             for hash in other.hashes {
@@ -300,14 +298,6 @@ pub fn deduplicate(components: Vec<ResolvedComponent>) -> Vec<ResolvedComponent>
             }
         }
 
-        // Group order follows input order, which the parallel walker
-        // does not fix; sort so the merged list does not depend on it.
-        // Only when the merge added something, so an unmerged list keeps
-        // the order its reader chose (dpkg's is already sorted).
-        if occurrences_grew {
-            best.occurrences.sort_by(|a, b| a.location.cmp(&b.location));
-        }
-
         result.push(best);
     }
 
@@ -332,6 +322,27 @@ pub fn deduplicate(components: Vec<ResolvedComponent>) -> Vec<ResolvedComponent>
 
     // Sort the output deterministically by PURL string.
     result.sort_by(|a, b| a.purl.as_str().cmp(b.purl.as_str()));
+
+    // #1292: and each component's occurrences by location, for the same
+    // reason — a reader appends them in walk order, which m772's
+    // parallel walker does not fix for sibling subtrees.
+    //
+    // Over every component, not inside the merge loop, because the two
+    // shapes that bypass that loop are the ones that escaped: a
+    // single-member group returns at `group.len() == 1` above, and a
+    // merge that added no new location failed the old `occurrences_grew`
+    // condition — which tested whether the merge grew the list, not
+    // whether the order was deterministic. That left 129 dpkg
+    // components sorted and 10 not in `image-postgres16` alone.
+    //
+    // The condition's comment claimed dpkg's order was already sorted.
+    // It is the `.list` file's line order, which is not sorted and which
+    // nothing reads: `file_hashes::compute_merkle_root` sorts by
+    // location before hashing, so this makes the emitted order agree
+    // with the order the component hash was computed over.
+    for component in &mut result {
+        component.occurrences.sort_by(|a, b| a.location.cmp(&b.location));
+    }
 
     // Component-role classification (milestone 048). Annotates every
     // dedup'd component whose `evidence.occurrences[]` paths match a
@@ -747,6 +758,63 @@ mod tests {
         let locations: Vec<&str> =
             deduped[0].occurrences.iter().map(|o| o.location.as_str()).collect();
         assert_eq!(locations, vec!["a/bin/tool", "b/bin/tool", "shared/tool"]);
+    }
+
+    /// #1292 — the two group shapes that never reached the old sort,
+    /// because it lived inside the merge loop behind `occurrences_grew`.
+    /// `occurrences_merged_across_duplicates` above covers only the
+    /// shape that did reach it, so neither of these was asserted
+    /// anywhere: a reader emitting walk order escaped through both.
+    #[test]
+    fn occurrences_sorted_for_groups_that_never_merge() {
+        let occ = |loc: &str| waybill_common::resolution::FileOccurrence {
+            location: loc.to_string(),
+            sha256: "aa".to_string(),
+            md5_legacy: None,
+            apk_sha1: None,
+            rpm_file_digest: None,
+        };
+
+        // A component with no duplicate takes the `group.len() == 1`
+        // path and skips the merge loop entirely.
+        let mut lone = make_component(
+            "pkg:generic/lone@1",
+            ResolutionTechnique::UrlPattern,
+            0.95,
+            vec![],
+            vec![],
+        );
+        lone.occurrences = vec![occ("/b/one"), occ("/a/two"), occ("/c/three")];
+
+        // A group of two whose merge adds no location the winner does
+        // not already have: the old condition stayed false.
+        let mut winner = make_component(
+            "pkg:generic/twin@1",
+            ResolutionTechnique::UrlPattern,
+            0.95,
+            vec![],
+            vec![],
+        );
+        winner.occurrences = vec![occ("/z/last"), occ("/a/first")];
+        let mut loser = make_component(
+            "pkg:generic/twin@1",
+            ResolutionTechnique::HashMatch,
+            0.90,
+            vec![],
+            vec![],
+        );
+        loser.occurrences = vec![occ("/a/first")];
+
+        let deduped = deduplicate(vec![lone, winner, loser]);
+        let locations = |purl: &str| -> Vec<String> {
+            deduped
+                .iter()
+                .find(|c| c.purl.as_str() == purl)
+                .map(|c| c.occurrences.iter().map(|o| o.location.clone()).collect())
+                .unwrap_or_default()
+        };
+        assert_eq!(locations("pkg:generic/lone@1"), vec!["/a/two", "/b/one", "/c/three"]);
+        assert_eq!(locations("pkg:generic/twin@1"), vec!["/a/first", "/z/last"]);
     }
 
     #[test]
