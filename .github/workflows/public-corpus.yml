@@ -155,6 +155,68 @@ jobs:
             echo "::warning::$ignored corpus target(s) were ignored rather than run."
           fi
 
+      # #1286 — in regen mode, name the targets whose goldens were
+      # regenerated, and fail if any target that ran is missing from that
+      # list.
+      #
+      # The artifact uploaded below is the whole fixture directory, so a
+      # target that wrote nothing contributes its COMMITTED bytes and the
+      # file count is right either way. Run 40401082720 uploaded all 51
+      # files, green, with 0 of 51 differing, while the one target that
+      # needed regenerating had failed before its write — a result
+      # indistinguishable from "this change moves no goldens".
+      #
+      # The harness fix (`run_layers` in tests/public_corpus.rs) makes the
+      # write reachable from a failing layer, which covers every failure
+      # after the scan. This step covers what it cannot: a target whose
+      # scan itself failed has no documents to write, so the only honest
+      # answer is to name it.
+      #
+      # `|| true` on every grep: a non-matching grep exits 1, and under
+      # `set -e` that would abort this step and report nothing — the same
+      # shape of silence the step exists to end.
+      - name: Assert every target regenerated its goldens
+        if: ${{ always() && inputs.regen_goldens == true }}
+        run: |
+          set -euo pipefail
+          log=corpus-artifacts/corpus-run.log
+          [ -f "$log" ] || { echo "::error::no corpus run log, so no target can be shown to have regenerated anything"; exit 1; }
+          # Test-function name -> target name: strip `corpus_`, `_` -> `-`.
+          grep -oE '^test corpus_[a-z0-9_]+ \.\.\. (ok|FAILED)' "$log" \
+            | sed -E 's/^test corpus_([a-z0-9_]+) .*/\1/' | tr '_' '-' \
+            | sort -u > corpus-artifacts/ran.txt || true
+          # Unanchored: --nocapture with --test-threads=3 interleaves the
+          # harness's own lines with these, so a `^` anchor would drop them.
+          grep -oE 'corpus-regen: [a-z0-9-]+: goldens written' "$log" \
+            | sed -E 's/corpus-regen: ([a-z0-9-]+):.*/\1/' \
+            | sort -u > corpus-artifacts/regenerated.txt || true
+          grep -oE 'skipping [a-z0-9-]+: WAYBILL_[A-Z_]+' "$log" \
+            | sed -E 's/skipping ([a-z0-9-]+):.*/\1/' \
+            | sort -u > corpus-artifacts/skipped.txt || true
+          comm -23 corpus-artifacts/ran.txt corpus-artifacts/skipped.txt \
+            > corpus-artifacts/expected.txt
+          comm -23 corpus-artifacts/expected.txt corpus-artifacts/regenerated.txt \
+            > corpus-artifacts/missing.txt
+          n_wrote=$(wc -l < corpus-artifacts/regenerated.txt | tr -d ' ')
+          n_expect=$(wc -l < corpus-artifacts/expected.txt | tr -d ' ')
+          echo "regenerated ${n_wrote} of ${n_expect} target(s):"
+          sed 's/^/  - /' corpus-artifacts/regenerated.txt
+          # An empty expected set has nothing missing from it, so the check
+          # below would pass while proving nothing. The step above already
+          # fails on zero targets; this does not depend on it having run,
+          # because a check that is only correct given another step's
+          # ordering is the shape this whole issue is about.
+          if [ "$n_expect" -eq 0 ]; then
+            echo "::error::regen mode was requested and NO corpus target was found to have run, so there is nothing this step could have verified. See #1286."
+            exit 1
+          fi
+          # The positive control is the comparison itself: a harness that
+          # stopped writing goldens altogether leaves every target missing.
+          if [ -s corpus-artifacts/missing.txt ]; then
+            echo "::error::corpus-goldens-regen is INCOMPLETE. These targets ran but wrote no goldens, so the artifact holds their committed bytes and looks unchanged for them: $(tr '\n' ' ' < corpus-artifacts/missing.txt | sed 's/[[:space:]]*$//'). See #1286."
+            exit 1
+          fi
+
       # Extract which targets drifted and in how many formats. The
       # per-format count matters for triage: "3 of 3" reads as broad
       # accumulated drift, while a single format drifting is narrower and
@@ -204,6 +266,22 @@ jobs:
               echo "## Drifted"
               echo ""
               cat corpus-artifacts/failing.txt
+            fi
+            # #1286 — on a regen dispatch, name the targets whose goldens
+            # the artifact actually holds. Without this the artifact can
+            # only be checked by diffing it against the committed tree,
+            # and a target that wrote nothing is invisible in that diff.
+            if [ -s corpus-artifacts/regenerated.txt ]; then
+              echo ""
+              echo "## Goldens regenerated"
+              echo ""
+              sed 's/^/- /' corpus-artifacts/regenerated.txt
+            fi
+            if [ -s corpus-artifacts/missing.txt ]; then
+              echo ""
+              echo "## Goldens NOT regenerated (artifact is incomplete for these)"
+              echo ""
+              sed 's/^/- /' corpus-artifacts/missing.txt
             fi
           } > corpus-artifacts/corpus-run-summary.md
 
