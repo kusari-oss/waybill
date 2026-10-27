@@ -126,6 +126,16 @@ the CI workspace, and the job uploads the fixture tree as the
 `corpus-goldens-regen` artifact. Nothing is written to your repository
 by the workflow — you install the goldens yourself, in step 8.
 
+The run names the targets whose goldens it wrote, in the log and in
+`corpus-run-summary.md`, and fails if a target that ran is missing from
+that list. Read it: the artifact is the whole fixture directory, so a
+target that wrote nothing contributes its *committed* bytes and the file
+count is right either way. Before #1286 a regen run whose invariant gate
+failed uploaded all 51 files, green, with 0 of 51 differing — which
+reads as "my change moves no goldens" and was not. A failing gate no
+longer skips the write, so one dispatch is now enough where #1272
+needed two.
+
 > **Dispatch one at a time.** The lane's concurrency group is keyed on
 > `github.ref`, and every `workflow_dispatch` resolves to the same ref
 > whatever `branch` you pass — so all your dispatches share one group.
