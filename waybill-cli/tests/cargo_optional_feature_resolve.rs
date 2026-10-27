@@ -425,3 +425,137 @@ default = ["serde"]
          --offline — the Optional branch requires evidence. cdx: {cdx:#}"
     );
 }
+
+// ─────────────────────────────────────────────────────────────────
+// #1284 — the name-only optional match is masked, and the masking
+// is now asserted rather than accidental
+// ─────────────────────────────────────────────────────────────────
+
+/// Build a two-member workspace: member `a` declares `dep_line_a` and
+/// member `b` declares `dep_line_b`, then `cargo fetch` so waybill's
+/// `cargo metadata --offline` subprocess has something to resolve.
+///
+/// `cargo fetch` rather than `generate-lockfile`, for the reason given
+/// on [`build_synthetic_workspace`]: metadata reads dep manifests from
+/// unpacked crates under `registry/src/`.
+fn build_two_member_workspace(ws_root: &Path, member_a: &str, member_b: &str) {
+    std::fs::write(
+        ws_root.join("Cargo.toml"),
+        "[workspace]\nmembers = [\"a\", \"b\"]\nresolver = \"2\"\n",
+    )
+    .unwrap();
+    for (dir, manifest) in [("a", member_a), ("b", member_b)] {
+        std::fs::create_dir_all(ws_root.join(dir).join("src")).unwrap();
+        std::fs::write(ws_root.join(dir).join("Cargo.toml"), manifest).unwrap();
+        std::fs::write(ws_root.join(dir).join("src/main.rs"), "fn main() {}\n").unwrap();
+    }
+    let out = Command::new("cargo")
+        .args(["fetch"])
+        .current_dir(ws_root)
+        .output()
+        .expect("spawn cargo fetch");
+    assert!(
+        out.status.success(),
+        "cargo fetch failed: stderr:\n{}",
+        String::from_utf8_lossy(&out.stderr),
+    );
+}
+
+/// A dependency one workspace member declares `optional = true` and
+/// another declares plainly must classify `Runtime`.
+///
+/// `optional_names` is a name-only union across every manifest in the
+/// workspace, with no record of which manifest made which declaration,
+/// so member `a`'s `optional = true` makes the *name* a candidate for
+/// `Optional` even though member `b` depends on it unconditionally.
+/// #1284 was filed as a defect on that basis. It is not one, and this
+/// test pins the reason:
+///
+/// `resolve.nodes[].deps[]` — the activation set waybill reads — is
+/// populated from every workspace member, so member `b`'s plain
+/// declaration puts the name in it, and the classifier's second
+/// condition (`NOT activated`) fails. The name-only match is masked by
+/// the activation check in both of the classifier's states: with
+/// evidence, as here; and without evidence, where #1272 means nothing
+/// classifies `Optional` at all.
+///
+/// The masking was accidental until this test. It rests on two
+/// properties that nothing else asserts, and either could be changed
+/// in good faith by someone who did not know this depended on them:
+///
+///   * `cargo metadata` is invoked without `--filter-platform`, so the
+///     activation set spans all target platforms. Adding that flag
+///     would drop non-host `[target.'cfg(…)'.dependencies]` from the
+///     activation set while waybill still unions their declarations.
+///   * `discover_workspace_manifests` follows the root manifest's
+///     `[workspace] members` rather than walking the tree, so every
+///     manifest whose declarations are unioned is one cargo's resolve
+///     covers. Tree-walking discovery would union manifests cargo
+///     never saw. See
+///     `discover_workspace_manifests_is_scoped_to_the_declared_workspace`
+///     in `cargo.rs` for that half.
+///
+/// If either changes, this test is where it surfaces.
+#[test]
+fn issue_1284_a_plain_declaration_in_another_member_keeps_it_runtime() {
+    if !require_cargo() {
+        eprintln!("skipping: cargo needed to resolve the feature set");
+        return;
+    }
+    let tempdir = tempfile::tempdir().unwrap();
+    let ws = tempdir.path();
+    build_two_member_workspace(
+        ws,
+        // `once_cell` is optional here and gated behind a NON-default
+        // feature, so this member alone would not activate it.
+        r#"[package]
+name = "m1284-member-a"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+once_cell = { version = "1", optional = true }
+
+[features]
+cache = ["dep:once_cell"]
+"#,
+        // …and unconditional here.
+        r#"[package]
+name = "m1284-member-b"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+once_cell = "1"
+"#,
+    );
+
+    let (cdx, stderr, ok) = scan_workspace_with_env(ws, None);
+    assert!(ok, "scan MUST succeed. stderr:\n{stderr}");
+
+    // The precondition. Without it the assertions below also pass
+    // against a run that fell back to `FeatureActivation::Unknown`,
+    // where nothing classifies Optional for an unrelated reason and
+    // the test would prove nothing about the masking.
+    assert!(
+        !stderr.contains("cargo metadata failed")
+            && !stderr.contains("cargo metadata skipped"),
+        "this test is about the Known-activation path; a fallback here makes it \
+         vacuous. stderr:\n{stderr}"
+    );
+
+    let once_cell = find_component_by_name(&cdx, "once_cell")
+        .unwrap_or_else(|| panic!("once_cell component present. cdx: {cdx:#}"));
+    let scope = component_scope(once_cell);
+    assert!(
+        scope.is_none() || scope == Some("runtime"),
+        "once_cell is an unconditional dependency of member b, so it MUST be \
+         runtime (CDX omits the field for runtime) however member a declares \
+         it, got {scope:?}. cdx: {cdx:#}"
+    );
+    assert_eq!(
+        component_property(once_cell, "waybill:optional-derivation"),
+        None,
+        "and it must carry no optional-derivation annotation. cdx: {cdx:#}"
+    );
+}
