@@ -139,8 +139,10 @@ impl LinkageAggregator {
         self.add(soname, parent_path, parent_bom_ref);
     }
 
-    /// Emit one `PackageDbEntry` per unique soname. Entries are sorted
-    /// by PURL for deterministic output.
+    /// Emit one `PackageDbEntry` per unique soname. Both axes are
+    /// sorted for deterministic output: the entries by PURL, and each
+    /// entry's parent paths among themselves (#1291 — before that only
+    /// the first was, and the docstring claimed both).
     pub fn into_entries(self) -> Vec<PackageDbEntry> {
         let mut records: Vec<_> = self.by_soname.into_iter().collect();
         records.sort_by(|a, b| a.0.cmp(&b.0));
@@ -149,7 +151,15 @@ impl LinkageAggregator {
             .into_iter()
             .map(|(soname, rec)| {
                 // #1060: every linking binary is a separate source path.
-                let mut parents = rec.parents.into_iter();
+                // #1291: sorted, because `parents` is appended in the
+                // order `add` was called — walk order, which m772's
+                // parallel walker does not fix. The deduplicator's own
+                // sort cannot cover this: it runs only when a merge grew
+                // the list, and a linkage component reaches dedup already
+                // carrying every parent, so nothing grows.
+                let mut parents = rec.parents;
+                parents.sort();
+                let mut parents = parents.into_iter();
                 let source_path = parents.next().unwrap_or_default();
                 PackageDbEntry {
                 extra_source_paths: parents.collect(),
@@ -238,6 +248,29 @@ mod tests {
         // All three parent paths preserved, each as its own path (#1060).
         assert_eq!(libssl.source_path, "/bin/app1");
         assert_eq!(libssl.extra_source_paths, vec!["/bin/app2", "/bin/app3"]);
+    }
+
+    /// #1291 — `parents` is appended in walk order, and since m772 the
+    /// walker does not fix the order in which sibling subtrees are
+    /// reached, so the emitted `evidence.occurrences` order was a
+    /// scheduling outcome. The end-to-end test in
+    /// `waybill-cli/tests/binary_source_paths.rs` cannot force that
+    /// order — it observed this as an intermittent failure on main
+    /// (CI run 40533529284), not as a gate. This is the level at which
+    /// the order is forceable, so this is where it is asserted.
+    #[test]
+    fn parents_are_sorted_whatever_order_the_walker_reached_them() {
+        let mut agg = LinkageAggregator::new();
+        for parent in ["/scan/b/bin/tool", "/scan/a/bin/tool", "/scan/c/bin/tool"] {
+            agg.add("libc.so.6", Path::new(parent), "r1");
+        }
+        let entries = agg.into_entries();
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].source_path, "/scan/a/bin/tool");
+        assert_eq!(
+            entries[0].extra_source_paths,
+            vec!["/scan/b/bin/tool", "/scan/c/bin/tool"]
+        );
     }
 
     #[test]
