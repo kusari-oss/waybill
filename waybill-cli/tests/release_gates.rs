@@ -717,3 +717,114 @@ fn sort_v_disagrees_with_semver_on_prereleases() {
          either way"
     );
 }
+
+// ---------------------------------------------------------------------------
+// #1287 — a workflow that picks its own checkout ref must resolve the
+// commit it scanned
+// ---------------------------------------------------------------------------
+
+/// On a `workflow_dispatch`, `github.sha` is the SHA of the ref the workflow
+/// definition was loaded from — the default branch — whatever a `branch`
+/// input names. A workflow whose Checkout uses `inputs.branch` and whose
+/// output quotes `github.sha` therefore attests to a commit it never looked
+/// at. The corpus lane did exactly that inside `corpus-run-summary.md`, the
+/// durable artifact a maintainer quotes when landing a change that moves
+/// goldens, and `quality-corpus.yml` did it in an artifact name.
+///
+/// The rule is derived from the files rather than from a list of workflow
+/// names, because a list that mirrors a directory falls out of date the way
+/// #1287's own un-audited guess did: it named `ebpf-canary.yml` and the
+/// release path as suspects, and neither mentions `github.sha` at all,
+/// while `quality-corpus.yml` — which it did not name — had the defect.
+///
+/// What is asserted is that such a workflow resolves the scanned commit
+/// itself and uses the result. Whether a *label* describes a `github.sha`
+/// honestly is not mechanically decidable, so the two honest shapes are a
+/// closed set below: a third one has to justify itself by editing this test.
+#[test]
+fn a_workflow_that_picks_its_own_ref_resolves_the_commit_it_scanned() {
+    let dir = repo_root().join(".github/workflows");
+    let mut checked: Vec<String> = Vec::new();
+    let mut problems: Vec<String> = Vec::new();
+
+    let mut paths: Vec<PathBuf> = std::fs::read_dir(&dir)
+        .expect(".github/workflows is readable")
+        .map(|e| e.expect("readable dir entry").path())
+        .filter(|p| p.extension().and_then(|e| e.to_str()) == Some("yml"))
+        .collect();
+    paths.sort();
+
+    for path in paths {
+        let yml = std::fs::read_to_string(&path).expect("workflow is readable");
+        // A checkout that resolves a ref from a dispatch input is what makes
+        // `github.sha` and the scanned commit diverge. A `pull_request_target`
+        // workflow that checks out the default branch on purpose is not in
+        // this class — it resolves its subject from the API instead, which
+        // `review-gate.yml` does and documents.
+        if !yml.contains("ref: ${{ github.event.inputs.branch") {
+            continue;
+        }
+        let name = path
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("<unnamed>")
+            .to_string();
+        checked.push(name.clone());
+
+        if !yml.contains("git rev-parse HEAD") {
+            problems.push(format!(
+                "{name}: checks out a ref of its own choosing but never resolves the \
+                 commit it got. Without `git rev-parse HEAD` after checkout there is \
+                 nothing to report but `github.sha`, which is the default branch's tip."
+            ));
+        }
+        if !yml.contains("steps.scanned.outputs.sha") {
+            problems.push(format!(
+                "{name}: resolves nothing that anything consumes. A resolution step \
+                 whose output is never read leaves the reported commit as wrong as \
+                 before while looking fixed."
+            ));
+        }
+        for (i, line) in yml.lines().enumerate() {
+            if !line.contains("github.sha") {
+                continue;
+            }
+            // A comment mentioning it is inert, in YAML and in a `run:`
+            // block's shell alike — and this file's own rationale mentions
+            // it repeatedly, which is how this skip was discovered.
+            if line.trim_start().starts_with('#') {
+                continue;
+            }
+            // The two honest shapes, deliberately a closed set.
+            let fallback_after_scanned = line.contains("steps.scanned.outputs.sha ||");
+            let labelled_as_definition = line.contains("DEFINITION");
+            if !fallback_after_scanned && !labelled_as_definition {
+                problems.push(format!(
+                    "{name}:{}: `{}` — a `github.sha` here is either the workflow \
+                     definition's commit, in which case name it so (a variable whose \
+                     name contains DEFINITION), or a fallback after \
+                     `steps.scanned.outputs.sha ||`. Reported as anything else it \
+                     names a commit this run did not scan (#1287).",
+                    i + 1,
+                    line.trim()
+                ));
+            }
+        }
+    }
+
+    // The positive control. Without it this test passes when the filter
+    // matches nothing — a reworded checkout, a renamed input or a path typo
+    // all look exactly like "no workflow has this defect".
+    assert!(
+        checked.len() >= 2,
+        "expected at least two workflows resolving a checkout ref from a dispatch \
+         input (public-corpus.yml and quality-corpus.yml both do); found {checked:?}. \
+         Either they were reworded, in which case this test checks nothing, or the \
+         filter is wrong."
+    );
+    assert!(
+        problems.is_empty(),
+        "#1287:\n  {}",
+        problems.join("\n  ")
+    );
+}
