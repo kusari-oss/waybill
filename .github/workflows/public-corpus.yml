@@ -50,6 +50,29 @@ jobs:
           # exfiltrate the token via .git/config leakage.
           persist-credentials: false
 
+      # #1287 — resolve the commit this run actually CHECKED OUT.
+      #
+      # On a `workflow_dispatch`, `github.sha` is the SHA of the ref the
+      # workflow definition was loaded from — the default branch — whatever
+      # the `branch` input names, while the Checkout above deliberately uses
+      # `inputs.branch`. The two therefore never agree on a manual dispatch
+      # against a branch, and anything reporting `github.sha` names the one
+      # that was not scanned.
+      #
+      # Run 40403171227, dispatched against `1272-cargo-activation-evidence`,
+      # produced a summary headed with that branch and `Commit:
+      # 58ca77fdb8dea421183a0373fbca9db2e7188016` — main's tip, the squash
+      # merge of #1277 — while the Checkout step's own log line said
+      # 49638f76c89021e0d290e0fa04b991f3ba9b1403. Five lines that contradict
+      # themselves, in the artifact a maintainer quotes as evidence.
+      - name: Resolve the scanned commit
+        id: scanned
+        run: |
+          set -euo pipefail
+          sha=$(git rev-parse HEAD)
+          echo "sha=${sha}" >> "$GITHUB_OUTPUT"
+          echo "scanned commit: ${sha}"
+
       - name: Install Rust (stable)
         uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable (2026-04-25)
         with:
@@ -251,14 +274,21 @@ jobs:
           # can't be evaluated as shell code inside the run: block
           # (per Kusari Inspector template-injection finding).
           BRANCH_REF: ${{ github.event.inputs.branch || github.ref }}
-          COMMIT_SHA: ${{ github.sha }}
+          # #1287 — two distinct things, labelled as such. The second is
+          # genuinely useful when the lane's own YAML differs on the branch
+          # under test; reporting it as "the commit" was the defect.
+          SCANNED_SHA: ${{ steps.scanned.outputs.sha }}
+          DEFINITION_SHA: ${{ github.sha }}
         run: |
           mkdir -p corpus-artifacts
           {
             echo "# Public corpus run — ${BRANCH_REF}"
             echo ""
-            echo "Commit: ${COMMIT_SHA}"
-            echo "Date:   $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            # Empty only if Checkout itself never completed, in which
+            # case nothing was scanned and saying so is the honest answer.
+            echo "Scanned commit:           ${SCANNED_SHA:-<checkout did not complete; nothing was scanned>}"
+            echo "Workflow definition from: ${DEFINITION_SHA}"
+            echo "Date:                     $(date -u +%Y-%m-%dT%H:%M:%SZ)"
             echo ""
             echo "See workflow log for per-target diagnostic blocks."
             if [ -s corpus-artifacts/failing.txt ]; then
