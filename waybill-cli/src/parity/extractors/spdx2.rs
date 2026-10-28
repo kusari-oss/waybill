@@ -788,6 +788,7 @@ spdx23_anno!(c120_spdx23, "waybill:workspace-member",                 component)
 spdx23_anno!(c121_spdx23, "waybill:workspaces-detected",              document);
 // Milestone 179: C122 per-component optional-dep derivation source.
 spdx23_anno!(c122_spdx23, "waybill:optional-derivation",              component);
+spdx23_anno!(c199_spdx23, "waybill:cargo-activation-evidence",        component);
 
 // C67 — `waybill:assertion-conflict` (milestone 119). Per-Package
 // envelope carrying the JSON-encoded array of conflict records.

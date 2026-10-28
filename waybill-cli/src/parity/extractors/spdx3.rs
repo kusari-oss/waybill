@@ -845,6 +845,7 @@ spdx3_anno!(c120_spdx3, "waybill:workspace-member",                 component);
 spdx3_anno!(c121_spdx3, "waybill:workspaces-detected",              document);
 // Milestone 179: C122 per-component optional-dep derivation source.
 spdx3_anno!(c122_spdx3, "waybill:optional-derivation",              component);
+spdx3_anno!(c199_spdx3, "waybill:cargo-activation-evidence",        component);
 
 // C67 — `waybill:assertion-conflict` (milestone 119). Per-component
 // graph-element annotation carrying the JSON-encoded array of

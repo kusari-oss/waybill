@@ -1006,6 +1006,7 @@ cdx_anno!(c197_cdx, "waybill:version-absence", component);
 // are all URL-shaped), so unlike both SPDX versions it keeps the
 // property. The capability asymmetry runs the opposite way to C185's.
 cdx_anno!(c198_cdx, "waybill:source-package", component);
+cdx_anno!(c199_cdx, "waybill:cargo-activation-evidence", component);
 
 /// C194 — compared by projection only (milestone 1071).
 pub(super) fn c194_cdx(doc: &Value) -> BTreeSet<String> {

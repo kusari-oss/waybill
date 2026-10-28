@@ -117,7 +117,44 @@ pub(super) enum FeatureActivation {
     Known(HashSet<String>),
     /// The subprocess was skipped or failed, so there is no activation
     /// information at all. Distinct from `Known(empty)`.
-    Unknown,
+    ///
+    /// Carries *why*, because the three causes call for different
+    /// reactions from whoever reads the document: `--offline` is a
+    /// choice the operator made, a missing manifest is a property of
+    /// the tree, and a failed subprocess is an environment defect to
+    /// go and fix. #1300.
+    Unknown(NoEvidenceReason),
+}
+
+/// Why waybill has no feature-activation evidence for a cargo
+/// workspace. Reaches the emitted document as the C199
+/// `waybill:cargo-activation-evidence` value, so the strings are a
+/// closed wire vocabulary: changing one is a format change.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum NoEvidenceReason {
+    /// A `Cargo.lock` with no `Cargo.toml` beside it. There is no
+    /// manifest to read features from, so there is nothing to run.
+    NoManifest,
+    /// The operator passed `--offline` (or set `WAYBILL_OFFLINE`), so
+    /// the subprocess was deliberately skipped — see #771 for why it
+    /// is skipped outright rather than run with `--offline`.
+    Offline,
+    /// `cargo metadata` ran and failed: no cargo binary, a cold
+    /// registry cache, a resolution error, or a timeout.
+    CargoMetadataFailed,
+}
+
+impl NoEvidenceReason {
+    /// The C199 wire value. `absent-` prefixed so a reader can tell
+    /// at a glance that the annotation reports a *lack* of evidence
+    /// rather than a finding.
+    fn as_annotation_value(self) -> &'static str {
+        match self {
+            NoEvidenceReason::NoManifest => "absent-no-manifest",
+            NoEvidenceReason::Offline => "absent-offline",
+            NoEvidenceReason::CargoMetadataFailed => "absent-cargo-metadata-failed",
+        }
+    }
 }
 
 impl FeatureActivation {
@@ -130,7 +167,21 @@ impl FeatureActivation {
     fn treats_as_activated(&self, name: &str) -> bool {
         match self {
             FeatureActivation::Known(activated) => activated.contains(name),
-            FeatureActivation::Unknown => true,
+            FeatureActivation::Unknown(_) => true,
+        }
+    }
+
+    /// `Some(reason)` when there is no activation evidence.
+    ///
+    /// The classifier uses this to say so in the document. Without it
+    /// the two meanings of `Runtime` for a declared-optional
+    /// dependency — "the resolved feature set activates this" and
+    /// "nobody found out" — are indistinguishable on the wire, which
+    /// is #1300.
+    fn no_evidence_reason(&self) -> Option<NoEvidenceReason> {
+        match self {
+            FeatureActivation::Known(_) => None,
+            FeatureActivation::Unknown(reason) => Some(*reason),
         }
     }
 }
@@ -1609,6 +1660,34 @@ fn parse_lockfile(
                     );
                 } else if prod_set.contains(&key) {
                     entry.lifecycle_scope = Some(LifecycleScope::Runtime);
+                    // #1300 — say so when this `Runtime` is a default
+                    // rather than a finding.
+                    //
+                    // A declared-optional dep lands here in exactly two
+                    // situations: the resolved feature set activates it,
+                    // or there was no resolved feature set to consult.
+                    // The arm above has already taken everything that
+                    // was *known* to be inactive, so reaching here with
+                    // no evidence means the preceding condition could
+                    // not be evaluated — not that it was evaluated and
+                    // came out false. Those are different claims and the
+                    // document used to make them look identical.
+                    //
+                    // Only the declared-optional names are marked. A dep
+                    // nobody declared optional is `Runtime` for reasons
+                    // that have nothing to do with activation, so
+                    // annotating it would say nothing and would put a
+                    // property on most components in the document.
+                    if let Some(reason) = activation.no_evidence_reason() {
+                        if optional_names.contains(&pkg.name) {
+                            entry.extra_annotations.insert(
+                                "waybill:cargo-activation-evidence".to_string(),
+                                serde_json::Value::String(
+                                    reason.as_annotation_value().to_string(),
+                                ),
+                            );
+                        }
+                    }
                 } else if build_set.contains(&key) {
                     entry.lifecycle_scope = Some(LifecycleScope::Build);
                 } else {
@@ -1794,7 +1873,7 @@ pub(crate) fn finalize(
             // Lockfile with no manifest beside it — a legitimate
             // test-fixture shape, not a failure, so no log. There is
             // no manifest to read features from, hence no evidence.
-            FeatureActivation::Unknown
+            FeatureActivation::Unknown(NoEvidenceReason::NoManifest)
         } else if offline {
             tracing::info!(
                 workspace = %workspace_root.display(),
@@ -1803,7 +1882,7 @@ pub(crate) fn finalize(
                  (safe over-inclusion — run without --offline for the resolved \
                  feature set)"
             );
-            FeatureActivation::Unknown
+            FeatureActivation::Unknown(NoEvidenceReason::Offline)
         } else {
             match resolve_activated_deps_via_cargo_metadata(
                 workspace_root,
@@ -1823,7 +1902,7 @@ pub(crate) fn finalize(
                          populate registry cache to distinguish activated from \
                          non-activated optionals)"
                     );
-                    FeatureActivation::Unknown
+                    FeatureActivation::Unknown(NoEvidenceReason::CargoMetadataFailed)
                 }
             }
         };
@@ -2426,7 +2505,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0000000000000000000000000000000000000000000000000000000000000001"
 "#;
         let path = write_lockfile(dir.path(), body);
-        let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &FeatureActivation::Unknown, &HashSet::new()).unwrap();
+        let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &FeatureActivation::Unknown(NoEvidenceReason::CargoMetadataFailed), &HashSet::new()).unwrap();
         assert_eq!(entries.len(), 2);
         assert!(entries.iter().any(|e| e.name == "serde"));
         let serde = entries.iter().find(|e| e.name == "serde").unwrap();
@@ -2448,7 +2527,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5ad32ce52e4161730f7098c077cd2ed6229b5804ccf99e5366be1ab72a98b4e1"
 "#;
         let path = write_lockfile(dir.path(), body);
-        let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &FeatureActivation::Unknown, &HashSet::new()).unwrap();
+        let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &FeatureActivation::Unknown(NoEvidenceReason::CargoMetadataFailed), &HashSet::new()).unwrap();
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].name, "anyhow");
     }
@@ -2465,7 +2544,7 @@ version = "0.1.0"
 source = "git+https://github.com/me/my-fork?branch=main#abc123"
 "#;
         let path = write_lockfile(dir.path(), body);
-        let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &FeatureActivation::Unknown, &HashSet::new()).unwrap();
+        let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &FeatureActivation::Unknown(NoEvidenceReason::CargoMetadataFailed), &HashSet::new()).unwrap();
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].source_type.as_deref(), Some("git"));
     }
@@ -2506,7 +2585,7 @@ source = "git+https://example.com/fork#abc123"
         let doc = parse_lockfile_doc(&path).unwrap().unwrap();
         let prod = compute_cargo_prod_set(&doc, &HashSet::from(["app".to_string()]));
         assert_eq!(prod.len(), 3, "legacy root participates in transitive traversal");
-        let entries = parse_lockfile(&path, &prod, &HashSet::new(), &HashSet::new(), &FeatureActivation::Unknown, &HashSet::new()).unwrap();
+        let entries = parse_lockfile(&path, &prod, &HashSet::new(), &HashSet::new(), &FeatureActivation::Unknown(NoEvidenceReason::CargoMetadataFailed), &HashSet::new()).unwrap();
         assert_eq!(entries.len(), 4);
         let app = entries.iter().find(|e| e.name == "app").unwrap();
         assert_eq!(app.depends, ["x 0.1.0"]);
@@ -2536,7 +2615,7 @@ checksum = "0000000000000000000000000000000000000000000000000000000000000000"
 "#;
         for header in ["", "version = 1\n", "version = 2\n"] {
             let path = write_lockfile(dir.path(), &format!("{header}{body}"));
-            let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &FeatureActivation::Unknown, &HashSet::new()).unwrap();
+            let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &FeatureActivation::Unknown(NoEvidenceReason::CargoMetadataFailed), &HashSet::new()).unwrap();
             assert_eq!(entries.len(), 1);
             assert_eq!(entries[0].purl.as_str(), "pkg:cargo/x@0.1.0");
             assert_eq!(entries[0].hashes, vec![ContentHash::sha256(&"0".repeat(64)).unwrap()]);
@@ -2576,7 +2655,7 @@ source = "registry+https://example.com/index"
 "checksum wrong-version 2.0.0 (registry+https://example.com/index)" = "0000000000000000000000000000000000000000000000000000000000000003"
 "#;
         let path = write_lockfile(dir.path(), body);
-        let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &FeatureActivation::Unknown, &HashSet::new()).unwrap();
+        let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &FeatureActivation::Unknown(NoEvidenceReason::CargoMetadataFailed), &HashSet::new()).unwrap();
         assert_eq!(entries.len(), 4);
         assert_eq!(entries[0].hashes, vec![ContentHash::sha256(&format!("{:0>64}", "1")).unwrap()]);
         assert!(entries[1..].iter().all(|entry| entry.hashes.is_empty()));
@@ -2589,7 +2668,7 @@ source = "registry+https://example.com/index"
             let path = write_lockfile(dir.path(), &format!("version = {version}\n"));
             for err in [
                 parse_lockfile_doc(&path).unwrap_err(),
-                parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &FeatureActivation::Unknown, &HashSet::new()).unwrap_err(),
+                parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &FeatureActivation::Unknown(NoEvidenceReason::CargoMetadataFailed), &HashSet::new()).unwrap_err(),
             ] {
                 assert!(err.to_string().contains(&path.display().to_string()));
                 assert!(matches!(err, CargoError::LockfileUnsupportedVersion { version: actual, .. } if actual == version));
@@ -4056,6 +4135,111 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
     /// Classify `optional_dep_lockfile` under a given activation state,
     /// returning `(scope of shipped, scope of shipped-core)`.
+    /// #1300 — the C199 `waybill:cargo-activation-evidence` value for
+    /// `shipped` (declared optional) and `shipped-core` (not declared
+    /// optional anywhere), under one activation state.
+    ///
+    /// Returning both is what makes the assertions below non-vacuous:
+    /// a bug that annotated every component, or none, is visible in
+    /// the pair where it is invisible in either alone.
+    fn evidence_annotation_under(
+        activation: &FeatureActivation,
+    ) -> (Option<String>, Option<String>) {
+        let dir = tempfile::tempdir().unwrap();
+        let path = optional_dep_lockfile(dir.path());
+        let doc = parse_lockfile_doc(&path).unwrap().unwrap();
+        let prod = compute_cargo_prod_set(&doc, &HashSet::from(["app".to_string()]));
+        let optional_names = HashSet::from(["shipped".to_string()]);
+        let entries = parse_lockfile(
+            &path,
+            &prod,
+            &HashSet::new(),
+            &optional_names,
+            activation,
+            &HashSet::from(["app".to_string()]),
+        )
+        .unwrap();
+        let marker_of = |name: &str| -> Option<String> {
+            entries
+                .iter()
+                .find(|e| e.name == name)
+                .unwrap_or_else(|| panic!("{name} present in {entries:?}"))
+                .extra_annotations
+                .get("waybill:cargo-activation-evidence")
+                .and_then(|v| v.as_str())
+                .map(str::to_string)
+        };
+        (marker_of("shipped"), marker_of("shipped-core"))
+    }
+
+    /// #1300 — each no-evidence cause reaches the document under its
+    /// own name.
+    ///
+    /// The three are distinguished because they ask different things
+    /// of whoever reads the document: `--offline` was a choice, a
+    /// missing manifest is a property of the tree, and a failed
+    /// subprocess is an environment defect to go and fix. Collapsing
+    /// them to one "no evidence" string would make the artifact unable
+    /// to tell an operator which.
+    #[test]
+    fn each_no_evidence_cause_names_itself_in_the_document() {
+        for (reason, expected) in [
+            (NoEvidenceReason::NoManifest, "absent-no-manifest"),
+            (NoEvidenceReason::Offline, "absent-offline"),
+            (
+                NoEvidenceReason::CargoMetadataFailed,
+                "absent-cargo-metadata-failed",
+            ),
+        ] {
+            let (shipped, core) =
+                evidence_annotation_under(&FeatureActivation::Unknown(reason));
+            assert_eq!(
+                shipped.as_deref(),
+                Some(expected),
+                "{reason:?} must reach the document as `{expected}`"
+            );
+            assert_eq!(
+                core, None,
+                "`shipped-core` is not declared optional anywhere, so its \
+                 Runtime classification has nothing to do with activation \
+                 evidence and must carry no marker ({reason:?})"
+            );
+        }
+    }
+
+    /// #1300's negative control: with evidence, no marker.
+    ///
+    /// Without this the test above passes just as well against an
+    /// implementation that annotates unconditionally, which would
+    /// assert the opposite of what C199 means — that every cargo
+    /// `Runtime` is unverified.
+    ///
+    /// Both halves of `Known` are covered, because they take different
+    /// branches. `Known(["shipped"])` activates it, so it lands in the
+    /// same `Runtime` arm the marker is emitted from and is the case
+    /// that could regress. `Known([])` knows it is inactive, so it
+    /// classifies `Optional` and never reaches that arm.
+    #[test]
+    fn evidence_present_emits_no_absence_marker() {
+        let activated =
+            FeatureActivation::Known(HashSet::from(["shipped".to_string()]));
+        assert_eq!(
+            evidence_annotation_under(&activated),
+            (None, None),
+            "`shipped` is Runtime because the resolved feature set activates \
+             it — a finding, not a default, so there is no absence to report"
+        );
+
+        let nothing_activated = FeatureActivation::Known(HashSet::new());
+        assert_eq!(
+            evidence_annotation_under(&nothing_activated),
+            (None, None),
+            "`Known([])` is evidence that nothing is activated: `shipped` \
+             classifies Optional with its C122 marker and must not also claim \
+             its evidence was absent"
+        );
+    }
+
     fn classify_under(
         activation: &FeatureActivation,
     ) -> (Option<LifecycleScope>, Option<LifecycleScope>) {
@@ -4093,7 +4277,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
     /// dependencies the binary ships.
     #[test]
     fn unknown_activation_classifies_a_declared_optional_dep_runtime() {
-        let (shipped, core) = classify_under(&FeatureActivation::Unknown);
+        let (shipped, core) = classify_under(&FeatureActivation::Unknown(NoEvidenceReason::CargoMetadataFailed));
         assert_eq!(
             shipped,
             Some(LifecycleScope::Runtime),
