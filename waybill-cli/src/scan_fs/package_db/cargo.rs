@@ -1212,6 +1212,20 @@ pub(crate) struct CargoTomlSections {
     /// ∈ root_names` targets the workspace-root [[package]] itself
     /// without affecting its transitive closure.
     pub root_names: HashSet<String>,
+    /// #1302 — resolved names of the `optional = true` dependencies
+    /// that this manifest's own `default` feature closure activates.
+    ///
+    /// Positive evidence only, and only about *this* manifest. Read
+    /// without cargo, a registry or a network, which is the whole
+    /// point: `cargo metadata --offline` cannot resolve without a
+    /// populated registry index, and the environments that lack one
+    /// are exactly where the reader has no evidence at all.
+    pub feature_activated_optional: HashSet<String>,
+    /// #1302 — whether this manifest declares `[workspace] members`.
+    ///
+    /// Gates the one direction of the inference that is not free. See
+    /// `manifest_activation_is_complete`.
+    pub declares_workspace_members: bool,
 }
 
 impl CargoTomlSections {
@@ -1224,6 +1238,9 @@ impl CargoTomlSections {
         self.build_deps.extend(other.build_deps.iter().cloned());
         self.optional_deps.extend(other.optional_deps.iter().cloned());
         self.root_names.extend(other.root_names.iter().cloned());
+        self.feature_activated_optional
+            .extend(other.feature_activated_optional.iter().cloned());
+        self.declares_workspace_members |= other.declares_workspace_members;
     }
 }
 
@@ -1286,7 +1303,186 @@ pub(crate) fn parse_cargo_toml(path: &Path) -> Option<CargoTomlSections> {
     {
         out.root_names.insert(root_name.to_string());
     }
+    // #1302 — feature-activation evidence the manifest already holds.
+    out.feature_activated_optional = default_activated_optional_deps(&parsed);
+    out.declares_workspace_members = parsed
+        .get("workspace")
+        .and_then(|v| v.as_table())
+        .map(|t| t.contains_key("members"))
+        .unwrap_or(false);
     Some(out)
+}
+
+/// #1302 — whether a manifest set's feature evidence is complete
+/// enough to assert that an optional dependency is **not** in the
+/// build.
+///
+/// The two directions are not equally sound. "In the default closure,
+/// therefore ships" is free: at worst it agrees with the no-evidence
+/// over-inclusion. "Not in the closure, therefore does not ship" is
+/// the one worth having and the one that can be wrong, because a
+/// sibling workspace member can activate another member's optional
+/// feature through a path dependency's `features = [...]`, and a
+/// transitive crate's feature selection is not visible in the
+/// workspace at all.
+///
+/// So the predicate is deliberately narrow: one manifest, declaring a
+/// `[package]`, with no `[workspace] members`. For that shape the
+/// root's default closure *is* the build, and completeness is
+/// structural rather than inferred. Multi-member workspaces keep the
+/// existing fallback until member-to-member activation is modelled —
+/// asserting inactivity we cannot support would reintroduce #1272's
+/// false negatives while looking like evidence, which is worse than
+/// having none.
+fn manifest_activation_is_complete(
+    manifest_count: usize,
+    sections: &CargoTomlSections,
+) -> bool {
+    manifest_count == 1 && !sections.declares_workspace_members && !sections.root_names.is_empty()
+}
+
+/// #1302 — map every `optional = true` dependency's **local key** to
+/// the **resolved** package name, across `[dependencies]` and every
+/// `[target.<cfg>.dependencies]`.
+///
+/// Both halves are needed because they are different namespaces and
+/// the difference is silent. `[features]` entries name the local key;
+/// `optional_deps` stores the resolved name, honouring
+/// `package = "..."` renames (see `collect_optional_dep_keys`). For
+/// `foo = { package = "real-foo", optional = true }` the feature is
+/// `foo` and the stored name is `real-foo`, so matching feature
+/// entries straight against `optional_deps` never fires — and the
+/// result looks exactly like a crate that activates no optionals.
+fn optional_local_to_resolved(parsed: &toml::Value) -> HashMap<String, String> {
+    let mut out = HashMap::new();
+    let mut from_section = |value: &toml::Value| {
+        let Some(table) = value.get("dependencies").and_then(|v| v.as_table()) else {
+            return;
+        };
+        for (key, dep) in table {
+            let Some(dep_table) = dep.as_table() else { continue };
+            if !dep_table
+                .get("optional")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false)
+            {
+                continue;
+            }
+            let resolved = dep_table
+                .get("package")
+                .and_then(|v| v.as_str())
+                .unwrap_or(key.as_str())
+                .to_string();
+            out.insert(key.clone(), resolved);
+        }
+    };
+    from_section(parsed);
+    if let Some(targets) = parsed.get("target").and_then(|v| v.as_table()) {
+        for (_cfg, target_value) in targets {
+            from_section(target_value);
+        }
+    }
+    out
+}
+
+/// #1302 — the optional dependencies a default `cargo build` of this
+/// manifest activates, as resolved package names.
+///
+/// Walks the `[features]` graph from `default`. The four entry forms
+/// carry different meanings and getting one wrong is worse than having
+/// no evidence, because the result would look like evidence:
+///
+/// | entry          | effect                                            |
+/// |----------------|---------------------------------------------------|
+/// | `other`        | feature -> feature, or an optional dep's implicit feature |
+/// | `dep:foo`      | activates `foo`                                   |
+/// | `foo/bar`      | activates `foo` and its feature `bar`             |
+/// | `foo?/bar`     | **weak**: enables `bar` only if `foo` is already activated, and never activates `foo` |
+///
+/// A manifest with no `[features]` table activates nothing, which is
+/// sound rather than a degenerate case: with no features there is no
+/// way for an optional dependency to be switched on.
+///
+/// `dep:foo` also suppresses `foo`'s implicit feature in cargo, and
+/// that rule needs no code here. It can only change the answer when a
+/// bare `foo` entry is reachable, `dep:foo` exists, and `foo` is not
+/// itself a declared feature — which cargo rejects outright ("feature
+/// `x` includes `foo`, but `foo` is not a feature"). For every
+/// manifest cargo accepts, recursing into a declared feature named
+/// after the dep reaches the same `dep:foo` and gives the same
+/// result. A guard for it was written, found to be unfalsifiable, and
+/// removed: on a manifest cargo would reject it would have
+/// *under*-activated, and under-activation is the false-negative
+/// direction this reader exists to avoid.
+fn default_activated_optional_deps(parsed: &toml::Value) -> HashSet<String> {
+    let local_to_resolved = optional_local_to_resolved(parsed);
+    if local_to_resolved.is_empty() {
+        return HashSet::new();
+    }
+    let features: HashMap<String, Vec<String>> = parsed
+        .get("features")
+        .and_then(|v| v.as_table())
+        .map(|t| {
+            t.iter()
+                .map(|(name, list)| {
+                    let entries = list
+                        .as_array()
+                        .map(|a| {
+                            a.iter()
+                                .filter_map(|e| e.as_str().map(str::to_string))
+                                .collect()
+                        })
+                        .unwrap_or_default();
+                    (name.clone(), entries)
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+
+    let mut activated_local: HashSet<String> = HashSet::new();
+    let mut seen: HashSet<String> = HashSet::new();
+    let mut work: Vec<String> = vec!["default".to_string()];
+    while let Some(feature) = work.pop() {
+        if !seen.insert(feature.clone()) {
+            continue;
+        }
+        let Some(entries) = features.get(&feature) else {
+            continue;
+        };
+        for entry in entries {
+            if let Some(name) = entry.strip_prefix("dep:") {
+                if local_to_resolved.contains_key(name) {
+                    activated_local.insert(name.to_string());
+                }
+                continue;
+            }
+            if let Some((dep, _feat)) = entry.split_once('/') {
+                // `foo?/bar` is weak and must not activate `foo`.
+                if let Some(strong) = dep.strip_suffix('?') {
+                    let _ = strong;
+                    continue;
+                }
+                if local_to_resolved.contains_key(dep) {
+                    activated_local.insert(dep.to_string());
+                }
+                continue;
+            }
+            // A bare name can be a feature, an optional dep's implicit
+            // feature, or both; `battery = ["starship-battery"]` is the
+            // second reached through the first.
+            if local_to_resolved.contains_key(entry) {
+                activated_local.insert(entry.clone());
+            }
+            if features.contains_key(entry) {
+                work.push(entry.clone());
+            }
+        }
+    }
+
+    activated_local
+        .iter()
+        .filter_map(|local| local_to_resolved.get(local).cloned())
+        .collect()
 }
 
 /// Milestone 179 US3 — variant of [`collect_section_keys`] that
@@ -1874,6 +2070,19 @@ pub(crate) fn finalize(
             // test-fixture shape, not a failure, so no log. There is
             // no manifest to read features from, hence no evidence.
             FeatureActivation::Unknown(NoEvidenceReason::NoManifest)
+        } else if offline && manifest_activation_is_complete(manifests.len(), &workspace_sections) {
+            // #1302 — `--offline` skips the subprocess outright (#771),
+            // so this branch had no evidence by construction. The
+            // manifest's feature table needs no network, which makes
+            // this the case the manifest resolver helps most.
+            tracing::info!(
+                workspace = %workspace_root.display(),
+                activated = workspace_sections.feature_activated_optional.len(),
+                "cargo metadata skipped under --offline; derived feature activation \
+                 from the manifest's own default-feature closure instead \
+                 (single-package workspace, so the closure is the build)"
+            );
+            FeatureActivation::Known(workspace_sections.feature_activated_optional.clone())
         } else if offline {
             tracing::info!(
                 workspace = %workspace_root.display(),
@@ -1902,7 +2111,27 @@ pub(crate) fn finalize(
                          populate registry cache to distinguish activated from \
                          non-activated optionals)"
                     );
-                    FeatureActivation::Unknown(NoEvidenceReason::CargoMetadataFailed)
+                    // #1302 — the manifest's own feature table is
+                    // evidence, and needs neither cargo nor a registry.
+                    // The WARN above still fires either way: a failing
+                    // subprocess is an environment defect the operator
+                    // should hear about even when the reader recovers,
+                    // and silencing it would hide the thing worth
+                    // fixing behind a successful scan.
+                    if manifest_activation_is_complete(manifests.len(), &workspace_sections) {
+                        tracing::info!(
+                            workspace = %workspace_root.display(),
+                            activated = workspace_sections.feature_activated_optional.len(),
+                            "recovered feature activation from the manifest's own \
+                             default-feature closure (single-package workspace, so \
+                             the closure is the build)"
+                        );
+                        FeatureActivation::Known(
+                            workspace_sections.feature_activated_optional.clone(),
+                        )
+                    } else {
+                        FeatureActivation::Unknown(NoEvidenceReason::CargoMetadataFailed)
+                    }
                 }
             }
         };
@@ -4135,6 +4364,368 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
     /// Classify `optional_dep_lockfile` under a given activation state,
     /// returning `(scope of shipped, scope of shipped-core)`.
+    /// #1302 helper — the resolved optional-dep names a manifest's
+    /// `default` closure activates.
+    fn activated_in(manifest: &str) -> Vec<String> {
+        let parsed: toml::Value = toml::from_str(manifest).unwrap();
+        let mut out: Vec<String> =
+            default_activated_optional_deps(&parsed).into_iter().collect();
+        out.sort();
+        out
+    }
+
+    /// #1302 — the shape that motivated this: two optional deps reached
+    /// through default features, one gated behind a non-default one.
+    ///
+    /// Taken from `starship`'s manifest, which is where the cost showed
+    /// up: with no activation evidence all three classified Runtime, so
+    /// the emitted document carried `schemars` and its closure for a
+    /// build that does not compile them.
+    #[test]
+    fn default_closure_separates_activated_optionals_from_gated_ones() {
+        assert_eq!(
+            activated_in(
+                r#"
+                [package]
+                name = "starship"
+                [features]
+                default = ["battery", "notify"]
+                battery = ["starship-battery"]
+                config-schema = ["schemars"]
+                notify = ["notify-rust"]
+                [dependencies]
+                notify-rust = { version = "4", optional = true }
+                starship-battery = { version = "0.11", optional = true }
+                schemars = { version = "1", optional = true }
+                "#
+            ),
+            vec!["notify-rust".to_string(), "starship-battery".to_string()],
+            "`config-schema` is not in `default`, so `schemars` must not be \
+             reported as activated — that is the whole difference between a \
+             document that is nearly right and one that is right"
+        );
+    }
+
+    /// #1302 — both routes to an optional dep activate it: `dep:foo`
+    /// reached from `default`, and a declared feature named after the
+    /// dep that wraps `dep:foo`.
+    ///
+    /// The second shape is why no implicit-feature suppression rule is
+    /// needed. Cargo drops the implicit `foo` feature once `dep:foo`
+    /// appears, but a manifest that does that and still wants
+    /// `--features foo` declares `foo = ["dep:foo"]`, and recursing
+    /// into it reaches the same place. The only case where a
+    /// suppression guard would change the answer is one cargo rejects;
+    /// see `default_activated_optional_deps`.
+    #[test]
+    fn both_routes_to_an_optional_dep_activate_it() {
+        assert_eq!(
+            activated_in(
+                r#"
+                [package]
+                name = "p"
+                [features]
+                default = ["json"]
+                json = ["dep:serde_json"]
+                [dependencies]
+                serde_json = { version = "1", optional = true }
+                "#
+            ),
+            vec!["serde_json".to_string()],
+            "`dep:` reached from default activates the dep"
+        );
+        assert_eq!(
+            activated_in(
+                r#"
+                [package]
+                name = "p"
+                [features]
+                default = ["serde_json"]
+                serde_json = ["dep:serde_json"]
+                [dependencies]
+                serde_json = { version = "1", optional = true }
+                "#
+            ),
+            vec!["serde_json".to_string()],
+            "a declared feature sharing the dep's name is reached by recursion"
+        );
+        assert!(
+            activated_in(
+                r#"
+                [package]
+                name = "p"
+                [features]
+                default = []
+                json = ["dep:serde_json"]
+                [dependencies]
+                serde_json = { version = "1", optional = true }
+                "#
+            )
+            .is_empty(),
+            "an unreached feature activates nothing"
+        );
+    }
+
+    /// #1302 — a weak `foo?/bar` must not activate `foo`.
+    ///
+    /// This is the one error that would be worse than having no
+    /// evidence: it reports an activation that cargo would not perform,
+    /// and it reports it as evidence rather than as the blanket
+    /// over-inclusion the no-evidence path is honest about.
+    #[test]
+    fn weak_dependency_feature_does_not_activate_the_dependency() {
+        assert!(
+            activated_in(
+                r#"
+                [package]
+                name = "p"
+                [features]
+                default = ["fast"]
+                fast = ["serde?/derive"]
+                [dependencies]
+                serde = { version = "1", optional = true }
+                "#
+            )
+            .is_empty(),
+            "`serde?/derive` enables `derive` only if something else already \
+             activated `serde`; on its own it activates nothing"
+        );
+        assert_eq!(
+            activated_in(
+                r#"
+                [package]
+                name = "p"
+                [features]
+                default = ["fast"]
+                fast = ["serde/derive"]
+                [dependencies]
+                serde = { version = "1", optional = true }
+                "#
+            ),
+            vec!["serde".to_string()],
+            "the same entry without `?` is strong and does activate it"
+        );
+    }
+
+    /// #1302 — the local/resolved namespace split.
+    ///
+    /// `[features]` names the local key; `optional_deps` stores the
+    /// resolved name. A resolver that matched feature entries straight
+    /// against the stored names would never fire for a renamed dep, and
+    /// the failure is invisible: it looks exactly like a crate that
+    /// activates no optionals.
+    #[test]
+    fn package_rename_is_translated_to_the_resolved_name() {
+        assert_eq!(
+            activated_in(
+                r#"
+                [package]
+                name = "p"
+                [features]
+                default = ["foo"]
+                [dependencies]
+                foo = { version = "1", package = "real-foo", optional = true }
+                "#
+            ),
+            vec!["real-foo".to_string()],
+            "the feature is named `foo`; the component is named `real-foo`"
+        );
+    }
+
+    /// #1302 — a manifest with no `[features]` table activates nothing,
+    /// and a feature cycle terminates.
+    #[test]
+    fn no_feature_table_activates_nothing_and_cycles_terminate() {
+        assert!(
+            activated_in(
+                r#"
+                [package]
+                name = "p"
+                [dependencies]
+                serde = { version = "1", optional = true }
+                "#
+            )
+            .is_empty(),
+            "with no features there is no way to switch an optional dep on"
+        );
+        assert_eq!(
+            activated_in(
+                r#"
+                [package]
+                name = "p"
+                [features]
+                default = ["a"]
+                a = ["b"]
+                b = ["a", "serde"]
+                [dependencies]
+                serde = { version = "1", optional = true }
+                "#
+            ),
+            vec!["serde".to_string()],
+            "a -> b -> a must not loop"
+        );
+    }
+
+    /// #1302 — the wiring, through `read()`.
+    ///
+    /// The unit tests above prove the closure walk is right. They do
+    /// not prove anything calls it, and a resolver that is never
+    /// reached looks exactly like one that found nothing. This drives
+    /// the real entry point with `WAYBILL_OFFLINE` set, which is the
+    /// branch where the subprocess is skipped outright (#771) and the
+    /// reader previously had no evidence at all.
+    ///
+    /// Shape is starship's: two optional deps activated by `default`,
+    /// one gated behind a feature that is not.
+    #[test]
+    fn read_derives_activation_from_the_manifest_when_offline() {
+        let mut g = crate::testing::EnvGuard::acquire();
+        g.set("WAYBILL_OFFLINE", "1");
+
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("Cargo.toml"),
+            r#"
+[package]
+name = "app"
+version = "0.1.0"
+
+[features]
+default = ["battery", "notify"]
+battery = ["starship-battery"]
+config-schema = ["schemars"]
+notify = ["notify-rust"]
+
+[dependencies]
+notify-rust = { version = "4", optional = true }
+starship-battery = { version = "0.11", optional = true }
+schemars = { version = "1", optional = true }
+"#,
+        )
+        .unwrap();
+        std::fs::write(
+            dir.path().join("Cargo.lock"),
+            r#"
+version = 3
+
+[[package]]
+name = "app"
+version = "0.1.0"
+dependencies = ["notify-rust", "schemars", "starship-battery"]
+
+[[package]]
+name = "notify-rust"
+version = "4.18.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "starship-battery"
+version = "0.11.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "schemars"
+version = "1.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+"#,
+        )
+        .unwrap();
+
+        let out = read(
+            dir.path(),
+            false,
+            &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty(),
+        )
+        .unwrap();
+        let scope_of = |name: &str| {
+            out.entries
+                .iter()
+                .find(|e| e.name == name)
+                .unwrap_or_else(|| panic!("{name} present in {:?}", out.entries))
+                .lifecycle_scope
+        };
+
+        assert_eq!(
+            scope_of("notify-rust"),
+            Some(LifecycleScope::Runtime),
+            "`notify` is a default feature, so notify-rust ships — this is the \
+             half the pre-#1272 behaviour got wrong, excluding crates the \
+             binary really contains"
+        );
+        assert_eq!(
+            scope_of("starship-battery"),
+            Some(LifecycleScope::Runtime),
+            "`battery` is a default feature too"
+        );
+        assert_eq!(
+            scope_of("schemars"),
+            Some(LifecycleScope::Optional),
+            "`config-schema` is NOT in `default`, so schemars does not ship. \
+             Without the manifest resolver this was Runtime: the whole point \
+             of the change, and the assertion that fails if nothing calls it"
+        );
+
+        let marker = out
+            .entries
+            .iter()
+            .find(|e| e.name == "schemars")
+            .and_then(|e| e.extra_annotations.get("waybill:cargo-activation-evidence"))
+            .cloned();
+        assert_eq!(
+            marker, None,
+            "#1300's absence marker must disappear once there is evidence; \
+             leaving it would tell a consumer the classification was a default \
+             when it was a finding"
+        );
+    }
+
+    /// #1302 — the completeness predicate refuses the shapes where
+    /// "not in the closure" is not evidence of anything.
+    ///
+    /// A multi-member workspace can activate one member's optional
+    /// feature from another member's `features = [...]`, which this
+    /// manifest-only view cannot see. Asserting inactivity there would
+    /// reintroduce #1272's false negatives while looking like evidence.
+    #[test]
+    fn completeness_predicate_admits_only_the_single_package_shape() {
+        let single: CargoTomlSections = {
+            let parsed: toml::Value =
+                toml::from_str("[package]\nname = \"p\"\n").unwrap();
+            let mut sections = CargoTomlSections::default();
+            sections.root_names.insert("p".to_string());
+            sections.declares_workspace_members = parsed
+                .get("workspace")
+                .and_then(|v| v.as_table())
+                .map(|t| t.contains_key("members"))
+                .unwrap_or(false);
+            sections
+        };
+        assert!(
+            manifest_activation_is_complete(1, &single),
+            "one manifest declaring a package and no members is the provable case"
+        );
+        assert!(
+            !manifest_activation_is_complete(2, &single),
+            "a second manifest can activate the first's optionals unseen"
+        );
+
+        let mut with_members = single.clone();
+        with_members.declares_workspace_members = true;
+        assert!(
+            !manifest_activation_is_complete(1, &with_members),
+            "`[workspace] members` means members exist whether or not this \
+             lockfile's discovery returned them"
+        );
+
+        let mut virtual_ws = single.clone();
+        virtual_ws.root_names.clear();
+        assert!(
+            !manifest_activation_is_complete(1, &virtual_ws),
+            "a virtual manifest has no package, so it has no default closure \
+             that could be the build"
+        );
+    }
+
     /// #1300 — the C199 `waybill:cargo-activation-evidence` value for
     /// `shipped` (declared optional) and `shipped-core` (not declared
     /// optional anywhere), under one activation state.
