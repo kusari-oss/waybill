@@ -7,6 +7,58 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Added
+
+- **A cargo scan now says in the document when optional classification had
+  no evidence.** #1272 made the reader classify a declared-optional
+  dependency `Runtime` when it has no resolved feature set, because
+  over-including a dependency that does not ship costs a false positive
+  downstream while under-including one that does ship costs a false
+  negative. That direction is right; what the document could not say was
+  which of two things the `Runtime` meant — that the resolved feature set
+  activates this dependency, or that nothing ever looked. The only signal
+  was a WARN in a scan log, which is not part of the artifact: pipe the
+  SBOM anywhere and it is gone. C199 `waybill:cargo-activation-evidence`
+  is now emitted per-component, naming which of three causes applied:
+  `absent-no-manifest`, `absent-offline`,
+  `absent-cargo-metadata-failed`. They are distinguished rather than
+  collapsed because they ask different things of a reader — `--offline`
+  was a choice, a missing manifest is a property of the tree, and a failed
+  subprocess is an environment defect to go and fix. Only
+  declared-optional components are marked: a dependency nobody declared
+  optional is `Runtime` for reasons that have nothing to do with
+  activation, so marking it would say nothing and would put a property on
+  most of the document. **Consumer-visible**: a new annotation on the wire
+  in all three formats (#1300).
+
+- **Feature activation is derived from the manifest when `cargo metadata`
+  cannot run.** `cargo metadata --offline` cannot resolve without a
+  populated registry index, and `--offline` skips the subprocess outright
+  (#771) — so the environments where the reader had no activation evidence
+  are exactly the ones where it could have computed some: the `[features]`
+  table sits in a manifest the reader already parses and had never read.
+  It now walks the feature graph from `default` and returns the optional
+  dependencies that closure activates. The entry forms are handled
+  separately because they decide correctness: `dep:foo` and `foo/bar`
+  activate `foo`, a bare name is a feature or an optional dependency's
+  implicit feature, and the weak form `foo?/bar` activates nothing —
+  treating it as strong would report an activation cargo would not
+  perform, and report it as evidence, which is worse than the honest
+  blanket over-inclusion it replaces. The `package = "..."` rename is
+  translated, because `[features]` names the local key while the
+  optional-dependency set stores the resolved name.
+  The two directions are not equally sound. "In the closure, therefore
+  ships" is free; "not in the closure, therefore does not ship" is the one
+  worth having and the one that can be wrong, because a sibling workspace
+  member can activate another member's optional feature through a path
+  dependency's `features = [...]`. So it is gated to a single `[package]`
+  manifest with no `[workspace] members`, where the root's default closure
+  *is* the build and completeness is structural rather than inferred.
+  **Consumer-visible**: in that shape a declared-optional dependency
+  outside the default closure is classified `Optional` again, where #1272
+  left it `Runtime`; workspaces and every other shape are unchanged
+  (#1302).
+
 ### Fixed
 
 - **A cargo dependency that ships is no longer reported as excluded
@@ -163,6 +215,65 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   simply never consulted it, which is why a release could be marked a
   prerelease on the Releases page while publishing itself as `:latest`
   (#1266).
+
+- **A component's `evidence.occurrences` no longer depends on walk order.**
+  The field is emitted and byte-compared, and a reader appends to it in
+  walk order, which milestone 772's parallel walker does not fix for
+  sibling subtrees. The deduplicator's compensating sort covered one of the
+  three shapes a component can arrive in: a single-member group returned
+  early and never reached the sort; a multi-member group whose merge added
+  no new location failed the `if occurrences_grew` condition, which tested
+  whether the merge grew the list — unrelated to whether the pre-merge
+  order was deterministic; only a merge that grew the list was sorted. So
+  the emitted order was not a reader's property but an artifact of whether
+  a merge happened: in the `image-postgres16` golden, 129 dpkg components
+  are lex-sorted and 10 are not, from one reader in one document. Replaced
+  with one unconditional pass over every surviving component, sited after
+  `fold_declared_not_cached` and before `classify_component_roles` — which
+  reads the *first* matching occurrence, so its result was previously
+  order-dependent too (#1292).
+
+- **A linkage component's parent paths are sorted.** `LinkageRecord.parents`
+  was appended in `add` call order, which is walk order; one soname's entry
+  carries every linking binary, so the emitted `evidence.occurrences` order
+  was a scheduling outcome and the same tree could produce two
+  byte-different SBOMs. It surfaced as an intermittent red lane rather than
+  as a gate: CI run 40533529284 observed `evidence.occurrences` as
+  `["b/bin/tool", "a/bin/tool"]` while `waybill:source-files` on the same
+  component read `["a/bin/tool", "b/bin/tool"]`, because the milestone-148
+  union pass sorts that one. Two fields disagreeing about where a component
+  was found is what #1063 set out to remove, and `occurrences` is the
+  standards-native one consumers read. The assertion lives at the
+  aggregator, because walk order is forceable there and not in an
+  end-to-end scan — which is why the pre-existing end-to-end test behaved
+  as a coin flip (#1291).
+
+- Release and corpus tooling only; no change to the binary or its output.
+  A regen dispatch could upload a `corpus-goldens-regen` artifact missing
+  exactly the target whose goldens needed regenerating, indistinguishable
+  from one where nothing needed to change: `run_target` ran the pre-write
+  layers as a straight-line sequence of panics, so a target failing an
+  earlier layer never reached the write, while the upload step takes the
+  whole fixture directory and so contributed that target's *committed*
+  bytes with the file count right either way. Run 40401082720 had regen
+  mode fully engaged, uploaded all 51 files, reported success, and differed
+  from the committed tree in 0 of 51 — from which the correct-looking
+  conclusion "this change moves no goldens" was wrong. In regen mode the
+  write now runs before the failure is reported (#1286). Separately, both
+  corpus workflows reported `github.sha` as the commit scanned, which on
+  the `workflow_dispatch` with a `branch` input — the only way the lane is
+  run manually — is the default branch's tip rather than the commit checked
+  out: run 40403171227, dispatched against a feature branch, reported
+  main's tip. They now resolve `git rev-parse HEAD` after checkout and
+  report `Scanned commit:` and `Workflow definition from:` as two labelled
+  lines (#1287). The corpus refresh procedure's step 10 told the reader to
+  expect every target to drift from a version-constant mutation that the
+  same section says drifts nothing, four paragraphs apart; it now points at
+  the component rename and records what to check rather than only what to
+  expect (#1295). And the cargo classifier's name-only `optional_names`
+  union across workspace manifests is now asserted to be masked rather than
+  relied upon — #1284 was filed as a defect and is not one, but the masking
+  rested on two properties nothing recorded (#1284).
 
 ## [0.13.0] - 2026-10-23
 
