@@ -382,12 +382,19 @@ milestone 840 failed at build time and proved nothing, costing a full
 lane run to discover.
 
 Then check what the failure actually says, rather than that it went red.
-Expect `3 of 3 formats drifted for <target>`, once per affected target —
-with the version-constant mutation above, all of them. When this was
-first run, a deliberate mutation failed every target while naming only
-`cdx.json`, because the layer-2 loop panicked on the first failing format
-and CDX is compared first. A red lane was not evidence the SPDX
-comparisons ran either.
+Expect `3 of 3 formats drifted for <target>`, once for every target that
+reaches layer 2 — with the component rename above, all but `haskell-aeson`.
+When this was first run, a deliberate mutation failed every target while
+naming only `cdx.json`, because the layer-2 loop panicked on the first
+failing format and CDX is compared first. A red lane was not evidence the
+SPDX comparisons ran either.
+
+The count is the thing to check, because a comparison blind in one format
+fails the lane just as loudly as one that works. Run 40631028029 reproduced
+the #1160 signature on a much later commit — `98 passed; 17 failed`, and
+49 reported failures, which is 16 targets × 3 formats + `haskell-aeson`'s
+single tripwire. If the arithmetic does not close like that, some format
+was not compared.
 
 The mutation has to reach the remote to be dispatched, so your branch
 will carry a deliberate-breakage commit and its revert. That is expected;
