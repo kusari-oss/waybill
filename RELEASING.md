@@ -48,6 +48,20 @@ Maintainer judgment. No automated gate. Rule of thumb: recent CI green,
 no in-flight destabilizing PRs, changelog contains a coherent set of
 features/fixes since the last stable.
 
+**First, check whether the public-corpus goldens are current**, because they
+are the one set the bump cannot refresh. If any reader's or emitter's output
+changed since the last refresh, refresh them and land that **before** the bump
+PR, following `docs/development/refreshing-corpus-goldens.md` — budget an
+afternoon, since the procedure needs several lane runs.
+
+Two reasons it cannot wait until the bump. Refreshing them inside the bump PR
+makes `check-version-bump.py` fail by design: corpus goldens live under the
+fixture tree, so they reach its comparison, and a reader-output change is
+exactly the "differs beyond the version" that comparison exists to catch. And a
+green local gate says nothing either way — every corpus test is `#[ignore]`d
+locally and the PR lane does not run them, so an unrefreshed reader change
+surfaces as a red nightly after the release rather than a red check before it.
+
 **Then choose the version. Do not inherit it.** `Cargo.toml` already holds
 one: the next *patch*, which `post-release.yml` set as a placeholder after
 the previous release (step 10). A placeholder is a default, not a decision.
@@ -116,7 +130,7 @@ git checkout -b release/v<X>.<Y>.<Z>
 
 - **Version:** sets `[workspace.package] version` in `Cargo.toml`.
 - **Lockfile:** runs `cargo update --workspace`, so only waybill's own crates change in `Cargo.lock`. A plain `cargo update` would upgrade every dependency as a side effect of a version bump.
-- **Goldens and check:** regenerates every golden (`scripts/regen-goldens.sh`), then runs `scripts/check-version-bump.py`. That check fails if anything outside `Cargo.toml`, `Cargo.lock`, `CHANGELOG.md` and test fixtures changed, or if a fixture differs from `HEAD` by anything other than the tool version (`waybill-<v>`, `"version": "<v>"`) and the content-addressed IDs derived from it. It then greps the fixture tree for the old version in **both** of those forms, to catch a golden the regen sweep never reached — a fixture that did not change at all cannot "differ beyond the version", so the comparison alone is silent about that case (#1221). Fixtures listed in its `INPUT_FIXTURES` are exempt from that grep: they are documents a test reads as *input*, nothing regenerates them, and the version in them names the build that emitted them. Do not hand-edit a fixture to satisfy this check — that is how v0.11.0 left three `sbom_edit` documents disagreeing about their own provenance and broke the next automated bump (#1220).
+- **Goldens and check:** regenerates every golden (`scripts/regen-goldens.sh`), then runs `scripts/check-version-bump.py`. That check fails if anything outside `Cargo.toml`, `Cargo.lock`, `CHANGELOG.md` and test fixtures changed, or if a fixture differs from `HEAD` by anything other than the tool version (`waybill-<v>`, `"version": "<v>"`) and the content-addressed IDs derived from it. It then sweeps the fixture tree for the old version, to catch a golden the regen sweep never reached — a fixture that did not change at all cannot "differ beyond the version", so the comparison alone is silent about that case (#1221). The two forms are checked differently, and the difference is the point: `waybill-<v>` is the tool's own name and version joined, so a textual hit is conclusive, while `"version": "<v>"` is the shape *every* CycloneDX component uses, so a hit there counts only if its object also carries a `waybill` name. Grepping that second form plainly failed two releases running, on real dependencies — `tasty-quickcheck@0.11.1` and `pathspec@0.12.1` — that the sweep had correctly left alone (#1251, fixed in #1257). A fixture the structural check cannot parse is reported, not skipped: the pass exists to find a golden nothing reached, and an unreadable file is that case unexamined. Fixtures listed in its `INPUT_FIXTURES` are exempt from that grep: they are documents a test reads as *input*, nothing regenerates them, and the version in them names the build that emitted them. Do not hand-edit a fixture to satisfy this check — that is how v0.11.0 left three `sbom_edit` documents disagreeing about their own provenance and broke the next automated bump (#1220).
 
 Commit any new scripts or docs **before** running it, since the check treats them as unexpected changes. Then move the CHANGELOG's `[Unreleased]` entries under `## [<X>.<Y>.<Z>] - <date>`.
 
