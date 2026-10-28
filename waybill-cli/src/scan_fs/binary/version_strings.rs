@@ -1,5 +1,5 @@
 //! Curated embedded-version-string scanner. Per research R6 / FR-025.
-//! Eleven patterns for well-known self-identifying libraries:
+//! Twelve patterns for well-known self-identifying libraries:
 //!
 //! | Library   | Signature                                                    |
 //! |-----------|--------------------------------------------------------------|
@@ -14,6 +14,7 @@
 //! | LibreSSL  | `LibreSSL X.Y.Z`                                             |
 //! | LLVM      | `LLVM version X.Y.Z`                                         |
 //! | OpenJDK   | `OpenJDK X.Y.Z[+B]` (modern) or `OpenJDK 8uX[-bY]` (legacy)  |
+//! | Node.js   | `node.js/vX.Y.Z` (the compiled-in default User-Agent)        |
 //!
 //! Scanning runs ONLY against format-appropriate read-only string sections (ELF `.rodata` + `.data.rel.ro`, Mach-O `__TEXT,__cstring` + `__TEXT,__const`, PE `.rdata`) — never against the full binary image (Q4 resolution / FR-025). This bounds the false-positive surface. Control-set validation per SC-005.
 //
@@ -29,6 +30,9 @@
 //   - V8:     version strings buried in stack-trace formatting code;
 //             tend to be non-deterministic across builds. May
 //             require an inline-data scan rather than a string scan.
+//             NOTE: the `Node` pattern below reads the Node.js runtime's
+//             OWN version, not the V8 it embeds. A node binary matching
+//             `node` says nothing about its V8, which stays deferred.
 // Tracking: `docs/architecture/licenses.md` sbomqs deferred list.
 
 /// One match from the curated scanner. Converted to a
@@ -67,6 +71,9 @@ pub enum CuratedLibrary {
     // so no OS package reader claims it and the binary walker had nothing
     // to version it by.
     Php,
+    // Issue #1244 — the Node.js runtime, which official `node:*`
+    // images install outside any package manager.
+    Node,
 }
 
 impl CuratedLibrary {
@@ -84,6 +91,7 @@ impl CuratedLibrary {
             CuratedLibrary::Llvm => "llvm",
             CuratedLibrary::OpenJdk => "openjdk",
             CuratedLibrary::Php => "php",
+            CuratedLibrary::Node => "node",
         }
     }
 }
@@ -246,6 +254,30 @@ fn match_prefix(
         if let Some(v) = parse_semver_triple(tail) {
             return Some(EmbeddedVersionMatch {
                 library: CuratedLibrary::Php,
+                version: v,
+            });
+        }
+    }
+    // Node.js — "node.js/v" (issue #1244). This is Node's compiled-in
+    // default HTTP User-Agent, which is why it carries the `node.js/`
+    // context that a bare `v24.14.1` lacks; the module's contract is
+    // that a version matches only behind a self-identifying prefix.
+    //
+    // Measured in node 24.14.1 (official linux-x64 ELF, `.rodata`) and
+    // node 22.23.1 (Mach-O arm64): exactly one distinct `node.js/v<ver>`
+    // per binary, every occurrence NUL-preceded, so `at_boundary` holds.
+    // One of the two occurrences is NOT NUL-terminated (it abuts the
+    // next literal), which `parse_semver_triple` handles by stopping at
+    // the first byte that is neither a digit nor a dot.
+    //
+    // A nightly build's `node.js/v25.0.0-nightly…` yields the triple
+    // `25.0.0` and drops the prerelease tag — the same lossy-but-correct
+    // behaviour the other semver-triple patterns have.
+    if window.starts_with(b"node.js/v") {
+        let tail = &region[pos + 9..];
+        if let Some(v) = parse_semver_triple(tail) {
+            return Some(EmbeddedVersionMatch {
+                library: CuratedLibrary::Node,
                 version: v,
             });
         }
@@ -800,5 +832,105 @@ mod tests {
         assert_eq!(hits.len(), 1);
         assert_eq!(hits[0].library, CuratedLibrary::OpenJdk);
         assert_eq!(hits[0].version, "8u362-b09");
+    }
+
+    // ====================================================================
+    // Issue #1244 — the Node.js runtime
+    //
+    // Byte shapes here are the ones measured in real node binaries, not
+    // invented: the NUL-preceded `node.js/v<semver>` literal, and the
+    // second occurrence that abuts the next literal with no NUL between.
+    // ====================================================================
+
+    #[test]
+    fn node_positive() {
+        let r = region(b"node.js/v24.14.1");
+        let hits = scan(&r);
+        assert_eq!(hits.len(), 1);
+        assert_eq!(hits[0].library, CuratedLibrary::Node);
+        assert_eq!(hits[0].version, "24.14.1");
+    }
+
+    #[test]
+    fn node_unterminated_literal_stops_at_the_version() {
+        // Measured in node 24.14.1: one of the two occurrences is a
+        // length-counted literal that runs straight into the next one.
+        let mut v = vec![0u8];
+        v.extend_from_slice(b"node.js/v24.14.1Protocol");
+        v.push(0);
+        let hits = scan(&v);
+        assert_eq!(hits.len(), 1);
+        assert_eq!(hits[0].version, "24.14.1");
+    }
+
+    #[test]
+    fn node_bare_version_without_prefix_doesnt_match() {
+        let r = region(b"24.14.1");
+        assert!(scan(&r).is_empty());
+    }
+
+    #[test]
+    fn node_prefix_without_version_doesnt_match() {
+        let r = region(b"node.js/v");
+        assert!(scan(&r).is_empty());
+        let r = region(b"node.js/vnext");
+        assert!(scan(&r).is_empty());
+    }
+
+    #[test]
+    fn node_two_digit_version_needs_all_three_segments() {
+        // `parse_semver_triple` requires exactly two dots, so a
+        // major.minor User-Agent is not accepted as a runtime version.
+        let r = region(b"node.js/v24.14");
+        assert!(scan(&r).is_empty());
+    }
+
+    #[test]
+    fn node_nightly_prerelease_yields_the_triple() {
+        let r = region(b"node.js/v25.0.0-nightly20260101abcdef");
+        let hits = scan(&r);
+        assert_eq!(hits.len(), 1);
+        assert_eq!(hits[0].version, "25.0.0");
+    }
+
+    #[test]
+    fn node_and_its_bundled_openssl_both_match() {
+        // A real node binary carries both; the runtime must not mask
+        // the library it bundles, nor the reverse. `OpenSSL 3.5.5` is
+        // the string measured in node 24.14.1's .rodata.
+        let mut v = vec![0u8];
+        v.extend_from_slice(b"node.js/v24.14.1");
+        v.push(0);
+        v.extend_from_slice(b"OpenSSL 3.5.5 ");
+        v.push(0);
+        let hits = scan(&v);
+        assert_eq!(hits.len(), 2, "got {hits:?}");
+        assert!(hits
+            .iter()
+            .any(|h| h.library == CuratedLibrary::Node && h.version == "24.14.1"));
+        assert!(hits
+            .iter()
+            .any(|h| h.library == CuratedLibrary::OpenSsl && h.version == "3.5.5"));
+    }
+
+    #[test]
+    fn node_mid_string_not_matched() {
+        // Same rule as `mid_string_openssl_not_matched`: a User-Agent
+        // header assembled into a longer literal is not a boundary.
+        let r = region(b"User-Agent: node.js/v24.14.1");
+        let hits = scan(&r);
+        assert!(hits.is_empty(), "mid-string match must be rejected; got {hits:?}");
+    }
+
+    #[test]
+    fn node_dedup_across_both_measured_occurrences() {
+        // Measured: two distinct occurrences per binary, same version.
+        let mut v = vec![0u8];
+        v.extend_from_slice(b"node.js/v24.14.1");
+        v.push(0);
+        v.extend_from_slice(b"node.js/v24.14.1Protocol");
+        v.push(0);
+        let hits = scan(&v);
+        assert_eq!(hits.len(), 1);
     }
 }
