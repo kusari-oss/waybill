@@ -1,0 +1,14 @@
+version = 3
+
+[[package]]
+name = "waybill-fixture-ws-member"
+version = "0.1.0"
+dependencies = [
+ "waybill-fixture-optional",
+]
+
+[[package]]
+name = "waybill-fixture-optional"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0000000000000000000000000000000000000000000000000000000000000000"

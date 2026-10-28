@@ -1,0 +1,14 @@
+# #1302 fixture — a MULTI-MEMBER workspace, which is the shape where
+# manifest-derived feature activation is NOT evidence.
+#
+# A sibling member can activate another member's optional feature
+# through a path dependency's `features = [...]`, and this
+# manifest-only view cannot see that. So
+# `manifest_activation_is_complete` declines here, the reader keeps
+# #1272's safe over-inclusion, and the declared-optional dependency
+# below stays unscoped.
+#
+# Package names are synthetic (`waybill-fixture-*`) so the advisory
+# scan on PRs has no real coordinate to match.
+[workspace]
+members = ["member"]

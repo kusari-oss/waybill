@@ -1,0 +1,13 @@
+[package]
+name = "waybill-fixture-ws-member"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+waybill-fixture-optional = { version = "1", optional = true }
+
+# Deliberately NOT a default feature. In a single-package workspace
+# that would be decisive and the dep would classify Optional; here the
+# evidence is incomplete, so the reader must decline to say so.
+[features]
+gated = ["dep:waybill-fixture-optional"]

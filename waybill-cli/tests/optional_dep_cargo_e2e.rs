@@ -341,44 +341,55 @@ fn t027_cargo_optional_basic_mode_collapses() {
     );
 }
 
-/// #1272 — under `--offline` there is no feature-activation evidence,
-/// so waybill must not assert that a declared-optional dependency is
-/// non-runtime.
+/// #1302 — under `--offline` the reader derives activation from the
+/// manifest, so it now gives the precise answer here.
 ///
-/// The fixture's `once_cell` genuinely does not ship: it sits behind a
-/// non-default `caching` feature, and `cargo metadata` confirms it is
-/// absent from the resolved activation set. So this test asserts the
-/// *less precise* answer on purpose. The two error directions are not
-/// symmetric — over-including a dependency that does not ship costs a
-/// downstream false positive, while under-including one that does ship
-/// costs a false negative. Before #1272 the degraded path took the
-/// second direction, and on the `rust-ripgrep` corpus target that
-/// emitted `scope: "excluded"` for `log`, `serde` and `serde_json`,
-/// two of them declared non-optionally in the workspace root's own
-/// `[dependencies]`.
+/// This test asserted the opposite until #1302, and deliberately so:
+/// `cargo metadata` is skipped outright under `--offline` (#771), and
+/// #1272 established that without evidence waybill must not claim a
+/// declared-optional dependency is non-runtime. The two error
+/// directions are not symmetric — over-including a dependency that
+/// does not ship costs a downstream false positive, while
+/// under-including one that does ship costs a false negative, and on
+/// the `rust-ripgrep` corpus target the second direction emitted
+/// `scope: "excluded"` for `log`, `serde` and `serde_json`.
 ///
-/// This is the hermetic half of the pair: no cargo subprocess runs, so
-/// unlike `t026` it needs neither a cargo binary nor a warm registry.
+/// #1272's rule is intact. What changed is the premise: the fixture's
+/// `[features]` table says `once_cell` sits behind a non-default
+/// `caching` feature, which is evidence, and it needs no cargo, no
+/// registry and no network to read. The old docstring here recorded
+/// that `cargo metadata` confirms `once_cell` is absent from the
+/// resolved activation set — so this is not a new claim, it is the
+/// same claim reached without the subprocess, and the two paths now
+/// agree on this fixture.
+///
+/// The guard against asserting inactivity *without* evidence lives in
+/// `issue_1272_multi_member_workspace_still_declines` below, on a
+/// shape where the manifest view is genuinely incomplete.
 #[test]
-fn issue_1272_offline_declines_to_assert_non_runtime() {
+fn issue_1302_offline_derives_activation_from_the_manifest() {
     let (cdx, spdx23, _) = run_scan(&fixture_path(), &[]);
 
     let once_cell_cdx =
         find_component_by_name(&cdx, "once_cell").expect("once_cell present in CDX");
-    // CDX omits `scope` for runtime components rather than writing
-    // "runtime", so absence is the assertion. Anything else means
-    // waybill claimed to know something it was never told.
     assert_eq!(
         once_cell_cdx.get("scope").and_then(|v| v.as_str()),
-        None,
-        "under --offline waybill has no activation evidence and MUST NOT emit \
-         scope=excluded for a declared-optional dep. cdx component: {once_cell_cdx:#}"
+        Some("excluded"),
+        "`caching` is not a default feature, so once_cell does not ship and the \
+         manifest says so without any subprocess. cdx component: {once_cell_cdx:#}"
     );
     assert_eq!(
-        find_property(once_cell_cdx, "waybill:optional-derivation"),
+        find_property(once_cell_cdx, "waybill:optional-derivation")
+            .and_then(|v| v.as_str()),
+        Some("cargo-optional-true"),
+        "the Optional branch fired, so it carries its derivation marker. cdx \
+         component: {once_cell_cdx:#}"
+    );
+    assert_eq!(
+        find_property(once_cell_cdx, "waybill:cargo-activation-evidence"),
         None,
-        "the derivation annotation is set by the Optional branch, which must not \
-         have fired. cdx component: {once_cell_cdx:#}"
+        "#1300's absence marker must be gone: the classification is now a \
+         finding, not a default. cdx component: {once_cell_cdx:#}"
     );
 
     // And the SPDX 2.3 side carries no typed optional edge, since the
@@ -395,9 +406,8 @@ fn issue_1272_offline_declines_to_assert_non_runtime() {
         })
         .collect();
     assert!(
-        optional_edges.is_empty(),
-        "no OPTIONAL_DEPENDENCY_OF edge may be emitted without activation \
-         evidence, found: {optional_edges:#?}"
+        !optional_edges.is_empty(),
+        "the typed edge is derived from the same scope, so it follows: {rels:#?}"
     );
 
     // The control: `serde`, a plain non-optional dependency, is still
@@ -409,5 +419,47 @@ fn issue_1272_offline_declines_to_assert_non_runtime() {
         serde_cdx.get("scope").and_then(|v| v.as_str()),
         None,
         "serde is a plain runtime dep and stays unscoped. cdx: {serde_cdx:#}"
+    );
+}
+
+/// #1272's guard, on the shape where manifest evidence is incomplete.
+///
+/// This carries the contract the test above used to hold. A sibling
+/// workspace member can activate another member's optional feature
+/// through a path dependency's `features = [...]`, and the
+/// manifest-only view cannot see that, so "not in this manifest's
+/// default closure" is not evidence of anything. `#1302`'s
+/// completeness predicate declines here and the reader keeps safe
+/// over-inclusion.
+///
+/// Without this test, #1302 would have removed the only end-to-end
+/// cover for #1272's guarantee while appearing to leave it in place —
+/// the previous test's name still said "declines" after its subject
+/// had stopped being a no-evidence case.
+#[test]
+fn issue_1272_multi_member_workspace_still_declines() {
+    let fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests/fixtures/optional_dep/cargo_workspace");
+    let (cdx, _spdx23, _) = run_scan(&fixture, &[]);
+
+    let dep = find_component_by_name(&cdx, "waybill-fixture-optional")
+        .expect("the declared-optional dep is present in CDX");
+    assert_eq!(
+        dep.get("scope").and_then(|v| v.as_str()),
+        None,
+        "a multi-member workspace gives incomplete feature evidence, so the \\
+         reader must not assert non-runtime. cdx component: {dep:#}"
+    );
+    assert_eq!(
+        find_property(dep, "waybill:optional-derivation").and_then(|v| v.as_str()),
+        None,
+        "the Optional branch must not have fired. cdx component: {dep:#}"
+    );
+    assert_eq!(
+        find_property(dep, "waybill:cargo-activation-evidence").and_then(|v| v.as_str()),
+        Some("absent-offline"),
+        "and #1300's marker must say so, naming --offline as the cause rather \\
+         than leaving the Runtime classification looking like a finding. cdx \\
+         component: {dep:#}"
     );
 }
