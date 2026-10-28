@@ -82,6 +82,16 @@ const GENERIC_LIBRARY_CPES: &[(&str, &[(&str, &str)])] = &[
     // LLVM umbrella project. Sub-projects (clang, lld) are out of scope
     // for v1 — the version-string scanner doesn't distinguish them.
     ("llvm", &[("llvm", "llvm")]),
+    // Node.js (issue #1244) — the product segment is `node.js`, not
+    // `nodejs`. This is corroborated in-repo: the milestone-128 Yocto
+    // recipe-to-CPE map, sourced from openembedded-core's own CVE
+    // exclusions, carries the same `("nodejs", "node.js")` pair at
+    // `scan_fs/package_db/yocto/cpe_name_map.rs`. Vendor is `nodejs`.
+    //
+    // This maps the RUNTIME only. Node's bundled V8 and OpenSSL are
+    // separate CPEs; OpenSSL already has its own row below and is
+    // matched independently by the version-string scanner.
+    ("node", &[("nodejs", "node.js")]),
     // OpenJDK — `oracle:openjdk` dominates Java vuln records. Build
     // suffix (e.g. `+12`) is stripped before CPE emission per NVD-shape
     // inconsistency; the PURL preserves the full version verbatim.
@@ -131,6 +141,7 @@ const NVD_DICTIONARY_OBSERVED: &[(&str, &str, u32)] = &[
     ("gnu", "gnutls", 366),
     ("haxx", "curl", 228),
     ("llvm", "llvm", 55),
+    ("nodejs", "node.js", 1714),
     ("openbsd", "libressl", 110),
     ("openssl", "openssl", 368),
     ("oracle", "openjdk", 241),
