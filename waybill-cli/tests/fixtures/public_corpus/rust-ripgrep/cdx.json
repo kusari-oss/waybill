@@ -1734,6 +1734,10 @@
           "value": "source"
         },
         {
+          "name": "waybill:cargo-activation-evidence",
+          "value": "absent-offline"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -2596,6 +2600,10 @@
           "value": "source"
         },
         {
+          "name": "waybill:cargo-activation-evidence",
+          "value": "absent-offline"
+        },
+        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -2716,6 +2724,10 @@
         {
           "name": "waybill:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "waybill:cargo-activation-evidence",
+          "value": "absent-offline"
         },
         {
           "name": "waybill:workspace-member",
