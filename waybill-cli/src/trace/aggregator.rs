@@ -63,6 +63,16 @@ pub struct TraceStats {
     /// (per FR-009 — MUST serialize as `[]` in the emitted JSON, never
     /// null, never absent).
     pub filter_categories_applied: Vec<String>,
+    /// #1252 — program names of kprobes and tracepoints that failed to
+    /// attach, from `trace::loader::ProbeAttachFailures`. Merged with
+    /// `counter_attach_failures` into
+    /// `TraceIntegrity.kprobe_attach_failures[]`.
+    ///
+    /// Before this existed the loader only logged a WARN, so an
+    /// attestation from a kernel where `do_filp_open` would not attach
+    /// serialized `kprobe_attach_failures: []` and
+    /// `completeness: complete` while half the file events were missing.
+    pub probe_attach_failures: Vec<String>,
 }
 
 /// Aggregated trace results ready for attestation building.
@@ -521,7 +531,10 @@ impl EventAggregator {
         // Sort + dedup so the wire ordering is deterministic (FR-003
         // byte-identity, spec.md research R6). Pre-m212 the field was
         // always empty, so the sort is a no-op regression guarantee.
+        // #1252 — and ALSO the probe attaches themselves, which is what
+        // the field's name says and what it never carried until now.
         let mut kprobe_attach_failures = stats.counter_attach_failures.clone();
+        kprobe_attach_failures.extend(stats.probe_attach_failures.iter().cloned());
         kprobe_attach_failures.sort();
         kprobe_attach_failures.dedup();
 
@@ -539,6 +552,10 @@ impl EventAggregator {
         let trace_integrity = TraceIntegrity {
             ring_buffer_overflows: stats.ring_buffer_overflows,
             events_dropped: stats.events_dropped,
+            // Structurally empty, not unmeasured: every uprobe attach in
+            // `trace::loader` uses `?`, so a failure aborts the trace and
+            // no attestation is produced. If a uprobe is ever made
+            // best-effort, it must feed this the way #1252 fed the kprobes.
             uprobe_attach_failures: Vec::new(),
             kprobe_attach_failures,
             partial_captures: Vec::new(),
@@ -745,5 +762,61 @@ mod tests {
         let trace = agg.finalize(&TraceStats::default());
         let kinds: Vec<_> = trace.file_access.operations.iter().map(|o| o.operation.clone()).collect();
         assert_eq!(kinds, vec![FileOpType::Read, FileOpType::Write]);
+    }
+
+    /// #1252. `kprobe_attach_failures[]` is the field a consumer reads to
+    /// decide whether a capture can be trusted, and it carried only
+    /// counter-map failures — so an attestation produced with two probes
+    /// missing serialized `[]`. Both sources must reach it.
+    #[test]
+    fn probe_and_counter_attach_failures_both_reach_the_wire() {
+        let agg = EventAggregator::new();
+        let trace = agg.finalize(&TraceStats {
+            counter_attach_failures: vec!["file_event_drops".to_string()],
+            probe_attach_failures: vec!["do_filp_open_entry".to_string()],
+            ..TraceStats::default()
+        });
+        assert_eq!(
+            trace.trace_integrity.kprobe_attach_failures,
+            vec![
+                "do_filp_open_entry".to_string(),
+                "file_event_drops".to_string()
+            ],
+            "sorted union of both sources"
+        );
+    }
+
+    /// Control: the same call with nothing failing must produce an empty
+    /// array, or the test above would pass against a function that always
+    /// reports a failure.
+    #[test]
+    fn an_intact_attach_reports_no_failures() {
+        let agg = EventAggregator::new();
+        let trace = agg.finalize(&TraceStats::default());
+        assert!(trace.trace_integrity.kprobe_attach_failures.is_empty());
+    }
+
+    /// A repeated name must appear once, since the wire shape is
+    /// byte-compared across runs (m212 FR-003).
+    ///
+    /// The duplicate is placed in `probe_attach_failures` alone, with the
+    /// counter source empty, so this fails if the merge is dropped as well
+    /// as if the dedup is. The first version of this test put one copy in
+    /// each source and passed with the merge removed, because the counter
+    /// source supplied the surviving copy by itself.
+    #[test]
+    fn a_repeated_name_is_deduped() {
+        let agg = EventAggregator::new();
+        let trace = agg.finalize(&TraceStats {
+            probe_attach_failures: vec![
+                "openat2_entry".to_string(),
+                "openat2_entry".to_string(),
+            ],
+            ..TraceStats::default()
+        });
+        assert_eq!(
+            trace.trace_integrity.kprobe_attach_failures,
+            vec!["openat2_entry".to_string()]
+        );
     }
 }
