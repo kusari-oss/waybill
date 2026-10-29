@@ -211,3 +211,59 @@ pub struct PendingRename {
 
 #[map]
 pub static PENDING_RENAME: HashMap<u32, PendingRename> = HashMap::with_max_entries(4096, 0);
+
+/// #1252 — arguments of an in-flight open, by thread id. Same shape and same
+/// reasoning as `PendingRename` above: the entry tracepoint stores what the
+/// process asked for, the exit tracepoint learns whether it worked.
+///
+/// The key is the thread id rather than the pid because a syscall's entry and
+/// exit run on one thread. The bound is therefore threads currently inside an
+/// open, not opens — a build with 4096 threads blocked in `openat` at one
+/// instant would be remarkable.
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct PendingOpen {
+    pub dfd: i64,
+    pub path_ptr: u64,
+    /// `O_*` flags as the caller passed them. Read from the tracepoint's own
+    /// argument slot for every call but `openat2`, whose flags live behind a
+    /// user pointer (see `open_syscalls.rs`).
+    pub flags: u32,
+    pub _padding: u32,
+}
+
+#[map]
+pub static PENDING_OPEN: HashMap<u32, PendingOpen> = HashMap::with_max_entries(4096, 0);
+
+/// #1252 — per-CPU count of open requests discarded because the syscall
+/// failed. Counted unconditionally, which is the point: a zero here on a
+/// build known to attempt a failed open means the exit tracepoint is not
+/// firing, and that is indistinguishable from a clean run if nothing counts
+/// it. Reaches `TraceIntegrity.open_failures_discarded`.
+#[map]
+pub static OPEN_FAILURES_DISCARDED: PerCpuArray<u64> =
+    PerCpuArray::with_max_entries(1, 0);
+
+/// #1252 — per-CPU u8 config flag, slot 0: `1` means this host could not
+/// provide the result of an open, so capture falls back to recording
+/// requests the way it did before this feature (FR-004b).
+///
+/// Set by the loader when `sys_enter_openat` attached and
+/// `sys_exit_openat` did not. The alternative to a fallback would be to
+/// abort, which throws away every open on a host that can still see most
+/// of them; the alternative to a *flag* would be to hold requests that no
+/// exit will ever collect, which is the silent loss this feature exists
+/// to remove. So the kernel emits at entry instead, and the loader
+/// records the gap — the capture is honest about being a floor.
+#[map]
+pub static OPEN_REQUEST_ONLY: PerCpuArray<u8> = PerCpuArray::with_max_entries(1, 0);
+
+/// #1252 — per-CPU u8 config flag, slot 0: `1` makes a discarded open
+/// reportable as an `OpenFailed` record carrying the path and the errno,
+/// `0` (the default) drops it after counting. Same shape as `FILTER_WIDEN`
+/// above, and written once at loader time.
+///
+/// It exists so a removed read-set entry can be attributed to a failed
+/// request by name rather than accepted because a count matched.
+#[map]
+pub static OPEN_DIAG: PerCpuArray<u8> = PerCpuArray::with_max_entries(1, 0);

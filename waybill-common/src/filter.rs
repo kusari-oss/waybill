@@ -13,7 +13,8 @@
 //! matching logic exhaustively in `cargo test -p waybill-common` without
 //! needing a kernel + eBPF loader. The eBPF side calls
 //! `path_matches_filter_category(&path, widen_system)` from
-//! `try_do_filp_open` + `try_openat2` (m213 T012 + T013).
+//! `open_syscalls::finish_open` and `fs_syscalls::finish_rename`. It was
+//! called from the two open kprobes until #1252 removed them.
 //!
 //! ## Verifier safety (v2 — post-CI-88657233643-fix)
 //!

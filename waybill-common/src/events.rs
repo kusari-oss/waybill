@@ -58,6 +58,14 @@ pub enum FileEventType {
     Fchdir = 6,
     /// A successful rename. Carried by a [`RenameEvent`].
     Rename = 7,
+    /// An open request the kernel discarded because it did not succeed.
+    ///
+    /// Emitted only when the diagnostic slot is set (`OPEN_DIAG`); userspace
+    /// logs it and never admits it to a read or write set. For this variant
+    /// alone, [`FileEvent::flags`] carries the negated errno the syscall
+    /// returned rather than the open flags — the field is read by event type,
+    /// so a consumer that dispatches first cannot confuse the two.
+    OpenFailed = 8,
 }
 
 impl FileEventType {
@@ -73,6 +81,7 @@ impl FileEventType {
             5 => Self::Chdir,
             6 => Self::Fchdir,
             7 => Self::Rename,
+            8 => Self::OpenFailed,
             _ => return None,
         })
     }
@@ -95,7 +104,8 @@ pub struct FileEvent {
     pub path_truncated: u8,
     pub _path_padding: [u8; 3],
     /// Open flags (`O_ACCMODE`, `O_CREAT`, `O_TRUNC`, ...) for `Open`
-    /// records; 0 otherwise (milestone 1070).
+    /// records; the negated errno for [`FileEventType::OpenFailed`] records
+    /// (#1252); 0 otherwise (milestone 1070).
     pub flags: u32,
     /// Directory fd the path is relative to; [`AT_FDCWD`] for the working
     /// directory (milestone 1070).
@@ -370,10 +380,15 @@ mod tests {
             FileEventType::Chdir,
             FileEventType::Fchdir,
             FileEventType::Rename,
+            FileEventType::OpenFailed,
         ] {
             assert!(FileEventType::from_raw(t as u32) == Some(t));
         }
-        assert!(FileEventType::from_raw(8).is_none());
+        // One past the last known variant. The guard matters because
+        // userspace reads the leading u32 as a raw value and dispatches on
+        // it: a record kind this build does not know must be skipped, not
+        // decoded as whichever variant happens to sit at that number.
+        assert!(FileEventType::from_raw(9).is_none());
     }
 
     #[test]

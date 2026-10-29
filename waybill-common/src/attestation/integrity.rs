@@ -13,6 +13,22 @@ pub struct TraceIntegrity {
     /// measured since m212 -- for the loss the kernel does report.
     pub events_dropped: u64,
     pub uprobe_attach_failures: Vec<String>,
+    /// Capture interfaces that did not become usable on this host.
+    ///
+    /// The name says "kprobe" and the contents have not been only kprobes
+    /// for a long time: counter-map names since m212, `sched_*` tracepoint
+    /// names since m210, and after #1252 no kprobe names at all, because
+    /// capture attaches to syscall tracepoints. Read it as "whatever could
+    /// not be used", whatever kind of interface that is — a reader who
+    /// trusts the name will misread the contents.
+    ///
+    /// The name stays regardless. This is a stability surface: documents
+    /// produced before and after #1252 have to stay comparable, and a
+    /// rename would break every consumer for a cosmetic gain.
+    ///
+    /// A non-empty value means the recorded sets are a floor rather than a
+    /// total, and `compiler_pipeline.completeness` must say so — the two
+    /// disagreeing is what #1252 fixed.
     pub kprobe_attach_failures: Vec<String>,
     pub partial_captures: Vec<PartialCapture>,
     pub bloom_filter_capacity: u64,
@@ -46,6 +62,20 @@ pub struct TraceIntegrity {
     /// m1070 precedent two fields above.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub compiler_hash_coverage: Option<CompilerHashCoverage>,
+    /// #1252: open requests the kernel discarded because the syscall failed.
+    ///
+    /// Those requests used to reach the read set — capture observed the
+    /// request, not its result — so this is the size of the overstatement
+    /// this feature removes. It is also the signal that the kernel-side join
+    /// is firing at all: a compiler attempts failed opens constantly across
+    /// its header and library search paths, so a zero here on a real build
+    /// is evidence about the capture rather than about the build.
+    ///
+    /// Omitted when zero, and placed LAST in the struct, so a pre-#1252
+    /// attestation round-trips and serializes byte-identically — the m1070
+    /// and m1072 precedent above.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub open_failures_discarded: u64,
 }
 
 fn is_zero(n: &u64) -> bool {
@@ -113,6 +143,53 @@ mod tests {
         integrity.unresolved_relative_opens = 3;
         let json = serde_json::to_string(&integrity).expect("serialize");
         assert!(json.contains("\"unresolved_relative_opens\":3"));
+    }
+
+    /// #1252 (T009): a document produced before this feature must
+    /// deserialize, and a trace with no failed opens must serialize exactly
+    /// as it did before the field existed.
+    ///
+    /// Both halves matter. The first is the compatibility claim; the second
+    /// is why the field is omitted at zero rather than written as `0` — an
+    /// attestation whose bytes change for a trace that observed nothing new
+    /// would make every committed expectation churn for no information.
+    #[test]
+    fn open_failures_discarded_is_absent_before_and_at_zero() {
+        // A pre-#1252 document: every field this build knows except the new
+        // one. It must deserialize, and the missing field must read as 0.
+        let before = r#"{
+            "ring_buffer_overflows": 0,
+            "events_dropped": 0,
+            "uprobe_attach_failures": [],
+            "kprobe_attach_failures": [],
+            "partial_captures": [],
+            "bloom_filter_capacity": 65536,
+            "bloom_filter_false_positive_rate": 0.01,
+            "filter_categories_applied": []
+        }"#;
+        let parsed: TraceIntegrity =
+            serde_json::from_str(before).expect("a pre-#1252 document must still parse");
+        assert_eq!(parsed.open_failures_discarded, 0);
+
+        // Re-serializing it must not introduce the field. Asserted on the
+        // whole string rather than on a substring search alone, so a field
+        // written as `"open_failures_discarded":0` cannot pass by sitting
+        // somewhere the search did not look.
+        let json = serde_json::to_string(&parsed).expect("serialize");
+        assert!(
+            !json.contains("open_failures_discarded"),
+            "a zero count must not appear in the document: {json}"
+        );
+
+        // And the converse, so the test cannot pass by the field never
+        // serializing at all.
+        let mut nonzero = parsed;
+        nonzero.open_failures_discarded = 51;
+        let json = serde_json::to_string(&nonzero).expect("serialize");
+        assert!(
+            json.contains("\"open_failures_discarded\":51"),
+            "a non-zero count must appear: {json}"
+        );
     }
 
     #[test]

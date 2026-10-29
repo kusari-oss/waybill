@@ -877,6 +877,65 @@ mod tests {
         );
     }
 
+    /// #1252 (T028): losing network-connect capture degrades the trace and
+    /// does not end it.
+    ///
+    /// FR-008 — a build that fetches nothing over the network is a normal
+    /// build, so the absence of connect capture makes the record a floor
+    /// rather than invalidating it. The distinction matters because the
+    /// open interfaces are treated the opposite way: losing all of those
+    /// stops the trace (FR-007), since a document whose empty file list
+    /// reads as "this build opened nothing" is worse than no document.
+    ///
+    /// Asserted on the pair of statements a consumer actually reads: the
+    /// gap is named, and completeness does not claim Complete.
+    #[test]
+    fn losing_connect_capture_degrades_rather_than_ends_the_trace() {
+        let mut agg = CompilerPipelineAggregator::new(FilterConfig::default());
+        agg.handle_compiler_event(&make_exec_event(100, 50, "rustc"));
+        agg.mark_probe_attach_failed();
+        let data = agg.finalize();
+
+        // Still a capture: the invocation survived.
+        assert_eq!(data.invocations.len(), 1, "the trace must still produce a record");
+        assert_eq!(
+            data.completeness,
+            CompletenessState::Partial {
+                reason: PartialReason::ProbeAttachFailed,
+            },
+            "a named gap must downgrade completeness, not abort"
+        );
+    }
+
+    /// #1252 (T029): an architecture that has no such syscall is not a
+    /// fault, and must not be recorded as one.
+    ///
+    /// `open` and `creat` do not exist on arm64 — measured, see
+    /// specs/1270-stable-probe-tracepoints/measurements/findings.md run 1
+    /// — so capture guards them with `#[cfg(target_arch = "x86_64")]`
+    /// rather than attaching them best-effort. A compile-time guard cannot
+    /// mistake an architecture's shape for a failure; a runtime attach
+    /// attempt would put `sys_enter_open` in `kprobe_attach_failures[]` on
+    /// every arm64 host and downgrade every arm64 capture to partial.
+    ///
+    /// This asserts the consequence: on an architecture without them,
+    /// nothing reports a gap and completeness stays Complete.
+    #[test]
+    #[cfg(not(target_arch = "x86_64"))]
+    fn an_absent_syscall_on_this_architecture_is_not_a_gap() {
+        let mut agg = CompilerPipelineAggregator::new(FilterConfig::default());
+        agg.handle_compiler_event(&make_exec_event(100, 50, "rustc"));
+        // Nothing marks a probe failure, because the loader never tried to
+        // attach `sys_enter_open` here.
+        let data = agg.finalize();
+        assert_eq!(
+            data.completeness,
+            CompletenessState::Complete,
+            "an architecture without `open`/`creat` must still report a \
+             complete capture — their absence is not a fault"
+        );
+    }
+
     /// The pair that actually misread: a probe that never attached loses
     /// events no drop counter observes, so `events_dropped == 0` is not
     /// evidence of a complete capture. Asserted as a precedence check

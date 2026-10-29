@@ -560,6 +560,34 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
                     match kind {
                         FileEventType::Chdir => cwd.chdir(ev.pid, ev.path_str(), ev.path_truncated != 0),
                         FileEventType::Fchdir => cwd.fchdir(ev.pid),
+                        // #1252 — a discarded open request, reported only
+                        // when the diagnostic slot is on. Logged and
+                        // dropped: it is the evidence that a read-set entry
+                        // which disappeared belongs to a failed request, and
+                        // it must never become a claim that the build read
+                        // the file. `flags` carries the negated errno for
+                        // this record kind.
+                        //
+                        // Resolved against the process's working directory
+                        // first, so a relative request can be matched
+                        // against the read set it was removed from.
+                        FileEventType::OpenFailed => {
+                            if !admitted(ev.pid) {
+                                continue;
+                            }
+                            let raw = ev.path_str();
+                            let (path, _unresolved) = resolved(
+                                cwd.resolve(ev.pid, ev.dfd, raw, ev.path_truncated != 0),
+                                raw,
+                            );
+                            tracing::info!(
+                                path = %path,
+                                errno = ev.flags,
+                                pid = ev.pid,
+                                comm = %ev.comm_str(),
+                                "#1252 discarded open: the request did not succeed"
+                            );
+                        }
                         _ => {
                             if !admitted(ev.pid) {
                                 continue;
@@ -750,6 +778,18 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
     let mut counter_attach_failures = drops.attach_failures;
     counter_attach_failures.extend(filter_hits.attach_failures);
 
+    // #1252 — open requests the kernel discarded because the syscall
+    // failed. Counted unconditionally so a zero is readable: a compiler
+    // attempts failed opens constantly across its search paths, so zero
+    // on a real build says something about the capture, not the build.
+    // An unreadable counter is recorded as an attach failure rather than
+    // reported as zero.
+    let (open_failures_discarded, open_counter_failure) =
+        crate::trace::counters::read_open_failures_discarded(&mut handle.bpf);
+    if let Some(name) = open_counter_failure {
+        counter_attach_failures.push(name);
+    }
+
     let mut trace = agg.finalize(&TraceStats {
         network_events: net_count,
         file_events: file_count,
@@ -761,6 +801,7 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
         counter_attach_failures,
         filter_categories_applied,
         probe_attach_failures,
+        open_failures_discarded,
     });
 
     if trace.network_trace.connections.is_empty()

@@ -255,6 +255,43 @@ fn read_percpu_slot_sum(bpf: &mut aya::Ebpf, name: &str, idx: u32) -> anyhow::Re
     Ok(values.iter().sum())
 }
 
+// ============================================================================
+// #1252 — discarded-open counter reader.
+// ============================================================================
+
+/// Read `OPEN_FAILURES_DISCARDED`: open requests the kernel discarded
+/// because the syscall failed.
+///
+/// A failure to read the map is reported as `(0, Some(reason))` rather than
+/// as an error that aborts the trace, matching how the m212 counters behave:
+/// the capture itself is unaffected, but a consumer must be able to tell "no
+/// failed opens" from "the counter was unavailable". The reason reaches
+/// `kprobe_attach_failures[]` through `counter_attach_failures`, which has
+/// carried counter-map names since m212.
+#[cfg(all(target_os = "linux", feature = "ebpf-tracing"))]
+pub fn read_open_failures_discarded(bpf: &mut aya::Ebpf) -> (u64, Option<String>) {
+    match read_percpu_sum(bpf, "OPEN_FAILURES_DISCARDED") {
+        Ok(n) => (n, None),
+        Err(e) => {
+            tracing::warn!(
+                error = %truncate_error(&e.to_string()),
+                "could not read OPEN_FAILURES_DISCARDED; the discarded-open \
+                 count is unavailable, so zero here means unmeasured"
+            );
+            (0, Some("open_failures_discarded".to_string()))
+        }
+    }
+}
+
+/// Non-Linux stub. Matches the trace pipeline's no-op behaviour when
+/// `ebpf-tracing` is off.
+#[cfg(not(all(target_os = "linux", feature = "ebpf-tracing")))]
+#[allow(dead_code)]
+pub fn read_open_failures_discarded<T>(_bpf: &mut T) -> (u64, Option<String>) {
+    (0, None)
+}
+
+
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {

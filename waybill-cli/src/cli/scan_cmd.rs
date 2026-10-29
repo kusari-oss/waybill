@@ -4204,6 +4204,10 @@ pub async fn execute(
         filter_categories_applied: vec![],
         unresolved_relative_opens: 0,
         compiler_hash_coverage: None,
+        // #1252 — scan mode attempts no opens through the kernel, so
+        // nothing could have been discarded. Zero is a fact here, not an
+        // unmeasured default, for the same reason as the fields above.
+        open_failures_discarded: 0,
     };
 
     // Milestone 073: resolve identifiers — auto-detected

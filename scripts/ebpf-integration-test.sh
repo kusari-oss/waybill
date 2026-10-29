@@ -153,6 +153,58 @@ if [[ "$COMPLETENESS" == "partial" && "$REASON" == "probe_attach_failed" \
 fi
 echo "    #1252 honesty invariant: completeness and kprobe_attach_failures agree"
 
+# #1252 — the discarded-open counter, as a POSITIVE CONTROL.
+#
+# Capture now records opens that succeeded rather than opens that were
+# attempted, which means a failed open leaves no trace in the read set.
+# A zero here is therefore ambiguous on its face: either the build
+# attempted no failed opens, or the exit tracepoint is not firing and
+# every open is being dropped. Those look identical in the output and
+# only one of them is healthy.
+#
+# The fixture resolves the ambiguity. A rustc + linker build probes for
+# headers, libraries and optional manifests across every search path it
+# has, and almost all of those opens fail by design — measured at 599
+# discards for this fixture on a host where capture is intact. So zero
+# here is a statement about the capture, not about the build.
+DISCARDED=$(jq '.predicate.trace_integrity.open_failures_discarded // 0' "$OUTPUT")
+echo "    open_failures_discarded: $DISCARDED"
+if [[ "$DISCARDED" -eq 0 ]]; then
+    echo "FAIL: zero discarded opens for a compiler build (#1252)"
+    echo "      A compiler attempts failed opens constantly across its header"
+    echo "      and library search paths. Zero means the sys_exit_open*"
+    echo "      tracepoints are not reporting results — in which case every"
+    echo "      open is being discarded, not just the failed ones — or the"
+    echo "      OPEN_FAILURES_DISCARDED counter map did not load."
+    echo "      Check kprobe_attach_failures above for the counter's name."
+    exit 1
+fi
+
+# #1252 — the request/result join must not cost ring-buffer volume.
+#
+# FR-005b: an open that did not succeed must not occupy ring-buffer space
+# at all, and per-build volume must not increase. The ceiling is the
+# pre-change count for this fixture (573 events, measured; see
+# specs/1270-stable-probe-tracepoints/measurements/baseline-before.md).
+# An implementation that sent both the request and the result to
+# userspace and joined them there would pass every content-based check
+# above while roughly doubling volume, so this is measured rather than
+# argued.
+#
+# The margin is wide on purpose: the same host produced 573 and 575 on
+# two runs of the same fixture, so the count is not bit-stable.
+FILE_OP_COUNT=$(jq '.predicate.file_access.operations | length' "$OUTPUT")
+echo "    file operations: $FILE_OP_COUNT (pre-#1252 ceiling: 600)"
+if [[ "$FILE_OP_COUNT" -gt 600 ]]; then
+    echo "FAIL: $FILE_OP_COUNT file operations exceeds the pre-#1252 ceiling (#1252 FR-005b/SC-008)"
+    echo "      The kernel-side join should REDUCE volume: one syscall is now"
+    echo "      one event where do_sys_openat2 and do_filp_open both fired,"
+    echo "      and failed opens are discarded before the ring buffer."
+    echo "      A count above the ceiling suggests both observations are"
+    echo "      reaching userspace."
+    exit 1
+fi
+
 # Milestone 212 (issue #615) — assert the real ring_buffer_overflows
 # counter is present as a JSON number type. Pre-m212 the field was
 # hardcoded to 0 at every emission site; post-m212 it carries real
@@ -808,6 +860,77 @@ if [[ "$UNEXPECTED" != "[]" ]]; then
 fi
 echo "    trace_integrity keys: $(jq -c '.predicate.trace_integrity | keys' "$WIDENED_OUTPUT")"
 echo "    all present in the pre-m1072 struct; no coverage record emitted"
+
+echo "==> #1252 SC-007: an IPv6-only connection is recorded"
+# The old capture was a kprobe on `tcp_v4_connect`, which IPv6 connections
+# never reach, so a build that connected only over IPv6 was recorded as
+# having made no connection at all — indistinguishable from an offline
+# build. The destination now comes from the `sockaddr` the process passed,
+# so the address family is read rather than inferred.
+#
+# Verified against a deliberately IPv6-only case, not inferred from a build
+# that happens to use both. The listener is on ::1 inside the container, so
+# this needs no network egress and cannot flake on DNS or a firewall.
+#
+# The compiler fixture cannot carry this check: it is hermetic and makes no
+# connection at all, so every other run in this harness reports
+# connections=0 and the IPv6 path would stay unobserved while compiling,
+# loading and attaching perfectly well.
+V6_OUTPUT=/tmp/i1270-ipv6.attestation.json
+if ! python3 -c 'import socket; socket.socket(socket.AF_INET6, socket.SOCK_STREAM).close()' 2>/dev/null; then
+    echo "FAIL: no IPv6 support in this container; the SC-007 case cannot run"
+    echo "      A skip here would read like a pass. If IPv6 is genuinely"
+    echo "      unavailable on the runner, the check needs a different host,"
+    echo "      not a silent bypass."
+    exit 1
+fi
+
+# A listener on ::1, and a client that connects to it and nothing else.
+python3 - > /tmp/i1270-port <<'PYEOF'
+import socket
+s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+s.bind(("::1", 0))
+s.listen(1)
+print(s.getsockname()[1])
+import os, sys
+sys.stdout.flush()
+# Hold the socket open in a child so the port stays bound for the trace.
+if os.fork() == 0:
+    try:
+        c, _ = s.accept()
+        c.close()
+    except Exception:
+        pass
+    os._exit(0)
+PYEOF
+V6_PORT=$(cat /tmp/i1270-port)
+echo "    IPv6 listener on [::1]:$V6_PORT"
+
+set +e
+"$MIKEBOM" trace capture \
+    --attestation-format waybill-v1 \
+    --output "$V6_OUTPUT" \
+    -- python3 -c "import socket; s=socket.socket(socket.AF_INET6, socket.SOCK_STREAM); s.connect(('::1', $V6_PORT)); s.close()"
+V6_STATUS=$?
+set -e
+if [[ $V6_STATUS -ne 0 ]]; then
+    echo "FAIL: the IPv6 trace exited $V6_STATUS"
+    exit 1
+fi
+
+# `destination.ip` is a string; an IPv6 literal is the only form that
+# contains a colon, so this discriminates without parsing.
+V6_CONNS=$(jq '[.predicate.network_trace.connections[]
+               | select(.destination.ip | contains(":"))] | length' "$V6_OUTPUT")
+echo "    connections with a v6 destination: $V6_CONNS"
+if [[ "$V6_CONNS" -eq 0 ]]; then
+    echo "FAIL: an IPv6 connection to [::1]:$V6_PORT was not recorded (#1252 SC-007)"
+    echo "      This is the exact case the old tcp_v4_connect kprobe could"
+    echo "      not see. All connections recorded:"
+    jq -c '.predicate.network_trace.connections[].destination' "$V6_OUTPUT" | sed 's/^/        /'
+    exit 1
+fi
+echo "    #1252 SC-007: the IPv6 destination is recorded"
 
 echo
 echo ">>> m210 + m212 + m213 + m1072 integration test PASSED"
