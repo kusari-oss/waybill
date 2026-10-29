@@ -2783,6 +2783,14 @@
     {
       "annotationType": "other",
       "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-4F6MGA455232DU5F",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cargo-activation-evidence\",\"value\":\"absent-offline\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-6TYCISEIIDD2YBCC",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-4HUPYDWJDJEKLNDK",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-CNQ3ODPJWHADEBHT",
@@ -3674,6 +3682,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-FGQ5KZ2Z6JAAL7WQ",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"Cargo.lock\",\"sha256\":\"<masked-sha256>\"}]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-UEVZTWYNRTDG2IH7",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-FI7FDQRLXZEJECBP",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cargo-activation-evidence\",\"value\":\"absent-offline\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-XSAHB22QVFZL6CFF",
       "type": "Annotation"
     },
     {
@@ -5218,6 +5234,14 @@
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-XGDY3H6S6CD7LWU5",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"Cargo.lock\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-XXMZZ6ZEQXVQEWLB",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "<masked>",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/anno-XH3T5WFZC564ZYDJ",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cargo-activation-evidence\",\"value\":\"absent-offline\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-<masked>/pkg-L4OWNLE63ENHN4QH",
       "type": "Annotation"
     },
     {
