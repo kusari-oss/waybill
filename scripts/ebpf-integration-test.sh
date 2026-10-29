@@ -48,13 +48,17 @@ set +e
 # components — neither of which a vendored offline `cargo build` provides.
 # Using `capture` sidesteps the m211 US2 combined-workflow gap without
 # affecting m212's ring_buffer_overflows verification.
-"$MIKEBOM" trace capture \
+# #1252: the discard record is on for this run and the output is teed to
+# a file, so a read-set entry that is missing can be checked against the
+# requests the kernel discarded. It costs one log line per failed open
+# and changes nothing the attestation carries.
+WAYBILL_TRACE_OPEN_DIAG=1 "$MIKEBOM" trace capture \
     --attestation-format waybill-v1 \
     --output "$OUTPUT" \
     -- cargo build --release \
         --manifest-path "$FIXTURE/Cargo.toml" \
-        --target-dir "$FIXTURE_TARGET"
-TRACE_STATUS=$?
+        --target-dir "$FIXTURE_TARGET" 2>&1 | tee /tmp/i1252-trace.log
+TRACE_STATUS=${PIPESTATUS[0]}
 set -e
 
 if [[ $TRACE_STATUS -ne 0 ]]; then
@@ -314,6 +318,30 @@ all_writes() {
 for root in libsafe/src/lib.rs libvuln/src/lib.rs binaries/safe-only/src/main.rs binaries/vuln-included/src/main.rs; do
     if ! reads_of 'select(.compiler == "rustc")' | grep -qx "$FIXTURE/$root"; then
         echo "FAIL: $FIXTURE/$root is in no rustc read set (m1070 SC-001)"
+        # #1252 diagnostic: this assertion names a missing file and says
+        # nothing about why. The capture is small enough to print whole,
+        # and the three candidate causes are distinguishable from it:
+        #   - the open was resolved to a relative path we cannot match
+        #     -> unresolved_relative_opens > 0 and the raw path appears
+        #   - the open was observed and classified as a failure
+        #     -> the path appears in the discard log above
+        #   - the open was never observed at all
+        #     -> neither, and the total is far below the other arch's
+        echo "      --- diagnostic ---"
+        echo "      total file operations: $(jq '.predicate.file_access.operations | length' "$OUTPUT")"
+        echo "      unresolved_relative_opens: $(jq '.predicate.trace_integrity.unresolved_relative_opens // 0' "$OUTPUT")"
+        echo "      operations flagged unresolved: $(jq '[.predicate.file_access.operations[] | select(.unresolved_relative)] | length' "$OUTPUT")"
+        echo "      open_failures_discarded: $(jq '.predicate.trace_integrity.open_failures_discarded // 0' "$OUTPUT")"
+        echo "      rustc read sets, every entry:"
+        reads_of 'select(.compiler == "rustc")' | sort -u | sed 's/^/        /'
+        echo "      every recorded operation:"
+        jq -r '.predicate.file_access.operations[]
+               | "        \(.operation) \(if .unresolved_relative then "UNRESOLVED " else "" end)\(.path)"' \
+            "$OUTPUT" | sort -u
+        echo "      did the discard record claim it? (needs WAYBILL_TRACE_OPEN_DIAG=1 above)"
+        grep -F "$root" /tmp/i1252-trace.log 2>/dev/null | sed 's/^/        /' | head -5 \
+            || echo "        (no discard line names it)"
+        echo "      --- end diagnostic ---"
         if [[ "$ATTACH_FAILURE_COUNT" -gt 0 ]]; then
             echo "      probe(s) did not attach on this kernel: $ATTACH_FAILURES"
             echo "      a read set assembled without an open-family kprobe is"
