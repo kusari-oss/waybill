@@ -7,6 +7,16 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Fixed
+
+- pnpm v9 source scans now derive development dependency seeds from
+  resolved importer declarations, so `--exclude-scope dev` removes
+  development-only transitive dependencies. Runtime reachability across
+  importers takes precedence, including aliases and merged peer contexts.
+  Runtime and optional importer evidence survives absent child manifests.
+  v6/v7 per-package flags and missing-importer behavior are preserved.
+  This addresses the pnpm portion of #1297; Yarn is unchanged.
+
 ## [0.14.0] - 2026-10-28
 
 A minor, not the `0.13.1` patch the placeholder held. Three things a

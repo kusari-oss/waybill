@@ -1,0 +1,8 @@
+{
+  "name": "waybill-fixture-optional-member",
+  "version": "1.0.0",
+  "private": true,
+  "optionalDependencies": {
+    "string-width": "4.2.3"
+  }
+}

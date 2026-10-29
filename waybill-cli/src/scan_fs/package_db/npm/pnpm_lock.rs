@@ -10,28 +10,21 @@
 //! behavior (walks all three non-dev dep sub-mappings — see
 //! `PNPM_DEP_SECTIONS` const).
 
+use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
-
 use super::super::PackageDbEntry;
-use super::{build_npm_purl, NpmIntegrity};
+use super::{NpmIntegrity, build_npm_purl};
 
 /// Milestone 157: pnpm dep-section names walked by both the snapshots
 /// pre-scan (v9) AND the packages-inline path (v6/v7). Kept in one
 /// place so the SC-011 pnpm/npm parity assertion has a stable code
 /// anchor and so a future dep-section addition is a single edit.
 ///
-/// NOT identical to `package_lock.rs`'s 4-section list — pnpm encodes
-/// dev status via the per-package `dev: true` boolean at the entry
-/// level (handled below in `parse_pnpm_lock`), NOT via a
-/// `devDependencies:` sub-mapping. So `PNPM_DEP_SECTIONS` walks only
-/// the three non-dev sections. The `dev: true` boolean continues to
-/// gate whole-package filtering when `include_dev = false`.
-const PNPM_DEP_SECTIONS: &[&str] = &[
-    "dependencies",
-    "peerDependencies",
-    "optionalDependencies",
-];
+/// Package edges use these sections. v6/v7 encode development status
+/// in per-package `dev: true`; v9 instead declares development roots
+/// under `importers.<path>.devDependencies` (see `v9_importer_scopes`).
+const PNPM_DEP_SECTIONS: &[&str] = &["dependencies", "peerDependencies", "optionalDependencies"];
 
 /// Milestone 157: walk the three dep sub-mappings inside a single
 /// packages-entry table (v6/v7 inline path). Returns the sorted-
@@ -70,8 +63,12 @@ fn collect_pnpm_dep_names(
             continue;
         };
         for (dep_key, dep_value) in sub {
-            let Some(dep_name) = dep_key.as_str() else { continue };
-            let Some(dep_ver_raw) = dep_value.as_str() else { continue };
+            let Some(dep_name) = dep_key.as_str() else {
+                continue;
+            };
+            let Some(dep_ver_raw) = dep_value.as_str() else {
+                continue;
+            };
             // Milestone 159: detect pnpm alias syntax on the VALUE
             // string. When the value's canonical name differs from
             // the local dep-key, emit an AliasResolution and use the
@@ -149,23 +146,24 @@ fn build_snapshots_lookup(
     // the FR-009 info-log summary.
     versioned_counter: &mut usize,
     warn_counter: &mut usize,
-) -> std::collections::HashMap<String, Vec<String>> {
-    let mut out = std::collections::HashMap::new();
-    let Some(snapshots) = root
-        .get("snapshots")
-        .and_then(|v| v.as_mapping())
-    else {
+) -> HashMap<String, Vec<String>> {
+    let mut out: HashMap<String, Vec<String>> = HashMap::new();
+    let Some(snapshots) = root.get("snapshots").and_then(|v| v.as_mapping()) else {
         return out;
     };
     for (key, entry) in snapshots {
-        let Some(key_str) = key.as_str() else { continue };
+        let Some(key_str) = key.as_str() else {
+            continue;
+        };
         let stripped = key_str.strip_prefix('/').unwrap_or(key_str);
         let Some((name, version)) = parse_pnpm_key(stripped) else {
             tracing::debug!(snapshot_key = %key_str, "pnpm-lock: skipping non-registry snapshot key");
             continue;
         };
         let canonical = format!("{name}@{version}");
-        let Some(tbl) = entry.as_mapping() else { continue };
+        let Some(tbl) = entry.as_mapping() else {
+            continue;
+        };
         // Milestone 164 (T004, FR-001): v9 snapshots are the load-bearing
         // multi-version site — emit disambiguation form.
         let deps = collect_pnpm_dep_names(
@@ -176,10 +174,100 @@ fn build_snapshots_lookup(
             Some(versioned_counter),
             Some(warn_counter),
         );
-        out.insert(canonical, deps);
+        // Peer contexts share one emitted identity. Keep every context's
+        // edges, including those needed to establish runtime reachability.
+        out.entry(canonical).or_default().extend(deps);
+    }
+    for deps in out.values_mut() {
+        deps.sort();
+        deps.dedup();
     }
     out
 }
+
+// -----------------------------------------------------------------------
+// Importer-scope helper: normalize declarations and protect runtime closure.
+// -----------------------------------------------------------------------
+
+struct V9ImporterScopes {
+    development: HashSet<String>,
+    protected: HashSet<String>,
+}
+
+/// A dev declaration is insufficient when another importer or a runtime
+/// subtree needs the same locked identity. Preserve that runtime evidence
+/// even when its manifest cannot seed the global propagation pass.
+fn v9_importer_scopes(
+    root: &serde_yaml::Value,
+    snapshots: &HashMap<String, Vec<String>>,
+    source_path: &str,
+) -> Option<V9ImporterScopes> {
+    let importers = root.get("importers")?.as_mapping()?;
+    let packages = root.get("packages")?.as_mapping()?;
+    let mut dev = HashSet::new();
+    let mut protected = HashSet::new();
+    for importer in importers.values() {
+        for section in ["dependencies", "optionalDependencies", "devDependencies"] {
+            let Some(declarations) = importer.get(section).and_then(|v| v.as_mapping()) else {
+                continue;
+            };
+            for (name, resolution) in declarations {
+                let Some(name) = name.as_str() else { continue };
+                let Some(version) = resolution.get("version").and_then(|v| v.as_str()) else {
+                    continue;
+                };
+                let identity = if let Some(alias) =
+                    super::alias_mapping::detect_pnpm_alias(name, version, source_path)
+                {
+                    format!("{}@{}", alias.aliased_name, alias.aliased_version)
+                } else {
+                    let Some((name, version)) = parse_pnpm_key(&format!("{name}@{version}")) else {
+                        continue;
+                    };
+                    format!("{name}@{version}")
+                };
+                // link:/workspace:/file: references must not invent a
+                // registry identity. All workspace importers are visited.
+                if !packages.contains_key(serde_yaml::Value::String(identity.clone())) {
+                    continue;
+                }
+                if section == "devDependencies" {
+                    dev.insert(identity);
+                } else {
+                    protected.insert(identity);
+                }
+            }
+        }
+    }
+    if dev.is_empty() && protected.is_empty() {
+        return None;
+    }
+    let closure = |mut seen: HashSet<String>| {
+        let mut pending: Vec<String> = seen.iter().cloned().collect();
+        while let Some(identity) = pending.pop() {
+            for dependency in snapshots.get(&identity).into_iter().flatten() {
+                // Snapshot edges already carry resolved aliases and versions.
+                if let Some((name, version)) = dependency.rsplit_once(' ') {
+                    let identity = format!("{name}@{version}");
+                    if seen.insert(identity.clone()) {
+                        pending.push(identity);
+                    }
+                }
+            }
+        }
+        seen
+    };
+    let protected = closure(protected);
+    dev.retain(|identity| !protected.contains(identity));
+    Some(V9ImporterScopes {
+        development: dev,
+        protected,
+    })
+}
+
+// -----------------------------------------------------------------------
+// End of importer-scope helper. Lockfile parsing and emission follow.
+// -----------------------------------------------------------------------
 
 pub(super) fn read_pnpm_lock(rootfs: &Path, include_dev: bool) -> Option<Vec<PackageDbEntry>> {
     let path = rootfs.join("pnpm-lock.yaml");
@@ -244,6 +332,11 @@ pub(crate) fn parse_pnpm_lock(
         &mut multi_version_disambiguated_count,
         &mut malformed_key_warn_count,
     );
+    let importer_scopes = if is_v9_or_later {
+        v9_importer_scopes(root, &snapshots_lookup, source_path)
+    } else {
+        None
+    };
 
     // v6/v7 put per-package info under `packages:` keyed by
     // "/<name>@<version>" (or "/@scope/name@version"). v9 removes
@@ -263,7 +356,9 @@ pub(crate) fn parse_pnpm_lock(
         let Some(entry) = packages.get(serde_yaml::Value::String(key.clone())) else {
             continue;
         };
-        let Some(tbl) = entry.as_mapping() else { continue };
+        let Some(tbl) = entry.as_mapping() else {
+            continue;
+        };
 
         // v6/v7 key form: "/foo@1.0.0" or "/@scope/name@1.0.0"
         // v9 key form: "foo@1.0.0" (no leading slash)
@@ -273,10 +368,13 @@ pub(crate) fn parse_pnpm_lock(
             continue;
         }
 
-        let is_dev = tbl
-            .get(serde_yaml::Value::String("dev".to_string()))
-            .and_then(|v| v.as_bool())
-            .unwrap_or(false);
+        let is_dev = match &importer_scopes {
+            Some(scopes) => scopes.development.contains(&format!("{name}@{version}")),
+            None => tbl
+                .get(serde_yaml::Value::String("dev".to_string()))
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false),
+        };
         // Milestone 180 T012 — extract the per-entry `optional: true`
         // marker (pnpm sets this on entries reachable only through
         // optional edges; parallel to npm's `optional` flag). Currently
@@ -378,6 +476,18 @@ pub(crate) fn parse_pnpm_lock(
                 serde_json::Value::String("npm-optional-dependencies".to_string()),
             );
             Some(LifecycleScope::Optional)
+        } else if importer_scopes
+            .as_ref()
+            .is_some_and(|scopes| scopes.protected.contains(&format!("{name}@{version}")))
+        {
+            // Non-dev evidence must survive a missing importer manifest.
+            // Keep the legacy Runtime default for unmarked optional paths;
+            // existing Optional/peer classification above takes precedence.
+            Some(LifecycleScope::Runtime)
+        } else if importer_scopes.is_some() {
+            // Absence from the direct dev set is not runtime evidence:
+            // leave transitives available to the existing scope pass.
+            None
         } else {
             Some(LifecycleScope::Runtime)
         };
@@ -545,6 +655,181 @@ fn parse_pnpm_key(key: &str) -> Option<(String, String)> {
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
     use super::*;
+
+    #[test]
+    fn pnpm_v9_importer_generated_fixture_seeds_direct_dev_only() {
+        let root: serde_yaml::Value = serde_yaml::from_str(include_str!(
+            "../../../../tests/fixtures/pnpm_v9_scope/pnpm-lock.yaml"
+        ))
+        .unwrap();
+        let entries = parse_pnpm_lock(&root, "/pnpm-lock.yaml", true);
+        use waybill_common::resolution::LifecycleScope;
+        assert_eq!(
+            entry_by_name(&entries, "wrap-ansi")
+                .unwrap()
+                .lifecycle_scope,
+            Some(LifecycleScope::Development)
+        );
+        assert_eq!(
+            entry_by_name(&entries, "ansi-styles")
+                .unwrap()
+                .lifecycle_scope,
+            None,
+            "the existing propagation pass must classify the dev transitive"
+        );
+        assert_eq!(
+            entry_by_name(&entries, "string-width")
+                .unwrap()
+                .lifecycle_scope,
+            Some(LifecycleScope::Runtime),
+            "shared runtime reachability must remain eligible for immunity"
+        );
+    }
+
+    #[test]
+    fn pnpm_v9_importer_runtime_transitive_and_other_importer_win_per_version() {
+        let root: serde_yaml::Value = serde_yaml::from_str(
+            r#"
+lockfileVersion: '9.0'
+importers:
+  .:
+    dependencies:
+      waybill-fixture-prod: {version: 1.0.0}
+    devDependencies:
+      waybill-fixture-shared: {version: 1.0.0}
+      waybill-fixture-dual: {version: 2.0.0}
+      waybill-fixture-cross: {version: 1.0.0}
+  packages/app:
+    dependencies:
+      waybill-fixture-dual: {version: 1.0.0}
+      waybill-fixture-cross: {version: 1.0.0}
+packages:
+  waybill-fixture-prod@1.0.0: {}
+  waybill-fixture-shared@1.0.0: {}
+  waybill-fixture-dual@1.0.0: {}
+  waybill-fixture-dual@2.0.0: {}
+  waybill-fixture-cross@1.0.0: {}
+snapshots:
+  waybill-fixture-prod@1.0.0:
+    dependencies:
+      waybill-fixture-shared: 1.0.0
+  waybill-fixture-shared@1.0.0: {}
+  waybill-fixture-dual@1.0.0: {}
+  waybill-fixture-dual@2.0.0: {}
+  waybill-fixture-cross@1.0.0: {}
+"#,
+        )
+        .unwrap();
+        let entries = parse_pnpm_lock(&root, "/pnpm-lock.yaml", true);
+        let development: Vec<_> = entries
+            .iter()
+            .filter(|entry| {
+                entry.lifecycle_scope
+                    == Some(waybill_common::resolution::LifecycleScope::Development)
+            })
+            .map(|entry| entry.purl.as_str())
+            .collect();
+        assert_eq!(development, ["pkg:npm/waybill-fixture-dual@2.0.0"]);
+    }
+
+    #[test]
+    fn pnpm_v9_importer_aliases_and_all_peer_contexts_protect_runtime() {
+        let root: serde_yaml::Value = serde_yaml::from_str(
+            r#"
+lockfileVersion: '9.0'
+importers:
+  .:
+    dependencies:
+      waybill-fixture-prod: {version: '1.0.0(peer@1.0.0)'}
+    devDependencies:
+      alias-shared: {version: '@scope/waybill-fixture-shared@1.0.0(peer@1.0.0)'}
+      alias-dev: {version: '@scope/waybill-fixture-dev@2.0.0(peer@1.0.0)'}
+      waybill-fixture-optional: {version: 1.0.0}
+    optionalDependencies:
+      waybill-fixture-optional: {version: 1.0.0}
+packages:
+  waybill-fixture-prod@1.0.0: {}
+  '@scope/waybill-fixture-shared@1.0.0': {}
+  '@scope/waybill-fixture-dev@2.0.0': {}
+  waybill-fixture-optional@1.0.0: {optional: true}
+snapshots:
+  waybill-fixture-prod@1.0.0(peer@1.0.0):
+    dependencies:
+      '@scope/waybill-fixture-shared': 1.0.0
+  waybill-fixture-prod@1.0.0(peer@2.0.0): {}
+  '@scope/waybill-fixture-shared@1.0.0': {}
+  '@scope/waybill-fixture-dev@2.0.0': {}
+  waybill-fixture-optional@1.0.0: {}
+"#,
+        )
+        .unwrap();
+        for reverse in [false, true] {
+            let mut ordered = root.clone();
+            if reverse {
+                ordered["snapshots"] = serde_yaml::Value::Mapping(
+                    root["snapshots"]
+                        .as_mapping()
+                        .unwrap()
+                        .iter()
+                        .map(|(key, value)| (key.clone(), value.clone()))
+                        .collect::<Vec<_>>()
+                        .into_iter()
+                        .rev()
+                        .collect(),
+                );
+            }
+            let entries = parse_pnpm_lock(&ordered, "/pnpm-lock.yaml", true);
+            use waybill_common::resolution::LifecycleScope;
+            assert_eq!(
+                entry_by_name(&entries, "@scope/waybill-fixture-shared")
+                    .unwrap()
+                    .lifecycle_scope,
+                Some(LifecycleScope::Runtime)
+            );
+            assert_eq!(
+                entry_by_name(&entries, "@scope/waybill-fixture-dev")
+                    .unwrap()
+                    .lifecycle_scope,
+                Some(LifecycleScope::Development)
+            );
+            assert_eq!(
+                entry_by_name(&entries, "waybill-fixture-optional")
+                    .unwrap()
+                    .lifecycle_scope,
+                Some(LifecycleScope::Optional)
+            );
+            assert_eq!(
+                entry_by_name(&entries, "waybill-fixture-prod")
+                    .unwrap()
+                    .depends,
+                ["@scope/waybill-fixture-shared 1.0.0"]
+            );
+        }
+    }
+
+    #[test]
+    fn pnpm_v9_importer_missing_evidence_keeps_legacy_runtime_default() {
+        let root: serde_yaml::Value = serde_yaml::from_str(
+            r#"
+lockfileVersion: '9.0'
+packages:
+  waybill-fixture-runtime@1.0.0: {}
+  waybill-fixture-dev@1.0.0: {dev: true}
+snapshots:
+  waybill-fixture-runtime@1.0.0: {}
+  waybill-fixture-dev@1.0.0: {}
+"#,
+        )
+        .unwrap();
+        let entries = parse_pnpm_lock(&root, "/pnpm-lock.yaml", false);
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].name, "waybill-fixture-runtime");
+        assert_eq!(
+            entries[0].lifecycle_scope,
+            Some(waybill_common::resolution::LifecycleScope::Runtime)
+        );
+    }
+
     #[test]
     fn pnpm_lock_v6_style_parses() {
         let yaml = r#"
@@ -800,9 +1085,9 @@ snapshots:
     #[test]
     fn pnpm_walks_same_dep_sections_as_package_lock_non_dev() {
         // SC-011 parity: PNPM_DEP_SECTIONS matches the non-dev subset
-        // of package_lock.rs's 4-section walk. The `dev: true` boolean
-        // handles pnpm's dev-status axis; no devDependencies: sub-
-        // mapping exists on individual pnpm entries by lockfile design.
+        // of package_lock.rs's 4-section walk. Legacy `dev: true`
+        // handles v6/v7 status; v9 importer classification is covered
+        // independently above. These sections describe package edges.
         assert_eq!(
             PNPM_DEP_SECTIONS,
             &["dependencies", "peerDependencies", "optionalDependencies"],
