@@ -889,6 +889,48 @@ fi
 echo "    trace_integrity keys: $(jq -c '.predicate.trace_integrity | keys' "$WIDENED_OUTPUT")"
 echo "    all present in the pre-m1072 struct; no coverage record emitted"
 
+echo "==> #618 drop counters: the plumbing is self-verifying"
+# A counter that cannot fire is worse than no counter: it reports a
+# confident zero. This forces one drop path and asserts the count is
+# exact, so every OTHER zero in event_drop_reasons is readable.
+#
+# `openat(AT_FDCWD, NULL, 0)` is the only way to reach the null-path
+# branch. Called through glibc's wrapper rather than a raw syscall
+# number -- openat is 257 on x86_64 and 56 on aarch64, and the first
+# version of this control called whatever 257 is on arm64 and silently
+# measured nothing.
+DROPS_OUTPUT=/tmp/i618-control.attestation.json
+cat > /tmp/i618-nullopen.py <<'PYEOF'
+import ctypes
+libc = ctypes.CDLL("libc.so.6", use_errno=True)
+libc.openat.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_int]
+for _ in range(5):
+    libc.openat(-100, None, 0)
+PYEOF
+"$MIKEBOM" trace capture --attestation-format waybill-v1 \
+    --output "$DROPS_OUTPUT" -- python3 /tmp/i618-nullopen.py > /dev/null 2>&1
+NULL_PATH_DROPS=$(jq '.predicate.trace_integrity.event_drop_reasons.kernel_null_path // 0' \
+    "$DROPS_OUTPUT")
+echo "    kernel_null_path after 5 forced openat(NULL): $NULL_PATH_DROPS"
+if [[ "$NULL_PATH_DROPS" -ne 5 ]]; then
+    echo "FAIL: expected exactly 5 kernel_null_path drops, got $NULL_PATH_DROPS (#618)"
+    echo "      The kernel-side EVENT_DROPS slots are not reaching the"
+    echo "      attestation, which makes every kernel-side zero in"
+    echo "      event_drop_reasons unreadable -- the exact ambiguity #618"
+    echo "      exists to remove."
+    jq -c '.predicate.trace_integrity.event_drop_reasons' "$DROPS_OUTPUT" | sed 's/^/      /'
+    exit 1
+fi
+echo "    #618 control: the drop counters fire, and the count is exact"
+
+# Report what the real build dropped. Not an assertion: on a healthy host
+# `user_no_invocation_mapping` is non-zero because cargo's own file
+# activity belongs to no compiler invocation. It is printed so a CI log
+# names the mechanism when a capture comes up short (#1185).
+echo "    event_drop_reasons (fixture build):"
+jq -r '(.predicate.trace_integrity.event_drop_reasons // {})
+       | to_entries | sort_by(-.value) | .[] | "      \(.key) \(.value)"' "$OUTPUT"
+
 echo "==> #1252 SC-007: an IPv6-only connection is recorded"
 # The old capture was a kprobe on `tcp_v4_connect`, which IPv6 connections
 # never reach, so a build that connected only over IPv6 was recorded as

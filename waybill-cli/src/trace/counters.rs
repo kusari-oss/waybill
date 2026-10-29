@@ -412,3 +412,87 @@ mod tests {
         assert!(summary.applied_categories().is_empty());
     }
 }
+
+// ============================================================================
+// #618 / #1185 — named drop counters.
+// ============================================================================
+
+/// Observed events that never reached the recorded sets, by mechanism.
+///
+/// Userspace-side reasons are counted here as the drain loop runs;
+/// kernel-side reasons are read out of `EVENT_DROPS` at trace end and
+/// merged in. The result reaches
+/// `TraceIntegrity.event_drop_reasons`.
+///
+/// Why named counts rather than one total: `events_dropped` has read `0`
+/// since it was introduced, and a single zero cannot distinguish "nothing
+/// was dropped" from "nothing was counted". #1185 is a capture losing
+/// whole compiler invocations while reporting `completeness: complete`,
+/// and narrowing it by elimination cost one CI cycle per hypothesis.
+#[derive(Debug, Default, Clone)]
+pub struct EventDropCounts {
+    counts: std::collections::BTreeMap<&'static str, u64>,
+}
+
+impl EventDropCounts {
+    pub fn record(&mut self, reason: waybill_common::events::EventDropReason) {
+        *self.counts.entry(reason.name()).or_insert(0) += 1;
+    }
+
+    pub fn record_n(&mut self, reason: waybill_common::events::EventDropReason, n: u64) {
+        if n > 0 {
+            *self.counts.entry(reason.name()).or_insert(0) += n;
+        }
+    }
+
+    pub fn total(&self) -> u64 {
+        self.counts.values().sum()
+    }
+
+    /// Wire shape: zero-valued reasons are omitted, so a reason that did
+    /// not fire is absent rather than present-and-zero. An empty map
+    /// serializes away entirely, leaving a lossless trace byte-identical
+    /// to one produced before this existed.
+    pub fn into_wire(self) -> std::collections::BTreeMap<String, u64> {
+        self.counts
+            .into_iter()
+            .filter(|(_, n)| *n > 0)
+            .map(|(k, n)| (k.to_string(), n))
+            .collect()
+    }
+}
+
+/// Read the kernel-side `EVENT_DROPS` slots and merge them in.
+///
+/// A map that will not read is itself reported, through
+/// `counter_attach_failures`, for the same reason the m212 counters are:
+/// a zero from an unreadable counter is not a measurement.
+#[cfg(all(target_os = "linux", feature = "ebpf-tracing"))]
+pub fn merge_kernel_event_drops(
+    bpf: &mut aya::Ebpf,
+    counts: &mut EventDropCounts,
+) -> Option<String> {
+    use waybill_common::events::EventDropReason;
+    for (slot, reason) in EventDropReason::KERNEL.iter().enumerate() {
+        match read_percpu_slot_sum(bpf, "EVENT_DROPS", slot as u32) {
+            Ok(n) => counts.record_n(*reason, n),
+            Err(e) => {
+                tracing::warn!(
+                    error = %truncate_error(&e.to_string()),
+                    slot,
+                    "could not read EVENT_DROPS; kernel-side drop reasons are \
+                     unavailable, so their absence here means unmeasured"
+                );
+                return Some("event_drops".to_string());
+            }
+        }
+    }
+    None
+}
+
+/// Non-Linux stub.
+#[cfg(not(all(target_os = "linux", feature = "ebpf-tracing")))]
+#[allow(dead_code)]
+pub fn merge_kernel_event_drops<T>(_bpf: &mut T, _counts: &mut EventDropCounts) -> Option<String> {
+    None
+}

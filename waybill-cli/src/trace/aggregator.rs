@@ -77,6 +77,10 @@ pub struct TraceStats {
     /// failed, from the `OPEN_FAILURES_DISCARDED` per-CPU counter. Flows
     /// into `TraceIntegrity.open_failures_discarded`.
     pub open_failures_discarded: u64,
+    /// #618 / #1185 — observed events that never reached the recorded
+    /// sets, by mechanism. Flows into
+    /// `TraceIntegrity.event_drop_reasons`.
+    pub event_drop_reasons: std::collections::BTreeMap<String, u64>,
 }
 
 /// Aggregated trace results ready for attestation building.
@@ -575,6 +579,7 @@ impl EventAggregator {
                 .count() as u64,
             compiler_hash_coverage: None,
             open_failures_discarded: stats.open_failures_discarded,
+            event_drop_reasons: stats.event_drop_reasons.clone(),
         };
 
         AggregatedTrace {

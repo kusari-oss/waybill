@@ -76,6 +76,22 @@ pub struct TraceIntegrity {
     /// and m1072 precedent above.
     #[serde(default, skip_serializing_if = "is_zero")]
     pub open_failures_discarded: u64,
+    /// #618 / #1185: observed events that never reached the recorded
+    /// sets, by the mechanism that consumed them.
+    ///
+    /// Every key is an `EventDropReason::name()`. Zero-valued reasons are
+    /// omitted, and the whole map is omitted when nothing was dropped, so
+    /// a trace that lost nothing serializes as it did before.
+    ///
+    /// This exists because `events_dropped` above reads `0` whether
+    /// nothing was dropped or nothing was counted, and `completeness`
+    /// could read `complete` with compiler invocations missing (#1185).
+    /// A named count distinguishes "the mechanism did not fire" from "no
+    /// mechanism was watching". Read it alongside
+    /// `ring_buffer_overflows`, which covers the one drop path that was
+    /// already measured (m212).
+    #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
+    pub event_drop_reasons: std::collections::BTreeMap<String, u64>,
 }
 
 fn is_zero(n: &u64) -> bool {
@@ -189,6 +205,61 @@ mod tests {
         assert!(
             json.contains("\"open_failures_discarded\":51"),
             "a non-zero count must appear: {json}"
+        );
+    }
+
+    /// #618: a trace that dropped nothing must serialize exactly as it
+    /// did before this field existed, and a reason that did not fire must
+    /// be absent rather than present-and-zero.
+    ///
+    /// Both halves matter. Present-and-zero is the shape that made
+    /// `events_dropped` unreadable: a consumer cannot tell a measured
+    /// zero from an unmeasured one, which is the whole of #618.
+    #[test]
+    fn event_drop_reasons_is_absent_when_nothing_was_dropped() {
+        let mut integrity = TraceIntegrity::default();
+        let json = serde_json::to_string(&integrity).expect("serialize");
+        assert!(
+            !json.contains("event_drop_reasons"),
+            "a lossless trace must not carry the field at all: {json}"
+        );
+
+        integrity
+            .event_drop_reasons
+            .insert("kernel_path_unreadable".to_string(), 7);
+        let json = serde_json::to_string(&integrity).expect("serialize");
+        assert!(
+            json.contains("\"kernel_path_unreadable\":7"),
+            "a reason that fired must be named with its count: {json}"
+        );
+
+        // And it round-trips, so a consumer reading it back gets the same
+        // map rather than an empty default.
+        let back: TraceIntegrity = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(back.event_drop_reasons.get("kernel_path_unreadable"), Some(&7));
+    }
+
+    /// #618: every reason name is distinct, and none is empty. The names
+    /// are the wire contract a consumer joins on, so a copy-paste
+    /// collision between two variants would silently merge two mechanisms
+    /// into one count.
+    #[test]
+    fn every_drop_reason_has_a_distinct_name() {
+        use crate::events::EventDropReason;
+        let all: Vec<&str> = EventDropReason::KERNEL
+            .iter()
+            .chain(EventDropReason::USER.iter())
+            .map(|r| r.name())
+            .collect();
+        let mut sorted = all.clone();
+        sorted.sort_unstable();
+        sorted.dedup();
+        assert_eq!(sorted.len(), all.len(), "two reasons share a name: {all:?}");
+        assert!(all.iter().all(|n| !n.is_empty()));
+        assert_eq!(
+            EventDropReason::KERNEL.len() as u32,
+            EventDropReason::KERNEL_SLOTS,
+            "KERNEL_SLOTS must match the array the kernel map is sized for"
         );
     }
 

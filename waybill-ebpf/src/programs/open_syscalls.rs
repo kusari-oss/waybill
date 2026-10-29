@@ -49,7 +49,8 @@ use aya_ebpf::{
 use waybill_common::events::{FileEvent, FileEventType, AT_FDCWD};
 
 use crate::helpers::{
-    current_comm, current_pid, current_tid, increment_drop_counter, should_trace,
+    current_comm, current_pid, current_tid, increment_drop_counter, increment_event_drop,
+    should_trace,
 };
 use crate::maps::{
     PendingOpen, FILE_EVENTS, FILE_EVENT_DROPS, OPEN_DIAG, OPEN_FAILURES_DISCARDED,
@@ -62,6 +63,13 @@ use crate::programs::file_ops::classify_and_drop_if_noise;
 /// `sys_exit_*` carries `long ret` at 16. Measured against every
 /// tracepoint this module attaches to — see
 /// `specs/1270-stable-probe-tracepoints/measurements/findings.md`.
+/// `EventDropReason::KERNEL` slot indices. Named here rather than
+/// imported as the enum because `waybill-common` is `no_std`-shared but
+/// the enum carries `&'static str` names the kernel has no use for.
+const KERNEL_PATH_UNREADABLE: u8 = 0;
+const KERNEL_NULL_PATH: u8 = 1;
+const KERNEL_EXIT_WITHOUT_REQUEST: u8 = 2;
+
 const ARG0: usize = 16;
 const ARG1: usize = 24;
 const ARG2: usize = 32;
@@ -126,12 +134,16 @@ fn finish_open(ctx: &TracePointContext) {
     // SAFETY: `HashMap::get` is unsafe because the returned reference
     // borrows map memory the kernel may reuse; copied out immediately.
     let Some(p) = (unsafe { PENDING_OPEN.get(&tid).copied() }) else {
+        // Expected for syscalls already in flight when the trace started.
+        // A large count means entry events are being lost (#1185).
+        increment_event_drop(KERNEL_EXIT_WITHOUT_REQUEST);
         return;
     };
     // Unconditionally, and before the result is inspected: a failed open
     // must not leave an entry behind (FR-005c).
     let _ = PENDING_OPEN.remove(&tid);
     if p.path_ptr == 0 {
+        increment_event_drop(KERNEL_NULL_PATH);
         return;
     }
 
@@ -173,6 +185,16 @@ fn emit_open(p: &PendingOpen, tid: u32) {
         let copied = bpf_probe_read_user_str_bytes(p.path_ptr as *const u8, &mut (*event).path)
             .map(|s| s.len())
             .unwrap_or(0);
+        // #618 / #1185: reading the path at syscall exit assumes the user
+        // pages are still mapped. When they are not the record would
+        // carry an empty path, which userspace skips silently. Count it
+        // here, where the cause is known, rather than leaving userspace to
+        // infer it from an empty string.
+        if copied == 0 {
+            increment_event_drop(KERNEL_PATH_UNREADABLE);
+            buf.discard(0);
+            return;
+        }
         // A copy that filled the buffer may have been cut off; userspace
         // will not resolve a truncated relative path (m1070).
         (*event).path_truncated = if copied >= 255 { 1 } else { 0 };

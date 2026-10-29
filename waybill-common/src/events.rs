@@ -284,6 +284,100 @@ impl CompilerExecEvent {
     }
 }
 
+/// #618 / #1185 — a reason an observed event never reached the recorded
+/// sets, named so a consumer can tell which mechanism consumed it.
+///
+/// Every variant corresponds to a site that used to `continue` or
+/// `return` with nothing incremented. That is why an attestation could
+/// read `completeness: complete` while compiler invocations were missing
+/// from it: the drops were real and the artifact had no vocabulary for
+/// them. A zero here means the mechanism did not fire; an absent field
+/// means this build does not measure it.
+///
+/// The kernel-side variants occupy slots `0..KERNEL_SLOTS` of the
+/// `EVENT_DROPS` per-CPU array, in discriminant order, following the
+/// m213 `FILTER_CATEGORY_HITS` pattern. The userspace variants are
+/// counted in process memory and never cross the map boundary.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug)]
+#[repr(u8)]
+pub enum EventDropReason {
+    // ---- kernel side: slots in EVENT_DROPS, discriminant order ----
+    /// The path string could not be read from user memory, so the event
+    /// would carry an empty path. Reading at syscall exit assumes the
+    /// pages are still mapped; this counts the times they were not.
+    KernelPathUnreadable = 0,
+    /// The syscall was handed a null path pointer.
+    KernelNullPath = 1,
+    /// A syscall exit arrived with no stored request for that thread, so
+    /// there was nothing to join the result to. Expected at trace start
+    /// for syscalls already in flight; a large count means entry events
+    /// are being lost.
+    KernelExitWithoutRequest = 2,
+
+    // ---- userspace side ----
+    /// The record's leading kind was a value this build does not know.
+    UserUnknownRecordKind = 16,
+    /// The record was shorter than the struct it claims to be.
+    UserShortRecord = 17,
+    /// The event's pid was outside the operator's `--target-pid` set.
+    UserPidNotAdmitted = 18,
+    /// The event carried an empty or unparseable path. This is where a
+    /// kernel-side `KernelPathUnreadable` lands if it is submitted
+    /// anyway, so the two should move together.
+    UserEmptyPath = 19,
+    /// The compiler aggregator's replay buffer was at capacity.
+    UserHeldAtCapacity = 21,
+    /// Held for replay and never claimed, because the exec record it was
+    /// waiting for never arrived.
+    UserHeldUnreplayed = 22,
+    /// The drain loop reached its deadline while events were still
+    /// arriving, so the remainder was abandoned when the programs
+    /// unloaded. This is #618's original subject.
+    UserDrainAbandoned = 23,
+}
+
+impl EventDropReason {
+    /// Number of kernel-side slots in the `EVENT_DROPS` map.
+    pub const KERNEL_SLOTS: u32 = 3;
+
+    /// The kernel-side variants, in slot order.
+    pub const KERNEL: [EventDropReason; 3] = [
+        Self::KernelPathUnreadable,
+        Self::KernelNullPath,
+        Self::KernelExitWithoutRequest,
+    ];
+
+    /// The userspace variants.
+    pub const USER: [EventDropReason; 7] = [
+        Self::UserUnknownRecordKind,
+        Self::UserShortRecord,
+        Self::UserPidNotAdmitted,
+        Self::UserEmptyPath,
+        Self::UserHeldAtCapacity,
+        Self::UserHeldUnreplayed,
+        Self::UserDrainAbandoned,
+    ];
+
+    /// The name emitted in `TraceIntegrity.event_drop_reasons`. Stable
+    /// wire values: a consumer joins on these, so they are not derived
+    /// from the variant name by a macro that a rename could silently
+    /// change.
+    pub fn name(self) -> &'static str {
+        match self {
+            Self::KernelPathUnreadable => "kernel_path_unreadable",
+            Self::KernelNullPath => "kernel_null_path",
+            Self::KernelExitWithoutRequest => "kernel_exit_without_request",
+            Self::UserUnknownRecordKind => "user_unknown_record_kind",
+            Self::UserShortRecord => "user_short_record",
+            Self::UserPidNotAdmitted => "user_pid_not_admitted",
+            Self::UserEmptyPath => "user_empty_path",
+            Self::UserHeldAtCapacity => "user_held_at_capacity",
+            Self::UserHeldUnreplayed => "user_held_unreplayed",
+            Self::UserDrainAbandoned => "user_drain_abandoned",
+        }
+    }
+}
+
 /// Milestone 213: filter-category discriminant transported kernel↔user
 /// via the `FILTER_CATEGORY_HITS` per-CPU array's slot index.
 ///

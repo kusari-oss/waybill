@@ -258,6 +258,18 @@ pub static OPEN_FAILURES_DISCARDED: PerCpuArray<u64> =
 #[map]
 pub static OPEN_REQUEST_ONLY: PerCpuArray<u8> = PerCpuArray::with_max_entries(1, 0);
 
+/// #618 / #1185 — per-CPU counters for kernel-side drops that used to be
+/// invisible, one slot per `EventDropReason::KERNEL` variant in
+/// discriminant order. Same shape and same reasoning as m213's
+/// `FILTER_CATEGORY_HITS`.
+///
+/// Each slot counts a site that returned early without recording
+/// anything. The point is not the number but the distinction: a zero
+/// here means the mechanism did not fire, where before there was no way
+/// to tell that from nobody looking.
+#[map]
+pub static EVENT_DROPS: PerCpuArray<u64> = PerCpuArray::with_max_entries(3, 0);
+
 /// #1252 — per-CPU u8 config flag, slot 0: `1` makes a discarded open
 /// reportable as an `OpenFailed` record carrying the path and the errno,
 /// `0` (the default) drops it after counting. Same shape as `FILTER_WIDEN`

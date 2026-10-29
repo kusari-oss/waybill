@@ -91,6 +91,8 @@ pub struct CompilerPipelineAggregator {
     /// a crate root missing from its compile's read set. They are replayed
     /// when the exec arrives.
     held: Vec<ObservedOp>,
+    /// #618 / #1185 — ops discarded because `held` was at `HELD_CAP`.
+    dropped_at_held_cap: u64,
 }
 
 /// Bound on `held`. Only compiler-named processes are held, and only until
@@ -151,6 +153,7 @@ impl CompilerPipelineAggregator {
             attach_late: false,
             probe_attach_failed: false,
             held: Vec::new(),
+            dropped_at_held_cap: 0,
         }
     }
 
@@ -194,9 +197,14 @@ impl CompilerPipelineAggregator {
             // one whose exec record is still in the other ring buffer: hold
             // it for replay (see `held`). Anything else is not compiler
             // activity.
-            if classify_compiler_family(&op.comm, "") != CompilerFamily::Unknown
-                && self.held.len() < HELD_CAP
-            {
+            let compiler_named = classify_compiler_family(&op.comm, "") != CompilerFamily::Unknown;
+            if compiler_named && self.held.len() >= HELD_CAP {
+                // #618: the replay buffer is full, so this op is gone. The
+                // cap is a safety limit rather than a working size, so
+                // reaching it is itself the finding.
+                self.dropped_at_held_cap += 1;
+            }
+            if compiler_named && self.held.len() < HELD_CAP {
                 self.held.push(op.clone());
             }
             return;
@@ -318,6 +326,17 @@ impl CompilerPipelineAggregator {
     /// (#1252). Emits `CompletenessState::Partial` with
     /// `PartialReason::ProbeAttachFailed` at finalize. The probe names
     /// themselves travel in `TraceIntegrity.kprobe_attach_failures[]`.
+    /// #618 / #1185 — ops discarded because the replay buffer was full.
+    pub fn dropped_at_held_cap(&self) -> u64 {
+        self.dropped_at_held_cap
+    }
+
+    /// #618 / #1185 — ops still held at trace end, waiting for an exec
+    /// record that never arrived. They reached no read or write set.
+    pub fn held_unreplayed(&self) -> usize {
+        self.held.len()
+    }
+
     pub fn mark_probe_attach_failed(&mut self) {
         self.probe_attach_failed = true;
     }
@@ -875,6 +894,60 @@ mod tests {
                 reason: PartialReason::ProbeAttachFailed,
             }
         );
+    }
+
+    /// #618 / #1185 (controls): each drop counter must be able to fire.
+    ///
+    /// A counter that cannot fire is worse than no counter — it reports a
+    /// confident zero. Each case here forces one mechanism and asserts the
+    /// others stay at zero, so a single counter cannot satisfy the whole
+    /// test by incrementing on everything.
+    #[test]
+    fn a_non_compiler_op_is_counted_as_claimed_by_no_invocation() {
+        use crate::trace::observed::ObservedKind;
+        let mut agg = CompilerPipelineAggregator::new(FilterConfig::default());
+        let mut o = op(ObservedKind::Read, 100, "/ws/src/lib.rs", false);
+        o.comm = "bash".to_string();
+        agg.handle_op(&o);
+        // Deliberately NOT counted as a drop: the op still reaches the
+        // document-level set, so nothing was lost. It simply belongs to no
+        // compiler invocation, which is true of all of cargo's own file
+        // activity on every healthy capture.
+        assert_eq!(agg.held_unreplayed(), 0, "a non-compiler op is not held");
+        assert_eq!(agg.dropped_at_held_cap(), 0);
+    }
+
+    /// The other side of the same branch: a compiler-named op with no exec
+    /// record yet is *held*, not dropped, and is still unreplayed at the
+    /// end if the exec never comes.
+    #[test]
+    fn a_compiler_op_with_no_exec_record_is_held_and_counted_unreplayed() {
+        use crate::trace::observed::ObservedKind;
+        let mut agg = CompilerPipelineAggregator::new(FilterConfig::default());
+        let mut o = op(ObservedKind::Read, 100, "/ws/src/lib.rs", false);
+        o.comm = "rustc".to_string();
+        agg.handle_op(&o);
+        assert_eq!(agg.held_unreplayed(), 1, "held for a replay that never came");
+        assert_eq!(
+            agg.dropped_at_held_cap(),
+            0,
+            "a held op is not yet lost, so nothing must be counted against it"
+        );
+    }
+
+    /// Control for both of the above: an op belonging to a known
+    /// invocation increments nothing. Without this the two tests would
+    /// also pass against a counter that incremented on every op.
+    #[test]
+    fn an_op_with_a_known_invocation_counts_no_drop() {
+        use crate::trace::observed::ObservedKind;
+        let mut agg = CompilerPipelineAggregator::new(FilterConfig::default());
+        agg.handle_compiler_event(&make_exec_event(100, 50, "rustc"));
+        let mut o = op(ObservedKind::Read, 100, "/ws/src/lib.rs", false);
+        o.comm = "rustc".to_string();
+        agg.handle_op(&o);
+        assert_eq!(agg.held_unreplayed(), 0);
+        assert_eq!(agg.dropped_at_held_cap(), 0);
     }
 
     /// #1252 (T028): losing network-connect capture degrades the trace and

@@ -494,6 +494,7 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
         count: &mut u64,
         max: usize,
         target_pids: &std::collections::HashSet<u32>,
+        drops: &mut crate::trace::counters::EventDropCounts,
     ) -> usize {
         fn resolved(r: Resolution, raw: &str) -> (String, bool) {
             match r {
@@ -510,7 +511,12 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
             let data: &[u8] = item.as_ref();
             let Some(head) = data.get(..4) else { continue };
             let raw_kind = u32::from_ne_bytes([head[0], head[1], head[2], head[3]]);
-            let Some(kind) = FileEventType::from_raw(raw_kind) else { continue };
+            let Some(kind) = FileEventType::from_raw(raw_kind) else {
+                // #618: a record kind this build does not know. Skipping it
+                // is right; doing so invisibly was not.
+                drops.record(waybill_common::events::EventDropReason::UserUnknownRecordKind);
+                continue;
+            };
             match kind {
                 FileEventType::Fork => {
                     if data.len() >= core::mem::size_of::<LineageEvent>() {
@@ -553,6 +559,7 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
                 }
                 _ => {
                     if data.len() < core::mem::size_of::<FileEvent>() {
+                        drops.record(waybill_common::events::EventDropReason::UserShortRecord);
                         continue;
                     }
                     // SAFETY: length checked; the kind was validated above.
@@ -590,11 +597,21 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
                         }
                         _ => {
                             if !admitted(ev.pid) {
+                                drops.record(waybill_common::events::EventDropReason::UserPidNotAdmitted);
                                 continue;
                             }
+                            // Not a drop: a record kind that is not a file
+                            // operation has nothing to contribute to a read
+                            // or write set by construction.
                             let Some(op_kind) = observed::kind_of(&ev) else { continue };
                             let raw = ev.path_str();
                             if raw.is_empty() || raw == "<invalid>" {
+                                // #618 / #1185: where a kernel-side
+                                // `kernel_path_unreadable` lands if the event
+                                // is submitted anyway. The two should move
+                                // together; if this one moves alone, the path
+                                // was lost between the read and here.
+                                drops.record(waybill_common::events::EventDropReason::UserEmptyPath);
                                 continue;
                             }
                             let (path, unresolved) =
@@ -641,6 +658,9 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
         .take_map("COMPILER_EXEC_EVENTS")
         .and_then(|m| RingBuf::try_from(m).ok());
 
+    // #618 / #1185 — every site below that skips an event records why.
+    let mut event_drops = crate::trace::counters::EventDropCounts::default();
+
     loop {
         let done = if let Some(ref mut c) = child {
             c.try_wait().ok().flatten().is_some()
@@ -669,12 +689,13 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
             &mut compiler_count,
             MAX_PER_ITER,
         );
-        drain_file(&mut file_rb, &mut agg, &mut compiler_agg, &mut cwd, &mut file_count, MAX_PER_ITER, active_filter);
+        drain_file(&mut file_rb, &mut agg, &mut compiler_agg, &mut cwd, &mut file_count, MAX_PER_ITER, active_filter, &mut event_drops);
 
         if done {
             // Settling drain: pull remaining events with a hard deadline so
             // we never loop forever if probes keep firing from unrelated PIDs.
             let deadline = Instant::now() + Duration::from_millis(250);
+            let mut settled = false;
             while Instant::now() < deadline {
                 let n = drain_network(&mut network_rb, &mut agg, &mut net_count, MAX_PER_ITER, active_filter)
                     + drain_compiler(
@@ -683,10 +704,22 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
                         &mut compiler_count,
                         MAX_PER_ITER,
                     )
-                    + drain_file(&mut file_rb, &mut agg, &mut compiler_agg, &mut cwd, &mut file_count, MAX_PER_ITER, active_filter);
+                    + drain_file(&mut file_rb, &mut agg, &mut compiler_agg, &mut cwd, &mut file_count, MAX_PER_ITER, active_filter, &mut event_drops);
                 if n == 0 {
+                    settled = true;
                     break;
                 }
+            }
+            // #618's original subject: the deadline expired while events
+            // were still arriving, so whatever remained went away with the
+            // programs. The size of the remainder is not knowable from
+            // here — that it happened at all is, and was not before.
+            if !settled {
+                event_drops.record(waybill_common::events::EventDropReason::UserDrainAbandoned);
+                tracing::warn!(
+                    "drain deadline expired with events still arriving; the \
+                     remainder was abandoned and the capture is a floor"
+                );
             }
             break;
         }
@@ -790,6 +823,37 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
         counter_attach_failures.push(name);
     }
 
+    // #618 / #1185 — merge the kernel-side drop slots into the userspace
+    // counts. An unreadable map is reported rather than read as zero.
+    if let Some(name) =
+        crate::trace::counters::merge_kernel_event_drops(&mut handle.bpf, &mut event_drops)
+    {
+        counter_attach_failures.push(name);
+    }
+    // The compiler aggregator's own silent drops. Note what is NOT here:
+    // an op whose process is not compiler-named belongs to no invocation
+    // by construction, and it still reaches the document-level set, so it
+    // is not a loss. Counting it warned that every healthy capture was "a
+    // floor, not a total", which is the kind of false alarm that teaches
+    // people to ignore the real one.
+    event_drops.record_n(
+        waybill_common::events::EventDropReason::UserHeldUnreplayed,
+        compiler_agg.held_unreplayed() as u64,
+    );
+    event_drops.record_n(
+        waybill_common::events::EventDropReason::UserHeldAtCapacity,
+        compiler_agg.dropped_at_held_cap(),
+    );
+    let event_drop_total = event_drops.total();
+    if event_drop_total > 0 {
+        tracing::warn!(
+            reasons = ?event_drops,
+            "#618 observed events did not reach the recorded sets; the \
+             capture is a floor, not a total"
+        );
+    }
+    let event_drop_reasons = event_drops.into_wire();
+
     let mut trace = agg.finalize(&TraceStats {
         network_events: net_count,
         file_events: file_count,
@@ -802,6 +866,7 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
         filter_categories_applied,
         probe_attach_failures,
         open_failures_discarded,
+        event_drop_reasons,
     });
 
     if trace.network_trace.connections.is_empty()

@@ -83,3 +83,19 @@ pub fn increment_filter_category_hit(cat: u8) {
         }
     }
 }
+
+/// #618 / #1185 — increment the `EVENT_DROPS` slot for a kernel-side
+/// drop reason. `slot` is the `EventDropReason` discriminant, which for
+/// the kernel-side variants is its index in `EventDropReason::KERNEL`.
+///
+/// Every call sits at a site that returns without recording anything.
+/// Before these counters an attestation could report `complete` while
+/// such a site had fired thousands of times (#1185).
+#[inline(always)]
+pub fn increment_event_drop(slot: u8) {
+    if let Some(counter) = crate::maps::EVENT_DROPS.get_ptr_mut(slot as u32) {
+        unsafe {
+            *counter = (*counter).saturating_add(1);
+        }
+    }
+}

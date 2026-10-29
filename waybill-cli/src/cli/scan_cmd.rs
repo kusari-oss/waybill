@@ -4208,6 +4208,9 @@ pub async fn execute(
         // nothing could have been discarded. Zero is a fact here, not an
         // unmeasured default, for the same reason as the fields above.
         open_failures_discarded: 0,
+        // #618 — scan mode runs no eBPF, so there is no event stream to
+        // drop from. Empty is a fact here, not an unmeasured default.
+        event_drop_reasons: std::collections::BTreeMap::new(),
     };
 
     // Milestone 073: resolve identifiers — auto-detected
