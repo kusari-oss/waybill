@@ -78,6 +78,10 @@ pub struct CompilerPipelineAggregator {
     /// already started? Set at trace-start if any `Exec` event
     /// reference a pid that had already been observed.
     attach_late: bool,
+    /// #1252 signal: did a probe the capture depends on fail to attach?
+    /// A read set assembled without one of the open-family kprobes is a
+    /// floor, not a total, and must not be reported as `Complete`.
+    probe_attach_failed: bool,
     /// Milestone 1070: operations by a compiler-named process whose exec
     /// record hasn't been processed yet. Exec records and file records come
     /// through different ring buffers. When a compiler starts between the
@@ -145,6 +149,7 @@ impl CompilerPipelineAggregator {
             secrets_read_filtered: 0,
             filter_categories_applied: std::collections::HashSet::new(),
             attach_late: false,
+            probe_attach_failed: false,
             held: Vec::new(),
         }
     }
@@ -307,6 +312,14 @@ impl CompilerPipelineAggregator {
     /// with `PartialReason::AttachLate` at finalize.
     pub fn mark_attach_late(&mut self) {
         self.attach_late = true;
+    }
+
+    /// Signal that one or more probes did not attach on this kernel
+    /// (#1252). Emits `CompletenessState::Partial` with
+    /// `PartialReason::ProbeAttachFailed` at finalize. The probe names
+    /// themselves travel in `TraceIntegrity.kprobe_attach_failures[]`.
+    pub fn mark_probe_attach_failed(&mut self) {
+        self.probe_attach_failed = true;
     }
 
     /// Number of invocations captured so far. Test-only accessor.
@@ -517,6 +530,15 @@ impl CompilerPipelineAggregator {
         if self.attach_late {
             return CompletenessState::Partial {
                 reason: PartialReason::AttachLate,
+            };
+        }
+        // #1252 — before the drop check: a probe that never attached loses
+        // events the drop counters never see, so `events_dropped == 0`
+        // alongside a missing probe is the exact pair that read as
+        // `Complete` while half the file opens were absent.
+        if self.probe_attach_failed {
+            return CompletenessState::Partial {
+                reason: PartialReason::ProbeAttachFailed,
             };
         }
         if self.events_dropped > 0 {
@@ -835,6 +857,59 @@ mod tests {
                 reason: PartialReason::AttachLate,
             }
         );
+    }
+
+    /// #1252. The regression this encodes: on GitHub's ubuntu-24.04 image
+    /// 20261025.353 the `do_filp_open` kprobe stopped attaching, file
+    /// events fell 902 -> 443 on an identical build, and the trace
+    /// finalized as `Complete` anyway.
+    #[test]
+    fn probe_attach_failure_derives_partial_completeness() {
+        let mut agg = CompilerPipelineAggregator::new(FilterConfig::default());
+        agg.handle_compiler_event(&make_exec_event(100, 50, "rustc"));
+        agg.mark_probe_attach_failed();
+        let data = agg.finalize();
+        assert_eq!(
+            data.completeness,
+            CompletenessState::Partial {
+                reason: PartialReason::ProbeAttachFailed,
+            }
+        );
+    }
+
+    /// The pair that actually misread: a probe that never attached loses
+    /// events no drop counter observes, so `events_dropped == 0` is not
+    /// evidence of a complete capture. Asserted as a precedence check
+    /// because `Degraded { dropped: 0 }` would be the wrong answer too.
+    #[test]
+    fn a_missing_probe_outranks_a_zero_drop_count() {
+        let mut agg = CompilerPipelineAggregator::new(FilterConfig::default());
+        agg.handle_compiler_event(&make_exec_event(100, 50, "rustc"));
+        agg.record_events_dropped(0);
+        agg.mark_probe_attach_failed();
+        let data = agg.finalize();
+        assert_ne!(
+            data.completeness,
+            CompletenessState::Complete,
+            "a capture missing a probe must never report Complete"
+        );
+        assert_eq!(
+            data.completeness,
+            CompletenessState::Partial {
+                reason: PartialReason::ProbeAttachFailed,
+            }
+        );
+    }
+
+    /// Control: without the mark, the same aggregator still reaches
+    /// `Complete`. Without this, the two tests above would pass just as
+    /// well against a `derive_completeness` that never returns `Complete`.
+    #[test]
+    fn an_intact_capture_still_reports_complete() {
+        let mut agg = CompilerPipelineAggregator::new(FilterConfig::default());
+        agg.handle_compiler_event(&make_exec_event(100, 50, "rustc"));
+        let data = agg.finalize();
+        assert_eq!(data.completeness, CompletenessState::Complete);
     }
 
     #[test]

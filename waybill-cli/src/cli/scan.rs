@@ -312,7 +312,17 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
         // to the kernel-side FILTER_WIDEN[0] slot per FR-010.
         include_system_reads: args.include_system_reads,
     })?;
-    tracing::info!("eBPF probes attached");
+    // #1252 — the probe names, kept for the attestation. Cloned here
+    // because `handle.bpf` is borrowed mutably further down.
+    let probe_attach_failures = handle.attach_failures.kprobe.clone();
+    if probe_attach_failures.is_empty() {
+        tracing::info!("eBPF probes attached");
+    } else {
+        tracing::warn!(
+            failed = ?probe_attach_failures,
+            "eBPF probes attached with gaps; this capture is a floor, not a total"
+        );
+    }
 
     // THEN spawn child
     let mut child = if args.target_pid.is_none() {
@@ -350,6 +360,11 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
         include_system_reads: args.include_system_reads,
         home_dir: std::env::var("HOME").ok().map(std::path::PathBuf::from),
     });
+    // #1252 — a read set assembled without one of the open-family kprobes
+    // is incomplete by construction, so it must not finalize as `Complete`.
+    if !probe_attach_failures.is_empty() {
+        compiler_agg.mark_probe_attach_failed();
+    }
     // Milestone 1070 — working directory per traced process, from observed
     // forks and directory changes, used to resolve relative paths.
     let mut cwd = CwdTracker::new();
@@ -745,6 +760,7 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
         events_dropped: 0,
         counter_attach_failures,
         filter_categories_applied,
+        probe_attach_failures,
     });
 
     if trace.network_trace.connections.is_empty()

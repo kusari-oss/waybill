@@ -35,6 +35,8 @@ jobs:
   #   - lint-and-test-ebpf         (Linux, --features ebpf-tracing, stable + nightly + bpf-linker)
   #   - lint-and-test-keyless-sbom (Linux, Sigstore staging, id-token: write)
   #   - ci-ok                      (aggregate of the above minus ebpf; the required check)
+  #   - main-red                   (push-to-main only; files a deduped issue when any
+  #                                 lane fails, including the ones ci-ok does not gate)
   #
   # The default lanes drop the nightly + bpf-linker + xtask ebpf cost
   # entirely. The ebpf lane runs in parallel and is the regression gate
@@ -741,3 +743,165 @@ jobs:
         run: |
           jq -r 'to_entries[] | "\(.key): \(.value.result)"' <<< "$NEEDS"
           jq -e 'all(.[]; .result == "success" or .result == "skipped")' <<< "$NEEDS" > /dev/null
+
+  # #1252 — a red main must announce itself.
+  #
+  # `ci-ok` above is deliberately the aggregate of every lane EXCEPT the
+  # eBPF one (#1161: "The eBPF lane stays optional"), which is right for
+  # pull requests: the eBPF lane depends on a GitHub-hosted runner image
+  # that GitHub rolls without notice, and blocking every PR on their
+  # rollover schedule is not a trade worth making.
+  #
+  # The cost of that choice was invisible. The lane always runs on push to
+  # main, so it can fail there forever with nothing gated on it and nothing
+  # watching: #1252 sat red for seven consecutive runs across two releases
+  # before anyone looked, and its own description got the onset date wrong
+  # by a week because the evidence had scrolled away. A lane whose failure
+  # nobody is told about is not a signal, it is a log line.
+  #
+  # So: on push to main only, if any lane failed, open or update one
+  # deduped issue; when main is green again, close it. Dedupe and the
+  # frozen title follow `ebpf-canary.yml`, which solved this for the
+  # nightly build (m234/m896). This watches the optional lanes the required
+  # check cannot, and it generalises — any lane added to `needs` below is
+  # covered without further work.
+  main-red:
+    name: main-red
+    # `always()` so a failed lane still reaches this job; the ref guard
+    # keeps it off pull requests, where ci-ok is the gate and an issue per
+    # red PR would be noise.
+    if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs:
+      - changes
+      - lint-and-test
+      - lint-and-test-macos
+      - lint-and-test-windows
+      - lint-and-test-keyless-sbom
+      - lint-and-test-ebpf
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          # Routed through env: so github-script reads process.env rather
+          # than having the values interpolated into the JS source — same
+          # defense-in-depth as ebpf-canary.yml.
+          NEEDS: ${{ toJSON(needs) }}
+          HEAD_SHA: ${{ github.sha }}
+        with:
+          script: |
+            // FROZEN: dedupe is exact-title-match within the label set.
+            const TITLE = '[ci] main is red';
+            const LABELS = ['github_actions', 'regression'];
+
+            const needs = JSON.parse(process.env.NEEDS || '{}');
+            const sha = (process.env.HEAD_SHA || '').slice(0, 8);
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+
+            // `skipped` is a pass: every lane here skips only by its own
+            // `if:` condition.
+            //
+            // `cancelled` is neither. This workflow sets
+            // `cancel-in-progress: true`, so two pushes to main in quick
+            // succession cancel the first run's lanes — which proves nothing
+            // about the code and must not file a report. It must not close an
+            // open one either, for the same reason: nothing was learned.
+            const results = Object.entries(needs);
+            if (results.some(([, v]) => v.result === 'cancelled')) {
+              core.notice('a lane was cancelled (likely superseded by a newer push); no action');
+              return;
+            }
+            const failed = results
+              .filter(([, v]) => v.result !== 'success' && v.result !== 'skipped')
+              .map(([k, v]) => `${k} (${v.result})`);
+
+            const open = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: LABELS.join(','),
+              per_page: 100,
+            });
+            const match = open.data.find(i => i.title === TITLE);
+
+            if (failed.length === 0) {
+              // Self-healing. Without this the report goes stale and stops
+              // being read, which is the failure this job exists to fix.
+              if (match) {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: match.number,
+                  body: `main is green again as of \`${sha}\`.\n\n${runUrl}`,
+                });
+                await github.rest.issues.update({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: match.number,
+                  state: 'closed',
+                  state_reason: 'completed',
+                });
+                core.info(`main green; closed #${match.number}`);
+              } else {
+                core.info('main green; nothing open');
+              }
+              return;
+            }
+
+            const body = [
+              `Lane(s) failing on \`main\` at \`${sha}\`:`,
+              ``,
+              ...failed.map(f => `- \`${f}\``),
+              ``,
+              `Run: ${runUrl}`,
+              ``,
+              `Every lane's result this run:`,
+              ``,
+              '```',
+              ...Object.entries(needs).map(([k, v]) => `${k}: ${v.result}`),
+              '```',
+            ].join('\n');
+
+            if (match) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: match.number,
+                body: `## Still red — \`${sha}\`\n\n${body}`,
+              });
+              core.info(`appended to #${match.number}`);
+            } else {
+              const created = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: TITLE,
+                body: [
+                  `A lane failed on a push to \`main\`.`,
+                  ``,
+                  `This is filed automatically because \`ci-ok\` does not cover`,
+                  `every lane — the eBPF lane is optional by design (#1161) and so`,
+                  `its failure blocks nothing. That is the right call for pull`,
+                  `requests and a silent one for \`main\`.`,
+                  ``,
+                  `## Details`,
+                  ``,
+                  body,
+                  ``,
+                  `---`,
+                  `_Auto-opened by \`ci.yml\`'s main-red job. Later red runs append`,
+                  `comments; a green run closes this._`,
+                  `_Do not edit the title — dedupe matches on it._`,
+                ].join('\n'),
+                labels: LABELS,
+              });
+              core.info(`opened #${created.data.number}`);
+            }
+            // Deliberately NOT core.setFailed. The red lane already failed
+            // this run; making the watcher fail too would mean a red main and
+            // a broken watcher look identical, which is the mistake m896 had
+            // to undo for the canary (#685: 35 nights of the canary reporting
+            // its own breakage as an upstream regression). A green main-red
+            // job means "the alarm ran"; a red one means the alarm is broken.
+            core.notice(`main is red: ${failed.join(', ')}`);

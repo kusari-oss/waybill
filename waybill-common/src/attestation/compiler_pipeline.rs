@@ -181,15 +181,23 @@ pub enum CompletenessState {
     },
 }
 
-/// Why the trace is `Partial`. Currently one variant; extended
-/// via serde-additive semantics if future partial-completion
-/// modes emerge.
+/// Why the trace is `Partial`. Extended via serde-additive
+/// semantics as further partial-completion modes emerge.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum PartialReason {
     /// FR-017 — trace attached AFTER one or more compilers had
     /// started; early events preceding attach are missing.
     AttachLate,
+    /// #1252 — a probe the capture depends on did not attach on this
+    /// kernel, so the read sets are a floor rather than a total. The
+    /// probe names are in `TraceIntegrity.kprobe_attach_failures[]`.
+    ///
+    /// This exists because the alternative was worse than useless: on
+    /// GitHub's ubuntu-24.04 image 20261025.353 the `do_filp_open`
+    /// kprobe stopped attaching, file events fell from 902 to 443 for
+    /// an identical build, and the trace still reported `Complete`.
+    ProbeAttachFailed,
 }
 
 /// Categorizes which FR-016 filter groups produced drops during

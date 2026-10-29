@@ -108,6 +108,7 @@ fi
 COMPLETENESS=$(jq -r '.predicate.compiler_pipeline.completeness.state' "$OUTPUT")
 echo "    completeness: $COMPLETENESS"
 
+REASON=""
 case "$COMPLETENESS" in
     complete)
         # OK
@@ -125,6 +126,32 @@ case "$COMPLETENESS" in
         exit 1
         ;;
 esac
+
+# #1252 — the honesty invariant. Not a check on the kernel: it passes on a
+# kernel where every probe attaches and on one where none do. It fails only
+# if the artifact's two statements about its own fidelity disagree.
+#
+# It exists because they did disagree, silently, for every run on GitHub's
+# ubuntu-24.04 image 20261025.353: `do_filp_open` would not attach, file
+# events fell from 902 to 443 on an identical build, and the attestation
+# still carried `kprobe_attach_failures: []` with `completeness: complete`.
+# The only thing that noticed was the SC-001 read-set assertion below, which
+# names a missing file and says nothing about why.
+ATTACH_FAILURES=$(jq -c '.predicate.trace_integrity.kprobe_attach_failures' "$OUTPUT")
+ATTACH_FAILURE_COUNT=$(jq '.predicate.trace_integrity.kprobe_attach_failures | length' "$OUTPUT")
+echo "    kprobe_attach_failures: $ATTACH_FAILURES"
+
+if [[ "$ATTACH_FAILURE_COUNT" -gt 0 && "$COMPLETENESS" == "complete" ]]; then
+    echo "FAIL: $ATTACH_FAILURE_COUNT probe(s) did not attach, yet completeness reads 'complete' (#1252)"
+    echo "      failures: $ATTACH_FAILURES"
+    exit 1
+fi
+if [[ "$COMPLETENESS" == "partial" && "$REASON" == "probe_attach_failed" \
+      && "$ATTACH_FAILURE_COUNT" -eq 0 ]]; then
+    echo "FAIL: completeness reads 'partial/probe_attach_failed' but kprobe_attach_failures is empty (#1252)"
+    exit 1
+fi
+echo "    #1252 honesty invariant: completeness and kprobe_attach_failures agree"
 
 # Milestone 212 (issue #615) — assert the real ring_buffer_overflows
 # counter is present as a JSON number type. Pre-m212 the field was
@@ -235,6 +262,12 @@ all_writes() {
 for root in libsafe/src/lib.rs libvuln/src/lib.rs binaries/safe-only/src/main.rs binaries/vuln-included/src/main.rs; do
     if ! reads_of 'select(.compiler == "rustc")' | grep -qx "$FIXTURE/$root"; then
         echo "FAIL: $FIXTURE/$root is in no rustc read set (m1070 SC-001)"
+        if [[ "$ATTACH_FAILURE_COUNT" -gt 0 ]]; then
+            echo "      probe(s) did not attach on this kernel: $ATTACH_FAILURES"
+            echo "      a read set assembled without an open-family kprobe is"
+            echo "      incomplete by construction — see #1252 before reading this"
+            echo "      as a reader or fixture defect."
+        fi
         exit 1
     fi
     echo "    read set has $root"

@@ -5,6 +5,26 @@
 
 use std::path::PathBuf;
 
+/// Probes that did not attach on this kernel (#1252).
+///
+/// Every best-effort attach in `load_and_attach` records its program name
+/// here instead of only logging a WARN. The names flow into
+/// `TraceIntegrity.kprobe_attach_failures[]`, which existed and was
+/// documented for exactly this since milestone 212 but was only ever fed
+/// from counter-map failures — so an attestation produced with two probes
+/// missing still serialized `kprobe_attach_failures: []`.
+#[derive(Clone, Debug, Default)]
+pub struct ProbeAttachFailures {
+    /// Program names of kprobes and tracepoints that failed to attach.
+    pub kprobe: Vec<String>,
+}
+
+impl ProbeAttachFailures {
+    pub fn is_empty(&self) -> bool {
+        self.kprobe.is_empty()
+    }
+}
+
 pub struct LoaderConfig {
     pub target_pid: u32,
     pub libssl_path: Option<PathBuf>,
@@ -31,14 +51,18 @@ mod inner {
 
     use waybill_common::maps::TraceConfig;
 
-    use super::LoaderConfig;
+    use super::{LoaderConfig, ProbeAttachFailures};
 
     pub struct EbpfHandle {
         pub bpf: Ebpf,
+        /// #1252 — which probes did not attach. The caller threads these
+        /// into the attestation so a degraded capture says so on the wire.
+        pub attach_failures: ProbeAttachFailures,
     }
 
     pub fn load_and_attach(config: &LoaderConfig) -> Result<EbpfHandle> {
         info!(target_pid = config.target_pid, "Loading eBPF program");
+        let mut attach_failures = ProbeAttachFailures::default();
 
         let obj_path = config
             .ebpf_object
@@ -163,14 +187,41 @@ mod inner {
         // benefit — enough of them to push out the late opens (like curl's
         // -o output file). File opens already carry the path via
         // do_filp_open + openat2, so we rely on those alone.
+        //
+        // Both are best-effort individually but load-bearing together:
+        // they are the ONLY source of file-open events, so losing both
+        // means the trace sees no file activity at all. #1252 — losing
+        // just `do_filp_open` on GitHub's ubuntu-24.04 image
+        // 20261025.353 cost 51% of file events (902 -> 443 on an
+        // identical build), which is why a partial loss is recorded
+        // rather than shrugged off.
+        let mut open_family_attached = 0usize;
         if let Err(e) = attach_kprobe(&mut bpf, "openat2_entry", "do_sys_openat2") {
             warn!("could not attach openat2 kprobe: {e}");
+            attach_failures.kprobe.push("openat2_entry".to_string());
+        } else {
+            open_family_attached += 1;
         }
         // do_filp_open catches every open-family syscall (open, openat,
         // openat2, creat) and is the fallback for paths openat2 misses,
         // e.g. glibc's default `open()` wrapper.
         if let Err(e) = attach_kprobe(&mut bpf, "do_filp_open_entry", "do_filp_open") {
             warn!("could not attach do_filp_open kprobe: {e}");
+            attach_failures
+                .kprobe
+                .push("do_filp_open_entry".to_string());
+        } else {
+            open_family_attached += 1;
+        }
+        // Principle III: a capture with no file visibility whatsoever must
+        // not present itself as a trace. The m1070 cwd/rename probes below
+        // already fail hard for the same reason.
+        if open_family_attached == 0 {
+            anyhow::bail!(
+                "no open-family probe could be attached (tried do_sys_openat2 and \
+                 do_filp_open) — the trace would observe zero file opens and \
+                 report them as an absence of file activity"
+            );
         }
         // Milestone 211 (issue #611): the vfs_open kprobe was retired
         // — see waybill-ebpf/src/programs/file_ops.rs for the full
@@ -190,22 +241,28 @@ mod inner {
             attach_tracepoint(&mut bpf, "sched_process_exec", "sched", "sched_process_exec")
         {
             warn!("could not attach sched_process_exec tracepoint: {e}");
+            attach_failures.kprobe.push("sched_process_exec".to_string());
         }
         if let Err(e) =
             attach_tracepoint(&mut bpf, "sched_process_fork", "sched", "sched_process_fork")
         {
             warn!("could not attach sched_process_fork tracepoint: {e}");
+            attach_failures.kprobe.push("sched_process_fork".to_string());
         }
         if let Err(e) =
             attach_tracepoint(&mut bpf, "sched_process_exit", "sched", "sched_process_exit")
         {
             warn!("could not attach sched_process_exit tracepoint: {e}");
+            attach_failures.kprobe.push("sched_process_exit".to_string());
         }
-        // TODO(follow-up): these three stay best-effort, as milestone 210 left
-        // them. Principle III asks for a fatal error. Fork records now also
-        // drive working-directory inheritance (milestone 1070), where a
-        // missing fork tracepoint shows up as unresolved relative opens,
-        // counted in trace_integrity rather than silent.
+        // These three stay best-effort, as milestone 210 left them, but
+        // since #1252 they are no longer silent: each records its name in
+        // `attach_failures`, which reaches
+        // `TraceIntegrity.kprobe_attach_failures[]` and downgrades the
+        // compiler-pipeline completeness to `partial/probe_attach_failed`.
+        // Fork records also drive working-directory inheritance (milestone
+        // 1070), where a missing fork tracepoint additionally shows up as
+        // unresolved relative opens.
 
         // Milestone 1070 (#614) — directory changes and renames. Unlike the
         // tracepoints above, a failure here is fatal (Principle III, analysis
@@ -232,8 +289,21 @@ mod inner {
                 .with_context(|| format!("could not attach the {event} tracepoint"))?;
         }
 
-        info!("All probes attached");
-        Ok(EbpfHandle { bpf })
+        // #1252 — this used to read `All probes attached` unconditionally,
+        // and printed it on a run where do_filp_open had just failed. Say
+        // what happened instead of what was hoped for.
+        if attach_failures.is_empty() {
+            info!("All probes attached");
+        } else {
+            warn!(
+                failed = ?attach_failures.kprobe,
+                "some probes did not attach; capture is a floor, not a total"
+            );
+        }
+        Ok(EbpfHandle {
+            bpf,
+            attach_failures,
+        })
     }
 
     fn attach_tracepoint(
