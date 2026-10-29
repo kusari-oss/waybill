@@ -7,7 +7,40 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-10-28
+
+A minor, not the `0.13.1` patch the placeholder held. Three things a
+consumer can observe on the wire: a Node-bearing image gains a versioned,
+CVE-matchable component it did not have; every declared-optional cargo
+component now carries a new annotation saying whether anything actually
+looked at feature activation; and a single-package cargo project can now
+have a dependency classified as not shipping where previously nothing
+could tell. Two determinism fixes also change byte-level output for
+anyone diffing documents across scans, in the stabilising direction —
+`evidence.occurrences` and a linkage component's parent paths no longer
+depend on walk order.
+
 ### Added
+
+- **The Node.js runtime is named and matchable.** An image built `FROM
+  node:<X.Y.Z>-alpine` yielded npm packages, OS packages, and an
+  unversioned `pkg:generic/node?file-sha256=…` for the runtime itself —
+  nothing an advisory could match, even though most high-severity Node
+  advisories are against the runtime or what it embeds. The binary
+  scanner now reads the `node.js/v<semver>` literal Node compiles in as
+  its default HTTP User-Agent, and emits `pkg:generic/node@<X.Y.Z>`
+  carrying `cpe:2.3:a:nodejs:node.js:<X.Y.Z>:*:*:*:*:*:*:*`. The CPE
+  product segment is `node.js`, not `nodejs`: that pair was probed
+  against NVD's dictionary and found in 1714 entries, with positive and
+  negative controls behaving, rather than argued for from an in-repo map.
+  **Consumer-visible**: a Node-bearing image's SBOM gains a component.
+  The pre-existing unversioned file-hash row is unchanged and still
+  present — folding the two into one umbrella needs a different shape
+  than the existing collapsers, because both of those read the version
+  out of the path and `/usr/local/bin/node` has none in it. That, and a
+  source-tier `.nvmrc` / `engines.node` reader, stay tracked on #1244.
+  Node's own V8 remains deferred: a binary matching `node` says nothing
+  about the V8 inside it. (#1244)
 
 - **A cargo scan now says in the document when optional classification had
   no evidence.** #1272 made the reader classify a declared-optional
@@ -6916,7 +6949,8 @@ per-release breakdown.
 
 ---
 
-[Unreleased]: https://github.com/kusari-oss/waybill/compare/v0.13.0...HEAD
+[Unreleased]: https://github.com/kusari-oss/waybill/compare/v0.14.0...HEAD
+[0.14.0]: https://github.com/kusari-oss/waybill/releases/tag/v0.14.0
 [0.13.0]: https://github.com/kusari-oss/waybill/releases/tag/v0.13.0
 [0.12.1]: https://github.com/kusari-oss/waybill/releases/tag/v0.12.1
 [0.12.0]: https://github.com/kusari-oss/waybill/releases/tag/v0.12.0
