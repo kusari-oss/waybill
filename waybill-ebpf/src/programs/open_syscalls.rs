@@ -68,9 +68,7 @@ const ARG2: usize = 32;
 const RET: usize = 16;
 
 /// `O_WRONLY | O_CREAT | O_TRUNC` — what `creat(2)` implies, since the
-/// syscall takes no flags argument of its own. `creat` is an x86-64-only
-/// syscall, so the constant is too.
-#[cfg(target_arch = "x86_64")]
+/// syscall takes no flags argument of its own.
 const CREAT_FLAGS: u32 = 0o1 | 0o100 | 0o1000;
 
 #[inline(always)]
@@ -296,9 +294,20 @@ pub fn sys_exit_openat2(ctx: TracePointContext) -> u32 {
 
 // ------------------------------------------------------- open, creat (x86)
 
-/// `open(filename, flags, mode)`. No dfd argument: x86-64 only, and absent
-/// on arm64, which has no such syscall — measured, not assumed.
-#[cfg(target_arch = "x86_64")]
+/// `open(filename, flags, mode)`. No dfd argument.
+///
+/// **Not** gated on `target_arch`, and that is load-bearing: this crate
+/// compiles for the BPF target, so `cfg(target_arch = "x86_64")` is false
+/// here on every host and the program would be missing from the object
+/// everywhere. The loader asked for it on x86_64, got `program
+/// 'sys_exit_open' not found`, and x86_64 opens that go through `open(2)`
+/// rather than `openat(2)` went uncaptured — `file=43` against 102 on
+/// arm64, with the fixture's crate roots missing from the read set.
+///
+/// Whether the syscall exists is a property of the kernel the program
+/// attaches to, not of the target it was compiled for. The *loader* gates
+/// the attach by host arch, which is where m1070 put the same decision
+/// for `rename`.
 #[tracepoint]
 pub fn sys_enter_open(ctx: TracePointContext) -> u32 {
     unsafe {
@@ -311,7 +320,6 @@ pub fn sys_enter_open(ctx: TracePointContext) -> u32 {
     0
 }
 
-#[cfg(target_arch = "x86_64")]
 #[tracepoint]
 pub fn sys_exit_open(ctx: TracePointContext) -> u32 {
     finish_open(&ctx);
@@ -320,7 +328,6 @@ pub fn sys_exit_open(ctx: TracePointContext) -> u32 {
 
 /// `creat(pathname, mode)` — `open` with `O_WRONLY|O_CREAT|O_TRUNC`
 /// implied. x86-64 only.
-#[cfg(target_arch = "x86_64")]
 #[tracepoint]
 pub fn sys_enter_creat(ctx: TracePointContext) -> u32 {
     unsafe {
@@ -333,7 +340,6 @@ pub fn sys_enter_creat(ctx: TracePointContext) -> u32 {
     0
 }
 
-#[cfg(target_arch = "x86_64")]
 #[tracepoint]
 pub fn sys_exit_creat(ctx: TracePointContext) -> u32 {
     finish_open(&ctx);

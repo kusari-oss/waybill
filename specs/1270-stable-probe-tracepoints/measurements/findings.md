@@ -223,3 +223,82 @@ events and the read set hid it because a set deduplicates. 289 → 102 is
 the failed requests leaving. Neither number was chosen; both fell out of
 the same fixture on the same host, and each mode was reached by a
 different mechanism.
+
+---
+
+## Run 2 — x86_64, from the eBPF lane (2026-10-29) — T001 ANSWERED
+
+The lane on PR #1313 was the first x86_64 execution of the `open` and
+`creat` programs. It **failed**, and the failure was in this feature's
+own code rather than in the kernel.
+
+```
+WARN could not attach the sys_exit_open tracepoint: program 'sys_exit_open' not found
+WARN could not attach the sys_exit_creat tracepoint: program 'sys_exit_creat' not found
+WARN some probes did not attach; capture is a floor, not a total
+     failed=["sys_exit_open", "sys_exit_creat"]
+completeness: partial  (reason=probe_attach_failed)
+Collection done net=6 file=43
+FAIL: .../libsafe/src/lib.rs is in no rustc read set (m1070 SC-001)
+```
+
+### The cause, in four steps
+
+1. The four `open`/`creat` programs were gated
+   `#[cfg(target_arch = "x86_64")]` **on the kernel side**. That crate
+   compiles for `bpfel-unknown-none`, so the predicate is false on every
+   host and the programs were in the object **nowhere**.
+2. The loader's `#[cfg(target_arch = "x86_64")]` evaluates against the
+   *host*, so on x86_64 it asked for programs that did not exist —
+   `program 'sys_exit_open' not found`, which is aya reporting a missing
+   program, not a missing kernel tracepoint.
+3. The exit-first attach rule then skipped `sys_enter_open`, as designed.
+4. x86_64 routes a real share of opens through `open(2)` rather than
+   `openat(2)`, so those opens were never observed: **43 file
+   operations against 102 on arm64**, with the fixture's crate roots
+   missing from the read set.
+
+`whether the syscall exists` is a property of the kernel a program
+attaches to, not of the target it was compiled for. m1070 had this right
+for `rename`: the kernel side is unconditional and only the *loader*
+gates by host arch. The cfg was added here where the template
+deliberately had none.
+
+### Fix, and how it is verified
+
+The arch gate is removed from the kernel side; the loader keeps its
+gate, so arm64 still does not attempt an attach for a syscall its kernel
+lacks. Verified by listing the object's symbols rather than by observing
+an attach, because an attach can only be observed on one architecture at
+a time:
+
+```
+$ readelf -s waybill-ebpf | grep -E 'sys_(enter|exit)_(open|openat|openat2|creat|connect)'
+sys_enter_connect  sys_enter_creat  sys_enter_open   sys_enter_openat
+sys_enter_openat2  sys_exit_creat   sys_exit_open    sys_exit_openat
+sys_exit_openat2
+```
+
+All nine present. arm64 harness re-run after the fix: unchanged — 102
+operations, 599 discards, `completeness: complete`,
+`kprobe_attach_failures: []`, IPv6 recorded.
+
+### What this says about the earlier claim
+
+The PR described this block as "inference, labelled" and reasoned that
+the tracepoints "should be present because those syscalls exist on
+x86-64". The reasoning was sound and answered the wrong question: the
+syscalls do exist and their tracepoints were available. What was missing
+was the program.
+
+**R10's superset assumption was therefore refuted on x86_64 and has now
+been repaired rather than confirmed.** It still awaits a clean x86_64
+run.
+
+### What worked
+
+The capture reported the gap rather than hiding it. `sys_exit_open`
+reached `kprobe_attach_failures[]`, completeness read
+`partial / probe_attach_failed`, and the harness named the missing crate
+root. Before #1310 this same loss presented as `complete` with an empty
+failure list, which is how it survived two releases.
