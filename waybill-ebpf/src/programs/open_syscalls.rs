@@ -262,6 +262,26 @@ fn finish_open(ctx: &TracePointContext) {
         // that case at its own site, so the two numbers separate the
         // causes: this slot minus that one is late arrival, and that one
         // is capture the host could not hold (#1185).
+        //
+        // The subtree gate is a third source, and it is not loss at all:
+        // an open it declined at entry stored no request, so its exit
+        // necessarily arrives with nothing to join. Counting that would
+        // fill this slot with precisely the ambient traffic the gate
+        // exists to remove, and this slot is the one #1185 set out to
+        // make readable.
+        //
+        // Measured by the N=10 protocol in `measurements/baseline.sh`:
+        // nine runs reported 0 here, and the one run that caught a burst
+        // of host activity reported 151 alongside 324 declined opens --
+        // the two outliers in the same run. A single run would have shown
+        // a clean 0 and hidden it.
+        //
+        // The same oversight was already handled one branch above for the
+        // handshake marker, which would otherwise have landed in
+        // `kernel_null_path`.
+        if gating_armed() && !in_traced_subtree(current_pid()) {
+            return;
+        }
         increment_event_drop(KERNEL_EXIT_WITHOUT_REQUEST);
         return;
     };

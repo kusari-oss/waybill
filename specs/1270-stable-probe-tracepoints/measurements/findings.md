@@ -930,3 +930,82 @@ finding being demonstrated. Fixed to the real path, with `dropped` and
 `reason` alongside. Recorded because a probe naming the wrong field
 states something false with full confidence, and nothing about the output
 looked wrong.
+
+## Phase 3 — a protocol, a baseline, and a defect the protocol found
+
+`measurements/baseline.sh`, committed so the table below can be re-run
+rather than trusted. One fixture, one flag set, one field list, N runs,
+min/median/max per field, and the per-run rows printed with the summary.
+
+Host: Colima aarch64, 4 CPUs, kernel 6.8.0-136, `Dockerfile.ebpf-test`.
+
+### The baseline, N=10
+
+| field | min | median | max | distinct |
+|---|---|---|---|---|
+| elapsed_ms | 832 | 863 | 945 | 9 |
+| file_operations | 102 | 102 | 102 | 1 |
+| compiler_invocations | 9 | 9 | 9 | 1 |
+| rustc_invocations | 7 | 7 | 7 | 1 |
+| traced_subtree_opens | 1173 | 1173 | 1173 | 1 |
+| outside_traced_subtree | 28 | 28 | 324 | 3 |
+| unresolved_relative_opens | 5 | 5 | 5 | 1 |
+| pending_open_entries_at_close | 0 | 0 | 0 | 1 |
+| ring_buffer_overflows | 0 | 0 | 0 | 1 |
+| open_failures_discarded | 599 | 599 | 599 | 1 |
+| exit_without_request | 0 | 0 | 151 | 2 |
+
+Set against the same feature a day earlier, where one identical control
+reported 239 operations and then 415: everything the capture *reports* is
+now stable, and the one field that still moves is
+`outside_traced_subtree` — what the capture **declines**. The host's noise
+left the measurement and became a counter about the host.
+
+### What the protocol found immediately
+
+The per-run rows, not the summary:
+
+    outside_traced_subtree:  28 28 28 28 32 28 28 324 28 28
+    exit_without_request:     0  0  0  0  0  0  0 151  0  0
+
+Both outliers are the same run. The gate returns at syscall *entry* for an
+out-of-subtree open, so no request is stored and the matching exit arrives
+with nothing to join — **the gate was manufacturing orphans in the one
+slot #1185 set out to make readable**. The same oversight was already
+handled one branch above for the handshake marker, which would otherwise
+have landed in `kernel_null_path` and broken the #618 control.
+
+Three things had to be true to see it: repetition (nine of ten runs read a
+clean `0`), a fixed command (so an outlier was not just a different
+measurement), and the raw rows (the summary said `max 151`; only the rows
+showed 151 and 324 in the *same* run, which is what named the mechanism).
+The third existed only because the first N=10 run wrote its rows into a
+`--rm` container and lost them.
+
+### The fix, verified against forced load rather than luck
+
+Waiting for an ambient burst is luck, so the control forces one — a
+`find /usr -type f` loop outside the subtree, for the duration of the
+trace:
+
+| | declined | orphans | admitted | file_ops | invocations |
+|---|---|---|---|---|---|
+| forced load ×3 | 33928 / 32072 / 33130 | **0** | 1173 | 103 | 9 |
+| quiet ×3 | 28 / 45 / 28 | **0** | 1173 | 102 / 103 / 102 | 9 |
+
+~33,000 declined opens — a thousandfold over ambient — produce zero
+orphans, where 324 produced 151 before the fix. `admitted` is unchanged at
+1173 under both, so the build's capture is indifferent to host load, which
+is the whole point of scoping it.
+
+### A correction to the table above
+
+`file_operations` is **102–103**, not 102. The N=10 run reported
+`distinct: 1` and six further runs include three 103s. Ten runs were not
+enough for that field, and the no-noise control establishes the extra
+operation is not caused by the ambient load.
+
+So the baseline's own stability column is itself a measurement with an N
+attached, and quoting "deterministic" from it needs that N stated.
+`traced_subtree_opens = 1173` has now held across 16 runs; `file_operations`
+has not held across 16.

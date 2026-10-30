@@ -226,6 +226,36 @@ From F17–F20, with F19's inference labelled:
   where the tracer performs one distinctive syscall after attach and the
   kernel records whatever pid *it* sees.
 
+## Phase 3 — the protocol, and what it caught
+
+| # | fact | status | source |
+|---|---|---|---|
+| F38 | With the capture scoped, everything it *reports* is stable across N=10: `compiler_invocations` 9, `rustc_invocations` 7, `traced_subtree_opens` 1173, `unresolved_relative_opens` 5, `open_failures_discarded` 599, `ring_buffer_overflows` 0, `pending_open_entries_at_close` 0. The only field that still varies is `outside_traced_subtree` — what the capture declines | measured | `measurements/baseline.sh`, N=10 |
+| F39 | The gate manufactured orphaned exits. An out-of-subtree open returns at syscall entry and stores no request, so its exit has nothing to join: one run of ten caught an ambient burst and reported **324** declined opens alongside **151** orphans, the two outliers in the same run, where the other nine reported 28 and 0 | measured | per-run rows, N=10 |
+| F40 | Fixed, verified against forced load rather than a chance burst: **~33,000** declined opens across three runs produce **0** orphans, with `admitted` unchanged at 1173. A thousandfold over ambient, so the control could have shown the defect | measured | `p11.sh`, forced `find /usr` outside the subtree |
+| F41 | `file_operations` is **102–103**, not deterministic. The N=10 table reported `distinct: 1`; six further runs contain three 103s, and a no-noise control shows the extra operation is not caused by ambient load | measured, n=16 | baseline N=10 + 6 probe runs |
+
+### Struck by F41
+
+My own Phase 3 report called `file_operations` deterministic at 102 on the
+strength of ten runs. It is not. The protocol was built because single runs
+are not measurements, and then its first output was over-read the same way
+— one rung up, with N=10 instead of N=1.
+
+The stability column is itself a measurement with an N attached. Quoting
+"deterministic" from it requires stating that N: `traced_subtree_opens`
+has held at 1173 across 16 runs, `file_operations` has not held across 16.
+
+### Why the protocol was worth building before the baseline mattered
+
+F39 needed three things at once, and no earlier approach had them:
+repetition (nine of ten runs read a clean 0), a fixed command (so an
+outlier was not merely a different measurement), and the raw per-run rows
+(the summary said `max 151`; only the rows put 151 and 324 in the same
+run, which is what identified the mechanism rather than the anomaly). The
+third existed only because the first N=10 run lost its rows inside a
+`--rm` container.
+
 ## Open questions, in dependency order
 
 | # | question | blocked on |
@@ -253,6 +283,7 @@ Recorded before the run that tests them.
 | P8 | With the slot read raw, the single-process probe reports `kernel_outside_traced_subtree` ≈ **26**, matching the 26 `waybill` operations in its own attestation. The two views reconcile | F26–F28 | **CONFIRMED** — 0 → **28**, twice. The residual over 26 is structural: the counter increments at syscall entry, upstream of both `discard_failed_open` and the noise classifier inside `emit_open`, so counter ≥ operations is the expected direction |
 | P9 | With the gate armed, the scope check reports `CLEAN` | the gate | **CONFIRMED** — 3 ops, 0 foreign |
 | P10 | The fixture build still reports its invocations and read/write sets | regression risk | **FAILED first, then CONFIRMED** — F31 was the cause; `file_ops=102` after the fix |
+| P11 | After the fix, `exit_without_request` stays 0 under heavy out-of-subtree open traffic | F39 | **CONFIRMED** — 0 across three runs at ~33k declined opens each. An earlier run that read 0 was **not** evidence: it used a stale image and saw no burst, so it could not have shown the defect |
 | P7 | Step 2's gate must cover the chdir/fork lineage records too, not only opens. Gating opens alone leaves ambient lineage traffic flowing; gating lineage *without* the subtree established first would break cwd inheritance for traced processes | F25 | pending — design constraint, to be tested by the gate |
 
 ## Reversals
