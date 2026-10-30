@@ -92,6 +92,50 @@ pub struct TraceIntegrity {
     /// already measured (m212).
     #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
     pub event_drop_reasons: std::collections::BTreeMap<String, u64>,
+    /// #1185: entries still held in the kernel's in-flight-open map when
+    /// the trace ended.
+    ///
+    /// The map is bounded and machine-wide, and an open whose request it
+    /// will not hold is an open the capture loses outright
+    /// (`kernel_pending_insert_failed`). This is the other half of that
+    /// question: how close the map came to full.
+    ///
+    /// Read it as accumulated leakage, not as peak pressure. An entry is
+    /// removed when its syscall exits, so by close almost nothing should
+    /// remain — what remains are threads that died inside an open, which
+    /// accumulate for the life of the trace and are never reclaimed. A
+    /// handful says the bound is not the constraint; a figure near the
+    /// map's capacity says saturation is reachable and the loss above is
+    /// what reaching it looks like.
+    ///
+    /// `None` means not measured: an older attestation, or a map that
+    /// would not read. Omitted when absent, and placed LAST in the
+    /// struct, so an attestation written before this field round-trips
+    /// and serializes byte-identically.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pending_open_entries_at_close: Option<u64>,
+    /// #1185: opens observed from inside the traced subtree — the spawned
+    /// root and every descendant that inherited from it on fork.
+    ///
+    /// The companion figure, opens from *outside* it, is
+    /// `kernel_outside_traced_subtree` in `event_drop_reasons`. Together
+    /// they say what the capture's scope actually was, which no field
+    /// previously did: a capture that admits every process on the machine
+    /// and one scoped to a build produce identical documents otherwise.
+    ///
+    /// A zero here on a trace that spawned a command means the subtree
+    /// never grew past its root, so fork propagation is broken.
+    ///
+    /// This lives in the attestation rather than a log line because an
+    /// assertion built on log text broke the first time it ran: the
+    /// container colours its output, so `grep 'inside='` could not match
+    /// `inside` and `=` separated by escape sequences.
+    ///
+    /// `None` means not measured. Omitted when absent, and last in the
+    /// struct, so an attestation written before this field round-trips
+    /// unchanged.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub traced_subtree_opens: Option<u64>,
 }
 
 fn is_zero(n: &u64) -> bool {
@@ -261,6 +305,68 @@ mod tests {
             EventDropReason::KERNEL_SLOTS,
             "KERNEL_SLOTS must match the array the kernel map is sized for"
         );
+    }
+
+    /// #1185: a kernel-side variant's position in `KERNEL` is its slot
+    /// index in the `EVENT_DROPS` map, and the eBPF programs name those
+    /// indices as their own `u8` constants — `KERNEL_PENDING_INSERT_FAILED
+    /// = 3` in `open_syscalls.rs`. Userspace reads slot `i` and labels it
+    /// `KERNEL[i]`, so reordering the array or renumbering a discriminant
+    /// relabels counts that were already taken: the kernel would still
+    /// write slot 3 while userspace called slot 3 something else. Nothing
+    /// else checks the two agree, and the symptom would be a plausible
+    /// number under the wrong name.
+    #[test]
+    fn kernel_slot_order_matches_the_discriminants_the_probes_write() {
+        use crate::events::EventDropReason;
+        for (i, reason) in EventDropReason::KERNEL.iter().enumerate() {
+            assert_eq!(
+                *reason as u8, i as u8,
+                "KERNEL[{i}] has discriminant {}, so the kernel writing slot \
+                 {i} would be read as a different mechanism",
+                *reason as u8
+            );
+        }
+        assert_eq!(
+            EventDropReason::KERNEL[3],
+            EventDropReason::KernelPendingInsertFailed,
+            "open_syscalls.rs hardcodes KERNEL_PENDING_INSERT_FAILED = 3"
+        );
+    }
+
+    /// #1185: the occupancy field is absent from the wire when it was not
+    /// measured, so an attestation written before it serializes
+    /// byte-identically — the same guarantee m1070, m1072 and #1252 each
+    /// made for their own additions.
+    #[test]
+    fn unmeasured_pending_open_occupancy_is_absent_from_the_wire() {
+        let mut integrity = TraceIntegrity::default();
+        let json = serde_json::to_string(&integrity).expect("serialize");
+        assert!(
+            !json.contains("pending_open_entries_at_close"),
+            "an unmeasured occupancy must not appear as a measured zero: {json}"
+        );
+
+        // Zero is a measurement, and distinct from absent: a map that was
+        // read and found empty says the bound is not the constraint, where
+        // an absent field says nobody looked.
+        integrity.pending_open_entries_at_close = Some(0);
+        let json = serde_json::to_string(&integrity).expect("serialize");
+        assert!(json.contains("\"pending_open_entries_at_close\":0"), "{json}");
+        let back: TraceIntegrity = serde_json::from_str(&json).expect("round trip");
+        assert_eq!(back.pending_open_entries_at_close, Some(0));
+
+        // And a document that predates the field reads back as unmeasured
+        // rather than as a measured zero. The document used is this
+        // struct's own serialization with the field absent, which is
+        // precisely what a pre-#1185 writer produced — not a hand-written
+        // minimum, which would only test which other fields carry
+        // `#[serde(default)]`.
+        integrity.pending_open_entries_at_close = None;
+        let pre = serde_json::to_string(&integrity).expect("serialize");
+        assert!(!pre.contains("pending_open_entries_at_close"));
+        let back: TraceIntegrity = serde_json::from_str(&pre).expect("pre-#1185 parse");
+        assert_eq!(back.pending_open_entries_at_close, None);
     }
 
     #[test]

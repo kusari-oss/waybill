@@ -302,6 +302,27 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
 
     // Load eBPF FIRST so probes are active before child spawns
     let target_pid = args.target_pid.unwrap_or(std::process::id());
+    // #1185 — the per-trace handshake nonce. Only command-execute mode can
+    // seed a traced root: `--target-pid` attaches to a process the tracer
+    // never spawned, so there is no `pre_exec` in which to announce it.
+    //
+    // Derived from the clock rather than a CSPRNG, and that is sufficient
+    // for what the nonce defends against: it keeps one trace's handshake
+    // from arming another's on the same host. It is not a secret, because
+    // the gate is positive — forging the handshake adds the forger to the
+    // traced set and can exclude nothing. Masked to 31 bits so the value
+    // stays a positive `int` when it is passed as the syscall's flags
+    // argument, and forced non-zero because zero means "unarmed".
+    let handshake_nonce: Option<u32> = if args.target_pid.is_none() {
+        let t = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.subsec_nanos() ^ (d.as_secs() as u32))
+            .unwrap_or(0x5A5A_5A5A);
+        Some((t & 0x7FFF_FFFF).max(1))
+    } else {
+        None
+    };
+
     let mut handle = loader::load_and_attach(&LoaderConfig {
         target_pid,
         libssl_path: args.libssl_path.clone(),
@@ -311,6 +332,7 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
         // Milestone 213 (issue #616) — plumbs --include-system-reads
         // to the kernel-side FILTER_WIDEN[0] slot per FR-010.
         include_system_reads: args.include_system_reads,
+        handshake_nonce,
     })?;
     // #618 / #1185 — the drop slots as they stand now, before the child
     // exists. The open probes attach exit-before-entry deliberately, and
@@ -334,19 +356,65 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
     }
 
     // THEN spawn child
-    let mut child = if args.target_pid.is_none() {
+    //
+    // Milestone 1070 (#614): the child is given an explicit working
+    // directory, though it is the one it would inherit anyway. Setting it
+    // makes the child perform a `chdir` before exec, which the trace
+    // observes like any other.
+    //
+    // #1185: the directory is also kept here, because this is the one cwd
+    // in the system the tracer *established* instead of inferring. It seeds
+    // the model directly below, so the build still resolves its relative
+    // reads when that `chdir` record is lost. Spawning is the only path that
+    // has it — `--target-pid` attaches to a process whose directory the
+    // tracer never chose, and that case stays purely observational.
+    let spawn_dir = if args.target_pid.is_none() {
+        Some(std::env::current_dir().map_err(|e| {
+            anyhow::anyhow!("cannot read the working directory to start the traced command in: {e}")
+        })?)
+    } else {
+        None
+    };
+    let mut child = if let Some(dir) = spawn_dir.as_ref() {
         let cmd = &args.command;
         tracing::info!(command = %cmd.join(" "), "Spawning traced command");
-        // Milestone 1070 (#614): an explicit working directory, though it is
-        // the one the child would inherit anyway. Setting it makes the child
-        // perform a `chdir` before exec, which the trace observes like any
-        // other. That seeds the working-directory model for the whole build,
-        // with no PID-namespace mapping between tracer and kernel (research R2).
-        let c = std::process::Command::new(&cmd[0])
-            .args(&cmd[1..])
-            .current_dir(std::env::current_dir().map_err(|e| {
-                anyhow::anyhow!("cannot read the working directory to start the traced command in: {e}")
-            })?)
+        let mut builder = std::process::Command::new(&cmd[0]);
+        builder.args(&cmd[1..]).current_dir(dir);
+
+        // #1185 — the traced root announces itself to the kernel, from
+        // inside the child, after fork and before exec.
+        //
+        // It has to come from the child, and the kernel has to learn the
+        // pid by observing rather than being told: the tracer cannot see
+        // its own or its child's initial-namespace pid (`std::process::id()`
+        // and `/proc/self/status`'s `NSpid` both report the container's
+        // view), and that mismatch is what silently disabled the
+        // tracer-exclusion filter in every containerised run.
+        //
+        // `pre_exec` runs in a forked child, so the closure must be
+        // async-signal-safe: one raw syscall, no allocation, no locks, no
+        // panic path. A null path is passed deliberately — the handshake
+        // carries no filename, and the kernel's entry program reads only
+        // `dfd` and `flags` for it. The call fails with `EBADF`, which is
+        // the intended outcome and is why the result is discarded here
+        // rather than reported: its success is not the signal, being
+        // *observed* is, and that is verified from the map below.
+        if let Some(nonce) = handshake_nonce {
+            unsafe {
+                use std::os::unix::process::CommandExt;
+                builder.pre_exec(move || {
+                    libc::syscall(
+                        libc::SYS_openat,
+                        waybill_common::maps::TRACE_HANDSHAKE_DFD,
+                        core::ptr::null::<libc::c_char>(),
+                        nonce as libc::c_int,
+                    );
+                    Ok(())
+                });
+            }
+        }
+
+        let c = builder
             .spawn()
             .map_err(|e| anyhow::anyhow!("failed to spawn: {e}"))?;
         tracing::info!(pid = c.id(), "Child started");
@@ -354,6 +422,27 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
     } else {
         None
     };
+
+    // #1185 — the root must be established before the trace proceeds.
+    //
+    // Deliberately before the drain loop and deliberately fatal. The
+    // handshake is the one thing the whole subtree rests on: with it, the
+    // kernel knows the traced root and propagates to every descendant on
+    // fork; without it the set stays empty, and an empty set is the state
+    // in which a positive gate drops every open and the attestation still
+    // says `complete`. That is #1185's exact signature, so it is made
+    // unreachable here rather than guarded later.
+    //
+    // 2 seconds: the handshake is one syscall between fork and exec, so
+    // this is orders of magnitude of headroom. A timeout means the
+    // mechanism is broken, not that the machine was busy.
+    if handshake_nonce.is_some() {
+        let seeded = crate::trace::counters::wait_for_traced_root(
+            &mut handle.bpf,
+            std::time::Duration::from_secs(2),
+        )?;
+        debug_assert!(seeded > 0);
+    }
 
     let child_pid = child.as_ref().map(|c| c.id()).unwrap_or(target_pid);
 
@@ -377,6 +466,18 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
     // Milestone 1070 — working directory per traced process, from observed
     // forks and directory changes, used to resolve relative paths.
     let mut cwd = CwdTracker::new();
+    // #1185 — seed the root from the directory the tracer set, before any
+    // event is drained. Both the tracer and the child are seeded: the
+    // child's `sched_process_fork` record names the tracer as its parent, so
+    // without the tracer's entry that record would overwrite the child's
+    // seed with `Unknown`. With both, either event surviving is enough and
+    // the two agree. Descendants keep inheriting through fork records as
+    // before; this hardens the root, which is what poisons everything
+    // downstream when it is lost.
+    if let Some(dir) = spawn_dir {
+        cwd.seed(std::process::id(), dir.clone());
+        cwd.seed(child_pid, dir);
+    }
     let mut compiler_count: u64 = 0;
     let mut net_count: u64 = 0;
     let mut file_count: u64 = 0;
@@ -843,6 +944,16 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
     {
         counter_attach_failures.push(name);
     }
+
+    // #1185 — the other half of `kernel_pending_insert_failed`: how full
+    // the map that refuses a request had become. A count alone does not
+    // say whether the bound was the constraint.
+    let (pending_open_entries_at_close, pending_open_failure) =
+        crate::trace::counters::read_pending_open_entries(&mut handle.bpf);
+    if let Some(name) = pending_open_failure {
+        counter_attach_failures.push(name);
+    }
+
     // The compiler aggregator's own silent drops. Note what is NOT here:
     // an op whose process is not compiler-named belongs to no invocation
     // by construction, and it still reaches the document-level set, so it
@@ -857,7 +968,30 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
         waybill_common::events::EventDropReason::UserHeldAtCapacity,
         compiler_agg.dropped_at_held_cap(),
     );
-    let event_drop_total = event_drops.total();
+    // #1185 — the dry-run slot is reported separately from loss, because
+    // during the dry run it is not loss. See `total_lost`.
+    let outside_subtree = event_drops.get(
+        waybill_common::events::EventDropReason::KernelOutsideTracedSubtree,
+    );
+    let (inside_subtree, subtree_counter_failure) =
+        crate::trace::counters::read_traced_subtree_hits(&mut handle.bpf);
+    let subtree_counter_unreadable = subtree_counter_failure.is_some();
+    if let Some(name) = subtree_counter_failure {
+        counter_attach_failures.push(name);
+    }
+    // One line, both halves, a stable prefix the harness greps for. Printed
+    // unconditionally — a zero `inside` with a seeded root means propagation
+    // is broken, and that is exactly the case a conditional print would
+    // hide.
+    tracing::info!(
+        inside = inside_subtree,
+        outside = outside_subtree,
+        "#1185 traced subtree: opens admitted from the build and declined \
+         from everything else. `outside` is other processes' opens the gate \
+         dropped — not loss by this capture — and `inside` is whether \
+         propagation past the root worked"
+    );
+    let event_drop_total = event_drops.total_lost();
     if event_drop_total > 0 {
         tracing::warn!(
             reasons = ?event_drops,
@@ -880,6 +1014,14 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
         probe_attach_failures,
         open_failures_discarded,
         event_drop_reasons,
+        pending_open_entries_at_close,
+        // #1185 — `None` only when the counter could not be read, which
+        // `counter_attach_failures` records. A zero is a measurement.
+        traced_subtree_opens: if subtree_counter_unreadable {
+            None
+        } else {
+            Some(inside_subtree)
+        },
     });
 
     if trace.network_trace.connections.is_empty()

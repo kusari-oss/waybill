@@ -83,6 +83,23 @@ pub fn sys_exit_fchdir(ctx: TracePointContext) -> u32 {
 /// every directory change to resolve paths, whatever the directory is.
 #[inline(always)]
 fn emit_dir_change(kind: FileEventType, path_ptr: u64) {
+    // #1185 — gated in one place, which covers both callers.
+    //
+    // A directory change by a process outside the traced subtree cannot
+    // affect how the build's paths resolve, and admitting it means every
+    // `chdir` on the machine reaches the ring buffer. Gated here rather
+    // than at the two call sites so a third caller cannot be added
+    // ungated.
+    //
+    // For a process *inside* the subtree this record must survive: losing
+    // one turns every later relative read by that process and its
+    // descendants into `Unresolved` (m1070, #1185). Membership is
+    // established at fork, before the process can chdir, so there is no
+    // window where a traced process's record is dropped for not being
+    // known yet.
+    if crate::helpers::gating_armed() && !crate::helpers::in_traced_subtree(current_pid()) {
+        return;
+    }
     let Some(mut buf) = FILE_EVENTS.reserve::<FileEvent>(0) else {
         increment_drop_counter(&FILE_EVENT_DROPS);
         return;

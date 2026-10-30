@@ -38,6 +38,14 @@ pub struct LoaderConfig {
     /// buffer instead of being dropped. UserCache/Ephemeral/CargoFingerprint
     /// remain active regardless of this flag.
     pub include_system_reads: bool,
+    /// #1185 — per-trace handshake nonce, or `None` for a mode that cannot
+    /// seed a traced root.
+    ///
+    /// `--target-pid` attaches to a process the tracer did not spawn, so
+    /// there is no `pre_exec` in which to announce a root and the capture
+    /// stays unscoped. `None` says so explicitly rather than arming a
+    /// handshake nothing will answer.
+    pub handshake_nonce: Option<u32>,
 }
 
 #[cfg(all(target_os = "linux", feature = "ebpf-tracing"))]
@@ -294,6 +302,30 @@ mod inner {
             set_request_only(&mut bpf)?;
         }
 
+        // #1185 — arm the handshake before the child can possibly run, so
+        // the root's announcement cannot arrive at an unarmed kernel.
+        if let Some(nonce) = config.handshake_nonce {
+            set_handshake_nonce(&mut bpf, nonce)?;
+        } else {
+            warn!(
+                "no handshake nonce: this mode cannot establish a traced \
+                 subtree, so the capture admits every process on the machine \
+                 (#1185)"
+            );
+        }
+
+        // #1185 — the forced counterpart to the fallback above. Not an
+        // attach failure and not recorded as one: the probes attached
+        // fine, and what is being withheld is the map's willingness to
+        // hold a request. Set here so it covers every open variant, since
+        // they all stash through the same map.
+        if std::env::var("WAYBILL_TRACE_FORCE_PENDING_INSERT_FAIL")
+            .map(|v| v == "1")
+            .unwrap_or(false)
+        {
+            set_pending_insert_force_fail(&mut bpf)?;
+        }
+
         // openat2 is best-effort: it is the newer interface and a kernel
         // that lacks it still serves every open through `openat`. Exit
         // first, so its entry is never attached without it.
@@ -450,6 +482,60 @@ mod inner {
             "FR-004b fallback ON: this host reports no open results, so capture \
              records requests. A request that failed will appear in a read set, \
              and the attestation says the capture is a floor rather than a total."
+        );
+        Ok(())
+    }
+
+    /// #1185 — arm the handshake the traced root uses to announce itself.
+    ///
+    /// Fails loudly. Without the nonce in the map the kernel recognises no
+    /// handshake, nothing is seeded, and the traced subtree stays empty —
+    /// which, once the gate lands, is a capture that drops every open while
+    /// reporting itself complete. That is the failure this whole line of
+    /// work exists to remove, so it must not be reachable by a warning.
+    fn set_handshake_nonce(bpf: &mut Ebpf, nonce: u32) -> Result<()> {
+        debug_assert!(nonce != 0, "a zero nonce arms nothing");
+        let map = bpf.map_mut("TRACE_HANDSHAKE_NONCE").context(
+            "TRACE_HANDSHAKE_NONCE map not found, so the traced root cannot \
+             announce itself and the subtree would stay empty",
+        )?;
+        let mut arr = aya::maps::Array::<_, u32>::try_from(map)
+            .context("TRACE_HANDSHAKE_NONCE is not a usable array")?;
+        arr.set(waybill_common::maps::TRACE_HANDSHAKE_NONCE_SLOT, nonce, 0)
+            .context("could not write TRACE_HANDSHAKE_NONCE")?;
+        Ok(())
+    }
+
+    /// #1185 — make the entry tracepoint refuse to stash requests, so the
+    /// `kernel_pending_insert_failed` counter can be seen to fire.
+    ///
+    /// Fails loudly rather than warning, for `set_request_only`'s reason
+    /// inverted: an operator who asked for the forced failure and silently
+    /// did not get it would read the resulting zero as the counter being
+    /// quiet, which is the ambiguity the counter exists to remove.
+    fn set_pending_insert_force_fail(bpf: &mut Ebpf) -> Result<()> {
+        let map = bpf.map_mut("PENDING_INSERT_FORCE_FAIL").context(
+            "PENDING_INSERT_FORCE_FAIL map not found, so the #1185 forced \
+             insert failure cannot be enabled",
+        )?;
+        let mut slot = aya::maps::PerCpuArray::<_, u8>::try_from(map)
+            .context("PENDING_INSERT_FORCE_FAIL is not a usable per-CPU array")?;
+        let nr_cpus = aya::util::nr_cpus().map_err(|(msg, err)| {
+            anyhow::anyhow!(
+                "failed to detect online CPU count for PENDING_INSERT_FORCE_FAIL ({msg}): {err}"
+            )
+        })?;
+        let values: aya::maps::PerCpuValues<u8> =
+            aya::maps::PerCpuValues::try_from(vec![1u8; nr_cpus])?;
+        slot.set(0, values, 0).context(
+            "could not write PENDING_INSERT_FORCE_FAIL; the forced failure \
+             would not happen and its absence would read as a quiet counter",
+        )?;
+        warn!(
+            "WAYBILL_TRACE_FORCE_PENDING_INSERT_FAIL=1: pretending every open \
+             arrives at a full PENDING_OPEN map. Every open will be lost and \
+             counted as kernel_pending_insert_failed — this is #1185's symptom \
+             on purpose, not a usable capture."
         );
         Ok(())
     }

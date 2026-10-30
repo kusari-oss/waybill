@@ -34,6 +34,210 @@ echo
 # target dir so we don't clobber waybill's own compile cache.
 cd /waybill
 
+# #1185 — a control, before the fixture build and on the same runner in the
+# same run. `kernel_exit_without_request` counts an open-syscall exit whose
+# entry was never stored. The open probes attach exit-before-entry on
+# purpose (an entry program live before its exit program would stash
+# requests nothing can join, losing successful opens outright), and the
+# probes are system-wide, so every open anywhere on the machine during that
+# window exits with nothing stored. Userspace baselines the slot, but a
+# syscall that *entered* during the gap *exits* after the baseline read, so
+# it lands in the delta however the baseline is timed — measured on x86-64,
+# baselining removed only ~124 of 1237.
+#
+# So the number alone cannot say whether the build lost entry events. This
+# run gives it the missing comparison: a process that does almost no work.
+# What this control reports in that slot is the ambient floor, and only the
+# fixture build's excess over it is attributable to the build. The floor is
+# measured here and not carried from another host, because it is a property
+# of this runner's load during one attach window.
+#
+# Diagnostic, not asserted: no threshold is claimed here because none has
+# been measured yet (CLAUDE.md, "measure external behaviour before designing
+# around it"). What *is* asserted is that the control ran — a print from a
+# run that failed would be a floor measured on nothing.
+#
+# `--include-system-reads` is on because `trace capture` refuses a capture
+# that aggregated nothing ("no dependency activity observed"), and the only
+# file `cat /etc/hostname` reads is one the m213 System category drops. It
+# cannot bias the comparison: the noise classifier runs *after* the
+# entry/exit join, inside `emit_open` (`open_syscalls.rs`, the
+# `classify_and_drop_if_noise` call), so a filtered path has already been
+# joined and counted no drop. The flag changes which records reach the ring
+# buffer, never whether an exit found its entry.
+CONTROL_OUTPUT=/tmp/i1185-control.attestation.json
+echo "==> #1185 control: trace a trivial command before the fixture build"
+set +e
+"$MIKEBOM" trace capture \
+    --attestation-format waybill-v1 \
+    --include-system-reads \
+    --output "$CONTROL_OUTPUT" \
+    -- cat /etc/hostname >/tmp/i1185-control.log 2>&1
+CONTROL_STATUS=$?
+set -e
+if [[ $CONTROL_STATUS -ne 0 ]]; then
+    echo "FAIL: the #1185 control trace exited $CONTROL_STATUS; its floor would be measured on nothing"
+    tail -40 /tmp/i1185-control.log
+    exit 1
+fi
+if [[ ! -f "$CONTROL_OUTPUT" ]]; then
+    echo "FAIL: the #1185 control trace wrote no attestation at $CONTROL_OUTPUT"
+    exit 1
+fi
+# Only `event_drop_reasons` is a floor for the fixture build's: the join
+# this control baselines happens before the noise classifier, so the widen
+# flag cannot move it. The other two figures are filter-dependent and are
+# NOT comparable to the fixture build's — the widen flag admits every
+# ambient System-category read on the machine, which is most of what they
+# count. Labelled rather than dropped, because a bare number next to the
+# fixture's invites exactly that comparison. Two consecutive runs of this
+# same block, minutes apart on one image, reported 239 operations / 192
+# unresolved and then 415 / 258, against a fixture build of 108 / 5 both
+# times: these two rows track the container's ambient load, not the traced
+# command, so they are a floor for nothing.
+CONTROL_DROPS=$(jq -c '.predicate.trace_integrity.event_drop_reasons // {}' "$CONTROL_OUTPUT")
+CONTROL_OPS=$(jq '.predicate.file_access.operations | length' "$CONTROL_OUTPUT")
+CONTROL_UNRESOLVED=$(jq '.predicate.trace_integrity.unresolved_relative_opens // 0' "$CONTROL_OUTPUT")
+echo "    control event_drop_reasons:  $CONTROL_DROPS   <- the floor; comparable"
+echo "    control file operations:     $CONTROL_OPS   (widened; NOT comparable)"
+echo "    control unresolved_relative: $CONTROL_UNRESOLVED   (widened; NOT comparable)"
+echo
+
+# =============================================================================
+# The capture's scope. #1185 — the first check of what the probes are
+# pointed AT, rather than of what they lost.
+# =============================================================================
+#
+# Every number this feature has ever produced -- 1237, 1113, 918, 415, 239,
+# 108, 102, 56, 5 -- was taken with a capture that admits operations from
+# every process on the machine. `should_trace()` (waybill-ebpf/src/helpers.rs)
+# excludes the tracer's own pid and nothing else. So those figures measure the
+# build PLUS the host, with nothing in them to separate the two, which is why
+# they do not reconcile across runs or across architectures.
+#
+# Three scoping mechanisms exist and none is wired to a reader:
+#
+#   PID_FILTER            written at trace/loader.rs:89     read by nobody
+#   TraceConfig.trace_children  written at trace/loader.rs:114  read by nobody
+#   COMPILER_INVOCATIONS  written by programs/compiler_exec.rs, with fork
+#                         propagation -- read by no file-op program, though
+#                         its own doc comment in maps.rs says "Consumed by
+#                         every file-op kprobe (see file_ops.rs)".
+#
+# This block exists so that fact is a number in a log rather than a claim in
+# a comment. It does not fix anything.
+#
+# ---- why `comm` and not `pid` ----
+#
+# The pids cannot be compared. The tracer runs in the container's pid
+# namespace and reports `Child started pid=23`; the kernel reports the same
+# cargo as `pid=497887`, because `bpf_get_current_pid_tgid()` returns the
+# initial namespace's view. `process.pid` in the attestation is therefore
+# host-namespace and the traced child's pid, as the tracer knows it, is not.
+# Translating them needs `NSpid` from /proc and belongs in the fix, not in
+# the measurement.
+#
+# So the probe is a copy of `cat` under a name nothing else on the host has,
+# and an operation is foreign when its `comm` is not that name. That makes
+# the count a LOWER BOUND on foreign capture -- it cannot overstate, because
+# every operation it counts demonstrably came from a process that is not the
+# traced command.
+#
+# ---- what the widen flag does and does not change ----
+#
+# `--include-system-reads` is required: the probe's only read is an /etc path
+# that the m213 System category drops, and `trace capture` refuses a capture
+# that aggregated nothing. It changes the MAGNITUDE of the foreign count and
+# not the verdict, because the m213 classifier filters on path category and
+# runs inside `emit_open` after the entry/exit join -- it has never had a pid
+# in its hand.
+# #1185 — the scope check is now an assertion, not a record.
+#
+# It was non-blocking while the capture was known to be machine-wide:
+# reddening a lane over a documented state adds noise. The subtree gate is
+# in, so a foreign operation here is a hole in the gate, which is the one
+# thing that must not pass quietly.
+export WAYBILL_SCOPE_MUST_PASS=1
+SCOPE_OUTPUT=/tmp/i1185-scope.attestation.json
+SCOPE_PROBE=/tmp/wbscopeprobe   # <= 15 chars, so `comm` is not truncated
+cp "$(command -v cat)" "$SCOPE_PROBE"   # resolved, not hardcoded to /bin
+echo "==> #1185 scope: whose operations does the capture admit?"
+set +e
+"$MIKEBOM" trace capture \
+    --attestation-format waybill-v1 \
+    --include-system-reads \
+    --output "$SCOPE_OUTPUT" \
+    -- "$SCOPE_PROBE" /etc/hostname >/tmp/i1185-scope.log 2>&1
+SCOPE_STATUS=$?
+set -e
+if [[ $SCOPE_STATUS -ne 0 || ! -f "$SCOPE_OUTPUT" ]]; then
+    echo "FAIL: the #1185 scope probe exited $SCOPE_STATUS with no attestation"
+    tail -40 /tmp/i1185-scope.log
+    exit 1
+fi
+
+SCOPE_TOTAL=$(jq '.predicate.file_access.operations | length' "$SCOPE_OUTPUT")
+SCOPE_OWN=$(jq '[.predicate.file_access.operations[]
+                 | select(.process.comm == "wbscopeprobe")] | length' "$SCOPE_OUTPUT")
+SCOPE_FOREIGN=$(jq '[.predicate.file_access.operations[]
+                     | select(.process.comm != "wbscopeprobe")] | length' "$SCOPE_OUTPUT")
+
+# Non-vacuity first, and these are hard failures. A scope test that measured
+# nothing, or that missed the traced command itself, reports a clean or a
+# total violation for a reason that has nothing to do with scope -- and a
+# vacuous scope test is worse than none, because it reads like evidence.
+if [[ "$SCOPE_TOTAL" -eq 0 ]]; then
+    echo "FAIL: the scope probe captured zero operations, so it measured nothing"
+    echo "      Neither a clean nor a violating result can be read from this."
+    exit 1
+fi
+if [[ "$SCOPE_OWN" -eq 0 ]]; then
+    echo "FAIL: the scope probe captured $SCOPE_TOTAL operations and none of them"
+    echo "      came from the traced command itself (comm=wbscopeprobe)."
+    echo "      Every operation would count as foreign for the wrong reason."
+    jq -r '[.predicate.file_access.operations[].process.comm] | unique | join(", ")' \
+        "$SCOPE_OUTPUT" | sed 's/^/      comms seen: /'
+    exit 1
+fi
+
+echo "    operations captured:          $SCOPE_TOTAL"
+echo "    from the traced command:      $SCOPE_OWN"
+echo "    from other processes:         $SCOPE_FOREIGN   <- lower bound on foreign capture"
+if [[ "$SCOPE_FOREIGN" -gt 0 ]]; then
+    echo "    the other processes, by operation count:"
+    jq -r '[.predicate.file_access.operations[]
+            | select(.process.comm != "wbscopeprobe") | .process.comm]
+           | group_by(.) | map({comm: .[0], ops: length})
+           | sort_by(-.ops) | .[:10][] | "      \(.ops)\t\(.comm)"' "$SCOPE_OUTPUT"
+fi
+
+# The verdict. Non-blocking by default: the eBPF lane does not gate a merge
+# (`ci-ok` excludes it) and reddening it on a known, recorded state would add
+# noise to a lane that is already pending demotion. `WAYBILL_SCOPE_MUST_PASS=1`
+# makes it an assertion, which is the switch to flip when scoping lands --
+# no code change needed to make it blocking.
+if [[ "$SCOPE_FOREIGN" -gt 0 ]]; then
+    echo "    SCOPE: UNSCOPED -- $SCOPE_FOREIGN of $SCOPE_TOTAL operations came from"
+    echo "           processes other than the traced command. The capture is"
+    echo "           machine-wide, so no figure taken from it is a measurement"
+    echo "           of a build (#1185)."
+    if [[ "${WAYBILL_SCOPE_MUST_PASS:-0}" == "1" ]]; then
+        echo "FAIL: WAYBILL_SCOPE_MUST_PASS=1 and the capture is not scoped"
+        exit 1
+    fi
+    echo "           Recorded, not asserted. Set WAYBILL_SCOPE_MUST_PASS=1 to"
+    echo "           make this blocking."
+else
+    echo "    SCOPE: CLEAN -- every one of $SCOPE_TOTAL operations came from the"
+    echo "           traced command. Trustworthy because the two checks above"
+    echo "           passed: operations were captured, and the traced command"
+    echo "           was among them."
+    echo "           If scoping has landed, update the baseline in"
+    echo "           specs/1270-stable-probe-tracepoints/measurements/findings.md"
+    echo "           and make this blocking with WAYBILL_SCOPE_MUST_PASS=1."
+fi
+echo
+
 # Milestone 1070 (#614): build inside the workspace. A target dir under
 # /tmp is dropped whole by the Ephemeral noise category, which made every
 # write invisible; the in-tree layout is also what real builds use.
@@ -890,7 +1094,7 @@ PRE_M1072_FIELDS='["bloom_filter_capacity","bloom_filter_false_positive_rate","e
 # Found by running the harness to completion on arm64. The x86-64 lane
 # exits at the m1070 SC-001 check above, so CI has never reached this
 # assertion and never reported the conflict.
-THIS_BRANCH_FIELDS='["open_failures_discarded","event_drop_reasons"]'
+THIS_BRANCH_FIELDS='["open_failures_discarded","event_drop_reasons","pending_open_entries_at_close","traced_subtree_opens"]'
 ALLOWED_FIELDS=$(jq -cn --argjson a "$PRE_M1072_FIELDS" --argjson b "$THIS_BRANCH_FIELDS" '$a + $b')
 # `index($k)` is an exact membership test. The earlier form,
 # `[.] | inside($pre)`, matched substrings -- jq's `inside` on strings is
@@ -943,13 +1147,170 @@ if [[ "$NULL_PATH_DROPS" -ne 5 ]]; then
 fi
 echo "    #618 control: the drop counters fire, and the count is exact"
 
+echo "==> #1185 control: the one drop that had no counter"
+# `store_open` discarding a failed `PENDING_OPEN.insert` was the only
+# early return in the open path that recorded nothing, and the open it
+# dropped is lost outright -- the exit has no request to join. The map is
+# bounded (4096) and machine-wide, so saturation is reachable and nothing
+# said when it happened.
+#
+# Saturating a 4096-entry map on demand is not something a test can
+# arrange, so the branch is forced instead, the same way
+# WAYBILL_TRACE_FORCE_REQUEST_ONLY forces the FR-004b fallback. This is a
+# control over the plumbing: that the count reaches the attestation, and
+# that losing the request loses the open.
+#
+# It does NOT establish that a genuinely full map returns an error here.
+# That rests on bpf_map_update_elem rejecting an insert into a full hash
+# map, and only real saturation confirms it. Labelled, not implied.
+#
+# `rustc --version` rather than a trivial command because every open is
+# lost by construction, and `trace capture` refuses a capture that
+# aggregated nothing. The compiler exec arrives on a different ring buffer
+# and is unaffected, so the capture is admitted with an empty read set --
+# which is the point being demonstrated.
+#
+# `--include-system-reads` strengthens the zero-operations assertion below
+# rather than weakening it: with the m213 System category filtered, a
+# surviving ambient open would be dropped downstream and the assertion
+# would pass on a flag that had covered only some open variants. Widened,
+# anything that survives is visible.
+FORCED_OUTPUT=/tmp/i1185-forced.attestation.json
+set +e
+WAYBILL_TRACE_FORCE_PENDING_INSERT_FAIL=1 "$MIKEBOM" trace capture \
+    --attestation-format waybill-v1 \
+    --include-system-reads \
+    --output "$FORCED_OUTPUT" \
+    -- rustc --version >/tmp/i1185-forced.log 2>&1
+FORCED_STATUS=$?
+set -e
+if [[ $FORCED_STATUS -ne 0 || ! -f "$FORCED_OUTPUT" ]]; then
+    echo "FAIL: the #1185 forced-failure control exited $FORCED_STATUS with no attestation"
+    echo "      A control that did not run proves nothing about the counter."
+    tail -40 /tmp/i1185-forced.log
+    exit 1
+fi
+FORCED_INSERT_FAILS=$(jq '.predicate.trace_integrity.event_drop_reasons.kernel_pending_insert_failed // 0' "$FORCED_OUTPUT")
+FORCED_ORPHANS=$(jq '.predicate.trace_integrity.event_drop_reasons.kernel_exit_without_request // 0' "$FORCED_OUTPUT")
+FORCED_OPS=$(jq '.predicate.file_access.operations | length' "$FORCED_OUTPUT")
+FORCED_HELD=$(jq '.predicate.trace_integrity.pending_open_entries_at_close // "unmeasured"' "$FORCED_OUTPUT")
+# `.predicate.compiler_pipeline.completeness.state`, the path the m210
+# check at the top of this script uses. The first version of this line
+# looked under `trace_integrity` and printed "absent", which reads as
+# "the capture declined to claim completeness" -- the opposite of the
+# finding. A probe that names the wrong field says something false about
+# the system with full confidence.
+FORCED_COMPLETENESS=$(jq -r '.predicate.compiler_pipeline.completeness.state // "absent"' "$FORCED_OUTPUT")
+FORCED_DROPPED=$(jq -r '.predicate.compiler_pipeline.completeness.dropped // "-"' "$FORCED_OUTPUT")
+FORCED_REASON=$(jq -r '.predicate.compiler_pipeline.completeness.reason // "-"' "$FORCED_OUTPUT")
+echo "    kernel_pending_insert_failed: $FORCED_INSERT_FAILS"
+echo "    kernel_exit_without_request:  $FORCED_ORPHANS   (the same losses, seen at the other end)"
+echo "    file operations captured:     $FORCED_OPS   (expected 0 -- every request refused)"
+echo "    pending_open_entries_at_close: $FORCED_HELD"
+if [[ "$FORCED_INSERT_FAILS" -le 0 ]]; then
+    echo "FAIL: the forced insert failure counted nothing (#1185)"
+    echo "      Either the flag did not reach the kernel or the new EVENT_DROPS"
+    echo "      slot is past the end of the map, in which case get_ptr_mut"
+    echo "      returns None and the counter reads zero forever -- a counter"
+    echo "      that cannot see its own subject."
+    jq -c '.predicate.trace_integrity.event_drop_reasons' "$FORCED_OUTPUT" | sed 's/^/      /'
+    exit 1
+fi
+if [[ "$FORCED_OPS" -ne 0 ]]; then
+    echo "FAIL: $FORCED_OPS operations survived a trace where every request was refused"
+    echo "      The forced flag is not covering every open variant, so the"
+    echo "      control measures less than it claims."
+    exit 1
+fi
+echo "    #1185 control: the counter fires, and refusing the request loses the open"
+# Printed, not asserted: this is #1185's remaining defect rather than a
+# regression this branch introduces. A capture that lost every single open
+# still describes itself as it does below. Tightening this into an
+# assertion is the honest-claim change (spec T038), not this one.
+echo "    completeness with a total capture loss: $FORCED_COMPLETENESS   (dropped=$FORCED_DROPPED reason=$FORCED_REASON)"
+
 # Report what the real build dropped. Not an assertion: on a healthy host
 # `user_no_invocation_mapping` is non-zero because cargo's own file
 # activity belongs to no compiler invocation. It is printed so a CI log
 # names the mechanism when a capture comes up short (#1185).
+# #1185 step 1 — did the traced subtree get established, and did it reach
+# past its root?
+#
+# With the gate still off, capture is byte-identical whether the subtree
+# holds one process or ninety, so the attestation cannot answer this and the
+# kernel counters are the only signal. `inside` counts opens from processes
+# in the subtree; `outside` counts the rest, and is what the gate will drop.
+#
+# A zero `inside` is the failure that matters. It means the root announced
+# itself -- the trace would have refused to start otherwise -- and no
+# descendant inherited, so the propagation in `try_sched_process_fork` is
+# not working. Enabling a gate on top of that would drop the entire build.
+# Read from the attestation, not from the log. The first version of this
+# grepped `inside=` out of the trace log and never matched: the container
+# colours its output, so the log holds `inside` and `=` separated by escape
+# sequences. Worse, with `set -euo pipefail` the no-match made the
+# assignment exit 1 and killed this script *before* the FAIL branch below
+# could print -- a check whose failure path was unreachable because the line
+# feeding it killed the shell first.
+INSIDE=$(jq -r '.predicate.trace_integrity.traced_subtree_opens // "absent"' "$OUTPUT")
+OUTSIDE=$(jq -r '.predicate.trace_integrity.event_drop_reasons.kernel_outside_traced_subtree // 0' "$OUTPUT")
+echo "==> #1185 traced subtree (fixture build)"
+if [[ "$INSIDE" == "absent" ]]; then
+    echo "FAIL: traced_subtree_opens is absent from the attestation"
+    echo "      The field is emitted whenever the counter could be read, so"
+    echo "      its absence means the counter was unreadable and the subtree"
+    echo "      is unmeasured -- which is not the same as a subtree of zero."
+    jq -c '.predicate.trace_integrity.kprobe_attach_failures' "$OUTPUT" | sed 's/^/      attach failures: /'
+    exit 1
+fi
+echo "    opens admitted (inside the subtree): $INSIDE"
+echo "    opens declined (other processes):    $OUTSIDE"
+if [[ "$INSIDE" -eq 0 ]]; then
+    echo "FAIL: the traced subtree admitted zero opens"
+    echo "      The root announced itself -- the trace refuses to start"
+    echo "      otherwise -- so this means fork propagation is broken, the"
+    echo "      subtree never grew past its root, and the gate has dropped"
+    echo "      the entire build while the attestation still describes it"
+    echo "      (#1185, the exact failure this work exists to remove)."
+    exit 1
+fi
+# No threshold on the ratio. Nothing has measured what it should be on this
+# fixture, and a number invented here would be exactly the kind of figure
+# that passes every test written around it (CLAUDE.md, "measure external
+# behaviour before designing around it").
+#
+# The real guards on this change are elsewhere and already in this script:
+# m1070 SC-001, the 9-invocation / 7-rustc counts, and the m1072 read and
+# write set checks. If the gate dropped something the build needed, those
+# fail -- which is the assertion a ratio threshold would only approximate.
+echo "    (declined opens are other processes', not loss by this capture)"
+echo
+
+echo "    pending_open_entries_at_close (fixture build): $(jq '.predicate.trace_integrity.pending_open_entries_at_close // "unmeasured"' "$OUTPUT")"
+echo "      ^ of 4096. Read as accumulated leakage, not peak: an entry is"
+echo "        removed when its syscall exits, so what remains are threads"
+echo "        that died inside an open. Near the cap means saturation is"
+echo "        reachable and kernel_pending_insert_failed is what it costs."
 echo "    event_drop_reasons (fixture build):"
 jq -r '(.predicate.trace_integrity.event_drop_reasons // {})
        | to_entries | sort_by(-.value) | .[] | "      \(.key) \(.value)"' "$OUTPUT"
+
+# #1185 — the same slots beside the control measured at the top of this run,
+# and the excess the build is answerable for. A slot the control already
+# holds is ambient traffic on this runner, not loss by the build; only the
+# difference says anything about the capture. Negative differences are shown
+# as they are rather than clamped: the control is one sample, so a build
+# below it means the slots are noise-dominated, which is itself the finding.
+echo "    event_drop_reasons (control / fixture / excess):"
+jq -rn --slurpfile c "$CONTROL_OUTPUT" --slurpfile f "$OUTPUT" '
+    ($c[0].predicate.trace_integrity.event_drop_reasons // {}) as $ctl
+  | ($f[0].predicate.trace_integrity.event_drop_reasons // {}) as $fix
+  | (($ctl | keys) + ($fix | keys) | unique)
+  | .[]
+  | . as $k
+  | (($ctl[$k] // 0)) as $a
+  | (($fix[$k] // 0)) as $b
+  | "      \($k) \($a) / \($b) / \($b - $a)"'
 
 echo "==> #1252 SC-007: an IPv6-only connection is recorded"
 # The old capture was a kprobe on `tcp_v4_connect`, which IPv6 connections

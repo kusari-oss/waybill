@@ -536,3 +536,397 @@ The delta is now attributable, so each outcome says something different:
   program not firing for some opens.
 - **in between** — compare it against the 73 missing operations
   (102 − 29) to size how much of the shortfall the join accounts for.
+
+## Run 8 — the baseline landed, the number is still not attributable, and a far better lead
+
+x86-64 lane on `51a2c24c`. Two attempts of the same fixture build:
+
+| | attempt 1 | attempt 2 | arm64 |
+|---|---|---|---|
+| file operations | 91 | 35 | 102 |
+| `unresolved_relative_opens` | **56** | 2 | — |
+| `open_failures_discarded` | 111 | 248 | 599 |
+| `kernel_exit_without_request` | 1113 | 845 | absent |
+| rustc invocations | 7 | 7 | 7 |
+
+### The baseline works and is insufficient
+
+It subtracted ~124 and ~73 (1237→1113, 918→845). So the window between
+attach completing and the baseline read holds ~100 orphans — which
+tells us the ambient open rate on the runner is roughly 100 per few
+milliseconds, and therefore that the full attach gap plausibly accounts
+for ~1000. The baseline cannot catch those: a syscall that *entered*
+during the attach gap *exits* after the baseline read, so it lands in
+the delta no matter when the baseline is taken.
+
+Conclusion: `kernel_exit_without_request` still cannot distinguish
+ambient traffic from lost build entries. The baseline removed one
+component of the artifact, not the artifact. **The missing control is a
+trace of a trivial command on the same runner**: if `cat /etc/hostname`
+also reports ~1000, the number is ambient. The harness already traces
+exactly that for the m213 widen case, but the script exits at the
+m1070 SC-001 failure above it, so CI has never reached it. The control
+has to move ahead of the fixture build.
+
+### The better lead: a source read that arrived and did not resolve
+
+Attempt 1's recorded operations contain:
+
+```
+read UNRESOLVED binaries/safe-only/src/main.rs
+```
+
+A source file, **captured**, and unresolved. So these reads are not
+uniformly lost — at least some reach userspace and fail to resolve
+because the working-directory model did not know the process's cwd.
+The other unresolved entries in that run (`nvme0n1`, `ACPI0004:00`,
+`block`, `devices`, `259:1`) are ambient udev/systemd opens against a
+directory fd, which are legitimately unresolvable and always will be.
+
+That reframes the m1070 SC-001 failure. The check looks for an absolute
+path in a rustc read set; an unresolved relative read is present in the
+capture but can never match, so the capture can hold the evidence and
+still fail the assertion.
+
+56 unresolved in attempt 1 against 2 in attempt 2 is the #1185
+nondeterminism, now with a mechanism attached to it rather than a
+symptom.
+
+### Why cwd would be unknown
+
+The seed is not missing: `scan.rs` spawns the traced child with an
+explicit `current_dir`, precisely so the child performs an observable
+`chdir` (m1070 research R2). So the model's ground truth depends on
+three events surviving the capture — the root's `sys_enter_chdir` /
+`sys_exit_chdir` pair, and a `sched_process_fork` per descendant.
+
+Which gives a single explanation covering every observation: the
+capture is lossy on x86-64, and **losing one chdir or fork event
+amplifies**. cwd is inherited, so one lost event turns every subsequent
+relative read by that process and its children into `Unresolved`. That
+is why whole crate roots vanish together, why which root vanishes
+varies run to run, and why a busy x86-64 runner fails where a quiet
+arm64 container passes.
+
+It also explains why #618 never names it: the lost event is a *chdir or
+fork*, not an open, and the drop counters only instrument the open join.
+
+### Two things worth doing, in order
+
+1. **Seed the root's cwd from the tracer's own ground truth.** The
+   tracer calls `current_dir()` to build the `Command`; it knows the
+   directory and the child pid. Depending on observing the `chdir` it
+   itself caused is strictly weaker than recording what it set. This is
+   not resolving against a guess (Principle III) — it is the one cwd in
+   the system the tracer established rather than inferred. Children
+   still inherit through fork events, so this hardens the root only,
+   but the root is what poisons everything downstream.
+2. **Move a control trace ahead of the fixture build** and print its
+   drop reasons and operation count, so `kernel_exit_without_request`
+   acquires a baseline measured on the same runner in the same run.
+
+## Run 9 — both of run 8's next steps, measured on arm64
+
+Implemented the two items above and ran the full harness in the
+container (`waybill-ebpf-test:1185e`, arm64, Colima). `RUN_EXIT=0`, zero
+`FAIL` lines, zero `WARN` lines, `>>> m210 + m212 + m213 + m1072
+integration test PASSED`.
+
+### The seed
+
+`CwdTracker::seed(pid, dir)` records a directory the tracer
+*established* rather than observed, and `scan.rs` seeds the root before
+any event is drained.
+
+It seeds **two** pids, and the second is not redundant. The child's
+`sched_process_fork` record names the tracer as its parent, and
+`CwdTracker::fork` overwrites unconditionally, so seeding only the child
+would have been clobbered straight back to `Unknown` by the very record
+the seed exists to stop depending on. With both seeded, either event
+surviving is enough and the two agree.
+
+That was found by mutation, not by reading: deleting the tracer seed
+from `the_root_fork_inherits_the_seed_rather_than_clobbering_it` makes
+it fail with `left: Unresolved`. A single seed would have looked
+correct, passed its own test, and changed nothing about #1185.
+
+arm64 still passes m1070 SC-001 with the seed in place. The seed cannot
+be shown to fix anything here, because arm64 was already passing — only
+the x86-64 lane can show that.
+
+### The control, and what it can and cannot baseline
+
+A trace of `cat /etc/hostname` now runs before the fixture build, on the
+same runner in the same run. It asserts only that it *ran* — a floor
+measured on a failed run is worse than no floor — and then prints.
+
+First attempt failed: `trace capture` refuses a capture that aggregated
+nothing ("no dependency activity observed"), and the only file `cat`
+reads is one the m213 System category drops. Fixed with
+`--include-system-reads`.
+
+Before using that flag I checked it cannot bias the one number the
+control exists to measure, rather than assuming so.
+`classify_and_drop_if_noise` is called inside `emit_open`, *after* the
+entry/exit join — so a filtered path has already been joined and counted
+no drop. The widen flag changes which records reach the ring buffer,
+never whether an exit found its entry.
+
+| | control, run 9 | control, run 10 | fixture build (default) |
+|---|---|---|---|
+| `event_drop_reasons` | `{}` | `{}` | `{}` |
+| file operations | 239 | **415** | 108 |
+| `unresolved_relative_opens` | 192 | **258** | 5 |
+
+Run 10 re-ran the identical block on the same image minutes later, to
+check a relabelling edit. It moved 239 → 415 and 192 → 258 while the
+fixture build held at 108 / 5. That is the "not comparable" claim
+demonstrated rather than asserted: those two rows track the container's
+ambient load, so they are a floor for nothing. `event_drop_reasons` was
+`{}` in both, which is the row the control exists for.
+
+**The flag is safe for the drop slots and invalidates the other two
+rows.** A bare `cat` reporting 239 operations is not `cat`'s work: the
+probes are machine-wide, and m211 clears the userspace pid filter in
+command-execute mode (`admitted()` returns true for every pid when
+`target_pids` is empty), so with System reads admitted the capture holds
+every ambient open in the container. The fixture build's 108 and 5 were
+taken with that category filtered. The 239/192 vs 108/5 difference is
+the filter, not the build, and the script now says so on each line —
+dropping the figures would have been worse, because the next reader
+would recompute them and draw the comparison anyway.
+
+I drew that comparison wrongly myself before checking: on seeing 192 I
+said attempt 1's 56 unresolved opens were "probably mostly ambient". Not
+supported. x86-64's 56 and arm64's 5 were both taken with the System
+category **on**, so that gap stands as a real difference between the two
+architectures.
+
+### What run 9 did not settle
+
+`event_drop_reasons` is `{}` on **both** arm64 runs, so arm64 has no
+orphans to baseline and the control measured a floor of zero against a
+build of zero. The question the control was built to answer —
+whether x86-64's 1113 is ambient traffic or lost build entries — needs
+the x86-64 lane, where the slot is non-empty. The delta table
+(`control / fixture / excess`) correctly printed nothing here, which is
+the lossless shape.
+
+So: the instrument is in place and verified to fire exactly (the #618
+positive control still reports `kernel_null_path = 5` on five forced
+`openat(NULL)` calls), and it has nothing to say on this architecture.
+
+## Run 11 — reading the open path instead of the counters, and the drop nobody counted
+
+Run 9 and run 10 left the orphan slot uninterpretable for a reason no
+further control can fix, so this run went back to the code rather than
+measuring around it.
+
+### The finding
+
+`store_open` in `waybill-ebpf/src/programs/open_syscalls.rs` ended with:
+
+```rust
+let _ = PENDING_OPEN.insert(&tid, &pending, 0);
+```
+
+`PENDING_OPEN` is a BPF hash map of **4096** entries
+(`waybill-ebpf/src/maps.rs`). A full hash map rejects
+`bpf_map_update_elem`, and that result was discarded. This was the only
+early return in the open path that recorded nothing — every other site
+in the module already had a named `EVENT_DROPS` slot.
+
+The consequence is not a missing counter but a missing open: with no
+stored request the exit tracepoint has nothing to join, so the open never
+reaches a read set. It also increments
+`kernel_exit_without_request`, which is why that slot could not be read.
+**Two different failures were summing into one number:**
+
+| | cause | consequence |
+|---|---|---|
+| exit arrived before its entry was ever stored | the map refused the request | the open is **lost** |
+| exit arrived for a syscall already in flight | the probes attached late | nothing lost; counting noise |
+
+Subtracting a floor cannot separate those, because a floor is one number
+and this is two mechanisms. That — not arm64's quietness — is why runs 9
+and 10 could not settle what x86-64's 1113 means.
+
+### Why this matches #1185's symptom better than anything measured so far
+
+These tracepoints are **machine-wide** (`should_trace()` excludes only
+the tracer's own pid), so every thread on the host competes for the same
+4096 slots. The map's own doc comment claimed the bound was "threads
+currently inside an open, not opens", which holds only while every entry
+is eventually removed. The exit tracepoint removes one; a thread that
+dies inside the syscall does not, and nothing reclaims it for the rest of
+the trace.
+
+If occupancy saturates partway through a build, every subsequent open
+anywhere on the machine is dropped. That produces loss that is
+
+- **nondeterministic** — it depends on accumulated leakage and on
+  whatever else the host was doing;
+- **wholesale rather than sampled** — later crates vanish entirely while
+  earlier ones look intact, which is the shape #1185 reports;
+- **invisible** — the capture still reports itself complete.
+
+This is a hypothesis, not a measurement. What this run adds is the
+instrument that can confirm or kill it.
+
+### Ruled out by reading, not by assuming
+
+An entry program live without its exit would leak every entry it stored.
+`trace/loader.rs` already prevents it: `openat2`, `open` and `creat`
+attach **exit first** and skip the entry on failure, and `openat`'s
+entry-first exception has the FR-004b `request_only` fallback, which
+emits at entry instead of stashing. So an unpaired entry program is not a
+standing leak source. Only `openat`'s own attach window is, and that is
+milliseconds.
+
+### What this run changed
+
+1. `kernel_pending_insert_failed` (`EventDropReason` slot 3) counts the
+   refused insert at its own site. It double-counts with
+   `kernel_exit_without_request` by design: the difference between the
+   two is late arrival, and this slot alone is loss the capture caused.
+2. `EVENT_DROPS` is now sized from `EventDropReason::KERNEL_SLOTS`
+   instead of the literal `3`. `increment_event_drop` reaches its slot
+   through `get_ptr_mut`, which returns `None` past the end of the map
+   and silently counts nothing — so a variant added without widening the
+   map would read zero forever. A counter that cannot see its own
+   subject is indistinguishable from a mechanism that never fired, which
+   is the ambiguity #618 exists to remove.
+3. `pending_open_entries_at_close` reports the map's occupancy at trace
+   end. Read as **accumulated leakage, not peak**: entries drain as
+   syscalls exit, so what remains are the threads that died inside one.
+   A handful means the bound is not the constraint; a figure near 4096
+   means saturation is reachable and (1) is what reaching it costs. This
+   is the better early-warning instrument, because (1) only fires after
+   the damage.
+4. A forced-failure control (`WAYBILL_TRACE_FORCE_PENDING_INSERT_FAIL=1`,
+   following the existing `WAYBILL_TRACE_FORCE_REQUEST_ONLY` precedent)
+   makes the branch reachable, since saturating a 4096-entry machine-wide
+   map on demand is not something a test can arrange.
+
+### What the forced control does and does not establish
+
+It establishes that the count reaches the attestation, and that refusing
+the request loses the open — the harness asserts the counter is non-zero
+and that **zero** operations survive.
+
+It does **not** establish that a genuinely full map returns an error at
+this call site. That rests on `bpf_map_update_elem` rejecting an insert
+into a full hash map, and only real saturation would confirm it. The
+distinction is labelled in the map's doc comment and in the harness
+output rather than left to be inferred.
+
+### #1185's honesty defect, now demonstrable on demand
+
+Under the forced flag the capture loses **every** open and still
+describes itself the way the harness prints. That is printed, not
+asserted: it is the defect #1185 reports rather than a regression this
+change introduces, and tightening it into an assertion is the
+honest-claim change (T038), not this one.
+
+### Measured, arm64, Colima aarch64 / 2 CPUs / kernel 6.8, image `1185g`
+
+The forced control:
+
+| | |
+|---|---|
+| `kernel_pending_insert_failed` | **75** |
+| `kernel_exit_without_request` | **75** |
+| file operations captured | **0** |
+| `pending_open_entries_at_close` | 0 |
+
+The counter fires and reaches the attestation; refusing the request loses
+**every** open. The two slots came out exactly equal, which is the 1:1
+pairing claimed above, measured rather than argued — every refused insert
+produced exactly one orphaned exit. Recorded as a finding, not asserted:
+a syscall interrupted between entry and exit would break the equality
+without anything being wrong, and a brittle assertion that goes red for
+that reason teaches people to ignore it.
+
+The fixture build:
+
+| | |
+|---|---|
+| `pending_open_entries_at_close` | **2**, then **0**, of 4096 |
+| `event_drop_reasons` | `{}` |
+| file operations | 102 |
+| `completeness` | `complete` |
+
+Two runs of the same image, minutes apart: occupancy 2 and then 0. The
+forced control reported `kernel_pending_insert_failed: 75` in both, which
+is the determinism expected of a fixed command (`rustc --version`) with a
+fixed open count — so the 2-vs-0 is the host's leakage varying, not the
+instrument.
+
+### This weakens the saturation hypothesis
+
+**2 of 4096, and then 0.** Over an entire fixture build on a machine-wide
+probe, the in-flight-open map accumulated two leaked entries, then none. On this host leakage
+is not close to being the constraint, and the mechanism proposed above —
+leaks accumulating until the map saturates — is not what is happening
+here.
+
+Stated as a weakening rather than a refutation, because of what the
+number does and does not cover:
+
+- It is one small build on a quiet 2-CPU arm64 VM. x86-64 is where the
+  1113 orphans are, and it is a busier host.
+- Occupancy at close measures **accumulated leakage**, not peak. A build
+  could transiently saturate from genuine concurrency and drain before
+  close; 2 at close does not exclude that. What it does make unlikely is
+  the specific leak-accumulation path.
+
+So arm64 now has neither orphans (`{}`) nor leakage (2), and still cannot
+discriminate between the two mechanisms — for the same structural reason
+run 9 could not, with one more slot established as silent.
+
+### What the x86-64 lane now answers
+
+Sharper than before, and without needing a control at all:
+
+- `kernel_pending_insert_failed` **near 1113** → the map is the cause,
+  and #1185 is a sizing-and-eviction bug.
+- `kernel_pending_insert_failed` **0 with 1113 orphans** → the map is
+  exonerated outright, every one of those 1113 is late arrival or
+  ambient traffic, and the loss #1185 reports is somewhere else entirely.
+- `pending_open_entries_at_close` says which of those two to expect
+  before the counter does.
+
+Either answer closes a question that four runs of controls could not,
+which is the argument for the counter over another floor.
+
+### #1185's honesty defect is now a deterministic reproduction
+
+With the path corrected, the forced control reports:
+
+```
+completeness with a total capture loss: complete   (dropped=- reason=-)
+```
+
+A capture that observed **zero** file operations — every single open lost
+— describes itself as `complete`, and names no drop and no reason. That
+is #1185's report verbatim, and it is now reachable from one environment
+variable instead of waiting for a nondeterministic loss to occur.
+
+Nothing in this change makes it worse and nothing here fixes it; the
+assertion is deliberately left as a print. The fix is the honest-claim
+change (T038): a capture whose kernel drop slots are non-zero must not
+claim `complete`. What this run adds is that the fix now has a test that
+fails before it and passes after, which it did not have while the loss
+was nondeterministic.
+
+### A defect in this run's own instrument
+
+The forced control first printed `completeness with a total capture loss:
+absent`, read from `.predicate.trace_integrity.completeness`. That field
+does not exist — the m210 check at the top of the same script reads
+`.predicate.compiler_pipeline.completeness.state`. "Absent" reads as the
+capture declining to claim completeness, which is the opposite of the
+finding being demonstrated. Fixed to the real path, with `dropped` and
+`reason` alongside. Recorded because a probe naming the wrong field
+states something false with full confidence, and nothing about the output
+looked wrong.

@@ -53,10 +53,27 @@ pub static CONFIG: Array<TraceConfig> = Array::with_max_entries(1, 0);
 /// Milestone 210 — PID → compiler-invocation-id map. Populated in
 /// kernel by the `sched_process_exec` tracepoint when a whitelisted
 /// compiler starts; extended to child PIDs by the `sched_process_fork`
-/// tracepoint (research R3). Consumed by every file-op kprobe (see
-/// `file_ops.rs`) to gate whether the file event should be emitted at
-/// all — non-compiler-descendant events are dropped at zero userspace
-/// cost per R3.
+/// tracepoint (research R3).
+///
+/// This comment used to say the map was "consumed by every file-op kprobe
+/// (see `file_ops.rs`) to gate whether the file event should be emitted at
+/// all — non-compiler-descendant events are dropped at zero userspace cost
+/// per R3". **That was not true**, and had not been for as long as the
+/// sentence existed: `grep -rn COMPILER_INVOCATIONS waybill-ebpf/src`
+/// returns `compiler_exec.rs` and this declaration, nothing else. No
+/// file-op program reads it, so nothing gated on compiler ancestry and the
+/// capture admitted every process on the machine (#1185).
+///
+/// Corrected rather than deleted, because the sentence read as a verified
+/// fact and a reader who believed it — including the author of the #1185
+/// controls — would model the capture as subtree-scoped when it is not.
+/// It is restored to a claim when a file-op program actually gates on a
+/// traced-descendant set; see the scope check in
+/// `scripts/ebpf-integration-test.sh`, which measures what the capture
+/// admits instead of asserting it in prose.
+///
+/// What the map IS used for: `compiler_exec.rs` reads it to assign and
+/// propagate invocation ids, and to walk ancestry for `ppid` resolution.
 ///
 /// Value = the invocation-id assigned userspace-side at exec-event
 /// receive time. On fork, the child inherits its parent's value so
@@ -217,20 +234,20 @@ pub static PENDING_RENAME: HashMap<u32, PendingRename> = HashMap::with_max_entri
 /// process asked for, the exit tracepoint learns whether it worked.
 ///
 /// The key is the thread id rather than the pid because a syscall's entry and
-/// exit run on one thread. The bound is therefore threads currently inside an
-/// open, not opens — a build with 4096 threads blocked in `openat` at one
-/// instant would be remarkable.
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub struct PendingOpen {
-    pub dfd: i64,
-    pub path_ptr: u64,
-    /// `O_*` flags as the caller passed them. Read from the tracepoint's own
-    /// argument slot for every call but `openat2`, whose flags live behind a
-    /// user pointer (see `open_syscalls.rs`).
-    pub flags: u32,
-    pub _padding: u32,
-}
+/// exit run on one thread. The bound was taken to be threads currently
+/// inside an open, not opens — a build with 4096 threads blocked in `openat`
+/// at one instant would be remarkable.
+///
+/// #1185 questions that, because it holds only while every entry is
+/// eventually removed. The exit tracepoint removes one; a thread that dies
+/// inside the syscall does not, and nothing reclaims it for the rest of the
+/// trace. These probes are machine-wide, so every thread on the host
+/// contributes. Whether that accumulates anywhere near 4096 is a question
+/// about the host rather than the build, and it is now measured instead of
+/// assumed: `pending_open_entries_at_close` in the attestation is this map's
+/// occupancy when the trace ended, and `kernel_pending_insert_failed` counts
+/// the opens lost when it would take no more.
+pub use waybill_common::maps::PendingOpen;
 
 #[map]
 pub static PENDING_OPEN: HashMap<u32, PendingOpen> = HashMap::with_max_entries(4096, 0);
@@ -258,6 +275,66 @@ pub static OPEN_FAILURES_DISCARDED: PerCpuArray<u64> =
 #[map]
 pub static OPEN_REQUEST_ONLY: PerCpuArray<u8> = PerCpuArray::with_max_entries(1, 0);
 
+/// #1185 — the traced subtree: the spawned root and every descendant.
+///
+/// Seeded by the root itself through the handshake in `open_syscalls.rs`
+/// (see `waybill_common::maps::TRACE_HANDSHAKE_DFD` for why the tracer
+/// cannot seed it by pid), then extended on every fork by
+/// `compiler_exec.rs::try_sched_process_fork` — the same propagation that
+/// map already does for `COMPILER_INVOCATIONS`, in the same function.
+///
+/// Keyed by **tgid**, because every lookup is by tgid: file records carry
+/// the process id, so a traced process's threads are covered by its own
+/// entry. The fork tracepoint cannot tell a new thread from a new process,
+/// so a thread's id is inserted too and never looked up. That is dead
+/// weight rather than a correctness problem, and the exit tracepoint
+/// reclaims it.
+///
+/// Sized above `COMPILER_INVOCATIONS` because this holds the whole build,
+/// not just compiler descendants, and because the cost of running out is
+/// a descendant that looks foreign. `KernelTracedInsertFailed` counts that
+/// rather than leaving it silent.
+#[map]
+pub static TRACED_PIDS: HashMap<u32, u8> = HashMap::with_max_entries(16384, 0);
+
+/// #1185 — opens observed from **inside** the traced subtree, slot 0.
+///
+/// Not an `EventDropReason`: nothing is dropped here, and the drop slots
+/// are a vocabulary for loss. This is the positive half of the dry run,
+/// and it is the only way to see whether fork propagation works while the
+/// gate is still off — with capture unchanged, the attestation looks
+/// identical whether the subtree contains one process or ninety.
+///
+/// A zero here with a seeded root means propagation is broken: the root
+/// announced itself and no descendant inherited.
+#[map]
+pub static TRACED_SUBTREE_HITS: PerCpuArray<u64> = PerCpuArray::with_max_entries(1, 0);
+
+/// #1185 — the per-trace handshake nonce, written by the loader before the
+/// child is spawned. Slot `TRACE_HANDSHAKE_NONCE_SLOT`. A zero nonce means
+/// no handshake is armed, and no pid can be seeded.
+#[map]
+pub static TRACE_HANDSHAKE_NONCE: Array<u32> = Array::with_max_entries(1, 0);
+
+/// #1185 — per-CPU u8 config flag, slot 0: `1` makes the entry tracepoint
+/// refuse to stash the in-flight open, as a full `PENDING_OPEN` would.
+///
+/// A counter nobody has seen fire is not a measurement. The new
+/// `kernel_pending_insert_failed` slot counts a map that would not take
+/// the request, and saturating a 4096-entry machine-wide map on demand is
+/// not something a test can arrange — so the branch is made reachable
+/// instead, the way `OPEN_REQUEST_ONLY` above makes the FR-004b fallback
+/// reachable without waiting for a host that lacks the exit tracepoint.
+///
+/// What it establishes: that the count reaches the attestation, and what
+/// a capture looks like when the request cannot be held — every open
+/// lost, which is the #1185 symptom. What it does NOT establish: that a
+/// genuinely full map returns an error here. That claim rests on
+/// `bpf_map_update_elem` rejecting an insert into a full hash map, and
+/// only a real saturation would confirm it.
+#[map]
+pub static PENDING_INSERT_FORCE_FAIL: PerCpuArray<u8> = PerCpuArray::with_max_entries(1, 0);
+
 /// #618 / #1185 — per-CPU counters for kernel-side drops that used to be
 /// invisible, one slot per `EventDropReason::KERNEL` variant in
 /// discriminant order. Same shape and same reasoning as m213's
@@ -267,8 +344,16 @@ pub static OPEN_REQUEST_ONLY: PerCpuArray<u8> = PerCpuArray::with_max_entries(1,
 /// anything. The point is not the number but the distinction: a zero
 /// here means the mechanism did not fire, where before there was no way
 /// to tell that from nobody looking.
+///
+/// Sized from `KERNEL_SLOTS` rather than a literal, because
+/// `increment_event_drop` reaches the slot through `get_ptr_mut`, which
+/// returns `None` for an index past the end and silently counts
+/// nothing. A variant added to the enum without widening the map would
+/// therefore read zero forever — a counter that cannot see its own
+/// subject, indistinguishable from a mechanism that never fired.
 #[map]
-pub static EVENT_DROPS: PerCpuArray<u64> = PerCpuArray::with_max_entries(3, 0);
+pub static EVENT_DROPS: PerCpuArray<u64> =
+    PerCpuArray::with_max_entries(waybill_common::events::EventDropReason::KERNEL_SLOTS, 0);
 
 /// #1252 — per-CPU u8 config flag, slot 0: `1` makes a discarded open
 /// reportable as an `OpenFailed` record carrying the path and the errno,

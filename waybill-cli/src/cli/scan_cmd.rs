@@ -4211,6 +4211,14 @@ pub async fn execute(
         // #618 — scan mode runs no eBPF, so there is no event stream to
         // drop from. Empty is a fact here, not an unmeasured default.
         event_drop_reasons: std::collections::BTreeMap::new(),
+        // #1185 — `None` rather than `Some(0)`, and the distinction
+        // matters: there is no in-flight-open map in scan mode, so its
+        // occupancy is not a measurement of zero. Every other field here
+        // states a fact; this one states an absence.
+        pending_open_entries_at_close: None,
+        // #1185 — scan mode spawns nothing and loads no probes, so there is
+        // no traced subtree to have observed. Absent, not zero.
+        traced_subtree_opens: None,
     };
 
     // Milestone 073: resolve identifiers — auto-detected

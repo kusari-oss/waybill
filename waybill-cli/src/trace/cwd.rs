@@ -74,6 +74,25 @@ impl CwdTracker {
         self.dirs.get(&pid).cloned().unwrap_or(WorkingDir::Unknown)
     }
 
+    /// Record a directory the tracer *established* rather than observed.
+    ///
+    /// The tracer builds the child's `Command` with an explicit
+    /// `current_dir`, so for that one process it knows the answer without
+    /// inferring it. Everything else in this model is observational, and
+    /// deliberately so — but depending on observing the `chdir` the tracer
+    /// itself caused is strictly weaker than recording what it set, and the
+    /// root's directory is the one every descendant inherits. Losing that
+    /// single event turns every later relative read by the build *and its
+    /// children* into `Unresolved` (#1185).
+    ///
+    /// This is not resolving against a guess (Constitution Principle III):
+    /// `dir` is ground truth held by the process that chose it. Nothing else
+    /// may be seeded, and an observed `chdir` still overwrites it, because a
+    /// process that moves afterwards really has moved.
+    pub fn seed(&mut self, pid: u32, dir: PathBuf) {
+        self.dirs.insert(pid, WorkingDir::Known(dir));
+    }
+
     /// `child` starts in `parent`'s directory. A reused pid is overwritten.
     pub fn fork(&mut self, parent: u32, child: u32) {
         let inherited = self.get(parent);
@@ -192,6 +211,40 @@ mod tests {
         let mut t = CwdTracker::new();
         t.chdir(1, "/ws/a", false);
         assert_eq!(t.resolve(1, AT_FDCWD, "../b/c.rs", false), resolved("/ws/a/../b/c.rs"));
+    }
+
+    /// #1185 — the root is seeded, so the build resolves even if the
+    /// `chdir` the tracer caused never reaches userspace.
+    #[test]
+    fn a_seeded_root_resolves_without_ever_observing_a_chdir() {
+        let mut t = CwdTracker::new();
+        t.seed(100, PathBuf::from("/ws"));
+        assert_eq!(t.resolve(100, AT_FDCWD, "binaries/safe-only/src/main.rs", false),
+                   resolved("/ws/binaries/safe-only/src/main.rs"));
+    }
+
+    /// The tracer seeds *itself* as well as the child, so the root's
+    /// `sched_process_fork` record — which names the tracer as parent —
+    /// inherits the same directory instead of clobbering the seed with
+    /// `Unknown`. Either event surviving is enough; both agree.
+    #[test]
+    fn the_root_fork_inherits_the_seed_rather_than_clobbering_it() {
+        let mut t = CwdTracker::new();
+        t.seed(10, PathBuf::from("/ws")); // the tracer
+        t.seed(11, PathBuf::from("/ws")); // the child it is about to spawn
+        t.fork(10, 11); // the record the tracepoint emits for that spawn
+        t.fork(11, 12); // a rustc the build spawns
+        assert_eq!(t.resolve(12, AT_FDCWD, "src/lib.rs", false), resolved("/ws/src/lib.rs"));
+    }
+
+    /// A seed is a starting point, not an override: a process that really
+    /// moves is still followed.
+    #[test]
+    fn an_observed_chdir_overwrites_a_seed() {
+        let mut t = CwdTracker::new();
+        t.seed(100, PathBuf::from("/ws"));
+        t.chdir(100, "/elsewhere", false);
+        assert_eq!(t.resolve(100, AT_FDCWD, "a.rs", false), resolved("/elsewhere/a.rs"));
     }
 
     #[test]

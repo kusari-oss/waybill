@@ -81,6 +81,13 @@ pub struct TraceStats {
     /// sets, by mechanism. Flows into
     /// `TraceIntegrity.event_drop_reasons`.
     pub event_drop_reasons: std::collections::BTreeMap<String, u64>,
+    /// #1185 — occupancy of the kernel's in-flight-open map at trace end,
+    /// or `None` when the map would not read. Flows into
+    /// `TraceIntegrity.pending_open_entries_at_close`.
+    pub pending_open_entries_at_close: Option<u64>,
+    /// #1185 — opens from inside the traced subtree. Flows into
+    /// `TraceIntegrity.traced_subtree_opens`.
+    pub traced_subtree_opens: Option<u64>,
 }
 
 /// Aggregated trace results ready for attestation building.
@@ -580,6 +587,8 @@ impl EventAggregator {
             compiler_hash_coverage: None,
             open_failures_discarded: stats.open_failures_discarded,
             event_drop_reasons: stats.event_drop_reasons.clone(),
+            pending_open_entries_at_close: stats.pending_open_entries_at_close,
+            traced_subtree_opens: stats.traced_subtree_opens,
         };
 
         AggregatedTrace {

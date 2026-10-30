@@ -313,6 +313,35 @@ pub enum EventDropReason {
     /// for syscalls already in flight; a large count means entry events
     /// are being lost.
     KernelExitWithoutRequest = 2,
+    /// The entry tracepoint could not stash the in-flight open, so the
+    /// exit had nothing to join and the open was lost outright. The map
+    /// is bounded and machine-wide, so this is what saturation looks
+    /// like: once the slots are gone, every subsequent open anywhere on
+    /// the host is dropped until they free up.
+    ///
+    /// This is the one site in the open path that returned early
+    /// without recording anything (#1185). It double-counts with
+    /// `KernelExitWithoutRequest` by design — the same lost open
+    /// increments both, since an exit whose entry was never stored is
+    /// also an exit with no request. That pairing is the point: the
+    /// difference between the two is the orphan count attributable to
+    /// syscalls already in flight when the probes attached, and this
+    /// slot alone is loss the capture caused.
+    KernelPendingInsertFailed = 3,
+    /// An open was observed from a process outside the traced subtree.
+    ///
+    /// Until the subtree gate lands these opens are still captured, so
+    /// this is a dry run: the count is what the gate *will* drop. That
+    /// ordering is deliberate — a positive gate whose seed went missing
+    /// drops everything silently, which is #1185's own shape, so the
+    /// measurement comes before the behaviour.
+    KernelOutsideTracedSubtree = 4,
+    /// The traced-subtree set would not take a descendant, so that
+    /// process and everything it spawns will look foreign.
+    ///
+    /// Counted because discarding an `insert` result is exactly how the
+    /// in-flight-open map came to lose opens in silence (#1185).
+    KernelTracedInsertFailed = 5,
 
     // ---- userspace side ----
     /// The record's leading kind was a value this build does not know.
@@ -338,13 +367,16 @@ pub enum EventDropReason {
 
 impl EventDropReason {
     /// Number of kernel-side slots in the `EVENT_DROPS` map.
-    pub const KERNEL_SLOTS: u32 = 3;
+    pub const KERNEL_SLOTS: u32 = 6;
 
     /// The kernel-side variants, in slot order.
-    pub const KERNEL: [EventDropReason; 3] = [
+    pub const KERNEL: [EventDropReason; 6] = [
         Self::KernelPathUnreadable,
         Self::KernelNullPath,
         Self::KernelExitWithoutRequest,
+        Self::KernelPendingInsertFailed,
+        Self::KernelOutsideTracedSubtree,
+        Self::KernelTracedInsertFailed,
     ];
 
     /// The userspace variants.
@@ -367,6 +399,9 @@ impl EventDropReason {
             Self::KernelPathUnreadable => "kernel_path_unreadable",
             Self::KernelNullPath => "kernel_null_path",
             Self::KernelExitWithoutRequest => "kernel_exit_without_request",
+            Self::KernelPendingInsertFailed => "kernel_pending_insert_failed",
+            Self::KernelOutsideTracedSubtree => "kernel_outside_traced_subtree",
+            Self::KernelTracedInsertFailed => "kernel_traced_insert_failed",
             Self::UserUnknownRecordKind => "user_unknown_record_kind",
             Self::UserShortRecord => "user_short_record",
             Self::UserPidNotAdmitted => "user_pid_not_admitted",

@@ -20,6 +20,37 @@ pub fn should_trace() -> bool {
     true
 }
 
+/// #1185 — is the traced-subtree gate armed for this trace?
+///
+/// Armed means the loader wrote a handshake nonce, which only
+/// command-execute mode does. `--target-pid` attaches to a process the
+/// tracer never spawned, so no root can announce itself and no subtree
+/// exists.
+///
+/// This is an explicit flag and **not** "is the subtree non-empty",
+/// because those differ in the one case that matters: an empty subtree is
+/// the state where a seed went missing, and treating that as "admit
+/// everything" is how the userspace pid filter became a silent no-op
+/// (`admitted()`'s `target_pids.is_empty() || …`). Unarmed means do not
+/// gate; armed-and-empty means drop, which is why userspace refuses to
+/// start a trace whose root never announced itself.
+#[inline(always)]
+pub fn gating_armed() -> bool {
+    match crate::maps::TRACE_HANDSHAKE_NONCE.get(
+        waybill_common::maps::TRACE_HANDSHAKE_NONCE_SLOT,
+    ) {
+        Some(&n) => n != 0,
+        None => false,
+    }
+}
+
+/// #1185 — is `pid` inside the traced subtree: the spawned root, or a
+/// descendant that inherited from it on fork?
+#[inline(always)]
+pub fn in_traced_subtree(pid: u32) -> bool {
+    unsafe { crate::maps::TRACED_PIDS.get(&pid) }.is_some()
+}
+
 /// Get the current PID (thread group ID).
 #[inline(always)]
 pub fn current_pid() -> u32 {

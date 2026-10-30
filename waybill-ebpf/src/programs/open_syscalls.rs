@@ -49,12 +49,13 @@ use aya_ebpf::{
 use waybill_common::events::{FileEvent, FileEventType, AT_FDCWD};
 
 use crate::helpers::{
-    current_comm, current_pid, current_tid, increment_drop_counter, increment_event_drop,
-    should_trace,
+    current_comm, current_pid, current_tid, gating_armed, in_traced_subtree,
+    increment_drop_counter, increment_event_drop, should_trace,
 };
 use crate::maps::{
     PendingOpen, FILE_EVENTS, FILE_EVENT_DROPS, OPEN_DIAG, OPEN_FAILURES_DISCARDED,
-    OPEN_REQUEST_ONLY, PENDING_OPEN,
+    OPEN_REQUEST_ONLY, PENDING_INSERT_FORCE_FAIL, PENDING_OPEN, TRACED_PIDS,
+    TRACED_SUBTREE_HITS, TRACE_HANDSHAKE_NONCE,
 };
 use crate::programs::file_ops::classify_and_drop_if_noise;
 
@@ -69,6 +70,9 @@ use crate::programs::file_ops::classify_and_drop_if_noise;
 const KERNEL_PATH_UNREADABLE: u8 = 0;
 const KERNEL_NULL_PATH: u8 = 1;
 const KERNEL_EXIT_WITHOUT_REQUEST: u8 = 2;
+const KERNEL_PENDING_INSERT_FAILED: u8 = 3;
+const KERNEL_OUTSIDE_TRACED_SUBTREE: u8 = 4;
+const KERNEL_TRACED_INSERT_FAILED: u8 = 5;
 
 const ARG0: usize = 16;
 const ARG1: usize = 24;
@@ -84,16 +88,103 @@ fn read_ret(ctx: &TracePointContext) -> i64 {
     unsafe { ctx.read_at::<i64>(RET).unwrap_or(-1) }
 }
 
+/// Is this open the traced root announcing itself?
+///
+/// Recognised at **entry**, where `dfd` and `flags` are in hand as plain
+/// integers — no path is read and no string is compared, so the cost on the
+/// hot path is two comparisons. See `TRACE_HANDSHAKE_DFD` in
+/// `waybill-common` for why the pid cannot simply be passed in.
+#[inline(always)]
+fn is_handshake(dfd: i64, flags: u32) -> bool {
+    if dfd != waybill_common::maps::TRACE_HANDSHAKE_DFD {
+        return false;
+    }
+    // A zero nonce is no armed handshake, so nothing can be seeded by a
+    // caller that happens to guess the dfd.
+    match TRACE_HANDSHAKE_NONCE.get(waybill_common::maps::TRACE_HANDSHAKE_NONCE_SLOT) {
+        Some(&n) => n != 0 && n == flags,
+        None => false,
+    }
+}
+
+/// Record the handshaking process as the traced root.
+#[inline(always)]
+fn seed_traced_root() {
+    let pid = current_pid();
+    if unsafe { TRACED_PIDS.insert(&pid, &1u8, 0) }.is_err() {
+        increment_event_drop(KERNEL_TRACED_INSERT_FAILED);
+    }
+}
+
 /// Stash an in-flight open under the current thread id.
 ///
-/// `insert` overwrites, which is what bounds the map: a thread that died
-/// inside a syscall leaves one entry, and that thread's next open replaces
-/// it rather than inheriting it.
+/// `insert` overwrites, which is what bounds the map *per thread*: a
+/// thread that died inside a syscall leaves one entry, and that thread's
+/// next open replaces it rather than inheriting it. It does not bound the
+/// map across threads, and `PENDING_OPEN` holds 4096 of them for the whole
+/// machine — these tracepoints are system-wide, so every thread on the
+/// host competes for the same slots. A full BPF hash map rejects the
+/// update, and until #1185 that rejection was discarded.
+///
+/// It is the only early return in this module that recorded nothing, and
+/// the consequence is not a missing counter but a missing open: no stored
+/// request means the exit has nothing to join, so the open never reaches
+/// a read set. That is the shape of the loss #1185 reports — every open
+/// after saturation is dropped, so a build loses whole invocations partway
+/// through rather than a scattering of reads, and the count varies with
+/// whatever else the host was doing.
 #[inline(always)]
 fn store_open(dfd: i64, path_ptr: u64, flags: u32) {
+    // The handshake is answered before any other consideration, including
+    // `should_trace()`: it carries no path, reads nothing, and is the one
+    // syscall whose whole purpose is to be observed.
+    //
+    // A pending entry is stored for it anyway, carrying the handshake `dfd`
+    // as its marker, so the matching exit finds a request and discards it
+    // quietly. Returning here instead would leave an exit with nothing to
+    // join, which increments `kernel_exit_without_request` -- polluting the
+    // very counter this work exists to make readable.
+    if is_handshake(dfd, flags) {
+        seed_traced_root();
+        let marker = PendingOpen {
+            dfd,
+            path_ptr: 0,
+            flags,
+            _padding: 0,
+        };
+        let tid = current_tid();
+        let _ = unsafe { PENDING_OPEN.insert(&tid, &marker, 0) };
+        return;
+    }
     if !should_trace() {
         return;
     }
+
+    // #1185 — the subtree gate.
+    //
+    // Dropping here, at entry, is deliberate: an open from outside the
+    // subtree never consumes a `PENDING_OPEN` slot or ring-buffer space, so
+    // this removes the resource competition as well as the noise. Every
+    // thread on the machine shared those 4096 slots before.
+    //
+    // The gate is positive -- admit what is known to belong -- and that is
+    // only safe because an unseeded root is unreachable: userspace refuses
+    // to start a trace whose root never announced itself. Without that
+    // check this branch is #1185's own failure, dropping every open while
+    // the attestation still reports `complete`.
+    //
+    // An unarmed trace counts and does not drop, so `--target-pid` keeps
+    // the behaviour it has always had rather than silently capturing
+    // nothing.
+    if in_traced_subtree(current_pid()) {
+        increment_drop_counter(&TRACED_SUBTREE_HITS);
+    } else {
+        increment_event_drop(KERNEL_OUTSIDE_TRACED_SUBTREE);
+        if gating_armed() {
+            return;
+        }
+    }
+
     let pending = PendingOpen {
         dfd,
         path_ptr,
@@ -114,7 +205,20 @@ fn store_open(dfd: i64, path_ptr: u64, flags: u32) {
     }
 
     let tid = current_tid();
-    let _ = PENDING_OPEN.insert(&tid, &pending, 0);
+    if force_insert_failure() || PENDING_OPEN.insert(&tid, &pending, 0).is_err() {
+        increment_event_drop(KERNEL_PENDING_INSERT_FAILED);
+    }
+}
+
+/// Read the #1185 forced-failure slot, which makes the branch above
+/// reachable without saturating a machine-wide map. Absent or unreadable
+/// reads as `0`, the behaviour of a host nobody is testing.
+#[inline(always)]
+fn force_insert_failure() -> bool {
+    match PENDING_INSERT_FORCE_FAIL.get(0) {
+        Some(&v) => v != 0,
+        None => false,
+    }
 }
 
 /// Read the FR-004b fallback slot. An absent or unreadable slot reads as
@@ -149,14 +253,32 @@ fn finish_open(ctx: &TracePointContext) {
         // exit and the entry program — the probes are system-wide, so
         // that window counts every open on the machine. Userspace
         // baselines this slot once attach completes and reports only the
-        // delta, which is what makes a nonzero value here mean entry
-        // events are being lost (#1185).
+        // delta.
+        //
+        // The delta alone still does not say which mechanism it came
+        // from, because `store_open` failing to stash the request lands
+        // here too, and that one is real loss rather than a syscall the
+        // probes arrived late for. `kernel_pending_insert_failed` counts
+        // that case at its own site, so the two numbers separate the
+        // causes: this slot minus that one is late arrival, and that one
+        // is capture the host could not hold (#1185).
         increment_event_drop(KERNEL_EXIT_WITHOUT_REQUEST);
         return;
     };
     // Unconditionally, and before the result is inspected: a failed open
     // must not leave an entry behind (FR-005c).
     let _ = PENDING_OPEN.remove(&tid);
+
+    // The handshake's own exit. Discarded before the null-path branch
+    // below, which it would otherwise reach -- the marker carries no path
+    // by design. That branch feeds `kernel_null_path`, whose positive
+    // control asserts a count of exactly 5, so letting the handshake
+    // through would break an unrelated assertion and make the drop
+    // counters mean one more thing than they say.
+    if p.dfd == waybill_common::maps::TRACE_HANDSHAKE_DFD {
+        return;
+    }
+
     if p.path_ptr == 0 {
         increment_event_drop(KERNEL_NULL_PATH);
         return;
