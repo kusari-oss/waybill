@@ -1009,3 +1009,119 @@ So the baseline's own stability column is itself a measurement with an N
 attached, and quoting "deterministic" from it needs that N stated.
 `traced_subtree_opens = 1173` has now held across 16 runs; `file_operations`
 has not held across 16.
+
+## Phase 5 — the claim
+
+The decision was the maintainer's and it was to err on the side of caution:
+claim less, and file issues for what cannot be supported yet.
+
+### What was wrong with the claim
+
+`CompilerPipelineData.completeness` is the one field a consumer reads to
+decide whether the read and write sets are a total or a floor. It had three
+inputs, and the only numeric one was dead:
+
+```rust
+// derive_completeness, before
+if self.attach_late          { Partial { attach_late } }
+if self.probe_attach_failed  { Partial { probe_attach_failed } }
+if self.events_dropped > 0   { Degraded { .. } }      // always false
+Complete
+```
+
+`record_events_dropped` is called from four unit tests and nowhere else;
+`TraceStats.events_dropped` is the literal `0`, carrying the comment "Not
+measured". So `Degraded` could not occur in a real trace, and `Complete`
+was the default answer for every run that did not hit one of the two
+`Partial` conditions — regardless of what the drop counters said.
+
+This is why F10 held. The forced control refuses every single open, counts
+them in `kernel_pending_insert_failed`, captures zero operations, and the
+document says `complete`. The information was all there; nothing read it.
+
+The sharpest form of it: `scan.rs` already logged the correct sentence —
+
+> #618 observed events did not reach the recorded sets; the capture is a
+> floor, not a total
+
+— computed from `total_lost()`, and then wrote `complete` into the artifact
+that gets signed. A log line goes to a terminal somebody may not be
+watching. The attestation is the thing that travels.
+
+### The exclusion was already written
+
+`EventDropCounts::total_lost()` existed, with a doc comment arguing exactly
+the distinction the claim needed: `kernel_outside_traced_subtree` counts
+what the capture **declined**, not what it **lost**, and folding it in would
+degrade every healthy scoped trace — "the false alarm that teaches people
+to ignore the real one".
+
+So the fix is three terms and no new judgement:
+
+```
+measured_loss = total_lost()                      // loss slots, scope excluded
+              + ring_buffer_overflows             // kernel wrote, drain never saw
+              + pending_open_entries_at_close     // still in flight at the end
+```
+
+fed to a `measured_loss` input kept **separate** from `events_dropped`.
+Separate on purpose: `events_dropped` is #618's field and names one
+specific mechanism. Overloading it would make a named field mean something
+other than its name, which is the class of defect this whole phase is
+about.
+
+### What it costs, per the committed baseline
+
+| field | N=10 median | contributes? |
+|---|---|---|
+| `ring_buffer_overflows` | 0 | yes, 0 |
+| `pending_open_entries_at_close` | 0 | yes, 0 |
+| the five kernel loss slots | 0 | yes, 0 |
+| `outside_traced_subtree` | varies (28–33928) | **no — scope, not loss** |
+| `open_failures_discarded` | 599 | no — not a drop reason |
+
+So a healthy arm64 run still reports `complete`, and does so because every
+loss counter reads zero rather than because nothing was consulted. That is
+the difference the phase was for.
+
+A run on the x86_64 lane, where `kernel_exit_without_request` has measured
+~1113, now reports `degraded`. That is the honest answer and P6 is still
+open on why the figure is what it is — but the document no longer has to
+wait for P6 to stop overclaiming.
+
+### A gap left visible rather than folded in
+
+A loss counter that cannot be **read** still leaves the claim at
+`complete`. The read failure lands in `counter_attach_failures`, which is
+not an input to completeness. An unreadable counter is a reason not to
+assert a total, and wiring that is its own change: `counter_attach_failures`
+also carries failures of maps that have nothing to do with loss, so
+degrading on any entry would be the same over-broad move the scope slot
+exclusion exists to avoid.
+
+### What was filed instead of fixed
+
+Six issues, one per gap the Phase 4 inventory ranked, each stating in its
+first lines whether its content is a measurement or a reading of the
+source. The three that change what a record *means* rather than whether it
+exists are the ones to take seriously:
+
+- the `openat2` flags default of `0`, which is `O_RDONLY`, so a write is
+  recorded as a read;
+- the `ret` default of `-1`, which makes `open_failures_discarded` assert a
+  failure nobody observed;
+- the `dfd` default of `AT_FDCWD`, which converts an honestly `Unresolved`
+  path into a confidently wrong `Resolved` one — routing around machinery
+  that already declines correctly.
+
+Plus the two groups of discarded map inserts (`PENDING_CHDIR` /
+`PENDING_RENAME`, and the four in `compiler_exec.rs`), and the claim itself,
+filed with its blast radius written down because the x86_64 consequence is
+a visible change rather than a silent one.
+
+None of the five substitution issues can quote a measurement, and each says
+so. That is not a gap in the filing: the whole property of a
+SILENT-SUBSTITUTION is that a run in which it fires is indistinguishable
+from one in which it does not, so there is nothing to measure until a
+counter exists. The order of work is counter, then forced control, then
+measurement — the order `kernel_pending_insert_failed` went through.

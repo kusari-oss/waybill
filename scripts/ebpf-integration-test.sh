@@ -312,7 +312,12 @@ if [[ "$RUSTC_COUNT" -eq 0 ]]; then
     exit 1
 fi
 
-# Assert the completeness signal is present + not degraded.
+# Assert the completeness signal is present and is one of the states the
+# type defines. Not that it is `complete`: since #1185 wired the measured
+# drop counters into the claim, `degraded` is the correct answer on a host
+# that lost events, and failing here would be failing the honesty rather
+# than the capture. The forced control further down is where `complete` is
+# asserted NOT to hold.
 COMPLETENESS=$(jq -r '.predicate.compiler_pipeline.completeness.state' "$OUTPUT")
 echo "    completeness: $COMPLETENESS"
 
@@ -323,7 +328,11 @@ case "$COMPLETENESS" in
         ;;
     degraded)
         DROPPED=$(jq -r '.predicate.compiler_pipeline.completeness.dropped' "$OUTPUT")
-        echo "    (degraded: dropped=$DROPPED — non-fatal but note ring-buffer overflow occurred)"
+        # Non-fatal, and no longer ring-buffer-specific: since #1185 the
+        # figure is the sum of every measured loss mechanism. The breakdown
+        # is in trace_integrity.event_drop_reasons, printed below.
+        echo "    (degraded: dropped=$DROPPED — measured loss; see event_drop_reasons for the mechanism)"
+        jq -c '.predicate.trace_integrity.event_drop_reasons // {}' "$OUTPUT" | sed 's/^/      /'
         ;;
     partial)
         REASON=$(jq -r '.predicate.compiler_pipeline.completeness.reason' "$OUTPUT")
@@ -1223,11 +1232,35 @@ if [[ "$FORCED_OPS" -ne 0 ]]; then
     exit 1
 fi
 echo "    #1185 control: the counter fires, and refusing the request loses the open"
-# Printed, not asserted: this is #1185's remaining defect rather than a
-# regression this branch introduces. A capture that lost every single open
-# still describes itself as it does below. Tightening this into an
-# assertion is the honest-claim change (spec T038), not this one.
+# Asserted, not merely printed. This block used to end here with a note
+# saying the claim was #1185's remaining defect and that tightening it was
+# a later change -- and it is now that change. `derive_completeness` read
+# one input, `events_dropped`, which production hardcodes to 0, so the
+# `Degraded` arm was unreachable and THIS run -- in which every single open
+# was refused -- reported `complete`.
+#
+# The assertion is deliberately negative on one value rather than positive
+# on another: `partial` is also an acceptable answer here (a missing probe
+# outranks a count), and pinning the exact state would make this check fail
+# on any kernel where a probe does not attach, for a reason that has
+# nothing to do with what it is testing. What must never hold is `complete`.
 echo "    completeness with a total capture loss: $FORCED_COMPLETENESS   (dropped=$FORCED_DROPPED reason=$FORCED_REASON)"
+if [[ "$FORCED_COMPLETENESS" == "complete" ]]; then
+    echo "FAIL: a capture that lost every open still claims 'complete' (#1185)"
+    echo "      kernel_pending_insert_failed=$FORCED_INSERT_FAILS and"
+    echo "      file operations captured=$FORCED_OPS, so the loss is measured"
+    echo "      and the document disagrees with its own counters. The claim"
+    echo "      is derived in trace/compiler_pipeline.rs::derive_completeness;"
+    echo "      check that cli/scan.rs still calls record_measured_loss."
+    exit 1
+fi
+if [[ "$FORCED_COMPLETENESS" == "absent" ]]; then
+    echo "FAIL: no completeness state in the forced control's attestation"
+    echo "      This check cannot distinguish an honest claim from a missing"
+    echo "      one, so an absent field fails rather than passing quietly."
+    exit 1
+fi
+echo "    #1185 claim: a total capture loss is not reported as 'complete'"
 
 # Report what the real build dropped. Not an assertion: on a healthy host
 # `user_no_invocation_mapping` is non-zero because cargo's own file

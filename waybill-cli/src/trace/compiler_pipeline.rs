@@ -68,6 +68,15 @@ pub struct CompilerPipelineAggregator {
     filter_config: FilterConfig,
     /// FR-008 signal: total events dropped due to ring-buffer overflow.
     events_dropped: u64,
+    /// #1185 — loss this trace actually measured, by any mechanism, summed
+    /// from the named drop counters at trace end.
+    ///
+    /// Separate from `events_dropped` on purpose. That field is #618's and
+    /// means one specific thing (records the kernel wrote that userspace
+    /// never drained); nothing writes it yet, so folding other mechanisms
+    /// into it would make a named field mean something other than its name.
+    /// The claim needs its own input.
+    measured_loss: u64,
     /// FR-016a counter: reads filtered because the path matched a
     /// secret-adjacent pattern.
     secrets_read_filtered: u64,
@@ -148,6 +157,7 @@ impl CompilerPipelineAggregator {
             next_invocation_id: 1,
             filter_config,
             events_dropped: 0,
+            measured_loss: 0,
             secrets_read_filtered: 0,
             filter_categories_applied: std::collections::HashSet::new(),
             attach_late: false,
@@ -313,6 +323,26 @@ impl CompilerPipelineAggregator {
     /// Contributes to the FR-008 C132 completeness signal.
     pub fn record_events_dropped(&mut self, count: u64) {
         self.events_dropped += count;
+    }
+
+    /// #1185 — record loss this trace measured, from any mechanism.
+    ///
+    /// The caller passes the sum of the named drop counters that represent
+    /// *the build's* lost events: `EventDropCounts::total_lost`, which
+    /// excludes `kernel_outside_traced_subtree` because that slot counts
+    /// what the capture declined rather than what it lost, plus the
+    /// ring-buffer overflow total and the in-flight entries still held at
+    /// close.
+    ///
+    /// Why this exists at all: `derive_completeness` read exactly one input,
+    /// `events_dropped`, which production hardcodes to `0`. So `Degraded`
+    /// was unreachable in a real trace and the document reported `complete`
+    /// next to every loss counter that had fired — including a forced
+    /// control in which *every* open was refused. The warning at
+    /// `cli/scan.rs` already said "the capture is a floor, not a total";
+    /// this makes the signed artifact say it too.
+    pub fn record_measured_loss(&mut self, count: u64) {
+        self.measured_loss += count;
     }
 
     /// Signal that the trace attached AFTER at least one compiler
@@ -560,9 +590,14 @@ impl CompilerPipelineAggregator {
                 reason: PartialReason::ProbeAttachFailed,
             };
         }
-        if self.events_dropped > 0 {
+        // #1185 — both inputs, not just `events_dropped`. The breakdown by
+        // mechanism stays in `TraceIntegrity.event_drop_reasons`; this is
+        // the one-number claim, and it must not read zero while that map is
+        // non-empty.
+        let dropped = self.events_dropped + self.measured_loss;
+        if dropped > 0 {
             return CompletenessState::Degraded {
-                dropped: self.events_dropped,
+                dropped,
                 affected_component_count: total_invocation_count,
             };
         }
@@ -1055,6 +1090,72 @@ mod tests {
             CompletenessState::Degraded {
                 dropped: 7,
                 affected_component_count: 1,
+            }
+        );
+    }
+
+    /// #1185 — the claim reads the loss the trace actually measured.
+    ///
+    /// Before this, `derive_completeness` had one numeric input,
+    /// `events_dropped`, and production hardcodes it to `0`
+    /// (`cli/scan.rs`, "Not measured"). So the `Degraded` arm was
+    /// unreachable outside this module's own tests, and the forced control
+    /// in `scripts/ebpf-integration-test.sh` measured a trace that lost
+    /// **every** open and still reported `complete`.
+    ///
+    /// The mechanism breakdown stays in `TraceIntegrity.event_drop_reasons`;
+    /// `dropped` is the sum, so the assertion here is on the sum.
+    #[test]
+    fn measured_loss_derives_degraded_completeness() {
+        let mut agg = CompilerPipelineAggregator::new(FilterConfig::default());
+        agg.handle_compiler_event(&make_exec_event(100, 50, "rustc"));
+        agg.record_measured_loss(41);
+        let data = agg.finalize();
+        assert_eq!(
+            data.completeness,
+            CompletenessState::Degraded {
+                dropped: 41,
+                affected_component_count: 1,
+            },
+            "a trace that measured loss must not claim a total; this is the \
+             defect #1185 was opened about"
+        );
+    }
+
+    /// The two inputs are independent and both count. A regression that
+    /// wired `measured_loss` in place of `events_dropped` rather than
+    /// alongside it would pass the test above and fail this one.
+    #[test]
+    fn both_loss_inputs_contribute_to_the_dropped_total() {
+        let mut agg = CompilerPipelineAggregator::new(FilterConfig::default());
+        agg.handle_compiler_event(&make_exec_event(100, 50, "rustc"));
+        agg.record_events_dropped(3);
+        agg.record_measured_loss(4);
+        let data = agg.finalize();
+        assert_eq!(
+            data.completeness,
+            CompletenessState::Degraded {
+                dropped: 7,
+                affected_component_count: 1,
+            }
+        );
+    }
+
+    /// Precedence: a missing probe is `Partial`, which says the capture is
+    /// a floor for a structural reason, and that outranks a count of what
+    /// leaked. Asserted because the obvious refactor -- hoisting the sum
+    /// above the `Partial` arms -- silently reverses it.
+    #[test]
+    fn a_probe_attach_failure_outranks_measured_loss() {
+        let mut agg = CompilerPipelineAggregator::new(FilterConfig::default());
+        agg.handle_compiler_event(&make_exec_event(100, 50, "rustc"));
+        agg.record_measured_loss(41);
+        agg.mark_probe_attach_failed();
+        let data = agg.finalize();
+        assert_eq!(
+            data.completeness,
+            CompletenessState::Partial {
+                reason: PartialReason::ProbeAttachFailed,
             }
         );
     }

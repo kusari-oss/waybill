@@ -176,6 +176,21 @@ counters (F26–F28), and the scope check against m210 (F31).
 | F11 | **91** sites in the eBPF programs where control leaves early or discards a result; **25** increment a named counter; the remainder is unclassified | measured | `grep -rnE 'return;\|let _ = \|unwrap_or\|is_err()\|else {' waybill-ebpf/src/programs/*.rs` |
 | F13 | x86-64 reports `kernel_exit_without_request` ≈ **1113**; baselining the attach window removed ~124 of 1237 | measured | findings.md runs 6–8 |
 
+## Phase 5 — the claim
+
+| # | fact | status | source |
+|---|---|---|---|
+| F42 | `CompilerPipelineAggregator::record_events_dropped` is called from **no production path** — only from four unit tests. `TraceStats.events_dropped` is the literal `0` with the comment "Not measured" | measured | `grep -rn record_events_dropped waybill-cli/src`; `waybill-cli/src/cli/scan.rs` |
+| F43 | Therefore `CompletenessState::Degraded` was **unreachable in a real trace**: `derive_completeness` read `attach_late`, `probe_attach_failed` and `events_dropped`, and the third is always zero. The only states a real trace could report were `Partial` and `Complete` | measured | `waybill-cli/src/trace/compiler_pipeline.rs` |
+| F44 | Seven counters the trace **does** measure and reports in `trace_integrity` were not inputs to the claim: `ring_buffer_overflows`, the five kernel loss slots, and `pending_open_entries_at_close`. `scan.rs` logs "the capture is a floor, not a total" from `total_lost()` and then writes `complete` into the document | measured | same |
+| F45 | `EventDropCounts::total_lost()` already existed and already excluded `kernel_outside_traced_subtree`. The exclusion the claim needed was written before the claim was wired; nothing consumed it except a log line | measured | `waybill-cli/src/trace/counters.rs:519` |
+| F46 | `user_no_invocation_mapping`, which the harness comments describe as "non-zero on a healthy host", **is not an `EventDropReason`** and exists only in comments. So it cannot contaminate the loss total, and the comment describing it as a live false-alarm risk is stale | measured | `grep -rn user_no_invocation_mapping waybill-common waybill-cli` |
+
+Each of F42–F44 is a reading of the source rather than a run, and all three
+are mechanically checkable by the greps named — which is the distinction
+that matters, because F10 is the *measured* consequence of them and was
+already in the ledger before the cause was.
+
 ## Struck
 
 | struck | replaced by |

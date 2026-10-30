@@ -999,6 +999,34 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
              capture is a floor, not a total"
         );
     }
+    // #1185 — and now the attestation says it too, not just this log line.
+    //
+    // `derive_completeness` read one input, `events_dropped`, which is
+    // hardcoded `0` below. So `Degraded` could not occur in a real trace and
+    // the document reported `complete` beside a non-empty
+    // `event_drop_reasons` map -- measured in the forced control, where
+    // every open was refused and the state still read `complete`.
+    //
+    // Three terms, and the exclusions matter as much as the inclusions:
+    //   - `total_lost()` already drops `kernel_outside_traced_subtree`,
+    //     which is scope, not loss. Including it would degrade every
+    //     healthy scoped trace, which is the false alarm that teaches
+    //     people to ignore the real one.
+    //   - `overflows_total` is unambiguous loss: the kernel wrote records
+    //     the drain never saw.
+    //   - `pending_open_entries_at_close` is an open still in flight when
+    //     the trace ended. It reached no set. Measured at 0 across 16 runs
+    //     of the committed baseline, so including it costs nothing on a
+    //     healthy host and is honest on an unhealthy one.
+    //
+    // Not covered, and deliberately left visible rather than quietly
+    // folded in: a loss counter that could not be *read* still leaves the
+    // claim at `complete`. The failure is recorded in
+    // `counter_attach_failures`, but an unreadable counter is a reason not
+    // to claim a total, and that gap is its own change.
+    compiler_agg.record_measured_loss(
+        event_drop_total + overflows_total + pending_open_entries_at_close.unwrap_or(0),
+    );
     let event_drop_reasons = event_drops.into_wire();
 
     let mut trace = agg.finalize(&TraceStats {
