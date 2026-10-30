@@ -411,6 +411,53 @@ mod tests {
         // reliably" state. applied_categories() correctly returns empty.
         assert!(summary.applied_categories().is_empty());
     }
+
+    // ---------------------------------------------------------------
+    // #618 / #1185 — the attach-window baseline.
+    // ---------------------------------------------------------------
+
+    #[test]
+    fn baseline_nets_out_what_the_attach_window_already_counted() {
+        // The case this exists for: the open probes attach exit-first, so
+        // on a busy host the slot is already nonzero before the build
+        // starts. 1237 was the measured value on the x86-64 CI lane.
+        let b = KernelEventDropBaseline::from_slots(vec![Some(0), Some(1237), Some(0)]);
+        assert_eq!(b.net(1, 1237), 0, "a build that lost nothing reads zero");
+        assert_eq!(b.net(1, 1240), 3, "only drops after attach are reported");
+    }
+
+    #[test]
+    fn an_unreadable_baseline_slot_subtracts_nothing() {
+        // A slot that would not read must not become a zero baseline,
+        // which would silently inflate the delta by the attach window.
+        // Reporting the full count is the conservative direction: it
+        // over-reports loss rather than hiding it.
+        let b = KernelEventDropBaseline::from_slots(vec![None]);
+        assert_eq!(b.net(0, 99), 99);
+    }
+
+    #[test]
+    fn a_slot_past_the_end_subtracts_nothing() {
+        let b = KernelEventDropBaseline::from_slots(vec![Some(5)]);
+        assert_eq!(b.net(7, 11), 11);
+    }
+
+    #[test]
+    fn a_lower_later_reading_is_not_a_wrap() {
+        // Per-CPU sums read at two points in time: a CPU coming online
+        // between them can lower the total. Must read as "nothing since
+        // attach", not as u64::MAX.
+        let b = KernelEventDropBaseline::from_slots(vec![Some(500)]);
+        assert_eq!(b.net(0, 100), 0);
+    }
+
+    #[test]
+    fn a_default_baseline_subtracts_nothing() {
+        // The non-Linux stub and the pre-attach state both produce this.
+        let b = KernelEventDropBaseline::default();
+        assert_eq!(b.net(0, 42), 42);
+    }
+
 }
 
 // ============================================================================
@@ -462,7 +509,95 @@ impl EventDropCounts {
     }
 }
 
-/// Read the kernel-side `EVENT_DROPS` slots and merge them in.
+/// The kernel drop slots as they read once attach has completed.
+///
+/// The open probes attach exit-before-entry on purpose: an entry program
+/// live before its exit program would stash requests nothing can join,
+/// losing successful opens outright. The cost is a window in which an
+/// exit fires with no stored entry, and because the probes are
+/// system-wide that window counts every open on the machine rather than
+/// just the build's. On a quiet host it reads 0 and on a busy CI runner
+/// it read 1237 (measurements/findings.md run 6) — the same healthy
+/// capture either way.
+///
+/// So the attach window is subtracted rather than reported. What remains
+/// is attributable: a nonzero delta means entry events were lost while
+/// the probes were fully attached.
+#[derive(Debug, Default, Clone)]
+pub struct KernelEventDropBaseline {
+    /// Per-slot values, indexed as `EventDropReason::KERNEL`. A slot that
+    /// could not be read is `None`, which subtracts nothing — an
+    /// unmeasured baseline must not silently become a zero one.
+    slots: Vec<Option<u64>>,
+}
+
+impl KernelEventDropBaseline {
+    /// What this slot read at attach time. A slot that could not be read
+    /// contributes 0, so an unmeasured baseline subtracts nothing rather
+    /// than quietly becoming a zero one.
+    fn at(&self, slot: usize) -> u64 {
+        self.slots.get(slot).copied().flatten().unwrap_or(0)
+    }
+
+    /// Drops attributable to the traced build: this slot now, less what
+    /// it already held when the probes finished attaching.
+    ///
+    /// `saturating_sub` rather than an assertion, because these are
+    /// per-CPU counters summed at two points in time and a CPU coming
+    /// online between them can lower the sum. A negative delta means
+    /// "nothing since attach", not a fault.
+    pub fn net(&self, slot: usize, now: u64) -> u64 {
+        now.saturating_sub(self.at(slot))
+    }
+
+    /// Construct from per-slot readings. `None` is a slot that would not
+    /// read.
+    pub fn from_slots(slots: Vec<Option<u64>>) -> Self {
+        Self { slots }
+    }
+}
+
+/// Read every kernel drop slot immediately after attach completes.
+///
+/// Called before the traced child is spawned, so anything counted here
+/// predates the build entirely.
+#[cfg(all(target_os = "linux", feature = "ebpf-tracing"))]
+pub fn read_kernel_event_drop_baseline(bpf: &mut aya::Ebpf) -> KernelEventDropBaseline {
+    use waybill_common::events::EventDropReason;
+    let mut slots = Vec::with_capacity(EventDropReason::KERNEL.len());
+    for slot in 0..EventDropReason::KERNEL.len() {
+        match read_percpu_slot_sum(bpf, "EVENT_DROPS", slot as u32) {
+            Ok(n) => slots.push(Some(n)),
+            Err(e) => {
+                // Said out loud rather than swallowed. An unreadable
+                // baseline degrades this slot to the pre-baseline
+                // behaviour — the attach window counted as loss — and
+                // without this line that is indistinguishable from the
+                // baseline working, which is the ambiguity #618 exists
+                // to remove.
+                tracing::warn!(
+                    error = %truncate_error(&e.to_string()),
+                    slot,
+                    "could not baseline EVENT_DROPS; this slot will include \
+                     opens that exited during the attach window, so a nonzero \
+                     count for it is not attributable to the build"
+                );
+                slots.push(None);
+            }
+        }
+    }
+    KernelEventDropBaseline::from_slots(slots)
+}
+
+/// Non-Linux stub.
+#[cfg(not(all(target_os = "linux", feature = "ebpf-tracing")))]
+#[allow(dead_code)]
+pub fn read_kernel_event_drop_baseline<T>(_bpf: &mut T) -> KernelEventDropBaseline {
+    KernelEventDropBaseline::default()
+}
+
+/// Read the kernel-side `EVENT_DROPS` slots and merge them in, net of the
+/// attach-window baseline.
 ///
 /// A map that will not read is itself reported, through
 /// `counter_attach_failures`, for the same reason the m212 counters are:
@@ -470,12 +605,13 @@ impl EventDropCounts {
 #[cfg(all(target_os = "linux", feature = "ebpf-tracing"))]
 pub fn merge_kernel_event_drops(
     bpf: &mut aya::Ebpf,
+    baseline: &KernelEventDropBaseline,
     counts: &mut EventDropCounts,
 ) -> Option<String> {
     use waybill_common::events::EventDropReason;
     for (slot, reason) in EventDropReason::KERNEL.iter().enumerate() {
         match read_percpu_slot_sum(bpf, "EVENT_DROPS", slot as u32) {
-            Ok(n) => counts.record_n(*reason, n),
+            Ok(n) => counts.record_n(*reason, baseline.net(slot, n)),
             Err(e) => {
                 tracing::warn!(
                     error = %truncate_error(&e.to_string()),
@@ -493,6 +629,10 @@ pub fn merge_kernel_event_drops(
 /// Non-Linux stub.
 #[cfg(not(all(target_os = "linux", feature = "ebpf-tracing")))]
 #[allow(dead_code)]
-pub fn merge_kernel_event_drops<T>(_bpf: &mut T, _counts: &mut EventDropCounts) -> Option<String> {
+pub fn merge_kernel_event_drops<T>(
+    _bpf: &mut T,
+    _baseline: &KernelEventDropBaseline,
+    _counts: &mut EventDropCounts,
+) -> Option<String> {
     None
 }

@@ -878,8 +878,27 @@ fi
 # -- the merge base of this branch -- not from the current struct, which
 # would make the check circular.
 PRE_M1072_FIELDS='["bloom_filter_capacity","bloom_filter_false_positive_rate","events_dropped","filter_categories_applied","kprobe_attach_failures","partial_captures","ring_buffer_overflows","unresolved_relative_opens","uprobe_attach_failures"]'
-UNEXPECTED=$(jq --argjson pre "$PRE_M1072_FIELDS" \
-    '[.predicate.trace_integrity | keys[] | select([.] | inside($pre) | not)]' \
+# Fields this branch adds on purpose, listed one by one rather than by
+# widening the check, so an addition nobody intended still fails here.
+#
+#   open_failures_discarded (#1252) — a trace of `cat` reaches this
+#     legitimately: the loader probes several paths for libc and most of
+#     those opens fail, which is the whole point of counting them.
+#   event_drop_reasons (#618) — absent on a lossless capture, so it is
+#     usually not present at all; admitted because it may be.
+#
+# Found by running the harness to completion on arm64. The x86-64 lane
+# exits at the m1070 SC-001 check above, so CI has never reached this
+# assertion and never reported the conflict.
+THIS_BRANCH_FIELDS='["open_failures_discarded","event_drop_reasons"]'
+ALLOWED_FIELDS=$(jq -cn --argjson a "$PRE_M1072_FIELDS" --argjson b "$THIS_BRANCH_FIELDS" '$a + $b')
+# `index($k)` is an exact membership test. The earlier form,
+# `[.] | inside($pre)`, matched substrings -- jq's `inside` on strings is
+# substring containment -- so a stray `ring_buffer` key would have passed
+# against `ring_buffer_overflows`. Exact matching makes this strictly
+# stronger than before.
+UNEXPECTED=$(jq --argjson pre "$ALLOWED_FIELDS" \
+    '[.predicate.trace_integrity | keys[] | . as $k | select($pre | index($k) | not)]' \
     "$WIDENED_OUTPUT")
 if [[ "$UNEXPECTED" != "[]" ]]; then
     echo "FAIL: trace_integrity carries keys the pre-m1072 struct did not have (SC-007)"
@@ -887,7 +906,8 @@ if [[ "$UNEXPECTED" != "[]" ]]; then
     exit 1
 fi
 echo "    trace_integrity keys: $(jq -c '.predicate.trace_integrity | keys' "$WIDENED_OUTPUT")"
-echo "    all present in the pre-m1072 struct; no coverage record emitted"
+echo "    all present in the pre-m1072 struct or deliberately added by this branch;"
+echo "    no coverage record emitted"
 
 echo "==> #618 drop counters: the plumbing is self-verifying"
 # A counter that cannot fire is worse than no counter: it reports a

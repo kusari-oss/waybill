@@ -302,3 +302,237 @@ reached `kprobe_attach_failures[]`, completeness read
 `partial / probe_attach_failed`, and the harness named the missing crate
 root. Before #1310 this same loss presented as `complete` with an empty
 failure list, which is how it survived two releases.
+
+## Run 6 — the #618 instrument on x86_64, and why its number cannot be read yet
+
+First x86_64 lane run carrying the #618 drop counters (job 123780037537,
+head `5944173c`). The lane had to be re-run once: the first attempt
+(job 123731999178) died in the pre-existing `go install sbomqs` step on
+a `proxy.golang.org` stream error, in both the plain and the eBPF
+x86_64 lanes, and never reached the harness. A grep for
+`event_drop_reasons` on that first log returned zero matches — which is
+indistinguishable from a clean capture, and would have been reported as
+one if the failing step had not been checked. The same shape as the
+`openat`-257 control and the `-i`-less `docker run`.
+
+### What the instrument reported
+
+Two traced builds of the `two_binaries_diverge` fixture:
+
+```
+reasons=EventDropCounts { counts: {"kernel_exit_without_request": 1237} }
+reasons=EventDropCounts { counts: {"kernel_exit_without_request": 918} }
+```
+
+Every other reason zero. No `kernel_path_unreadable`, no
+`user_empty_path`, no `user_*` reason at all.
+
+### The prediction this refutes — mine
+
+Before the run I recorded: "if entry events are being lost,
+`kernel_exit_without_request` is large." That inference is **not
+available**, because of a design decision in this same feature.
+
+The open tracepoints are attached **exit first** (`loader.rs`, and the
+comment "Exit first, same rule as openat2 above"). The reason is sound:
+an entry attached before its exit would stash requests no exit program
+can join, losing successful opens outright. The consequence is that in
+the window between attaching `sys_exit_openat` and `sys_enter_openat` —
+and again for `openat2`, `open` and `creat` — every open **anywhere on
+the machine** exits with no stored request and increments this counter.
+The probes are system-wide; the capture is scoped to the build's process
+tree in userspace. So the counter aggregates the whole runner's ambient
+open traffic across the attach window, and the capture does not.
+
+That explains arm64 reading 0 and x86_64 reading 1237 with no defect in
+between: a quiet local container versus a busy CI runner. It also means
+the number cannot presently distinguish ambient attach-window orphans
+from genuinely lost build entries. A global counter compared against a
+process-scoped capture is not evidence.
+
+A second, smaller asymmetry is real but latent: `store_open` returns
+early on `!should_trace()` and `finish_open` has no such guard, so the
+tracer's own opens orphan their exits. `tracer_pid` is populated
+(`loader.rs:112`), so the path is live; the count stays small only
+because the tracer is blocked in the ring-buffer drain for the window
+and writes the attestation after detach.
+
+### What is independently established
+
+The x86_64 capture really is short, and that does not rest on the
+counter:
+
+| | arm64 (passing) | x86_64 (failing) |
+|---|---|---|
+| file operations | 102 | **29** |
+| rustc invocations | 7 | 7 |
+| ring_buffer_overflows | 0 | 0 |
+| open_failures_discarded | — | 151 |
+| unresolved_relative_opens | — | 2 |
+
+All 7 rustc invocations were captured this run — whole invocations did
+not vanish, unlike earlier #1185 observations. What is missing is the
+contents of their read sets: **not one `.rs` read appears in the entire
+recorded operation list.** Every surviving read is an absolute path
+under `target/release/deps/`. `completeness` still reads `complete`,
+which is the #1185 complaint exactly.
+
+### Mechanisms eliminated for `libsafe/src/lib.rs` specifically
+
+- **m213 kernel noise filter** — not a match. The fixture path
+  `/waybill/waybill-cli/tests/fixtures/.../libsafe/src/lib.rs` hits no
+  prefix pattern (`/etc/ /proc/ /sys/ /dev/ /lib/ /usr/ /bin/ /var/`)
+  and no contains pattern (`/.cache/ /.local/ /fingerp /.finger
+  /increme Cargo.to -toolcha .cargo/c Cargo.lo`). Checked against the
+  catalog in `waybill-common/src/filter.rs`, not assumed. Note the
+  filter does legitimately explain the absence of `Cargo.toml` reads,
+  via the `Cargo.to` contains pattern.
+- **Ring buffer** — `ring_buffer_overflows: 0`.
+- **Failed-open discard** — the harness diagnostic reports "(no discard
+  line names it)".
+- **Relative-path resolution (m1070)** — would report the open as
+  `Unresolved`, and only 2 operations are so flagged, neither of them a
+  source file. An unresolvable open still appears; this one does not
+  appear at all.
+
+So the event never reached userspace, and no instrumented site claims
+it. It is either inside the unattributable 1237, or upstream of every
+counter.
+
+### What would make the next run decisive
+
+1. **Scope the orphan counter to the traced process tree**, or carry the
+   pid with the drop, so ambient traffic stops being counted against a
+   process-scoped capture.
+2. **Baseline `EVENT_DROPS` immediately after attach completes** and
+   report the delta. The attach-window orphans are expected by design
+   and should not be reported as loss at all.
+3. **Set `WAYBILL_TRACE_OPEN_DIAG=1` in the harness.** The diagnostic
+   already asks for it ("needs WAYBILL_TRACE_OPEN_DIAG=1 above") and
+   `OPEN_DIAG` is already written on that env var — this costs nothing
+   to switch on and names what happened to each open.
+
+Until (1) and (2) land, `kernel_exit_without_request` should be read as
+"not yet attributable", not as evidence either way. The counter that
+*is* trustworthy is the set of zeros around it: no path-read failure, no
+null path, no userspace drop reason fired on a capture that lost ~70% of
+its operations.
+
+## Run 7 — making the counter attributable, and a second failure CI had masked
+
+Three changes, measured on arm64 in the `Dockerfile.ebpf-test` container.
+
+### The two that make `kernel_exit_without_request` mean something
+
+1. **`finish_open` now applies `should_trace()`**, the guard `store_open`
+   already had. Without it the filtering was asymmetric: the tracer's own
+   opens stored no request at entry and then counted a drop at exit.
+
+2. **`EVENT_DROPS` is baselined after attach completes**, read in
+   `scan.rs` between `load_and_attach` returning and the child being
+   spawned, so anything it already holds predates the build.
+   `merge_kernel_event_drops` reports the delta.
+
+The exit-first attach order is kept. It is correct — an entry program
+live before its exit program would stash requests nothing can join,
+losing successful opens outright — so the window is a consequence to
+subtract, not a bug to fix.
+
+Two decisions, both in the direction of not concealing loss:
+
+- An unreadable baseline slot subtracts **nothing** rather than
+  defaulting to zero, because a zero baseline would silently inflate the
+  delta by the whole attach window. Over-reporting loss beats hiding it.
+- `saturating_sub`, not an assertion. Per-CPU sums read at two instants
+  can fall if a CPU comes online between them; that is "nothing since
+  attach", not a fault.
+
+Five unit tests cover the arithmetic. The one that matters is
+mutation-verified: making `net()` return `now` makes
+`baseline_nets_out_what_the_attach_window_already_counted` fail, so the
+test exercises the subtraction rather than the plumbing around it.
+
+### The third was already done
+
+`WAYBILL_TRACE_OPEN_DIAG=1` has been set in the harness since #1252
+(line 55). The diagnostic's "(needs WAYBILL_TRACE_OPEN_DIAG=1 above)" is
+a reminder, which run 6 misread as a complaint. So run 6's "(no discard
+line names it)" was already a real negative result: the missing crate
+root is genuinely absent from the discarded failed opens, not merely
+unlogged. Nothing to change, and the run-6 conclusion is strengthened.
+
+### A second failure, which the first was masking
+
+Running the harness to completion on arm64 surfaced:
+
+```
+FAIL: trace_integrity carries keys the pre-m1072 struct did not have (SC-007)
+      ["open_failures_discarded"]
+```
+
+m1072 SC-007 pins `trace_integrity`'s key set against the **merge-base**
+struct, deliberately, so the assertion cannot be circular. #1252 then
+added `open_failures_discarded`, which a trace of `cat /etc/hostname`
+populates legitimately — the loader probes several paths for libc and
+most of those opens fail, which is what the counter is for.
+
+Pre-existing at `5944173c`. CI has never reported it because **the
+x86-64 lane exits at the m1070 SC-001 check further up the script and
+never reaches this assertion.** One failure hid the other, so "the eBPF
+lane is red" was two independent faults:
+
+| | fails on | cause |
+|---|---|---|
+| m1070 SC-001 | x86-64 only | #1185 — the capture loses the source reads |
+| m1072 SC-007 | both; arm64 reaches it first | #1252 added a field SC-007 pins against |
+
+Fixed by naming the two fields this branch adds on purpose
+(`open_failures_discarded`, `event_drop_reasons`) rather than widening
+the check, so an addition nobody intended still fails.
+
+### The assertion was also weaker than it read
+
+It used `[.] | inside($pre)`. On strings jq's `inside` is substring
+containment, so a stray `ring_buffer` key would have passed against
+`ring_buffer_overflows`. Now exact membership via `index($k)`, proved
+rather than asserted:
+
+```
+  ring_buffer_overflows      inside=true  index=true
+  open_failures_discarded    inside=true  index=true
+  event_drop_reasons         inside=true  index=true
+  ring_buffer                inside=true  index=false   <- would have slipped through
+  totally_new                inside=false index=false
+```
+
+Strictly stricter than before about everything it did not admit on
+purpose.
+
+### arm64 after the changes: unchanged
+
+| | before | after |
+|---|---|---|
+| fixture file operations | 102 | 102 |
+| `event_drop_reasons` | absent | absent |
+| "capture is a floor" warnings | 0 | 0 |
+| #618 control (`kernel_null_path`) | 5 | 5 |
+| ring_buffer_overflows | 0 | 0 |
+| harness exit | — | 0 (full run) |
+
+Caveat on scope of evidence: in this run `open_failures_discarded`
+happened to be absent from the `cat` trace, so the harness did not
+re-exercise the SC-007 fix end-to-end. The evidence for that fix is the
+predicate table above plus run 6 failing with the key present.
+
+### What the next x86-64 lane run distinguishes
+
+The delta is now attributable, so each outcome says something different:
+
+- **~0** — entry events were never being lost; run 6's 1237 was the
+  attach window and tracer self-noise. The loss then sits upstream of
+  every instrumented site, which eliminates the whole join mechanism.
+- **still large** — entry events are genuinely lost with all probes
+  attached, pointing at `PENDING_OPEN` insert failure or the entry
+  program not firing for some opens.
+- **in between** — compare it against the 73 missing operations
+  (102 − 29) to size how much of the shortfall the join accounts for.

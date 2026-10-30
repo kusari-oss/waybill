@@ -130,12 +130,27 @@ fn request_only() -> bool {
 /// Report the open if it succeeded; count and drop it if it did not.
 #[inline(always)]
 fn finish_open(ctx: &TracePointContext) {
+    // The same guard `store_open` applies, and for the counter's sake
+    // rather than the capture's. Without it the filtering is asymmetric:
+    // the tracer's own opens store no request at entry and then orphan
+    // their exit here, so `KERNEL_EXIT_WITHOUT_REQUEST` counts a drop
+    // for an event that was never meant to be captured. Measured on the
+    // x86-64 lane: see measurements/findings.md run 6.
+    if !should_trace() {
+        return;
+    }
     let tid = current_tid();
     // SAFETY: `HashMap::get` is unsafe because the returned reference
     // borrows map memory the kernel may reuse; copied out immediately.
     let Some(p) = (unsafe { PENDING_OPEN.get(&tid).copied() }) else {
-        // Expected for syscalls already in flight when the trace started.
-        // A large count means entry events are being lost (#1185).
+        // An exit whose entry was never stored. Two benign sources are
+        // bounded and one-time: a syscall already in flight when the
+        // exit program attached, and the window between attaching the
+        // exit and the entry program — the probes are system-wide, so
+        // that window counts every open on the machine. Userspace
+        // baselines this slot once attach completes and reports only the
+        // delta, which is what makes a nonzero value here mean entry
+        // events are being lost (#1185).
         increment_event_drop(KERNEL_EXIT_WITHOUT_REQUEST);
         return;
     };

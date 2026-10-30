@@ -312,6 +312,15 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
         // to the kernel-side FILTER_WIDEN[0] slot per FR-010.
         include_system_reads: args.include_system_reads,
     })?;
+    // #618 / #1185 — the drop slots as they stand now, before the child
+    // exists. The open probes attach exit-before-entry deliberately, and
+    // the probes are system-wide, so the attach window counts every open
+    // on the machine as an exit without a request. Baselined here and
+    // subtracted at trace end, which is what makes the remainder mean
+    // "entry events were lost during the build".
+    let event_drop_baseline =
+        crate::trace::counters::read_kernel_event_drop_baseline(&mut handle.bpf);
+
     // #1252 — the probe names, kept for the attestation. Cloned here
     // because `handle.bpf` is borrowed mutably further down.
     let probe_attach_failures = handle.attach_failures.kprobe.clone();
@@ -826,7 +835,11 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
     // #618 / #1185 — merge the kernel-side drop slots into the userspace
     // counts. An unreadable map is reported rather than read as zero.
     if let Some(name) =
-        crate::trace::counters::merge_kernel_event_drops(&mut handle.bpf, &mut event_drops)
+        crate::trace::counters::merge_kernel_event_drops(
+            &mut handle.bpf,
+            &event_drop_baseline,
+            &mut event_drops,
+        )
     {
         counter_attach_failures.push(name);
     }
