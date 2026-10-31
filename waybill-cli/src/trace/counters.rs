@@ -815,6 +815,7 @@ fn describe_handshake_failure(bpf: &mut aya::Ebpf) -> String {
     let recognised = slot(bpf, 3);
     let low32_only = slot(bpf, 4);
     let odd_negative = slot(bpf, 5);
+    let nonce_in_flags = slot(bpf, 6);
     let insert_failed = match read_percpu_slot_sum(bpf, "EVENT_DROPS", 5) {
         Ok(n) => n.to_string(),
         Err(e) => format!("unreadable({})", truncate_error(&e.to_string())),
@@ -837,7 +838,12 @@ fn describe_handshake_failure(bpf: &mut aya::Ebpf) -> String {
     // The reading, stated rather than left to be re-derived. Phrased as
     // what each shape rules out, because the point of the counters is
     // that two plausible mechanisms were already wrong.
-    let reading = if low32_only != "0" {
+    let reading = if nonce_in_flags != "0" {
+        "slot 6 fired, so the nonce-in-flags marker was observed; if \
+         `sentinel_dfd_seen` is zero alongside it, this kernel raises \
+         the tracepoint after validating `dfd` and the invalid-`dfd` \
+         marker could never be seen on it"
+    } else if low32_only != "0" {
         "slot 4 is non-zero: the sentinel arrived with its low 32 bits \
          intact and its upper 32 differing, so the kernel reports `dfd` \
          zero-extended from the `int` rather than as the raw register. \
@@ -861,7 +867,7 @@ fn describe_handshake_failure(bpf: &mut aya::Ebpf) -> String {
         "#1185 handshake diagnosis -- openat_entered={entered} \
          sentinel_dfd_seen={sentinel} nonce_rejected={rejected} \
          recognised={recognised} low32_only={low32_only} \
-         odd_negative_dfd={odd_negative} \
+         odd_negative_dfd={odd_negative} nonce_in_flags={nonce_in_flags} \
          traced_insert_failed={insert_failed} \
          nonce_readback={nonce_readback}; {reading}"
     )

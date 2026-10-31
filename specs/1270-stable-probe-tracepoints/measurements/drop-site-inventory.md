@@ -90,6 +90,14 @@ Network paths, uncounted throughout:
 
 ## SCOPE
 
+Two sites in `is_handshake` are new to the list and neither is a loss.
+
+| site | what it is | why it is not loss |
+|---|---|---|
+| `open_syscalls.rs` `None => return false` | the nonce slot could not be read | behaviourally unchanged -- it was `None => false` before and the grep simply did not match an expression arm. Nothing is armed, so nothing is recognised, so the root is never seeded and the run **aborts** rather than capturing. It fails closed, and since #1185 it also fails *loudly*: `describe_handshake_failure` prints `nonce_readback`, so an unreadable slot is named rather than inferred |
+| `open_syscalls.rs` `return true` | the handshake was recognised | the positive path. Returning here is the feature |
+
+
 `open_syscalls.rs` 100, 156–160, 208; `compiler_exec.rs` 171, 356, 427,
 432; `fs_syscalls.rs` 63, 67. The handshake, `should_trace()`, the subtree
 gate, the compiler whitelist, and the pending-entry joins. Returning here
