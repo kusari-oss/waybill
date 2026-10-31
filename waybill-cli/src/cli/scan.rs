@@ -419,10 +419,26 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
         // real and the inference from it was wrong. Recorded here
         // because the hypothesis is the obvious one to form twice.
         static HANDSHAKE_EMPTY_PATH: [libc::c_char; 1] = [0];
+        // NUL-terminated, in the data segment, so the address is valid in
+        // the forked child with no allocation.
+        static HANDSHAKE_RAN_PATH: [u8; 21] = *b"/tmp/wb-pre-exec-ran\0";
         if let Some(nonce) = handshake_nonce {
             unsafe {
                 use std::os::unix::process::CommandExt;
                 builder.pre_exec(move || {
+                    // #1185 — proof that this closure runs, independent
+                    // of eBPF entirely. Both markers came back
+                    // unobserved, and "the tracepoint did not see it"
+                    // and "it never happened" are indistinguishable
+                    // from the kernel side alone. A file the tracer can
+                    // stat afterwards separates them.
+                    libc::syscall(
+                        libc::SYS_openat,
+                        libc::AT_FDCWD as libc::c_long,
+                        HANDSHAKE_RAN_PATH.as_ptr() as *const libc::c_char,
+                        (libc::O_CREAT | libc::O_WRONLY) as libc::c_int,
+                        0o600 as libc::c_int,
+                    );
                     // The signal: a valid `dfd`, the nonce in `flags`.
                     // Nothing here depends on the kernel accepting the
                     // call, only on the entry tracepoint firing.

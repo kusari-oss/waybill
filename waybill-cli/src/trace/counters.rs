@@ -816,6 +816,14 @@ fn describe_handshake_failure(bpf: &mut aya::Ebpf) -> String {
     let low32_only = slot(bpf, 4);
     let odd_negative = slot(bpf, 5);
     let nonce_in_flags = slot(bpf, 6);
+    let non_tracer = slot(bpf, 7);
+    // BPF-independent: did the child's `pre_exec` run at all? Written by
+    // a raw syscall in the closure, so its presence does not depend on
+    // any probe seeing anything.
+    let pre_exec_ran = match std::fs::metadata("/tmp/wb-pre-exec-ran") {
+        Ok(_) => "yes",
+        Err(_) => "no",
+    };
     let insert_failed = match read_percpu_slot_sum(bpf, "EVENT_DROPS", 5) {
         Ok(n) => n.to_string(),
         Err(e) => format!("unreadable({})", truncate_error(&e.to_string())),
@@ -838,7 +846,16 @@ fn describe_handshake_failure(bpf: &mut aya::Ebpf) -> String {
     // The reading, stated rather than left to be re-derived. Phrased as
     // what each shape rules out, because the point of the counters is
     // that two plausible mechanisms were already wrong.
-    let reading = if nonce_in_flags != "0" {
+    let reading = if pre_exec_ran == "no" {
+        "the child's `pre_exec` left no trace on the filesystem either, \
+         so the closure did not run and no marker was ever issued -- \
+         this is a spawn-path problem, not a capture one"
+    } else if non_tracer == "0" {
+        "`pre_exec` ran, and every open this probe observed came from \
+         the tracer itself: not one syscall from any other process was \
+         seen. That is one fault behind both the handshake and the \
+         x86_64 shortfall, not two"
+    } else if nonce_in_flags != "0" {
         "slot 6 fired, so the nonce-in-flags marker was observed; if \
          `sentinel_dfd_seen` is zero alongside it, this kernel raises \
          the tracepoint after validating `dfd` and the invalid-`dfd` \
@@ -868,6 +885,7 @@ fn describe_handshake_failure(bpf: &mut aya::Ebpf) -> String {
          sentinel_dfd_seen={sentinel} nonce_rejected={rejected} \
          recognised={recognised} low32_only={low32_only} \
          odd_negative_dfd={odd_negative} nonce_in_flags={nonce_in_flags} \
+         non_tracer_opens={non_tracer} pre_exec_ran={pre_exec_ran} \
          traced_insert_failed={insert_failed} \
          nonce_readback={nonce_readback}; {reading}"
     )

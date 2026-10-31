@@ -346,6 +346,12 @@ pub static TRACED_SUBTREE_HITS: PerCpuArray<u64> = PerCpuArray::with_max_entries
 ///   `0x00000000F8523F42` where one passing the raw register yields
 ///   `0xFFFFFFFFF8523F42`. Non-zero here names that difference exactly,
 ///   and the comparison should be on the low 32 bits.
+/// - `7` an open was observed from a pid that is **not** the tracer.
+///   The unifying control. If this is zero while slot 0 counts
+///   hundreds, the probe sees only the tracing process, which would
+///   explain the handshake and the x86_64 shortfall -- 29 operations
+///   against 102, with not one `.rs` read -- as one fault rather than
+///   two.
 /// - `6` an open arrived whose `flags` equalled the nonce, whatever its
 ///   `dfd`. This is the control for the one thing the marker's design
 ///   rests on: that an open with a deliberately invalid `dfd` is
@@ -356,7 +362,7 @@ pub static TRACED_SUBTREE_HITS: PerCpuArray<u64> = PerCpuArray::with_max_entries
 ///   catch-all: if slot 4 is zero too, the marker is being transformed
 ///   some third way, or is not reaching this tracepoint at all.
 #[map]
-pub static HANDSHAKE_DIAG: PerCpuArray<u64> = PerCpuArray::with_max_entries(7, 0);
+pub static HANDSHAKE_DIAG: PerCpuArray<u64> = PerCpuArray::with_max_entries(8, 0);
 
 /// #1185 — the per-trace handshake nonce, written by the loader before the
 /// child is spawned. Slot `TRACE_HANDSHAKE_NONCE_SLOT`. A zero nonce means

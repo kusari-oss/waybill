@@ -83,6 +83,7 @@ const DIAG_RECOGNISED: u8 = 3;
 const DIAG_LOW32_ONLY: u8 = 4;
 const DIAG_ODD_NEGATIVE_DFD: u8 = 5;
 const DIAG_NONCE_IN_FLAGS: u8 = 6;
+const DIAG_NON_TRACER_OPEN: u8 = 7;
 
 const ARG0: usize = 16;
 const ARG1: usize = 24;
@@ -472,6 +473,12 @@ pub fn sys_enter_openat(ctx: TracePointContext) -> u32 {
     // nothing". The handshake is issued as an explicit `SYS_openat`, so
     // this is the program it must reach.
     increment_handshake_diag(DIAG_OPENAT_ENTERED);
+    // #1185 — is any open seen that is not the tracer's own? `should_trace`
+    // returns false only for the tracer pid, so this reuses the existing
+    // comparison rather than adding a second source of truth.
+    if should_trace() {
+        increment_handshake_diag(DIAG_NON_TRACER_OPEN);
+    }
     unsafe {
         store_open(
             ctx.read_at::<i64>(ARG0).unwrap_or(AT_FDCWD as i64),
