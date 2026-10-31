@@ -80,6 +80,8 @@ const DIAG_OPENAT_ENTERED: u8 = 0;
 const DIAG_SENTINEL_DFD_SEEN: u8 = 1;
 const DIAG_NONCE_REJECTED: u8 = 2;
 const DIAG_RECOGNISED: u8 = 3;
+const DIAG_LOW32_ONLY: u8 = 4;
+const DIAG_ODD_NEGATIVE_DFD: u8 = 5;
 
 const ARG0: usize = 16;
 const ARG1: usize = 24;
@@ -104,6 +106,15 @@ fn read_ret(ctx: &TracePointContext) -> i64 {
 #[inline(always)]
 fn is_handshake(dfd: i64, flags: u32) -> bool {
     if dfd != waybill_common::maps::TRACE_HANDSHAKE_DFD {
+        // #1185 — why it did not match, counted so the next run says it.
+        // The 7.0 x86_64 lane reports `sentinel_dfd_seen=0` with the
+        // entry program firing 99 times, so the marker is issued and
+        // arrives as something other than what was written.
+        if dfd as u32 == waybill_common::maps::TRACE_HANDSHAKE_DFD as u32 {
+            increment_handshake_diag(DIAG_LOW32_ONLY);
+        } else if dfd < 0 && dfd != AT_FDCWD as i64 {
+            increment_handshake_diag(DIAG_ODD_NEGATIVE_DFD);
+        }
         return false;
     }
     // #1185 — the marker's dfd arrived as written. Counted before the

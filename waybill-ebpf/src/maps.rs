@@ -339,8 +339,18 @@ pub static TRACED_SUBTREE_HITS: PerCpuArray<u64> = PerCpuArray::with_max_entries
 ///   with an empty `TRACED_PIDS` means the insert failed (see
 ///   `kernel_traced_insert_failed`) or userspace is reading a different
 ///   map than the kernel wrote.
+/// - `4` the low 32 bits of `dfd` equalled the sentinel's and the full
+///   64 bits did not. The kernel's `dfd` is an `int` reported in an
+///   8-byte slot the format declares `signed:0`; a kernel that
+///   zero-extends the truncated `int` yields
+///   `0x00000000F8523F42` where one passing the raw register yields
+///   `0xFFFFFFFFF8523F42`. Non-zero here names that difference exactly,
+///   and the comparison should be on the low 32 bits.
+/// - `5` any open with a negative `dfd` other than `AT_FDCWD`. A
+///   catch-all: if slot 4 is zero too, the marker is being transformed
+///   some third way, or is not reaching this tracepoint at all.
 #[map]
-pub static HANDSHAKE_DIAG: PerCpuArray<u64> = PerCpuArray::with_max_entries(4, 0);
+pub static HANDSHAKE_DIAG: PerCpuArray<u64> = PerCpuArray::with_max_entries(6, 0);
 
 /// #1185 — the per-trace handshake nonce, written by the loader before the
 /// child is spawned. Slot `TRACE_HANDSHAKE_NONCE_SLOT`. A zero nonce means
