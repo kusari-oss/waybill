@@ -53,6 +53,13 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   before and after have to stay comparable — and its documentation now
   states that it lists any capture interface that failed to become
   usable (#1252).
+- pnpm v9 source scans now derive development dependency seeds from
+  resolved importer declarations, so `--exclude-scope dev` removes
+  development-only transitive dependencies. Runtime reachability across
+  importers takes precedence, including aliases and merged peer contexts.
+  Runtime and optional importer evidence survives absent child manifests.
+  v6/v7 per-package flags and missing-importer behavior are preserved.
+  This addresses the pnpm portion of #1297; Yarn is unchanged.
 
 ## [0.14.0] - 2026-10-28
 
