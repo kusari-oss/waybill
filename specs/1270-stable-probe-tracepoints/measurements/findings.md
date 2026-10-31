@@ -1,0 +1,1127 @@
+# Measurements: syscall tracepoint inventory
+
+Probe: `tracepoint-inventory.sh` in this directory. Re-run it when the
+kernel changes; an undocumented interface is one that can move without
+notice.
+
+## Run 1 — aarch64, Linux 6.8.0-136-generic
+
+Colima's VM kernel on the development host, 2026-10-29. Not a runner
+image: this run answers "do these tracepoints exist and where are their
+arguments", not "do they exist on the image the lane draws".
+
+```
+kernel: 6.8.0-136-generic aarch64
+PRESENT sys_enter_openat   sys_exit_openat
+PRESENT sys_enter_openat2  sys_exit_openat2
+PRESENT sys_enter_connect  sys_exit_connect
+ABSENT  sys_enter_open     sys_exit_open
+ABSENT  sys_enter_creat    sys_exit_creat
+ABSENT  sys_enter_rename   sys_exit_rename
+PRESENT sys_enter_chdir sys_exit_chdir sys_exit_fchdir
+PRESENT sys_enter_renameat sys_exit_renameat
+PRESENT sys_enter_renameat2 sys_exit_renameat2
+```
+
+**Controls.** Two groups in that list are not under test. The m1070
+calls (`chdir`, `renameat`, `renameat2`) are attached today and must
+read PRESENT — they do, so the probe discriminates rather than printing
+PRESENT for everything. And `rename` must read ABSENT on this
+architecture, because `waybill-cli/src/trace/loader.rs` already guards
+it behind `#[cfg(target_arch = "x86_64")]` — it does, so the probe is
+reading this kernel rather than a cached or generic list.
+
+**What it establishes.**
+
+1. `openat` and `openat2` both offer an enter/exit pair here. The pair
+   is what the kernel-side join needs: arguments at enter, result at
+   exit.
+2. `open` and `creat` do not exist on this architecture — arm64 has no
+   such syscalls. FR-006's requirement is therefore live, not
+   hypothetical, and the per-arch attach must follow the m1070 `rename`
+   precedent rather than treating absence as failure.
+3. `connect` offers an enter/exit pair, and `uservaddr` sits at offset
+   24 — the address family and the address itself come from a
+   UAPI-defined `struct sockaddr` in user memory, so capture reads no
+   kernel struct layout at all. This is what removes both unstable
+   dependencies in the network path at once: the symbol name
+   `tcp_v4_connect` and the hardcoded `struct sock` offsets 4 and 12
+   that the current kprobe reads.
+4. The argument offsets match the constants m1070 already hardcodes
+   (`ARG0=16, ARG1=24, ARG2=32, ARG3=40, RET=16`) exactly, on every
+   tracepoint printed. The new code reuses those constants rather than
+   deriving its own.
+
+**What it does not establish.** Whether `sys_enter_open` and
+`sys_enter_creat` exist on x86_64, where the lane runs. They are
+expected to, because x86-64 has both syscalls, but that is an
+expectation and this probe cannot reach an x86_64 kernel from this
+host: a `--platform linux/amd64` container still reports the arm64 host
+kernel's tracepoints. T-numbered task in `tasks.md` must run this probe
+in the eBPF lane and record run 2 here before the per-arch attach list
+is finalised.
+
+## Still to measure
+
+- **Run 2, x86_64 on the runner image.** The open-family presence list
+  and the offsets, from the lane itself.
+- **The successful-open baseline (SC-001a).** No measurement of
+  successful-opens-only exists. The before/after comparison needs one,
+  taken on a host where capture is intact, using the same fixture.
+- **Ring-buffer event volume before and after (SC-008).** Today's count
+  for the fixture build is the ceiling the join must not exceed.
+
+---
+
+## Run 3 — after the change, same host (2026-10-29)
+
+aarch64, Linux 6.8.0-136-generic, image built from the working tree.
+Harness exits 0; all probes attach; `completeness: complete` and
+`kprobe_attach_failures: []` agree, so the #1252 honesty invariant holds.
+
+| Quantity | Before | After |
+|---|---|---|
+| File operations | 573 | 102 |
+| Distinct read paths (masked) | 109 | 31 |
+| Distinct write paths (masked) | 31 | 31 |
+| `open_failures_discarded` | — | 599 (203 distinct paths) |
+| `ring_buffer_overflows` | 0 | 0 |
+| Compiler invocations | 9 (7 rustc) | 9 (7 rustc) |
+
+### SC-001b — every removal is attributable
+
+`diff-sets.py` in this directory, run against the before sets, the after
+sets and the discard record:
+
+```
+--- READ (masked) ---
+  before=109 after=31 removed=78 added=0
+  attributable to a failed request : 78
+  UNEXPLAINED removals             : 0
+--- WRITE (masked) ---
+  before=31 after=31 removed=0 added=0
+  UNEXPLAINED removals             : 0
+
+SC-001b: PASS — every removal is attributable, nothing was added
+```
+
+**78 read entries left the set and all 78 appear by name in the discard
+record. Nothing was added. The write set did not change at all.** That
+is FR-004 and FR-004a satisfied together: the only thing lost is open
+requests that failed.
+
+The counter and the log agree independently — 599 discard events
+counted in the kernel, 599 discard records logged in userspace — which
+is a consistency check between two mechanisms that could have
+disagreed.
+
+### SC-008 — volume
+
+573 → 102 events, so the ceiling is met with a wide margin, and
+`ring_buffer_overflows` stays 0. Two reductions compound, as predicted
+in research R8: `do_sys_openat2` called `do_filp_open`, so one `openat`
+used to submit two events, and failed opens are now discarded in the
+kernel instead of being submitted. 599 discards against 102 recorded
+events is the size of the second effect.
+
+### R10 / the superset assumption — CONFIRMED on this host
+
+The removal of the kprobes rested on the syscall tracepoints covering
+every open the kprobes caught. Zero unexplained removals is that claim
+measured: nothing the kprobes saw is missing except requests that
+failed. Confirmed on aarch64 6.8; the x86_64 lane must reproduce it
+before the assumption is retired generally.
+
+### Two measurement traps, both hit
+
+**The diff is dominated by run-to-run noise unless it is masked.** The
+first comparison reported **52 unexplained read removals and 18
+additions**, which read as a serious regression. They were rustc's and
+cargo's random temp directories: `rmetaTmtspV` in one run and
+`rmeta6OxaCo` in the next, `.tmpWRoguS.temp-archive` and
+`.tmpwLsqVV.temp-archive`, `targeto3Q2sv` and `targetkpUXvC`. Masking
+those four shapes takes the read diff to 78 removed / 0 added and the
+write diff to 0 / 0. The masks are in `diff-sets.py`; a new random-name
+shape will show up as an unexplained removal paired with a matching
+addition, which is the signature to look for before believing a
+regression.
+
+**The discard log must be stripped of ANSI escapes before parsing.** The
+first extraction matched whole log lines rather than paths, and so
+reported "599 distinct discarded paths" when 599 was the event count and
+203 the distinct-path count. A count that exactly equals another count
+is worth a second look.
+
+### Still owed from the lane
+
+- Run 2 of the inventory on x86_64, and whether `open`/`creat` exist
+  there (research R9; the `#[cfg(target_arch = "x86_64")]` block is
+  unverified and would be dead code if they do not).
+- The same before/after comparison on the x86_64 runner image,
+  especially the image where the kprobe failed.
+- An IPv6-only connect (SC-007). The fixture build is hermetic and
+  makes no network connection at all, so `connections=0` in every run
+  here — the IPv6 path is compiled and loaded but has not been observed
+  firing.
+- SC-003's 30 consecutive default-branch runs.
+
+---
+
+## Run 4 — IPv6, with a control (2026-10-29)
+
+SC-007 asks for a build that connects only over IPv6, verified against a
+deliberately IPv6-only case rather than inferred from one that uses both.
+The harness now does this with a listener on `::1` inside the container,
+so it needs no egress and cannot flake on DNS or a firewall.
+
+| | Result |
+|---|---|
+| After the change | 1 connection recorded, destination `::1` |
+| **Control: the same case on the pre-#1252 binary** | **0 connections recorded** |
+
+The control is what makes the assertion worth having. `tcp_v4_connect` is
+reached only by IPv4, so the old capture saw nothing at all for this
+build — indistinguishable from an offline build — and a test written
+without the control could have passed against code that recorded
+connections for an unrelated reason.
+
+The compiler fixture cannot carry this check: it is hermetic and reports
+`connections=0` on every run, so the IPv6 path would have shipped
+compiled, loaded, attached and never once observed firing.
+
+## Run 5 — the FR-004b fallback, exercised deliberately
+
+A host that attaches the open entry but not its exit can see requests and
+not results. FR-004b says capture must degrade to recording requests,
+record the gap, and not claim completeness. That branch had never
+executed, so `WAYBILL_TRACE_FORCE_REQUEST_ONLY=1` makes it reachable —
+SC-005 asks for this verified by making an interface unavailable on
+purpose rather than by waiting to observe it.
+
+| | Result |
+|---|---|
+| Attestation produced | yes — the trace did not abort |
+| `kprobe_attach_failures` | `["sys_exit_openat"]` — the gap is named |
+| `completeness` | `partial / probe_attach_failed` — does not claim complete |
+| `open_failures_discarded` | 0 — correct: nothing is discarded in request mode |
+| File operations | 289 |
+
+### The three modes reconcile
+
+This is the check that the model of the defect is right, rather than
+merely consistent with the numbers:
+
+| Mode | Operations | What it records |
+|---|---|---|
+| Pre-#1252 (two kprobes) | 573 | every request, **twice** |
+| FR-004b fallback (entry only) | 289 | every request, once |
+| #1252 (entry joined to exit) | 102 | every request that succeeded |
+
+573 ≈ 2 × 289 is the duplication research R8 predicted:
+`do_sys_openat2` called `do_filp_open`, so one `openat` submitted two
+events and the read set hid it because a set deduplicates. 289 → 102 is
+the failed requests leaving. Neither number was chosen; both fell out of
+the same fixture on the same host, and each mode was reached by a
+different mechanism.
+
+---
+
+## Run 2 — x86_64, from the eBPF lane (2026-10-29) — T001 ANSWERED
+
+The lane on PR #1313 was the first x86_64 execution of the `open` and
+`creat` programs. It **failed**, and the failure was in this feature's
+own code rather than in the kernel.
+
+```
+WARN could not attach the sys_exit_open tracepoint: program 'sys_exit_open' not found
+WARN could not attach the sys_exit_creat tracepoint: program 'sys_exit_creat' not found
+WARN some probes did not attach; capture is a floor, not a total
+     failed=["sys_exit_open", "sys_exit_creat"]
+completeness: partial  (reason=probe_attach_failed)
+Collection done net=6 file=43
+FAIL: .../libsafe/src/lib.rs is in no rustc read set (m1070 SC-001)
+```
+
+### The cause, in four steps
+
+1. The four `open`/`creat` programs were gated
+   `#[cfg(target_arch = "x86_64")]` **on the kernel side**. That crate
+   compiles for `bpfel-unknown-none`, so the predicate is false on every
+   host and the programs were in the object **nowhere**.
+2. The loader's `#[cfg(target_arch = "x86_64")]` evaluates against the
+   *host*, so on x86_64 it asked for programs that did not exist —
+   `program 'sys_exit_open' not found`, which is aya reporting a missing
+   program, not a missing kernel tracepoint.
+3. The exit-first attach rule then skipped `sys_enter_open`, as designed.
+4. x86_64 routes a real share of opens through `open(2)` rather than
+   `openat(2)`, so those opens were never observed: **43 file
+   operations against 102 on arm64**, with the fixture's crate roots
+   missing from the read set.
+
+`whether the syscall exists` is a property of the kernel a program
+attaches to, not of the target it was compiled for. m1070 had this right
+for `rename`: the kernel side is unconditional and only the *loader*
+gates by host arch. The cfg was added here where the template
+deliberately had none.
+
+### Fix, and how it is verified
+
+The arch gate is removed from the kernel side; the loader keeps its
+gate, so arm64 still does not attempt an attach for a syscall its kernel
+lacks. Verified by listing the object's symbols rather than by observing
+an attach, because an attach can only be observed on one architecture at
+a time:
+
+```
+$ readelf -s waybill-ebpf | grep -E 'sys_(enter|exit)_(open|openat|openat2|creat|connect)'
+sys_enter_connect  sys_enter_creat  sys_enter_open   sys_enter_openat
+sys_enter_openat2  sys_exit_creat   sys_exit_open    sys_exit_openat
+sys_exit_openat2
+```
+
+All nine present. arm64 harness re-run after the fix: unchanged — 102
+operations, 599 discards, `completeness: complete`,
+`kprobe_attach_failures: []`, IPv6 recorded.
+
+### What this says about the earlier claim
+
+The PR described this block as "inference, labelled" and reasoned that
+the tracepoints "should be present because those syscalls exist on
+x86-64". The reasoning was sound and answered the wrong question: the
+syscalls do exist and their tracepoints were available. What was missing
+was the program.
+
+**R10's superset assumption was therefore refuted on x86_64 and has now
+been repaired rather than confirmed.** It still awaits a clean x86_64
+run.
+
+### What worked
+
+The capture reported the gap rather than hiding it. `sys_exit_open`
+reached `kprobe_attach_failures[]`, completeness read
+`partial / probe_attach_failed`, and the harness named the missing crate
+root. Before #1310 this same loss presented as `complete` with an empty
+failure list, which is how it survived two releases.
+
+## Run 6 — the #618 instrument on x86_64, and why its number cannot be read yet
+
+First x86_64 lane run carrying the #618 drop counters (job 123780037537,
+head `5944173c`). The lane had to be re-run once: the first attempt
+(job 123731999178) died in the pre-existing `go install sbomqs` step on
+a `proxy.golang.org` stream error, in both the plain and the eBPF
+x86_64 lanes, and never reached the harness. A grep for
+`event_drop_reasons` on that first log returned zero matches — which is
+indistinguishable from a clean capture, and would have been reported as
+one if the failing step had not been checked. The same shape as the
+`openat`-257 control and the `-i`-less `docker run`.
+
+### What the instrument reported
+
+Two traced builds of the `two_binaries_diverge` fixture:
+
+```
+reasons=EventDropCounts { counts: {"kernel_exit_without_request": 1237} }
+reasons=EventDropCounts { counts: {"kernel_exit_without_request": 918} }
+```
+
+Every other reason zero. No `kernel_path_unreadable`, no
+`user_empty_path`, no `user_*` reason at all.
+
+### The prediction this refutes — mine
+
+Before the run I recorded: "if entry events are being lost,
+`kernel_exit_without_request` is large." That inference is **not
+available**, because of a design decision in this same feature.
+
+The open tracepoints are attached **exit first** (`loader.rs`, and the
+comment "Exit first, same rule as openat2 above"). The reason is sound:
+an entry attached before its exit would stash requests no exit program
+can join, losing successful opens outright. The consequence is that in
+the window between attaching `sys_exit_openat` and `sys_enter_openat` —
+and again for `openat2`, `open` and `creat` — every open **anywhere on
+the machine** exits with no stored request and increments this counter.
+The probes are system-wide; the capture is scoped to the build's process
+tree in userspace. So the counter aggregates the whole runner's ambient
+open traffic across the attach window, and the capture does not.
+
+That explains arm64 reading 0 and x86_64 reading 1237 with no defect in
+between: a quiet local container versus a busy CI runner. It also means
+the number cannot presently distinguish ambient attach-window orphans
+from genuinely lost build entries. A global counter compared against a
+process-scoped capture is not evidence.
+
+A second, smaller asymmetry is real but latent: `store_open` returns
+early on `!should_trace()` and `finish_open` has no such guard, so the
+tracer's own opens orphan their exits. `tracer_pid` is populated
+(`loader.rs:112`), so the path is live; the count stays small only
+because the tracer is blocked in the ring-buffer drain for the window
+and writes the attestation after detach.
+
+### What is independently established
+
+The x86_64 capture really is short, and that does not rest on the
+counter:
+
+| | arm64 (passing) | x86_64 (failing) |
+|---|---|---|
+| file operations | 102 | **29** |
+| rustc invocations | 7 | 7 |
+| ring_buffer_overflows | 0 | 0 |
+| open_failures_discarded | — | 151 |
+| unresolved_relative_opens | — | 2 |
+
+All 7 rustc invocations were captured this run — whole invocations did
+not vanish, unlike earlier #1185 observations. What is missing is the
+contents of their read sets: **not one `.rs` read appears in the entire
+recorded operation list.** Every surviving read is an absolute path
+under `target/release/deps/`. `completeness` still reads `complete`,
+which is the #1185 complaint exactly.
+
+### Mechanisms eliminated for `libsafe/src/lib.rs` specifically
+
+- **m213 kernel noise filter** — not a match. The fixture path
+  `/waybill/waybill-cli/tests/fixtures/.../libsafe/src/lib.rs` hits no
+  prefix pattern (`/etc/ /proc/ /sys/ /dev/ /lib/ /usr/ /bin/ /var/`)
+  and no contains pattern (`/.cache/ /.local/ /fingerp /.finger
+  /increme Cargo.to -toolcha .cargo/c Cargo.lo`). Checked against the
+  catalog in `waybill-common/src/filter.rs`, not assumed. Note the
+  filter does legitimately explain the absence of `Cargo.toml` reads,
+  via the `Cargo.to` contains pattern.
+- **Ring buffer** — `ring_buffer_overflows: 0`.
+- **Failed-open discard** — the harness diagnostic reports "(no discard
+  line names it)".
+- **Relative-path resolution (m1070)** — would report the open as
+  `Unresolved`, and only 2 operations are so flagged, neither of them a
+  source file. An unresolvable open still appears; this one does not
+  appear at all.
+
+So the event never reached userspace, and no instrumented site claims
+it. It is either inside the unattributable 1237, or upstream of every
+counter.
+
+### What would make the next run decisive
+
+1. **Scope the orphan counter to the traced process tree**, or carry the
+   pid with the drop, so ambient traffic stops being counted against a
+   process-scoped capture.
+2. **Baseline `EVENT_DROPS` immediately after attach completes** and
+   report the delta. The attach-window orphans are expected by design
+   and should not be reported as loss at all.
+3. **Set `WAYBILL_TRACE_OPEN_DIAG=1` in the harness.** The diagnostic
+   already asks for it ("needs WAYBILL_TRACE_OPEN_DIAG=1 above") and
+   `OPEN_DIAG` is already written on that env var — this costs nothing
+   to switch on and names what happened to each open.
+
+Until (1) and (2) land, `kernel_exit_without_request` should be read as
+"not yet attributable", not as evidence either way. The counter that
+*is* trustworthy is the set of zeros around it: no path-read failure, no
+null path, no userspace drop reason fired on a capture that lost ~70% of
+its operations.
+
+## Run 7 — making the counter attributable, and a second failure CI had masked
+
+Three changes, measured on arm64 in the `Dockerfile.ebpf-test` container.
+
+### The two that make `kernel_exit_without_request` mean something
+
+1. **`finish_open` now applies `should_trace()`**, the guard `store_open`
+   already had. Without it the filtering was asymmetric: the tracer's own
+   opens stored no request at entry and then counted a drop at exit.
+
+2. **`EVENT_DROPS` is baselined after attach completes**, read in
+   `scan.rs` between `load_and_attach` returning and the child being
+   spawned, so anything it already holds predates the build.
+   `merge_kernel_event_drops` reports the delta.
+
+The exit-first attach order is kept. It is correct — an entry program
+live before its exit program would stash requests nothing can join,
+losing successful opens outright — so the window is a consequence to
+subtract, not a bug to fix.
+
+Two decisions, both in the direction of not concealing loss:
+
+- An unreadable baseline slot subtracts **nothing** rather than
+  defaulting to zero, because a zero baseline would silently inflate the
+  delta by the whole attach window. Over-reporting loss beats hiding it.
+- `saturating_sub`, not an assertion. Per-CPU sums read at two instants
+  can fall if a CPU comes online between them; that is "nothing since
+  attach", not a fault.
+
+Five unit tests cover the arithmetic. The one that matters is
+mutation-verified: making `net()` return `now` makes
+`baseline_nets_out_what_the_attach_window_already_counted` fail, so the
+test exercises the subtraction rather than the plumbing around it.
+
+### The third was already done
+
+`WAYBILL_TRACE_OPEN_DIAG=1` has been set in the harness since #1252
+(line 55). The diagnostic's "(needs WAYBILL_TRACE_OPEN_DIAG=1 above)" is
+a reminder, which run 6 misread as a complaint. So run 6's "(no discard
+line names it)" was already a real negative result: the missing crate
+root is genuinely absent from the discarded failed opens, not merely
+unlogged. Nothing to change, and the run-6 conclusion is strengthened.
+
+### A second failure, which the first was masking
+
+Running the harness to completion on arm64 surfaced:
+
+```
+FAIL: trace_integrity carries keys the pre-m1072 struct did not have (SC-007)
+      ["open_failures_discarded"]
+```
+
+m1072 SC-007 pins `trace_integrity`'s key set against the **merge-base**
+struct, deliberately, so the assertion cannot be circular. #1252 then
+added `open_failures_discarded`, which a trace of `cat /etc/hostname`
+populates legitimately — the loader probes several paths for libc and
+most of those opens fail, which is what the counter is for.
+
+Pre-existing at `5944173c`. CI has never reported it because **the
+x86-64 lane exits at the m1070 SC-001 check further up the script and
+never reaches this assertion.** One failure hid the other, so "the eBPF
+lane is red" was two independent faults:
+
+| | fails on | cause |
+|---|---|---|
+| m1070 SC-001 | x86-64 only | #1185 — the capture loses the source reads |
+| m1072 SC-007 | both; arm64 reaches it first | #1252 added a field SC-007 pins against |
+
+Fixed by naming the two fields this branch adds on purpose
+(`open_failures_discarded`, `event_drop_reasons`) rather than widening
+the check, so an addition nobody intended still fails.
+
+### The assertion was also weaker than it read
+
+It used `[.] | inside($pre)`. On strings jq's `inside` is substring
+containment, so a stray `ring_buffer` key would have passed against
+`ring_buffer_overflows`. Now exact membership via `index($k)`, proved
+rather than asserted:
+
+```
+  ring_buffer_overflows      inside=true  index=true
+  open_failures_discarded    inside=true  index=true
+  event_drop_reasons         inside=true  index=true
+  ring_buffer                inside=true  index=false   <- would have slipped through
+  totally_new                inside=false index=false
+```
+
+Strictly stricter than before about everything it did not admit on
+purpose.
+
+### arm64 after the changes: unchanged
+
+| | before | after |
+|---|---|---|
+| fixture file operations | 102 | 102 |
+| `event_drop_reasons` | absent | absent |
+| "capture is a floor" warnings | 0 | 0 |
+| #618 control (`kernel_null_path`) | 5 | 5 |
+| ring_buffer_overflows | 0 | 0 |
+| harness exit | — | 0 (full run) |
+
+Caveat on scope of evidence: in this run `open_failures_discarded`
+happened to be absent from the `cat` trace, so the harness did not
+re-exercise the SC-007 fix end-to-end. The evidence for that fix is the
+predicate table above plus run 6 failing with the key present.
+
+### What the next x86-64 lane run distinguishes
+
+The delta is now attributable, so each outcome says something different:
+
+- **~0** — entry events were never being lost; run 6's 1237 was the
+  attach window and tracer self-noise. The loss then sits upstream of
+  every instrumented site, which eliminates the whole join mechanism.
+- **still large** — entry events are genuinely lost with all probes
+  attached, pointing at `PENDING_OPEN` insert failure or the entry
+  program not firing for some opens.
+- **in between** — compare it against the 73 missing operations
+  (102 − 29) to size how much of the shortfall the join accounts for.
+
+## Run 8 — the baseline landed, the number is still not attributable, and a far better lead
+
+x86-64 lane on `51a2c24c`. Two attempts of the same fixture build:
+
+| | attempt 1 | attempt 2 | arm64 |
+|---|---|---|---|
+| file operations | 91 | 35 | 102 |
+| `unresolved_relative_opens` | **56** | 2 | — |
+| `open_failures_discarded` | 111 | 248 | 599 |
+| `kernel_exit_without_request` | 1113 | 845 | absent |
+| rustc invocations | 7 | 7 | 7 |
+
+### The baseline works and is insufficient
+
+It subtracted ~124 and ~73 (1237→1113, 918→845). So the window between
+attach completing and the baseline read holds ~100 orphans — which
+tells us the ambient open rate on the runner is roughly 100 per few
+milliseconds, and therefore that the full attach gap plausibly accounts
+for ~1000. The baseline cannot catch those: a syscall that *entered*
+during the attach gap *exits* after the baseline read, so it lands in
+the delta no matter when the baseline is taken.
+
+Conclusion: `kernel_exit_without_request` still cannot distinguish
+ambient traffic from lost build entries. The baseline removed one
+component of the artifact, not the artifact. **The missing control is a
+trace of a trivial command on the same runner**: if `cat /etc/hostname`
+also reports ~1000, the number is ambient. The harness already traces
+exactly that for the m213 widen case, but the script exits at the
+m1070 SC-001 failure above it, so CI has never reached it. The control
+has to move ahead of the fixture build.
+
+### The better lead: a source read that arrived and did not resolve
+
+Attempt 1's recorded operations contain:
+
+```
+read UNRESOLVED binaries/safe-only/src/main.rs
+```
+
+A source file, **captured**, and unresolved. So these reads are not
+uniformly lost — at least some reach userspace and fail to resolve
+because the working-directory model did not know the process's cwd.
+The other unresolved entries in that run (`nvme0n1`, `ACPI0004:00`,
+`block`, `devices`, `259:1`) are ambient udev/systemd opens against a
+directory fd, which are legitimately unresolvable and always will be.
+
+That reframes the m1070 SC-001 failure. The check looks for an absolute
+path in a rustc read set; an unresolved relative read is present in the
+capture but can never match, so the capture can hold the evidence and
+still fail the assertion.
+
+56 unresolved in attempt 1 against 2 in attempt 2 is the #1185
+nondeterminism, now with a mechanism attached to it rather than a
+symptom.
+
+### Why cwd would be unknown
+
+The seed is not missing: `scan.rs` spawns the traced child with an
+explicit `current_dir`, precisely so the child performs an observable
+`chdir` (m1070 research R2). So the model's ground truth depends on
+three events surviving the capture — the root's `sys_enter_chdir` /
+`sys_exit_chdir` pair, and a `sched_process_fork` per descendant.
+
+Which gives a single explanation covering every observation: the
+capture is lossy on x86-64, and **losing one chdir or fork event
+amplifies**. cwd is inherited, so one lost event turns every subsequent
+relative read by that process and its children into `Unresolved`. That
+is why whole crate roots vanish together, why which root vanishes
+varies run to run, and why a busy x86-64 runner fails where a quiet
+arm64 container passes.
+
+It also explains why #618 never names it: the lost event is a *chdir or
+fork*, not an open, and the drop counters only instrument the open join.
+
+### Two things worth doing, in order
+
+1. **Seed the root's cwd from the tracer's own ground truth.** The
+   tracer calls `current_dir()` to build the `Command`; it knows the
+   directory and the child pid. Depending on observing the `chdir` it
+   itself caused is strictly weaker than recording what it set. This is
+   not resolving against a guess (Principle III) — it is the one cwd in
+   the system the tracer established rather than inferred. Children
+   still inherit through fork events, so this hardens the root only,
+   but the root is what poisons everything downstream.
+2. **Move a control trace ahead of the fixture build** and print its
+   drop reasons and operation count, so `kernel_exit_without_request`
+   acquires a baseline measured on the same runner in the same run.
+
+## Run 9 — both of run 8's next steps, measured on arm64
+
+Implemented the two items above and ran the full harness in the
+container (`waybill-ebpf-test:1185e`, arm64, Colima). `RUN_EXIT=0`, zero
+`FAIL` lines, zero `WARN` lines, `>>> m210 + m212 + m213 + m1072
+integration test PASSED`.
+
+### The seed
+
+`CwdTracker::seed(pid, dir)` records a directory the tracer
+*established* rather than observed, and `scan.rs` seeds the root before
+any event is drained.
+
+It seeds **two** pids, and the second is not redundant. The child's
+`sched_process_fork` record names the tracer as its parent, and
+`CwdTracker::fork` overwrites unconditionally, so seeding only the child
+would have been clobbered straight back to `Unknown` by the very record
+the seed exists to stop depending on. With both seeded, either event
+surviving is enough and the two agree.
+
+That was found by mutation, not by reading: deleting the tracer seed
+from `the_root_fork_inherits_the_seed_rather_than_clobbering_it` makes
+it fail with `left: Unresolved`. A single seed would have looked
+correct, passed its own test, and changed nothing about #1185.
+
+arm64 still passes m1070 SC-001 with the seed in place. The seed cannot
+be shown to fix anything here, because arm64 was already passing — only
+the x86-64 lane can show that.
+
+### The control, and what it can and cannot baseline
+
+A trace of `cat /etc/hostname` now runs before the fixture build, on the
+same runner in the same run. It asserts only that it *ran* — a floor
+measured on a failed run is worse than no floor — and then prints.
+
+First attempt failed: `trace capture` refuses a capture that aggregated
+nothing ("no dependency activity observed"), and the only file `cat`
+reads is one the m213 System category drops. Fixed with
+`--include-system-reads`.
+
+Before using that flag I checked it cannot bias the one number the
+control exists to measure, rather than assuming so.
+`classify_and_drop_if_noise` is called inside `emit_open`, *after* the
+entry/exit join — so a filtered path has already been joined and counted
+no drop. The widen flag changes which records reach the ring buffer,
+never whether an exit found its entry.
+
+| | control, run 9 | control, run 10 | fixture build (default) |
+|---|---|---|---|
+| `event_drop_reasons` | `{}` | `{}` | `{}` |
+| file operations | 239 | **415** | 108 |
+| `unresolved_relative_opens` | 192 | **258** | 5 |
+
+Run 10 re-ran the identical block on the same image minutes later, to
+check a relabelling edit. It moved 239 → 415 and 192 → 258 while the
+fixture build held at 108 / 5. That is the "not comparable" claim
+demonstrated rather than asserted: those two rows track the container's
+ambient load, so they are a floor for nothing. `event_drop_reasons` was
+`{}` in both, which is the row the control exists for.
+
+**The flag is safe for the drop slots and invalidates the other two
+rows.** A bare `cat` reporting 239 operations is not `cat`'s work: the
+probes are machine-wide, and m211 clears the userspace pid filter in
+command-execute mode (`admitted()` returns true for every pid when
+`target_pids` is empty), so with System reads admitted the capture holds
+every ambient open in the container. The fixture build's 108 and 5 were
+taken with that category filtered. The 239/192 vs 108/5 difference is
+the filter, not the build, and the script now says so on each line —
+dropping the figures would have been worse, because the next reader
+would recompute them and draw the comparison anyway.
+
+I drew that comparison wrongly myself before checking: on seeing 192 I
+said attempt 1's 56 unresolved opens were "probably mostly ambient". Not
+supported. x86-64's 56 and arm64's 5 were both taken with the System
+category **on**, so that gap stands as a real difference between the two
+architectures.
+
+### What run 9 did not settle
+
+`event_drop_reasons` is `{}` on **both** arm64 runs, so arm64 has no
+orphans to baseline and the control measured a floor of zero against a
+build of zero. The question the control was built to answer —
+whether x86-64's 1113 is ambient traffic or lost build entries — needs
+the x86-64 lane, where the slot is non-empty. The delta table
+(`control / fixture / excess`) correctly printed nothing here, which is
+the lossless shape.
+
+So: the instrument is in place and verified to fire exactly (the #618
+positive control still reports `kernel_null_path = 5` on five forced
+`openat(NULL)` calls), and it has nothing to say on this architecture.
+
+## Run 11 — reading the open path instead of the counters, and the drop nobody counted
+
+Run 9 and run 10 left the orphan slot uninterpretable for a reason no
+further control can fix, so this run went back to the code rather than
+measuring around it.
+
+### The finding
+
+`store_open` in `waybill-ebpf/src/programs/open_syscalls.rs` ended with:
+
+```rust
+let _ = PENDING_OPEN.insert(&tid, &pending, 0);
+```
+
+`PENDING_OPEN` is a BPF hash map of **4096** entries
+(`waybill-ebpf/src/maps.rs`). A full hash map rejects
+`bpf_map_update_elem`, and that result was discarded. This was the only
+early return in the open path that recorded nothing — every other site
+in the module already had a named `EVENT_DROPS` slot.
+
+The consequence is not a missing counter but a missing open: with no
+stored request the exit tracepoint has nothing to join, so the open never
+reaches a read set. It also increments
+`kernel_exit_without_request`, which is why that slot could not be read.
+**Two different failures were summing into one number:**
+
+| | cause | consequence |
+|---|---|---|
+| exit arrived before its entry was ever stored | the map refused the request | the open is **lost** |
+| exit arrived for a syscall already in flight | the probes attached late | nothing lost; counting noise |
+
+Subtracting a floor cannot separate those, because a floor is one number
+and this is two mechanisms. That — not arm64's quietness — is why runs 9
+and 10 could not settle what x86-64's 1113 means.
+
+### Why this matches #1185's symptom better than anything measured so far
+
+These tracepoints are **machine-wide** (`should_trace()` excludes only
+the tracer's own pid), so every thread on the host competes for the same
+4096 slots. The map's own doc comment claimed the bound was "threads
+currently inside an open, not opens", which holds only while every entry
+is eventually removed. The exit tracepoint removes one; a thread that
+dies inside the syscall does not, and nothing reclaims it for the rest of
+the trace.
+
+If occupancy saturates partway through a build, every subsequent open
+anywhere on the machine is dropped. That produces loss that is
+
+- **nondeterministic** — it depends on accumulated leakage and on
+  whatever else the host was doing;
+- **wholesale rather than sampled** — later crates vanish entirely while
+  earlier ones look intact, which is the shape #1185 reports;
+- **invisible** — the capture still reports itself complete.
+
+This is a hypothesis, not a measurement. What this run adds is the
+instrument that can confirm or kill it.
+
+### Ruled out by reading, not by assuming
+
+An entry program live without its exit would leak every entry it stored.
+`trace/loader.rs` already prevents it: `openat2`, `open` and `creat`
+attach **exit first** and skip the entry on failure, and `openat`'s
+entry-first exception has the FR-004b `request_only` fallback, which
+emits at entry instead of stashing. So an unpaired entry program is not a
+standing leak source. Only `openat`'s own attach window is, and that is
+milliseconds.
+
+### What this run changed
+
+1. `kernel_pending_insert_failed` (`EventDropReason` slot 3) counts the
+   refused insert at its own site. It double-counts with
+   `kernel_exit_without_request` by design: the difference between the
+   two is late arrival, and this slot alone is loss the capture caused.
+2. `EVENT_DROPS` is now sized from `EventDropReason::KERNEL_SLOTS`
+   instead of the literal `3`. `increment_event_drop` reaches its slot
+   through `get_ptr_mut`, which returns `None` past the end of the map
+   and silently counts nothing — so a variant added without widening the
+   map would read zero forever. A counter that cannot see its own
+   subject is indistinguishable from a mechanism that never fired, which
+   is the ambiguity #618 exists to remove.
+3. `pending_open_entries_at_close` reports the map's occupancy at trace
+   end. Read as **accumulated leakage, not peak**: entries drain as
+   syscalls exit, so what remains are the threads that died inside one.
+   A handful means the bound is not the constraint; a figure near 4096
+   means saturation is reachable and (1) is what reaching it costs. This
+   is the better early-warning instrument, because (1) only fires after
+   the damage.
+4. A forced-failure control (`WAYBILL_TRACE_FORCE_PENDING_INSERT_FAIL=1`,
+   following the existing `WAYBILL_TRACE_FORCE_REQUEST_ONLY` precedent)
+   makes the branch reachable, since saturating a 4096-entry machine-wide
+   map on demand is not something a test can arrange.
+
+### What the forced control does and does not establish
+
+It establishes that the count reaches the attestation, and that refusing
+the request loses the open — the harness asserts the counter is non-zero
+and that **zero** operations survive.
+
+It does **not** establish that a genuinely full map returns an error at
+this call site. That rests on `bpf_map_update_elem` rejecting an insert
+into a full hash map, and only real saturation would confirm it. The
+distinction is labelled in the map's doc comment and in the harness
+output rather than left to be inferred.
+
+### #1185's honesty defect, now demonstrable on demand
+
+Under the forced flag the capture loses **every** open and still
+describes itself the way the harness prints. That is printed, not
+asserted: it is the defect #1185 reports rather than a regression this
+change introduces, and tightening it into an assertion is the
+honest-claim change (T038), not this one.
+
+### Measured, arm64, Colima aarch64 / 2 CPUs / kernel 6.8, image `1185g`
+
+The forced control:
+
+| | |
+|---|---|
+| `kernel_pending_insert_failed` | **75** |
+| `kernel_exit_without_request` | **75** |
+| file operations captured | **0** |
+| `pending_open_entries_at_close` | 0 |
+
+The counter fires and reaches the attestation; refusing the request loses
+**every** open. The two slots came out exactly equal, which is the 1:1
+pairing claimed above, measured rather than argued — every refused insert
+produced exactly one orphaned exit. Recorded as a finding, not asserted:
+a syscall interrupted between entry and exit would break the equality
+without anything being wrong, and a brittle assertion that goes red for
+that reason teaches people to ignore it.
+
+The fixture build:
+
+| | |
+|---|---|
+| `pending_open_entries_at_close` | **2**, then **0**, of 4096 |
+| `event_drop_reasons` | `{}` |
+| file operations | 102 |
+| `completeness` | `complete` |
+
+Two runs of the same image, minutes apart: occupancy 2 and then 0. The
+forced control reported `kernel_pending_insert_failed: 75` in both, which
+is the determinism expected of a fixed command (`rustc --version`) with a
+fixed open count — so the 2-vs-0 is the host's leakage varying, not the
+instrument.
+
+### This weakens the saturation hypothesis
+
+**2 of 4096, and then 0.** Over an entire fixture build on a machine-wide
+probe, the in-flight-open map accumulated two leaked entries, then none. On this host leakage
+is not close to being the constraint, and the mechanism proposed above —
+leaks accumulating until the map saturates — is not what is happening
+here.
+
+Stated as a weakening rather than a refutation, because of what the
+number does and does not cover:
+
+- It is one small build on a quiet 2-CPU arm64 VM. x86-64 is where the
+  1113 orphans are, and it is a busier host.
+- Occupancy at close measures **accumulated leakage**, not peak. A build
+  could transiently saturate from genuine concurrency and drain before
+  close; 2 at close does not exclude that. What it does make unlikely is
+  the specific leak-accumulation path.
+
+So arm64 now has neither orphans (`{}`) nor leakage (2), and still cannot
+discriminate between the two mechanisms — for the same structural reason
+run 9 could not, with one more slot established as silent.
+
+### What the x86-64 lane now answers
+
+Sharper than before, and without needing a control at all:
+
+- `kernel_pending_insert_failed` **near 1113** → the map is the cause,
+  and #1185 is a sizing-and-eviction bug.
+- `kernel_pending_insert_failed` **0 with 1113 orphans** → the map is
+  exonerated outright, every one of those 1113 is late arrival or
+  ambient traffic, and the loss #1185 reports is somewhere else entirely.
+- `pending_open_entries_at_close` says which of those two to expect
+  before the counter does.
+
+Either answer closes a question that four runs of controls could not,
+which is the argument for the counter over another floor.
+
+### #1185's honesty defect is now a deterministic reproduction
+
+With the path corrected, the forced control reports:
+
+```
+completeness with a total capture loss: complete   (dropped=- reason=-)
+```
+
+A capture that observed **zero** file operations — every single open lost
+— describes itself as `complete`, and names no drop and no reason. That
+is #1185's report verbatim, and it is now reachable from one environment
+variable instead of waiting for a nondeterministic loss to occur.
+
+Nothing in this change makes it worse and nothing here fixes it; the
+assertion is deliberately left as a print. The fix is the honest-claim
+change (T038): a capture whose kernel drop slots are non-zero must not
+claim `complete`. What this run adds is that the fix now has a test that
+fails before it and passes after, which it did not have while the loss
+was nondeterministic.
+
+### A defect in this run's own instrument
+
+The forced control first printed `completeness with a total capture loss:
+absent`, read from `.predicate.trace_integrity.completeness`. That field
+does not exist — the m210 check at the top of the same script reads
+`.predicate.compiler_pipeline.completeness.state`. "Absent" reads as the
+capture declining to claim completeness, which is the opposite of the
+finding being demonstrated. Fixed to the real path, with `dropped` and
+`reason` alongside. Recorded because a probe naming the wrong field
+states something false with full confidence, and nothing about the output
+looked wrong.
+
+## Phase 3 — a protocol, a baseline, and a defect the protocol found
+
+`measurements/baseline.sh`, committed so the table below can be re-run
+rather than trusted. One fixture, one flag set, one field list, N runs,
+min/median/max per field, and the per-run rows printed with the summary.
+
+Host: Colima aarch64, 4 CPUs, kernel 6.8.0-136, `Dockerfile.ebpf-test`.
+
+### The baseline, N=10
+
+| field | min | median | max | distinct |
+|---|---|---|---|---|
+| elapsed_ms | 832 | 863 | 945 | 9 |
+| file_operations | 102 | 102 | 102 | 1 |
+| compiler_invocations | 9 | 9 | 9 | 1 |
+| rustc_invocations | 7 | 7 | 7 | 1 |
+| traced_subtree_opens | 1173 | 1173 | 1173 | 1 |
+| outside_traced_subtree | 28 | 28 | 324 | 3 |
+| unresolved_relative_opens | 5 | 5 | 5 | 1 |
+| pending_open_entries_at_close | 0 | 0 | 0 | 1 |
+| ring_buffer_overflows | 0 | 0 | 0 | 1 |
+| open_failures_discarded | 599 | 599 | 599 | 1 |
+| exit_without_request | 0 | 0 | 151 | 2 |
+
+Set against the same feature a day earlier, where one identical control
+reported 239 operations and then 415: everything the capture *reports* is
+now stable, and the one field that still moves is
+`outside_traced_subtree` — what the capture **declines**. The host's noise
+left the measurement and became a counter about the host.
+
+### What the protocol found immediately
+
+The per-run rows, not the summary:
+
+    outside_traced_subtree:  28 28 28 28 32 28 28 324 28 28
+    exit_without_request:     0  0  0  0  0  0  0 151  0  0
+
+Both outliers are the same run. The gate returns at syscall *entry* for an
+out-of-subtree open, so no request is stored and the matching exit arrives
+with nothing to join — **the gate was manufacturing orphans in the one
+slot #1185 set out to make readable**. The same oversight was already
+handled one branch above for the handshake marker, which would otherwise
+have landed in `kernel_null_path` and broken the #618 control.
+
+Three things had to be true to see it: repetition (nine of ten runs read a
+clean `0`), a fixed command (so an outlier was not just a different
+measurement), and the raw rows (the summary said `max 151`; only the rows
+showed 151 and 324 in the *same* run, which is what named the mechanism).
+The third existed only because the first N=10 run wrote its rows into a
+`--rm` container and lost them.
+
+### The fix, verified against forced load rather than luck
+
+Waiting for an ambient burst is luck, so the control forces one — a
+`find /usr -type f` loop outside the subtree, for the duration of the
+trace:
+
+| | declined | orphans | admitted | file_ops | invocations |
+|---|---|---|---|---|---|
+| forced load ×3 | 33928 / 32072 / 33130 | **0** | 1173 | 103 | 9 |
+| quiet ×3 | 28 / 45 / 28 | **0** | 1173 | 102 / 103 / 102 | 9 |
+
+~33,000 declined opens — a thousandfold over ambient — produce zero
+orphans, where 324 produced 151 before the fix. `admitted` is unchanged at
+1173 under both, so the build's capture is indifferent to host load, which
+is the whole point of scoping it.
+
+### A correction to the table above
+
+`file_operations` is **102–103**, not 102. The N=10 run reported
+`distinct: 1` and six further runs include three 103s. Ten runs were not
+enough for that field, and the no-noise control establishes the extra
+operation is not caused by the ambient load.
+
+So the baseline's own stability column is itself a measurement with an N
+attached, and quoting "deterministic" from it needs that N stated.
+`traced_subtree_opens = 1173` has now held across 16 runs; `file_operations`
+has not held across 16.
+
+## Phase 5 — the claim
+
+The decision was the maintainer's and it was to err on the side of caution:
+claim less, and file issues for what cannot be supported yet.
+
+### What was wrong with the claim
+
+`CompilerPipelineData.completeness` is the one field a consumer reads to
+decide whether the read and write sets are a total or a floor. It had three
+inputs, and the only numeric one was dead:
+
+```rust
+// derive_completeness, before
+if self.attach_late          { Partial { attach_late } }
+if self.probe_attach_failed  { Partial { probe_attach_failed } }
+if self.events_dropped > 0   { Degraded { .. } }      // always false
+Complete
+```
+
+`record_events_dropped` is called from four unit tests and nowhere else;
+`TraceStats.events_dropped` is the literal `0`, carrying the comment "Not
+measured". So `Degraded` could not occur in a real trace, and `Complete`
+was the default answer for every run that did not hit one of the two
+`Partial` conditions — regardless of what the drop counters said.
+
+This is why F10 held. The forced control refuses every single open, counts
+them in `kernel_pending_insert_failed`, captures zero operations, and the
+document says `complete`. The information was all there; nothing read it.
+
+The sharpest form of it: `scan.rs` already logged the correct sentence —
+
+> #618 observed events did not reach the recorded sets; the capture is a
+> floor, not a total
+
+— computed from `total_lost()`, and then wrote `complete` into the artifact
+that gets signed. A log line goes to a terminal somebody may not be
+watching. The attestation is the thing that travels.
+
+### The exclusion was already written
+
+`EventDropCounts::total_lost()` existed, with a doc comment arguing exactly
+the distinction the claim needed: `kernel_outside_traced_subtree` counts
+what the capture **declined**, not what it **lost**, and folding it in would
+degrade every healthy scoped trace — "the false alarm that teaches people
+to ignore the real one".
+
+So the fix is three terms and no new judgement:
+
+```
+measured_loss = total_lost()                      // loss slots, scope excluded
+              + ring_buffer_overflows             // kernel wrote, drain never saw
+              + pending_open_entries_at_close     // still in flight at the end
+```
+
+fed to a `measured_loss` input kept **separate** from `events_dropped`.
+Separate on purpose: `events_dropped` is #618's field and names one
+specific mechanism. Overloading it would make a named field mean something
+other than its name, which is the class of defect this whole phase is
+about.
+
+### What it costs, per the committed baseline
+
+| field | N=10 median | contributes? |
+|---|---|---|
+| `ring_buffer_overflows` | 0 | yes, 0 |
+| `pending_open_entries_at_close` | 0 | yes, 0 |
+| the five kernel loss slots | 0 | yes, 0 |
+| `outside_traced_subtree` | varies (28–33928) | **no — scope, not loss** |
+| `open_failures_discarded` | 599 | no — not a drop reason |
+
+So a healthy arm64 run still reports `complete`, and does so because every
+loss counter reads zero rather than because nothing was consulted. That is
+the difference the phase was for.
+
+A run on the x86_64 lane, where `kernel_exit_without_request` has measured
+~1113, now reports `degraded`. That is the honest answer and P6 is still
+open on why the figure is what it is — but the document no longer has to
+wait for P6 to stop overclaiming.
+
+### A gap left visible rather than folded in
+
+A loss counter that cannot be **read** still leaves the claim at
+`complete`. The read failure lands in `counter_attach_failures`, which is
+not an input to completeness. An unreadable counter is a reason not to
+assert a total, and wiring that is its own change: `counter_attach_failures`
+also carries failures of maps that have nothing to do with loss, so
+degrading on any entry would be the same over-broad move the scope slot
+exclusion exists to avoid.
+
+### What was filed instead of fixed
+
+Six issues, one per gap the Phase 4 inventory ranked, each stating in its
+first lines whether its content is a measurement or a reading of the
+source. The three that change what a record *means* rather than whether it
+exists are the ones to take seriously:
+
+- the `openat2` flags default of `0`, which is `O_RDONLY`, so a write is
+  recorded as a read;
+- the `ret` default of `-1`, which makes `open_failures_discarded` assert a
+  failure nobody observed;
+- the `dfd` default of `AT_FDCWD`, which converts an honestly `Unresolved`
+  path into a confidently wrong `Resolved` one — routing around machinery
+  that already declines correctly.
+
+Plus the two groups of discarded map inserts (`PENDING_CHDIR` /
+`PENDING_RENAME`, and the four in `compiler_exec.rs`), and the claim itself,
+filed with its blast radius written down because the x86_64 consequence is
+a visible change rather than a silent one.
+
+None of the five substitution issues can quote a measurement, and each says
+so. That is not a gap in the filing: the whole property of a
+SILENT-SUBSTITUTION is that a run in which it fires is indistinguishable
+from one in which it does not, so there is nothing to measure until a
+counter exists. The order of work is counter, then forced control, then
+measurement — the order `kernel_pending_insert_failed` went through.
