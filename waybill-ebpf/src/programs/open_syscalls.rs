@@ -50,7 +50,7 @@ use waybill_common::events::{FileEvent, FileEventType, AT_FDCWD};
 
 use crate::helpers::{
     current_comm, current_pid, current_tid, gating_armed, in_traced_subtree,
-    increment_drop_counter, increment_event_drop, should_trace,
+    increment_drop_counter, increment_event_drop, increment_handshake_diag, should_trace,
 };
 use crate::maps::{
     PendingOpen, FILE_EVENTS, FILE_EVENT_DROPS, OPEN_DIAG, OPEN_FAILURES_DISCARDED,
@@ -73,6 +73,13 @@ const KERNEL_EXIT_WITHOUT_REQUEST: u8 = 2;
 const KERNEL_PENDING_INSERT_FAILED: u8 = 3;
 const KERNEL_OUTSIDE_TRACED_SUBTREE: u8 = 4;
 const KERNEL_TRACED_INSERT_FAILED: u8 = 5;
+
+/// #1185 — `HANDSHAKE_DIAG` slots. See `crate::maps::HANDSHAKE_DIAG` for
+/// what each one rules in or out.
+const DIAG_OPENAT_ENTERED: u8 = 0;
+const DIAG_SENTINEL_DFD_SEEN: u8 = 1;
+const DIAG_NONCE_REJECTED: u8 = 2;
+const DIAG_RECOGNISED: u8 = 3;
 
 const ARG0: usize = 16;
 const ARG1: usize = 24;
@@ -99,12 +106,22 @@ fn is_handshake(dfd: i64, flags: u32) -> bool {
     if dfd != waybill_common::maps::TRACE_HANDSHAKE_DFD {
         return false;
     }
+    // #1185 — the marker's dfd arrived as written. Counted before the
+    // nonce is consulted so a rejection here is distinguishable from the
+    // dfd never arriving at all.
+    increment_handshake_diag(DIAG_SENTINEL_DFD_SEEN);
     // A zero nonce is no armed handshake, so nothing can be seeded by a
     // caller that happens to guess the dfd.
-    match TRACE_HANDSHAKE_NONCE.get(waybill_common::maps::TRACE_HANDSHAKE_NONCE_SLOT) {
+    let armed = match TRACE_HANDSHAKE_NONCE.get(waybill_common::maps::TRACE_HANDSHAKE_NONCE_SLOT) {
         Some(&n) => n != 0 && n == flags,
         None => false,
+    };
+    if armed {
+        increment_handshake_diag(DIAG_RECOGNISED);
+    } else {
+        increment_handshake_diag(DIAG_NONCE_REJECTED);
     }
+    armed
 }
 
 /// Record the handshaking process as the traced root.
@@ -421,6 +438,11 @@ fn discard_failed_open(p: &PendingOpen, ret: i64) {
 /// `openat(dfd, filename, flags, mode)`.
 #[tracepoint]
 pub fn sys_enter_openat(ctx: TracePointContext) -> u32 {
+    // #1185 — counted first and ungated, so a zero distinguishes "this
+    // program does not run on this kernel" from "it runs and recognises
+    // nothing". The handshake is issued as an explicit `SYS_openat`, so
+    // this is the program it must reach.
+    increment_handshake_diag(DIAG_OPENAT_ENTERED);
     unsafe {
         store_open(
             ctx.read_at::<i64>(ARG0).unwrap_or(AT_FDCWD as i64),

@@ -310,6 +310,38 @@ pub static TRACED_PIDS: HashMap<u32, u8> = HashMap::with_max_entries(16384, 0);
 #[map]
 pub static TRACED_SUBTREE_HITS: PerCpuArray<u64> = PerCpuArray::with_max_entries(1, 0);
 
+/// #1185 — where the handshake dies, when it dies.
+///
+/// Separate from `EVENT_DROPS` on purpose, and not for tidiness: that map
+/// is now an input to the completeness claim (`measured_loss` sums
+/// `total_lost()`), so a diagnostic counted there would be reported as
+/// capture loss. This one is read for diagnosis and feeds nothing.
+///
+/// It exists because the failure it diagnoses destroys its own evidence.
+/// When the root is never established the run aborts before writing an
+/// attestation, so every existing counter -- including
+/// `kernel_traced_insert_failed`, which covers the seeding path itself --
+/// is unreadable. Two hypotheses were refuted by separate means before
+/// this was built; counts localise in one run what guessing did not in
+/// two.
+///
+/// Slots, and what each distinguishes:
+///
+/// - `0` `sys_enter_openat` fired at all. Zero here means the entry
+///   program does not run on this kernel, which would explain far more
+///   than the handshake.
+/// - `1` an open arrived whose `dfd` equalled `TRACE_HANDSHAKE_DFD`.
+///   Zero with slot 0 non-zero means the marker's `dfd` is not arriving
+///   as written.
+/// - `2` the `dfd` matched and the nonce did not. Non-zero means compare
+///   the value userspace wrote against what the slot reads back.
+/// - `3` `is_handshake` returned true, so seeding was attempted. Non-zero
+///   with an empty `TRACED_PIDS` means the insert failed (see
+///   `kernel_traced_insert_failed`) or userspace is reading a different
+///   map than the kernel wrote.
+#[map]
+pub static HANDSHAKE_DIAG: PerCpuArray<u64> = PerCpuArray::with_max_entries(4, 0);
+
 /// #1185 — the per-trace handshake nonce, written by the loader before the
 /// child is spawned. Slot `TRACE_HANDSHAKE_NONCE_SLOT`. A zero nonce means
 /// no handshake is armed, and no pid can be seeded.

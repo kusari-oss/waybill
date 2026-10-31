@@ -791,6 +791,73 @@ pub fn read_traced_subtree_hits<T>(_bpf: &mut T) -> (u64, Option<String>) {
 /// deliberately. The verification is therefore added before the gate, so
 /// that state is unreachable rather than merely unlikely.
 #[cfg(all(target_os = "linux", feature = "ebpf-tracing"))]
+/// #1185 — localise a handshake that never arrived.
+///
+/// Reads `HANDSHAKE_DIAG` and the nonce slot and says which link in the
+/// chain broke, rather than leaving the reader with "TRACED_PIDS is
+/// empty" and no way to narrow it. Each slot rules something in or out;
+/// see `waybill-ebpf/src/maps.rs::HANDSHAKE_DIAG`.
+///
+/// Every read here can fail, and a failed read must not read as a zero:
+/// a zero in slot 0 is a strong claim (the entry program does not run on
+/// this kernel) and an unreadable map is no claim at all.
+#[cfg(all(target_os = "linux", feature = "ebpf-tracing"))]
+fn describe_handshake_failure(bpf: &mut aya::Ebpf) -> String {
+    fn slot(bpf: &mut aya::Ebpf, i: u32) -> String {
+        match read_percpu_slot_sum(bpf, "HANDSHAKE_DIAG", i) {
+            Ok(n) => n.to_string(),
+            Err(e) => format!("unreadable({})", truncate_error(&e.to_string())),
+        }
+    }
+    let entered = slot(bpf, 0);
+    let sentinel = slot(bpf, 1);
+    let rejected = slot(bpf, 2);
+    let recognised = slot(bpf, 3);
+    let insert_failed = match read_percpu_slot_sum(bpf, "EVENT_DROPS", 5) {
+        Ok(n) => n.to_string(),
+        Err(e) => format!("unreadable({})", truncate_error(&e.to_string())),
+    };
+    let nonce_readback = match bpf
+        .map_mut("TRACE_HANDSHAKE_NONCE")
+        .ok_or_else(|| anyhow::anyhow!("map not found"))
+        .and_then(|m| {
+            aya::maps::Array::<_, u32>::try_from(m)
+                .map_err(|e| anyhow::anyhow!("not a usable array: {e}"))
+        })
+        .and_then(|a| {
+            a.get(&waybill_common::maps::TRACE_HANDSHAKE_NONCE_SLOT, 0)
+                .map_err(|e| anyhow::anyhow!("{e}"))
+        }) {
+        Ok(n) => n.to_string(),
+        Err(e) => format!("unreadable({})", truncate_error(&e.to_string())),
+    };
+
+    // The reading, stated rather than left to be re-derived. Phrased as
+    // what each shape rules out, because the point of the counters is
+    // that two plausible mechanisms were already wrong.
+    let reading = if entered == "0" {
+        "slot 0 is zero: `sys_enter_openat` did not fire at all, which is \
+         larger than the handshake and would explain a short capture too"
+    } else if sentinel == "0" {
+        "the entry program ran and no open carried the sentinel `dfd`: \
+         either the marker syscall never reached this tracepoint, or the \
+         `dfd` does not arrive as written"
+    } else if recognised == "0" {
+        "the sentinel `dfd` arrived and the nonce did not match: compare \
+         the read-back below against what the loader wrote"
+    } else {
+        "the handshake was recognised and seeding was attempted, so the \
+         break is at the insert or in what userspace reads"
+    };
+
+    format!(
+        "#1185 handshake diagnosis -- openat_entered={entered} \
+         sentinel_dfd_seen={sentinel} nonce_rejected={rejected} \
+         recognised={recognised} traced_insert_failed={insert_failed} \
+         nonce_readback={nonce_readback}; {reading}"
+    )
+}
+
 pub fn wait_for_traced_root(bpf: &mut aya::Ebpf, timeout: std::time::Duration) -> anyhow::Result<u64> {
     let start = std::time::Instant::now();
     loop {
@@ -804,12 +871,23 @@ pub fn wait_for_traced_root(bpf: &mut aya::Ebpf, timeout: std::time::Duration) -
             return Ok(n);
         }
         if start.elapsed() >= timeout {
+            // #1185 — say where it died before refusing.
+            //
+            // This guard destroyed its own evidence: aborting here means
+            // no attestation is written, so every drop counter was
+            // unreadable -- including `kernel_traced_insert_failed`,
+            // which covers the seeding path itself. Diagnosing the 7.0
+            // x86_64 failure took a separate probe and two refuted
+            // hypotheses because of it.
+            let d = describe_handshake_failure(bpf);
+            tracing::error!("{d}");
             anyhow::bail!(
                 "the traced root never announced itself within {:?}: TRACED_PIDS is empty, \
                  so the kernel has no traced subtree. The capture would admit every process \
                  on the machine, and once the subtree gate is enabled it would instead admit \
                  none while still reporting itself complete (#1185). Refusing to trace on an \
-                 unestablished root rather than producing a figure that cannot be attributed.",
+                 unestablished root rather than producing a figure that cannot be attributed. \
+                 {d}",
                 timeout
             );
         }
