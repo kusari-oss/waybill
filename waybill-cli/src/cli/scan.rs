@@ -318,7 +318,11 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
             .duration_since(std::time::UNIX_EPOCH)
             .map(|d| d.subsec_nanos() ^ (d.as_secs() as u32))
             .unwrap_or(0x5A5A_5A5A);
-        Some((t & 0x7FFF_FFFF).max(1))
+        // #1185 — bit 30 forced set. The nonce is now carried in the
+        // syscall's `flags`, so it must not collide with a real
+        // open-flags combination; every `O_*` value together stays far
+        // below 0x40000000.
+        Some((t & 0x3FFF_FFFF) | 0x4000_0000)
     } else {
         None
     };
@@ -399,10 +403,58 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
         // the intended outcome and is why the result is discarded here
         // rather than reported: its success is not the signal, being
         // *observed* is, and that is verified from the map below.
+        //
+        // #1185 — the NULL was tested and is **not** why the 7.0 x86_64
+        // lane fails to establish its root. Kernel 7.0 added
+        // `__data_loc char[] __filename_val` to `sys_enter_openat`, so
+        // the tracepoint now copies the filename into the record where
+        // 6.8 only reported the pointer:
+        //
+        //   6.8.0-136  aarch64: fields end at `umode_t mode` @40
+        //   7.0.0-1017 x86_64 : `__filename_val` @48
+        //
+        // That made a dereferenced NULL look like the mechanism. Passing
+        // a valid empty-string pointer instead changed nothing -- the
+        // handshake was still never observed -- so the difference is
+        // real and the inference from it was wrong. Recorded here
+        // because the hypothesis is the obvious one to form twice.
+        static HANDSHAKE_EMPTY_PATH: [libc::c_char; 1] = [0];
+        // NUL-terminated, in the data segment, so the address is valid in
+        // the forked child with no allocation.
+        static HANDSHAKE_RAN_PATH: [u8; 21] = *b"/tmp/wb-pre-exec-ran\0";
         if let Some(nonce) = handshake_nonce {
             unsafe {
                 use std::os::unix::process::CommandExt;
                 builder.pre_exec(move || {
+                    // #1185 — proof that this closure runs, independent
+                    // of eBPF entirely. Both markers came back
+                    // unobserved, and "the tracepoint did not see it"
+                    // and "it never happened" are indistinguishable
+                    // from the kernel side alone. A file the tracer can
+                    // stat afterwards separates them.
+                    libc::syscall(
+                        libc::SYS_openat,
+                        libc::AT_FDCWD as libc::c_long,
+                        HANDSHAKE_RAN_PATH.as_ptr() as *const libc::c_char,
+                        (libc::O_CREAT | libc::O_WRONLY) as libc::c_int,
+                        0o600 as libc::c_int,
+                    );
+                    // The signal: a valid `dfd`, the nonce in `flags`.
+                    // Nothing here depends on the kernel accepting the
+                    // call, only on the entry tracepoint firing.
+                    libc::syscall(
+                        libc::SYS_openat,
+                        libc::AT_FDCWD as libc::c_long,
+                        HANDSHAKE_EMPTY_PATH.as_ptr(),
+                        nonce as libc::c_int,
+                    );
+                    // The control, kept deliberately: the old marker,
+                    // with its invalid `dfd`. If the kernel observes
+                    // this one too, `sentinel_dfd_seen` says so and the
+                    // invalid `dfd` was never the problem. If it does
+                    // not while the signal above is recognised, the
+                    // tracepoint fires after `dfd` validation and the
+                    // original design could not work on this kernel.
                     libc::syscall(
                         libc::SYS_openat,
                         waybill_common::maps::TRACE_HANDSHAKE_DFD,

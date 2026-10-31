@@ -70,6 +70,22 @@ jobs:
             ebpf:
               - 'waybill-ebpf/**'
               - 'waybill-cli/src/trace/**'
+              # #1185 — `trace/**` is not the whole of the traced path.
+              # `execute_scan` lives in `cli/scan.rs` and carries the
+              # trace orchestration, the handshake the kernel's traced
+              # root is established by, and the loss wiring the
+              # completeness claim reads. A PR could change any of it
+              # with this lane never running.
+              - 'waybill-cli/src/cli/scan.rs'
+              # The kernel crate compiles against these four modules --
+              # 19 `waybill_common::` references, `TRACE_HANDSHAKE_DFD`
+              # among them. They are the kernel/userspace ABI, so a
+              # change here can break capture without touching either
+              # crate's own directory.
+              - 'waybill-common/src/maps.rs'
+              - 'waybill-common/src/events.rs'
+              - 'waybill-common/src/filter.rs'
+              - 'waybill-common/src/ip.rs'
               - 'xtask/**'
               - 'Dockerfile.ebpf-test'
               - 'scripts/ebpf-*.sh'
