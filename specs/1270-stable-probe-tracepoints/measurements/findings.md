@@ -1223,3 +1223,81 @@ and only the markers are not, which nothing yet explains.
   kernel/userspace ABI changed under it.
 - `open_syscalls.rs` claimed its offsets were "measured against every
   tracepoint this module attaches to". True of arm64 only until run 7.
+
+## Run 12 — the x86_64 handshake is intermittent, not absent
+
+Found while reconciling #1322 against the tree, by reading `main`'s own
+eBPF lane logs rather than the probe branch's. It contradicts two things
+run 7 and #1322 both asserted.
+
+### What the lane actually did
+
+`main` at `9880eb77`, run `41161815084`, container harness, kernel
+`7.0.0-1017-azure` x86_64. Three traces across two harness attempts:
+
+| # | trace | result |
+|---|---|---|
+| 1 | `#1185 control` (attempt 1) | **root established** — attestation emitted, `event_drop_reasons {"kernel_outside_traced_subtree":21}`, `file operations 4`, `unresolved_relative 0` |
+| 2 | `#1185 scope` (attempt 1) | failed: `TRACED_PIDS is empty` |
+| 3 | `#1185 control` (attempt 2) | failed: `TRACED_PIDS is empty` |
+
+One of three established its traced root. The first and third are the
+*same probe with the same command*, 16 seconds apart in the same
+container, and they disagree.
+
+### Two claims this refutes, both mine
+
+**"The traced root never announces itself on x86_64."** It announced
+itself in trace 1. Run 7 generalised "never" from runs that all failed,
+and that set did not include a success it could have. The honest
+statement is **intermittent**, with N=3 in one run — which is not enough
+to characterise a rate, only enough to kill "never".
+
+**"#1313 traded a wrong x86_64 capture for no x86_64 capture."**
+Unsupported. The harness order changed: the `#1185` control and scope
+probes now run *before* the m210 fixture trace, and the scope probe's
+abort ends the harness, so **the m210 trace is never reached**. At
+`2f9be2e6` the m210 trace ran, emitted an attestation and captured 7
+rustc invocations, failing later on `m1070 SC-001`
+(`libsafe/src/lib.rs is in no rustc read set`). Post-#1313 there is no
+evidence either way about m210 capture on x86_64, because nothing runs
+it. "No capture" described the harness aborting early, not the capture
+failing.
+
+### What this does to the next test
+
+The amplitude test recorded in run 7 — issue N identical openats from
+`pre_exec` and watch `openat_entered` move — was designed for a probe
+that never sees the child. For a handshake that works one time in three
+it answers the wrong question: a null result would be indistinguishable
+from having drawn two failures.
+
+The question is now **what differs between a trace that establishes its
+root and one that does not**, and the first candidate is timing, because
+the bail is a 2s timeout. Two things to measure, in order:
+
+1. **Rate, before mechanism.** Run the control probe N≥20 times in one
+   container and count establishments. Without a rate, any fix is
+   unfalsifiable: a change that does nothing passes two runs out of
+   three.
+2. **What the clock says.** The log already carries `All probes
+   attached` → `Spawning traced command` → `Child started`, and in trace
+   1 that span was 2.4ms. Instrument the nonce write and the first
+   `is_handshake` call against the same clock and compare an
+   establishing trace with a failing one.
+
+Note the uprobe attach in this run took **2.47s** (`Attaching uprobes to
+libssl` 03:10:08.131 → `All probes attached` 03:10:10.604), against a
+2s handshake timeout. That is not yet a cause — attach completes before
+the child is spawned, so ordering is not violated — but it is the only
+measured quantity in the trace that is the same order of magnitude as
+the timeout, and it is the first thing to rule in or out.
+
+### Why this is in the list
+
+#1322 records ten measurements that read as results and were not. This
+is the eleventh, and it is the same shape as the slot-7 control: a
+property asserted from a sample that could not establish it. "Never"
+needed one counter-example and the counter-example was sitting in
+`main`'s own CI log the whole time, unread, because the diagnosis was
+being run on the probe branch.
