@@ -1125,3 +1125,101 @@ SILENT-SUBSTITUTION is that a run in which it fires is indistinguishable
 from one in which it does not, so there is nothing to measure until a
 counter exists. The order of work is counter, then forced control, then
 measurement — the order `kernel_pending_insert_failed` went through.
+
+---
+
+## Run 7 — why the 7.0 x86_64 lane cannot establish its traced root
+
+Open. Five hypotheses refuted, no cause yet, and one of my own controls
+was invalid. Recorded because the refutations are the expensive part and
+the next person should not re-pay for them.
+
+Kernels: `6.8.0-136-generic aarch64` (Colima, handshake works) against
+`7.0.0-1017-azure x86_64` (the lane, handshake never observed).
+
+### What the lane reports
+
+`TRACED_PIDS is empty` after the 2s wait, so the capture refuses to
+trace. Before #1313 the same lane failed later, on
+`libsafe/src/lib.rs is in no rustc read set` -- #1185's own symptom. The
+guard is doing its job; the handshake underneath it is not.
+
+### Refuted, each by measurement rather than argument
+
+1. **Attach ordering / a missing program.** `All probes attached` at
+   `03:10:10.604446`, `Spawning traced command` at `.604522` -- 78us
+   earlier, no attach failure.
+2. **Argument offsets.** `tracepoint-inventory.sh` run on x86_64 for the
+   first time (the gap this document listed as outstanding):
+   `dfd`@16, `filename`@24, `flags`@32, `ret`@16, identical to arm64 and
+   to what `open_syscalls.rs` hardcodes. All nine open-family
+   tracepoints PRESENT. Control held -- `rename` reads PRESENT here and
+   ABSENT on arm64, so the probe read this kernel.
+3. **A NULL filename.** 7.0 *does* add
+   `__data_loc char[] __filename_val` @48 to `sys_enter_openat`, absent
+   on 6.8, so the tracepoint now copies the filename into the record.
+   Passing a valid empty-string pointer changed nothing. The kernel
+   difference is real; the inference from it was wrong.
+4. **A zero-extended `dfd`.** `low32_only=0`: no open arrived with the
+   sentinel's low 32 bits and a differing upper 32.
+5. **`dfd` validated before the tracepoint fires.** Both markers issued
+   from one `pre_exec` -- the invalid-`dfd` original and a
+   nonce-in-`flags` variant with a valid `AT_FDCWD`. Both unobserved
+   (`sentinel_dfd_seen=0`, `nonce_in_flags=0`), so rejecting the call
+   early is not it either.
+
+### Established
+
+- `sys_enter_openat` fires on this kernel: 466, 99, 45, 20, 18 openats
+  across runs.
+- The nonce is armed and reads back intact after the failure.
+- Seeding is never attempted: `recognised=0`, `traced_insert_failed=0`.
+- `pre_exec` **does** run, proven without eBPF -- the closure creates
+  `/tmp/wb-pre-exec-ran` by raw syscall and userspace stats it:
+  `pre_exec_ran=yes`. So the marker syscalls execute.
+- And they are not observed. That is the whole remaining question.
+
+### The invalid control, named
+
+Slot 7 counted "opens from a pid that is not the tracer" via
+`should_trace()`, intending to test whether the probe sees any process
+but itself. It reported `non_tracer_opens == openat_entered` exactly
+(18 of 18, 20 of 20), which looks like a clean answer and is not one:
+`should_trace` compares `cfg.tracer_pid` to `current_pid()`, and the
+tracer's pid is the namespaced one while the kernel's is the
+init-namespace one. They cannot match in a container. **This is the
+mismatch the handshake exists to work around**, documented in
+`cli/scan.rs` as "what silently disabled the tracer-exclusion filter in
+every containerised run" -- and the control was built on top of it. It
+measures a tautology, so the unifying hypothesis below is untested, not
+supported.
+
+### The hypothesis worth testing next
+
+The x86_64 capture has been short since before #1313: 29 file operations
+against 102 on arm64, not one `.rs` read in the recorded list, every
+instrumented site denying it. If the probe does not observe the traced
+child's syscalls at all, that is the handshake failure and the missing
+read sets as **one** fault.
+
+Test it by amplitude, not by identity, since identity is what the
+invalid control got wrong: have `pre_exec` issue N identical openats and
+read `openat_entered`. Baseline is 18-20. If issuing 50 leaves it at
+18-20 the child's opens are invisible; if it reaches ~68 they are seen
+and only the markers are not, which nothing yet explains.
+
+### What is already worth keeping, cause or no cause
+
+- The failure now describes itself. Aborting before the attestation left
+  every drop counter unreadable, `kernel_traced_insert_failed` included
+  -- the one covering the seeding path. Two rounds were spent on that
+  before the diagnosis moved into the error.
+- `HANDSHAKE_DIAG` is deliberately not slots in `EVENT_DROPS`: that map
+  now feeds `measured_loss`, so a diagnostic counted there would be
+  reported as lost capture.
+- The eBPF lane did not watch `waybill-cli/src/cli/scan.rs` or
+  `waybill-common/src/{maps,events,filter,ip}.rs`. It could skip inside
+  a run reporting success while the trace orchestration and the
+  kernel/userspace ABI changed under it.
+- `open_syscalls.rs` claimed its offsets were "measured against every
+  tracepoint this module attaches to". True of arm64 only until run 7.

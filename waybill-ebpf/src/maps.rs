@@ -346,12 +346,17 @@ pub static TRACED_SUBTREE_HITS: PerCpuArray<u64> = PerCpuArray::with_max_entries
 ///   `0x00000000F8523F42` where one passing the raw register yields
 ///   `0xFFFFFFFFF8523F42`. Non-zero here names that difference exactly,
 ///   and the comparison should be on the low 32 bits.
-/// - `7` an open was observed from a pid that is **not** the tracer.
-///   The unifying control. If this is zero while slot 0 counts
-///   hundreds, the probe sees only the tracing process, which would
-///   explain the handshake and the x86_64 shortfall -- 29 operations
-///   against 102, with not one `.rs` read -- as one fault rather than
-///   two.
+/// - `7` **an invalid control. Do not read it as an answer.** It counts
+///   opens where `should_trace()` is true, intending "not the tracer's
+///   own". But `should_trace` compares `cfg.tracer_pid` against
+///   `current_pid()`, and the tracer's pid is the namespaced one while
+///   the kernel's is the init-namespace one -- they cannot match in a
+///   container. That mismatch is the thing the handshake exists to work
+///   around, so this slot reports every open and reads
+///   `non_tracer_opens == openat_entered` whatever is true. Kept, named,
+///   and not deleted, because it looked like a clean result for one
+///   round. Measure visibility by amplitude instead: issue N identical
+///   opens from `pre_exec` and watch slot 0 move, or not.
 /// - `6` an open arrived whose `flags` equalled the nonce, whatever its
 ///   `dfd`. This is the control for the one thing the marker's design
 ///   rests on: that an open with a deliberately invalid `dfd` is

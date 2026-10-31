@@ -850,11 +850,6 @@ fn describe_handshake_failure(bpf: &mut aya::Ebpf) -> String {
         "the child's `pre_exec` left no trace on the filesystem either, \
          so the closure did not run and no marker was ever issued -- \
          this is a spawn-path problem, not a capture one"
-    } else if non_tracer == "0" {
-        "`pre_exec` ran, and every open this probe observed came from \
-         the tracer itself: not one syscall from any other process was \
-         seen. That is one fault behind both the handshake and the \
-         x86_64 shortfall, not two"
     } else if nonce_in_flags != "0" {
         "slot 6 fired, so the nonce-in-flags marker was observed; if \
          `sentinel_dfd_seen` is zero alongside it, this kernel raises \
@@ -885,7 +880,8 @@ fn describe_handshake_failure(bpf: &mut aya::Ebpf) -> String {
          sentinel_dfd_seen={sentinel} nonce_rejected={rejected} \
          recognised={recognised} low32_only={low32_only} \
          odd_negative_dfd={odd_negative} nonce_in_flags={nonce_in_flags} \
-         non_tracer_opens={non_tracer} pre_exec_ran={pre_exec_ran} \
+         non_tracer_opens={non_tracer}[invalid-control] \
+         pre_exec_ran={pre_exec_ran} \
          traced_insert_failed={insert_failed} \
          nonce_readback={nonce_readback}; {reading}"
     )
