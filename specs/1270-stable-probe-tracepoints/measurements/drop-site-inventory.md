@@ -6,7 +6,7 @@ open path that recorded nothing when it returned early. It was found by
 reading, not by a check, and reading is not a method — so this enumerates
 the rest.
 
-97 candidate sites across the seven kernel programs, by
+99 candidate sites across the seven kernel programs, by
 `grep -nE "return|let _ = |unwrap_or|\.is_err\(\)"` with comment lines
 excluded. The grep over-counts — ordinary control flow matches it — and
 that is deliberate: a conservative pattern that produces rows to classify
@@ -14,7 +14,10 @@ beats a precise one that misses a site, which is the whole subject here.
 
 (An earlier draft of this document said 108. That was the same grep
 counting its own comment lines, which is the kind of figure that reads as
-a measurement and is not one.)
+a measurement and is not one. This line said 97 for longer: the table
+below was extended to 99 and the count in the prose was not, so the
+document disagreed with `scripts/audit-drop-sites.sh` — which prints the
+live figure and is the one to trust.)
 
 `scripts/audit-drop-sites.sh` diffs the live sites against the committed
 list, so a new one cannot appear unexamined.
