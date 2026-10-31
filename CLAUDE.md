@@ -579,6 +579,35 @@ status of a script that compares content is exactly right; that is
 what a gate is. Checking a status when nothing compared content is
 not a check at all.
 
+### Run the gate in the configuration that can fail
+
+`--features ebpf-tracing` passing is not evidence about the default
+build, and the reverse is equally untrue. Feature-gated code has two
+builds and a misplaced `#[cfg]` breaks exactly the one that was not
+tested.
+
+This has bitten in both directions. `feedback_ebpf_container_test_gap`
+records the first: macOS `cargo check` is blind to
+`#[cfg(all(target_os = "linux", feature = "ebpf-tracing"))]` code, so
+trace changes must be built via `Dockerfile.ebpf-test`. The inverse
+cost PR #1321 several commits of a fully red CI: inserting a function
+above `wait_for_traced_root` in `waybill-cli/src/trace/counters.rs`
+displaced that function's `#[cfg]` attribute, leaving two definitions
+of it and an unlinked `aya` reference in the default build. Clippy
+failed on linux, macOS *and* Windows, while clippy had been verified
+green in-container with the feature **on** — the one configuration in
+which that defect cannot appear.
+
+So: after editing anything adjacent to a `#[cfg]`, diff the attribute
+against `main` for the functions around the insertion point, and run
+`./scripts/pre-pr.sh` — default features, no `+toolchain` — on your own
+branch before calling it ready. A per-feature check is an addition to
+the mandatory gate, never a substitute for it.
+
+And when CI reports a failure, enumerate **every** job's conclusion.
+Reading one summary field is how a four-lane compile break hid behind
+the single lane that was expected to be red.
+
 ## Measure external behaviour before designing around it
 
 When a design depends on how an external service actually behaves —
