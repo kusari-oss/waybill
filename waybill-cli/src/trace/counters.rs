@@ -887,6 +887,7 @@ fn describe_handshake_failure(bpf: &mut aya::Ebpf) -> String {
     )
 }
 
+#[cfg(all(target_os = "linux", feature = "ebpf-tracing"))]
 pub fn wait_for_traced_root(bpf: &mut aya::Ebpf, timeout: std::time::Duration) -> anyhow::Result<u64> {
     let start = std::time::Instant::now();
     loop {
