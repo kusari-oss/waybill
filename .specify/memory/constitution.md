@@ -578,10 +578,14 @@ element) to avoid a penalty that measurement showed does not exist.
 In trace mode, all dependency **discovery** MUST occur through eBPF tracing
 of live build processes. Network interception uses `uprobes`
 attached to TLS libraries (OpenSSL, GoTLS) to capture
-plaintext before encryption. File operations are traced via
-kernel probes. No MITM proxy, no certificate injection, and
-no static manifest/lockfile parsing are permitted **as a
-dependency source**.
+plaintext before encryption. File operations and outbound
+connections are traced via kernel-side probes — syscall
+tracepoints, whose names and argument layouts are UAPI.
+Kprobes on internal kernel functions are not used: their
+presence as traceable symbols is not promised to anyone, and
+#1252 is what that costs when one disappears. No MITM proxy,
+no certificate injection, and no static manifest/lockfile
+parsing are permitted **as a dependency source**.
 
 External data sources (lockfiles, databases, APIs) MAY be
 used to **enrich** already-discovered dependencies — for
@@ -1046,4 +1050,4 @@ changes do not violate any principle. Violations require
 either a code fix or a constitution amendment — never silent
 deviation.
 
-**Version**: 4.0.1 | **Ratified**: 2026-04-15 | **Last Amended**: 2026-10-18
+**Version**: 4.0.2 | **Ratified**: 2026-04-15 | **Last Amended**: 2026-10-29
