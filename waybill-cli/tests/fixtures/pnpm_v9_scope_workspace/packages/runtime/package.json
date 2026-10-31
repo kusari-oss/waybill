@@ -1,0 +1,8 @@
+{
+  "name": "waybill-fixture-runtime-member",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "string-width": "4.2.3"
+  }
+}
