@@ -393,12 +393,27 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
         //
         // `pre_exec` runs in a forked child, so the closure must be
         // async-signal-safe: one raw syscall, no allocation, no locks, no
-        // panic path. A null path is passed deliberately — the handshake
-        // carries no filename, and the kernel's entry program reads only
-        // `dfd` and `flags` for it. The call fails with `EBADF`, which is
-        // the intended outcome and is why the result is discarded here
-        // rather than reported: its success is not the signal, being
-        // *observed* is, and that is verified from the map below.
+        // panic path. The kernel's entry program reads only `dfd` and
+        // `flags`; the call fails (`EBADF`) either way, and its success is
+        // not the signal -- being *observed* is, verified from the map
+        // below.
+        //
+        // #1185 — the filename is an empty string rather than NULL, and
+        // the pointer is load-bearing. Kernel 7.0 added a
+        // `__data_loc char[] __filename_val` field to `sys_enter_openat`,
+        // so the tracepoint now copies the filename *into* the record;
+        // 6.8 has no such field. Measured on both:
+        //
+        //   6.8.0-136  aarch64: fields end at `umode_t mode` @40
+        //   7.0.0-1017 x86_64 : `__filename_val` @48
+        //
+        // A NULL filename was deliberate while the tracepoint only
+        // reported the pointer. It stopped being free once the kernel
+        // started dereferencing it, and on the 7.0 lane the handshake was
+        // never observed at all while every probe attached cleanly. The
+        // static lives in the binary's data segment, so the address is
+        // valid in the forked child without allocating.
+        static HANDSHAKE_EMPTY_PATH: [libc::c_char; 1] = [0];
         if let Some(nonce) = handshake_nonce {
             unsafe {
                 use std::os::unix::process::CommandExt;
@@ -406,7 +421,7 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
                     libc::syscall(
                         libc::SYS_openat,
                         waybill_common::maps::TRACE_HANDSHAKE_DFD,
-                        core::ptr::null::<libc::c_char>(),
+                        HANDSHAKE_EMPTY_PATH.as_ptr(),
                         nonce as libc::c_int,
                     );
                     Ok(())
