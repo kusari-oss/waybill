@@ -40,13 +40,27 @@ use aya_ebpf::{
     programs::TracePointContext,
 };
 
-use waybill_common::events::{CompilerExecEvent, CompilerExecEventKind, FileEventType, LineageEvent};
+use waybill_common::events::{
+    CompilerExecEvent, CompilerExecEventKind, EventDropReason, FileEventType, LineageEvent,
+};
 
-use crate::helpers::increment_drop_counter;
+use crate::helpers::{
+    gating_armed, in_traced_subtree, increment_drop_counter, increment_event_drop,
+};
 use crate::maps::{
     COMPILER_DIRECT_EXECS, COMPILER_EXEC_DROPS, COMPILER_EXEC_EVENTS, COMPILER_INVOCATIONS,
-    FILE_EVENTS, FILE_EVENT_DROPS, PID_TO_PPID,
+    FILE_EVENTS, FILE_EVENT_DROPS, PID_TO_PPID, TRACED_PIDS,
 };
+
+/// The `EVENT_DROPS` slot for a traced-subtree insert that would not take.
+///
+/// Taken from the enum rather than restated as a literal. `open_syscalls.rs`
+/// names its slots as local `u8` constants, which is fine where one file
+/// owns them, but this slot is written from two files and a literal in each
+/// is a number that can drift from the enum that labels it. The
+/// `kernel_slot_order_matches_the_discriminants_the_probes_write` test in
+/// `waybill-common` guards the mapping; this removes the second copy.
+const KERNEL_TRACED_INSERT_FAILED: u8 = EventDropReason::KernelTracedInsertFailed as u8;
 
 /// Compiler whitelist per FR-002. Matched against the 16-byte
 /// comm-field in-kernel; longer names truncate (e.g.
@@ -159,6 +173,20 @@ fn try_sched_process_exec(_ctx: &TracePointContext) -> Result<u32, i64> {
 
     let pid_tgid = unsafe { bpf_get_current_pid_tgid() };
     let pid = (pid_tgid >> 32) as u32;
+
+    // #1185 — a whitelisted compiler that is not in the traced subtree is
+    // someone else's build. Before this, any `rustc` anywhere on the
+    // machine entered this trace's invocation set.
+    //
+    // Safe at this point because membership is established at fork, and a
+    // process must fork before it can exec. The traced root is the one
+    // exception: it announces itself in `pre_exec`, which runs after the
+    // fork and before the exec this tracepoint observes, so it is in the
+    // subtree by the time it gets here.
+    if gating_armed() && !in_traced_subtree(pid) {
+        return Ok(0);
+    }
+
     let ts_ns = unsafe { bpf_ktime_get_ns() };
 
     // Milestone 210 (issue #610) — resolve `ppid` by walking up the
@@ -293,6 +321,41 @@ fn try_sched_process_fork(ctx: &TracePointContext) -> Result<u32, i64> {
     // process's id, or a new thread's id; a thread's record is harmless,
     // because file records carry the process id.
     let parent_tgid = (bpf_get_current_pid_tgid() >> 32) as u32;
+
+    // #1185 — extend the traced subtree. Keyed on `parent_tgid` and not on
+    // the tracepoint's `parent_pid` argument, for the reason the comment
+    // below records: `parent_pid` is the forking *thread*, and cargo spawns
+    // its compiles from worker threads, so a thread-keyed lookup would find
+    // nothing and the subtree would stop at the root (analysis U1).
+    //
+    // The insert result is checked. Losing one here loses the process and
+    // every descendant it goes on to spawn, which is the amplifying kind of
+    // loss that `kernel_pending_insert_failed` was added for.
+    let parent_traced = in_traced_subtree(parent_tgid);
+    if parent_traced && unsafe { TRACED_PIDS.insert(&child_pid, &1u8, 0) }.is_err() {
+        increment_event_drop(KERNEL_TRACED_INSERT_FAILED);
+    }
+
+    // #1185 — gate the lineage record on the **parent**, and only after the
+    // insert above.
+    //
+    // Two orderings matter here and both are load-bearing. Gating on the
+    // *child* would drop the very record that tells userspace the child
+    // exists. And emitting before the insert would be a record for a pid
+    // that is not yet in the subtree, so a race could leave the child
+    // known to userspace and unknown to the kernel.
+    //
+    // The traced root's own fork is gated out by this test, because its
+    // parent is the tracer and the tracer is deliberately not in the
+    // subtree. That is survivable only because `CwdTracker` is seeded
+    // directly with both the tracer's and the child's pid (#1185, the
+    // `seed` method) — without that seed, losing this one record would
+    // leave the build's root with an unknown working directory and every
+    // relative read unresolved.
+    if gating_armed() && !parent_traced {
+        return Ok(0);
+    }
+
     if let Some(mut buf) = FILE_EVENTS.reserve::<LineageEvent>(0) {
         let event = buf.as_mut_ptr();
         unsafe {
@@ -324,14 +387,45 @@ pub fn sched_process_exit(ctx: TracePointContext) -> u32 {
 fn try_sched_process_exit(_ctx: &TracePointContext) -> Result<u32, i64> {
     let pid_tgid = unsafe { bpf_get_current_pid_tgid() };
     let pid = (pid_tgid >> 32) as u32;
+    let tid = (pid_tgid & 0xFFFF_FFFF) as u32;
 
-    // Milestone 210 (issue #610) — purge PID_TO_PPID unconditionally
-    // on any exit so the map doesn't grow unbounded. The map holds
-    // every fork's child→parent link regardless of compiler
-    // whitelist, so pruning has to be as broad as insertion. Runs
-    // BEFORE the early-return for non-compiler pids so cleanup
-    // still fires on ordinary process exits.
-    let _ = unsafe { PID_TO_PPID.remove(&pid) };
+    // Milestone 210 (issue #610) — purge PID_TO_PPID on any exit so the
+    // map doesn't grow unbounded. The map holds every fork's child→parent
+    // link regardless of compiler whitelist, so pruning has to be as broad
+    // as insertion. Runs BEFORE the early-return for non-compiler pids so
+    // cleanup still fires on ordinary process exits.
+    //
+    // Keyed by the exiting **task** id, because that is the key insertion
+    // used: `PID_TO_PPID.insert(&child_pid, …)` stores the new task's id,
+    // which is a tid for a thread and tid == tgid for a process. Keyed by
+    // tgid — as this was — a thread exit deleted its *process's* parent
+    // link while the process was still running, and a thread's own entry
+    // was never reclaimed. `sched_process_exit` fires for every task, not
+    // every process, so cargo's worker threads were doing both.
+    let _ = unsafe { PID_TO_PPID.remove(&tid) };
+
+    // #1185 — reclaim the traced-subtree entry, before the early return
+    // for non-compiler pids: most of a build's processes are not
+    // whitelisted compilers, and placed after that return — where this was
+    // first written — shells, build scripts and cargo itself would never
+    // be reclaimed.
+    //
+    // Keyed by tid for the reason above, and this is not a subtlety: keyed
+    // by tgid, cargo's first worker-thread exit removed **cargo** from the
+    // traced subtree, nothing propagated to the compilers it went on to
+    // spawn, and the fixture build's invocations fell to zero while the
+    // scope check reported a perfectly clean capture. Measured, not
+    // reasoned about — `inside` fell from 738 to 26 and `file_ops` from
+    // 102 to 8.
+    //
+    // Membership is read with the *process* id, because that is what every
+    // other gate tests, and before the removal: a traced process's own
+    // exit record is gated on it below.
+    let was_traced = in_traced_subtree(pid);
+    let _ = unsafe { TRACED_PIDS.remove(&tid) };
+    if gating_armed() && !was_traced {
+        return Ok(0);
+    }
 
     let invocation_id = unsafe { COMPILER_INVOCATIONS.get(&pid).copied() };
     let Some(id) = invocation_id else {

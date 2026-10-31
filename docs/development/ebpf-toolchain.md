@@ -38,6 +38,58 @@ Upstream docs-feedback issue tracking the switch:
 | `scripts/verify-ebpf.sh` | Contributor's un-pin readiness command. Runs the same build path release.yml uses; exits 0 iff the candidate version works. |
 | `.github/workflows/nightly.yml` | NOT a consumer — it dispatches `release.yml` and inherits the pin transitively. Guarded by `pin-consistency.yml`. |
 
+## What capture attaches to, and what it must not (#1252)
+
+Every kernel-side program attaches to a **syscall tracepoint** or a
+**uprobe**. Nothing attaches to an internal kernel function, and the
+loader has no helper that could: `attach_kprobe` was deleted, and
+`waybill-cli/tests/stable_probe_interfaces.rs` fails if it returns.
+
+| Capture | Attaches to |
+|---|---|
+| File opens | `sys_enter_openat` / `sys_exit_openat` (fatal pair), `openat2` pair (best-effort), `open` and `creat` pairs (x86-64 only) |
+| Directory changes, renames | `sys_enter_chdir` / `sys_exit_chdir`, `sys_exit_fchdir`, the `renameat` family (m1070) |
+| Process lifecycle | `sched_process_exec` / `_fork` / `_exit` (m210) |
+| Network connects | `sys_enter_connect` |
+| TLS plaintext | uprobes on `SSL_read` / `SSL_write` (Principle II names these) |
+
+The rule, and the reason for it: a syscall's name, its argument order
+and the layout of the structures it is handed are UAPI, so the kernel
+cannot change them without breaking every program on the machine. An
+internal function like `do_filp_open` is implementation detail, and its
+presence as a traceable symbol is promised to nobody. That is not
+hypothetical — on GitHub's `ubuntu-24.04` image `20261025.353` the
+`do_filp_open` kprobe stopped attaching, file-open events for an
+identical fixture build fell from 902 to 443, and the attestation
+reported itself complete anyway. The same objection applies to reading
+kernel structures at hardcoded offsets, which is how the retired
+`tcp_v4_connect` kprobe found a destination address.
+
+Two consequences worth knowing before you debug a capture:
+
+- **Each open syscall is attached as an exit-then-entry pair**, in that
+  order. The entry alone leaves held requests nothing will collect; the
+  exit alone produces results with no request to match. Attaching the
+  exit first means a failure there prevents the entry from attaching at
+  all.
+- **`openat` is the exception**, because every libc open wrapper reaches
+  it. Losing its *entry* stops the trace (Principle III). Losing only
+  its *exit* degrades to recording requests — what capture did before
+  #1252, including requests that failed — names `sys_exit_openat` in
+  `kprobe_attach_failures[]`, and downgrades completeness to
+  `partial / probe_attach_failed`. Reach that path on purpose with
+  `WAYBILL_TRACE_FORCE_REQUEST_ONLY=1`.
+
+`WAYBILL_TRACE_OPEN_DIAG=1` makes the kernel report each open it
+discarded, with the path and the errno, so a read-set entry that
+disappeared can be attributed to a failed request by name. Off by
+default; it changes nothing a consumer sees.
+
+Tier semantics, and what a failure to attach means in the attestation:
+`specs/1270-stable-probe-tracepoints/contracts/probe-attachment.md`.
+Which interfaces the project treats as stable and why:
+`waybill-ebpf/src/programs/open_syscalls.rs`, in its module docs.
+
 ## The Rust nightly pin (#1089)
 
 The eBPF crate builds with a dated nightly named in

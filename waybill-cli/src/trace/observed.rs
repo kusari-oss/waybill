@@ -83,5 +83,10 @@ pub fn kind_of(ev: &FileEvent) -> Option<ObservedKind> {
         | FileEventType::Chdir
         | FileEventType::Fchdir
         | FileEventType::Rename => None,
+        // #1252 — an open that did not succeed is not a file operation.
+        // Returning `None` here is what keeps it out of the read and write
+        // sets structurally: a diagnostic record cannot become a claim that
+        // the build read a file, whatever a later caller does with it.
+        FileEventType::OpenFailed => None,
     }
 }

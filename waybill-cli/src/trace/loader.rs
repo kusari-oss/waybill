@@ -38,6 +38,14 @@ pub struct LoaderConfig {
     /// buffer instead of being dropped. UserCache/Ephemeral/CargoFingerprint
     /// remain active regardless of this flag.
     pub include_system_reads: bool,
+    /// #1185 — per-trace handshake nonce, or `None` for a mode that cannot
+    /// seed a traced root.
+    ///
+    /// `--target-pid` attaches to a process the tracer did not spawn, so
+    /// there is no `pre_exec` in which to announce a root and the capture
+    /// stays unscoped. `None` says so explicitly rather than arming a
+    /// handshake nothing will answer.
+    pub handshake_nonce: Option<u32>,
 }
 
 #[cfg(all(target_os = "linux", feature = "ebpf-tracing"))]
@@ -45,7 +53,7 @@ mod inner {
     use std::path::{Path, PathBuf};
 
     use anyhow::{Context, Result};
-    use aya::programs::{KProbe, TracePoint, UProbe};
+    use aya::programs::{TracePoint, UProbe};
     use aya::Ebpf;
     use tracing::{debug, info, warn};
 
@@ -165,6 +173,51 @@ mod inner {
             }
         }
 
+        // #1252 — the discarded-open diagnostic slot (OPEN_DIAG[0]).
+        //
+        // `1` makes the kernel report each open it discards as an
+        // `OpenFailed` record naming the path and the errno; `0` (the
+        // default) counts the discard and drops it. It exists so a read-set
+        // entry that disappeared can be attributed to a failed request by
+        // name, rather than accepted because a count happened to match.
+        //
+        // Env-var rather than a CLI flag: it changes nothing a consumer
+        // sees, it is read when verifying a change to capture rather than
+        // when producing an attestation, and FR-004c requires it not be
+        // needed for a trace to run. An unusable map is a warning, not a
+        // failure, for the same reason FILTER_WIDEN's is: the kernel reads
+        // an absent slot as `0`, which is the default behaviour anyway.
+        {
+            let diag = std::env::var("WAYBILL_TRACE_OPEN_DIAG")
+                .map(|v| v == "1")
+                .unwrap_or(false);
+            if diag {
+                match bpf.map_mut("OPEN_DIAG").map(aya::maps::PerCpuArray::try_from) {
+                    Some(Ok(mut diag_map)) => {
+                        let nr_cpus = aya::util::nr_cpus().map_err(|(msg, err)| {
+                            anyhow::anyhow!(
+                                "failed to detect online CPU count for OPEN_DIAG write ({msg}): {err}"
+                            )
+                        })?;
+                        let values: aya::maps::PerCpuValues<u8> =
+                            aya::maps::PerCpuValues::try_from(vec![1u8; nr_cpus])?;
+                        if let Err(e) = diag_map.set(0, values, 0) {
+                            warn!(error = %e,
+                                "OPEN_DIAG set failed; discarded opens will be counted but not named");
+                        } else {
+                            info!(
+                                "#1252 discarded-open diagnostics ON: each failed open is \
+                                 reported with its path and errno"
+                            );
+                        }
+                    }
+                    Some(Err(e)) => warn!(error = %e,
+                        "OPEN_DIAG map not usable on this kernel; discarded opens will be counted but not named"),
+                    None => warn!("OPEN_DIAG map not found; discarded opens will be counted but not named"),
+                }
+            }
+        }
+
         // Attach uprobes to OpenSSL
         let libssl = config
             .libssl_path
@@ -177,59 +230,155 @@ mod inner {
         attach_uprobe(&mut bpf, "ssl_read_return", &libssl, "SSL_read")?;
         attach_uprobe(&mut bpf, "ssl_write_entry", &libssl, "SSL_write")?;
 
-        // Attach kprobes
-        attach_kprobe(&mut bpf, "tcp_connect", "tcp_v4_connect")?;
-        attach_kprobe(&mut bpf, "tcp_connect_ret", "tcp_v4_connect")?;
-        // vfs_read/vfs_write are intentionally NOT attached. They fire on
-        // every read/write syscall system-wide but the current probe emits
-        // empty-path events (kernel path resolution for vfs_* is non-trivial).
-        // Every such event consumes ring-buffer space for no aggregator
-        // benefit — enough of them to push out the late opens (like curl's
-        // -o output file). File opens already carry the path via
-        // do_filp_open + openat2, so we rely on those alone.
+        // #1252 — file opens and network connects, observed at the
+        // syscall boundary. Nothing here names an internal kernel
+        // function: a syscall tracepoint's name and argument layout are
+        // UAPI, and the kprobes these replaced were not. See
+        // waybill-ebpf/src/programs/open_syscalls.rs for which interfaces
+        // this project treats as stable and why.
         //
-        // Both are best-effort individually but load-bearing together:
-        // they are the ONLY source of file-open events, so losing both
-        // means the trace sees no file activity at all. #1252 — losing
-        // just `do_filp_open` on GitHub's ubuntu-24.04 image
-        // 20261025.353 cost 51% of file events (902 -> 443 on an
-        // identical build), which is why a partial loss is recorded
-        // rather than shrugged off.
-        let mut open_family_attached = 0usize;
-        if let Err(e) = attach_kprobe(&mut bpf, "openat2_entry", "do_sys_openat2") {
-            warn!("could not attach openat2 kprobe: {e}");
-            attach_failures.kprobe.push("openat2_entry".to_string());
-        } else {
-            open_family_attached += 1;
+        // vfs_read/vfs_write remain declared and NOT attached. They fire
+        // on every read/write syscall system-wide and emit empty-path
+        // events, so each one costs ring-buffer space for no aggregator
+        // benefit -- enough of them to push out the late opens. A kprobe
+        // target is resolved at attach time, so leaving them unattached
+        // costs nothing and keeps them out of #1252's scope.
+
+        // Each open syscall is attached as an exit-then-entry pair, in
+        // that order and never half of one. The entry tracepoint alone
+        // produces a held request that nothing will ever collect; the exit
+        // alone produces results with no request to match. Attaching the
+        // exit first means a failure there stops the entry from being
+        // attached at all, so the half-attached state the contract warns
+        // about cannot arise by accident.
+        //
+        // `openat` is the exception that FR-004b exists for, handled
+        // below: it is the interface every libc open wrapper reaches, so
+        // losing its entry is fatal while losing only its exit degrades.
+
+        // `sys_enter_openat` is fatal. Principle III — a capture with no
+        // file visibility at all must not present itself as a trace.
+        attach_tracepoint(&mut bpf, "sys_enter_openat", "syscalls", "sys_enter_openat")
+            .with_context(|| {
+                "could not attach the sys_enter_openat tracepoint — the trace \
+                 would observe zero file opens and report them as an absence \
+                 of file activity"
+                    .to_string()
+            })?;
+
+        // FR-004b — the host can see the request but not its result.
+        // Rather than abort, capture degrades to recording requests, which
+        // is what it did before #1252, and says so: the name reaches
+        // `kprobe_attach_failures[]` and the completeness statement
+        // downgrades to `partial / probe_attach_failed`. Recording
+        // requests *silently* is the failure this feature removes, so the
+        // fallback is only acceptable with the gap attached to it.
+        //
+        // SC-005 asks for this verified by making an interface unavailable
+        // deliberately rather than by waiting to observe it, so the
+        // fallback is reachable on demand. Without that the branch below
+        // would ship unexecuted — a fallback that has never run is a
+        // fallback nobody knows works.
+        let force_request_only = std::env::var("WAYBILL_TRACE_FORCE_REQUEST_ONLY")
+            .map(|v| v == "1")
+            .unwrap_or(false);
+        if force_request_only {
+            warn!(
+                "WAYBILL_TRACE_FORCE_REQUEST_ONLY=1: pretending this host \
+                 cannot report open results, to exercise the FR-004b fallback"
+            );
+            attach_failures.kprobe.push("sys_exit_openat".to_string());
+            set_request_only(&mut bpf)?;
+        } else if let Err(e) =
+            attach_tracepoint(&mut bpf, "sys_exit_openat", "syscalls", "sys_exit_openat")
+        {
+            warn!(
+                "could not attach the sys_exit_openat tracepoint: {e}; capture \
+                 falls back to recording open requests, so a request that \
+                 failed will appear in a read set and the capture is a floor \
+                 rather than a total"
+            );
+            attach_failures.kprobe.push("sys_exit_openat".to_string());
+            set_request_only(&mut bpf)?;
         }
-        // do_filp_open catches every open-family syscall (open, openat,
-        // openat2, creat) and is the fallback for paths openat2 misses,
-        // e.g. glibc's default `open()` wrapper.
-        if let Err(e) = attach_kprobe(&mut bpf, "do_filp_open_entry", "do_filp_open") {
-            warn!("could not attach do_filp_open kprobe: {e}");
-            attach_failures
-                .kprobe
-                .push("do_filp_open_entry".to_string());
+
+        // #1185 — arm the handshake before the child can possibly run, so
+        // the root's announcement cannot arrive at an unarmed kernel.
+        if let Some(nonce) = config.handshake_nonce {
+            set_handshake_nonce(&mut bpf, nonce)?;
         } else {
-            open_family_attached += 1;
-        }
-        // Principle III: a capture with no file visibility whatsoever must
-        // not present itself as a trace. The m1070 cwd/rename probes below
-        // already fail hard for the same reason.
-        if open_family_attached == 0 {
-            anyhow::bail!(
-                "no open-family probe could be attached (tried do_sys_openat2 and \
-                 do_filp_open) — the trace would observe zero file opens and \
-                 report them as an absence of file activity"
+            warn!(
+                "no handshake nonce: this mode cannot establish a traced \
+                 subtree, so the capture admits every process on the machine \
+                 (#1185)"
             );
         }
-        // Milestone 211 (issue #611): the vfs_open kprobe was retired
-        // — see waybill-ebpf/src/programs/file_ops.rs for the full
-        // explanation. Its intended fallback role for paths that
-        // do_filp_open + openat2 miss was never realized because
-        // bpf_d_path (which vfs_open used to resolve paths) is
-        // restricted to LSM/fentry/fexit programs at the kernel API
-        // level. do_filp_open in practice covers every relevant open.
+
+        // #1185 — the forced counterpart to the fallback above. Not an
+        // attach failure and not recorded as one: the probes attached
+        // fine, and what is being withheld is the map's willingness to
+        // hold a request. Set here so it covers every open variant, since
+        // they all stash through the same map.
+        if std::env::var("WAYBILL_TRACE_FORCE_PENDING_INSERT_FAIL")
+            .map(|v| v == "1")
+            .unwrap_or(false)
+        {
+            set_pending_insert_force_fail(&mut bpf)?;
+        }
+
+        // openat2 is best-effort: it is the newer interface and a kernel
+        // that lacks it still serves every open through `openat`. Exit
+        // first, so its entry is never attached without it.
+        if attach_tracepoint(&mut bpf, "sys_exit_openat2", "syscalls", "sys_exit_openat2")
+            .map_err(|e| {
+                warn!("could not attach the sys_exit_openat2 tracepoint: {e}");
+                attach_failures.kprobe.push("sys_exit_openat2".to_string());
+            })
+            .is_ok()
+        {
+            if let Err(e) =
+                attach_tracepoint(&mut bpf, "sys_enter_openat2", "syscalls", "sys_enter_openat2")
+            {
+                warn!("could not attach the sys_enter_openat2 tracepoint: {e}");
+                attach_failures.kprobe.push("sys_enter_openat2".to_string());
+            }
+        }
+
+        // `open` and `creat` exist on x86-64 and not on arm64, which has
+        // only the directory-relative forms. Measured, not assumed:
+        // specs/1270-stable-probe-tracepoints/measurements/findings.md.
+        // Guarded at compile time rather than attached best-effort,
+        // because an architecture's shape is not a fault and must not be
+        // recorded as one (FR-006) — the m1070 `rename` precedent below.
+        #[cfg(target_arch = "x86_64")]
+        for (enter, exit) in [
+            ("sys_enter_open", "sys_exit_open"),
+            ("sys_enter_creat", "sys_exit_creat"),
+        ] {
+            // Exit first, same rule as openat2 above.
+            if let Err(e) = attach_tracepoint(&mut bpf, exit, "syscalls", exit) {
+                warn!("could not attach the {exit} tracepoint: {e}");
+                attach_failures.kprobe.push(exit.to_string());
+                continue;
+            }
+            if let Err(e) = attach_tracepoint(&mut bpf, enter, "syscalls", enter) {
+                warn!("could not attach the {enter} tracepoint: {e}");
+                attach_failures.kprobe.push(enter.to_string());
+            }
+        }
+
+        // Network connects. Non-fatal: a build that fetches nothing over
+        // the network is a normal build, so losing this degrades the
+        // record rather than invalidating it (FR-008). Only the entry is
+        // attached — see the module note in programs/tcp_connect.rs on why
+        // connects keep attempt semantics while opens do not.
+        if let Err(e) = attach_tracepoint(&mut bpf, "sys_enter_connect", "syscalls", "sys_enter_connect")
+        {
+            warn!("could not attach the sys_enter_connect tracepoint: {e}");
+            attach_failures
+                .kprobe
+                .push("sys_enter_connect".to_string());
+        }
 
         // Milestone 210 — compiler-pipeline tracepoints. Best-effort:
         // if any of the three fail to attach (missing symbol, kernel
@@ -306,6 +455,91 @@ mod inner {
         })
     }
 
+    /// FR-004b — tell the kernel it must emit at entry, because this host
+    /// cannot report the result of an open.
+    ///
+    /// Writing the slot is fatal if it fails. Everywhere else in this
+    /// loader an unusable config map is a warning, because the kernel
+    /// reads an absent slot as the default and the default is the intended
+    /// behaviour. Here the default is the *wrong* behaviour: without the
+    /// flag the entry tracepoint holds requests that no exit will collect,
+    /// so the trace would record almost no opens while reporting only a
+    /// probe-attach gap. Failing is the honest outcome.
+    fn set_request_only(bpf: &mut Ebpf) -> Result<()> {
+        let map = bpf
+            .map_mut("OPEN_REQUEST_ONLY")
+            .context("OPEN_REQUEST_ONLY map not found, so the FR-004b fallback cannot be enabled")?;
+        let mut slot = aya::maps::PerCpuArray::<_, u8>::try_from(map)
+            .context("OPEN_REQUEST_ONLY is not a usable per-CPU array")?;
+        let nr_cpus = aya::util::nr_cpus().map_err(|(msg, err)| {
+            anyhow::anyhow!("failed to detect online CPU count for OPEN_REQUEST_ONLY ({msg}): {err}")
+        })?;
+        let values: aya::maps::PerCpuValues<u8> =
+            aya::maps::PerCpuValues::try_from(vec![1u8; nr_cpus])?;
+        slot.set(0, values, 0)
+            .context("could not write OPEN_REQUEST_ONLY; capture would hold requests nothing collects")?;
+        warn!(
+            "FR-004b fallback ON: this host reports no open results, so capture \
+             records requests. A request that failed will appear in a read set, \
+             and the attestation says the capture is a floor rather than a total."
+        );
+        Ok(())
+    }
+
+    /// #1185 — arm the handshake the traced root uses to announce itself.
+    ///
+    /// Fails loudly. Without the nonce in the map the kernel recognises no
+    /// handshake, nothing is seeded, and the traced subtree stays empty —
+    /// which, once the gate lands, is a capture that drops every open while
+    /// reporting itself complete. That is the failure this whole line of
+    /// work exists to remove, so it must not be reachable by a warning.
+    fn set_handshake_nonce(bpf: &mut Ebpf, nonce: u32) -> Result<()> {
+        debug_assert!(nonce != 0, "a zero nonce arms nothing");
+        let map = bpf.map_mut("TRACE_HANDSHAKE_NONCE").context(
+            "TRACE_HANDSHAKE_NONCE map not found, so the traced root cannot \
+             announce itself and the subtree would stay empty",
+        )?;
+        let mut arr = aya::maps::Array::<_, u32>::try_from(map)
+            .context("TRACE_HANDSHAKE_NONCE is not a usable array")?;
+        arr.set(waybill_common::maps::TRACE_HANDSHAKE_NONCE_SLOT, nonce, 0)
+            .context("could not write TRACE_HANDSHAKE_NONCE")?;
+        Ok(())
+    }
+
+    /// #1185 — make the entry tracepoint refuse to stash requests, so the
+    /// `kernel_pending_insert_failed` counter can be seen to fire.
+    ///
+    /// Fails loudly rather than warning, for `set_request_only`'s reason
+    /// inverted: an operator who asked for the forced failure and silently
+    /// did not get it would read the resulting zero as the counter being
+    /// quiet, which is the ambiguity the counter exists to remove.
+    fn set_pending_insert_force_fail(bpf: &mut Ebpf) -> Result<()> {
+        let map = bpf.map_mut("PENDING_INSERT_FORCE_FAIL").context(
+            "PENDING_INSERT_FORCE_FAIL map not found, so the #1185 forced \
+             insert failure cannot be enabled",
+        )?;
+        let mut slot = aya::maps::PerCpuArray::<_, u8>::try_from(map)
+            .context("PENDING_INSERT_FORCE_FAIL is not a usable per-CPU array")?;
+        let nr_cpus = aya::util::nr_cpus().map_err(|(msg, err)| {
+            anyhow::anyhow!(
+                "failed to detect online CPU count for PENDING_INSERT_FORCE_FAIL ({msg}): {err}"
+            )
+        })?;
+        let values: aya::maps::PerCpuValues<u8> =
+            aya::maps::PerCpuValues::try_from(vec![1u8; nr_cpus])?;
+        slot.set(0, values, 0).context(
+            "could not write PENDING_INSERT_FORCE_FAIL; the forced failure \
+             would not happen and its absence would read as a quiet counter",
+        )?;
+        warn!(
+            "WAYBILL_TRACE_FORCE_PENDING_INSERT_FAIL=1: pretending every open \
+             arrives at a full PENDING_OPEN map. Every open will be lost and \
+             counted as kernel_pending_insert_failed — this is #1185's symptom \
+             on purpose, not a usable capture."
+        );
+        Ok(())
+    }
+
     fn attach_tracepoint(
         bpf: &mut Ebpf,
         prog: &str,
@@ -333,16 +567,15 @@ mod inner {
         Ok(())
     }
 
-    fn attach_kprobe(bpf: &mut Ebpf, prog: &str, fn_name: &str) -> Result<()> {
-        let p: &mut KProbe = bpf
-            .program_mut(prog)
-            .and_then(|p| p.try_into().ok())
-            .with_context(|| format!("program '{prog}' not found"))?;
-        p.load()?;
-        p.attach(fn_name, 0)?;
-        debug!(prog, fn_name, "kprobe attached");
-        Ok(())
-    }
+    // #1252 — `attach_kprobe` is deliberately absent.
+    //
+    // Nothing in this loader may attach a kprobe, because a kprobe's
+    // target is an internal kernel function and that is the dependency
+    // this feature removed. The helper's absence is the enforcement:
+    // reintroducing one means writing the attach code from scratch, which
+    // a reviewer notices, and `loader_attaches_no_kprobes` in
+    // `waybill-cli/tests/` fails on the attempt. A list of permitted
+    // attach sites would not do the same job — a list can grow an entry.
 
     fn default_ebpf_path() -> PathBuf {
         let p = PathBuf::from("waybill-ebpf/target/bpfel-unknown-none/release/waybill-ebpf");

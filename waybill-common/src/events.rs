@@ -58,6 +58,14 @@ pub enum FileEventType {
     Fchdir = 6,
     /// A successful rename. Carried by a [`RenameEvent`].
     Rename = 7,
+    /// An open request the kernel discarded because it did not succeed.
+    ///
+    /// Emitted only when the diagnostic slot is set (`OPEN_DIAG`); userspace
+    /// logs it and never admits it to a read or write set. For this variant
+    /// alone, [`FileEvent::flags`] carries the negated errno the syscall
+    /// returned rather than the open flags — the field is read by event type,
+    /// so a consumer that dispatches first cannot confuse the two.
+    OpenFailed = 8,
 }
 
 impl FileEventType {
@@ -73,6 +81,7 @@ impl FileEventType {
             5 => Self::Chdir,
             6 => Self::Fchdir,
             7 => Self::Rename,
+            8 => Self::OpenFailed,
             _ => return None,
         })
     }
@@ -95,7 +104,8 @@ pub struct FileEvent {
     pub path_truncated: u8,
     pub _path_padding: [u8; 3],
     /// Open flags (`O_ACCMODE`, `O_CREAT`, `O_TRUNC`, ...) for `Open`
-    /// records; 0 otherwise (milestone 1070).
+    /// records; the negated errno for [`FileEventType::OpenFailed`] records
+    /// (#1252); 0 otherwise (milestone 1070).
     pub flags: u32,
     /// Directory fd the path is relative to; [`AT_FDCWD`] for the working
     /// directory (milestone 1070).
@@ -274,6 +284,135 @@ impl CompilerExecEvent {
     }
 }
 
+/// #618 / #1185 — a reason an observed event never reached the recorded
+/// sets, named so a consumer can tell which mechanism consumed it.
+///
+/// Every variant corresponds to a site that used to `continue` or
+/// `return` with nothing incremented. That is why an attestation could
+/// read `completeness: complete` while compiler invocations were missing
+/// from it: the drops were real and the artifact had no vocabulary for
+/// them. A zero here means the mechanism did not fire; an absent field
+/// means this build does not measure it.
+///
+/// The kernel-side variants occupy slots `0..KERNEL_SLOTS` of the
+/// `EVENT_DROPS` per-CPU array, in discriminant order, following the
+/// m213 `FILTER_CATEGORY_HITS` pattern. The userspace variants are
+/// counted in process memory and never cross the map boundary.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug)]
+#[repr(u8)]
+pub enum EventDropReason {
+    // ---- kernel side: slots in EVENT_DROPS, discriminant order ----
+    /// The path string could not be read from user memory, so the event
+    /// would carry an empty path. Reading at syscall exit assumes the
+    /// pages are still mapped; this counts the times they were not.
+    KernelPathUnreadable = 0,
+    /// The syscall was handed a null path pointer.
+    KernelNullPath = 1,
+    /// A syscall exit arrived with no stored request for that thread, so
+    /// there was nothing to join the result to. Expected at trace start
+    /// for syscalls already in flight; a large count means entry events
+    /// are being lost.
+    KernelExitWithoutRequest = 2,
+    /// The entry tracepoint could not stash the in-flight open, so the
+    /// exit had nothing to join and the open was lost outright. The map
+    /// is bounded and machine-wide, so this is what saturation looks
+    /// like: once the slots are gone, every subsequent open anywhere on
+    /// the host is dropped until they free up.
+    ///
+    /// This is the one site in the open path that returned early
+    /// without recording anything (#1185). It double-counts with
+    /// `KernelExitWithoutRequest` by design — the same lost open
+    /// increments both, since an exit whose entry was never stored is
+    /// also an exit with no request. That pairing is the point: the
+    /// difference between the two is the orphan count attributable to
+    /// syscalls already in flight when the probes attached, and this
+    /// slot alone is loss the capture caused.
+    KernelPendingInsertFailed = 3,
+    /// An open was observed from a process outside the traced subtree.
+    ///
+    /// Until the subtree gate lands these opens are still captured, so
+    /// this is a dry run: the count is what the gate *will* drop. That
+    /// ordering is deliberate — a positive gate whose seed went missing
+    /// drops everything silently, which is #1185's own shape, so the
+    /// measurement comes before the behaviour.
+    KernelOutsideTracedSubtree = 4,
+    /// The traced-subtree set would not take a descendant, so that
+    /// process and everything it spawns will look foreign.
+    ///
+    /// Counted because discarding an `insert` result is exactly how the
+    /// in-flight-open map came to lose opens in silence (#1185).
+    KernelTracedInsertFailed = 5,
+
+    // ---- userspace side ----
+    /// The record's leading kind was a value this build does not know.
+    UserUnknownRecordKind = 16,
+    /// The record was shorter than the struct it claims to be.
+    UserShortRecord = 17,
+    /// The event's pid was outside the operator's `--target-pid` set.
+    UserPidNotAdmitted = 18,
+    /// The event carried an empty or unparseable path. This is where a
+    /// kernel-side `KernelPathUnreadable` lands if it is submitted
+    /// anyway, so the two should move together.
+    UserEmptyPath = 19,
+    /// The compiler aggregator's replay buffer was at capacity.
+    UserHeldAtCapacity = 21,
+    /// Held for replay and never claimed, because the exec record it was
+    /// waiting for never arrived.
+    UserHeldUnreplayed = 22,
+    /// The drain loop reached its deadline while events were still
+    /// arriving, so the remainder was abandoned when the programs
+    /// unloaded. This is #618's original subject.
+    UserDrainAbandoned = 23,
+}
+
+impl EventDropReason {
+    /// Number of kernel-side slots in the `EVENT_DROPS` map.
+    pub const KERNEL_SLOTS: u32 = 6;
+
+    /// The kernel-side variants, in slot order.
+    pub const KERNEL: [EventDropReason; 6] = [
+        Self::KernelPathUnreadable,
+        Self::KernelNullPath,
+        Self::KernelExitWithoutRequest,
+        Self::KernelPendingInsertFailed,
+        Self::KernelOutsideTracedSubtree,
+        Self::KernelTracedInsertFailed,
+    ];
+
+    /// The userspace variants.
+    pub const USER: [EventDropReason; 7] = [
+        Self::UserUnknownRecordKind,
+        Self::UserShortRecord,
+        Self::UserPidNotAdmitted,
+        Self::UserEmptyPath,
+        Self::UserHeldAtCapacity,
+        Self::UserHeldUnreplayed,
+        Self::UserDrainAbandoned,
+    ];
+
+    /// The name emitted in `TraceIntegrity.event_drop_reasons`. Stable
+    /// wire values: a consumer joins on these, so they are not derived
+    /// from the variant name by a macro that a rename could silently
+    /// change.
+    pub fn name(self) -> &'static str {
+        match self {
+            Self::KernelPathUnreadable => "kernel_path_unreadable",
+            Self::KernelNullPath => "kernel_null_path",
+            Self::KernelExitWithoutRequest => "kernel_exit_without_request",
+            Self::KernelPendingInsertFailed => "kernel_pending_insert_failed",
+            Self::KernelOutsideTracedSubtree => "kernel_outside_traced_subtree",
+            Self::KernelTracedInsertFailed => "kernel_traced_insert_failed",
+            Self::UserUnknownRecordKind => "user_unknown_record_kind",
+            Self::UserShortRecord => "user_short_record",
+            Self::UserPidNotAdmitted => "user_pid_not_admitted",
+            Self::UserEmptyPath => "user_empty_path",
+            Self::UserHeldAtCapacity => "user_held_at_capacity",
+            Self::UserHeldUnreplayed => "user_held_unreplayed",
+            Self::UserDrainAbandoned => "user_drain_abandoned",
+        }
+    }
+}
+
 /// Milestone 213: filter-category discriminant transported kernel↔user
 /// via the `FILTER_CATEGORY_HITS` per-CPU array's slot index.
 ///
@@ -370,10 +509,15 @@ mod tests {
             FileEventType::Chdir,
             FileEventType::Fchdir,
             FileEventType::Rename,
+            FileEventType::OpenFailed,
         ] {
             assert!(FileEventType::from_raw(t as u32) == Some(t));
         }
-        assert!(FileEventType::from_raw(8).is_none());
+        // One past the last known variant. The guard matters because
+        // userspace reads the leading u32 as a raw value and dispatches on
+        // it: a record kind this build does not know must be skipped, not
+        // decoded as whichever variant happens to sit at that number.
+        assert!(FileEventType::from_raw(9).is_none());
     }
 
     #[test]
