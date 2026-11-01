@@ -773,24 +773,6 @@ pub fn read_traced_subtree_hits<T>(_bpf: &mut T) -> (u64, Option<String>) {
     (0, None)
 }
 
-/// #1185 — block until the traced root has announced itself, or fail.
-///
-/// The root performs its handshake between fork and exec, so `spawn()` can
-/// return before the kernel has seen it. This waits for the seed rather
-/// than sampling once and guessing.
-///
-/// Nothing is drained here, and nothing needs to be: the handshake is
-/// recorded by the kernel writing a map, not by an event crossing the ring
-/// buffer. That is the reason for seeding through a map — a seed that
-/// depended on an event would be lost by exactly the mechanisms this work
-/// is investigating.
-///
-/// **This returns an error rather than warning.** Once the subtree gate
-/// lands, a trace that runs without a seeded root drops every open and
-/// reports itself complete, which is #1185's own failure rebuilt
-/// deliberately. The verification is therefore added before the gate, so
-/// that state is unreachable rather than merely unlikely.
-#[cfg(all(target_os = "linux", feature = "ebpf-tracing"))]
 /// #1185 — localise a handshake that never arrived.
 ///
 /// Reads `HANDSHAKE_DIAG` and the nonce slot and says which link in the
@@ -887,6 +869,23 @@ fn describe_handshake_failure(bpf: &mut aya::Ebpf) -> String {
     )
 }
 
+/// #1185 — block until the traced root has announced itself, or fail.
+///
+/// The root performs its handshake between fork and exec, so `spawn()` can
+/// return before the kernel has seen it. This waits for the seed rather
+/// than sampling once and guessing.
+///
+/// Nothing is drained here, and nothing needs to be: the handshake is
+/// recorded by the kernel writing a map, not by an event crossing the ring
+/// buffer. That is the reason for seeding through a map — a seed that
+/// depended on an event would be lost by exactly the mechanisms this work
+/// is investigating.
+///
+/// **This returns an error rather than warning.** Once the subtree gate
+/// lands, a trace that runs without a seeded root drops every open and
+/// reports itself complete, which is #1185's own failure rebuilt
+/// deliberately. The verification is therefore added before the gate, so
+/// that state is unreachable rather than merely unlikely.
 #[cfg(all(target_os = "linux", feature = "ebpf-tracing"))]
 pub fn wait_for_traced_root(bpf: &mut aya::Ebpf, timeout: std::time::Duration) -> anyhow::Result<u64> {
     let start = std::time::Instant::now();
