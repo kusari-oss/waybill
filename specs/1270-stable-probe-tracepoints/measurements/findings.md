@@ -1540,3 +1540,117 @@ defect. Three of this instrument's four defects were found by asking a
 question other than "does it look right": *can it be invoked* found two,
 and an external analyser found this one. Reading the file again found
 none of them.
+
+## Run 14 — the rate, and what it does to the timing candidate
+
+PR #1321, workflow `handshake establishment rate (x86_64)`, run
+`41345243372`, commit `7a45f9f1`, kernel 7.0 x86_64. 25 traces of
+`trace capture -- cat /etc/hostname` in **one** container.
+
+```
+handshake-rate: iterations=25 attempted=25 established=9
+handshake-rate: 9/25 established = 36.0%
+```
+
+**The denominator exists.** 36% against run 12's one-in-three from N=3.
+Mechanisms are falsifiable from here: a fix has to move 36% by more than
+the spread of a 25-trace sample, and the two-of-three pass that run 12
+warned about is no longer available to a change that does nothing.
+
+### The duration split, and why it is not the cause
+
+```
+established: min=3289ms median=3311ms max=3351ms n=9
+failed:      min=3307ms median=5272ms max=5359ms n=16
+```
+
+Establishments are extraordinarily tight — a 62ms spread across nine
+traces. Failures sit about 1961ms above them at the median, and **1961ms
+is the 2s handshake timeout**. A failing trace does the same ~3.3s of
+work as a succeeding one and then spends the bail.
+
+So the duration difference is a *consequence* of failure, not evidence of
+a cause, and run 12's timing candidate is weaker than when it was
+proposed: the 2.47s uprobe attach it flagged against a 2s timeout would
+have to show up as a difference in the non-waiting work, and there is
+none — 3289..3351ms whether the handshake lands or not. Recorded as a
+candidate ruled *down*, not out: the attach happens before the child
+spawns in both cases, so this measurement cannot see a race inside it.
+
+This is the second measurement from run 12's list, answered alongside the
+first, and it answered in the unwelcome direction. Worth stating plainly,
+because the attractive reading of a 2s gap is that it is the 2s attach.
+
+### Three failure shapes, which is the informative part
+
+Grouped, 15 diagnosed failures:
+
+| shape | n | what it says |
+|---|---|---|
+| `NEITHER marker arrived`, `openat_entered` non-zero | 14 | run 13's finding, reproduced 14 times |
+| `openat_entered=0` — "`sys_enter_openat` did not fire at all" | 1 | the entry program never ran in that trace |
+| no diagnosis line emitted at all, and it failed in **3307ms** | 1 | iteration 5: a failure that did not consume the timeout |
+
+The last two are new. Iteration 5 failed in establishment-like time with
+no diagnosis, so it did not reach the handshake wait — a different
+failure path from the other fifteen, and one the diagnostic does not
+describe. Iteration 21 saw *zero* machine-wide opens.
+
+### The new lead: `openat_entered` spans 0 to 378
+
+Across the 15 diagnosed failures:
+
+```
+    seen      0 open(s): 1 trace     seen     35 open(s): 1 trace
+    seen      3 open(s): 1 trace     seen     36 open(s): 1 trace
+    seen     11 open(s): 1 trace     seen     38 open(s): 1 trace
+    seen     17 open(s): 1 trace     seen    114 open(s): 1 trace
+    seen     18 open(s): 2 traces    seen    377 open(s): 1 trace
+    seen     30 open(s): 1 trace     seen    378 open(s): 1 trace
+    seen     33 open(s): 2 traces
+```
+
+This counter is incremented **ungated, as the entry program's first
+statement, for every `openat` on the machine**. A trace that observed 3
+opens — or 0 — during a ~3.3s window on a CI runner did not observe a
+quiet machine; it observed almost none of one that cannot have been that
+quiet. A 100× spread across otherwise identical traces says the program's
+*live window* varies, not that the marker is encoded wrongly.
+
+That is a different class of hypothesis from everything tried on this
+branch, and it fits the intermittency naturally: a race between the
+attach becoming effective and the child's pre-exec openats, which are
+issued microseconds after `spawn()`. It also fits run 13's finding rather
+than competing with it — if the program is not yet live, neither marker
+can arrive, whatever either is encoded as.
+
+**Alternatives not excluded**, because this is one run's inference and
+the counter is read once at the end: a partial per-CPU read, a counter
+lost to the same mechanism under investigation, or the read racing
+detachment. The next instrument should timestamp the first
+`increment_handshake_diag` against the nonce write and the spawn, which
+is run 12's measurement 2 asked properly — of the *program's* clock
+rather than the trace's.
+
+### Two defects in the instrument, from its own first run
+
+Both in the grouping, and both the same class as the thing it was built
+to avoid.
+
+**It grouped nothing.** 13 groups for 15 failures, because
+`openat_entered` and `non_tracer_opens` vary per trace by construction
+and were left in the grouping key — so every failure became its own
+group, which is exactly the "25 near-identical lines hide whether they
+are identical" problem the grouping exists to solve. Their spread is a
+finding, as above; their presence in a key is noise. Normalised, and
+reported separately.
+
+**Every count was exactly 2×.** The diagnosis is emitted twice per
+failure, once as the ERROR log and once inside the `Error:` message, and
+the grouping counted matches rather than files. 4+4+2×11 = 30 for 15
+diagnosed failures. One line per log file now.
+
+Neither changes a number above — the rate, the durations and the shapes
+were all recoverable from the per-iteration lines — but a reader who
+trusted the distribution block would have concluded the failures were all
+distinct, which is the opposite of what they are.

@@ -91,9 +91,37 @@ echo "--- distribution of failure diagnoses ---"
 # Grouped by the counter shape rather than listed, because 25 near-identical
 # lines hide whether they are in fact identical. A second shape appearing
 # here is more informative than any single line.
-grep -ho '#1185 handshake diagnosis -- .*' "$LOGDIR"/iter-*.log 2>/dev/null \
-    | sed 's/nonce_readback=[0-9]*/nonce_readback=<varies>/' \
+#
+# Run 14 is why this takes three precautions rather than one. Normalising
+# `nonce_readback` alone produced 13 groups for 15 diagnosed failures and
+# grouped nothing:
+#
+#   - `openat_entered` and `non_tracer_opens` vary per trace by
+#     construction -- they count every open on the machine during the
+#     window -- so leaving them in the key makes every failure its own
+#     group. Their *spread* is a finding; their presence in a grouping key
+#     is noise. Normalised, and reported separately below.
+#   - each failure emits the line twice, once as the ERROR log and once
+#     inside the `Error:` message, so the counts came out at exactly 2x.
+#     One line per log file, not one per match.
+grep -l . "$LOGDIR"/iter-*.log 2>/dev/null \
+    | while read -r f; do grep -o '#1185 handshake diagnosis -- .*' "$f" | head -1; done \
+    | sed -e 's/nonce_readback=[0-9]*/nonce_readback=<varies>/' \
+          -e 's/openat_entered=[0-9]*/openat_entered=<varies>/' \
+          -e 's/non_tracer_opens=[0-9]*/non_tracer_opens=<varies>/' \
     | sort | uniq -c | sort -rn || echo "    (none — every iteration established)"
+
+# The spread that grouping had to normalise away, reported as its own
+# measurement. `openat_entered` is incremented ungated as the entry
+# program's first statement, for every openat on the machine, so a trace
+# that saw single digits saw a machine that cannot have been that quiet.
+echo
+echo "--- openat_entered across failing traces (machine-wide opens seen) ---"
+grep -l . "$LOGDIR"/iter-*.log 2>/dev/null \
+    | while read -r f; do grep -o 'openat_entered=[0-9]*' "$f" | head -1; done \
+    | cut -d= -f2 | sort -n | uniq -c \
+    | awk '{printf "    seen %6s open(s): %d trace(s)\n", $2, $1}' \
+    || echo "    (no diagnosed failures)"
 
 summary() {
     local -n arr=$1
