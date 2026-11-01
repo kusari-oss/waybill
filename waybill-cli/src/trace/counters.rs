@@ -834,10 +834,23 @@ fn describe_handshake_failure(bpf: &mut aya::Ebpf) -> String {
     } else if entered == "0" {
         "slot 0 is zero: `sys_enter_openat` did not fire at all, which is \
          larger than the handshake and would explain a short capture too"
+    } else if sentinel == "0" && nonce_in_flags == "0" && entered != "0" {
+        // Run 13 made this the observed case, and the chain had the data
+        // to narrow it and did not use it. The two markers differ in
+        // `dfd` AND in `flags`; one of them depends on neither the
+        // kernel accepting the call nor on how `dfd` arrives. Both
+        // absent while the program is demonstrably running eliminates
+        // every encoding hypothesis at once.
+        "the entry program ran and NEITHER marker arrived. The two \
+         markers differ in `dfd` and in `flags`, so no encoding of \
+         either can explain both being absent: the child's pre-exec \
+         openats are not reaching this tracepoint at all, while other \
+         processes' opens are counted in openat_entered. Not an \
+         argument-layout problem"
     } else if sentinel == "0" {
-        "the entry program ran and no open carried the sentinel `dfd`: \
-         either the marker syscall never reached this tracepoint, or the \
-         `dfd` does not arrive as written"
+        "the entry program ran and no open carried the sentinel `dfd` \
+         while the nonce-in-flags marker WAS seen: this kernel raises \
+         the tracepoint after validating `dfd`"
     } else if recognised == "0" {
         "the sentinel `dfd` arrived and the nonce did not match: compare \
          the read-back below against what the loader wrote"

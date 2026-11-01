@@ -1344,3 +1344,73 @@ nothing to clean up. It is not built here because it cannot be compiled
 in the configuration where it runs from this host, and shipping untested
 `unsafe` fd plumbing to answer a diagnostic question is how this branch
 got its `#[cfg]` defect in the first place.
+
+## Run 13 — the diagnostic's first real output, and what it eliminates
+
+PR #1321, run `41335262367`, `Lint + test (linux-x86_64, --features
+ebpf-tracing)`, kernel `7.0.0-1017-azure`. Two traces, both failed to
+establish, and `describe_handshake_failure` printed for each:
+
+| slot | trace A | trace B |
+|---|---|---|
+| `openat_entered` | **135** | **79** |
+| `sentinel_dfd_seen` | 0 | 0 |
+| `nonce_in_flags` | **0** | **0** |
+| `nonce_rejected` | 0 | 0 |
+| `recognised` | 0 | 0 |
+| `low32_only` | 0 | 0 |
+| `odd_negative_dfd` | 0 | 0 |
+| `traced_insert_failed` | 0 | 0 |
+| `nonce_readback` | 1974713396 | 1355945307 |
+
+### What is now established
+
+**The entry program runs.** 135 and 79 openats reached it. "The
+tracepoint does not fire on this kernel" is dead.
+
+**The nonce is armed and readable.** Both read-backs are non-zero,
+differ per trace, and sit inside `[0x40000000, 0x7FFFFFFF]` — the range
+the loader's forced bit 30 produces. Neither the arming nor the
+userspace read is the break.
+
+**Neither marker arrived.** This is the finding. The branch issues two:
+the original with an invalid `dfd` and the nonce in `flags`, and the new
+one with `AT_FDCWD` and the nonce in `flags`. `sentinel_dfd_seen` and
+`nonce_in_flags` are both zero. The two differ in `dfd` *and* the second
+depends on neither the kernel accepting the call nor on how `dfd`
+arrives — so **no encoding of either can explain both being absent**.
+
+That eliminates, in one run, every hypothesis this branch was built on:
+the NULL filename, the 7.0 `__filename_val` field, `dfd` validation
+ordering, and `dfd` arriving zero-extended (`low32_only` = 0,
+`odd_negative_dfd` = 0 — no negative `dfd` other than `AT_FDCWD`
+appeared at all). The question is no longer how the marker is encoded.
+It is why the child's pre-exec openats are not observed while 135 other
+opens are.
+
+### What it does NOT establish
+
+A rate. These are two draws from a distribution run 12 measured at
+roughly one establishment in three, and both are failures — which is the
+outcome run 12 predicted would be indistinguishable from a real
+negative. **Run 12's ordering stands: rate before mechanism.** Two more
+failures with sharper counters is not the N≥20 that would make any of
+this falsifiable.
+
+### One correction to the instrument, from its own first run
+
+The reading chain fell through to "no open carried the sentinel `dfd`:
+either the marker syscall never reached this tracepoint, or the `dfd`
+does not arrive as written" — offering two possibilities when
+`nonce_in_flags=0`, printed on the same line, had already eliminated the
+second. The instrument had the data to narrow and did not use it. Fixed:
+`sentinel == 0 && nonce_in_flags == 0 && entered != 0` is now its own
+branch and says that no encoding can explain it.
+
+`non_tracer_opens` equals `openat_entered` in both traces and means less
+than it appears to: `should_trace()` is false only for the tracer's own
+pid, and the marker is issued by the forked child, whose pid differs —
+so the child's opens are counted as "non-tracer" too. The slot is
+labelled `[invalid-control]` in the output for that reason and should be
+read as "the tracer process itself did no openat in the window", which
+is unremarkable. Recorded because the equality is suggestive and wrong.
