@@ -64,17 +64,34 @@ permissions:
 
 jobs:
   rate:
-    name: handshake establishment rate
-    runs-on: ubuntu-latest
+    name: handshake establishment rate (${{ matrix.runner }})
+    # Run 16 found the eBPF lane's red has three regimes with a *runner
+    # image* boundary, which makes the runner the variable to vary. The
+    # container shares the host kernel, so the label below selects the
+    # kernel the handshake races against — it is the only lever this
+    # instrument has over that kernel, since a hosted runner's image
+    # version cannot be pinned.
+    #
+    # Both labels in one matrix rather than one label per push: runs
+    # 14/15/17 already measured `ubuntu-latest` at 27/75, but they ran on
+    # another day against another image. A control measured beside the
+    # experiment, from one commit in one hour, is the comparison the
+    # three-regime finding actually needs.
+    #
+    # fail-fast: false because a retired label is a result, not a reason
+    # to cancel the other arm.
+    strategy:
+      fail-fast: false
+      matrix:
+        runner:
+          - ubuntu-latest
+          - ubuntu-22.04
+    runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      # The kernel is the independent variable of the whole investigation,
-      # so it is recorded before anything else runs. Run 12's finding is
-      # specific to 7.0.0-1017-azure; a runner image rollover changing this
-      # line changes what the rate below is a rate *of*.
       # #1287's lesson, applied before it can bite: on `workflow_dispatch`
       # `github.sha` is the workflow definition's commit, not necessarily
       # the tree that was checked out. A rate is a property of a tree, so
@@ -91,9 +108,21 @@ jobs:
       # specific to 7.0.0-1017-azure; a runner image rollover changing this
       # line changes what the rate below is a rate *of*.
       - name: kernel identity
+        # Through `env:`, not spliced into the script text. `matrix.runner`
+        # is a literal from this file rather than external input, so this
+        # is not the injection the step below defends against — but a
+        # `run:` block in this workflow is a privileged-container job, and
+        # one spelling for every expression is cheaper than arguing each
+        # one's provenance at review time.
+        env:
+          RUNNER_LABEL: ${{ matrix.runner }}
         run: |
           uname -a
           echo "arch: $(uname -m)"
+          echo "requested label: $RUNNER_LABEL"
+          echo "image os:        ${ImageOS:-unknown}"
+          echo "image version:   ${ImageVersion:-unknown}"
+          grep -E '^(PRETTY_NAME|VERSION_ID)=' /etc/os-release
 
       # No host-side Rust setup: the image builds the eBPF object and the
       # userspace binary itself, and installs its own pinned bpf-linker.
@@ -162,6 +191,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: handshake-rate
+          name: handshake-rate-${{ matrix.runner }}
           path: rate.txt
           if-no-files-found: error
