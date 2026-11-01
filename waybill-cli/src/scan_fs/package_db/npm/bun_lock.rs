@@ -150,6 +150,127 @@ fn resolve_bun_key(
     None
 }
 
+/// Milestone 1271 US1: the development/runtime partition for a
+/// `bun.lock`, keyed by `packages`-map key.
+///
+/// `development` holds the direct development declarations that no
+/// runtime or optional path reaches; `protected` is the transitive
+/// closure of every runtime and optional declaration. The two are
+/// disjoint by construction — `development` is the smaller set *after*
+/// subtraction, never before it.
+///
+/// Only the seeds are returned. The transitive spread of development
+/// scope is milestone 1269's job (`resolve/scope_propagation.rs`); a
+/// reader that assigned scope to transitives as well would both
+/// duplicate that pass and defeat its runtime-reachability guard.
+struct BunDevScopes {
+    development: std::collections::HashSet<String>,
+    protected: std::collections::HashSet<String>,
+}
+
+/// A dependency spec that does not denote a registry package. Such a
+/// declaration contributes no development seed and no identity is
+/// synthesised for it (FR-012); the containment check alone does not
+/// exclude them, because bun does list workspace members in its
+/// `packages` map.
+fn bun_spec_is_non_registry(spec: &str) -> bool {
+    const NON_REGISTRY: [&str; 5] = ["workspace:", "link:", "file:", "portal:", "npm:"];
+    NON_REGISTRY.iter().any(|p| spec.starts_with(p))
+}
+
+/// Partition one `bun.lock`'s workspace declarations per
+/// `specs/1271-yarn-bun-dev-scope/contracts/classification.md`.
+///
+/// The axis is in the lockfile for the root and for every member, keyed
+/// by workspace path — measured, see that feature's
+/// `measurements/findings.md`. No manifest on disk is read (FR-004).
+fn bun_workspace_dev_scopes(
+    root: &serde_json::Value,
+    packages_keys: &std::collections::HashSet<&str>,
+) -> Option<BunDevScopes> {
+    let workspaces = root.get("workspaces")?.as_object()?;
+    let packages = root.get("packages")?.as_object()?;
+
+    let mut development: std::collections::HashSet<String> = Default::default();
+    let mut protected: std::collections::HashSet<String> = Default::default();
+
+    // Step 1-3 of the contract: resolve every declaration to a locked
+    // identity and partition it. All workspace paths are visited; the
+    // scope of a lockfile is the union across its workspaces, matching
+    // the pnpm v9 precedent.
+    for info in workspaces.values() {
+        for section in ["dependencies", "optionalDependencies", "devDependencies"] {
+            let Some(declarations) = info.get(section).and_then(|v| v.as_object()) else {
+                continue;
+            };
+            for (name, spec) in declarations {
+                if spec.as_str().map(bun_spec_is_non_registry).unwrap_or(false) {
+                    continue;
+                }
+                // Workspace declarations resolve from the root of the
+                // install chain.
+                let Some(key) = resolve_bun_key("", name, packages_keys) else {
+                    continue;
+                };
+                // A workspace member is not a locked package, and
+                // needs no check here: `packages_keys` is derived from
+                // the m667 `packages_key_index`, which already skips
+                // every `@workspace:` descriptor, so `resolve_bun_key`
+                // cannot return one. A guard was written here first and
+                // deleted once mutation testing showed it unreachable —
+                // see the regression test
+                // `m1271_us1_bun_workspace_member_is_never_a_dev_seed`,
+                // which pins the invariant that makes it unnecessary.
+                if section == "devDependencies" {
+                    development.insert(key);
+                } else {
+                    protected.insert(key);
+                }
+            }
+        }
+    }
+
+    if development.is_empty() && protected.is_empty() {
+        return None;
+    }
+
+    // Step 4: close the protected set over the lockfile's own edges.
+    // Runtime reachability from any workspace outranks a development
+    // declaration made by another (FR-002) — this is the Principle IX
+    // protection, and it is why closure precedes subtraction.
+    let mut pending: Vec<String> = protected.iter().cloned().collect();
+    while let Some(key) = pending.pop() {
+        let Some(metadata) = packages
+            .get(&key)
+            .and_then(|v| v.as_array())
+            .and_then(|a| a.get(2))
+        else {
+            continue;
+        };
+        for section in ["dependencies", "optionalDependencies"] {
+            let Some(edges) = metadata.get(section).and_then(|v| v.as_object()) else {
+                continue;
+            };
+            for dep_name in edges.keys() {
+                let Some(target) = resolve_bun_key(&key, dep_name, packages_keys) else {
+                    continue;
+                };
+                if protected.insert(target.clone()) {
+                    pending.push(target);
+                }
+            }
+        }
+    }
+
+    // Step 5: subtract. Never before step 4.
+    development.retain(|key| !protected.contains(key));
+
+    Some(BunDevScopes {
+        development,
+        protected,
+    })
+}
+
 /// Read `<rootfs>/bun.lock` if present. Returns None when absent or
 /// unparseable. Pre-processes the file through the JSONC stripper to
 /// remove `//` line comments and `/* */` block comments before
@@ -735,6 +856,43 @@ pub(crate) fn parse_bun_lock(
                 "waybill:optional-derivation".to_string(),
                 serde_json::Value::String(derivation.to_string()),
             );
+        }
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // Milestone 1271 US1 (issue #1297): assign development scope from
+    // the lockfile's `workspaces` map. Until this existed,
+    // `--exclude-scope dev` removed nothing from a bun project and
+    // milestone 1269's propagation had no seed to walk from.
+    //
+    // Runs after the m667 optional finalize so FR-003 can be honoured
+    // by inspection: an entry that already carries a lifecycle scope
+    // keeps it. Nothing optional today becomes development.
+    // ────────────────────────────────────────────────────────────────
+    {
+        use waybill_common::resolution::LifecycleScope;
+        if let Some(scopes) = bun_workspace_dev_scopes(root, &packages_keys) {
+            let mut tagged = 0usize;
+            for key in &scopes.development {
+                let Some(&idx) = parent_key_to_out_idx.get(key.as_str()) else {
+                    continue;
+                };
+                let target = &mut out[idx];
+                if target.lifecycle_scope.is_some() {
+                    // FR-003: an existing assignment — Optional from
+                    // m180 — is authoritative and is not overwritten.
+                    continue;
+                }
+                target.lifecycle_scope = Some(LifecycleScope::Development);
+                tagged += 1;
+            }
+            if tagged > 0 {
+                tracing::info!(
+                    development_seeds = tagged,
+                    runtime_protected = scopes.protected.len(),
+                    "bun.lock: seeded development scope from the workspaces map",
+                );
+            }
         }
     }
 
@@ -1564,5 +1722,254 @@ mod tests {
         let orphan = entries.iter().find(|e| e.name == "@my/orphan").unwrap();
         assert_eq!(orphan.version, "0.0.0");
         assert_eq!(orphan.purl.as_str(), "pkg:npm/%40my/orphan@0.0.0");
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // Milestone 1271 US1 (issue #1297): development scope from the
+    // `workspaces` map. Fixtures are hand-written from the shape bun
+    // 1.4.2 emits — see
+    // specs/1271-yarn-bun-dev-scope/measurements/findings.md.
+    // ════════════════════════════════════════════════════════════════
+
+    fn m1271_fixture(name: &str) -> std::path::PathBuf {
+        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("tests")
+            .join("fixtures")
+            .join("bun_lock")
+            .join(name)
+    }
+
+    fn m1271_scope_of(
+        entries: &[PackageDbEntry],
+        name: &str,
+    ) -> Option<waybill_common::resolution::LifecycleScope> {
+        entries
+            .iter()
+            .find(|e| e.name == name)
+            .unwrap_or_else(|| panic!("fixture has no component named {name}"))
+            .lifecycle_scope
+    }
+
+    fn m1271_is_dev(entries: &[PackageDbEntry], name: &str) -> bool {
+        matches!(
+            m1271_scope_of(entries, name),
+            Some(waybill_common::resolution::LifecycleScope::Development)
+        )
+    }
+
+    /// US1 scenarios 1 and 3, plus the `overrides` map and JSONC
+    /// trailing commas the fixture carries. Only the direct dev
+    /// declaration is seeded here — the transitive spread is milestone
+    /// 1269's pass, deliberately not duplicated in the reader.
+    #[test]
+    fn m1271_us1_bun_seeds_dev_only_declarations() {
+        let entries = read_bun_lock(&m1271_fixture("dev_scope_single"), true)
+            .expect("fixture must parse");
+        assert!(
+            m1271_is_dev(&entries, "waybill-fixture-devtool"),
+            "a dev-only declaration MUST be seeded Development; got {:?}",
+            m1271_scope_of(&entries, "waybill-fixture-devtool")
+        );
+        for runtime in [
+            "waybill-fixture-runtime",
+            "waybill-fixture-shared",
+            "waybill-fixture-optional",
+        ] {
+            assert!(
+                !m1271_is_dev(&entries, runtime),
+                "{runtime} is runtime-reachable and MUST NOT be Development"
+            );
+        }
+    }
+
+    /// US1 scenario 3: a package declared under BOTH `dependencies`
+    /// and `devDependencies` is runtime. Partitioning puts a
+    /// double-declared name in protected, and subtraction removes it
+    /// from the development set.
+    #[test]
+    fn m1271_us1_bun_declared_in_both_sections_is_not_development() {
+        let entries = read_bun_lock(&m1271_fixture("dev_scope_single"), true)
+            .expect("fixture must parse");
+        assert!(
+            !m1271_is_dev(&entries, "waybill-fixture-both"),
+            "declared in dependencies AND devDependencies MUST stay runtime"
+        );
+    }
+
+    /// FR-003: nothing that already carries a lifecycle scope is
+    /// overwritten. Asserted as the negative that matters — the
+    /// optional declaration does not become Development.
+    #[test]
+    fn m1271_us1_bun_optional_is_never_demoted_to_development() {
+        let entries = read_bun_lock(&m1271_fixture("dev_scope_single"), true)
+            .expect("fixture must parse");
+        assert!(
+            !m1271_is_dev(&entries, "waybill-fixture-optional"),
+            "an optionalDependencies declaration MUST NOT become Development"
+        );
+    }
+
+    /// SC-005: a `lockfileVersion` 2 lockfile with a `configVersion`
+    /// field parses. `read_bun_lock` has no version gate, but no
+    /// fixture demonstrated that until this one — every other
+    /// committed bun fixture is version 1.
+    #[test]
+    fn m1271_us1_bun_lockfile_version_2_with_config_version_is_read() {
+        let entries = read_bun_lock(&m1271_fixture("dev_scope_single"), true)
+            .expect("a lockfileVersion 2 file with configVersion MUST parse");
+        assert!(
+            entries.len() >= 6,
+            "expected the fixture's registry packages; got {}",
+            entries.len()
+        );
+    }
+
+    /// FR-002 across workspaces: member-a calls `contested` a dev
+    /// tool, member-b needs it at runtime. Runtime wins globally.
+    #[test]
+    fn m1271_us1_bun_runtime_in_one_workspace_beats_dev_in_another() {
+        let entries = read_bun_lock(&m1271_fixture("dev_scope_monorepo"), true)
+            .expect("fixture must parse");
+        assert!(
+            !m1271_is_dev(&entries, "waybill-fixture-contested"),
+            "a sibling workspace needs it at runtime; it MUST NOT be Development"
+        );
+    }
+
+    /// SC-004, reader half: a dev declaration made only by a workspace
+    /// member is honoured, keyed by that member's workspace path.
+    #[test]
+    fn m1271_us1_bun_member_only_dev_declaration_is_seeded() {
+        let entries = read_bun_lock(&m1271_fixture("dev_scope_monorepo"), true)
+            .expect("fixture must parse");
+        assert!(
+            m1271_is_dev(&entries, "waybill-fixture-devonly"),
+            "a member's own devDependencies MUST seed development scope"
+        );
+    }
+
+    /// FR-012: a workspace member is listed in the `packages` map but
+    /// is not a locked package — it has neither version nor digest, and
+    /// must never become a development seed. The exclusion is
+    /// structural rather than a guard in the classifier: the m667
+    /// `packages_key_index` skips every `@workspace:` descriptor, and
+    /// the classifier resolves against keys derived from it. This test
+    /// pins that invariant, so it fails if workspace entries ever start
+    /// appearing in that index. The fixture declares a member BOTH as
+    /// `workspace:*` and, from the root, by plain version — the second
+    /// shape is the one that would reach a classifier guard at all.
+    #[test]
+    fn m1271_us1_bun_workspace_member_is_never_a_dev_seed() {
+        let entries = read_bun_lock(&m1271_fixture("dev_scope_monorepo"), true)
+            .expect("fixture must parse");
+        for member in ["waybill-fixture-member-a", "waybill-fixture-member-b"] {
+            assert!(
+                !m1271_is_dev(&entries, member),
+                "{member} is a workspace, not a locked package"
+            );
+        }
+    }
+
+    /// T012 / data-model invariant: the two sets are disjoint after
+    /// subtraction. An argued invariant with no test is the shape that
+    /// produced this feature, so it is asserted rather than reasoned
+    /// about.
+    #[test]
+    fn m1271_us1_bun_dev_and_protected_sets_are_disjoint() {
+        let text = std::fs::read_to_string(m1271_fixture("dev_scope_single").join("bun.lock"))
+            .expect("fixture readable");
+        let stripped = super::super::jsonc::strip_comments(&text);
+        let root: serde_json::Value =
+            serde_json::from_str(&stripped).expect("fixture parses");
+        let packages_keys: std::collections::HashSet<&str> = root
+            .get("packages")
+            .and_then(|v| v.as_object())
+            .expect("fixture has packages")
+            .keys()
+            .map(|k| k.as_str())
+            .collect();
+        let scopes = bun_workspace_dev_scopes(&root, &packages_keys)
+            .expect("fixture declares both kinds");
+        let overlap: Vec<&String> = scopes
+            .development
+            .iter()
+            .filter(|k| scopes.protected.contains(*k))
+            .collect();
+        assert!(
+            overlap.is_empty(),
+            "development and protected MUST be disjoint; overlap: {overlap:?}"
+        );
+        assert!(
+            !scopes.development.is_empty(),
+            "the fixture must produce at least one seed or it proves nothing"
+        );
+    }
+
+    /// T016 / FR-004: bun needs no manifest on disk. Asserted
+    /// positively — the lockfile is copied ALONE into a temporary
+    /// directory, so the absence is a property of this test rather than
+    /// of a fixture directory someone may later add a manifest to.
+    /// (`dev_scope_single` has one now, for a reason measured in
+    /// `measurements/findings.md`: milestone 1269 cannot spread the
+    /// seeds without a PURL-shaped main module, which a single-project
+    /// bun scan only has when a manifest exists. The seeding this test
+    /// is about happens either way.) Pins that the yarn evidence path
+    /// has not leaked into this reader.
+    #[test]
+    fn m1271_us1_bun_classifies_with_no_manifest_on_disk() {
+        for fixture in ["dev_scope_single", "dev_scope_monorepo"] {
+            let scratch = tempfile::tempdir().expect("tempdir");
+            std::fs::copy(
+                m1271_fixture(fixture).join("bun.lock"),
+                scratch.path().join("bun.lock"),
+            )
+            .expect("copy lockfile");
+            let dir = scratch.path().to_path_buf();
+            assert!(
+                !dir.join("package.json").exists(),
+                "{fixture}: the scratch copy must hold the lockfile alone, or this \
+                 test proves nothing"
+            );
+            let entries = read_bun_lock(&dir, true).expect("fixture must parse");
+            assert!(
+                entries.iter().any(|e| matches!(
+                    e.lifecycle_scope,
+                    Some(waybill_common::resolution::LifecycleScope::Development)
+                )),
+                "{fixture} must yield at least one development seed with no manifest present"
+            );
+        }
+    }
+
+    /// The last section of `contracts/diagnostics.md`: bun requires no
+    /// manifest on disk (FR-004), so none of US3's three warn
+    /// conditions can arise here. Asserted against the yarn
+    /// diagnostics sink rather than against captured log text, for the
+    /// reason that sink exists — and it states the claim more
+    /// precisely too: not "no warning appeared" but "the yarn evidence
+    /// path recorded nothing", which is what "it did not leak into
+    /// this reader" actually means.
+    #[test]
+    fn m1271_us3_bun_emits_none_of_the_yarn_diagnostics() {
+        // No manifest on disk at all — the condition that makes the
+        // yarn reader warn, and that bun is indifferent to.
+        let dir = tempfile::tempdir().expect("tempdir");
+        std::fs::copy(
+            m1271_fixture("dev_scope_single").join("bun.lock"),
+            dir.path().join("bun.lock"),
+        )
+        .expect("copy lockfile");
+        let sink = crate::scan_fs::package_db::npm::yarn_lock::diagnostic_sink_install(dir.path());
+        let entries = read_bun_lock(dir.path(), true).expect("fixture must parse");
+        assert_eq!(
+            sink.records(),
+            Vec::new(),
+            "bun needs no manifest, so none of US3's diagnostics may fire"
+        );
+        assert!(
+            m1271_is_dev(&entries, "waybill-fixture-devtool"),
+            "and classification still happened with no manifest present; got {:?}",
+            m1271_scope_of(&entries, "waybill-fixture-devtool")
+        );
     }
 }

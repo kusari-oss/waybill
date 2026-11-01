@@ -1,0 +1,10 @@
+{
+  "name": "waybill-fixture-member",
+  "version": "1.0.0",
+  "description": "Milestone 1271 fixture member — SYNTHETIC names. Owns the ONLY clean development declaration in this monorepo (`waybill-fixture-devonly`), which is what SC-004 turns on: the dependency is resolved into the lockfile and classified by nobody until workspace members are read. It also declares two conflicts: `waybill-fixture-runtime`, which the root declares at runtime (the cross-workspace conflict FR-002 resolves), and `waybill-fixture-shared`, which is not declared at runtime anywhere but IS reachable from one (the case that can only be resolved by closing the protected set before subtracting).",
+  "devDependencies": {
+    "waybill-fixture-devonly": "^1.0.0",
+    "waybill-fixture-runtime": "^1.0.0",
+    "waybill-fixture-shared": "^1.0.0"
+  }
+}

@@ -1,0 +1,48 @@
+// bun: lockfileVersion: 2
+// Milestone 1271 US1 fixture — SYNTHETIC package names only.
+// Hand-written from the shape bun 1.4.2 emits; see
+// specs/1271-yarn-bun-dev-scope/measurements/findings.md.
+//
+// Exercises: dev-only closure, a dependency shared between the runtime
+// and dev subtrees, a declaration in BOTH dependencies and
+// devDependencies, optionalDependencies, two locked versions of one
+// package classified independently, an `overrides` map, and JSONC
+// trailing commas throughout (bun emits them).
+{
+  "lockfileVersion": 2,
+  "configVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "waybill-fixture-bun-single",
+      "dependencies": {
+        "waybill-fixture-runtime": "1.0.0",
+        "waybill-fixture-both": "1.0.0",
+      },
+      "devDependencies": {
+        "waybill-fixture-devtool": "1.0.0",
+        "waybill-fixture-both": "1.0.0",
+      },
+      "optionalDependencies": {
+        "waybill-fixture-optional": "1.0.0",
+      },
+    },
+  },
+  "overrides": {
+    "waybill-fixture-devchild": "1.0.0",
+  },
+  "packages": {
+    "waybill-fixture-runtime": ["waybill-fixture-runtime@1.0.0", "", { "dependencies": { "waybill-fixture-shared": "^1.0.0" } }, "sha512-RUNTIME000000000000000000000000000000000000000000000000000000000000000000000000000000000000000=="],
+
+    "waybill-fixture-shared": ["waybill-fixture-shared@1.0.0", "", {}, "sha512-SHARED1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000=="],
+
+    "waybill-fixture-both": ["waybill-fixture-both@1.0.0", "", {}, "sha512-BOTH00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000=="],
+
+    "waybill-fixture-optional": ["waybill-fixture-optional@1.0.0", "", {}, "sha512-OPTIONAL00000000000000000000000000000000000000000000000000000000000000000000000000000000000000=="],
+
+    "waybill-fixture-devtool": ["waybill-fixture-devtool@1.0.0", "", { "dependencies": { "waybill-fixture-devchild": "^1.0.0", "waybill-fixture-shared": "^2.0.0" } }, "sha512-DEVTOOL000000000000000000000000000000000000000000000000000000000000000000000000000000000000000=="],
+
+    "waybill-fixture-devchild": ["waybill-fixture-devchild@1.0.0", "", {}, "sha512-DEVCHILD00000000000000000000000000000000000000000000000000000000000000000000000000000000000000=="],
+
+    "waybill-fixture-devtool/waybill-fixture-shared": ["waybill-fixture-shared@2.0.0", "", {}, "sha512-SHARED2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000=="],
+  }
+}

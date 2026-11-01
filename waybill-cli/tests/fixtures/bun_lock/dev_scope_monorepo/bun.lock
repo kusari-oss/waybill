@@ -1,0 +1,55 @@
+// bun: lockfileVersion: 2
+// Milestone 1271 US1 fixture — SYNTHETIC package names only.
+// Monorepo shape per measurements/findings.md: the dev axis is recorded
+// per workspace path, for members as well as the root.
+//
+// Exercises: a member-only dev declaration (SC-004), a workspace member
+// that is itself a dependency target of another workspace, and a package
+// one member declares dev while a sibling needs it at runtime — the
+// cross-workspace conflict FR-002 resolves in favour of runtime.
+{
+  "lockfileVersion": 2,
+  "configVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "waybill-fixture-bun-mono-root",
+      "dependencies": {
+        "waybill-fixture-runtime": "1.0.0",
+      },
+      "devDependencies": {
+        "waybill-fixture-member-a": "1.0.0",
+      },
+    },
+    "packages/member-a": {
+      "name": "waybill-fixture-member-a",
+      "version": "1.0.0",
+      "dependencies": {
+        "waybill-fixture-member-b": "workspace:*",
+      },
+      "devDependencies": {
+        "waybill-fixture-devonly": "1.0.0",
+        "waybill-fixture-contested": "1.0.0",
+      },
+    },
+    "packages/member-b": {
+      "name": "waybill-fixture-member-b",
+      "version": "1.0.0",
+      "dependencies": {
+        "waybill-fixture-contested": "1.0.0",
+      },
+    },
+  },
+  "packages": {
+    "waybill-fixture-member-a": ["waybill-fixture-member-a@workspace:packages/member-a"],
+
+    "waybill-fixture-member-b": ["waybill-fixture-member-b@workspace:packages/member-b"],
+
+    "waybill-fixture-runtime": ["waybill-fixture-runtime@1.0.0", "", {}, "sha512-RUNTIME000000000000000000000000000000000000000000000000000000000000000000000000000000000000000=="],
+
+    "waybill-fixture-contested": ["waybill-fixture-contested@1.0.0", "", {}, "sha512-CONTESTED0000000000000000000000000000000000000000000000000000000000000000000000000000000000000=="],
+
+    "waybill-fixture-devonly": ["waybill-fixture-devonly@1.0.0", "", { "dependencies": { "waybill-fixture-devonly-child": "^1.0.0" } }, "sha512-DEVONLY00000000000000000000000000000000000000000000000000000000000000000000000000000000000000=="],
+
+    "waybill-fixture-devonly-child": ["waybill-fixture-devonly-child@1.0.0", "", {}, "sha512-DEVONLYCHILD0000000000000000000000000000000000000000000000000000000000000000000000000000000000=="],
+  }
+}

@@ -1,0 +1,76 @@
+# Milestone 1271 fixture — SYNTHETIC package names only.
+# The pnpm v9 arm of the SC-003 cross-reader comparison, over a
+# package.json byte-identical to dev_scope_single/. pnpm v9 records the
+# development axis under `importers.<path>.devDependencies`, which is
+# what milestone 1270 taught the pnpm reader to read.
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      waybill-fixture-runtime:
+        specifier: ^1.0.0
+        version: 1.0.0
+      waybill-fixture-both:
+        specifier: ^1.0.0
+        version: 1.0.0
+    optionalDependencies:
+      waybill-fixture-optional:
+        specifier: ^1.0.0
+        version: 1.0.0
+    devDependencies:
+      waybill-fixture-devtool:
+        specifier: ^1.0.0
+        version: 1.0.0
+      waybill-fixture-alias:
+        specifier: npm:waybill-fixture-real@^1.0.0
+        version: waybill-fixture-real@1.0.0
+
+packages:
+
+  waybill-fixture-both@1.0.0:
+    resolution: {integrity: sha512-BOTH00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000==}
+
+  waybill-fixture-devchild@1.0.0:
+    resolution: {integrity: sha512-DEVCHILD00000000000000000000000000000000000000000000000000000000000000000000000000000000000000==}
+
+  waybill-fixture-devtool@1.0.0:
+    resolution: {integrity: sha512-DEVTOOL000000000000000000000000000000000000000000000000000000000000000000000000000000000000000==}
+
+  waybill-fixture-optional@1.0.0:
+    resolution: {integrity: sha512-OPTIONAL00000000000000000000000000000000000000000000000000000000000000000000000000000000000000==}
+
+  waybill-fixture-real@1.0.0:
+    resolution: {integrity: sha512-REAL00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000==}
+
+  waybill-fixture-runtime@1.0.0:
+    resolution: {integrity: sha512-RUNTIME000000000000000000000000000000000000000000000000000000000000000000000000000000000000000==}
+
+  waybill-fixture-shared@1.0.0:
+    resolution: {integrity: sha512-SHARED0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000==}
+
+snapshots:
+
+  waybill-fixture-both@1.0.0: {}
+
+  waybill-fixture-devchild@1.0.0: {}
+
+  waybill-fixture-devtool@1.0.0:
+    dependencies:
+      waybill-fixture-devchild: 1.0.0
+      waybill-fixture-shared: 1.0.0
+
+  waybill-fixture-optional@1.0.0: {}
+
+  waybill-fixture-real@1.0.0: {}
+
+  waybill-fixture-runtime@1.0.0:
+    dependencies:
+      waybill-fixture-shared: 1.0.0
+
+  waybill-fixture-shared@1.0.0: {}
