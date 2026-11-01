@@ -1,0 +1,17 @@
+{
+  "name": "waybill-fixture-protocols",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Milestone 1271 FR-012 fixture — SYNTHETIC names. Every devDependency here uses a non-registry protocol, so none of them may seed development scope or have an identity synthesised. The `patch:` entry is the accepted limitation: it wraps a real registry package and still goes unclassified.",
+  "workspaces": ["packages/*"],
+  "dependencies": {
+    "waybill-fixture-runtime": "^1.0.0"
+  },
+  "devDependencies": {
+    "waybill-fixture-sibling": "workspace:*",
+    "waybill-fixture-linked": "link:../external-linked",
+    "waybill-fixture-portal": "portal:../external-portal",
+    "waybill-fixture-filed": "file:../tarballs/waybill-fixture-filed-1.0.0.tgz",
+    "waybill-fixture-patched": "patch:waybill-fixture-patched@npm%3A1.0.0#./.yarn/patches/waybill-fixture-patched.patch"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "waybill-fixture-optional-meta",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Milestone 1271 FR-003 fixture — SYNTHETIC names. `waybill-fixture-devaux` is declared here under devDependencies AND is reached through another package's `optionalDependencies:` sub-block in the lockfile, so milestone 181 assigns it Optional. It is not runtime-reachable, so the subtraction does not remove it, and the only thing standing between it and a wrong Development assignment is FR-003's guard.",
+  "dependencies": {
+    "waybill-fixture-runtime": "^1.0.0"
+  },
+  "devDependencies": {
+    "waybill-fixture-devtool": "^1.0.0",
+    "waybill-fixture-devaux": "^1.0.0"
+  }
+}

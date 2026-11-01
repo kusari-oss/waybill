@@ -205,7 +205,7 @@ jobs:
           components: clippy
 
       - name: Cache cargo + build artifacts
-        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
 
       # dtolnay/rust-toolchain leaves the bootstrap installer
       # (`rustup-init`) sitting at `~/.cargo/bin/rustup-init` alongside
@@ -428,7 +428,7 @@ jobs:
           components: clippy
 
       - name: Cache cargo + build artifacts
-        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
 
       # See lint-and-test job for the rationale. MUST run AFTER
       # Swatinem/rust-cache or its $CARGO_HOME/bin restore re-creates
@@ -500,7 +500,7 @@ jobs:
           components: clippy
 
       - name: Cache cargo + build artifacts
-        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
 
       # See lint-and-test job for the rationale. This supersedes the
       # milestone-101 Windows-only `rustup default stable` workaround
@@ -704,7 +704,7 @@ jobs:
           components: clippy
 
       - name: Cache cargo + build artifacts
-        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
 
       # See lint-and-test-ebpf job for the rationale. Cleans up any
       # stale rustup-init that would race with cargo's rustup proxy

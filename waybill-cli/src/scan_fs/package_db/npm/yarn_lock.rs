@@ -31,7 +31,15 @@ use std::path::Path;
 use super::super::PackageDbEntry;
 use super::build_npm_purl;
 
-pub(super) fn read_yarn_lock(rootfs: &Path, _include_dev: bool) -> Option<Vec<PackageDbEntry>> {
+pub(super) fn read_yarn_lock(
+    rootfs: &Path,
+    _include_dev: bool,
+    // Milestone 1271 T022 (FR-011): member discovery expands the root
+    // manifest's `workspaces` patterns, which accept `**`, so it walks
+    // the tree. The operator's `--exclude-path` set reached only
+    // `mod.rs` before this; it has to reach the walk itself.
+    exclude_set: &super::super::exclude_path::ExclusionSet,
+) -> Option<Vec<PackageDbEntry>> {
     let path = rootfs.join("yarn.lock");
     let text = std::fs::read_to_string(&path).ok()?;
     let source_path = path.to_string_lossy().into_owned();
@@ -52,7 +60,11 @@ pub(super) fn read_yarn_lock(rootfs: &Path, _include_dev: bool) -> Option<Vec<Pa
             "package.json missing or unparseable — yarn optional-dep classification skipped (FR-004 fail-safe)"
         );
     }
-    let out = parse_yarn_lock(&text, &source_path, &pkg_json);
+    let mut out = parse_yarn_lock(&text, &source_path, &pkg_json);
+    // Milestone 1271 US2 (issue #1297) — assign development scope from
+    // the workspace manifests. Neither yarn dialect records the axis;
+    // see `apply_yarn_dev_scope`.
+    apply_yarn_dev_scope(&mut out, rootfs, &text, &pkg_json, exclude_set);
     if out.is_empty() {
         None
     } else {
@@ -546,6 +558,691 @@ fn build_entry(
         extra_annotations,
         binary_role: None,
     })
+}
+
+
+// ────────────────────────────────────────────────────────────────────
+// Milestone 1271 US2 (issue #1297): development scope for yarn
+// ────────────────────────────────────────────────────────────────────
+//
+// Until this existed, `--exclude-scope dev` removed nothing from a
+// yarn project in either dialect, and milestone 1269's propagation had
+// no seed to walk from.
+//
+// Neither dialect records the axis. yarn v1 omits it entirely — the
+// substring "dev" does not occur in a v1 lockfile — and Berry MERGES
+// `dependencies` with `devDependencies` in the workspace entry it
+// writes. Both measured against yarn 1.22.22 and 4.18.1; see
+// `specs/1271-yarn-bun-dev-scope/measurements/findings.md`. The
+// manifests on disk are therefore the only evidence (FR-005).
+//
+// That evidence is dialect-independent, so the classification is
+// implemented ONCE and the two dialects agree structurally rather than
+// by coincidence — which is what SC-003's first half asks for. Only
+// member *location* differs: Berry names its members in the lockfile,
+// v1 does not name them at all.
+//
+// The rule itself is `contracts/classification.md`, step for step, and
+// is identical to the bun implementation at `bun_lock.rs`: partition,
+// close the protected set, THEN subtract. Closing before subtracting
+// is what stops a runtime-reachable transitive from being marked
+// development and then spread by milestone 1269.
+
+/// Development seeds and the runtime/optional identities that outrank
+/// them, keyed by package name.
+///
+/// Name-keyed rather than `(name, version)`-keyed because both parsers
+/// discard the range when they collect an entry's edges, and the scan
+/// orchestrator resolves `depends` by name too. Under two locked
+/// versions of one name this is conservative in the safe direction:
+/// runtime reachability of any version protects all of them, which can
+/// over-protect but can never mark a runtime-reachable package
+/// development.
+struct YarnDevScopes {
+    development: std::collections::HashSet<String>,
+    protected: std::collections::HashSet<String>,
+}
+
+/// Resolve one manifest declaration to the package identity the
+/// reader emits, or `None` when it denotes no registry package.
+///
+/// A semver range never contains `:`, so a colon means a protocol.
+/// `npm:` is the one protocol that still names a registry package: it
+/// is either a redundant range prefix (`npm:^1.0.0`) or an alias
+/// (`npm:real-name@^1.0.0`), and an alias resolves to the aliased
+/// name, because that is the identity both dialects emit as a
+/// component (milestone 159).
+///
+/// Everything else — `workspace:`, `link:`, `portal:`, `file:`,
+/// `patch:`, `exec:`, git and URL specs — yields `None` (FR-012). The
+/// containment check alone would not exclude them: a `file:` package
+/// and a Berry `workspace:` member both appear in the lockfile under
+/// their declared name.
+fn yarn_declared_identity(name: &str, spec: &str) -> Option<String> {
+    let Some(rest) = spec.strip_prefix("npm:") else {
+        return if spec.contains(':') {
+            None
+        } else {
+            Some(name.to_string())
+        };
+    };
+    // `descriptor_to_name` returns None for a bare range, which is
+    // exactly the redundant-prefix case.
+    Some(descriptor_to_name(rest).unwrap_or_else(|| name.to_string()))
+}
+
+/// Fold one manifest's three dependency sections into the partition
+/// (contract step 3), and return how many of its declarations were
+/// discarded at step 2 — the FR-012 count, which exists so that a
+/// `patch:`-wrapped development dependency surviving
+/// `--exclude-scope dev` is a visible number rather than silence.
+///
+/// A name declared in both `dependencies` and `devDependencies` lands
+/// in `protected`, because `development` is subtracted at the end and
+/// never before.
+fn yarn_partition_manifest(
+    manifest: &serde_json::Value,
+    locked: &std::collections::HashSet<String>,
+    scopes: &mut YarnDevScopes,
+) -> usize {
+    let mut skipped = 0usize;
+    for section in ["dependencies", "optionalDependencies", "devDependencies"] {
+        let Some(declarations) = manifest.get(section).and_then(|v| v.as_object()) else {
+            continue;
+        };
+        for (name, spec) in declarations {
+            let Some(spec) = spec.as_str() else {
+                continue;
+            };
+            // Step 2, both halves: a non-registry protocol resolves to
+            // no identity at all, and an identity the lockfile does not
+            // lock is discarded. Either way no identity is synthesised.
+            let identity = yarn_declared_identity(name, spec)
+                .filter(|identity| locked.contains(identity));
+            let Some(identity) = identity else {
+                skipped += 1;
+                continue;
+            };
+            if section == "devDependencies" {
+                scopes.development.insert(identity);
+            } else {
+                scopes.protected.insert(identity);
+            }
+        }
+    }
+    skipped
+}
+
+/// The root manifest's `workspaces` patterns, accepting both spellings
+/// yarn supports: a bare array, and an object with a `packages` list
+/// (the spelling that carries `nohoist`). Both were measured to be
+/// accepted by every package manager in this family.
+fn yarn_workspace_patterns(pkg_json: &serde_json::Value) -> Vec<String> {
+    let field = match pkg_json.get("workspaces") {
+        Some(f) => f,
+        None => return Vec::new(),
+    };
+    let list = field
+        .as_array()
+        .or_else(|| field.get("packages").and_then(|p| p.as_array()));
+    list.map(|items| {
+        items
+            .iter()
+            .filter_map(|v| v.as_str())
+            .map(str::to_string)
+            .collect()
+    })
+    .unwrap_or_default()
+}
+
+/// How a workspace member's directory was found. The two dialects find
+/// them differently and the FR-010 / FR-011 diagnostics have to name
+/// the source, or an operator cannot tell a stale lockfile entry from a
+/// mis-written `workspaces` pattern.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum YarnMemberOrigin {
+    /// Berry — the lockfile's own `@workspace:<path>` resolution.
+    LockfileEntry,
+    /// v1 — expansion of the root manifest's `workspaces` patterns.
+    PatternExpansion,
+}
+
+impl YarnMemberOrigin {
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::LockfileEntry => "lockfile-member-entry",
+            Self::PatternExpansion => "root-manifest-workspaces-pattern",
+        }
+    }
+}
+
+/// The single enumerated per-member outcome that
+/// `contracts/diagnostics.md` is derived from. Four variants, two
+/// silent and two diagnostic, computed in exactly one place — so the
+/// diagnostic set is exhaustive by construction rather than by
+/// whatever conditionals happen to exist.
+#[derive(Clone, PartialEq, Eq, Debug)]
+enum YarnMemberOutcome {
+    /// The manifest was read and its declarations partitioned. Silent.
+    Classified,
+    /// The member directory holds no `package.json`. Normal monorepo
+    /// shape, and silent (FR-010).
+    NoManifest,
+    /// Present but unreadable or unparseable. This member contributes
+    /// nothing; its siblings are unaffected (FR-010).
+    UnreadableManifest,
+    /// Under a path the operator excluded. Carries the prefix that
+    /// matched, so the diagnostic names the exclusion rather than
+    /// merely reporting an absence (FR-011).
+    ExcludedByOperator { matched: String },
+}
+
+/// One discovered member: where it is, how it was found, and what came
+/// of it.
+struct YarnMemberLocation {
+    dir: std::path::PathBuf,
+    origin: YarnMemberOrigin,
+    outcome: YarnMemberOutcome,
+}
+
+/// Whether `dir` lies under an operator-excluded path, and which
+/// prefix matched.
+///
+/// Ancestor-aware: milestone 113's semantics exclude a directory's
+/// whole subtree, so excluding `packages` must exclude
+/// `packages/member`, which `matches("packages/member")` alone does
+/// not report.
+fn yarn_excluded_prefix(
+    rootfs: &Path,
+    dir: &Path,
+    exclude_set: &super::super::exclude_path::ExclusionSet,
+) -> Option<String> {
+    if exclude_set.is_empty() {
+        return None;
+    }
+    let relative = dir.strip_prefix(rootfs).ok()?;
+    let mut prefix = std::path::PathBuf::new();
+    for component in relative.components() {
+        prefix.push(component);
+        let candidate = prefix.to_string_lossy();
+        if exclude_set.matches(&candidate) {
+            return Some(candidate.into_owned());
+        }
+    }
+    None
+}
+
+/// Compile `workspaces` patterns against path semantics, not string
+/// semantics: `literal_separator` makes `packages/*` name direct
+/// children only, which is what yarn means by it. Returns `None` when
+/// no pattern compiles.
+fn yarn_member_pattern_set(patterns: &[String]) -> Option<globset::GlobSet> {
+    let mut builder = globset::GlobSetBuilder::new();
+    let mut any = false;
+    for pattern in patterns {
+        match globset::GlobBuilder::new(pattern)
+            .literal_separator(true)
+            .build()
+        {
+            Ok(glob) => {
+                builder.add(glob);
+                any = true;
+            }
+            Err(e) => tracing::warn!(
+                pattern = %pattern,
+                error = %e,
+                "yarn.lock: unparseable workspaces pattern (skipping this pattern)"
+            ),
+        }
+    }
+    if !any {
+        return None;
+    }
+    builder.build().ok()
+}
+
+/// Locate yarn v1 workspace members by expanding the root manifest's
+/// `workspaces` patterns (FR-009). A v1 lockfile does not name its
+/// members, so there is nothing else to go on.
+///
+/// Expansion routes through [`crate::scan_fs::walk::safe_walk`] rather
+/// than a hand-rolled descent, because `workspaces` accepts `**` and a
+/// symlink loop is therefore reachable — FR-011's termination and
+/// depth guarantees have to come from the implementation the scanner
+/// already uses, not from a promise. Consulting `ExclusionSet::matches`
+/// alone would satisfy neither.
+fn yarn_v1_member_dirs(rootfs: &Path, patterns: &[String]) -> Vec<std::path::PathBuf> {
+    let Some(set) = yarn_member_pattern_set(patterns) else {
+        return Vec::new();
+    };
+    let should_skip = |candidate: &Path, _rootfs: &Path| {
+        matches!(
+            candidate.file_name().and_then(|n| n.to_str()),
+            Some("node_modules" | ".git" | ".yarn" | ".yarn-cache")
+        )
+    };
+    // The walk is handed an EMPTY exclusion set deliberately, and this
+    // looks exactly like the defect milestones 113 and 118 exist to
+    // prevent, so: `safe_walk` suppresses descent into an excluded
+    // directory WITHOUT telling its caller, which would make an
+    // excluded member indistinguishable from one that was never there.
+    // FR-011 requires naming it. So the traversal guarantees come from
+    // `safe_walk` (symlink-loop termination, depth bound, rootfs
+    // sandbox) and the exclusion DECISION is taken by the caller, in
+    // `yarn_excluded_prefix`, where it can be reported. No evidence
+    // from an excluded member is used either way; the only difference
+    // is that the member's `package.json` is stat'ed and the operator
+    // is told.
+    let no_exclusions = super::super::exclude_path::ExclusionSet::new_empty();
+    let cfg = crate::scan_fs::walk::WalkConfig {
+        // A workspace pattern is conventionally one or two components
+        // deep; `**` can reach further. Eight matches the deeper end of
+        // the walker constants the milestone-054 audit enumerated and
+        // is the depth backstop behind the canonicalize-keyed
+        // visited-set, not the primary termination guarantee.
+        max_depth: 8,
+        should_skip: &should_skip,
+        exclude_set: &no_exclusions,
+    };
+    // BTreeSet: one entry per member directory, deterministically
+    // ordered. A member reachable by two routes (a symlink into the
+    // tree) is canonicalized away by `safe_walk`'s visited-set, so
+    // which route is recorded depends on `read_dir` order and is not
+    // something a caller may depend on — #958, #1056.
+    let mut dirs: std::collections::BTreeSet<std::path::PathBuf> = Default::default();
+    crate::scan_fs::walk::safe_walk(rootfs, &cfg, |path| {
+        if path.file_name().and_then(|n| n.to_str()) != Some("package.json") {
+            return;
+        }
+        if !path.is_file() {
+            return;
+        }
+        let Some(parent) = path.parent() else {
+            return;
+        };
+        let Ok(relative) = parent.strip_prefix(rootfs) else {
+            return;
+        };
+        if relative.as_os_str().is_empty() {
+            // The root manifest, already partitioned by the caller.
+            return;
+        }
+        if set.is_match(relative) {
+            dirs.insert(parent.to_path_buf());
+        }
+    });
+    dirs.into_iter().collect()
+}
+
+/// Locate yarn Berry workspace members from the lockfile's own
+/// `"<name>@workspace:<path>"` entries, whose `resolution` field
+/// carries the member's path (FR-009). Berry names its members; no
+/// glob expansion and no walk is needed, which is the measured
+/// asymmetry between the dialects.
+///
+/// Read line-wise rather than by deserializing the document a second
+/// time. `parse_berry` has already parsed it, and threading the parsed
+/// value out here would be the better fix — but measured on a
+/// synthetic 1 MB / 4000-package Berry lockfile, the second
+/// `serde_yaml` parse cost 0.44s of a 1.28s scan, about half the total,
+/// purely to read one field per entry. A line scan reads the same
+/// `resolution` field the contract names. See
+/// `measurements/findings.md`.
+fn yarn_berry_member_dirs(rootfs: &Path, text: &str) -> Vec<std::path::PathBuf> {
+    let mut dirs: std::collections::BTreeSet<std::path::PathBuf> = Default::default();
+    for line in text.lines() {
+        let Some(value) = line.trim_start().strip_prefix("resolution:") else {
+            continue;
+        };
+        let resolution = unquote(value);
+        let Some((_, path)) = resolution.split_once("@workspace:") else {
+            continue;
+        };
+        if path.is_empty() || path == "." {
+            // The root workspace, already partitioned by the caller.
+            continue;
+        }
+        dirs.insert(rootfs.join(path));
+    }
+    dirs.into_iter().collect()
+}
+
+// ────────────────────────────────────────────────────────────────────
+// Milestone 1271 US3: test-only observation sink for the diagnostics
+// ────────────────────────────────────────────────────────────────────
+//
+// The obvious way to test a diagnostic is to install a capture
+// subscriber with `tracing::subscriber::with_default` and assert on the
+// captured text. That is racy in this binary, and the repository
+// already knows it: see the note at `golang/legacy.rs` for milestone
+// 774, where other tests' global `set_global_default` subscribers were
+// observed preempting a thread-local one. Writing it that way here
+// produced exactly that — two failures, both on the first run after a
+// rebuild, then twenty clean runs, which is the signature of an
+// ordering race rather than of randomness.
+//
+// So the diagnostics are recorded into a path-scoped sink by the SAME
+// statement that logs them, and the tests assert on the sink. Removing
+// a diagnostic removes its record, so the tests still fail if one
+// disappears in a refactor. Compiled out in release.
+//
+// A list of sinks rather than one slot, per the #849 lesson attached to
+// the milestone 774 version: two tests installing at once would
+// otherwise clobber each other, and the loser aborts the process while
+// unwinding.
+
+#[cfg(test)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) struct DiagnosticRecord {
+    /// Which requirement's diagnostic this is.
+    pub(super) requirement: &'static str,
+    /// The subject — the manifest path, or the member directory.
+    pub(super) subject: String,
+    /// The requirement-specific detail: the FR-012 skipped count for
+    /// FR-006, the matched exclusion for FR-011, the discovery origin
+    /// for FR-010.
+    pub(super) detail: String,
+}
+
+#[cfg(test)]
+static DIAGNOSTIC_SINKS: std::sync::Mutex<
+    Vec<(std::path::PathBuf, Vec<DiagnosticRecord>)>,
+> = std::sync::Mutex::new(Vec::new());
+
+/// Install a sink for every scan rooted at or under `marker`,
+/// returning a guard that removes it on drop.
+#[cfg(test)]
+pub(super) fn diagnostic_sink_install(marker: &Path) -> DiagnosticSinkGuard {
+    DIAGNOSTIC_SINKS
+        .lock()
+        .expect("m1271 diagnostic sink mutex poisoned")
+        .push((marker.to_path_buf(), Vec::new()));
+    DiagnosticSinkGuard {
+        marker: marker.to_path_buf(),
+    }
+}
+
+#[cfg(test)]
+pub(super) struct DiagnosticSinkGuard {
+    marker: std::path::PathBuf,
+}
+
+#[cfg(test)]
+impl DiagnosticSinkGuard {
+    pub(super) fn records(&self) -> Vec<DiagnosticRecord> {
+        DIAGNOSTIC_SINKS
+            .lock()
+            .expect("m1271 diagnostic sink mutex poisoned")
+            .iter()
+            .find(|(m, _)| *m == self.marker)
+            .map(|(_, r)| r.clone())
+            .unwrap_or_default()
+    }
+
+    /// The records for one requirement, so a failure prints only what
+    /// it is about.
+    pub(super) fn for_requirement(&self, requirement: &str) -> Vec<DiagnosticRecord> {
+        self.records()
+            .into_iter()
+            .filter(|r| r.requirement == requirement)
+            .collect()
+    }
+}
+
+#[cfg(test)]
+impl Drop for DiagnosticSinkGuard {
+    fn drop(&mut self) {
+        // `lock()` rather than `expect`: a panicking test poisons the
+        // mutex, and panicking again while unwinding aborts the
+        // process.
+        if let Ok(mut guard) = DIAGNOSTIC_SINKS.lock() {
+            guard.retain(|(m, _)| *m != self.marker);
+        }
+    }
+}
+
+#[cfg(test)]
+fn diagnostic_record(rootfs: &Path, record: DiagnosticRecord) {
+    if let Ok(mut guard) = DIAGNOSTIC_SINKS.lock() {
+        for (marker, records) in guard.iter_mut() {
+            if rootfs.starts_with(marker) {
+                records.push(record.clone());
+            }
+        }
+    }
+}
+
+/// Assign `LifecycleScope::Development` per
+/// `specs/1271-yarn-bun-dev-scope/contracts/classification.md`, in the
+/// order the contract fixes: partition, close, subtract, assign — and
+/// emit the three diagnostics of `contracts/diagnostics.md`, derived
+/// from one enumerated per-member outcome.
+fn apply_yarn_dev_scope(
+    out: &mut [PackageDbEntry],
+    rootfs: &Path,
+    text: &str,
+    pkg_json: &serde_json::Value,
+    exclude_set: &super::super::exclude_path::ExclusionSet,
+) {
+    use waybill_common::resolution::LifecycleScope;
+
+    let berry = is_berry(text);
+
+    // The lockfile's own package map, keyed by the name each parser
+    // emits. Contract step 2 discards any declared identity this set
+    // does not contain, which is also what stops a non-registry
+    // protocol from synthesising one.
+    let locked: std::collections::HashSet<String> =
+        out.iter().map(|e| e.name.clone()).collect();
+
+    let mut scopes = YarnDevScopes {
+        development: Default::default(),
+        protected: Default::default(),
+    };
+
+    // Steps 1-3 for the root workspace. Re-uses the manifest the reader
+    // already parsed for the milestone 181 optional classifier;
+    // `Value::Null` (missing or unparseable) contributes nothing, which
+    // is FR-004's fail-safe and, for yarn, the whole degradation path.
+    let mut skipped_declarations = yarn_partition_manifest(pkg_json, &locked, &mut scopes);
+
+    // ... and for every workspace member. The member manifests are the
+    // only place a member's development axis survives: v1 does not name
+    // the member, and Berry's member entry merges the two sections just
+    // as the root entry does.
+    let (candidates, origin) = if berry {
+        (
+            yarn_berry_member_dirs(rootfs, text),
+            YarnMemberOrigin::LockfileEntry,
+        )
+    } else {
+        (
+            yarn_v1_member_dirs(rootfs, &yarn_workspace_patterns(pkg_json)),
+            YarnMemberOrigin::PatternExpansion,
+        )
+    };
+
+    let mut members: Vec<YarnMemberLocation> = Vec::with_capacity(candidates.len());
+    for dir in candidates {
+        let outcome = match yarn_excluded_prefix(rootfs, &dir, exclude_set) {
+            Some(matched) => YarnMemberOutcome::ExcludedByOperator { matched },
+            None => match std::fs::read_to_string(dir.join("package.json")) {
+                Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+                    YarnMemberOutcome::NoManifest
+                }
+                Err(_) => YarnMemberOutcome::UnreadableManifest,
+                Ok(raw) => match serde_json::from_str::<serde_json::Value>(&raw) {
+                    Err(_) => YarnMemberOutcome::UnreadableManifest,
+                    Ok(manifest) => {
+                        skipped_declarations +=
+                            yarn_partition_manifest(&manifest, &locked, &mut scopes);
+                        YarnMemberOutcome::Classified
+                    }
+                },
+            },
+        };
+        members.push(YarnMemberLocation {
+            dir,
+            origin,
+            outcome,
+        });
+    }
+
+    // The diagnostics, derived from the outcome above and from nothing
+    // else. Warn level per research R6 — note that R6 cites the
+    // adjacent site at `yarn_lock.rs:52` as a warn precedent and that
+    // site is in fact `debug!`; the decision stands on the spec's
+    // "operator-visible" constraint, which info does not satisfy, not
+    // on a precedent that does not exist.
+    //
+    // The sentinels below are load-bearing: no unit test can observe a
+    // log's LEVEL here, because capturing logs in this binary races
+    // against other tests' global subscribers. So
+    // `m1271_us3_the_diagnostics_are_emitted_at_warn_level` slices the
+    // source between them and checks the levels directly. Moving a
+    // diagnostic out of this region removes it from that check.
+    //
+    // m1271-us3-diagnostics-begin
+    for member in &members {
+        match &member.outcome {
+            // Silent, deliberately: an empty result is not a
+            // degradation, and a pattern matching a directory with no
+            // manifest is a normal monorepo shape.
+            YarnMemberOutcome::Classified | YarnMemberOutcome::NoManifest => {}
+            YarnMemberOutcome::UnreadableManifest => {
+                tracing::warn!(
+                    reader = "yarn",
+                    member = %member.dir.display(),
+                    found_via = member.origin.as_str(),
+                    "yarn.lock: workspace member manifest unreadable — this member \
+                     contributed no development scope; the rest of the workspace is \
+                     unaffected (FR-010)"
+                );
+                #[cfg(test)]
+                diagnostic_record(
+                    rootfs,
+                    DiagnosticRecord {
+                        requirement: "FR-010",
+                        subject: member.dir.display().to_string(),
+                        detail: member.origin.as_str().to_string(),
+                    },
+                );
+            }
+            YarnMemberOutcome::ExcludedByOperator { matched } => {
+                tracing::warn!(
+                    reader = "yarn",
+                    member = %member.dir.display(),
+                    found_via = member.origin.as_str(),
+                    excluded_by = %matched,
+                    "yarn.lock: workspace member lies under an excluded path and was \
+                     not read — its development declarations contribute nothing, so \
+                     this document is narrowed deliberately rather than unclassified \
+                     (FR-011)"
+                );
+                #[cfg(test)]
+                diagnostic_record(
+                    rootfs,
+                    DiagnosticRecord {
+                        requirement: "FR-011",
+                        subject: member.dir.display().to_string(),
+                        detail: matched.clone(),
+                    },
+                );
+            }
+        }
+    }
+
+    // FR-006. For yarn the root manifest is the only evidence of the
+    // development axis, so its absence is the whole degradation path
+    // and the operator has to hear about it — otherwise a document that
+    // cannot be filtered is indistinguishable from one that was.
+    if pkg_json.is_null() {
+        tracing::warn!(
+            reader = "yarn",
+            path = %rootfs.join("package.json").display(),
+            skipped_declarations = skipped_declarations,
+            "yarn.lock: root package.json missing or unparseable — development scope \
+             classification skipped entirely; every component keeps the scope it \
+             already had (FR-006)"
+        );
+        #[cfg(test)]
+        diagnostic_record(
+            rootfs,
+            DiagnosticRecord {
+                requirement: "FR-006",
+                subject: rootfs.join("package.json").display().to_string(),
+                detail: skipped_declarations.to_string(),
+            },
+        );
+    }
+
+    // m1271-us3-diagnostics-end
+
+    if scopes.development.is_empty() {
+        // Empty is normal and silent: a project with no development
+        // declarations is not a degradation.
+        return;
+    }
+
+    // Step 4: close the protected set over the lockfile's own edges,
+    // which both parsers have already collected into `depends`. Runtime
+    // reachability from any workspace outranks a development
+    // declaration made by another (FR-002) — the Principle IX
+    // protection, and the reason closure precedes subtraction.
+    let mut edges: std::collections::HashMap<&str, &[String]> = Default::default();
+    for entry in out.iter() {
+        edges.insert(entry.name.as_str(), entry.depends.as_slice());
+    }
+    let mut pending: Vec<String> = scopes.protected.iter().cloned().collect();
+    while let Some(name) = pending.pop() {
+        let Some(children) = edges.get(name.as_str()) else {
+            continue;
+        };
+        for child in children.iter() {
+            if scopes.protected.insert(child.clone()) {
+                pending.push(child.clone());
+            }
+        }
+    }
+
+    // Step 5: subtract. Never before step 4.
+    scopes
+        .development
+        .retain(|name| !scopes.protected.contains(name));
+
+    // Step 6: assign, and to nothing else.
+    let mut tagged = 0usize;
+    for entry in out.iter_mut() {
+        if !scopes.development.contains(&entry.name) {
+            continue;
+        }
+        if entry.lifecycle_scope.is_some() {
+            // FR-003: an existing assignment — Optional from milestone
+            // 181 — is authoritative and is not overwritten.
+            continue;
+        }
+        entry.lifecycle_scope = Some(LifecycleScope::Development);
+        tagged += 1;
+    }
+
+    if tagged > 0 {
+        // The FR-012 count rides here as well as on the FR-006
+        // diagnostic. FR-006 asks for it on the root-manifest-absent
+        // warning, which is where it is least informative: with no root
+        // manifest there are no declarations to skip, and for v1 no
+        // `workspaces` patterns either, so that count is structurally
+        // zero. The number an operator chasing a surviving
+        // `patch:`-wrapped dev dependency actually needs is this one,
+        // on the line emitted when classification DID run.
+        tracing::info!(
+            development_seeds = tagged,
+            runtime_protected = scopes.protected.len(),
+            workspace_members = members.len(),
+            skipped_declarations = skipped_declarations,
+            dialect = if berry { "berry" } else { "v1" },
+            "yarn.lock: seeded development scope from the workspace manifests",
+        );
+    }
 }
 
 #[cfg(test)]
@@ -1092,6 +1789,747 @@ __metadata:
             !react
                 .extra_annotations
                 .contains_key("waybill:optional-derivation")
+        );
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // Milestone 1271 US2 (issue #1297): development scope for yarn.
+    //
+    // Neither dialect records the development axis — yarn v1 omits it
+    // entirely and Berry MERGES dependencies with devDependencies in
+    // the workspace entry. Both facts were measured against yarn
+    // 1.22.22 and 4.18.1; see
+    // specs/1271-yarn-bun-dev-scope/measurements/findings.md. The
+    // manifests on disk are therefore the only evidence (FR-005), and
+    // because they are dialect-independent, the two dialects are
+    // expected to agree exactly — SC-003's first half, asserted below
+    // rather than argued.
+    // ════════════════════════════════════════════════════════════════
+
+    fn m1271_fixture(name: &str) -> std::path::PathBuf {
+        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("tests")
+            .join("fixtures")
+            .join("yarn_lock")
+            .join(name)
+    }
+
+    fn m1271_read(name: &str) -> Vec<PackageDbEntry> {
+        read_yarn_lock(
+            &m1271_fixture(name),
+            true,
+            &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty(),
+        )
+        .unwrap_or_else(|| panic!("fixture {name} must parse"))
+    }
+
+    fn m1271_scope_of(
+        entries: &[PackageDbEntry],
+        name: &str,
+    ) -> Option<waybill_common::resolution::LifecycleScope> {
+        entries
+            .iter()
+            .find(|e| e.name == name)
+            .unwrap_or_else(|| panic!("fixture has no component named {name}"))
+            .lifecycle_scope
+    }
+
+    fn m1271_is_dev(entries: &[PackageDbEntry], name: &str) -> bool {
+        matches!(
+            m1271_scope_of(entries, name),
+            Some(waybill_common::resolution::LifecycleScope::Development)
+        )
+    }
+
+    /// The set of names a fixture classifies Development, sorted so a
+    /// failure prints a diff rather than a bag.
+    fn m1271_dev_names(entries: &[PackageDbEntry]) -> Vec<String> {
+        let mut names: Vec<String> = entries
+            .iter()
+            .filter(|e| {
+                matches!(
+                    e.lifecycle_scope,
+                    Some(waybill_common::resolution::LifecycleScope::Development)
+                )
+            })
+            .map(|e| e.name.clone())
+            .collect();
+        names.sort();
+        names
+    }
+
+    /// US2 scenario 1 — a dev-only declaration is seeded, in both
+    /// dialects. Only the direct declaration: the transitive spread
+    /// onto `waybill-fixture-devchild` is milestone 1269's pass, which
+    /// the T011 baseline measured working on reader seeds.
+    #[test]
+    fn m1271_us2_yarn_seeds_dev_only_declarations_in_both_dialects() {
+        for dialect in ["dev_scope_single", "dev_scope_berry"] {
+            let entries = m1271_read(dialect);
+            assert!(
+                m1271_is_dev(&entries, "waybill-fixture-devtool"),
+                "{dialect}: a dev-only declaration MUST be seeded Development; got {:?}",
+                m1271_scope_of(&entries, "waybill-fixture-devtool")
+            );
+            for runtime in ["waybill-fixture-runtime", "waybill-fixture-shared"] {
+                assert!(
+                    !m1271_is_dev(&entries, runtime),
+                    "{dialect}: {runtime} is runtime-reachable and MUST NOT be Development"
+                );
+            }
+        }
+    }
+
+    /// US2 scenario 2 — declared in both sections, the runtime
+    /// declaration wins (contract step 3).
+    #[test]
+    fn m1271_us2_yarn_declared_in_both_sections_is_not_development() {
+        for dialect in ["dev_scope_single", "dev_scope_berry"] {
+            let entries = m1271_read(dialect);
+            assert!(
+                !m1271_is_dev(&entries, "waybill-fixture-both"),
+                "{dialect}: a name in BOTH sections must stay runtime; got {:?}",
+                m1271_scope_of(&entries, "waybill-fixture-both")
+            );
+        }
+    }
+
+    /// US2 scenario 3 / FR-003 — nothing already Optional is demoted.
+    /// Berry carries the flag in `dependenciesMeta`, so the Optional
+    /// assignment is live there and the guard is load-bearing.
+    #[test]
+    fn m1271_us2_yarn_optional_is_never_demoted_to_development() {
+        for dialect in ["dev_scope_single", "dev_scope_berry"] {
+            let entries = m1271_read(dialect);
+            assert!(
+                !m1271_is_dev(&entries, "waybill-fixture-optional"),
+                "{dialect}: an optional declaration must not become Development; got {:?}",
+                m1271_scope_of(&entries, "waybill-fixture-optional")
+            );
+        }
+    }
+
+    /// US2 scenario 5 — an npm-aliased dev declaration
+    /// (`alias: npm:real@range`) seeds the RESOLVED identity, because
+    /// that is the identity both dialects emit as a component.
+    #[test]
+    fn m1271_us2_yarn_npm_aliased_dev_declaration_seeds_the_resolved_identity() {
+        for dialect in ["dev_scope_single", "dev_scope_berry"] {
+            let entries = m1271_read(dialect);
+            assert!(
+                m1271_is_dev(&entries, "waybill-fixture-real"),
+                "{dialect}: the aliased dev declaration must seed the resolved name; got {:?}",
+                m1271_scope_of(&entries, "waybill-fixture-real")
+            );
+            assert!(
+                !entries.iter().any(|e| e.name == "waybill-fixture-alias"),
+                "{dialect}: the local alias name must not become a component of its own"
+            );
+        }
+    }
+
+    /// SC-003's first half, and the reason this reader implements the
+    /// classification once rather than twice: the evidence is the
+    /// manifest, which is dialect-independent, so the two dialects
+    /// must classify the SAME set over a byte-identical manifest.
+    #[test]
+    fn m1271_us2_yarn_v1_and_berry_classify_the_same_set() {
+        let v1 = m1271_dev_names(&m1271_read("dev_scope_single"));
+        let berry = m1271_dev_names(&m1271_read("dev_scope_berry"));
+        assert_eq!(
+            v1, berry,
+            "the two dialects disagree over a byte-identical package.json"
+        );
+        assert_eq!(
+            v1,
+            vec![
+                "waybill-fixture-devtool".to_string(),
+                "waybill-fixture-real".to_string(),
+            ],
+            "the development set is not what the shared manifest declares"
+        );
+    }
+
+
+    // ════════════════════════════════════════════════════════════════
+    // Milestone 1271 US3: a document that cannot be filtered says so.
+    //
+    // Each of the three warn conditions in
+    // `specs/1271-yarn-bun-dev-scope/contracts/diagnostics.md` is
+    // pinned by a test that fails if the diagnostic is removed, and
+    // each of the two deliberately silent conditions by a test that
+    // fails if one appears. A diagnostic nobody asserts is one that
+    // disappears in a refactor.
+    // ════════════════════════════════════════════════════════════════
+
+    /// Copy a fixture tree into a fresh temporary directory.
+    ///
+    /// Sinks are keyed by path prefix, so two tests installing a sink
+    /// on the SAME fixture directory share a marker — and the first
+    /// guard to drop removes the other test's sink along with its own,
+    /// which is the #849 failure mode the milestone 774 sink comment
+    /// warns about. It bit here, 6 runs in 15, until each sink got its
+    /// own marker. Copying is also what makes a "stays silent" test
+    /// and a "must warn" test able to use the same fixture at all.
+    fn m1271_fixture_copy(name: &str) -> tempfile::TempDir {
+        fn copy_tree(from: &std::path::Path, to: &std::path::Path) {
+            std::fs::create_dir_all(to).expect("create fixture copy dir");
+            for entry in std::fs::read_dir(from).expect("read fixture dir") {
+                let entry = entry.expect("fixture dir entry");
+                let target = to.join(entry.file_name());
+                if entry.path().is_dir() {
+                    copy_tree(&entry.path(), &target);
+                } else {
+                    std::fs::copy(entry.path(), &target).expect("copy fixture file");
+                }
+            }
+        }
+        let dir = tempfile::tempdir().expect("tempdir");
+        copy_tree(&m1271_fixture(name), dir.path());
+        dir
+    }
+
+    /// Run `read_yarn_lock` over a private copy of a fixture with a
+    /// diagnostic sink installed, returning the entries alongside the
+    /// recorded diagnostics. See the sink's own comment for why this is
+    /// not a `tracing` capture subscriber, and `m1271_fixture_copy`
+    /// for why it is a copy.
+    fn m1271_with_diagnostics(
+        fixture: &str,
+        exclude_set: &crate::scan_fs::package_db::exclude_path::ExclusionSet,
+    ) -> (
+        Option<Vec<PackageDbEntry>>,
+        DiagnosticSinkGuard,
+        tempfile::TempDir,
+    ) {
+        let dir = m1271_fixture_copy(fixture);
+        let sink = diagnostic_sink_install(dir.path());
+        let entries = read_yarn_lock(dir.path(), true, exclude_set);
+        (entries, sink, dir)
+    }
+
+    /// FR-006 — for yarn the root manifest is the ONLY evidence of the
+    /// development axis, so its absence means the document cannot be
+    /// filtered at all. The diagnostic names the reader, the path and
+    /// the consequence, and carries the FR-012 count.
+    #[test]
+    fn m1271_us3_yarn_absent_root_manifest_is_announced() {
+        let (entries, sink, dir) = m1271_with_diagnostics(
+            "dev_scope_no_manifest",
+            &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty(),
+        );
+        let rootfs = dir.path();
+        let entries = entries.expect("the lockfile alone must still parse");
+        assert_eq!(
+            m1271_dev_names(&entries),
+            Vec::<String>::new(),
+            "with no manifest there is no evidence, so nothing is Development"
+        );
+        let records = sink.for_requirement("FR-006");
+        assert_eq!(
+            records.len(),
+            1,
+            "FR-006: exactly one diagnostic; got {records:?}"
+        );
+        assert_eq!(
+            records[0].subject,
+            rootfs.join("package.json").display().to_string(),
+            "FR-006: the diagnostic must name the path it could not read"
+        );
+        assert_eq!(
+            records[0].detail, "0",
+            "FR-006 / R4: the diagnostic carries the FR-012 count — which is \
+             structurally zero here, with no manifest to hold declarations and no \
+             `workspaces` patterns to expand. That is the placement FR-006 asks \
+             for; the count an operator can act on rides the summary line."
+        );
+    }
+
+
+    /// FR-006's count, made falsifiable. The test above asserts a
+    /// count of zero — which is the honest value for an ABSENT root
+    /// manifest, and which mutation testing showed a hardcoded zero
+    /// also satisfies. The count only carries information when the
+    /// root manifest is unparseable rather than missing AND the
+    /// dialect can still reach members, which is Berry: it names them
+    /// in the lockfile. Here one member declaration resolves to a
+    /// locked package and one uses a non-registry protocol, so the
+    /// count is 1 and a faked zero fails.
+    #[test]
+    fn m1271_us3_yarn_fr006_count_is_falsifiable() {
+        let (entries, sink, _dir) = m1271_with_diagnostics(
+            "dev_scope_bad_root_berry",
+            &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty(),
+        );
+        let entries = entries.expect("the lockfile must still parse");
+        let records = sink.for_requirement("FR-006");
+        assert_eq!(
+            records.len(),
+            1,
+            "an unparseable root manifest is announced once; got {records:?}"
+        );
+        assert_eq!(
+            records[0].detail, "1",
+            "FR-006: the count must report the member's `workspace:`-protocol \
+             declaration as skipped at step 2"
+        );
+        // And the member's reachable development declaration is still
+        // seeded: an unparseable ROOT manifest does not stop Berry from
+        // reading members it found in the lockfile.
+        assert!(
+            m1271_is_dev(&entries, "waybill-fixture-devonly"),
+            "got {:?}",
+            m1271_scope_of(&entries, "waybill-fixture-devonly")
+        );
+    }
+
+    /// FR-010 — one unreadable member manifest degrades THAT member.
+    /// The sibling's development declaration must still be seeded, or
+    /// the degradation is not scoped at all.
+    #[test]
+    fn m1271_us3_yarn_unreadable_member_manifest_is_announced() {
+        let (entries, sink, _dir) = m1271_with_diagnostics(
+            "dev_scope_bad_member",
+            &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty(),
+        );
+        let entries = entries.expect("fixture must parse");
+        let records = sink.for_requirement("FR-010");
+        assert_eq!(
+            records.len(),
+            1,
+            "FR-010: exactly one member is unreadable; got {records:?}"
+        );
+        assert!(
+            records[0].subject.ends_with("packages/broken"),
+            "FR-010: the diagnostic must name WHICH member; got {:?}",
+            records[0]
+        );
+        assert_eq!(
+            records[0].detail, "root-manifest-workspaces-pattern",
+            "FR-010: and how it was found, so a stale lockfile entry is \
+             distinguishable from a mis-written pattern"
+        );
+        assert!(
+            m1271_is_dev(&entries, "waybill-fixture-devonly"),
+            "FR-010: the readable sibling must still be classified; got {:?}",
+            m1271_scope_of(&entries, "waybill-fixture-devonly")
+        );
+        assert!(
+            !m1271_is_dev(&entries, "waybill-fixture-devbroken"),
+            "the broken member's declaration contributes nothing, so its dependency \
+             stays unclassified rather than being guessed at"
+        );
+    }
+
+    /// FR-011 — a member under an excluded path contributes nothing AND
+    /// is named, so a deliberately narrowed document is
+    /// distinguishable from one that is silently unclassified. The
+    /// exclusion is built directly from patterns, so no environment
+    /// variable is mutated and no `EnvGuard` is needed.
+    #[test]
+    fn m1271_us3_yarn_excluded_member_is_announced() {
+        let exclude =
+            crate::scan_fs::package_db::exclude_path::ExclusionSet::from_iter(["packages"])
+                .expect("pattern must compile");
+        let (entries, sink, _dir) =
+            m1271_with_diagnostics("dev_scope_monorepo_array", &exclude);
+        let entries = entries.expect("fixture must parse");
+        let records = sink.for_requirement("FR-011");
+        assert_eq!(
+            records.len(),
+            1,
+            "FR-011: exactly one member is excluded; got {records:?}"
+        );
+        assert!(
+            records[0].subject.ends_with("packages/member"),
+            "FR-011: the diagnostic must name the member; got {:?}",
+            records[0]
+        );
+        assert_eq!(
+            records[0].detail, "packages",
+            "FR-011: and the exclusion that matched, which is the ANCESTOR here"
+        );
+        assert_eq!(
+            m1271_dev_names(&entries),
+            Vec::<String>::new(),
+            "FR-011: an excluded member contributes no development evidence"
+        );
+    }
+
+    /// FR-011, the ancestor case directly: milestone 113 excludes a
+    /// directory's whole subtree, so excluding `packages` must exclude
+    /// `packages/member`, which a direct `matches()` on the member's
+    /// own path does not report.
+    #[test]
+    fn m1271_us3_yarn_exclusion_applies_to_ancestors() {
+        let rootfs = m1271_fixture("dev_scope_monorepo_array");
+        let exclude =
+            crate::scan_fs::package_db::exclude_path::ExclusionSet::from_iter(["packages"])
+                .expect("pattern must compile");
+        assert_eq!(
+            yarn_excluded_prefix(&rootfs, &rootfs.join("packages").join("member"), &exclude),
+            Some("packages".to_string()),
+            "an excluded ancestor must exclude the member"
+        );
+        assert_eq!(
+            yarn_excluded_prefix(
+                &rootfs,
+                &rootfs.join("packages").join("member"),
+                &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty()
+            ),
+            None
+        );
+    }
+
+    /// SC-006 / SC-007 — the two silent conditions stay silent. A
+    /// manifest with no `devDependencies` is not a degradation, and a
+    /// member directory with no manifest is a normal shape (here a
+    /// stale Berry lockfile entry, the only route to that outcome).
+    #[test]
+    fn m1271_us3_yarn_silent_cases_stay_silent() {
+        for fixture in [
+            // Root manifest present, declares no devDependencies.
+            "dev_scope_monorepo_array",
+            // Berry, carrying a member entry whose directory is gone.
+            "dev_scope_monorepo_berry",
+        ] {
+            let (entries, sink, _dir) = m1271_with_diagnostics(
+                fixture,
+                &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty(),
+            );
+            assert!(entries.is_some(), "{fixture}: must parse");
+            assert_eq!(
+                sink.records(),
+                Vec::new(),
+                "{fixture}: this condition is silent by design"
+            );
+        }
+    }
+
+
+    /// R6 — the three diagnostics are emitted at warn level, which is
+    /// the only level the spec's "operator-visible" constraint admits.
+    ///
+    /// Checked against the source rather than against captured output,
+    /// because a `tracing` capture subscriber races with other tests'
+    /// global subscribers in this binary (milestone 774 recorded the
+    /// same hazard) and the path-scoped sink the other US3 tests use
+    /// records the diagnostic's condition and content but cannot see
+    /// its level. Without this, downgrading all three to `debug!`
+    /// passes every other test in this file — verified by mutation.
+    #[test]
+    fn m1271_us3_the_diagnostics_are_emitted_at_warn_level() {
+        const SOURCE: &str = include_str!("yarn_lock.rs");
+        let begin = SOURCE
+            .find("m1271-us3-diagnostics-begin")
+            .expect("the diagnostics region's begin sentinel is gone");
+        let end = SOURCE
+            .find("m1271-us3-diagnostics-end")
+            .expect("the diagnostics region's end sentinel is gone");
+        assert!(begin < end, "the sentinels are inverted");
+        let region = &SOURCE[begin..end];
+        assert_eq!(
+            region.matches("tracing::warn!(").count(),
+            3,
+            "exactly three warn-level diagnostics live in this region: FR-006, \
+             FR-010 and FR-011"
+        );
+        for lower in ["tracing::debug!(", "tracing::info!(", "tracing::trace!("] {
+            assert!(
+                !region.contains(lower),
+                "a diagnostic in this region was downgraded to {lower} — R6 requires \
+                 a level the operator sees by default"
+            );
+        }
+    }
+
+    /// Step 2 of the classification contract, and the FR-012 count's
+    /// actual value — not merely that the field is present.
+    ///
+    /// Mutation testing found that deleting the containment check
+    /// changes no classification at all: the assignment loop only ever
+    /// touches components the parsers emitted, so an identity the
+    /// lockfile does not lock could never be assigned anyway. What the
+    /// check does change is the count, which is the whole point of
+    /// R4 — a number that under-reports is worse than no number,
+    /// because an operator chasing a surviving development dependency
+    /// would read it as evidence that nothing was skipped.
+    #[test]
+    fn m1271_us3_yarn_fr012_count_includes_unlocked_declarations() {
+        let manifest: serde_json::Value = serde_json::from_str(
+            r#"{
+                "dependencies": { "waybill-fixture-runtime": "^1.0.0" },
+                "devDependencies": {
+                    "waybill-fixture-devtool": "^1.0.0",
+                    "waybill-fixture-unlocked": "^1.0.0",
+                    "waybill-fixture-sibling": "workspace:*"
+                }
+            }"#,
+        )
+        .unwrap();
+        let locked: std::collections::HashSet<String> = [
+            "waybill-fixture-runtime".to_string(),
+            "waybill-fixture-devtool".to_string(),
+            // `waybill-fixture-sibling` IS in the lockfile — a Berry
+            // workspace member is emitted as a component — which is why
+            // the protocol check and the containment check are both
+            // needed and neither subsumes the other.
+            "waybill-fixture-sibling".to_string(),
+        ]
+        .into_iter()
+        .collect();
+        let mut scopes = YarnDevScopes {
+            development: Default::default(),
+            protected: Default::default(),
+        };
+        let skipped = yarn_partition_manifest(&manifest, &locked, &mut scopes);
+        assert_eq!(
+            skipped, 2,
+            "both the unlocked declaration and the workspace-protocol one are \
+             skipped at step 2"
+        );
+        assert_eq!(
+            scopes.development,
+            ["waybill-fixture-devtool".to_string()].into_iter().collect(),
+            "only the declaration that resolves to a locked registry package seeds"
+        );
+        assert_eq!(
+            scopes.protected,
+            ["waybill-fixture-runtime".to_string()].into_iter().collect()
+        );
+    }
+
+    /// FR-003, reachably. The scenario-3 test above cannot observe the
+    /// guard: a name declared under `optionalDependencies` is in the
+    /// PROTECTED set, so the subtraction removes it before assignment
+    /// ever looks at it. The guard only matters when milestone 181
+    /// derived Optional from somewhere the root manifest's three
+    /// dependency sections do not name — a parent entry's
+    /// `optionalDependencies:` sub-block in v1, or `dependenciesMeta`
+    /// in Berry. Both arms are fixtures here because mutation testing
+    /// showed the guard surviving its own removal without them.
+    #[test]
+    fn m1271_us2_yarn_out_of_band_optional_is_not_overwritten() {
+        for fixture in [
+            "dev_scope_optional_meta_v1",
+            "dev_scope_optional_meta_berry",
+        ] {
+            let entries = m1271_read(fixture);
+            assert_eq!(
+                m1271_scope_of(&entries, "waybill-fixture-devaux"),
+                Some(waybill_common::resolution::LifecycleScope::Optional),
+                "{fixture}: FR-003 — an Optional assignment derived out-of-band must \
+                 survive, even though the root manifest declares the same name under \
+                 devDependencies"
+            );
+            assert!(
+                m1271_is_dev(&entries, "waybill-fixture-devtool"),
+                "{fixture}: the unguarded dev declaration in the same manifest is \
+                 still seeded, so the guard is narrow and not a blanket skip; got {:?}",
+                m1271_scope_of(&entries, "waybill-fixture-devtool")
+            );
+        }
+    }
+
+    /// US2 scenario 4 / SC-004 — the member owns the only clean dev
+    /// declaration, and a yarn v1 lockfile does not name the member at
+    /// all. Both `workspaces` spellings must reach it (T005).
+    #[test]
+    fn m1271_us2_yarn_v1_member_only_dev_declaration_is_seeded() {
+        for spelling in ["dev_scope_monorepo_array", "dev_scope_monorepo_object"] {
+            let entries = m1271_read(spelling);
+            assert!(
+                m1271_is_dev(&entries, "waybill-fixture-devonly"),
+                "{spelling}: the member's dev declaration MUST be seeded; got {:?}",
+                m1271_scope_of(&entries, "waybill-fixture-devonly")
+            );
+        }
+    }
+
+    /// The Berry arm of SC-004 — members are located from the
+    /// lockfile's own `@workspace:<path>` resolutions (FR-009), and
+    /// the member entry's merged `dependencies:` map must not be
+    /// mistaken for evidence of the axis.
+    #[test]
+    fn m1271_us2_yarn_berry_member_only_dev_declaration_is_seeded() {
+        let entries = m1271_read("dev_scope_monorepo_berry");
+        assert!(
+            m1271_is_dev(&entries, "waybill-fixture-devonly"),
+            "the Berry member's dev declaration MUST be seeded; got {:?}",
+            m1271_scope_of(&entries, "waybill-fixture-devonly")
+        );
+    }
+
+    /// FR-002, across workspaces and across dialects: the member
+    /// declares `waybill-fixture-runtime` as development while the
+    /// root declares it at runtime. Runtime wins globally.
+    #[test]
+    fn m1271_us2_yarn_runtime_in_one_workspace_beats_dev_in_another() {
+        for fixture in [
+            "dev_scope_monorepo_array",
+            "dev_scope_monorepo_object",
+            "dev_scope_monorepo_berry",
+        ] {
+            let entries = m1271_read(fixture);
+            assert!(
+                !m1271_is_dev(&entries, "waybill-fixture-runtime"),
+                "{fixture}: a runtime declaration in ANY workspace outranks a dev \
+                 declaration in another (FR-002); got {:?}",
+                m1271_scope_of(&entries, "waybill-fixture-runtime")
+            );
+        }
+    }
+
+    /// The ordering invariant, which no other test can observe: the
+    /// member declares `waybill-fixture-shared` as development, and
+    /// nothing declares it at runtime anywhere — but it IS reachable
+    /// from a package the root declares at runtime. Only closing the
+    /// protected set BEFORE subtracting resolves that in favour of
+    /// runtime. Subtract first and this component ships marked
+    /// development, and milestone 1269 then spreads the error.
+    #[test]
+    fn m1271_us2_yarn_closure_precedes_subtraction() {
+        for fixture in [
+            "dev_scope_monorepo_array",
+            "dev_scope_monorepo_object",
+            "dev_scope_monorepo_berry",
+        ] {
+            let entries = m1271_read(fixture);
+            assert!(
+                !m1271_is_dev(&entries, "waybill-fixture-shared"),
+                "{fixture}: a development declaration that is runtime-REACHABLE must \
+                 lose to the closure; got {:?}",
+                m1271_scope_of(&entries, "waybill-fixture-shared")
+            );
+            assert!(
+                m1271_is_dev(&entries, "waybill-fixture-devonly"),
+                "{fixture}: the genuinely dev-only declaration must survive the \
+                 subtraction; got {:?}",
+                m1271_scope_of(&entries, "waybill-fixture-devonly")
+            );
+        }
+    }
+
+    /// A workspace member is never itself a development seed. Berry
+    /// emits members as components; nothing may mark one Development
+    /// on the strength of a `workspace:` declaration.
+    #[test]
+    fn m1271_us2_yarn_workspace_member_is_never_a_dev_seed() {
+        let entries = m1271_read("dev_scope_monorepo_berry");
+        for member in ["waybill-fixture-member", "waybill-fixture-mono-root"] {
+            assert!(
+                !m1271_is_dev(&entries, member),
+                "{member} is a workspace, not a dependency, and must not be Development"
+            );
+        }
+    }
+
+    /// FR-011 — member discovery walks the tree, so it must terminate
+    /// through a committed symlink that points back inside the tree,
+    /// and must find the member once. Which route it took is NOT
+    /// asserted: `safe_walk`'s visited-set keys on the canonical path
+    /// and `read_dir` order is unspecified, so pinning the route is
+    /// the mistake #958 and #1056 already cost us.
+    #[test]
+    fn m1271_us2_yarn_member_discovery_terminates_through_a_symlink() {
+        let entries = m1271_read("dev_scope_symlink_member");
+        assert!(
+            m1271_is_dev(&entries, "waybill-fixture-devonly"),
+            "the member reached through `linked/**` must be discovered exactly once; got {:?}",
+            m1271_scope_of(&entries, "waybill-fixture-devonly")
+        );
+        assert!(
+            !m1271_is_dev(&entries, "waybill-fixture-runtime"),
+            "the root's runtime declaration still outranks the member's dev one"
+        );
+    }
+
+    /// The glob semantics member discovery depends on, asserted
+    /// directly rather than inferred from a passing fixture: yarn's
+    /// `packages/*` names direct children only, and `linked/**` is
+    /// what makes a loop reachable at all.
+    #[test]
+    fn m1271_us2_yarn_workspace_patterns_respect_the_path_separator() {
+        let set = yarn_member_pattern_set(&[
+            "packages/*".to_string(),
+            "linked/**".to_string(),
+        ])
+        .expect("both patterns must compile");
+        assert!(set.is_match(std::path::Path::new("packages/member")));
+        assert!(
+            !set.is_match(std::path::Path::new("packages/member/nested")),
+            "`packages/*` must not match a grandchild"
+        );
+        assert!(
+            set.is_match(std::path::Path::new("linked/aliased")),
+            "`linked/**` must match a direct child"
+        );
+        assert!(set.is_match(std::path::Path::new("linked/a/b")));
+    }
+
+    /// T021 / FR-012 / SC-008 — every non-registry protocol
+    /// contributes no development seed and no synthesised identity.
+    /// The `patch:`-wrapped package is the accepted limitation: it
+    /// wraps a genuine registry package and still goes unclassified.
+    /// Asserted so the limitation cannot drift into an accident.
+    #[test]
+    fn m1271_us2_yarn_non_registry_protocols_seed_nothing() {
+        let entries = m1271_read("dev_scope_protocols");
+        assert_eq!(
+            m1271_dev_names(&entries),
+            Vec::<String>::new(),
+            "no non-registry declaration may seed development scope (FR-012)"
+        );
+        // Each declaration individually, so a failure names the
+        // protocol that leaked rather than a set.
+        for declared in [
+            "waybill-fixture-sibling",
+            "waybill-fixture-linked",
+            "waybill-fixture-portal",
+            "waybill-fixture-filed",
+        ] {
+            assert!(
+                !m1271_is_dev(&entries, declared),
+                "{declared} is declared under devDependencies through a non-registry \
+                 protocol and MUST NOT be seeded (FR-012); got {:?}",
+                m1271_scope_of(&entries, declared)
+            );
+        }
+        // The limitation, pinned, and stronger than the spec assumed:
+        // a `patch:` descriptor carries a SECOND `@` (the wrapped
+        // `name@npm%3Aversion`), which defeats `descriptor_to_name`, so
+        // the package is not merely unclassified — it is never emitted
+        // as a component at all. SC-008 holds either way; recorded
+        // here because the measured shape is what a future reader
+        // needs, not the shape the spec guessed.
+        assert!(
+            !entries.iter().any(|e| e.name == "waybill-fixture-patched"),
+            "measured: the patch:-wrapped package is not emitted as a component"
+        );
+    }
+
+    /// FR-004's fail-safe, from the other direction: a yarn project
+    /// with no manifest on disk classifies nothing and does not panic.
+    /// The manifest is the ONLY evidence for yarn, so this is the
+    /// whole degradation path.
+    #[test]
+    fn m1271_us2_yarn_no_manifest_classifies_nothing() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        std::fs::copy(
+            m1271_fixture("dev_scope_single").join("yarn.lock"),
+            dir.path().join("yarn.lock"),
+        )
+        .expect("copy lockfile");
+        let entries = read_yarn_lock(
+            dir.path(),
+            true,
+            &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty(),
+        )
+        .expect("the lockfile alone must still parse");
+        assert_eq!(
+            m1271_dev_names(&entries),
+            Vec::<String>::new(),
+            "with no manifest there is no evidence, so nothing is Development"
         );
     }
 }

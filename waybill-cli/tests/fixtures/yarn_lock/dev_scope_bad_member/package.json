@@ -1,0 +1,10 @@
+{
+  "name": "waybill-fixture-bad-member-root",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Milestone 1271 FR-010 fixture — SYNTHETIC names. Two members: one manifest is valid and owns a development declaration, the other is unparseable. The valid member must be classified normally and only the broken one may contribute nothing.",
+  "workspaces": ["packages/*"],
+  "dependencies": {
+    "waybill-fixture-runtime": "^1.0.0"
+  }
+}

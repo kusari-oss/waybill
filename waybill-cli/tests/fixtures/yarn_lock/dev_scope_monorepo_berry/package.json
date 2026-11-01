@@ -1,0 +1,9 @@
+{
+  "name": "waybill-fixture-mono-root",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": ["packages/*"],
+  "dependencies": {
+    "waybill-fixture-runtime": "^1.0.0"
+  }
+}

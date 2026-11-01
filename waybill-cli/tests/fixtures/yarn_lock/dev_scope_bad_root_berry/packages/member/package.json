@@ -1,0 +1,9 @@
+{
+  "name": "waybill-fixture-member",
+  "version": "1.0.0",
+  "description": "Milestone 1271 FR-006 fixture member — SYNTHETIC names. Declares one development dependency that resolves to a locked registry package and one that uses a non-registry protocol, so the FR-006 diagnostic's FR-012 count is non-zero and therefore falsifiable. With an ABSENT root manifest the count is structurally zero and an assertion on it cannot fail; mutation testing proved that, which is why this fixture exists.",
+  "devDependencies": {
+    "waybill-fixture-devonly": "^1.0.0",
+    "waybill-fixture-sibling": "workspace:*"
+  }
+}
