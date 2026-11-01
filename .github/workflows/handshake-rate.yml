@@ -1,0 +1,115 @@
+# A measurement, not a gate. Nothing here is required by any branch
+# policy, nothing blocks a merge, and the job exits 0 whatever rate it
+# finds — a zero rate is a result.
+#
+# #1185: run 12 found the x86_64 traced-root handshake is *intermittent*,
+# not absent — one establishment in three traces, with two of those three
+# being the same probe with the same command 16 seconds apart. Run 13 then
+# eliminated every encoding hypothesis (both markers absent while the entry
+# program demonstrably ran) from two draws, both failures, which is exactly
+# the outcome run 12 predicted would be indistinguishable from a real
+# negative.
+#
+# So every further experiment on this handshake is unfalsifiable until the
+# rate is known: a change that does nothing passes two runs in three. This
+# workflow is that number.
+#
+# `workflow_dispatch` only, deliberately. The job rebuilds the eBPF test
+# image (~10 minutes) and then runs N privileged traces, which is far too
+# expensive to attach to a push trigger — and unlike
+# `tracepoint-inventory.yml`, whose probe takes 8 seconds, there is nothing
+# cheap about it. It is also the reason the rate cannot be gathered by
+# pushing N times: every push is a fresh runner with its own image and its
+# own timing, so N pushes measure N different environments once each. The
+# rate has to come from one container.
+name: handshake establishment rate (x86_64)
+
+on:
+  workflow_dispatch:
+    inputs:
+      iterations:
+        description: 'Traces to attempt in one container (run 12 says N>=20 to characterise a rate)'
+        required: false
+        default: '25'
+      deadline_seconds:
+        description: 'Container deadline. Each trace bails at 2s on failure, so budget ~10s per iteration plus slack'
+        required: false
+        default: '600'
+
+permissions:
+  contents: read
+
+jobs:
+  rate:
+    name: handshake establishment rate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # The kernel is the independent variable of the whole investigation,
+      # so it is recorded before anything else runs. Run 12's finding is
+      # specific to 7.0.0-1017-azure; a runner image rollover changing this
+      # line changes what the rate below is a rate *of*.
+      # #1287's lesson, applied before it can bite: on `workflow_dispatch`
+      # `github.sha` is the workflow definition's commit, not necessarily
+      # the tree that was checked out. A rate is a property of a tree, so
+      # the tree says so itself.
+      - name: the commit this rate is measured on
+        run: |
+          echo "measured commit: $(git rev-parse HEAD)"
+          echo "dispatch ref:    ${{ github.ref }}"
+
+      # The kernel is the independent variable of the whole investigation,
+      # so it is recorded before anything else runs. Run 12's finding is
+      # specific to 7.0.0-1017-azure; a runner image rollover changing this
+      # line changes what the rate below is a rate *of*.
+      - name: kernel identity
+        run: |
+          uname -a
+          echo "arch: $(uname -m)"
+
+      # No host-side Rust setup: the image builds the eBPF object and the
+      # userspace binary itself, and installs its own pinned bpf-linker.
+      # The CI lane's toolchain steps exist for its host-side clippy and
+      # tests, which this job does not run.
+      - name: Build the eBPF test image
+        uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4.0.0
+        with:
+          max_attempts: 2
+          timeout_minutes: 20
+          command: docker build -f Dockerfile.ebpf-test -t waybill-ebpf-test .
+
+      # Same privileged container and the same deadline-with-diagnostics
+      # treatment as the integration harness (#991), with the entrypoint
+      # overridden. Not retried: a retry would run the loop twice and the
+      # second run's numbers would be reported as the first's.
+      - name: Measure the rate
+        run: |
+          bash scripts/ebpf-container-run.sh \
+              waybill-ebpf-test \
+              "${{ inputs.deadline_seconds }}" \
+              /usr/local/bin/ebpf-handshake-rate.sh \
+              "${{ inputs.iterations }}" | tee rate.txt
+
+      # Assert on a positive signal, never on absence: a loop that exited
+      # early and a loop that ran to completion with zero establishments
+      # both print zeroes, and a check that did not run looks identical to
+      # one that passed. The script prints its own denominator and fails if
+      # it attempted fewer iterations than asked.
+      - name: The line that proves it ran
+        if: always()
+        run: |
+          grep -E '^handshake-rate: iterations=' rate.txt \
+            || { echo "FAIL: the probe produced no handshake-rate: summary line"; exit 1; }
+          grep -E '^handshake-rate: [0-9]+/[0-9]+ established' rate.txt \
+            || { echo "FAIL: the probe produced no rate line"; exit 1; }
+
+      - name: Upload the per-iteration log
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: handshake-rate
+          path: rate.txt
+          if-no-files-found: error

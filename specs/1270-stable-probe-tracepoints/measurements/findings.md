@@ -1414,3 +1414,80 @@ so the child's opens are counted as "non-tracer" too. The slot is
 labelled `[invalid-control]` in the output for that reason and should be
 read as "the tracer process itself did no openat in the window", which
 is unremarkable. Recorded because the equality is suggestive and wrong.
+
+## The instrument for run 14, built before the run
+
+Runs 12 and 13 both ended at the same place: *rate before mechanism*. The
+reason is not methodological tidiness. At roughly one establishment in
+three, a change that does nothing passes two runs out of three, so every
+experiment on this handshake — including run 13's, which drew two
+failures — is unfalsifiable until the denominator exists.
+
+`scripts/ebpf-handshake-rate.sh` plus
+`.github/workflows/handshake-rate.yml` is that denominator.
+
+**Why it cannot be gathered by pushing N times.** Every push is a fresh
+runner with its own image and its own timing, so N pushes measure N
+environments once each. Run 12's own counter-example came from two traces
+*in one container* disagreeing 16 seconds apart. The rate has to come
+from one container, which is why this is a loop inside the harness image
+rather than a trigger.
+
+**What one run reports.** For N iterations (default 25):
+
+- establishments, as a count and a percentage. A zero exit from `trace
+  capture` *is* an establishment, because the fail-closed guard returns
+  non-zero when `TRACED_PIDS` is empty — so the count needs no log
+  parsing to be trustworthy.
+- the per-iteration duration in milliseconds, split by outcome. Run 12
+  named timing as the first candidate cause and recorded a 2.47s uprobe
+  attach against a 2s handshake timeout: the only measured quantity in
+  that trace of the same order as the bail. Establishment-versus-duration
+  falls out of the same loop for free, so measurement 2 in run 12's list
+  arrives with measurement 1 rather than after it.
+- the failure diagnoses grouped by counter shape, with `nonce_readback`
+  normalised out since it varies per trace by construction. Grouped
+  rather than listed because 25 near-identical lines hide whether they
+  are in fact identical, and a *second* shape appearing is more
+  informative than any single line.
+
+**It asserts no threshold and exits 0 whatever it finds.** No rate has
+been measured, so there is nothing to assert against (CLAUDE.md, "measure
+external behaviour before designing around it"), and a zero rate is a
+result rather than a probe failure. Making a low rate an error would mean
+the only runs that report are the ones that already worked.
+
+What it *does* assert is its own denominator: it prints
+`handshake-rate: iterations=N attempted=N established=k` and fails if
+`attempted != N`, because a loop that exited early and a loop that ran to
+completion with zero establishments otherwise print the same zeroes. The
+workflow greps for that line and for the rate line, so a job that built
+an image and never looped cannot pass.
+
+**Deliberately `workflow_dispatch` only, and deliberately not the
+image's `ENTRYPOINT`.** The job rebuilds the test image (~10 minutes)
+before running N privileged traces, so it has no business on a push
+trigger — and the probe is invoked by overriding the entrypoint, so the
+eBPF CI lane that depends on this image cannot be altered by adding a
+measurement to it.
+
+### Two incidental corrections, from building it
+
+`Dockerfile.ebpf-test` claimed `.dockerignore` excludes `scripts/` from
+its bulk `COPY . .`, so that editing an assertion script would not
+invalidate the ~10-minute cargo-build layer. `scripts/` has never been in
+`.dockerignore`, so the optimisation never happened. Not "fixed":
+`.dockerignore` filters the build *context*, so excluding `scripts/`
+would make the explicit `COPY scripts/...` lines fail outright, and a
+negation exception puts the files back in the context where the bulk COPY
+picks them up again. Making the claim true needs the bulk COPY to name
+its paths or use BuildKit's `COPY --exclude`, which is a change to a
+cached 10-minute build that no measurement here calls for. The comment
+now describes what happens.
+
+`scripts/ebpf-container-run.sh` gained an optional entrypoint argument
+rather than a second copy of its deadline-and-diagnostics logic. Its
+empty-array expansion is written `${a[@]+"${a[@]}"}` because under
+`set -u` the bare form is an unbound-variable error before bash 4.4 and
+the script is reachable from a macOS host whose `/bin/bash` is 3.2 —
+measured both ways, not assumed.
