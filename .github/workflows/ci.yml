@@ -588,6 +588,22 @@ jobs:
         with:
           persist-credentials: false  # see lint-and-test job for rationale
 
+      # The kernel this lane's probes attach to, recorded before anything
+      # runs. Measured need, not hygiene: the lane went from ten
+      # consecutive green runs to one green in eleven across a runner
+      # image rollover (`20261012.334.1`/`20261021.278.1` →
+      # `20261025.353.1`, around 2026-10-28), and the kernel that changed
+      # underneath is **unrecoverable for every one of those runs** —
+      # nothing printed it. Image version can be read back from the
+      # Actions log; `uname -r` could not be, so the before-and-after
+      # comparison that would attribute #1252 and #1185 cannot be made
+      # retrospectively. See run 16 in
+      # specs/1270-stable-probe-tracepoints/measurements/findings.md.
+      - name: Kernel identity
+        run: |
+          uname -a
+          echo "kernel: $(uname -r)  arch: $(uname -m)"
+
       # #905: pins, apt deps, nightly + rust-src, stable, cache and the
       # rustup-init cleanup, shared with release.yml and ebpf-canary.yml.
       - name: Set up the eBPF build environment

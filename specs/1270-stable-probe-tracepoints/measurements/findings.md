@@ -1743,3 +1743,97 @@ family as the `pre_exec_ran` marker removed earlier — a diagnostic whose
 answer came from somewhere other than the thing it claimed to describe —
 and it is the third defect this instrument has had found by running it
 rather than by reading it.
+
+## Run 16 — the eBPF lane has had THREE failure regimes, and the boundary is a runner image
+
+Prompted by "still seeing failures on the eBPF side", which is true and
+which the rate explains — but checking it against `main`'s own history
+contradicted the framing this whole investigation has carried.
+
+The eBPF lane's outcome on the last 25 CI runs on `main`, with the
+GitHub runner image each ran on:
+
+| date | outcome | runner image |
+|---|---|---|
+| 10-25 → 10-27 | **success ×9** | `20261012.334.1` |
+| 10-28 | success ×1, **failure ×5** | `20261025.353.1` (the 10-28 success too) |
+| 10-28 (one earlier run) | success | `20261021.278.1` |
+| 10-29 → 11-01 | **failure ×10** | `20261025.353.1` |
+
+Ten of ten green on the old images. One of eleven green on the new one.
+
+### Why this is not one regression but three regimes
+
+The obvious reading — the image rollover broke the handshake — is wrong
+about the dates, and the check that catches it is cheap: **the #1185
+control probe, the scope probe and `wait_for_traced_root` all landed
+together in `9880eb77` (#1313) on 2026-10-30.** The lane began failing on
+**10-28**, two days before any of them existed. So the early failures
+cannot be handshake failures.
+
+Reading one: `07982870`, 10-29:
+
+```
+WARN could not attach do_filp_open kprobe: `perf_event_open` failed
+     m213 SC-001: rustc invocations captured via compiler_pipeline = 7
+```
+
+That is **#1252**, not #1185 — the kprobe attach failure, with the m210
+trace still running and still capturing. So:
+
+1. **≤ 10-27** — green, on runner images `20261012.334.1` and
+   `20261021.278.1`.
+2. **10-28 → 10-29** — red from #1252's `do_filp_open` kprobe, on image
+   `20261025.353.1`.
+3. **10-30 onward** — red from the #1185 handshake, because #1313's
+   fail-closed guard aborts the harness *before* the m210 trace is
+   reached. The kprobe problem is presumably still present and no longer
+   the thing that reports.
+
+The common factor across regimes 2 and 3 is the image, not the code.
+
+### Two claims this corrects
+
+**"x86_64 cannot establish its traced root" is the wrong statement.** The
+architecture did not change on 2026-10-28; the runner image did. The
+honest form is: *the runner image that arrived around 10-28 establishes
+the traced root about a third of the time, where its predecessors did so
+reliably enough for ten consecutive green runs.* Every encoding
+hypothesis this branch chased — the NULL filename, `dfd` validation
+order, the 7.0 `__filename_val` field — was a search for an architecture
+difference when the variable was an image change. Run 13 had already
+shown encoding was not the mechanism; this says why the search was aimed
+there.
+
+**The #1252 onset date in this repository's notes is a week early.** They
+record it failing "on every main run since 2026-10-21". The lane was
+green on 10-25, 10-26 and 10-27. The onset is 10-28, and it coincides
+with the image rollover rather than with any commit. #1252's own
+description is recorded as having got its onset date wrong once already,
+"because the evidence had scrolled away" — this is the same error
+repeated, and the fix is the table above, built from the API rather than
+from recollection.
+
+### The gap that made this hard, and the one-line fix
+
+**The eBPF CI lane never prints its kernel.** Image version is
+recoverable from the Actions log, but the kernel — the thing that
+actually changed under the probes — is not, for any historical run. So
+the old image's kernel is **unmeasured and now unmeasurable**: there is
+no log that recorded it. The failing runs report `7.0.0-1017-azure`,
+from the handshake-rate workflow, which records kernel identity as its
+first step precisely because the kernel is the independent variable.
+
+A `uname -a` step in the lane closes this for the next rollover, which is
+the one durable thing to take from this run.
+
+### What it does to the next measurement
+
+The live-window hypothesis from runs 14 and 15 stands — `openat_entered`
+spanning 0..378 and 0..218 is unaffected by any of this. But it acquires
+a sharper form: whatever the new image changed, it changed *when the
+entry program becomes live relative to a freshly forked child*, and a
+kernel bump is a plausible source for exactly that. Timestamping the
+program's own clock remains the next instrument; this run says to
+timestamp the attach too, and to compare against an older image if one
+can still be requested.
