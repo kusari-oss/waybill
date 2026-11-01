@@ -80,9 +80,11 @@ jobs:
       # the tree that was checked out. A rate is a property of a tree, so
       # the tree says so itself.
       - name: the commit this rate is measured on
+        env:
+          REF: ${{ github.ref }}
         run: |
           echo "measured commit: $(git rev-parse HEAD)"
-          echo "dispatch ref:    ${{ github.ref }}"
+          echo "dispatch ref:    $REF"
 
       # The kernel is the independent variable of the whole investigation,
       # so it is recorded before anything else runs. Run 12's finding is
@@ -109,12 +111,39 @@ jobs:
       # overridden. Not retried: a retry would run the loop twice and the
       # second run's numbers would be reported as the first's.
       - name: Measure the rate
+        # Dispatch inputs reach the shell through `env:`, never spliced into
+        # the script text — the same defence-in-depth the m896 canary and
+        # ci.yml's main-red step use for `github-script`. It matters more
+        # here than there: this step builds and runs a **privileged**
+        # container, so a template injection would execute with that
+        # container's reach. Flagged on PR #1321 by Kusari Inspector, and it
+        # was right.
+        #
+        # Validated as well as quoted. `DEADLINE` becomes `timeout`'s
+        # argument and `ITERATIONS` becomes a loop bound, so a
+        # non-numeric value fails obscurely deep inside the probe, and an
+        # unbounded one occupies a runner indefinitely. Bounds are
+        # deliberate, not a guess at a limit: 500 traces at ~10s each
+        # already exceeds any plausible deadline.
+        env:
+          DEADLINE: ${{ inputs.deadline_seconds || '600' }}
+          ITERATIONS: ${{ inputs.iterations || '25' }}
         run: |
+          case "$ITERATIONS" in
+              ''|*[!0-9]*) echo "FAIL: iterations '$ITERATIONS' is not a number"; exit 1 ;;
+          esac
+          case "$DEADLINE" in
+              ''|*[!0-9]*) echo "FAIL: deadline_seconds '$DEADLINE' is not a number"; exit 1 ;;
+          esac
+          [ "$ITERATIONS" -ge 1 ] && [ "$ITERATIONS" -le 500 ] \
+              || { echo "FAIL: iterations $ITERATIONS outside 1..500"; exit 1; }
+          [ "$DEADLINE" -ge 30 ] && [ "$DEADLINE" -le 3600 ] \
+              || { echo "FAIL: deadline_seconds $DEADLINE outside 30..3600"; exit 1; }
           bash scripts/ebpf-container-run.sh \
               waybill-ebpf-test \
-              "${{ inputs.deadline_seconds || '600' }}" \
+              "$DEADLINE" \
               /usr/local/bin/ebpf-handshake-rate.sh \
-              "${{ inputs.iterations || '25' }}" | tee rate.txt
+              "$ITERATIONS" | tee rate.txt
 
       # Assert on a positive signal, never on absence: a loop that exited
       # early and a loop that ran to completion with zero establishments

