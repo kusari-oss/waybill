@@ -1,0 +1,6 @@
+{
+  "name": "waybill-fixture-bun-single",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Milestone 1271 fixture — SYNTHETIC package names only. bun needs no manifest to CLASSIFY (FR-004), and this file is here for what happens after: milestone 1269's propagation declines to assign into an ecosystem with no resolvable root, and without a manifest a single-project bun scan has no PURL-shaped main module, so the seeds never spread. Measured, not assumed — see measurements/findings.md. The no-manifest path stays covered by two tests that copy the lockfile to a temporary directory."
+}

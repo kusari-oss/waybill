@@ -1,0 +1,10 @@
+{
+  "name": "waybill-fixture-symlink-root",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Milestone 1271 FR-011 fixture — SYNTHETIC names. The `linked/**` pattern is recursive, which is what makes a symlink loop reachable at all; `linked/aliased` is a committed symlink back into packages/. Member discovery must terminate and must discover the member once.",
+  "workspaces": ["packages/*", "linked/**"],
+  "dependencies": {
+    "waybill-fixture-runtime": "^1.0.0"
+  }
+}

@@ -1,0 +1,4 @@
+{
+  "name": "waybill-fixture-broken-member",
+  "devDependencies": {
+    "waybill-fixture-devbroken": "^1.0.0",

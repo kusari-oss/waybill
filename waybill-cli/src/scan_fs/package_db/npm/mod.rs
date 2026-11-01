@@ -258,7 +258,9 @@ pub(crate) fn finalize(
             // tier-A authority as package-lock / pnpm-lock. The
             // legacy binary `bun.lockb` format is out of scope.
             project_entries.extend(bun_entries);
-        } else if let Some(yarn_entries) = yarn_lock::read_yarn_lock(project_root, include_dev) {
+        } else if let Some(yarn_entries) =
+            yarn_lock::read_yarn_lock(project_root, include_dev, exclude_set)
+        {
             // Milestone 106 US5 (issue #274): Yarn support. Handles
             // both v1 (Classic) and Berry (v2+) formats, auto-
             // detected via the `__metadata:` block sentinel.

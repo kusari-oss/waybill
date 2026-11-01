@@ -1,0 +1,18 @@
+{
+  "name": "waybill-fixture-optional-meta",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Milestone 1271 FR-003 fixture — SYNTHETIC names. The Berry arm: `dependenciesMeta` marks a devDependency optional, which is the ONLY place Berry records optional status. Milestone 181 therefore assigns Optional, and FR-003's guard is what keeps this feature from overwriting it.",
+  "dependencies": {
+    "waybill-fixture-runtime": "^1.0.0"
+  },
+  "devDependencies": {
+    "waybill-fixture-devtool": "^1.0.0",
+    "waybill-fixture-devaux": "^1.0.0"
+  },
+  "dependenciesMeta": {
+    "waybill-fixture-devaux": {
+      "optional": true
+    }
+  }
+}

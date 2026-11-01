@@ -1,0 +1,7 @@
+{
+  "name": "waybill-fixture-good-member",
+  "version": "1.0.0",
+  "devDependencies": {
+    "waybill-fixture-devonly": "^1.0.0"
+  }
+}
