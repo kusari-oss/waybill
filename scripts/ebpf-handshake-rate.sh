@@ -104,12 +104,27 @@ echo "--- distribution of failure diagnoses ---"
 #   - each failure emits the line twice, once as the ERROR log and once
 #     inside the `Error:` message, so the counts came out at exactly 2x.
 #     One line per log file, not one per match.
-grep -l . "$LOGDIR"/iter-*.log 2>/dev/null \
-    | while read -r f; do grep -o '#1185 handshake diagnosis -- .*' "$f" | head -1; done \
-    | sed -e 's/nonce_readback=[0-9]*/nonce_readback=<varies>/' \
-          -e 's/openat_entered=[0-9]*/openat_entered=<varies>/' \
-          -e 's/non_tracer_opens=[0-9]*/non_tracer_opens=<varies>/' \
-    | sort | uniq -c | sort -rn || echo "    (none — every iteration established)"
+# Captured, then tested for emptiness, rather than `pipeline || echo`.
+# Run 15 printed "(none -- every iteration established)" directly beneath
+# a list of seventeen failures: `set -o pipefail` plus the inner
+# `grep -o ... | head -1` exiting 1 for the one log with no diagnosis line
+# makes the whole pipeline non-zero, so `||` fires on a pipeline that
+# produced perfectly good output. A fallback that triggers on exit status
+# states something false about the data; one that triggers on empty output
+# cannot.
+diag_groups=$(
+    grep -l . "$LOGDIR"/iter-*.log 2>/dev/null \
+        | while read -r f; do grep -o '#1185 handshake diagnosis -- .*' "$f" | head -1; done \
+        | sed -e 's/nonce_readback=[0-9]*/nonce_readback=<varies>/' \
+              -e 's/openat_entered=[0-9]*/openat_entered=<varies>/' \
+              -e 's/non_tracer_opens=[0-9]*/non_tracer_opens=<varies>/' \
+        | sort | uniq -c | sort -rn
+) || true
+if [ -n "$diag_groups" ]; then
+    printf '%s\n' "$diag_groups"
+else
+    echo "    (none — no iteration emitted a diagnosis)"
+fi
 
 # The spread that grouping had to normalise away, reported as its own
 # measurement. `openat_entered` is incremented ungated as the entry
@@ -117,11 +132,17 @@ grep -l . "$LOGDIR"/iter-*.log 2>/dev/null \
 # that saw single digits saw a machine that cannot have been that quiet.
 echo
 echo "--- openat_entered across failing traces (machine-wide opens seen) ---"
-grep -l . "$LOGDIR"/iter-*.log 2>/dev/null \
-    | while read -r f; do grep -o 'openat_entered=[0-9]*' "$f" | head -1; done \
-    | cut -d= -f2 | sort -n | uniq -c \
-    | awk '{printf "    seen %6s open(s): %d trace(s)\n", $2, $1}' \
-    || echo "    (no diagnosed failures)"
+entered_spread=$(
+    grep -l . "$LOGDIR"/iter-*.log 2>/dev/null \
+        | while read -r f; do grep -o 'openat_entered=[0-9]*' "$f" | head -1; done \
+        | cut -d= -f2 | sort -n | uniq -c \
+        | awk '{printf "    seen %6s open(s): %d trace(s)\n", $2, $1}'
+) || true
+if [ -n "$entered_spread" ]; then
+    printf '%s\n' "$entered_spread"
+else
+    echo "    (no diagnosed failures)"
+fi
 
 summary() {
     local -n arr=$1

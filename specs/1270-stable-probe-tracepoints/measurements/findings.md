@@ -1654,3 +1654,92 @@ Neither changes a number above — the rate, the durations and the shapes
 were all recoverable from the per-iteration lines — but a reader who
 trusted the distribution block would have concluded the failures were all
 distinct, which is the opposite of what they are.
+
+## Run 15 — the rate is stable, and the 2s gap is definitively the timeout
+
+Run `41346561754`, commit `ba929b96`, same workflow, same N, a different
+runner. Fired automatically by the push that changed the probe, which is
+what the `paths` filter is for.
+
+```
+handshake-rate: iterations=25 attempted=25 established=8
+handshake-rate: 8/25 established = 32.0%
+```
+
+**32% against run 14's 36%.** Nine establishments then eight, out of 25
+each. **Combined: 17/50 = 34%.** Two samples is not a confidence
+interval, but the denominator is stable enough to measure a fix against,
+which is the property that was missing.
+
+### The gap is the timeout, and now there is a control for it
+
+```
+run 14   established median=3311ms   failed median=5272ms   gap=1961ms
+run 15   established median=2753ms   failed median=4733ms   gap=1980ms
+```
+
+The absolute durations moved by ~550ms between the two runners — a 17%
+difference in machine speed — while **the gap moved by 19ms**, staying
+within 2% of the 2s handshake timeout. A property that survives a change
+in the thing it would depend on if it were machine-related is no longer
+an inference. Run 14 read the gap as the timeout; run 15 supplies the
+control that makes it a measurement.
+
+Which settles run 12's timing candidate as far as this instrument can:
+failing traces do the same work as succeeding ones and then spend the
+bail. The 2.47s uprobe attach is not visible here in either direction.
+
+### The prediction, and what it was tested against
+
+Stated before the run, so it could fail: the rate lands near 36%, and the
+fixed grouping collapses to two or three rows instead of thirteen.
+
+Both held. 32%, and:
+
+```
+     15 #1185 handshake diagnosis -- openat_entered=<varies> ... NEITHER marker arrived
+      2 #1185 handshake diagnosis -- openat_entered=<varies> ... slot 0 is zero
+```
+
+Two rows for 17 failures, counts no longer doubled. The two `slot 0`
+failures are the two traces that saw **zero** machine-wide opens.
+
+### The lead reproduces, harder
+
+`openat_entered` across the 17 failures:
+
+```
+    0, 0, 1, 4, 11, 14, 14, 16, 18, 20, 20, 30, 30, 34, 99, 189, 218
+```
+
+Two traces at zero and one at **one**. A single machine-wide `openat`
+observed across a 2.75s window on a CI runner is not a quiet machine; it
+is a program that was live for a sliver of its own trace. Run 14 spanned
+0..378 and run 15 spans 0..218, both with the mass down at the low end
+and a few outliers two orders of magnitude above. The live-window
+hypothesis survives a second sample.
+
+### A third instrument defect: a fallback that stated something false
+
+Both summary blocks printed their empty-case message *underneath their
+own output*:
+
+```
+     15 #1185 handshake diagnosis -- ...
+      2 #1185 handshake diagnosis -- ...
+    (none — every iteration established)
+```
+
+…beneath a list of seventeen failures, in a run where eight of 25
+established. The cause is `set -o pipefail` plus the inner
+`grep -o … | head -1`, which exits 1 for the one log with no diagnosis
+line and makes the whole pipeline non-zero — so `pipeline || echo` fires
+on a pipeline that produced perfectly good output.
+
+Fixed by capturing the output and testing *it* for emptiness. The general
+shape is worth keeping: **a fallback keyed on exit status can contradict
+the data beside it; one keyed on empty output cannot.** This is the same
+family as the `pre_exec_ran` marker removed earlier — a diagnostic whose
+answer came from somewhere other than the thing it claimed to describe —
+and it is the third defect this instrument has had found by running it
+rather than by reading it.
