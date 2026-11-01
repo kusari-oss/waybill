@@ -1301,3 +1301,46 @@ property asserted from a sample that could not establish it. "Never"
 needed one counter-example and the counter-example was sitting in
 `main`'s own CI log the whole time, unread, because the diagnosis was
 being run on the probe branch.
+
+## The twelfth: the `pre_exec_ran` marker could not have answered its question
+
+Removed before landing, not after. The diagnostic wrote
+`/tmp/wb-pre-exec-ran` from the child's `pre_exec` and stat'd it from the
+tracer, to separate "the closure did not run" from "the probe did not see
+it". Three defects, and the first alone is disqualifying:
+
+**It is sticky-positive and never removed.** The harness runs three
+traces per attempt. Once any one of them creates the file, every later
+trace in that container reads `pre_exec_ran=yes` whether its own closure
+ran or not. Run 12's table is exactly that shape — trace 1 established
+its root, traces 2 and 3 did not — so in the single run this instrument
+was built to explain, two of its three readings were the first trace's
+answer repeated. It is the same failure the slot-7 control had, and the
+same failure this whole document catalogues: a value that reads as a
+measurement and is a leftover.
+
+**It is a root-owned open of a predictable path in a world-writable
+directory.** Tracing needs privileges, so the opener is typically root,
+and `O_CREAT | O_WRONLY` follows symlinks: a pre-planted
+`/tmp/wb-pre-exec-ran -> <anything>` is opened for writing by that root
+process. Nothing is written through the handle, so the blast radius is
+small, but a privileged process opening an attacker-chosen path is not a
+shape to ship, and it also lets anyone on the host set the diagnostic's
+answer.
+
+**It is an unconditional side-effect of every trace.** `handshake_nonce`
+is `Some` for every command-execute trace, with no probe flag gating it,
+so a released binary would touch `/tmp` on every `waybill trace`.
+
+The question it asked is still a good one, and `HANDSHAKE_DIAG` cannot
+answer it: every slot in that map is written by a BPF program, so a
+kernel that never raises the tracepoint and a child whose closure never
+ran both read as zero. **The instrument for it is a `pipe2(O_CLOEXEC)`
+opened before the spawn**: `write()` of one byte in the closure is
+async-signal-safe and allocation-free, the parent's non-blocking read
+answers "did it run", the child's end closes at `exec`, and the whole
+thing is per-trace by construction — no path, no privilege, no staleness,
+nothing to clean up. It is not built here because it cannot be compiled
+in the configuration where it runs from this host, and shipping untested
+`unsafe` fd plumbing to answer a diagnostic question is how this branch
+got its `#[cfg]` defect in the first place.
