@@ -1,6 +1,6 @@
 # waybill Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-10-25
+Auto-generated from all feature plans. Last updated: 2026-10-29
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -427,6 +427,10 @@ Auto-generated from all feature plans. Last updated: 2026-10-25
 - None. Annotations are emitted into the SBOM and never read back; two committed TOML edits in `invariant-declarations.toml`, no runtime state. (1218-explain-every-orphan)
 - Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. No nightly. `waybill-ebpf` untouched. + Existing only — `std::collections::{HashMap, HashSet, VecDeque, BTreeMap}`, `serde_json` (annotation value), `tracing` (one INFO summary). **Zero new Cargo dependencies** (FR-016). (1269-transitive-dev-scope)
 - N/A — the pass is a pure in-memory transform over the component and relationship slices; nothing persists beyond the emitted SBOM. (1269-transitive-dev-scope)
+- Rust stable (workspace toolchain pinned by `rust-toolchain.toml`, 1.98.1) for user space, plus the dated nightly in `waybill-ebpf/rust-toolchain.toml` for the kernel-side crate. No new toolchain features. + Existing only — `aya` 0.13 (`TracePoint::attach`, `PerCpuArray` reads), `aya-ebpf` 0.1.1 (`#[tracepoint]`, `TracePointContext::read_at`, `HashMap`, `RingBuf`, `bpf_probe_read_user_str_bytes`), `serde`/`serde_json`, `tracing`, `anyhow`. **Zero new Cargo dependencies.** (1270-stable-probe-tracepoints)
+- N/A — per-thread pending entries live in a kernel hash map for one syscall, counters are per-CPU u64 slots read once at trace end, and nothing persists beyond the emitted attestation. (1270-stable-probe-tracepoints)
+- Rust pinned 1.98.1. + Existing serde_yaml and standard collections only. (1270-pnpm-v9-dev-scope)
+- In-process sets and adjacency only. (1270-pnpm-v9-dev-scope)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -620,9 +624,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 1270-pnpm-v9-dev-scope: Added Rust pinned 1.98.1. + Existing serde_yaml and standard collections only.
+- 1270-stable-probe-tracepoints: Added Rust stable (workspace toolchain pinned by `rust-toolchain.toml`, 1.98.1) for user space, plus the dated nightly in `waybill-ebpf/rust-toolchain.toml` for the kernel-side crate. No new toolchain features. + Existing only — `aya` 0.13 (`TracePoint::attach`, `PerCpuArray` reads), `aya-ebpf` 0.1.1 (`#[tracepoint]`, `TracePointContext::read_at`, `HashMap`, `RingBuf`, `bpf_probe_read_user_str_bytes`), `serde`/`serde_json`, `tracing`, `anyhow`. **Zero new Cargo dependencies.**
 - 1269-transitive-dev-scope: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. No nightly. `waybill-ebpf` untouched. + Existing only — `std::collections::{HashMap, HashSet, VecDeque, BTreeMap}`, `serde_json` (annotation value), `tracing` (one INFO summary). **Zero new Cargo dependencies** (FR-016).
-- 1218-explain-every-orphan: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. No nightly. + Existing only — `serde_json` and `std::collections`, both already imported by the module changed. **Zero new Cargo dependencies.**
-- 1217-must-pass-registry: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml`. No nightly. + Existing only — `toml = "0.8"` (already parses the declarations file), `serde`/`serde_json`, and dev-only `tempfile`. **Zero new Cargo dependencies.**
 
 
 <!-- MANUAL ADDITIONS START -->

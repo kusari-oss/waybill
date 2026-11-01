@@ -1,0 +1,12 @@
+{
+  "name": "waybill-fixture-pnpm-v9-scope",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "pnpm@9.15.9",
+  "dependencies": {
+    "string-width": "4.2.3"
+  },
+  "devDependencies": {
+    "wrap-ansi": "7.0.0"
+  }
+}

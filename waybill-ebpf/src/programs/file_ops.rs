@@ -1,5 +1,5 @@
 use aya_ebpf::{
-    helpers::{bpf_ktime_get_ns, bpf_probe_read_kernel, bpf_probe_read_kernel_str_bytes, bpf_probe_read_user_str_bytes},
+    helpers::bpf_ktime_get_ns,
     macros::kprobe,
     programs::ProbeContext,
 };
@@ -38,9 +38,12 @@ fn widen_system() -> bool {
 /// `FILE_EVENTS.reserve()` (either no category matched, or the widen
 /// flag suppressed the only matching category).
 ///
-/// Called from `try_openat2` + `try_do_filp_open` right after the path
-/// bytes are populated into the local `[u8; 256]` buffer and BEFORE
-/// the ring-buffer reserve call. Zero cost when no category matches.
+/// Called from `open_syscalls::finish_open` and
+/// `fs_syscalls::finish_rename` once the path bytes are populated. The
+/// open kprobes that used to call it classified before reserving;
+/// `finish_open` reserves first and discards on a match, because the path
+/// is not known until after the reserve (#1252). Zero cost when no
+/// category matches.
 #[inline(always)]
 pub(crate) fn classify_and_drop_if_noise(path: &[u8; 256]) -> bool {
     match path_matches_filter_category(path, widen_system()) {
@@ -159,190 +162,26 @@ fn try_vfs_read(ctx: &ProbeContext) -> Result<u32, i64> {
     Ok(0)
 }
 
-/// kprobe on do_sys_openat2 — captures file open events with flags.
-///
-/// long do_sys_openat2(int dfd, const char __user *filename,
-///                     struct open_how *how)
-#[kprobe]
-pub fn openat2_entry(ctx: ProbeContext) -> u32 {
-    match try_openat2(&ctx) {
-        Ok(0) => 0,
-        _ => 0,
-    }
-}
-
-fn try_openat2(ctx: &ProbeContext) -> Result<u32, i64> {
-    if !should_trace() {
-        return Ok(0);
-    }
-
-    let dfd: i32 = ctx.arg(0).ok_or(1i64)?;
-    let filename_ptr: u64 = ctx.arg(1).ok_or(1i64)?;
-    // Milestone 1070: `struct open_how *how` is a kernel pointer here and its
-    // `u64 flags` member is at offset 0 (UAPI layout). The low 32 bits hold
-    // O_ACCMODE, O_CREAT and O_TRUNC, which is all userspace needs to tell a
-    // write from a read. 0 on failure means "read".
-    let how_ptr: *const u64 = ctx.arg(2).ok_or(1i64)?;
-    let flags: u32 = if how_ptr.is_null() {
-        0
-    } else {
-        unsafe { bpf_probe_read_kernel(how_ptr).unwrap_or(0) as u32 }
-    };
-
-    let pid = current_pid();
-    let tid = current_tid();
-    let comm = current_comm();
-    let timestamp = unsafe { bpf_ktime_get_ns() };
-
-    // Read the filename from userspace. A copy that filled the buffer may
-    // have been cut off (milestone 1070): userspace won't resolve a truncated
-    // relative path.
-    let mut path = [0u8; 256];
-    let copied = unsafe {
-        bpf_probe_read_user_str_bytes(filename_ptr as *const u8, &mut path)
-            .map(|s| s.len())
-            .unwrap_or(0)
-    };
-    let path_truncated: u8 = if copied >= path.len() - 1 { 1 } else { 0 };
-
-    // Milestone 213 (issue #616) — kernel-side noise filter. Drop
-    // matched events BEFORE FILE_EVENTS.reserve() so the ring buffer
-    // stays free for the actual rustc + linker events (FR-001..FR-004).
-    // The FILE_EVENT_DROPS counter is NOT incremented on intentional
-    // drops (that would double-count the filter's activity with
-    // ring-buffer overflow noise — see specs/213-kernel-noise-filter/
-    // research.md R6).
-    if classify_and_drop_if_noise(&path) {
-        return Ok(0);
-    }
-
-    if let Some(mut buf) = FILE_EVENTS.reserve::<FileEvent>(0) {
-        let event = buf.as_mut_ptr();
-        unsafe {
-            (*event).event_type = FileEventType::Open;
-            (*event).timestamp_ns = timestamp;
-            (*event).pid = pid;
-            (*event).tid = tid;
-            (*event).comm = comm;
-            (*event).path = path;
-            (*event).path_truncated = path_truncated;
-            (*event)._path_padding = [0; 3];
-            (*event).flags = flags;
-            (*event).dfd = dfd;
-            (*event).bytes_transferred = 0;
-            (*event).content_hash = [0; 32];
-            (*event).inode = 0;
-        }
-        buf.submit(0);
-    } else {
-        increment_drop_counter(&FILE_EVENT_DROPS);
-    }
-
-    Ok(0)
-}
-
-/// kprobe on do_filp_open — the common entry point for every open-family
-/// syscall (open, openat, openat2, creat). Hooking here catches file opens
-/// that the glibc `openat` wrapper takes, which on modern kernels bypass
-/// `do_sys_openat2` and would otherwise be invisible to us.
-///
-/// struct file *do_filp_open(int dfd, struct filename *pathname,
-///                           const struct open_flags *op)
-///
-/// `struct filename` layout (stable across recent Linux versions):
-///   const char *name;          // offset 0 — kernel-space pathname
-///   const char __user *uptr;   // offset 8 — userspace pointer (may be NULL)
-///
-/// We read the 8-byte `name` pointer then dereference it as a kernel string.
-#[kprobe]
-pub fn do_filp_open_entry(ctx: ProbeContext) -> u32 {
-    match try_do_filp_open(&ctx) {
-        Ok(0) => 0,
-        _ => 0,
-    }
-}
-
-// Milestone 211 (issue #611) — vfs_open kprobe RETIRED. It called
-// `bpf_d_path` which the kernel restricts to LSM/fentry/fexit/tracing
-// program types only (`unknown func bpf_d_path#147` from the verifier
-// when loaded as a kprobe). This was a design flaw from day one; the
-// program never loaded on any kernel we've tested. `do_filp_open_entry`
-// + `openat2_entry` cover every real open path — the "curl -O" +
-// "cargo .crate writes" cases the retired kprobe was supposedly for
-// go through do_filp_open just like every other open. If a future
-// operator surfaces a real miss, convert vfs_open to a fentry program
-// (fentry IS on bpf_d_path's allowlist) as a follow-up milestone.
-
-fn try_do_filp_open(ctx: &ProbeContext) -> Result<u32, i64> {
-    if !should_trace() {
-        return Ok(0);
-    }
-
-    let dfd: i32 = ctx.arg(0).ok_or(1i64)?;
-    let filename_struct: *const u8 = ctx.arg(1).ok_or(1i64)?;
-    if filename_struct.is_null() {
-        return Ok(0);
-    }
-    // Milestone 1070: `const struct open_flags *op`. Its first member,
-    // `int open_flag`, has been at offset 0 since Linux 3.x (fs/internal.h).
-    // 0 on failure means "read".
-    let op_ptr: *const u32 = ctx.arg(2).ok_or(1i64)?;
-    let flags: u32 = if op_ptr.is_null() {
-        0
-    } else {
-        unsafe { bpf_probe_read_kernel(op_ptr).unwrap_or(0) }
-    };
-
-    // Read the `name` pointer (first field of struct filename, offset 0).
-    let name_ptr: *const u8 = unsafe {
-        bpf_probe_read_kernel(filename_struct as *const *const u8)
-            .map_err(|e| e as i64)?
-    };
-    if name_ptr.is_null() {
-        return Ok(0);
-    }
-
-    let pid = current_pid();
-    let tid = current_tid();
-    let comm = current_comm();
-    let timestamp = unsafe { bpf_ktime_get_ns() };
-
-    let mut path = [0u8; 256];
-    let copied = unsafe {
-        bpf_probe_read_kernel_str_bytes(name_ptr, &mut path)
-            .map(|s| s.len())
-            .unwrap_or(0)
-    };
-    let path_truncated: u8 = if copied >= path.len() - 1 { 1 } else { 0 };
-
-    // Milestone 213 (issue #616) — kernel-side noise filter, same
-    // rationale as try_openat2 above. Filter matches drop before
-    // ring-buffer reserve and DON'T count against FILE_EVENT_DROPS.
-    if classify_and_drop_if_noise(&path) {
-        return Ok(0);
-    }
-
-    if let Some(mut buf) = FILE_EVENTS.reserve::<FileEvent>(0) {
-        let event = buf.as_mut_ptr();
-        unsafe {
-            (*event).event_type = FileEventType::Open;
-            (*event).timestamp_ns = timestamp;
-            (*event).pid = pid;
-            (*event).tid = tid;
-            (*event).comm = comm;
-            (*event).path = path;
-            (*event).path_truncated = path_truncated;
-            (*event)._path_padding = [0; 3];
-            (*event).flags = flags;
-            (*event).dfd = dfd;
-            (*event).bytes_transferred = 0;
-            (*event).content_hash = [0; 32];
-            (*event).inode = 0;
-        }
-        buf.submit(0);
-    } else {
-        increment_drop_counter(&FILE_EVENT_DROPS);
-    }
-
-    Ok(0)
-}
+// #1252 — the `do_sys_openat2` and `do_filp_open` kprobes were REMOVED.
+//
+// They were the only source of file-open events, and on GitHub's
+// `ubuntu-24.04` image `20261025.353` `do_filp_open` stopped attaching:
+// file-open events for an identical fixture build fell from 902 to 443
+// and the attestation still reported itself complete. The names are
+// internal kernel functions, so their presence as traceable symbols was
+// never promised. Capture now attaches to syscall tracepoints in
+// `programs/open_syscalls.rs`, which also carries the note on which
+// interfaces this project treats as stable.
+//
+// Nothing replaced them *here* on purpose: this file is where the kprobes
+// lived, and the two approaches should not read as variants of one. What
+// is left is the shared noise classifier above and the two vfs probes,
+// which are declared and never attached.
+//
+// Milestone 211 (issue #611) retired a third kprobe, on `vfs_open`, for a
+// different reason worth keeping: it called `bpf_d_path`, which the kernel
+// restricts to LSM/fentry/fexit/tracing program types, so the program
+// never loaded on any kernel tested. If a future miss needs a kernel-side
+// path resolution, `fentry` is on that helper's allowlist — but it is
+// still an attach to an internal symbol, so prefer another syscall
+// tracepoint.

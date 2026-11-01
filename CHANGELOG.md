@@ -7,6 +7,60 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Changed
+
+- **A recorded read set no longer carries opens that failed.** Capture
+  observed open *requests*, so a file the build looked for and did not
+  find was recorded as a file the build read. On the integration
+  fixture that was 78 of 109 distinct read paths — compiler and linker
+  search-path probes that never existed. The kernel now joins the
+  request to its result and reports the open only if it succeeded, so
+  "the build read this file" is true as stated. Measured before and
+  after: every one of the 78 removals is attributable by name to a
+  failed request, nothing was added, and the write set is unchanged
+  (#1252).
+- **Capture no longer depends on internal kernel function names.** File
+  opens and network connects moved from kprobes on `do_filp_open`,
+  `do_sys_openat2` and `tcp_v4_connect` to syscall tracepoints, whose
+  names and argument layouts are UAPI. The kprobes were not: on one
+  runner image `do_filp_open` stopped attaching and file-open events
+  for an identical build fell from 902 to 443, with the attestation
+  reporting itself complete. `attach_kprobe` is deleted from the trace
+  loader and a test fails if it returns (#1252).
+- **IPv6 connections are recorded.** The old connect probe was reached
+  only by IPv4, so a build that connected over IPv6 was recorded as
+  having made no connection at all — indistinguishable from an offline
+  build. The destination now comes from the `sockaddr` the process
+  passed, so both address families are observed. Documents for
+  IPv6-connecting builds change (#1252).
+
+### Added
+
+- **`trace_integrity.open_failures_discarded`** counts the open requests
+  the kernel discarded because the syscall failed — the size of the
+  overstatement removed above. Omitted when zero, so a trace with no
+  failed opens serializes byte-identically to before. It is also the
+  signal that the join is working: a compiler attempts failed opens
+  constantly, so a zero on a real build says something about the
+  capture rather than about the build, and the integration harness
+  fails on it (#1252).
+
+### Fixed
+
+- **`kprobe_attach_failures` says what it holds.** The field has carried
+  counter-map names since m212 and tracepoint names since m210, and now
+  carries no kprobe names at all. The name is kept — documents produced
+  before and after have to stay comparable — and its documentation now
+  states that it lists any capture interface that failed to become
+  usable (#1252).
+- pnpm v9 source scans now derive development dependency seeds from
+  resolved importer declarations, so `--exclude-scope dev` removes
+  development-only transitive dependencies. Runtime reachability across
+  importers takes precedence, including aliases and merged peer contexts.
+  Runtime and optional importer evidence survives absent child manifests.
+  v6/v7 per-package flags and missing-importer behavior are preserved.
+  This addresses the pnpm portion of #1297; Yarn is unchanged.
+
 ## [0.14.0] - 2026-10-28
 
 A minor, not the `0.13.1` patch the placeholder held. Three things a

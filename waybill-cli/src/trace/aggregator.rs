@@ -73,6 +73,21 @@ pub struct TraceStats {
     /// serialized `kprobe_attach_failures: []` and
     /// `completeness: complete` while half the file events were missing.
     pub probe_attach_failures: Vec<String>,
+    /// #1252 — open requests the kernel discarded because the syscall
+    /// failed, from the `OPEN_FAILURES_DISCARDED` per-CPU counter. Flows
+    /// into `TraceIntegrity.open_failures_discarded`.
+    pub open_failures_discarded: u64,
+    /// #618 / #1185 — observed events that never reached the recorded
+    /// sets, by mechanism. Flows into
+    /// `TraceIntegrity.event_drop_reasons`.
+    pub event_drop_reasons: std::collections::BTreeMap<String, u64>,
+    /// #1185 — occupancy of the kernel's in-flight-open map at trace end,
+    /// or `None` when the map would not read. Flows into
+    /// `TraceIntegrity.pending_open_entries_at_close`.
+    pub pending_open_entries_at_close: Option<u64>,
+    /// #1185 — opens from inside the traced subtree. Flows into
+    /// `TraceIntegrity.traced_subtree_opens`.
+    pub traced_subtree_opens: Option<u64>,
 }
 
 /// Aggregated trace results ready for attestation building.
@@ -570,6 +585,10 @@ impl EventAggregator {
                 .filter(|op| op.unresolved_relative)
                 .count() as u64,
             compiler_hash_coverage: None,
+            open_failures_discarded: stats.open_failures_discarded,
+            event_drop_reasons: stats.event_drop_reasons.clone(),
+            pending_open_entries_at_close: stats.pending_open_entries_at_close,
+            traced_subtree_opens: stats.traced_subtree_opens,
         };
 
         AggregatedTrace {
@@ -764,6 +783,85 @@ mod tests {
         assert_eq!(kinds, vec![FileOpType::Read, FileOpType::Write]);
     }
 
+    /// #1252 (T012): an `OpenFailed` record is a diagnostic, not an
+    /// observation. It must reach no read set, no write set, and no
+    /// operation at all.
+    ///
+    /// The guard is structural — `observed::kind_of` returns `None` for the
+    /// variant — and the match there is exhaustive, so a future record kind
+    /// cannot be admitted by omission. This test is what makes the structure
+    /// load-bearing rather than incidental: the two events differ only in
+    /// their type, so it fails if `OpenFailed` is ever treated as an open.
+    #[test]
+    fn a_failed_open_is_not_recorded_as_a_read_or_a_write() {
+        use waybill_common::events::FileEventType;
+        let mut agg = EventAggregator::new();
+        let mut ev: FileEvent = unsafe { std::mem::zeroed() };
+        ev.path[..12].copy_from_slice(b"/ws/absent.h");
+
+        // Control first: as an `Open`, this path IS recorded. Without it the
+        // assertion below would also pass for an aggregator that recorded
+        // nothing at all.
+        agg.handle_file_event(&ev);
+        assert_eq!(agg.file_ops.len(), 1, "control: an Open is recorded");
+
+        // The same event, reported as a discarded request. `flags` carries
+        // the negated errno for this variant, not open flags.
+        ev.event_type = FileEventType::OpenFailed;
+        ev.flags = 2; // ENOENT, as the kernel reports it
+        agg.handle_file_event(&ev);
+        assert_eq!(
+            agg.file_ops.len(),
+            1,
+            "a discarded request must not become an operation"
+        );
+
+        let trace = agg.finalize(&TraceStats::default());
+        assert!(
+            trace
+                .file_access
+                .operations
+                .iter()
+                .all(|o| o.operation == FileOpType::Read),
+            "the only recorded operation is the control read"
+        );
+    }
+
+    /// #1252 (T013): one open is one record.
+    ///
+    /// FR-005 used to guard an overlap between two interfaces observing the
+    /// same open. With the kprobes removed that overlap is gone and the
+    /// remaining way to double-count is the request and the result of one
+    /// syscall, which are one event. The aggregate volume checks cannot
+    /// catch a regression here: the SC-008 ceiling carries slack equal to
+    /// the duplication this feature removes — `do_sys_openat2` called
+    /// `do_filp_open`, so one `openat` submitted two events — so a new
+    /// double-submit on a subset of opens would fit underneath it.
+    #[test]
+    fn n_opens_produce_exactly_n_records() {
+        let mut agg = EventAggregator::new();
+        let paths: [&[u8]; 3] = [b"/ws/a.rs", b"/ws/b.rs", b"/ws/c.rs"];
+        for p in paths {
+            let mut ev: FileEvent = unsafe { std::mem::zeroed() };
+            ev.path[..p.len()].copy_from_slice(p);
+            agg.handle_file_event(&ev);
+        }
+        let trace = agg.finalize(&TraceStats::default());
+        assert_eq!(
+            trace.file_access.operations.len(),
+            3,
+            "three opens, three records -- not six"
+        );
+        let mut seen: Vec<&str> = trace
+            .file_access
+            .operations
+            .iter()
+            .map(|o| o.path.as_str())
+            .collect();
+        seen.sort_unstable();
+        assert_eq!(seen, vec!["/ws/a.rs", "/ws/b.rs", "/ws/c.rs"]);
+    }
+
     /// #1252. `kprobe_attach_failures[]` is the field a consumer reads to
     /// decide whether a capture can be trusted, and it carried only
     /// counter-map failures — so an attestation produced with two probes
@@ -773,14 +871,14 @@ mod tests {
         let agg = EventAggregator::new();
         let trace = agg.finalize(&TraceStats {
             counter_attach_failures: vec!["file_event_drops".to_string()],
-            probe_attach_failures: vec!["do_filp_open_entry".to_string()],
+            probe_attach_failures: vec!["sys_exit_openat".to_string()],
             ..TraceStats::default()
         });
         assert_eq!(
             trace.trace_integrity.kprobe_attach_failures,
             vec![
-                "do_filp_open_entry".to_string(),
-                "file_event_drops".to_string()
+                "file_event_drops".to_string(),
+                "sys_exit_openat".to_string()
             ],
             "sorted union of both sources"
         );
@@ -809,14 +907,14 @@ mod tests {
         let agg = EventAggregator::new();
         let trace = agg.finalize(&TraceStats {
             probe_attach_failures: vec![
-                "openat2_entry".to_string(),
-                "openat2_entry".to_string(),
+                "sys_enter_openat2".to_string(),
+                "sys_enter_openat2".to_string(),
             ],
             ..TraceStats::default()
         });
         assert_eq!(
             trace.trace_integrity.kprobe_attach_failures,
-            vec!["openat2_entry".to_string()]
+            vec!["sys_enter_openat2".to_string()]
         );
     }
 }

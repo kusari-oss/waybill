@@ -68,6 +68,15 @@ pub struct CompilerPipelineAggregator {
     filter_config: FilterConfig,
     /// FR-008 signal: total events dropped due to ring-buffer overflow.
     events_dropped: u64,
+    /// #1185 — loss this trace actually measured, by any mechanism, summed
+    /// from the named drop counters at trace end.
+    ///
+    /// Separate from `events_dropped` on purpose. That field is #618's and
+    /// means one specific thing (records the kernel wrote that userspace
+    /// never drained); nothing writes it yet, so folding other mechanisms
+    /// into it would make a named field mean something other than its name.
+    /// The claim needs its own input.
+    measured_loss: u64,
     /// FR-016a counter: reads filtered because the path matched a
     /// secret-adjacent pattern.
     secrets_read_filtered: u64,
@@ -91,6 +100,8 @@ pub struct CompilerPipelineAggregator {
     /// a crate root missing from its compile's read set. They are replayed
     /// when the exec arrives.
     held: Vec<ObservedOp>,
+    /// #618 / #1185 — ops discarded because `held` was at `HELD_CAP`.
+    dropped_at_held_cap: u64,
 }
 
 /// Bound on `held`. Only compiler-named processes are held, and only until
@@ -146,11 +157,13 @@ impl CompilerPipelineAggregator {
             next_invocation_id: 1,
             filter_config,
             events_dropped: 0,
+            measured_loss: 0,
             secrets_read_filtered: 0,
             filter_categories_applied: std::collections::HashSet::new(),
             attach_late: false,
             probe_attach_failed: false,
             held: Vec::new(),
+            dropped_at_held_cap: 0,
         }
     }
 
@@ -194,9 +207,14 @@ impl CompilerPipelineAggregator {
             // one whose exec record is still in the other ring buffer: hold
             // it for replay (see `held`). Anything else is not compiler
             // activity.
-            if classify_compiler_family(&op.comm, "") != CompilerFamily::Unknown
-                && self.held.len() < HELD_CAP
-            {
+            let compiler_named = classify_compiler_family(&op.comm, "") != CompilerFamily::Unknown;
+            if compiler_named && self.held.len() >= HELD_CAP {
+                // #618: the replay buffer is full, so this op is gone. The
+                // cap is a safety limit rather than a working size, so
+                // reaching it is itself the finding.
+                self.dropped_at_held_cap += 1;
+            }
+            if compiler_named && self.held.len() < HELD_CAP {
                 self.held.push(op.clone());
             }
             return;
@@ -307,6 +325,26 @@ impl CompilerPipelineAggregator {
         self.events_dropped += count;
     }
 
+    /// #1185 — record loss this trace measured, from any mechanism.
+    ///
+    /// The caller passes the sum of the named drop counters that represent
+    /// *the build's* lost events: `EventDropCounts::total_lost`, which
+    /// excludes `kernel_outside_traced_subtree` because that slot counts
+    /// what the capture declined rather than what it lost, plus the
+    /// ring-buffer overflow total and the in-flight entries still held at
+    /// close.
+    ///
+    /// Why this exists at all: `derive_completeness` read exactly one input,
+    /// `events_dropped`, which production hardcodes to `0`. So `Degraded`
+    /// was unreachable in a real trace and the document reported `complete`
+    /// next to every loss counter that had fired — including a forced
+    /// control in which *every* open was refused. The warning at
+    /// `cli/scan.rs` already said "the capture is a floor, not a total";
+    /// this makes the signed artifact say it too.
+    pub fn record_measured_loss(&mut self, count: u64) {
+        self.measured_loss += count;
+    }
+
     /// Signal that the trace attached AFTER at least one compiler
     /// was already running (FR-017). Emits `CompletenessState::Partial`
     /// with `PartialReason::AttachLate` at finalize.
@@ -318,6 +356,17 @@ impl CompilerPipelineAggregator {
     /// (#1252). Emits `CompletenessState::Partial` with
     /// `PartialReason::ProbeAttachFailed` at finalize. The probe names
     /// themselves travel in `TraceIntegrity.kprobe_attach_failures[]`.
+    /// #618 / #1185 — ops discarded because the replay buffer was full.
+    pub fn dropped_at_held_cap(&self) -> u64 {
+        self.dropped_at_held_cap
+    }
+
+    /// #618 / #1185 — ops still held at trace end, waiting for an exec
+    /// record that never arrived. They reached no read or write set.
+    pub fn held_unreplayed(&self) -> usize {
+        self.held.len()
+    }
+
     pub fn mark_probe_attach_failed(&mut self) {
         self.probe_attach_failed = true;
     }
@@ -541,9 +590,14 @@ impl CompilerPipelineAggregator {
                 reason: PartialReason::ProbeAttachFailed,
             };
         }
-        if self.events_dropped > 0 {
+        // #1185 — both inputs, not just `events_dropped`. The breakdown by
+        // mechanism stays in `TraceIntegrity.event_drop_reasons`; this is
+        // the one-number claim, and it must not read zero while that map is
+        // non-empty.
+        let dropped = self.events_dropped + self.measured_loss;
+        if dropped > 0 {
             return CompletenessState::Degraded {
-                dropped: self.events_dropped,
+                dropped,
                 affected_component_count: total_invocation_count,
             };
         }
@@ -877,6 +931,119 @@ mod tests {
         );
     }
 
+    /// #618 / #1185 (controls): each drop counter must be able to fire.
+    ///
+    /// A counter that cannot fire is worse than no counter — it reports a
+    /// confident zero. Each case here forces one mechanism and asserts the
+    /// others stay at zero, so a single counter cannot satisfy the whole
+    /// test by incrementing on everything.
+    #[test]
+    fn a_non_compiler_op_is_counted_as_claimed_by_no_invocation() {
+        use crate::trace::observed::ObservedKind;
+        let mut agg = CompilerPipelineAggregator::new(FilterConfig::default());
+        let mut o = op(ObservedKind::Read, 100, "/ws/src/lib.rs", false);
+        o.comm = "bash".to_string();
+        agg.handle_op(&o);
+        // Deliberately NOT counted as a drop: the op still reaches the
+        // document-level set, so nothing was lost. It simply belongs to no
+        // compiler invocation, which is true of all of cargo's own file
+        // activity on every healthy capture.
+        assert_eq!(agg.held_unreplayed(), 0, "a non-compiler op is not held");
+        assert_eq!(agg.dropped_at_held_cap(), 0);
+    }
+
+    /// The other side of the same branch: a compiler-named op with no exec
+    /// record yet is *held*, not dropped, and is still unreplayed at the
+    /// end if the exec never comes.
+    #[test]
+    fn a_compiler_op_with_no_exec_record_is_held_and_counted_unreplayed() {
+        use crate::trace::observed::ObservedKind;
+        let mut agg = CompilerPipelineAggregator::new(FilterConfig::default());
+        let mut o = op(ObservedKind::Read, 100, "/ws/src/lib.rs", false);
+        o.comm = "rustc".to_string();
+        agg.handle_op(&o);
+        assert_eq!(agg.held_unreplayed(), 1, "held for a replay that never came");
+        assert_eq!(
+            agg.dropped_at_held_cap(),
+            0,
+            "a held op is not yet lost, so nothing must be counted against it"
+        );
+    }
+
+    /// Control for both of the above: an op belonging to a known
+    /// invocation increments nothing. Without this the two tests would
+    /// also pass against a counter that incremented on every op.
+    #[test]
+    fn an_op_with_a_known_invocation_counts_no_drop() {
+        use crate::trace::observed::ObservedKind;
+        let mut agg = CompilerPipelineAggregator::new(FilterConfig::default());
+        agg.handle_compiler_event(&make_exec_event(100, 50, "rustc"));
+        let mut o = op(ObservedKind::Read, 100, "/ws/src/lib.rs", false);
+        o.comm = "rustc".to_string();
+        agg.handle_op(&o);
+        assert_eq!(agg.held_unreplayed(), 0);
+        assert_eq!(agg.dropped_at_held_cap(), 0);
+    }
+
+    /// #1252 (T028): losing network-connect capture degrades the trace and
+    /// does not end it.
+    ///
+    /// FR-008 — a build that fetches nothing over the network is a normal
+    /// build, so the absence of connect capture makes the record a floor
+    /// rather than invalidating it. The distinction matters because the
+    /// open interfaces are treated the opposite way: losing all of those
+    /// stops the trace (FR-007), since a document whose empty file list
+    /// reads as "this build opened nothing" is worse than no document.
+    ///
+    /// Asserted on the pair of statements a consumer actually reads: the
+    /// gap is named, and completeness does not claim Complete.
+    #[test]
+    fn losing_connect_capture_degrades_rather_than_ends_the_trace() {
+        let mut agg = CompilerPipelineAggregator::new(FilterConfig::default());
+        agg.handle_compiler_event(&make_exec_event(100, 50, "rustc"));
+        agg.mark_probe_attach_failed();
+        let data = agg.finalize();
+
+        // Still a capture: the invocation survived.
+        assert_eq!(data.invocations.len(), 1, "the trace must still produce a record");
+        assert_eq!(
+            data.completeness,
+            CompletenessState::Partial {
+                reason: PartialReason::ProbeAttachFailed,
+            },
+            "a named gap must downgrade completeness, not abort"
+        );
+    }
+
+    /// #1252 (T029): an architecture that has no such syscall is not a
+    /// fault, and must not be recorded as one.
+    ///
+    /// `open` and `creat` do not exist on arm64 — measured, see
+    /// specs/1270-stable-probe-tracepoints/measurements/findings.md run 1
+    /// — so capture guards them with `#[cfg(target_arch = "x86_64")]`
+    /// rather than attaching them best-effort. A compile-time guard cannot
+    /// mistake an architecture's shape for a failure; a runtime attach
+    /// attempt would put `sys_enter_open` in `kprobe_attach_failures[]` on
+    /// every arm64 host and downgrade every arm64 capture to partial.
+    ///
+    /// This asserts the consequence: on an architecture without them,
+    /// nothing reports a gap and completeness stays Complete.
+    #[test]
+    #[cfg(not(target_arch = "x86_64"))]
+    fn an_absent_syscall_on_this_architecture_is_not_a_gap() {
+        let mut agg = CompilerPipelineAggregator::new(FilterConfig::default());
+        agg.handle_compiler_event(&make_exec_event(100, 50, "rustc"));
+        // Nothing marks a probe failure, because the loader never tried to
+        // attach `sys_enter_open` here.
+        let data = agg.finalize();
+        assert_eq!(
+            data.completeness,
+            CompletenessState::Complete,
+            "an architecture without `open`/`creat` must still report a \
+             complete capture — their absence is not a fault"
+        );
+    }
+
     /// The pair that actually misread: a probe that never attached loses
     /// events no drop counter observes, so `events_dropped == 0` is not
     /// evidence of a complete capture. Asserted as a precedence check
@@ -923,6 +1090,72 @@ mod tests {
             CompletenessState::Degraded {
                 dropped: 7,
                 affected_component_count: 1,
+            }
+        );
+    }
+
+    /// #1185 — the claim reads the loss the trace actually measured.
+    ///
+    /// Before this, `derive_completeness` had one numeric input,
+    /// `events_dropped`, and production hardcodes it to `0`
+    /// (`cli/scan.rs`, "Not measured"). So the `Degraded` arm was
+    /// unreachable outside this module's own tests, and the forced control
+    /// in `scripts/ebpf-integration-test.sh` measured a trace that lost
+    /// **every** open and still reported `complete`.
+    ///
+    /// The mechanism breakdown stays in `TraceIntegrity.event_drop_reasons`;
+    /// `dropped` is the sum, so the assertion here is on the sum.
+    #[test]
+    fn measured_loss_derives_degraded_completeness() {
+        let mut agg = CompilerPipelineAggregator::new(FilterConfig::default());
+        agg.handle_compiler_event(&make_exec_event(100, 50, "rustc"));
+        agg.record_measured_loss(41);
+        let data = agg.finalize();
+        assert_eq!(
+            data.completeness,
+            CompletenessState::Degraded {
+                dropped: 41,
+                affected_component_count: 1,
+            },
+            "a trace that measured loss must not claim a total; this is the \
+             defect #1185 was opened about"
+        );
+    }
+
+    /// The two inputs are independent and both count. A regression that
+    /// wired `measured_loss` in place of `events_dropped` rather than
+    /// alongside it would pass the test above and fail this one.
+    #[test]
+    fn both_loss_inputs_contribute_to_the_dropped_total() {
+        let mut agg = CompilerPipelineAggregator::new(FilterConfig::default());
+        agg.handle_compiler_event(&make_exec_event(100, 50, "rustc"));
+        agg.record_events_dropped(3);
+        agg.record_measured_loss(4);
+        let data = agg.finalize();
+        assert_eq!(
+            data.completeness,
+            CompletenessState::Degraded {
+                dropped: 7,
+                affected_component_count: 1,
+            }
+        );
+    }
+
+    /// Precedence: a missing probe is `Partial`, which says the capture is
+    /// a floor for a structural reason, and that outranks a count of what
+    /// leaked. Asserted because the obvious refactor -- hoisting the sum
+    /// above the `Partial` arms -- silently reverses it.
+    #[test]
+    fn a_probe_attach_failure_outranks_measured_loss() {
+        let mut agg = CompilerPipelineAggregator::new(FilterConfig::default());
+        agg.handle_compiler_event(&make_exec_event(100, 50, "rustc"));
+        agg.record_measured_loss(41);
+        agg.mark_probe_attach_failed();
+        let data = agg.finalize();
+        assert_eq!(
+            data.completeness,
+            CompletenessState::Partial {
+                reason: PartialReason::ProbeAttachFailed,
             }
         );
     }

@@ -255,6 +255,43 @@ fn read_percpu_slot_sum(bpf: &mut aya::Ebpf, name: &str, idx: u32) -> anyhow::Re
     Ok(values.iter().sum())
 }
 
+// ============================================================================
+// #1252 — discarded-open counter reader.
+// ============================================================================
+
+/// Read `OPEN_FAILURES_DISCARDED`: open requests the kernel discarded
+/// because the syscall failed.
+///
+/// A failure to read the map is reported as `(0, Some(reason))` rather than
+/// as an error that aborts the trace, matching how the m212 counters behave:
+/// the capture itself is unaffected, but a consumer must be able to tell "no
+/// failed opens" from "the counter was unavailable". The reason reaches
+/// `kprobe_attach_failures[]` through `counter_attach_failures`, which has
+/// carried counter-map names since m212.
+#[cfg(all(target_os = "linux", feature = "ebpf-tracing"))]
+pub fn read_open_failures_discarded(bpf: &mut aya::Ebpf) -> (u64, Option<String>) {
+    match read_percpu_sum(bpf, "OPEN_FAILURES_DISCARDED") {
+        Ok(n) => (n, None),
+        Err(e) => {
+            tracing::warn!(
+                error = %truncate_error(&e.to_string()),
+                "could not read OPEN_FAILURES_DISCARDED; the discarded-open \
+                 count is unavailable, so zero here means unmeasured"
+            );
+            (0, Some("open_failures_discarded".to_string()))
+        }
+    }
+}
+
+/// Non-Linux stub. Matches the trace pipeline's no-op behaviour when
+/// `ebpf-tracing` is off.
+#[cfg(not(all(target_os = "linux", feature = "ebpf-tracing")))]
+#[allow(dead_code)]
+pub fn read_open_failures_discarded<T>(_bpf: &mut T) -> (u64, Option<String>) {
+    (0, None)
+}
+
+
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
@@ -374,4 +411,421 @@ mod tests {
         // reliably" state. applied_categories() correctly returns empty.
         assert!(summary.applied_categories().is_empty());
     }
+
+    // ---------------------------------------------------------------
+    // #618 / #1185 — the attach-window baseline.
+    // ---------------------------------------------------------------
+
+    #[test]
+    fn baseline_nets_out_what_the_attach_window_already_counted() {
+        // The case this exists for: the open probes attach exit-first, so
+        // on a busy host the slot is already nonzero before the build
+        // starts. 1237 was the measured value on the x86-64 CI lane.
+        let b = KernelEventDropBaseline::from_slots(vec![Some(0), Some(1237), Some(0)]);
+        assert_eq!(b.net(1, 1237), 0, "a build that lost nothing reads zero");
+        assert_eq!(b.net(1, 1240), 3, "only drops after attach are reported");
+    }
+
+    #[test]
+    fn an_unreadable_baseline_slot_subtracts_nothing() {
+        // A slot that would not read must not become a zero baseline,
+        // which would silently inflate the delta by the attach window.
+        // Reporting the full count is the conservative direction: it
+        // over-reports loss rather than hiding it.
+        let b = KernelEventDropBaseline::from_slots(vec![None]);
+        assert_eq!(b.net(0, 99), 99);
+    }
+
+    #[test]
+    fn a_slot_past_the_end_subtracts_nothing() {
+        let b = KernelEventDropBaseline::from_slots(vec![Some(5)]);
+        assert_eq!(b.net(7, 11), 11);
+    }
+
+    #[test]
+    fn a_lower_later_reading_is_not_a_wrap() {
+        // Per-CPU sums read at two points in time: a CPU coming online
+        // between them can lower the total. Must read as "nothing since
+        // attach", not as u64::MAX.
+        let b = KernelEventDropBaseline::from_slots(vec![Some(500)]);
+        assert_eq!(b.net(0, 100), 0);
+    }
+
+    #[test]
+    fn a_default_baseline_subtracts_nothing() {
+        // The non-Linux stub and the pre-attach state both produce this.
+        let b = KernelEventDropBaseline::default();
+        assert_eq!(b.net(0, 42), 42);
+    }
+
+}
+
+// ============================================================================
+// #618 / #1185 — named drop counters.
+// ============================================================================
+
+/// Observed events that never reached the recorded sets, by mechanism.
+///
+/// Userspace-side reasons are counted here as the drain loop runs;
+/// kernel-side reasons are read out of `EVENT_DROPS` at trace end and
+/// merged in. The result reaches
+/// `TraceIntegrity.event_drop_reasons`.
+///
+/// Why named counts rather than one total: `events_dropped` has read `0`
+/// since it was introduced, and a single zero cannot distinguish "nothing
+/// was dropped" from "nothing was counted". #1185 is a capture losing
+/// whole compiler invocations while reporting `completeness: complete`,
+/// and narrowing it by elimination cost one CI cycle per hypothesis.
+#[derive(Debug, Default, Clone)]
+pub struct EventDropCounts {
+    counts: std::collections::BTreeMap<&'static str, u64>,
+}
+
+impl EventDropCounts {
+    pub fn record(&mut self, reason: waybill_common::events::EventDropReason) {
+        *self.counts.entry(reason.name()).or_insert(0) += 1;
+    }
+
+    pub fn record_n(&mut self, reason: waybill_common::events::EventDropReason, n: u64) {
+        if n > 0 {
+            *self.counts.entry(reason.name()).or_insert(0) += n;
+        }
+    }
+
+    pub fn total(&self) -> u64 {
+        self.counts.values().sum()
+    }
+
+    /// The count for one reason, or zero if it did not fire.
+    pub fn get(&self, reason: waybill_common::events::EventDropReason) -> u64 {
+        self.counts.get(reason.name()).copied().unwrap_or(0)
+    }
+
+    /// The total that represents events actually lost.
+    ///
+    /// `kernel_outside_traced_subtree` is **not** loss and is excluded.
+    /// With the gate armed those opens are dropped on purpose: they came
+    /// from processes that are not the traced build, and removing them is
+    /// the feature rather than a shortfall. Counting them as loss would
+    /// make the "#618 the capture is a floor, not a total" warning fire on
+    /// every healthy scoped trace — the false alarm that teaches people to
+    /// ignore the real one, which this module already warns about for
+    /// `user_no_invocation_mapping`.
+    ///
+    /// The distinction the attestation needs is between *the build's*
+    /// events that went missing and *other processes'* events that were
+    /// declined. This total is the first; the slot is reported separately
+    /// as the second.
+    pub fn total_lost(&self) -> u64 {
+        self.total() - self.get(waybill_common::events::EventDropReason::KernelOutsideTracedSubtree)
+    }
+
+    /// Wire shape: zero-valued reasons are omitted, so a reason that did
+    /// not fire is absent rather than present-and-zero. An empty map
+    /// serializes away entirely, leaving a lossless trace byte-identical
+    /// to one produced before this existed.
+    pub fn into_wire(self) -> std::collections::BTreeMap<String, u64> {
+        self.counts
+            .into_iter()
+            .filter(|(_, n)| *n > 0)
+            .map(|(k, n)| (k.to_string(), n))
+            .collect()
+    }
+}
+
+/// The kernel drop slots as they read once attach has completed.
+///
+/// The open probes attach exit-before-entry on purpose: an entry program
+/// live before its exit program would stash requests nothing can join,
+/// losing successful opens outright. The cost is a window in which an
+/// exit fires with no stored entry, and because the probes are
+/// system-wide that window counts every open on the machine rather than
+/// just the build's. On a quiet host it reads 0 and on a busy CI runner
+/// it read 1237 (measurements/findings.md run 6) — the same healthy
+/// capture either way.
+///
+/// So the attach window is subtracted rather than reported. What remains
+/// is attributable: a nonzero delta means entry events were lost while
+/// the probes were fully attached.
+#[derive(Debug, Default, Clone)]
+pub struct KernelEventDropBaseline {
+    /// Per-slot values, indexed as `EventDropReason::KERNEL`. A slot that
+    /// could not be read is `None`, which subtracts nothing — an
+    /// unmeasured baseline must not silently become a zero one.
+    slots: Vec<Option<u64>>,
+}
+
+impl KernelEventDropBaseline {
+    /// What this slot read at attach time. A slot that could not be read
+    /// contributes 0, so an unmeasured baseline subtracts nothing rather
+    /// than quietly becoming a zero one.
+    fn at(&self, slot: usize) -> u64 {
+        self.slots.get(slot).copied().flatten().unwrap_or(0)
+    }
+
+    /// Drops attributable to the traced build: this slot now, less what
+    /// it already held when the probes finished attaching.
+    ///
+    /// `saturating_sub` rather than an assertion, because these are
+    /// per-CPU counters summed at two points in time and a CPU coming
+    /// online between them can lower the sum. A negative delta means
+    /// "nothing since attach", not a fault.
+    pub fn net(&self, slot: usize, now: u64) -> u64 {
+        now.saturating_sub(self.at(slot))
+    }
+
+    /// Construct from per-slot readings. `None` is a slot that would not
+    /// read.
+    pub fn from_slots(slots: Vec<Option<u64>>) -> Self {
+        Self { slots }
+    }
+}
+
+/// Read every kernel drop slot immediately after attach completes.
+///
+/// Called before the traced child is spawned, so anything counted here
+/// predates the build entirely.
+#[cfg(all(target_os = "linux", feature = "ebpf-tracing"))]
+pub fn read_kernel_event_drop_baseline(bpf: &mut aya::Ebpf) -> KernelEventDropBaseline {
+    use waybill_common::events::EventDropReason;
+    let mut slots = Vec::with_capacity(EventDropReason::KERNEL.len());
+    for slot in 0..EventDropReason::KERNEL.len() {
+        match read_percpu_slot_sum(bpf, "EVENT_DROPS", slot as u32) {
+            Ok(n) => slots.push(Some(n)),
+            Err(e) => {
+                // Said out loud rather than swallowed. An unreadable
+                // baseline degrades this slot to the pre-baseline
+                // behaviour — the attach window counted as loss — and
+                // without this line that is indistinguishable from the
+                // baseline working, which is the ambiguity #618 exists
+                // to remove.
+                tracing::warn!(
+                    error = %truncate_error(&e.to_string()),
+                    slot,
+                    "could not baseline EVENT_DROPS; this slot will include \
+                     opens that exited during the attach window, so a nonzero \
+                     count for it is not attributable to the build"
+                );
+                slots.push(None);
+            }
+        }
+    }
+    KernelEventDropBaseline::from_slots(slots)
+}
+
+/// Non-Linux stub.
+#[cfg(not(all(target_os = "linux", feature = "ebpf-tracing")))]
+#[allow(dead_code)]
+pub fn read_kernel_event_drop_baseline<T>(_bpf: &mut T) -> KernelEventDropBaseline {
+    KernelEventDropBaseline::default()
+}
+
+/// Read the kernel-side `EVENT_DROPS` slots and merge them in, net of the
+/// attach-window baseline.
+///
+/// A map that will not read is itself reported, through
+/// `counter_attach_failures`, for the same reason the m212 counters are:
+/// a zero from an unreadable counter is not a measurement.
+#[cfg(all(target_os = "linux", feature = "ebpf-tracing"))]
+pub fn merge_kernel_event_drops(
+    bpf: &mut aya::Ebpf,
+    baseline: &KernelEventDropBaseline,
+    counts: &mut EventDropCounts,
+) -> Option<String> {
+    use waybill_common::events::EventDropReason;
+    for (slot, reason) in EventDropReason::KERNEL.iter().enumerate() {
+        // #1185 — the attach-window baseline is right for some slots and
+        // wrong for this one.
+        //
+        // Baselining exists because the probes are machine-wide and the
+        // window between attaching them counts syscalls the trace did not
+        // cause. For `kernel_exit_without_request` those counts are an
+        // artifact and subtracting them is correct.
+        //
+        // `kernel_outside_traced_subtree` is different: what it counts
+        // during that window is the tracer's own load-time reads — aya
+        // probing `/proc/version_signature` and friends — and those are
+        // real opens from a real process outside the subtree, which the
+        // gate will drop. Subtracting them makes the figure understate the
+        // gate's effect by exactly the amount the tracer reads at startup.
+        //
+        // Measured: a single-process probe captured 26 `waybill` reads and
+        // reported `kernel_outside_traced_subtree = 0`, because all 26 were
+        // counted before the baseline was taken and then subtracted away.
+        let raw = *reason == EventDropReason::KernelOutsideTracedSubtree;
+        match read_percpu_slot_sum(bpf, "EVENT_DROPS", slot as u32)
+            .map(|n| if raw { n } else { baseline.net(slot, n) })
+        {
+            Ok(n) => counts.record_n(*reason, n),
+            Err(e) => {
+                tracing::warn!(
+                    error = %truncate_error(&e.to_string()),
+                    slot,
+                    "could not read EVENT_DROPS; kernel-side drop reasons are \
+                     unavailable, so their absence here means unmeasured"
+                );
+                return Some("event_drops".to_string());
+            }
+        }
+    }
+    None
+}
+
+/// Non-Linux stub.
+#[cfg(not(all(target_os = "linux", feature = "ebpf-tracing")))]
+#[allow(dead_code)]
+pub fn merge_kernel_event_drops<T>(
+    _bpf: &mut T,
+    _baseline: &KernelEventDropBaseline,
+    _counts: &mut EventDropCounts,
+) -> Option<String> {
+    None
+}
+
+/// #1185 — how many in-flight-open entries the kernel map still held when
+/// the trace ended.
+///
+/// Counted by walking the keys, because a BPF hash map does not publish
+/// its own occupancy. The walk is bounded by the map's capacity, runs once
+/// per trace after the drain loop, and reads nothing the probes are still
+/// writing into — by this point the programs are detached.
+///
+/// `None` is "not measured", never zero: a map that will not read is the
+/// case this whole counter family exists to distinguish from a mechanism
+/// that did not fire. The caller records the name in
+/// `counter_attach_failures` so the absence is visible in the attestation.
+#[cfg(all(target_os = "linux", feature = "ebpf-tracing"))]
+pub fn read_pending_open_entries(bpf: &mut aya::Ebpf) -> (Option<u64>, Option<String>) {
+    use waybill_common::maps::PendingOpen;
+
+    // `map_mut` rather than `map`, matching `read_percpu_slot_sum` above:
+    // the same borrow shape every other reader in this file uses, so the
+    // trait resolution is one that is already known to compile for the
+    // eBPF target.
+    let Some(map) = bpf.map_mut("PENDING_OPEN") else {
+        tracing::warn!(
+            "PENDING_OPEN map not found; its occupancy is unmeasured, so a \
+             nonzero kernel_pending_insert_failed cannot be read against how \
+             full the map was"
+        );
+        return (None, Some("pending_open".to_string()));
+    };
+    let typed = match aya::maps::HashMap::<_, u32, PendingOpen>::try_from(map) {
+        Ok(h) => h,
+        Err(e) => {
+            tracing::warn!(
+                error = %truncate_error(&e.to_string()),
+                "PENDING_OPEN is not a usable hash map; its occupancy is unmeasured"
+            );
+            return (None, Some("pending_open".to_string()));
+        }
+    };
+    // A key that will not read is counted, not skipped: it occupies a slot
+    // either way, and the number being measured is how many slots are gone.
+    let held = typed.keys().count() as u64;
+    (Some(held), None)
+}
+
+/// Non-Linux stub.
+#[cfg(not(all(target_os = "linux", feature = "ebpf-tracing")))]
+#[allow(dead_code)]
+pub fn read_pending_open_entries<T>(_bpf: &mut T) -> (Option<u64>, Option<String>) {
+    (None, None)
+}
+
+/// #1185 — how many pids the kernel currently counts as inside the traced
+/// subtree.
+#[cfg(all(target_os = "linux", feature = "ebpf-tracing"))]
+pub fn read_traced_pid_count(bpf: &mut aya::Ebpf) -> anyhow::Result<u64> {
+    let map = bpf
+        .map_mut("TRACED_PIDS")
+        .ok_or_else(|| anyhow::anyhow!("TRACED_PIDS map not found in loaded eBPF object"))?;
+    let typed = aya::maps::HashMap::<_, u32, u8>::try_from(map)
+        .map_err(|e| anyhow::anyhow!("TRACED_PIDS is not a usable hash map: {e}"))?;
+    Ok(typed.keys().count() as u64)
+}
+
+/// #1185 — opens observed from inside the traced subtree.
+///
+/// The positive half of the dry run. With the gate off, capture is
+/// identical whether the subtree holds one process or ninety, so this is
+/// the only signal that fork propagation works.
+#[cfg(all(target_os = "linux", feature = "ebpf-tracing"))]
+pub fn read_traced_subtree_hits(bpf: &mut aya::Ebpf) -> (u64, Option<String>) {
+    match read_percpu_sum(bpf, "TRACED_SUBTREE_HITS") {
+        Ok(n) => (n, None),
+        Err(e) => {
+            tracing::warn!(
+                error = %truncate_error(&e.to_string()),
+                "could not read TRACED_SUBTREE_HITS; whether the traced \
+                 subtree propagated past its root is unmeasured, so a zero \
+                 here would not mean propagation failed"
+            );
+            (0, Some("traced_subtree_hits".to_string()))
+        }
+    }
+}
+
+/// Non-Linux stub.
+#[cfg(not(all(target_os = "linux", feature = "ebpf-tracing")))]
+#[allow(dead_code)]
+pub fn read_traced_subtree_hits<T>(_bpf: &mut T) -> (u64, Option<String>) {
+    (0, None)
+}
+
+/// #1185 — block until the traced root has announced itself, or fail.
+///
+/// The root performs its handshake between fork and exec, so `spawn()` can
+/// return before the kernel has seen it. This waits for the seed rather
+/// than sampling once and guessing.
+///
+/// Nothing is drained here, and nothing needs to be: the handshake is
+/// recorded by the kernel writing a map, not by an event crossing the ring
+/// buffer. That is the reason for seeding through a map — a seed that
+/// depended on an event would be lost by exactly the mechanisms this work
+/// is investigating.
+///
+/// **This returns an error rather than warning.** Once the subtree gate
+/// lands, a trace that runs without a seeded root drops every open and
+/// reports itself complete, which is #1185's own failure rebuilt
+/// deliberately. The verification is therefore added before the gate, so
+/// that state is unreachable rather than merely unlikely.
+#[cfg(all(target_os = "linux", feature = "ebpf-tracing"))]
+pub fn wait_for_traced_root(bpf: &mut aya::Ebpf, timeout: std::time::Duration) -> anyhow::Result<u64> {
+    let start = std::time::Instant::now();
+    loop {
+        let n = read_traced_pid_count(bpf)?;
+        if n > 0 {
+            tracing::info!(
+                traced_pids = n,
+                waited_ms = start.elapsed().as_millis() as u64,
+                "#1185 traced subtree seeded: the root announced itself"
+            );
+            return Ok(n);
+        }
+        if start.elapsed() >= timeout {
+            anyhow::bail!(
+                "the traced root never announced itself within {:?}: TRACED_PIDS is empty, \
+                 so the kernel has no traced subtree. The capture would admit every process \
+                 on the machine, and once the subtree gate is enabled it would instead admit \
+                 none while still reporting itself complete (#1185). Refusing to trace on an \
+                 unestablished root rather than producing a figure that cannot be attributed.",
+                timeout
+            );
+        }
+        std::thread::sleep(std::time::Duration::from_millis(2));
+    }
+}
+
+/// Non-Linux stubs.
+#[cfg(not(all(target_os = "linux", feature = "ebpf-tracing")))]
+#[allow(dead_code)]
+pub fn read_traced_pid_count<T>(_bpf: &mut T) -> anyhow::Result<u64> {
+    Ok(0)
+}
+
+#[cfg(not(all(target_os = "linux", feature = "ebpf-tracing")))]
+#[allow(dead_code)]
+pub fn wait_for_traced_root<T>(_bpf: &mut T, _timeout: std::time::Duration) -> anyhow::Result<u64> {
+    Ok(0)
 }

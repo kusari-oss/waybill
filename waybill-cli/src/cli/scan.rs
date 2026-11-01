@@ -302,6 +302,27 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
 
     // Load eBPF FIRST so probes are active before child spawns
     let target_pid = args.target_pid.unwrap_or(std::process::id());
+    // #1185 — the per-trace handshake nonce. Only command-execute mode can
+    // seed a traced root: `--target-pid` attaches to a process the tracer
+    // never spawned, so there is no `pre_exec` in which to announce it.
+    //
+    // Derived from the clock rather than a CSPRNG, and that is sufficient
+    // for what the nonce defends against: it keeps one trace's handshake
+    // from arming another's on the same host. It is not a secret, because
+    // the gate is positive — forging the handshake adds the forger to the
+    // traced set and can exclude nothing. Masked to 31 bits so the value
+    // stays a positive `int` when it is passed as the syscall's flags
+    // argument, and forced non-zero because zero means "unarmed".
+    let handshake_nonce: Option<u32> = if args.target_pid.is_none() {
+        let t = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.subsec_nanos() ^ (d.as_secs() as u32))
+            .unwrap_or(0x5A5A_5A5A);
+        Some((t & 0x7FFF_FFFF).max(1))
+    } else {
+        None
+    };
+
     let mut handle = loader::load_and_attach(&LoaderConfig {
         target_pid,
         libssl_path: args.libssl_path.clone(),
@@ -311,7 +332,17 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
         // Milestone 213 (issue #616) — plumbs --include-system-reads
         // to the kernel-side FILTER_WIDEN[0] slot per FR-010.
         include_system_reads: args.include_system_reads,
+        handshake_nonce,
     })?;
+    // #618 / #1185 — the drop slots as they stand now, before the child
+    // exists. The open probes attach exit-before-entry deliberately, and
+    // the probes are system-wide, so the attach window counts every open
+    // on the machine as an exit without a request. Baselined here and
+    // subtracted at trace end, which is what makes the remainder mean
+    // "entry events were lost during the build".
+    let event_drop_baseline =
+        crate::trace::counters::read_kernel_event_drop_baseline(&mut handle.bpf);
+
     // #1252 — the probe names, kept for the attestation. Cloned here
     // because `handle.bpf` is borrowed mutably further down.
     let probe_attach_failures = handle.attach_failures.kprobe.clone();
@@ -325,19 +356,65 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
     }
 
     // THEN spawn child
-    let mut child = if args.target_pid.is_none() {
+    //
+    // Milestone 1070 (#614): the child is given an explicit working
+    // directory, though it is the one it would inherit anyway. Setting it
+    // makes the child perform a `chdir` before exec, which the trace
+    // observes like any other.
+    //
+    // #1185: the directory is also kept here, because this is the one cwd
+    // in the system the tracer *established* instead of inferring. It seeds
+    // the model directly below, so the build still resolves its relative
+    // reads when that `chdir` record is lost. Spawning is the only path that
+    // has it — `--target-pid` attaches to a process whose directory the
+    // tracer never chose, and that case stays purely observational.
+    let spawn_dir = if args.target_pid.is_none() {
+        Some(std::env::current_dir().map_err(|e| {
+            anyhow::anyhow!("cannot read the working directory to start the traced command in: {e}")
+        })?)
+    } else {
+        None
+    };
+    let mut child = if let Some(dir) = spawn_dir.as_ref() {
         let cmd = &args.command;
         tracing::info!(command = %cmd.join(" "), "Spawning traced command");
-        // Milestone 1070 (#614): an explicit working directory, though it is
-        // the one the child would inherit anyway. Setting it makes the child
-        // perform a `chdir` before exec, which the trace observes like any
-        // other. That seeds the working-directory model for the whole build,
-        // with no PID-namespace mapping between tracer and kernel (research R2).
-        let c = std::process::Command::new(&cmd[0])
-            .args(&cmd[1..])
-            .current_dir(std::env::current_dir().map_err(|e| {
-                anyhow::anyhow!("cannot read the working directory to start the traced command in: {e}")
-            })?)
+        let mut builder = std::process::Command::new(&cmd[0]);
+        builder.args(&cmd[1..]).current_dir(dir);
+
+        // #1185 — the traced root announces itself to the kernel, from
+        // inside the child, after fork and before exec.
+        //
+        // It has to come from the child, and the kernel has to learn the
+        // pid by observing rather than being told: the tracer cannot see
+        // its own or its child's initial-namespace pid (`std::process::id()`
+        // and `/proc/self/status`'s `NSpid` both report the container's
+        // view), and that mismatch is what silently disabled the
+        // tracer-exclusion filter in every containerised run.
+        //
+        // `pre_exec` runs in a forked child, so the closure must be
+        // async-signal-safe: one raw syscall, no allocation, no locks, no
+        // panic path. A null path is passed deliberately — the handshake
+        // carries no filename, and the kernel's entry program reads only
+        // `dfd` and `flags` for it. The call fails with `EBADF`, which is
+        // the intended outcome and is why the result is discarded here
+        // rather than reported: its success is not the signal, being
+        // *observed* is, and that is verified from the map below.
+        if let Some(nonce) = handshake_nonce {
+            unsafe {
+                use std::os::unix::process::CommandExt;
+                builder.pre_exec(move || {
+                    libc::syscall(
+                        libc::SYS_openat,
+                        waybill_common::maps::TRACE_HANDSHAKE_DFD,
+                        core::ptr::null::<libc::c_char>(),
+                        nonce as libc::c_int,
+                    );
+                    Ok(())
+                });
+            }
+        }
+
+        let c = builder
             .spawn()
             .map_err(|e| anyhow::anyhow!("failed to spawn: {e}"))?;
         tracing::info!(pid = c.id(), "Child started");
@@ -345,6 +422,27 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
     } else {
         None
     };
+
+    // #1185 — the root must be established before the trace proceeds.
+    //
+    // Deliberately before the drain loop and deliberately fatal. The
+    // handshake is the one thing the whole subtree rests on: with it, the
+    // kernel knows the traced root and propagates to every descendant on
+    // fork; without it the set stays empty, and an empty set is the state
+    // in which a positive gate drops every open and the attestation still
+    // says `complete`. That is #1185's exact signature, so it is made
+    // unreachable here rather than guarded later.
+    //
+    // 2 seconds: the handshake is one syscall between fork and exec, so
+    // this is orders of magnitude of headroom. A timeout means the
+    // mechanism is broken, not that the machine was busy.
+    if handshake_nonce.is_some() {
+        let seeded = crate::trace::counters::wait_for_traced_root(
+            &mut handle.bpf,
+            std::time::Duration::from_secs(2),
+        )?;
+        debug_assert!(seeded > 0);
+    }
 
     let child_pid = child.as_ref().map(|c| c.id()).unwrap_or(target_pid);
 
@@ -368,6 +466,18 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
     // Milestone 1070 — working directory per traced process, from observed
     // forks and directory changes, used to resolve relative paths.
     let mut cwd = CwdTracker::new();
+    // #1185 — seed the root from the directory the tracer set, before any
+    // event is drained. Both the tracer and the child are seeded: the
+    // child's `sched_process_fork` record names the tracer as its parent, so
+    // without the tracer's entry that record would overwrite the child's
+    // seed with `Unknown`. With both, either event surviving is enough and
+    // the two agree. Descendants keep inheriting through fork records as
+    // before; this hardens the root, which is what poisons everything
+    // downstream when it is lost.
+    if let Some(dir) = spawn_dir {
+        cwd.seed(std::process::id(), dir.clone());
+        cwd.seed(child_pid, dir);
+    }
     let mut compiler_count: u64 = 0;
     let mut net_count: u64 = 0;
     let mut file_count: u64 = 0;
@@ -494,6 +604,7 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
         count: &mut u64,
         max: usize,
         target_pids: &std::collections::HashSet<u32>,
+        drops: &mut crate::trace::counters::EventDropCounts,
     ) -> usize {
         fn resolved(r: Resolution, raw: &str) -> (String, bool) {
             match r {
@@ -510,7 +621,12 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
             let data: &[u8] = item.as_ref();
             let Some(head) = data.get(..4) else { continue };
             let raw_kind = u32::from_ne_bytes([head[0], head[1], head[2], head[3]]);
-            let Some(kind) = FileEventType::from_raw(raw_kind) else { continue };
+            let Some(kind) = FileEventType::from_raw(raw_kind) else {
+                // #618: a record kind this build does not know. Skipping it
+                // is right; doing so invisibly was not.
+                drops.record(waybill_common::events::EventDropReason::UserUnknownRecordKind);
+                continue;
+            };
             match kind {
                 FileEventType::Fork => {
                     if data.len() >= core::mem::size_of::<LineageEvent>() {
@@ -553,6 +669,7 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
                 }
                 _ => {
                     if data.len() < core::mem::size_of::<FileEvent>() {
+                        drops.record(waybill_common::events::EventDropReason::UserShortRecord);
                         continue;
                     }
                     // SAFETY: length checked; the kind was validated above.
@@ -560,13 +677,51 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
                     match kind {
                         FileEventType::Chdir => cwd.chdir(ev.pid, ev.path_str(), ev.path_truncated != 0),
                         FileEventType::Fchdir => cwd.fchdir(ev.pid),
-                        _ => {
+                        // #1252 — a discarded open request, reported only
+                        // when the diagnostic slot is on. Logged and
+                        // dropped: it is the evidence that a read-set entry
+                        // which disappeared belongs to a failed request, and
+                        // it must never become a claim that the build read
+                        // the file. `flags` carries the negated errno for
+                        // this record kind.
+                        //
+                        // Resolved against the process's working directory
+                        // first, so a relative request can be matched
+                        // against the read set it was removed from.
+                        FileEventType::OpenFailed => {
                             if !admitted(ev.pid) {
                                 continue;
                             }
+                            let raw = ev.path_str();
+                            let (path, _unresolved) = resolved(
+                                cwd.resolve(ev.pid, ev.dfd, raw, ev.path_truncated != 0),
+                                raw,
+                            );
+                            tracing::info!(
+                                path = %path,
+                                errno = ev.flags,
+                                pid = ev.pid,
+                                comm = %ev.comm_str(),
+                                "#1252 discarded open: the request did not succeed"
+                            );
+                        }
+                        _ => {
+                            if !admitted(ev.pid) {
+                                drops.record(waybill_common::events::EventDropReason::UserPidNotAdmitted);
+                                continue;
+                            }
+                            // Not a drop: a record kind that is not a file
+                            // operation has nothing to contribute to a read
+                            // or write set by construction.
                             let Some(op_kind) = observed::kind_of(&ev) else { continue };
                             let raw = ev.path_str();
                             if raw.is_empty() || raw == "<invalid>" {
+                                // #618 / #1185: where a kernel-side
+                                // `kernel_path_unreadable` lands if the event
+                                // is submitted anyway. The two should move
+                                // together; if this one moves alone, the path
+                                // was lost between the read and here.
+                                drops.record(waybill_common::events::EventDropReason::UserEmptyPath);
                                 continue;
                             }
                             let (path, unresolved) =
@@ -613,6 +768,9 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
         .take_map("COMPILER_EXEC_EVENTS")
         .and_then(|m| RingBuf::try_from(m).ok());
 
+    // #618 / #1185 — every site below that skips an event records why.
+    let mut event_drops = crate::trace::counters::EventDropCounts::default();
+
     loop {
         let done = if let Some(ref mut c) = child {
             c.try_wait().ok().flatten().is_some()
@@ -641,12 +799,13 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
             &mut compiler_count,
             MAX_PER_ITER,
         );
-        drain_file(&mut file_rb, &mut agg, &mut compiler_agg, &mut cwd, &mut file_count, MAX_PER_ITER, active_filter);
+        drain_file(&mut file_rb, &mut agg, &mut compiler_agg, &mut cwd, &mut file_count, MAX_PER_ITER, active_filter, &mut event_drops);
 
         if done {
             // Settling drain: pull remaining events with a hard deadline so
             // we never loop forever if probes keep firing from unrelated PIDs.
             let deadline = Instant::now() + Duration::from_millis(250);
+            let mut settled = false;
             while Instant::now() < deadline {
                 let n = drain_network(&mut network_rb, &mut agg, &mut net_count, MAX_PER_ITER, active_filter)
                     + drain_compiler(
@@ -655,10 +814,22 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
                         &mut compiler_count,
                         MAX_PER_ITER,
                     )
-                    + drain_file(&mut file_rb, &mut agg, &mut compiler_agg, &mut cwd, &mut file_count, MAX_PER_ITER, active_filter);
+                    + drain_file(&mut file_rb, &mut agg, &mut compiler_agg, &mut cwd, &mut file_count, MAX_PER_ITER, active_filter, &mut event_drops);
                 if n == 0 {
+                    settled = true;
                     break;
                 }
+            }
+            // #618's original subject: the deadline expired while events
+            // were still arriving, so whatever remained went away with the
+            // programs. The size of the remainder is not knowable from
+            // here — that it happened at all is, and was not before.
+            if !settled {
+                event_drops.record(waybill_common::events::EventDropReason::UserDrainAbandoned);
+                tracing::warn!(
+                    "drain deadline expired with events still arriving; the \
+                     remainder was abandoned and the capture is a floor"
+                );
             }
             break;
         }
@@ -750,6 +921,114 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
     let mut counter_attach_failures = drops.attach_failures;
     counter_attach_failures.extend(filter_hits.attach_failures);
 
+    // #1252 — open requests the kernel discarded because the syscall
+    // failed. Counted unconditionally so a zero is readable: a compiler
+    // attempts failed opens constantly across its search paths, so zero
+    // on a real build says something about the capture, not the build.
+    // An unreadable counter is recorded as an attach failure rather than
+    // reported as zero.
+    let (open_failures_discarded, open_counter_failure) =
+        crate::trace::counters::read_open_failures_discarded(&mut handle.bpf);
+    if let Some(name) = open_counter_failure {
+        counter_attach_failures.push(name);
+    }
+
+    // #618 / #1185 — merge the kernel-side drop slots into the userspace
+    // counts. An unreadable map is reported rather than read as zero.
+    if let Some(name) =
+        crate::trace::counters::merge_kernel_event_drops(
+            &mut handle.bpf,
+            &event_drop_baseline,
+            &mut event_drops,
+        )
+    {
+        counter_attach_failures.push(name);
+    }
+
+    // #1185 — the other half of `kernel_pending_insert_failed`: how full
+    // the map that refuses a request had become. A count alone does not
+    // say whether the bound was the constraint.
+    let (pending_open_entries_at_close, pending_open_failure) =
+        crate::trace::counters::read_pending_open_entries(&mut handle.bpf);
+    if let Some(name) = pending_open_failure {
+        counter_attach_failures.push(name);
+    }
+
+    // The compiler aggregator's own silent drops. Note what is NOT here:
+    // an op whose process is not compiler-named belongs to no invocation
+    // by construction, and it still reaches the document-level set, so it
+    // is not a loss. Counting it warned that every healthy capture was "a
+    // floor, not a total", which is the kind of false alarm that teaches
+    // people to ignore the real one.
+    event_drops.record_n(
+        waybill_common::events::EventDropReason::UserHeldUnreplayed,
+        compiler_agg.held_unreplayed() as u64,
+    );
+    event_drops.record_n(
+        waybill_common::events::EventDropReason::UserHeldAtCapacity,
+        compiler_agg.dropped_at_held_cap(),
+    );
+    // #1185 — the dry-run slot is reported separately from loss, because
+    // during the dry run it is not loss. See `total_lost`.
+    let outside_subtree = event_drops.get(
+        waybill_common::events::EventDropReason::KernelOutsideTracedSubtree,
+    );
+    let (inside_subtree, subtree_counter_failure) =
+        crate::trace::counters::read_traced_subtree_hits(&mut handle.bpf);
+    let subtree_counter_unreadable = subtree_counter_failure.is_some();
+    if let Some(name) = subtree_counter_failure {
+        counter_attach_failures.push(name);
+    }
+    // One line, both halves, a stable prefix the harness greps for. Printed
+    // unconditionally — a zero `inside` with a seeded root means propagation
+    // is broken, and that is exactly the case a conditional print would
+    // hide.
+    tracing::info!(
+        inside = inside_subtree,
+        outside = outside_subtree,
+        "#1185 traced subtree: opens admitted from the build and declined \
+         from everything else. `outside` is other processes' opens the gate \
+         dropped — not loss by this capture — and `inside` is whether \
+         propagation past the root worked"
+    );
+    let event_drop_total = event_drops.total_lost();
+    if event_drop_total > 0 {
+        tracing::warn!(
+            reasons = ?event_drops,
+            "#618 observed events did not reach the recorded sets; the \
+             capture is a floor, not a total"
+        );
+    }
+    // #1185 — and now the attestation says it too, not just this log line.
+    //
+    // `derive_completeness` read one input, `events_dropped`, which is
+    // hardcoded `0` below. So `Degraded` could not occur in a real trace and
+    // the document reported `complete` beside a non-empty
+    // `event_drop_reasons` map -- measured in the forced control, where
+    // every open was refused and the state still read `complete`.
+    //
+    // Three terms, and the exclusions matter as much as the inclusions:
+    //   - `total_lost()` already drops `kernel_outside_traced_subtree`,
+    //     which is scope, not loss. Including it would degrade every
+    //     healthy scoped trace, which is the false alarm that teaches
+    //     people to ignore the real one.
+    //   - `overflows_total` is unambiguous loss: the kernel wrote records
+    //     the drain never saw.
+    //   - `pending_open_entries_at_close` is an open still in flight when
+    //     the trace ended. It reached no set. Measured at 0 across 16 runs
+    //     of the committed baseline, so including it costs nothing on a
+    //     healthy host and is honest on an unhealthy one.
+    //
+    // Not covered, and deliberately left visible rather than quietly
+    // folded in: a loss counter that could not be *read* still leaves the
+    // claim at `complete`. The failure is recorded in
+    // `counter_attach_failures`, but an unreadable counter is a reason not
+    // to claim a total, and that gap is its own change.
+    compiler_agg.record_measured_loss(
+        event_drop_total + overflows_total + pending_open_entries_at_close.unwrap_or(0),
+    );
+    let event_drop_reasons = event_drops.into_wire();
+
     let mut trace = agg.finalize(&TraceStats {
         network_events: net_count,
         file_events: file_count,
@@ -761,6 +1040,16 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
         counter_attach_failures,
         filter_categories_applied,
         probe_attach_failures,
+        open_failures_discarded,
+        event_drop_reasons,
+        pending_open_entries_at_close,
+        // #1185 — `None` only when the counter could not be read, which
+        // `counter_attach_failures` records. A zero is a measurement.
+        traced_subtree_opens: if subtree_counter_unreadable {
+            None
+        } else {
+            Some(inside_subtree)
+        },
     });
 
     if trace.network_trace.connections.is_empty()

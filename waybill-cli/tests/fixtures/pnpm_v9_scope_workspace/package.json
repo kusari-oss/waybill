@@ -1,0 +1,9 @@
+{
+  "name": "waybill-fixture-pnpm-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "pnpm@9.15.9",
+  "devDependencies": {
+    "wrap-ansi": "7.0.0"
+  }
+}

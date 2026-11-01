@@ -1,0 +1,97 @@
+compiler_exec.rs:.unwrap_or(0)
+compiler_exec.rs:(*ev).comm = bpf_get_current_comm().unwrap_or([0u8; 16]);
+compiler_exec.rs:if parent_traced && unsafe { TRACED_PIDS.insert(&child_pid, &1u8, 0) }.is_err() {
+compiler_exec.rs:let _ = id;
+compiler_exec.rs:let _ = unsafe { COMPILER_DIRECT_EXECS.insert(&pid, &one, 0) };
+compiler_exec.rs:let _ = unsafe { COMPILER_DIRECT_EXECS.remove(&pid) };
+compiler_exec.rs:let _ = unsafe { COMPILER_INVOCATIONS.insert(&child_pid, &parent_id, 0) };
+compiler_exec.rs:let _ = unsafe { COMPILER_INVOCATIONS.insert(&pid, &invocation_id, 0) };
+compiler_exec.rs:let _ = unsafe { COMPILER_INVOCATIONS.remove(&pid) };
+compiler_exec.rs:let _ = unsafe { PID_TO_PPID.insert(&child_pid, &parent_pid, 0) };
+compiler_exec.rs:let _ = unsafe { PID_TO_PPID.remove(&tid) };
+compiler_exec.rs:let _ = unsafe { TRACED_PIDS.remove(&tid) };
+compiler_exec.rs:let comm = bpf_get_current_comm().unwrap_or([0u8; 16]);
+compiler_exec.rs:let immediate_ppid = unsafe { PID_TO_PPID.get(&pid).copied() }.unwrap_or(0);
+compiler_exec.rs:let parent = unsafe { PID_TO_PPID.get(&cursor).copied() }.unwrap_or(0);
+compiler_exec.rs:return Ok(0);
+compiler_exec.rs:return Ok(0);
+compiler_exec.rs:return Ok(0);
+compiler_exec.rs:return Ok(0);
+compiler_exec.rs:return Ok(0);
+compiler_exec.rs:return true;
+file_ops.rs:let _ = file_ptr;
+file_ops.rs:let _ = file_ptr; // suppress unused warning
+file_ops.rs:return Ok(0);
+file_ops.rs:return Ok(0);
+fs_syscalls.rs:.unwrap_or(0);
+fs_syscalls.rs:.unwrap_or(0);
+fs_syscalls.rs:.unwrap_or(0);
+fs_syscalls.rs:let _ = unsafe { PENDING_CHDIR.insert(&tid, &ptr, 0) };
+fs_syscalls.rs:let _ = unsafe { PENDING_CHDIR.remove(&tid) };
+fs_syscalls.rs:let _ = unsafe { PENDING_RENAME.insert(&tid, &pending, 0) };
+fs_syscalls.rs:let _ = unsafe { PENDING_RENAME.remove(&tid) };
+fs_syscalls.rs:new_dfd: ctx.read_at::<i64>(ARG2).unwrap_or(AT_FDCWD as i64),
+fs_syscalls.rs:new_ptr: ctx.read_at::<u64>(ARG1).unwrap_or(0),
+fs_syscalls.rs:new_ptr: ctx.read_at::<u64>(ARG3).unwrap_or(0),
+fs_syscalls.rs:old_dfd: ctx.read_at::<i64>(ARG0).unwrap_or(AT_FDCWD as i64),
+fs_syscalls.rs:old_ptr: ctx.read_at::<u64>(ARG0).unwrap_or(0),
+fs_syscalls.rs:old_ptr: ctx.read_at::<u64>(ARG1).unwrap_or(0),
+fs_syscalls.rs:return 0;
+fs_syscalls.rs:return 0;
+fs_syscalls.rs:return;
+fs_syscalls.rs:return;
+fs_syscalls.rs:return;
+fs_syscalls.rs:return;
+fs_syscalls.rs:return;
+fs_syscalls.rs:return;
+fs_syscalls.rs:return;
+fs_syscalls.rs:unsafe { ctx.read_at::<i64>(RET).unwrap_or(-1) }
+open_syscalls.rs:.unwrap_or(0);
+open_syscalls.rs:.unwrap_or(0);
+open_syscalls.rs:bpf_probe_read_user(how_ptr as *const u64).unwrap_or(0) as u32
+open_syscalls.rs:ctx.read_at::<i64>(ARG0).unwrap_or(AT_FDCWD as i64),
+open_syscalls.rs:ctx.read_at::<i64>(ARG0).unwrap_or(AT_FDCWD as i64),
+open_syscalls.rs:ctx.read_at::<i64>(ARG1).unwrap_or(0) as u32,
+open_syscalls.rs:ctx.read_at::<i64>(ARG2).unwrap_or(0) as u32,
+open_syscalls.rs:ctx.read_at::<u64>(ARG0).unwrap_or(0),
+open_syscalls.rs:ctx.read_at::<u64>(ARG0).unwrap_or(0),
+open_syscalls.rs:ctx.read_at::<u64>(ARG1).unwrap_or(0),
+open_syscalls.rs:ctx.read_at::<u64>(ARG1).unwrap_or(0),
+open_syscalls.rs:if force_insert_failure() || PENDING_OPEN.insert(&tid, &pending, 0).is_err() {
+open_syscalls.rs:if unsafe { TRACED_PIDS.insert(&pid, &1u8, 0) }.is_err() {
+open_syscalls.rs:let _ = PENDING_OPEN.remove(&tid);
+open_syscalls.rs:let _ = unsafe { PENDING_OPEN.insert(&tid, &marker, 0) };
+open_syscalls.rs:let how_ptr = ctx.read_at::<u64>(ARG2).unwrap_or(0);
+open_syscalls.rs:return false;
+open_syscalls.rs:return;
+open_syscalls.rs:return;
+open_syscalls.rs:return;
+open_syscalls.rs:return;
+open_syscalls.rs:return;
+open_syscalls.rs:return;
+open_syscalls.rs:return;
+open_syscalls.rs:return;
+open_syscalls.rs:return;
+open_syscalls.rs:return;
+open_syscalls.rs:return;
+open_syscalls.rs:return;
+open_syscalls.rs:return;
+open_syscalls.rs:return;
+open_syscalls.rs:return;
+open_syscalls.rs:return;
+open_syscalls.rs:unsafe { ctx.read_at::<i64>(RET).unwrap_or(-1) }
+tcp_connect.rs:Err(_) => return 0,
+tcp_connect.rs:if CONN_INFO.insert(&conn_id, &conn_info, 0).is_err() {
+tcp_connect.rs:return 0;
+tcp_connect.rs:return 0;
+tcp_connect.rs:return 0;
+tcp_connect.rs:return None;
+tls_openssl.rs:fn try_ssl_read_return(ctx: &RetProbeContext) -> Result<u32, i64> {
+tls_openssl.rs:let _ = bpf_probe_read_user_buf(buf_ptr as *const u8, sub_slice);
+tls_openssl.rs:let _ = bpf_probe_read_user_buf(buf_ptr as *const u8, sub_slice);
+tls_openssl.rs:match try_ssl_read_return(&ctx) {
+tls_openssl.rs:pub fn ssl_read_return(ctx: RetProbeContext) -> u32 {
+tls_openssl.rs:return Ok(0);
+tls_openssl.rs:return Ok(0);
+tls_openssl.rs:return Ok(0);
+tls_openssl.rs:return Ok(0);
