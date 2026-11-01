@@ -1837,3 +1837,92 @@ kernel bump is a plausible source for exactly that. Timestamping the
 program's own clock remains the next instrument; this run says to
 timestamp the attach too, and to compare against an older image if one
 can still be requested.
+
+## Run 18 — the kernel is the variable, and 6.8 establishes 25 out of 25
+
+Run 16 ended by saying to "compare against an older image if one can
+still be requested". It can. `ubuntu-22.04` is still a live label, and
+because the container shares the host kernel, the label is the only
+lever this instrument has over the kernel the handshake races against —
+a hosted runner's image version cannot be pinned.
+
+Both arms ran as one matrix off commit `3d8504b0`, started within 20
+seconds of each other, each building its own image from the same tree.
+That matters: runs 14/15/17 measured `ubuntu-latest` on a different day
+against a different image, so they are a weak control for a new reading.
+
+| arm | release | kernel | runner image | rate |
+|---|---|---|---|---|
+| `ubuntu-latest` | 24.04.5 | `7.0.0-1017-azure` | `20261026.354.1` | **8/25 = 32.0%** |
+| `ubuntu-22.04` | 22.04.5 | `6.8.0-1070-azure` | `20261026.341.1` | **25/25 = 100.0%** |
+
+### This is not a shifted probability, it is a different outcome
+
+Twenty-five consecutive establishments. At the control arm's own
+measured 32%, a clean sweep of 25 has probability `0.32^25`, about
+1.3e-12. The instrument is the same script, the same container, the
+same command, in the same hour.
+
+The control also reproduces: 32.0% here against 36%, 32% and 40% in
+runs 14, 15 and 17. `ubuntu-latest` now stands at 35/100 = 35% across
+four runs on two images. A control that reproduces is what licenses
+reading the experimental arm at all.
+
+### The 22.04 arm's shape, which is the stronger evidence
+
+The rate is the headline, but the distribution is the finding:
+
+```
+ubuntu-22.04    established: min=2302ms median=2318ms max=2414ms n=25
+ubuntu-latest   established: min=3351ms median=3368ms max=3405ms n=8
+                failed:      min=5301ms median=5327ms max=5361ms n=17
+```
+
+Three things fall out.
+
+**No diagnosis was emitted at all** — not a quiet failure, not a
+degraded establishment. `(none — no iteration emitted a diagnosis)`,
+which is also the first time the run-15 fallback fix has been exercised
+by a genuinely empty set rather than by a reviewer's mutation.
+
+**The 2s gap holds a fourth time.** 5327 − 3368 = 1959ms, against 1961,
+1980 and 1987 in runs 14, 15 and 17 — within 28ms across four runs and
+four runners while absolute durations moved by a second. The gap is the
+timeout; that is now beyond argument.
+
+**6.8 is a second faster, not merely luckier.** Its established median
+is 2318ms against 24.04's 3368ms, and its spread across 25 traces is
+112ms against 24.04's 54ms across 8. A race that is lost a third of the
+time on one kernel is not being won slowly on the other; it is not
+being run.
+
+### What this settles, and what it does not
+
+Settled: **the traced-root handshake is not an x86_64 property.** It is
+a property of the kernel the probes attach to. Every encoding
+hypothesis this branch chased was looking for an architecture
+difference that was never there, and #1321's title already says so —
+this supplies the A/B that was missing behind it.
+
+Not settled: **which kernel change.** 6.8.0 → 7.0.0 is a wide interval
+and this run narrows it no further. The live-window lead from runs 14
+and 15 survives intact and now has a control to be measured against:
+`openat_entered` spans 1..241 across the 17 failures here, and on 6.8
+there are no failures to span anything.
+
+### The stopgap this makes available
+
+Pinning the eBPF lane to `ubuntu-22.04` is now a measured option rather
+than a guess, and it would take `main` green on #1185. Two cautions
+belong with it.
+
+It is a pin to a release that will itself be retired, so it buys time
+rather than a fix, and it should carry a comment saying what measurement
+justified it and what the expiry is.
+
+And it would change what the lane reports, not only whether it passes.
+#1252's second onset coincides with the same image rollover (see the
+comment on that issue), so a 6.8 lane may surface the `do_filp_open`
+kprobe attach failure that #1313's guard has been aborting ahead of
+since 10-31 — or may not, if that defect is kernel-dependent too. Either
+outcome is information; neither should be read as a new regression.
