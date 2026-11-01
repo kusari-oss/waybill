@@ -14,17 +14,40 @@
 # rate is known: a change that does nothing passes two runs in three. This
 # workflow is that number.
 #
-# `workflow_dispatch` only, deliberately. The job rebuilds the eBPF test
-# image (~10 minutes) and then runs N privileged traces, which is far too
-# expensive to attach to a push trigger — and unlike
-# `tracepoint-inventory.yml`, whose probe takes 8 seconds, there is nothing
-# cheap about it. It is also the reason the rate cannot be gathered by
-# pushing N times: every push is a fresh runner with its own image and its
-# own timing, so N pushes measure N different environments once each. The
-# rate has to come from one container.
+# The job rebuilds the eBPF test image (~10 minutes) and then runs N
+# privileged traces, so it has no business on a broad push trigger —
+# unlike `tracepoint-inventory.yml`, whose probe takes 8 seconds.
+#
+# It was written `workflow_dispatch`-only for that reason, and that made it
+# unrunnable: GitHub registers a workflow for dispatch only from the
+# default branch, so a dispatch-only file living on a feature branch does
+# not appear in the API at all. Checked rather than assumed —
+# `/actions/workflows` listed `tracepoint-inventory.yml` and not this file.
+# An instrument that cannot be invoked until it merges is not an
+# instrument, which is why `tracepoint-inventory.yml` is push-triggered
+# too.
+#
+# So: `probe/**` pushes, narrowed by `paths` to the probe and the things it
+# runs on. Those change deliberately and rarely, and the dispatch trigger
+# stays for re-running with a different N once this is on the default
+# branch.
+#
+# None of this makes the rate gatherable by pushing N times: every push is
+# a fresh runner with its own image and its own timing, so N pushes measure
+# N environments once each. Run 12's counter-example was two traces in ONE
+# container disagreeing 16 seconds apart. The loop has to be inside the
+# container, and it is.
 name: handshake establishment rate (x86_64)
 
 on:
+  push:
+    branches:
+      - 'probe/**'
+    paths:
+      - 'scripts/ebpf-handshake-rate.sh'
+      - 'scripts/ebpf-container-run.sh'
+      - '.github/workflows/handshake-rate.yml'
+      - 'Dockerfile.ebpf-test'
   workflow_dispatch:
     inputs:
       iterations:
@@ -89,9 +112,9 @@ jobs:
         run: |
           bash scripts/ebpf-container-run.sh \
               waybill-ebpf-test \
-              "${{ inputs.deadline_seconds }}" \
+              "${{ inputs.deadline_seconds || '600' }}" \
               /usr/local/bin/ebpf-handshake-rate.sh \
-              "${{ inputs.iterations }}" | tee rate.txt
+              "${{ inputs.iterations || '25' }}" | tee rate.txt
 
       # Assert on a positive signal, never on absence: a loop that exited
       # early and a loop that ran to completion with zero establishments

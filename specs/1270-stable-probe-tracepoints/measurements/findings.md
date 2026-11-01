@@ -1464,12 +1464,29 @@ completion with zero establishments otherwise print the same zeroes. The
 workflow greps for that line and for the rate line, so a job that built
 an image and never looped cannot pass.
 
-**Deliberately `workflow_dispatch` only, and deliberately not the
-image's `ENTRYPOINT`.** The job rebuilds the test image (~10 minutes)
-before running N privileged traces, so it has no business on a push
-trigger — and the probe is invoked by overriding the entrypoint, so the
-eBPF CI lane that depends on this image cannot be altered by adding a
-measurement to it.
+**Triggered by `probe/**` pushes narrowed to four paths, and
+deliberately not the image's `ENTRYPOINT`.** The probe is invoked by
+overriding the entrypoint, so the eBPF CI lane that depends on this image
+cannot be altered by adding a measurement to it.
+
+The trigger took a correction. It was written `workflow_dispatch`-only,
+because the job rebuilds the image (~10 minutes) before running N
+privileged traces and has no business on a broad push trigger. That made
+it **unrunnable**: GitHub registers a workflow for dispatch only from the
+default branch, so a dispatch-only file on a feature branch does not
+appear in `/actions/workflows` at all — checked there, which listed
+`tracepoint-inventory.yml` and not this file. An instrument that cannot
+be invoked until it merges is not an instrument, and it is why
+`tracepoint-inventory.yml` is push-triggered too. The `paths` filter
+keeps the cost where it belongs: the probe, the runner script, the
+workflow and the Dockerfile, all of which change deliberately and
+rarely.
+
+The same check caught a second defect in the same place: `inputs.*` is
+empty on a `push` event, so the deadline would have expanded to
+`timeout "" docker wait` and failed. The defaults now live in the
+expression (`${{ inputs.deadline_seconds || '600' }}`) rather than only
+in the dispatch form, where they are unreachable from a push.
 
 ### Two incidental corrections, from building it
 
