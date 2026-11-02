@@ -1,0 +1,58 @@
+# A measurement, not a gate.
+#
+# `specs/1270-stable-probe-tracepoints/measurements/tracepoint-inventory.sh`
+# answers two questions about the kernel a capture attaches to: which
+# syscall tracepoints it offers, and at what offsets it publishes their
+# arguments. It has only ever been run on arm64, because an arm64 host
+# cannot reach an x86_64 kernel -- a `--platform linux/amd64` container
+# still reports the host kernel's tracepoints.
+#
+# findings.md listed "the offsets, from the lane itself" as still to
+# measure. Run 2 answered the presence half on x86_64 and left the
+# offsets unmeasured, while `open_syscalls.rs` says they were "measured
+# against every tracepoint this module attaches to". That is true of
+# arm64 only, and the x86_64 lane now cannot establish its traced root
+# at all (#1185).
+#
+# Push a `probe/**` branch to run it. There is nothing to assert here:
+# the output is the result, and it is read, not gated.
+name: tracepoint inventory (x86_64)
+
+on:
+  push:
+    branches:
+      - 'probe/**'
+
+permissions:
+  contents: read
+
+jobs:
+  inventory:
+    name: syscall tracepoint presence + argument offsets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # A probe needs no credentials, and leaving the checkout token in
+          # the local git config lets anything later in the job use it.
+          persist-credentials: false
+
+      - name: kernel identity
+        run: |
+          uname -a
+          echo "arch: $(uname -m)"
+
+      # The script needs tracefs, so root. It prints a `kernel:` line
+      # first; if that line is absent it did not run, and the exit
+      # status alone would not say so.
+      - name: tracepoint inventory
+        run: |
+          sudo bash specs/1270-stable-probe-tracepoints/measurements/tracepoint-inventory.sh \
+              | tee inventory.txt
+          echo "=== the line that proves it ran ==="
+          grep -E '^kernel:' inventory.txt || { echo "FAIL: probe produced no kernel: line"; exit 1; }
+
+      - name: the offsets, isolated
+        run: |
+          echo "ARG0=16 ARG1=24 ARG2=32 RET=16 is what open_syscalls.rs hardcodes."
+          sed -n '/--- argument layout ---/,$p' inventory.txt

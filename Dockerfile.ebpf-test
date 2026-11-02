@@ -65,10 +65,22 @@ RUN channel=$(sed -n 's/^channel *= *"\(.*\)"/\1/p' /tmp/ebpf-rust-toolchain.tom
 
 WORKDIR /waybill
 
-# COPY the waybill source tree WITHOUT the harness script, so iterating
-# on the assertion script doesn't invalidate the ~10-minute cargo-build
-# layer. `.dockerignore` (see below) excludes scripts/ from this COPY;
-# we bring the script in as a separate final layer.
+# COPY the waybill source tree.
+#
+# This comment used to claim that `.dockerignore` excludes `scripts/`
+# from this COPY, so that editing an assertion script would not
+# invalidate the ~10-minute cargo-build layer below. It does not:
+# `scripts/` has never been in `.dockerignore`, so this COPY pulls it in
+# and an edit to the harness does invalidate the cargo layers.
+#
+# Left as it is rather than "fixed". `.dockerignore` filters the build
+# context, so excluding `scripts/` would make the explicit `COPY
+# scripts/...` lines below fail outright, and a negation exception would
+# put the files back in the context where the bulk COPY picks them up
+# again. Making the claim true needs the bulk COPY to name its paths or
+# use BuildKit's `COPY --exclude`, which is a change to a 10-minute
+# cached build that no measurement here calls for. The comment is now
+# accurate, which is the part that was costing anything.
 COPY . .
 
 # Build eBPF kernel bytecode + userspace binary with ebpf-tracing on.
@@ -77,11 +89,17 @@ COPY . .
 RUN cargo run --package xtask -- ebpf
 RUN cargo build --release --features ebpf-tracing --bin waybill
 
-# Layer the harness script LAST so edits to it don't invalidate the
-# preceding cargo-build layer. The COPY at line ~36 above pulls in
-# scripts/ once, but a subsequent edit to the harness overwrites the
-# specific file that ENTRYPOINT invokes without a full rebuild.
+# Re-COPY the scripts LAST, to the paths the container actually invokes.
+# This does not save the cargo layer (see above) but it does mean the
+# invoked copy is the edited one regardless of layer caching.
 COPY scripts/ebpf-integration-test.sh /usr/local/bin/ebpf-integration-test.sh
-RUN chmod +x /usr/local/bin/ebpf-integration-test.sh
+# #1185 — the handshake establishment-rate probe. Not the ENTRYPOINT:
+# it is run by passing `--entrypoint` explicitly (see
+# scripts/ebpf-container-run.sh), so the default behaviour of this image
+# is unchanged and the CI lane that depends on it cannot be altered by
+# adding a measurement.
+COPY scripts/ebpf-handshake-rate.sh /usr/local/bin/ebpf-handshake-rate.sh
+RUN chmod +x /usr/local/bin/ebpf-integration-test.sh \
+             /usr/local/bin/ebpf-handshake-rate.sh
 
 ENTRYPOINT ["/usr/local/bin/ebpf-integration-test.sh"]

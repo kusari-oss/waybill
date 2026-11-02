@@ -310,6 +310,65 @@ pub static TRACED_PIDS: HashMap<u32, u8> = HashMap::with_max_entries(16384, 0);
 #[map]
 pub static TRACED_SUBTREE_HITS: PerCpuArray<u64> = PerCpuArray::with_max_entries(1, 0);
 
+/// #1185 — where the handshake dies, when it dies.
+///
+/// Separate from `EVENT_DROPS` on purpose, and not for tidiness: that map
+/// is now an input to the completeness claim (`measured_loss` sums
+/// `total_lost()`), so a diagnostic counted there would be reported as
+/// capture loss. This one is read for diagnosis and feeds nothing.
+///
+/// It exists because the failure it diagnoses destroys its own evidence.
+/// When the root is never established the run aborts before writing an
+/// attestation, so every existing counter -- including
+/// `kernel_traced_insert_failed`, which covers the seeding path itself --
+/// is unreadable. Two hypotheses were refuted by separate means before
+/// this was built; counts localise in one run what guessing did not in
+/// two.
+///
+/// Slots, and what each distinguishes:
+///
+/// - `0` `sys_enter_openat` fired at all. Zero here means the entry
+///   program does not run on this kernel, which would explain far more
+///   than the handshake.
+/// - `1` an open arrived whose `dfd` equalled `TRACE_HANDSHAKE_DFD`.
+///   Zero with slot 0 non-zero means the marker's `dfd` is not arriving
+///   as written.
+/// - `2` the `dfd` matched and the nonce did not. Non-zero means compare
+///   the value userspace wrote against what the slot reads back.
+/// - `3` `is_handshake` returned true, so seeding was attempted. Non-zero
+///   with an empty `TRACED_PIDS` means the insert failed (see
+///   `kernel_traced_insert_failed`) or userspace is reading a different
+///   map than the kernel wrote.
+/// - `4` the low 32 bits of `dfd` equalled the sentinel's and the full
+///   64 bits did not. The kernel's `dfd` is an `int` reported in an
+///   8-byte slot the format declares `signed:0`; a kernel that
+///   zero-extends the truncated `int` yields
+///   `0x00000000F8523F42` where one passing the raw register yields
+///   `0xFFFFFFFFF8523F42`. Non-zero here names that difference exactly,
+///   and the comparison should be on the low 32 bits.
+/// - `7` **an invalid control. Do not read it as an answer.** It counts
+///   opens where `should_trace()` is true, intending "not the tracer's
+///   own". But `should_trace` compares `cfg.tracer_pid` against
+///   `current_pid()`, and the tracer's pid is the namespaced one while
+///   the kernel's is the init-namespace one -- they cannot match in a
+///   container. That mismatch is the thing the handshake exists to work
+///   around, so this slot reports every open and reads
+///   `non_tracer_opens == openat_entered` whatever is true. Kept, named,
+///   and not deleted, because it looked like a clean result for one
+///   round. Measure visibility by amplitude instead: issue N identical
+///   opens from `pre_exec` and watch slot 0 move, or not.
+/// - `6` an open arrived whose `flags` equalled the nonce, whatever its
+///   `dfd`. This is the control for the one thing the marker's design
+///   rests on: that an open with a deliberately invalid `dfd` is
+///   observed at syscall entry. If slot 6 fires while slot 1 stays
+///   zero, the kernel raises this tracepoint after validating `dfd`,
+///   and an invalid-`dfd` marker cannot be seen on it by construction.
+/// - `5` any open with a negative `dfd` other than `AT_FDCWD`. A
+///   catch-all: if slot 4 is zero too, the marker is being transformed
+///   some third way, or is not reaching this tracepoint at all.
+#[map]
+pub static HANDSHAKE_DIAG: PerCpuArray<u64> = PerCpuArray::with_max_entries(8, 0);
+
 /// #1185 — the per-trace handshake nonce, written by the loader before the
 /// child is spawned. Slot `TRACE_HANDSHAKE_NONCE_SLOT`. A zero nonce means
 /// no handshake is armed, and no pid can be seeded.
