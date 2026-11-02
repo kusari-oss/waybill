@@ -33,13 +33,33 @@
 
 ### Validation findings
 
-**All clarifications resolved.** FR-002's one marker — which manifest wins when
-both are present — was asked and answered in session 2026-11-02:
-`package.yaml`. The answer produced a requirement that was not in the first
-draft (FR-004a): milestone 143's existing warning tells operators to
-"regenerate before scanning", which stops being true once the manifest is what
-gets read, so the advice has to be rewritten rather than inherited. A
-clarification that only changed a sentence would not have surfaced that.
+**All clarifications resolved — 4 questions across one session.** The spec grew
+from 17 functional requirements to 26 and from 8 success criteria to 10, and
+every addition came from an answer rather than from redrafting.
+
+1. **Which manifest wins when both are present** → `package.yaml`. Produced
+   **FR-004a**, which was not in the first draft: milestone 143's warning tells
+   operators to "regenerate before scanning", and that stops being true the
+   moment the manifest is what gets read. Leaving it would instruct an operator
+   to perform a step that cannot affect the output.
+2. **Where the "could not read" signal lives** → document *and* log. Produced
+   **FR-018/019/020** and **SC-009**. The spec previously said "a diagnostic"
+   without saying where, and a log-only diagnostic would have left the artifact
+   exactly as dishonest as the defect being fixed.
+3. **How much of hpack to model** → the dependency-bearing subset, announcing
+   what is skipped. Produced **FR-001a/b/c**, three new edge cases, and
+   **SC-010**. FR-001c is the load-bearing one: `defaults:` fetches YAML from
+   GitHub, so an unexamined "model everything" reading would have put a network
+   call inside a manifest reader and broken `--offline`.
+4. **Whether to add an opt-in `hpack` subprocess tier** → no, in-tree only.
+   Produced **FR-021/022**, and resolved an assumption the spec had deferred to
+   Phase 0. FR-022 generalises the rejected option: no behaviour may vary with
+   what is on the host's `PATH`, because the project has already shipped a
+   fixture whose tier was silently decided by a system `gradle` on CI.
+
+The pattern worth noting: three of the four answers produced requirements, not
+just wording. A clarification round that only sharpens sentences has not found
+the decisions.
 
 **Content-quality judgement.** Several requirements name `package.yaml`,
 `*.cabal`, `hackage-packages.nix` and `flake.lock`. These are read as

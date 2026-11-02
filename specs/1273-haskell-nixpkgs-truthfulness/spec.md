@@ -45,6 +45,43 @@ Reproduction harnesses are committed under `measurements/`.
   "regenerate before scanning" stops being true the moment the manifest is what
   gets read.
 
+- Q: When waybill cannot read a Haskell manifest, or declines to withdraw an
+  optional mark, where must that signal live — log, document, or both?
+  → A: **Both, and the document is the part that matters.** A log line reaches
+  only the operator who ran the scan; this milestone exists because the
+  *artifact* reads as a confident answer when it is not one, and an artifact is
+  what gets consumed months later. Existing annotation vocabulary is reused
+  wherever it fits (`waybill:unresolved-reason` / C151,
+  `waybill:graph-completeness`) rather than new rows invented — Principle V,
+  standards-native and existing fields before new `waybill:` keys. Any
+  genuinely new catalog row must ship with its parity extractor, or the catalog
+  tests fail by design.
+
+- Q: How much of hpack's `package.yaml` should be modelled, and what happens to
+  a construct that is not?
+  → A: **The dependency-bearing subset, with anything skipped announced.**
+  Modelled: top-level and per-component `dependencies`, `source-dirs`, and
+  `when:` conditional blocks. Not modelled: `!include` and `defaults:`, which
+  must be announced in the document rather than passed over — `defaults:`
+  fetches YAML from GitHub, so it cannot be honoured under `--offline` and a
+  reader is not the place to introduce a network dependency. The rejected
+  alternative was refusing any manifest using an unmodelled construct: `when:`
+  is common for OS-conditional dependencies, so that would emit nothing for
+  many real projects, which is #1278 again with a louder failure mode.
+
+- Q: Should this milestone add an opt-in subprocess tier shelling out to the
+  real `hpack` binary, as `--gradle-resolve` and `--helm-render` do?
+  → A: **No — in-tree parser only, no new CLI surface.** The FR-001a subset is
+  YAML plus inheritance rules and `serde_yaml` is already a direct dependency,
+  so the parser is affordable; `!include` and `defaults:` stay announced rather
+  than resolved. A subprocess tier remains available as a later milestone if
+  the announced gap is measured to bite real projects. Explicitly rejected:
+  shelling out automatically when `hpack` is on `PATH`. That makes the document
+  depend on host state — the same project scanned on two machines would yield
+  different SBOMs with nothing recording why — and the project has already been
+  bitten by that exact shape, where a system `gradle` on CI's `PATH` silently
+  changed which Gradle tier the fixtures exercised.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 — a project the reader cannot read says so (Priority: P1)
@@ -186,8 +223,12 @@ carries a resolved version and an unresolved-reason.
   committed `*.cabal` and some do not.
 - A `package.yaml` whose `*.cabal` sibling is hpack-generated but STALE relative
   to it — the two disagree and only one can be the document's answer.
-- A `package.yaml` using hpack features that have no `.cabal` equivalent this
-  feature models.
+- A `package.yaml` whose only unmodelled construct is cosmetic (`ghc-options`,
+  `verbatim:`) — announcing it would be noise, since it cannot change the
+  dependency set, so FR-001b's trigger is specifically constructs that can.
+- A `package.yaml` using `!include` or `defaults:`, where the dependency set is
+  knowably incomplete and must be reported as such.
+- A `when:` block whose condition cannot be evaluated from the manifest alone.
 - A dependency marked optional by a `buildable: False` stanza that is ALSO a
   direct dependency of the library — not optional, and the closure must say so
   for the right reason.
@@ -236,6 +277,23 @@ carries a resolved version and an unresolved-reason.
   would instruct an operator to perform a step that cannot affect the output,
   which is worse than silence because it looks like a remedy.
 
+- **FR-001a**: The modelled subset of `package.yaml` is: top-level
+  `dependencies`, per-component `dependencies`, `source-dirs`, and `when:`
+  conditional blocks. The exact semantics of each — in particular how hpack
+  resolves per-component inheritance from the top-level list, and how a `when:`
+  condition is evaluated against defaults — are external behaviours of hpack and
+  MUST be measured before a requirement depends on them, not read from its
+  documentation alone.
+- **FR-001b**: A construct outside FR-001a's subset that could change the
+  dependency set MUST be announced in the emitted document per FR-018, naming
+  the construct and the file. `!include` and `defaults:` are both in this
+  category. A manifest using one yields a partial answer that says it is
+  partial, rather than a complete-looking answer that is not.
+- **FR-001c**: `defaults:` MUST NOT cause a network fetch. hpack resolves it by
+  retrieving YAML from a remote repository; a manifest reader is not the place to
+  introduce that, and it cannot be honoured under `--offline` at all. A manifest
+  using `defaults:` is handled by FR-001b.
+
 #### Completeness claims (US1)
 
 - **FR-005**: A document MUST NOT assert graph completeness on the strength of a
@@ -278,6 +336,28 @@ carries a resolved version and an unresolved-reason.
   reason MUST distinguish compiler-supplied from undeterminable.
 
 #### Cross-cutting
+
+- **FR-018**: Every signal this feature adds about what waybill could not do
+  MUST be present in the emitted document, not only in the scan log. The
+  document is the deliverable; a log reaches only the operator who ran the scan,
+  and the defect this milestone fixes is that the document reads as a confident
+  answer when it is not one.
+- **FR-019**: Those signals MUST reuse existing annotation vocabulary where it
+  fits — `waybill:unresolved-reason` (catalog row C151) and
+  `waybill:graph-completeness` both already express "waybill could not
+  establish this" — in preference to new `waybill:` keys, per Principle V. A
+  new catalog row MUST ship with its parity extractor in the same change; the
+  catalog's own tests enforce this, and adding a documentation row ahead of
+  emission code is a known way to break them.
+- **FR-020**: A signal MUST also be logged, so an operator can act before the
+  SBOM is published rather than only discover it afterwards.
+
+- **FR-021**: This feature MUST NOT add a CLI flag, an external tool
+  dependency, or a subprocess invocation. The hpack subset is read in-tree.
+- **FR-022**: No behaviour in this feature may vary with whether a tool is
+  present on the host's `PATH`. Two scans of the same tree on two machines MUST
+  produce the same classification, so that a difference between two documents is
+  always a difference between their inputs.
 
 - **FR-015**: The development, optional and build axes of every ecosystem this
   feature does not name MUST be unchanged.
@@ -324,6 +404,14 @@ carries a resolved version and an unresolved-reason.
   of those the cached set declares one for.
 - **SC-005**: No emitted component both carries a resolved version and an
   unresolved-reason. Measured today: 2.
+- **SC-010**: A `package.yaml` using `!include` or `defaults:` yields a document
+  that names the unmodelled construct, and a scan of it performs no network
+  request. Verified by asserting on the document and by running under
+  `--offline`.
+- **SC-009**: Every "could not read / could not establish" condition this
+  feature introduces is observable by reading the emitted document alone, with
+  no access to the scan log. Verified by asserting on the document, not on
+  captured logs.
 - **SC-006**: Every requirement above is covered by a test that fails when the
   behaviour it describes is removed. Mutation-tested, not assumed — on this
   milestone's own evidence, two of the four defects are cases where the existing
@@ -351,11 +439,11 @@ carries a resolved version and an unresolved-reason.
   quality, and how to fix them depends on open scoping decisions (#971, whether
   nix evaluation becomes primary; #1034, how deep a closure is followed).
   Fixing them before those are settled risks doing the work twice.
-- **No new runtime dependency on the `hpack` binary.** The project's constitution
-  constrains what the shipped binary links and shells out to; a parser is
-  expected to be in-tree. Whether that is affordable for the subset of hpack
-  FR-001 needs is a Phase 0 question, and if it is not, FR-001's shape changes
-  rather than the constraint.
+- **No dependency on the `hpack` binary, resolved rather than assumed.** FR-021
+  settles this: the subset FR-001a names is read in-tree, and the question of
+  whether a subprocess tier is affordable is answered by not needing one.
+  Phase 0 still has to measure hpack's *semantics* for that subset (FR-001a),
+  which is a different question from whether to invoke it.
 - **The two contradicting components in US4 are the same two US2 is about**, so
   US4's remaining population must be measured after US2 lands rather than
   predicted now.
