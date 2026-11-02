@@ -1,0 +1,13 @@
+{
+  "name": "waybill-fixture-bun-optional",
+  "version": "1.0.0",
+  "description": "Milestone 1272 US2 fixture - bun project in the shape bun actually produces. Structure measured on bun 1.4.2; names synthetic per FR-015.",
+  "private": true,
+  "dependencies": {
+    "waybill-fixture-runtime": "1.0.0"
+  },
+  "optionalDependencies": {
+    "waybill-fixture-optional": "2.0.0",
+    "waybill-fixture-contested": "4.0.0"
+  }
+}

@@ -269,3 +269,76 @@ designed for:
 Both now sit beside a measured-shape counterpart
 (`tests/fixtures/optional_dep/pnpm_v9_measured/`), per FR-013's rule
 that a hand-written shape must not be an arm's only evidence.
+
+## Probe E — bun publishes no closure at all, and `optionalPeers` is an array
+
+Harness: the bun half of `optional-axis-probe.sh`, plus a two-case
+comparison run during US2 implementation. bun 1.4.2.
+
+### Finding E1 — the contested and optional-only cases are byte-identical in `packages`
+
+Two projects were installed: one where a package is reachable by both an
+optional and a non-optional path, and one where it is reachable only
+optionally. The `packages` map bun emitted is **the same in both**:
+
+```json
+"packages": {
+  "debug": ["debug@4.3.4", "", { "dependencies": { "ms": "2.1.2" }, ... }, "sha512-..."],
+  "ms":    ["ms@2.1.2",    "", {}, "sha512-..."]
+}
+```
+
+The only difference between the two lockfiles is which `workspaces`
+section names the package — `dependencies` versus
+`optionalDependencies`. bun records the declaration and the edge, never
+a closure.
+
+This is why the bun arm needs two traversals where pnpm needed none, and
+why the US2 tests deliberately share one `packages` map between the two
+cases: a reader that ignored the `workspaces` map, or that cancelled at
+depth 1 only, would return the same answer for both.
+
+### Finding E2 — `optionalPeers` is a JSON array, so m667 could never read it
+
+Real bun emits:
+
+```json
+"optionalPeers": ["supports-color"]
+```
+
+An **array of names**, not an object of name-to-spec. m667's Pass 2
+reads every edge section with `metadata.get(section).and_then(|v| v.as_object())`,
+which is `None` for an array. Two consequences, neither previously
+visible:
+
+1. `seen_optional_peers` never fires on a real lockfile, so
+   **`bun-optional-peers` was an unreachable annotation value**. No
+   committed fixture contains `optionalPeers` and no test asserted the
+   string, which is why it went unnoticed. This is the same defect class
+   as Probe D's missing `peer:` key in pnpm v9 — a code path that exists
+   in the source and not in the behaviour.
+2. Those edges are also **absent from `depends`**, so an optional peer
+   is missing from the emitted dependency graph.
+
+US2 fixes (1), by resolving `optionalPeers` in its own closure helper
+and sourcing the derivation string from there rather than from m667's
+tracker. It deliberately does **not** fix (2): adding edges changes the
+emitted dependency graph, which is outside an axis-classification
+milestone. Worth filing separately.
+
+### Finding E3 — the runtime closure must follow hard edges only
+
+An optional parent's hard edge does not make its child runtime-reachable
+— the parent may be absent, so the child may be too. Probe C measured
+both reference implementations marking such a child optional.
+
+So bun's cancelling set is seeded from `dependencies` and
+`peerDependencies` and closed over those two sections only. Closing it
+over `optionalDependencies` as well — which is what the m1271
+development-axis helper's `protected` set does, correctly for that axis
+— would silently cancel the entire transitive case.
+
+Mutation-tested: switching the runtime closure to all four edge sections
+fails `parse_bun_lock_optional_dep_tagging`, an **m667** test rather
+than one of this milestone's, so the pre-existing suite guards the trap
+too.

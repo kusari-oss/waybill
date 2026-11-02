@@ -271,6 +271,204 @@ fn bun_workspace_dev_scopes(
     })
 }
 
+/// Milestone 1272 US2: the optional/runtime partition for a `bun.lock`,
+/// keyed by `packages`-map key.
+///
+/// Two closures, because bun publishes neither. Measured on bun 1.4.2:
+/// a contested graph and an optional-only graph produce a
+/// **byte-identical** `packages` map, differing only in which
+/// `workspaces` section names the parent. Bun records the declaration
+/// and the edge; the closure is ours to compute. See
+/// `specs/1272-npm-optional-scope/measurements/findings.md`, Probes B
+/// and C.
+///
+/// - `runtime_closure` — reachable from a workspace `dependencies` or
+///   `peerDependencies` declaration following only those same HARD
+///   edge kinds. This is FR-006's cancelling set.
+/// - `all_reachable` — reachable from ANY workspace declaration
+///   following ANY edge kind.
+///
+/// The optional set is then `all_reachable - runtime_closure`, and
+/// FR-007a's transitive propagation falls out of it rather than needing
+/// its own pass.
+///
+/// **Why the hard-edge restriction on the runtime closure matters.**
+/// An optional parent's hard edge does not make its child runtime-
+/// reachable: the parent may be absent, so the child may be too.
+/// Probe C measured exactly this and both reference implementations
+/// agree — a package whose only path runs through an optional parent is
+/// marked optional even though the final edge is a hard one. Closing
+/// the runtime set over optional edges would silently cancel that whole
+/// case.
+///
+/// This is deliberately NOT the m1271 development-axis helper's
+/// `protected` set. That one merges `dependencies` with
+/// `optionalDependencies`, which is correct there — both are "not dev" —
+/// and fatal here, because the cancelling set would contain the very
+/// packages being classified and FR-006 would subtract a set from
+/// itself.
+struct BunOptionalScopes {
+    runtime_closure: std::collections::HashSet<String>,
+    all_reachable: std::collections::HashSet<String>,
+    /// Targets an `optionalPeers` edge reached, and targets an
+    /// `optionalDependencies` edge or workspace declaration reached.
+    /// Only used to choose the derivation string, preserving m667's V6
+    /// rule that `-peers` applies when a target was reached
+    /// EXCLUSIVELY through optional peers.
+    ///
+    /// These are computed here rather than read from m667's
+    /// `target_opt_state` because **that tracker cannot see
+    /// `optionalPeers` at all**: real bun emits it as an ARRAY
+    /// (`"optionalPeers": ["supports-color"]`, measured on bun 1.4.2),
+    /// and m667's Pass 2 reads every section with `as_object()`, which
+    /// is `None` for an array. So `seen_optional_peers` never fires on
+    /// a real lockfile and `bun-optional-peers` was an unreachable
+    /// value. No committed fixture contains `optionalPeers` and no test
+    /// asserted that string, which is why it went unnoticed.
+    ///
+    /// m667's Pass 2 also means those edges are missing from `depends`.
+    /// That is a dependency-GRAPH defect rather than an axis defect, so
+    /// it is deliberately not fixed here -- changing emitted edges is
+    /// outside this milestone.
+    via_optional_peers: std::collections::HashSet<String>,
+    via_optional_deps: std::collections::HashSet<String>,
+}
+
+/// Edge kinds that confer runtime reachability. A non-optional peer is
+/// required, so it counts; `optionalDependencies` and `optionalPeers`
+/// do not.
+const BUN_HARD_EDGES: [&str; 2] = ["dependencies", "peerDependencies"];
+/// Every edge kind the m667 reader walks.
+const BUN_ALL_EDGES: [&str; 4] = [
+    "dependencies",
+    "peerDependencies",
+    "optionalDependencies",
+    "optionalPeers",
+];
+
+fn bun_optional_scopes(
+    root: &serde_json::Value,
+    packages_keys: &std::collections::HashSet<&str>,
+) -> Option<BunOptionalScopes> {
+    let workspaces = root.get("workspaces")?.as_object()?;
+    let packages = root.get("packages")?.as_object()?;
+
+    // `optionalPeers` is an array of names in the package metadata, not
+    // an object of name->spec, so it needs its own accessor.
+    let edge_targets = |key: &str, section: &str| -> Vec<String> {
+        let Some(metadata) = packages
+            .get(key)
+            .and_then(|v| v.as_array())
+            .and_then(|a| a.get(2))
+        else {
+            return Vec::new();
+        };
+        let names: Vec<String> = match section {
+            "optionalPeers" => metadata
+                .get(section)
+                .and_then(|v| v.as_array())
+                .map(|a| {
+                    a.iter()
+                        .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                        .collect()
+                })
+                .unwrap_or_default(),
+            _ => metadata
+                .get(section)
+                .and_then(|v| v.as_object())
+                .map(|m| m.keys().cloned().collect())
+                .unwrap_or_default(),
+        };
+        names
+            .iter()
+            .filter_map(|n| resolve_bun_key(key, n, packages_keys))
+            .collect()
+    };
+
+    let close = |seed: std::collections::HashSet<String>,
+                 sections: &[&str]|
+     -> std::collections::HashSet<String> {
+        let mut seen = seed;
+        let mut pending: Vec<String> = seen.iter().cloned().collect();
+        while let Some(key) = pending.pop() {
+            for section in sections {
+                for target in edge_targets(&key, section) {
+                    if seen.insert(target.clone()) {
+                        pending.push(target);
+                    }
+                }
+            }
+        }
+        seen
+    };
+
+    let mut runtime_seed: std::collections::HashSet<String> = Default::default();
+    let mut any_seed: std::collections::HashSet<String> = Default::default();
+    for info in workspaces.values() {
+        for section in BUN_ALL_EDGES {
+            let Some(declarations) = info.get(section).and_then(|v| v.as_object()) else {
+                continue;
+            };
+            for (name, spec) in declarations {
+                if spec.as_str().map(bun_spec_is_non_registry).unwrap_or(false) {
+                    continue;
+                }
+                let Some(key) = resolve_bun_key("", name, packages_keys) else {
+                    // FR-012: a declaration naming a package with no
+                    // lockfile entry is dropped, never synthesised.
+                    continue;
+                };
+                if BUN_HARD_EDGES.contains(&section) {
+                    runtime_seed.insert(key.clone());
+                }
+                any_seed.insert(key);
+            }
+        }
+    }
+
+    if any_seed.is_empty() {
+        return None;
+    }
+
+    let all_reachable = close(any_seed.clone(), &BUN_ALL_EDGES);
+
+    // Which optional edge kind reaches each target, for the derivation
+    // string only. Walked over the reachable set so an edge from an
+    // unreachable package cannot label anything.
+    let mut via_optional_peers: std::collections::HashSet<String> = Default::default();
+    let mut via_optional_deps: std::collections::HashSet<String> = Default::default();
+    for key in &all_reachable {
+        for target in edge_targets(key, "optionalPeers") {
+            via_optional_peers.insert(target);
+        }
+        for target in edge_targets(key, "optionalDependencies") {
+            via_optional_deps.insert(target);
+        }
+    }
+    // A workspace `optionalDependencies` declaration is a
+    // `-dependencies` origin too.
+    for info in workspaces.values() {
+        let Some(declarations) = info
+            .get("optionalDependencies")
+            .and_then(|v| v.as_object())
+        else {
+            continue;
+        };
+        for name in declarations.keys() {
+            if let Some(key) = resolve_bun_key("", name, packages_keys) {
+                via_optional_deps.insert(key);
+            }
+        }
+    }
+
+    Some(BunOptionalScopes {
+        runtime_closure: close(runtime_seed, &BUN_HARD_EDGES),
+        all_reachable,
+        via_optional_peers,
+        via_optional_deps,
+    })
+}
+
 /// Read `<rootfs>/bun.lock` if present. Returns None when absent or
 /// unparseable. Pre-processes the file through the JSONC stripper to
 /// remove `//` line comments and `/* */` block comments before
@@ -840,32 +1038,75 @@ pub(crate) fn parse_bun_lock(
     // ────────────────────────────────────────────────────────────────
     {
         use waybill_common::resolution::LifecycleScope;
-        for (target_key, state) in &target_opt_state {
-            if state.any_hard {
-                // Data-model V5: hard edge wins; leave target untagged.
-                continue;
-            }
-            if !state.seen_optional_deps && !state.seen_optional_peers {
-                // Impossible per Pass 2's tracker logic, but defensive.
-                continue;
-            }
-            let Some(&target_out_idx) =
-                parent_key_to_out_idx.get(target_key.as_str())
-            else {
-                // Target isn't in `out` (shouldn't happen — target_key
-                // came from packages_key_index which is a subset of
-                // parent_key_to_out_idx). Defensive skip.
-                continue;
+
+        // Milestone 1272 US2 — two changes to this pass, both forced by
+        // measurement rather than by taste.
+        //
+        // 1. The ROOT declaration now seeds the axis. m667 drove this
+        //    pass entirely from `target_opt_state`, which is populated
+        //    from per-package metadata and keyed through
+        //    `parent_key_to_out_idx`. That map excludes workspace
+        //    shapes by construction, so a `workspaces."".optionalDependencies`
+        //    declaration had no parent entry to be seen from and was
+        //    structurally invisible (FR-003).
+        //
+        // 2. Cancellation is transitive, not depth-1. `state.any_hard`
+        //    is set by a hard edge from ANY parent -- including a parent
+        //    that is itself optional. Probe C measured both reference
+        //    implementations marking exactly that package optional, so
+        //    `any_hard` suppressed a case the managers classify. The
+        //    runtime closure replaces it (FR-006, FR-007a).
+        //
+        // `target_opt_state` is still read, for one thing only: m667's
+        // choice of derivation string, whose `-peers`-only rule (V6)
+        // FR-009 requires be preserved.
+        let scopes = bun_optional_scopes(root, &packages_keys);
+        for (target_key, &target_out_idx) in &parent_key_to_out_idx {
+            let optional = match &scopes {
+                // The closure is authoritative when the workspaces map
+                // yielded any declaration at all.
+                Some(s) => {
+                    s.all_reachable.contains(*target_key)
+                        && !s.runtime_closure.contains(*target_key)
+                }
+                // No workspaces map, or no resolvable declaration in it:
+                // fall back to m667's per-parent evidence so a lockfile
+                // shape this reader has always handled keeps working.
+                None => target_opt_state
+                    .get(*target_key)
+                    .is_some_and(|st| {
+                        !st.any_hard && (st.seen_optional_deps || st.seen_optional_peers)
+                    }),
             };
+            if !optional {
+                continue;
+            }
             let target = &mut out[target_out_idx];
             target.lifecycle_scope = Some(LifecycleScope::Optional);
-            // V6: -dependencies wins when both sections referenced the
-            // same target with no hard edge. Only `-peers` if EXCLUSIVELY
-            // via optional-peers.
-            let derivation = if state.seen_optional_deps {
-                "bun-optional-dependencies"
-            } else {
+            // m667 V6, preserved: `-dependencies` wins when both
+            // sections referenced the same target; `-peers` only when
+            // the target was reached EXCLUSIVELY through optionalPeers.
+            // A target the tracker never saw was seeded by a workspace
+            // `optionalDependencies` declaration or inherited through
+            // the closure, so it takes the `-dependencies` string.
+            // m667 V6, preserved and finally reachable: `-peers` only
+            // when the target was reached EXCLUSIVELY through optional
+            // peers. Sourced from the closure rather than from
+            // `target_opt_state`, which cannot see `optionalPeers` --
+            // see `BunOptionalScopes`.
+            let peers_only = match &scopes {
+                Some(s) => {
+                    s.via_optional_peers.contains(*target_key)
+                        && !s.via_optional_deps.contains(*target_key)
+                }
+                None => target_opt_state
+                    .get(*target_key)
+                    .is_some_and(|st| st.seen_optional_peers && !st.seen_optional_deps),
+            };
+            let derivation = if peers_only {
                 "bun-optional-peers"
+            } else {
+                "bun-optional-dependencies"
             };
             target.extra_annotations.insert(
                 "waybill:optional-derivation".to_string(),
@@ -1985,6 +2226,227 @@ mod tests {
             m1271_is_dev(&entries, "waybill-fixture-devtool"),
             "and classification still happened with no manifest present; got {:?}",
             m1271_scope_of(&entries, "waybill-fixture-devtool")
+        );
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    // Milestone 1272 US2 — the optional axis for bun.
+    //
+    // The two lockfiles below have an IDENTICAL `packages` map and
+    // differ only in which workspace section names the parent. That is
+    // not a convenience: measured on bun 1.4.2, bun records only the
+    // declaration and the edge, never a closure, and the whole packages
+    // map is byte-identical between the contested and optional-only
+    // cases. See `specs/1272-npm-optional-scope/measurements/
+    // findings.md` Probe B/C.
+    //
+    // So any reader that gets these two cases right is doing the
+    // closure itself, and any reader that gets them both wrong in the
+    // same direction is not reading the workspaces map at all.
+    // ──────────────────────────────────────────────────────────────
+
+    /// The shared `packages` map. `parent` has a HARD edge to `child`.
+    const M1272_PACKAGES: &str = r#"
+  "packages": {
+    "waybill-fixture-parent": ["waybill-fixture-parent@1.0.0", "", { "dependencies": { "waybill-fixture-child": "2.0.0" } }, "sha512-parent"],
+    "waybill-fixture-child": ["waybill-fixture-child@2.0.0", "", {}, "sha512-child"]
+  }
+}"#;
+
+    fn m1272_bun_lock(workspace_sections: &str) -> serde_json::Value {
+        let src = format!(
+            r#"{{
+  "lockfileVersion": 2,
+  "configVersion": 1,
+  "workspaces": {{
+    "": {{
+      "name": "waybill-fixture-root",
+{workspace_sections}
+    }}
+  }},{M1272_PACKAGES}"#
+        );
+        serde_json::from_str(&src)
+            .unwrap_or_else(|e| panic!("fixture must parse: {e}\n{src}"))
+    }
+
+    fn m1272_scope(
+        entries: &[PackageDbEntry],
+        name: &str,
+    ) -> Option<waybill_common::resolution::LifecycleScope> {
+        entries
+            .iter()
+            .find(|e| e.name == name)
+            .unwrap_or_else(|| panic!("{name} emitted; got {entries:?}"))
+            .lifecycle_scope
+    }
+
+    /// T022 / FR-003 + C1 — a ROOT `optionalDependencies` declaration is
+    /// classified optional, and the runtime sibling is not.
+    ///
+    /// This is the defect: the declaration lives in `workspaces.""`, and
+    /// m667's tracker keys through `parent_key_to_out_idx`, which by
+    /// construction excludes workspace shapes. The root declaration was
+    /// structurally invisible.
+    #[test]
+    fn m1272_us2_bun_root_optional_declaration_is_classified() {
+        use waybill_common::resolution::LifecycleScope;
+        let root = m1272_bun_lock(
+            r#"      "optionalDependencies": { "waybill-fixture-parent": "1.0.0" }"#,
+        );
+        let tmp = tempfile::tempdir().unwrap();
+        let entries = parse_bun_lock(&root, "/tmp/bun.lock", tmp.path());
+
+        assert_eq!(
+            m1272_scope(&entries, "waybill-fixture-parent"),
+            Some(LifecycleScope::Optional),
+            "a root optionalDependencies declaration MUST be Optional (FR-003)"
+        );
+        let parent = entries
+            .iter()
+            .find(|e| e.name == "waybill-fixture-parent")
+            .unwrap();
+        assert_eq!(
+            parent.extra_annotations.get("waybill:optional-derivation"),
+            Some(&serde_json::Value::String(
+                "bun-optional-dependencies".to_string()
+            )),
+            "FR-008: the newly Optional component MUST carry the derivation"
+        );
+    }
+
+    /// T023 / FR-007a + C2 — optionality propagates along the optional
+    /// parent's HARD edge.
+    ///
+    /// `child` is declared optional nowhere. It is optional because its
+    /// only path runs through an optional parent. Probe C's control case
+    /// measured both npm and pnpm doing exactly this.
+    #[test]
+    fn m1272_us2_bun_transitive_optional_is_classified() {
+        use waybill_common::resolution::LifecycleScope;
+        let root = m1272_bun_lock(
+            r#"      "optionalDependencies": { "waybill-fixture-parent": "1.0.0" }"#,
+        );
+        let tmp = tempfile::tempdir().unwrap();
+        let entries = parse_bun_lock(&root, "/tmp/bun.lock", tmp.path());
+
+        assert_eq!(
+            m1272_scope(&entries, "waybill-fixture-child"),
+            Some(LifecycleScope::Optional),
+            "reachable only through an optional edge MUST be Optional, \
+             even though nothing declares it so (FR-007a)"
+        );
+    }
+
+    /// T024 / FR-006 + C3 — a runtime path cancels, transitively.
+    ///
+    /// Same packages map as the two tests above. `parent` is now a
+    /// runtime declaration, so its hard edge makes `child` runtime-
+    /// reachable; `child` is ALSO declared optional at the root. npm
+    /// writes `optional: false` for this shape and pnpm writes no key.
+    #[test]
+    fn m1272_us2_bun_runtime_path_cancels_optionality() {
+        use waybill_common::resolution::LifecycleScope;
+        let root = m1272_bun_lock(
+            r#"      "dependencies": { "waybill-fixture-parent": "1.0.0" },
+      "optionalDependencies": { "waybill-fixture-child": "2.0.0" }"#,
+        );
+        let tmp = tempfile::tempdir().unwrap();
+        let entries = parse_bun_lock(&root, "/tmp/bun.lock", tmp.path());
+
+        assert_ne!(
+            m1272_scope(&entries, "waybill-fixture-child"),
+            Some(LifecycleScope::Optional),
+            "a runtime path MUST cancel optionality even against a root \
+             optional declaration (FR-006, Probe C's C1 case)"
+        );
+        let child = entries
+            .iter()
+            .find(|e| e.name == "waybill-fixture-child")
+            .unwrap();
+        assert!(
+            !child
+                .extra_annotations
+                .contains_key("waybill:optional-derivation"),
+            "a cancelled component MUST NOT carry the derivation annotation"
+        );
+        assert_ne!(
+            m1272_scope(&entries, "waybill-fixture-parent"),
+            Some(LifecycleScope::Optional),
+            "control: the runtime parent is not optional either"
+        );
+    }
+
+    /// The pair that makes the three tests above mean something: the
+    /// SAME packages map, two workspace shapes, DIFFERENT answers for
+    /// the same package. A reader that ignored the workspaces map, or
+    /// that cancelled at depth 1 only, would return the same answer
+    /// both times.
+    #[test]
+    fn m1272_us2_bun_same_packages_map_two_answers() {
+        use waybill_common::resolution::LifecycleScope;
+        let tmp = tempfile::tempdir().unwrap();
+
+        let optional_only = m1272_bun_lock(
+            r#"      "optionalDependencies": { "waybill-fixture-parent": "1.0.0" }"#,
+        );
+        let contested = m1272_bun_lock(
+            r#"      "dependencies": { "waybill-fixture-parent": "1.0.0" },
+      "optionalDependencies": { "waybill-fixture-child": "2.0.0" }"#,
+        );
+
+        let a = parse_bun_lock(&optional_only, "/tmp/bun.lock", tmp.path());
+        let b = parse_bun_lock(&contested, "/tmp/bun.lock", tmp.path());
+
+        let child_a = m1272_scope(&a, "waybill-fixture-child");
+        let child_b = m1272_scope(&b, "waybill-fixture-child");
+        assert_eq!(child_a, Some(LifecycleScope::Optional));
+        assert_ne!(child_b, Some(LifecycleScope::Optional));
+        assert_ne!(
+            child_a, child_b,
+            "the two cases MUST differ -- identical answers mean the \
+             workspaces map is not being read (measured: bun's packages \
+             map is byte-identical between them)"
+        );
+    }
+
+    /// FR-009 — the m667 optional-PEERS derivation survives. A target
+    /// reached only through `optionalPeers` keeps `bun-optional-peers`,
+    /// not the `-dependencies` string.
+    #[test]
+    fn m1272_us2_bun_optional_peers_derivation_is_preserved() {
+        use waybill_common::resolution::LifecycleScope;
+        let src = r#"{
+  "lockfileVersion": 2,
+  "configVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "waybill-fixture-root",
+      "optionalDependencies": { "waybill-fixture-parent": "1.0.0" }
+    }
+  },
+  "packages": {
+    "waybill-fixture-parent": ["waybill-fixture-parent@1.0.0", "", { "peerDependencies": { "waybill-fixture-peerish": "*" }, "optionalPeers": ["waybill-fixture-peerish"] }, "sha512-parent"],
+    "waybill-fixture-peerish": ["waybill-fixture-peerish@3.0.0", "", {}, "sha512-peerish"]
+  }
+}"#;
+        let root: serde_json::Value = serde_json::from_str(src).unwrap();
+        let tmp = tempfile::tempdir().unwrap();
+        let entries = parse_bun_lock(&root, "/tmp/bun.lock", tmp.path());
+        let peerish = entries
+            .iter()
+            .find(|e| e.name == "waybill-fixture-peerish")
+            .unwrap_or_else(|| panic!("peerish emitted; got {entries:?}"));
+        assert_eq!(
+            peerish.lifecycle_scope,
+            Some(LifecycleScope::Optional),
+            "an optional peer of an optional parent is optional (Probe D p3)"
+        );
+        assert_eq!(
+            peerish.extra_annotations.get("waybill:optional-derivation"),
+            Some(&serde_json::Value::String(
+                "bun-optional-peers".to_string()
+            )),
+            "m667's -peers derivation MUST survive (FR-009, m667 V6)"
         );
     }
 }
