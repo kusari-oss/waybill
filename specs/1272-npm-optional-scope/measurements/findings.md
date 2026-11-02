@@ -441,3 +441,102 @@ was added for it, and fails under that mutant.
 
 Recorded because the six tests looked comprehensive. Only the mutant
 showed otherwise.
+
+## Probe G — yarn v1 (Yarn Classic), the US4 arm
+
+Harness: `measurements/yarn-v1-probe.sh`, yarn 1.22.22. Three cases.
+
+**G1 — a transitive optional edge.** Root declares `chokidar` as a plain
+runtime dependency; chokidar declares `fsevents` under
+`optionalDependencies`. So the only optional declaration anywhere in the
+graph is a transitive one. v1 records it, as a per-entry sub-block:
+
+```text
+chokidar@3.5.3:
+  version "3.5.3"
+  dependencies:
+    anymatch "~3.1.2"
+    …
+  optionalDependencies:
+    fsevents "~2.3.2"
+```
+
+and `fsevents` gets an ordinary entry of its own carrying **no marker**:
+
+```text
+fsevents@~2.3.2:
+  version "2.3.3"
+  resolved "…"
+  integrity sha512-…
+```
+
+This is the shape the reader already parses (`parse_v1`, the
+`is_optional_block` branch). Nothing new to read for the transitive case
+— what was missing was the closure over it.
+
+**G2 — contested.** Root additionally declares `fsevents` as a plain
+runtime dependency, at chokidar's own range so that both cases key the
+same descriptor. The `fsevents` entry is then **byte-identical to G1's**:
+
+```text
+--- do G1 and G2 differ in the fsevents entry? ---
+IDENTICAL -- v1 records no closure; the reader must derive it
+```
+
+Same finding as bun's Probe E, reached independently: v1 records
+declarations and edges, never a per-package closed answer. A reader that
+looks for one finds nothing and reports absence.
+
+**The first run of this probe reported DIFFER, and was wrong.** It
+declared `fsevents: "2.3.2"` in G2 against chokidar's `~2.3.2` in G1.
+yarn keys an entry by descriptor, so the two cases produced different
+keys *and* different resolved versions (2.3.2 vs 2.3.3), and the diff
+reported a difference the optional axis had no part in. Holding the range
+equal is what makes G1 and G2 a controlled pair; the uncontrolled version
+would have sent this arm looking for a marker that does not exist.
+
+**G3 — the root declaration.** Root declares `fsevents` under
+`optionalDependencies` and nothing else:
+
+```text
+=== root optionalDependencies: does it appear anywhere? ===
+0 occurrences of 'optional'
+```
+
+Zero. The lockfile is a single entry with no marker and no sub-block.
+This confirms, for the third time and now directly, what Probes B and C
+inferred from the absence of a root entry: **`package.json >
+optionalDependencies` is the only possible source of yarn v1's root
+answer** (FR-005). It is the only arm of the four for which that is true.
+
+### What US4 therefore needs
+
+| | source | present before? |
+|---|---|---|
+| root declaration | `package.json > optionalDependencies` | **no** |
+| transitive edge | parent `optionalDependencies:` sub-block | yes, read since m181 |
+| closure over the edges | derived | **no** — one level only |
+
+The one-level form at the `optional_children_seen.difference(
+&regular_children_seen)` site is not merely incomplete, it is
+*unsound as a seed*: `regular_children_seen` is a set of edge TARGETS,
+and seeding a runtime closure with edge targets confers runtime
+reachability on a child whose parent is reachable only optionally. That
+is the R7 trap in a third guise. G1 is the case that exposes it: close
+`regular_children_seen` and chokidar's own hard children would cancel
+nothing, but in the optional-only variant of G1 the same set would
+contain fsevents' hard children and wrongly cancel them.
+
+So the runtime closure must be seeded from the ROOT, not from edge
+targets — which is why FR-005's manifest seed and FR-006's closure are
+one change and not two.
+
+**One consequence, and the rule for it.** A v1 lockfile has no root
+entry, so when the manifest is absent (`serde_json::Value::Null`, which
+is what every m181 unit test passes) or does not reach an entry, a
+root-seeded closure is empty and *every* package would classify
+optional. An entry that no root declaration reaches is therefore itself
+treated as a graph root, excluding any entry named by an optional
+declaration. That rule is what keeps a lockfile-only scan from reading
+its whole contents as optional, and it is the exact inverse failure of
+the R7 trap: one over-seeds the runtime set, the other under-seeds it.

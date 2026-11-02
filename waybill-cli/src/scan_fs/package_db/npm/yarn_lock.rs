@@ -471,6 +471,160 @@ fn berry_optional_names_from_pkg_json(
 //     dependencies:
 //       bar "^2.0.0"
 
+/// Milestone 1272 US4 (T050, T051) — the optional/runtime partition for
+/// a yarn v1 (Yarn Classic) lockfile, in bare-name space.
+///
+/// v1's entry bodies key both sub-blocks by bare name
+/// (`fsevents "~2.3.2"`), and so does the root manifest, so the whole
+/// closure can be computed over names without a normalisation layer —
+/// the same reason the Berry arm needs none. pnpm keys by
+/// `name@version` and bun by packages-map key, which is why no shared
+/// closure helper is factored out across the arms.
+///
+/// Measured shape (yarn 1.22.22, `measurements/yarn-v1-probe.sh`,
+/// Probe G1):
+///
+/// ```text
+/// chokidar@3.5.3:
+///   version "3.5.3"
+///   dependencies:
+///     anymatch "~3.1.2"
+///   optionalDependencies:
+///     fsevents "~2.3.2"
+/// ```
+///
+/// so an entry's hard edges are its `dependencies:` sub-block and its
+/// optional edges are its `optionalDependencies:` sub-block — already
+/// parsed separately since m181. What v1 does NOT record is any closed
+/// per-package answer: Probe G2 measured a contested package and an
+/// optional-only one producing a byte-identical entry. The partition is
+/// therefore derived here, never read.
+struct V1OptionalScopes {
+    runtime_closure: std::collections::HashSet<String>,
+    all_reachable: std::collections::HashSet<String>,
+}
+
+/// The bare names one root-manifest dependency section declares.
+fn v1_root_section_names(
+    pkg_json: &serde_json::Value,
+    section: &str,
+) -> std::collections::HashSet<String> {
+    pkg_json
+        .get(section)
+        .and_then(|v| v.as_object())
+        .into_iter()
+        .flat_map(|obj| obj.keys())
+        .map(String::clone)
+        .collect()
+}
+
+/// Breadth-first closure of `seed` over `edges`.
+fn v1_close(
+    seed: &std::collections::HashSet<String>,
+    edges: &std::collections::HashMap<String, Vec<String>>,
+) -> std::collections::HashSet<String> {
+    let mut seen: std::collections::HashSet<String> = seed.clone();
+    let mut queue: std::collections::VecDeque<String> = seed.iter().cloned().collect();
+    while let Some(name) = queue.pop_front() {
+        let Some(children) = edges.get(&name) else {
+            continue;
+        };
+        for child in children {
+            if seen.insert(child.clone()) {
+                queue.push_back(child.clone());
+            }
+        }
+    }
+    seen
+}
+
+fn v1_optional_scopes(
+    entry_names: &std::collections::HashSet<String>,
+    hard_edges: &std::collections::HashMap<String, Vec<String>>,
+    all_edges: &std::collections::HashMap<String, Vec<String>>,
+    entry_optional: &std::collections::HashSet<String>,
+    pkg_json: &serde_json::Value,
+) -> V1OptionalScopes {
+    // FR-005. Measured in Probe G3: a root `optionalDependencies`
+    // declaration writes zero occurrences of the string `optional` into
+    // a v1 lockfile, so the manifest is not merely the preferred source
+    // for this arm's root answer, it is the only possible one. yarn v1
+    // is the only one of the four dialects for which that is true.
+    let root_optional = v1_root_section_names(pkg_json, "optionalDependencies");
+    let mut root_runtime = v1_root_section_names(pkg_json, "dependencies");
+    // A name in both sections is optional: the manifest says so
+    // explicitly, and FR-006's cancellation is decided by REACHABILITY
+    // below, not by a second declaration of the same edge.
+    root_runtime.retain(|n| !root_optional.contains(n));
+
+    // `devDependencies` is deliberately NOT part of this seed, and the
+    // first draft of this function had it folded in. That is the more
+    // obvious reading of FR-006 — a direct non-optional root
+    // declaration looks like exactly the cancelling path FR-006
+    // describes — and it fails an m1271 test, which is how the
+    // conflict surfaced.
+    //
+    // `dev_scope_optional_meta_v1` declares one name under
+    // `devDependencies` AND reaches it through another entry's
+    // `optionalDependencies:` sub-block. m1271's FR-003 decided, with a
+    // fixture and a mutation test behind it, that the out-of-band
+    // Optional assignment survives there. Seeding this closure from
+    // `devDependencies` overturns that decision and reassigns the
+    // package to Development — a change to the DEVELOPMENT axis's
+    // output, which this milestone's FR-010 / SC-004 and contract C5
+    // require to stay byte-identical.
+    //
+    // So the two axes stay orthogonal and the dev sections stay out.
+    // Nothing is lost for packages reachable only through a
+    // development dependency: the orphan-root rule below reaches that
+    // dependency, and the runtime closure then covers its hard
+    // children, so none of them is swept into the optional set.
+    //
+    // Whether a root `devDependencies` declaration OUGHT to cancel an
+    // out-of-band Optional is a live question about m1271's FR-003, not
+    // about this arm, and answering it here would be relitigating
+    // another milestone's requirement from inside an implementation.
+
+    // A v1 lockfile has no root or workspace entry (Probe B), so an
+    // entry that no root declaration reaches has no stated parent at
+    // all. Treat it as a graph root of its own, excluding anything an
+    // optional declaration names.
+    //
+    // Without this, a scan of a lockfile whose manifest is absent or
+    // partial — which is what every m181 unit test exercises, passing
+    // `serde_json::Value::Null` — would have an empty runtime closure
+    // and would classify the lockfile's ENTIRE contents optional. That
+    // is the exact inverse of the R7 trap guarded against at the
+    // classifier site: one over-seeds the runtime set from edge
+    // targets, this one under-seeds it from an absent root.
+    let manifest_seed: std::collections::HashSet<String> =
+        root_runtime.union(&root_optional).cloned().collect();
+    let reachable_from_manifest = v1_close(&manifest_seed, all_edges);
+
+    let mut runtime_seed = root_runtime.clone();
+    for name in entry_names {
+        if !reachable_from_manifest.contains(name)
+            && !entry_optional.contains(name)
+            && !root_optional.contains(name)
+        {
+            runtime_seed.insert(name.clone());
+        }
+    }
+
+    let mut all_seed = runtime_seed.clone();
+    all_seed.extend(root_optional.iter().cloned());
+    all_seed.extend(entry_optional.iter().cloned());
+
+    V1OptionalScopes {
+        // Hard edges only. An optional parent's hard edge must not
+        // confer runtime reachability on its child — the parent may be
+        // absent, so the child may be too — and Probe C measured both
+        // npm and pnpm marking such a child optional.
+        runtime_closure: v1_close(&runtime_seed, hard_edges),
+        all_reachable: v1_close(&all_seed, all_edges),
+    }
+}
+
 fn parse_v1(
     text: &str,
     source_path: &str,
@@ -501,6 +655,18 @@ fn parse_v1(
     let mut optional_children_seen: std::collections::HashSet<String> =
         Default::default();
     let mut regular_children_seen: std::collections::HashSet<String> =
+        Default::default();
+
+    // Milestone 1272 US4 (T050, T051) — the adjacency the transitive
+    // form needs, in the same bare-name space the two m181 sets above
+    // already live in. `regular_children_seen` is retained because the
+    // FR-012 diagnostics and the dev axis still read it; it is no
+    // longer the runtime SEED, for the reason spelled out at the
+    // classifier site below.
+    let mut v1_entry_names: std::collections::HashSet<String> = Default::default();
+    let mut v1_hard_edges: std::collections::HashMap<String, Vec<String>> =
+        Default::default();
+    let mut v1_all_edges: std::collections::HashMap<String, Vec<String>> =
         Default::default();
 
     let mut lines = text.lines().peekable();
@@ -574,6 +740,19 @@ fn parse_v1(
                 for n in &dep_names {
                     regular_children_seen.insert(n.clone());
                 }
+                // Milestone 1272 US4 — record the two edge sets for
+                // this entry BEFORE `dep_names` absorbs the optional
+                // children below, since the distinction is exactly what
+                // the runtime closure is restricted to.
+                v1_entry_names.insert(header_name.clone());
+                v1_hard_edges
+                    .entry(header_name.clone())
+                    .or_default()
+                    .extend(dep_names.iter().cloned());
+                let all_for_entry =
+                    v1_all_edges.entry(header_name.clone()).or_default();
+                all_for_entry.extend(dep_names.iter().cloned());
+                all_for_entry.extend(optional_dep_names.iter().cloned());
                 // Merge the two per-entry accumulators into `dep_names`
                 // for downstream edge emission (edges don't care about
                 // the regular/optional distinction — same as pre-m181).
@@ -621,16 +800,51 @@ fn parse_v1(
     }
     let alias_count = aliases.len();
 
-    // Milestone 181 T004 — compute the final optional-name set:
-    // `optional_children_seen - regular_children_seen` enforces the
-    // FR-007 diamond-shape rule (Runtime wins when a name appears in
-    // both sub-block kinds across any parents). Then apply the m180
-    // peer-precedence guard per FR-005: names that are ALSO peer-
-    // optional per the root package.json get removed so m178's
-    // `PROVIDED_DEPENDENCY_OF` classification wins (KEEP-BOTH
-    // polarity).
-    let mut optional_names: std::collections::HashSet<String> = optional_children_seen
-        .difference(&regular_children_seen)
+    // Milestone 1272 US4 (T051, T052) — the optional set, as the
+    // difference of two closures rather than of two edge-target sets.
+    //
+    // m181 computed `optional_children_seen - regular_children_seen`.
+    // That is right about the diamond and wrong about everything deeper
+    // than one level, and it is wrong in two directions at once:
+    //
+    //   * It can only ever classify a name some parent NAMES in an
+    //     `optionalDependencies:` sub-block. A root
+    //     `optionalDependencies` declaration names nothing in the
+    //     lockfile -- Probe G3 measured yarn v1 writing zero
+    //     occurrences of the string `optional` for one -- so the whole
+    //     root case was unreachable, and so was every package reachable
+    //     only THROUGH an optional one.
+    //
+    //   * `regular_children_seen` is a set of edge TARGETS, and a
+    //     target is not a seed. Seeding a runtime closure with one
+    //     confers runtime reachability on a child whose parent is itself
+    //     reachable only optionally: in Probe G's optional-only
+    //     arrangement the set contains the optional package's own hard
+    //     children, which would cancel exactly the packages FR-002
+    //     requires classified. This is the research R7 trap in a third
+    //     guise, and it is why FR-005's manifest seed and FR-006's
+    //     closure are one change and not two.
+    //
+    // So the runtime closure is seeded from the ROOT and restricted to
+    // hard edges, the reachable set is seeded from every declaration and
+    // follows all edges, and the optional set is the difference. Probe C
+    // measured both reference implementations agreeing with that
+    // partition on the contested and optional-only cases.
+    //
+    // The m180 peer-precedence guard (FR-009) is then applied to the
+    // result: a name that is ALSO peer-optional per the root
+    // package.json is removed so m178's `PROVIDED_DEPENDENCY_OF` wins
+    // (KEEP-BOTH polarity, unchanged from m181).
+    let v1_scopes = v1_optional_scopes(
+        &v1_entry_names,
+        &v1_hard_edges,
+        &v1_all_edges,
+        &optional_children_seen,
+        pkg_json,
+    );
+    let mut optional_names: std::collections::HashSet<String> = v1_scopes
+        .all_reachable
+        .difference(&v1_scopes.runtime_closure)
         .cloned()
         .collect();
     optional_names.retain(|n| {
@@ -3131,6 +3345,197 @@ __metadata:
             m1272_scope(&entries, "waybill-fixture-parent"),
             Some(LifecycleScope::Optional),
             "control: the optional parent MUST still be Optional"
+        );
+    }
+
+    // ── Milestone 1272 US4 — yarn v1 ──────────────────────────────
+
+    /// T048 / FR-005 + C1 — the case Probe G3 showed the lockfile is
+    /// silent about: a ROOT `optionalDependencies` declaration. The
+    /// lockfile below carries no marker and no sub-block at all, so a
+    /// reader that consults only the lockfile must report absence here.
+    #[test]
+    fn m1272_us4_v1_root_declaration_is_classified() {
+        use waybill_common::resolution::LifecycleScope;
+        let text = r#"# yarn lockfile v1
+
+
+"waybill-fixture-optroot@^1":
+  version "1.0.0"
+"#;
+        let pkg_json = serde_json::json!({
+            "name": "waybill-fixture-root",
+            "optionalDependencies": { "waybill-fixture-optroot": "^1" }
+        });
+        let entries = parse_yarn_lock(text, "/yarn.lock", &pkg_json);
+        assert_eq!(
+            m1272_scope(&entries, "waybill-fixture-optroot"),
+            Some(LifecycleScope::Optional),
+            "FR-005: a v1 root optionalDependencies declaration MUST be \
+             classified Optional from the manifest, since Probe G3 measured \
+             the lockfile writing zero occurrences of `optional` for one"
+        );
+    }
+
+    /// T049 / FR-002 + C2 — the transitive step the one-level
+    /// subtraction could not take: a hard child of an optional package.
+    #[test]
+    fn m1272_us4_v1_transitive_through_optional_is_classified() {
+        use waybill_common::resolution::LifecycleScope;
+        let text = r#"# yarn lockfile v1
+
+
+"waybill-fixture-optroot@^1":
+  version "1.0.0"
+  dependencies:
+    waybill-fixture-deep "^1"
+
+"waybill-fixture-deep@^1":
+  version "1.0.0"
+"#;
+        let pkg_json = serde_json::json!({
+            "name": "waybill-fixture-root",
+            "optionalDependencies": { "waybill-fixture-optroot": "^1" }
+        });
+        let entries = parse_yarn_lock(text, "/yarn.lock", &pkg_json);
+        assert_eq!(
+            m1272_scope(&entries, "waybill-fixture-deep"),
+            Some(LifecycleScope::Optional),
+            "FR-002: a package reachable only through an optional one MUST \
+             be Optional. m181's `optional_children_seen` can never contain \
+             it -- no sub-block names it."
+        );
+    }
+
+    /// T049 / FR-006 + C3 — a non-optional path cancels, and the
+    /// runtime closure that decides it is restricted to HARD edges.
+    #[test]
+    fn m1272_us4_v1_runtime_path_cancels_optionality() {
+        use waybill_common::resolution::LifecycleScope;
+        let text = r#"# yarn lockfile v1
+
+
+"waybill-fixture-runtime@^1":
+  version "1.0.0"
+  dependencies:
+    waybill-fixture-shared "^1"
+
+"waybill-fixture-optroot@^1":
+  version "1.0.0"
+  dependencies:
+    waybill-fixture-shared "^1"
+
+"waybill-fixture-shared@^1":
+  version "1.0.0"
+"#;
+        let pkg_json = serde_json::json!({
+            "name": "waybill-fixture-root",
+            "dependencies": { "waybill-fixture-runtime": "^1" },
+            "optionalDependencies": { "waybill-fixture-optroot": "^1" }
+        });
+        let entries = parse_yarn_lock(text, "/yarn.lock", &pkg_json);
+        assert_ne!(
+            m1272_scope(&entries, "waybill-fixture-shared"),
+            Some(LifecycleScope::Optional),
+            "FR-006: reachable by a hard path from a runtime root, so NOT \
+             optional -- measured in Probe C on both reference managers"
+        );
+        // Control: the optional root is still caught, so this cannot
+        // pass by classifying nothing at all.
+        assert_eq!(
+            m1272_scope(&entries, "waybill-fixture-optroot"),
+            Some(LifecycleScope::Optional),
+            "control: the optional root itself MUST still be Optional"
+        );
+    }
+
+    /// FR-006, the hard-edge restriction specifically. An optional
+    /// parent's hard edge must NOT confer runtime reachability: if it
+    /// did, `waybill-fixture-deep` above would cancel itself.
+    ///
+    /// This test exists because mutation testing on the Berry arm found
+    /// the equivalent gap -- switching that closure from hard edges to
+    /// all edges left every one of its first six tests passing, since
+    /// in each the optional package WAS the root declaration and the
+    /// runtime seed was empty. Here the runtime seed is non-empty and
+    /// the optional package is a transitive one, so the mutant shows.
+    #[test]
+    fn m1272_us4_v1_runtime_parent_with_optional_child() {
+        use waybill_common::resolution::LifecycleScope;
+        let text = r#"# yarn lockfile v1
+
+
+"waybill-fixture-runtime@^1":
+  version "1.0.0"
+  optionalDependencies:
+    waybill-fixture-opt "^1"
+
+"waybill-fixture-opt@^1":
+  version "1.0.0"
+  dependencies:
+    waybill-fixture-deep "^1"
+
+"waybill-fixture-deep@^1":
+  version "1.0.0"
+"#;
+        let pkg_json = serde_json::json!({
+            "name": "waybill-fixture-root",
+            "dependencies": { "waybill-fixture-runtime": "^1" }
+        });
+        let entries = parse_yarn_lock(text, "/yarn.lock", &pkg_json);
+        for name in ["waybill-fixture-opt", "waybill-fixture-deep"] {
+            assert_eq!(
+                m1272_scope(&entries, name),
+                Some(LifecycleScope::Optional),
+                "{name}: a RUNTIME-reachable parent's OPTIONAL edge must not \
+                 make its subtree runtime-reachable"
+            );
+        }
+        assert_ne!(
+            m1272_scope(&entries, "waybill-fixture-runtime"),
+            Some(LifecycleScope::Optional),
+            "the runtime root itself MUST NOT be Optional"
+        );
+    }
+
+    /// The orphan-root rule, which is what keeps a root-seeded closure
+    /// from reading an entire lockfile as optional when the manifest
+    /// cannot be consulted. Every m181 unit test passes
+    /// `serde_json::Value::Null`, so this is not a hypothetical shape.
+    ///
+    /// It is the exact inverse of the research R7 trap: that one
+    /// over-seeds the runtime set from edge targets, this one
+    /// under-seeds it from an absent root.
+    #[test]
+    fn m1272_us4_v1_absent_manifest_does_not_classify_everything() {
+        use waybill_common::resolution::LifecycleScope;
+        let text = r#"# yarn lockfile v1
+
+
+"waybill-fixture-parent@^1":
+  version "1.0.0"
+  dependencies:
+    waybill-fixture-child "^1"
+  optionalDependencies:
+    waybill-fixture-opt "^1"
+
+"waybill-fixture-child@^1":
+  version "1.0.0"
+
+"waybill-fixture-opt@^1":
+  version "1.0.0"
+"#;
+        let entries = parse_yarn_lock(text, "/yarn.lock", &serde_json::Value::Null);
+        let optional: Vec<&str> = entries
+            .iter()
+            .filter(|e| e.lifecycle_scope == Some(LifecycleScope::Optional))
+            .map(|e| e.name.as_str())
+            .collect();
+        assert_eq!(
+            optional,
+            vec!["waybill-fixture-opt"],
+            "with no manifest to seed from, ONLY the declared optional edge \
+             may classify -- not the whole lockfile"
         );
     }
 }
