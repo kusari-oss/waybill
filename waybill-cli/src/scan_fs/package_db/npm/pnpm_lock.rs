@@ -138,6 +138,25 @@ fn collect_pnpm_dep_names(
 /// Returns empty HashMap when the top-level `snapshots:` key is
 /// missing or not a mapping (v6/v7 lockfiles, or anomalous v9
 /// lockfiles).
+/// Milestone 1272 (T014, FR-001) — per-identity optional flag lifted
+/// out of the v9 `snapshots:` section.
+///
+/// Why this exists: the v9 `packages:` entry carries NO `optional:` key.
+/// Measured on pnpm 12.16.1 — see `specs/1272-npm-optional-scope/
+/// measurements/findings.md`, Probe A. pnpm moved the marker to
+/// `snapshots:` between v7 and v9, and the classifier below was still
+/// reading the `packages:` entry, so the optional branch could never
+/// fire for a v9 lockfile.
+///
+/// The value is AND-folded across peer contexts. One canonical identity
+/// can appear under several snapshot keys that differ only by their
+/// peer-context suffix — `debug@4.3.4(supports-color@9.4.0)` and a bare
+/// `debug@4.3.4` resolve to the same emitted component. FR-006 says any
+/// non-optional path cancels optionality, so the identity is optional
+/// only when EVERY context says so. A last-write-wins insert would make
+/// the answer depend on YAML ordering.
+type SnapshotOptionalFlags = HashMap<String, bool>;
+
 fn build_snapshots_lookup(
     root: &serde_yaml::Value,
     aliases: &mut Vec<super::alias_mapping::AliasResolution>,
@@ -146,6 +165,12 @@ fn build_snapshots_lookup(
     // the FR-009 info-log summary.
     versioned_counter: &mut usize,
     warn_counter: &mut usize,
+    // Milestone 1272 (T014): out-param rather than a changed return
+    // type, deliberately. `v9_importer_scopes` consumes this function's
+    // return value for the DEVELOPMENT axis, and FR-010 requires that
+    // axis stay byte-identical — so the development path's types are
+    // left untouched and the optional axis rides alongside.
+    optional_flags: &mut SnapshotOptionalFlags,
 ) -> HashMap<String, Vec<String>> {
     let mut out: HashMap<String, Vec<String>> = HashMap::new();
     let Some(snapshots) = root.get("snapshots").and_then(|v| v.as_mapping()) else {
@@ -174,6 +199,15 @@ fn build_snapshots_lookup(
             Some(versioned_counter),
             Some(warn_counter),
         );
+        // Milestone 1272 (T014, FR-001 + FR-006): AND-fold the optional
+        // flag across every peer context of this identity.
+        let entry_optional = tbl
+            .get(serde_yaml::Value::String("optional".to_string()))
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
+        let folded = optional_flags.entry(canonical.clone()).or_insert(true);
+        *folded = *folded && entry_optional;
+
         // Peer contexts share one emitted identity. Keep every context's
         // edges, including those needed to establish runtime reachability.
         out.entry(canonical).or_default().extend(deps);
@@ -181,6 +215,47 @@ fn build_snapshots_lookup(
     for deps in out.values_mut() {
         deps.sort();
         deps.dedup();
+    }
+    out
+}
+
+/// Milestone 1272 (T015, FR-009) — names some package declares as an
+/// OPTIONAL PEER, read from the v9 `packages:` entries.
+///
+/// Measured, and not what this reader assumed. A real pnpm v9 lockfile
+/// contains no `peer:` key anywhere — the classifier's `is_peer` input
+/// read `tbl.get("peer")`, which for v9 is always absent, so the
+/// peer-precedence guard could never fire. v9 expresses peer-optionality
+/// as `peerDependenciesMeta.<name>.optional: true` on the DECLARING
+/// PARENT's entry, with the peer context appearing as a suffix on the
+/// snapshot key.
+///
+/// That did not matter while the optional branch was also dead. It
+/// matters the moment it is not: without this, an optional peer would be
+/// classified Optional and m178's `PROVIDED_DEPENDENCY_OF` would lose a
+/// precedence FR-009 requires be preserved.
+///
+/// Keyed by bare name because `peerDependenciesMeta` is keyed by name.
+/// See `measurements/findings.md` Probe D for the four shapes measured.
+fn v9_peer_optional_names(packages: &serde_yaml::Mapping) -> HashSet<String> {
+    let mut out = HashSet::new();
+    for entry in packages.values() {
+        let Some(meta) = entry
+            .get("peerDependenciesMeta")
+            .and_then(|v| v.as_mapping())
+        else {
+            continue;
+        };
+        for (name, flags) in meta {
+            let Some(name) = name.as_str() else { continue };
+            if flags
+                .get("optional")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false)
+            {
+                out.insert(name.to_string());
+            }
+        }
     }
     out
 }
@@ -316,6 +391,25 @@ pub(crate) fn parse_pnpm_lock(
         .map(|major| major >= 9)
         .unwrap_or(false);
 
+    // Milestone 1272 (T005, FR-011a) — the optional axis was measured
+    // against v9. A newer major may have moved the marker again, exactly
+    // as v7 -> v9 did, so say so rather than letting an unfindable
+    // marker read as "not optional".
+    if let Some(major) = lock_version
+        .split('.')
+        .next()
+        .and_then(|s| s.parse::<u32>().ok())
+    {
+        if major > super::KNOWN_PNPM_LOCKFILE_MAJOR {
+            super::warn_unrecognized_lockfile_version(
+                "pnpm-lock.yaml",
+                &lock_version,
+                &super::KNOWN_PNPM_LOCKFILE_MAJOR.to_string(),
+                source_path,
+            );
+        }
+    }
+
     // Milestone 159 accumulator: alias-detection outputs from both
     // the snapshots first-pass AND the v6/v7 inline second-pass are
     // collected here for later edge-rewrite + annotation emission.
@@ -325,12 +419,14 @@ pub(crate) fn parse_pnpm_lock(
     // lookup keyed by canonical name@version. Empty HashMap on
     // v6/v7 (no snapshots section) — the inline packages path
     // takes precedence via collect_pnpm_dep_names.
+    let mut snapshot_optional_flags: SnapshotOptionalFlags = HashMap::new();
     let snapshots_lookup = build_snapshots_lookup(
         root,
         &mut aliases,
         source_path,
         &mut multi_version_disambiguated_count,
         &mut malformed_key_warn_count,
+        &mut snapshot_optional_flags,
     );
     let importer_scopes = if is_v9_or_later {
         v9_importer_scopes(root, &snapshots_lookup, source_path)
@@ -344,6 +440,14 @@ pub(crate) fn parse_pnpm_lock(
     // packages: side becomes identity + integrity metadata.
     let Some(packages) = root.get("packages").and_then(|v| v.as_mapping()) else {
         return out;
+    };
+
+    // Milestone 1272 (T015, FR-009): v9's peer-optional marker lives on
+    // the declaring parent, not on the peer's own entry.
+    let v9_peer_optional: HashSet<String> = if is_v9_or_later {
+        v9_peer_optional_names(packages)
+    } else {
+        HashSet::new()
     };
 
     let mut keys: Vec<String> = packages
@@ -375,27 +479,48 @@ pub(crate) fn parse_pnpm_lock(
                 .and_then(|v| v.as_bool())
                 .unwrap_or(false),
         };
-        // Milestone 180 T012 — extract the per-entry `optional: true`
-        // marker (pnpm sets this on entries reachable only through
-        // optional edges; parallel to npm's `optional` flag). Currently
-        // unused as a filter — the m179 `--include-dev` gating rides
-        // through the m179 `is_non_runtime()` helper which applies to
-        // any Optional-classified component.
-        let is_optional = tbl
-            .get(serde_yaml::Value::String("optional".to_string()))
-            .and_then(|v| v.as_bool())
-            .unwrap_or(false);
-        // Milestone 180 T012 — peer-precedence guard input. pnpm's
-        // packages entries carry `peer: true` when the entry was
-        // installed as a peer (parallel to npm's `peer` flag). Combined
-        // with `optional: true` the entry is peer-optional; per FR-006
-        // the m178 PROVIDED_DEPENDENCY_OF classification wins over
-        // m180's OPTIONAL_DEPENDENCY_OF, so we short-circuit Optional
-        // in the classifier below.
-        let is_peer = tbl
-            .get(serde_yaml::Value::String("peer".to_string()))
-            .and_then(|v| v.as_bool())
-            .unwrap_or(false);
+        // Milestone 1272 (T015, FR-001 + FR-002) — the optional marker
+        // is in a DIFFERENT SECTION per dialect, and reading the wrong
+        // one is the whole defect this milestone fixes.
+        //
+        //   v9+   `snapshots.<id>.optional`  (AND-folded over peer
+        //         contexts by `build_snapshots_lookup`). The v9
+        //         `packages:` entry carries no `optional` key at all,
+        //         so the pre-1272 read below always yielded `false`
+        //         and the Optional branch was unreachable.
+        //   v6/v7 the `packages:` entry, which is where those dialects
+        //         genuinely put it. Frozen by FR-002.
+        //
+        // pnpm publishes this flag already closed AND already cancelled:
+        // Probe C measured that a package reachable by both an optional
+        // and a non-optional path carries no `optional` key, and that a
+        // package reachable only through optional edges carries it even
+        // when nothing declares it. So FR-006 and FR-007a need no
+        // traversal here — reading the right field satisfies both.
+        let is_optional = if is_v9_or_later {
+            snapshot_optional_flags
+                .get(&format!("{name}@{version}"))
+                .copied()
+                .unwrap_or(false)
+        } else {
+            tbl.get(serde_yaml::Value::String("optional".to_string()))
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false)
+        };
+        // Milestone 1272 (T015, FR-009) — peer-precedence guard input,
+        // also dialect-dependent. v6/v7 set `peer: true` on the entry;
+        // v9 has no such key and names optional peers from the parent's
+        // `peerDependenciesMeta` instead. Combined with the optional
+        // marker the package is peer-optional, and m178's
+        // PROVIDED_DEPENDENCY_OF wins over m180's
+        // OPTIONAL_DEPENDENCY_OF, so the classifier short-circuits.
+        let is_peer = if is_v9_or_later {
+            v9_peer_optional.contains(&name)
+        } else {
+            tbl.get(serde_yaml::Value::String("peer".to_string()))
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false)
+        };
         if !include_dev && (is_dev || is_optional) {
             continue;
         }
@@ -751,7 +876,9 @@ packages:
   waybill-fixture-prod@1.0.0: {}
   '@scope/waybill-fixture-shared@1.0.0': {}
   '@scope/waybill-fixture-dev@2.0.0': {}
-  waybill-fixture-optional@1.0.0: {optional: true}
+  # Milestone 1272: the marker moved to the snapshots entry below --
+  # a real v9 `packages:` entry carries no `optional` key.
+  waybill-fixture-optional@1.0.0: {}
 snapshots:
   waybill-fixture-prod@1.0.0(peer@1.0.0):
     dependencies:
@@ -759,7 +886,8 @@ snapshots:
   waybill-fixture-prod@1.0.0(peer@2.0.0): {}
   '@scope/waybill-fixture-shared@1.0.0': {}
   '@scope/waybill-fixture-dev@2.0.0': {}
-  waybill-fixture-optional@1.0.0: {}
+  waybill-fixture-optional@1.0.0:
+    optional: true
 "#,
         )
         .unwrap();
@@ -1381,9 +1509,25 @@ snapshots:
         let mut aliases = Vec::new();
         let mut versioned = 0usize;
         let mut warned = 0usize;
-        let lookup =
-            build_snapshots_lookup(&root, &mut aliases, "/test.yaml", &mut versioned, &mut warned);
+        let mut optional_flags = HashMap::new();
+        let lookup = build_snapshots_lookup(
+            &root,
+            &mut aliases,
+            "/test.yaml",
+            &mut versioned,
+            &mut warned,
+            &mut optional_flags,
+        );
         assert_eq!(lookup.get("foo@1.0.0"), Some(&vec!["bar 2.0.0".to_string()]));
+        // Milestone 1272: neither snapshot carries `optional`, so the
+        // AND-fold must yield false for both -- not the `true` the
+        // accumulator is seeded with.
+        assert_eq!(
+            optional_flags.get("foo@1.0.0"),
+            Some(&false),
+            "an entry with no `optional` key must fold to false"
+        );
+        assert_eq!(optional_flags.get("bar@2.0.0"), Some(&false));
         assert!(versioned >= 1, "versioned_counter must increment on v9");
         assert_eq!(warned, 0, "no malformed keys expected on well-formed fixture");
     }
@@ -1534,22 +1678,34 @@ packages:
 
     #[test]
     fn pnpm_optional_true_populates_lifecycle_scope_optional() {
-        // Milestone 180 T015 — pnpm v9 packages entry with
-        // `optional: true` gets LifecycleScope::Optional + the m180
-        // derivation annotation.
+        // Milestone 1272 (T010, FR-001) — rewritten to the shape pnpm
+        // v9 ACTUALLY produces.
+        //
+        // As written for m180 this fixture declared `lockfileVersion:
+        // '9.0'`, used the v6/v7 slash key form, put `optional: true`
+        // in the `packages:` entry and had no `snapshots:` section at
+        // all. Measurement (pnpm 12.16.1, `measurements/findings.md`
+        // Probe A) shows a real v9 lockfile does the opposite: bare
+        // keys, and the marker ONLY under `snapshots:`. The test passed
+        // against a file pnpm cannot emit, which is why the reader's
+        // inability to classify any real v9 project went unnoticed.
         let yaml = r#"
 lockfileVersion: '9.0'
 packages:
-  /fsevents@2.3.3:
+  waybill-fixture-optional@2.3.3:
     resolution: {integrity: sha512-testtest}
+snapshots:
+  waybill-fixture-optional@2.3.3:
     optional: true
 "#;
         let root: serde_yaml::Value = serde_yaml::from_str(yaml).unwrap();
         let out = parse_pnpm_lock(&root, "/test.yaml", true);
-        let fsevents = entry_by_name(&out, "fsevents").expect("fsevents emitted");
+        let fsevents =
+            entry_by_name(&out, "waybill-fixture-optional").expect("optional pkg emitted");
         assert_eq!(
             fsevents.lifecycle_scope,
-            Some(waybill_common::resolution::LifecycleScope::Optional)
+            Some(waybill_common::resolution::LifecycleScope::Optional),
+            "v9 MUST read the optional marker from `snapshots:` (FR-001)"
         );
         assert_eq!(
             fsevents
@@ -1589,11 +1745,19 @@ packages:
 
     #[test]
     fn pnpm_peer_optional_stays_peer_not_optional() {
-        // Milestone 180 T015 / FR-006 — pnpm entry with BOTH `peer:
-        // true` AND `optional: true` short-circuits to Runtime; m178's
+        // Milestone 180 T015 / FR-006 — an entry with BOTH `peer: true`
+        // AND `optional: true` short-circuits to Runtime; m178's
         // PROVIDED_DEPENDENCY_OF fires separately.
+        //
+        // Milestone 1272: relabelled to v6, which is the dialect this
+        // shape belongs to. `peer:` and `optional:` on a `packages:`
+        // entry is the v6/v7 form; measurement found NO `peer:` key
+        // anywhere in a real v9 lockfile. Left as '9.0' this test would
+        // still pass after 1272 -- but only because both flags now read
+        // as absent, i.e. for the wrong reason. The v9 equivalent is
+        // `m1272_v9_peer_optional_stays_peer_not_optional` below.
         let yaml = r#"
-lockfileVersion: '9.0'
+lockfileVersion: '6.0'
 packages:
   /react@18.3.1:
     resolution: {integrity: sha512-reactint}
@@ -1613,6 +1777,284 @@ packages:
                 .extra_annotations
                 .contains_key("waybill:optional-derivation"),
             "peer-optional entry MUST NOT carry waybill:optional-derivation (FR-006)"
+        );
+    }
+
+    // ------------------------------------------------------------------
+    // Milestone 1272 — the optional axis for pnpm v9.
+    //
+    // Every fixture below is in the shape pnpm 12.16.1 actually emits,
+    // captured by `specs/1272-npm-optional-scope/measurements/
+    // optional-axis-probe.sh` and `cancellation-probe.sh`. Bare keys,
+    // and the `optional:` marker only under `snapshots:`.
+    // ------------------------------------------------------------------
+
+    /// T011 / FR-007a — optionality propagates along optional edges.
+    ///
+    /// Probe C's control case: pnpm marks a package optional that
+    /// nothing declares optional, purely because its only path runs
+    /// through an optional parent. The reader must agree.
+    #[test]
+    fn m1272_v9_transitive_optional_is_classified() {
+        let yaml = r#"
+lockfileVersion: '9.0'
+importers:
+  .:
+    optionalDependencies:
+      waybill-fixture-parent: {version: 1.0.0}
+packages:
+  waybill-fixture-parent@1.0.0: {}
+  waybill-fixture-child@2.0.0: {}
+snapshots:
+  waybill-fixture-parent@1.0.0:
+    dependencies:
+      waybill-fixture-child: 2.0.0
+    optional: true
+  waybill-fixture-child@2.0.0:
+    optional: true
+"#;
+        let root: serde_yaml::Value = serde_yaml::from_str(yaml).unwrap();
+        let out = parse_pnpm_lock(&root, "/test.yaml", true);
+        use waybill_common::resolution::LifecycleScope;
+        let child = entry_by_name(&out, "waybill-fixture-child").expect("child emitted");
+        assert_eq!(
+            child.lifecycle_scope,
+            Some(LifecycleScope::Optional),
+            "a package reachable only through an optional edge MUST be \
+             Optional even though nothing declares it so (FR-007a)"
+        );
+        assert_eq!(
+            child.extra_annotations.get("waybill:optional-derivation"),
+            Some(&serde_json::Value::String(
+                "npm-optional-dependencies".to_string()
+            )),
+            "FR-008: every newly Optional component carries the derivation"
+        );
+    }
+
+    /// T012 / FR-006 — a non-optional path cancels optionality.
+    ///
+    /// Probe C's contested case, measured: the root declares
+    /// `contested` optional AND a runtime parent depends on it. npm
+    /// writes `optional: false`, pnpm writes no key. Neither marks it.
+    #[test]
+    fn m1272_v9_runtime_path_cancels_optionality() {
+        let yaml = r#"
+lockfileVersion: '9.0'
+importers:
+  .:
+    dependencies:
+      waybill-fixture-runtime: {version: 1.0.0}
+    optionalDependencies:
+      waybill-fixture-contested: {version: 3.0.0}
+packages:
+  waybill-fixture-runtime@1.0.0: {}
+  waybill-fixture-contested@3.0.0: {}
+snapshots:
+  waybill-fixture-runtime@1.0.0:
+    dependencies:
+      waybill-fixture-contested: 3.0.0
+  waybill-fixture-contested@3.0.0: {}
+"#;
+        let root: serde_yaml::Value = serde_yaml::from_str(yaml).unwrap();
+        let out = parse_pnpm_lock(&root, "/test.yaml", true);
+        use waybill_common::resolution::LifecycleScope;
+        let contested =
+            entry_by_name(&out, "waybill-fixture-contested").expect("contested emitted");
+        assert_ne!(
+            contested.lifecycle_scope,
+            Some(LifecycleScope::Optional),
+            "a package a runtime path reaches MUST NOT be Optional even \
+             when the root declared it optional (FR-006, Probe C)"
+        );
+        assert!(
+            !contested
+                .extra_annotations
+                .contains_key("waybill:optional-derivation"),
+            "a cancelled package MUST NOT carry the derivation annotation"
+        );
+    }
+
+    /// T012 / FR-006 — the AND-fold across peer contexts.
+    ///
+    /// One canonical identity can appear under several snapshot keys
+    /// differing only by peer-context suffix. They collapse to one
+    /// emitted component, so FR-006 requires that ANY non-optional
+    /// context cancel. A last-write-wins insert would make the answer
+    /// depend on YAML ordering, so both orderings are asserted.
+    #[test]
+    fn m1272_v9_optional_and_folds_across_peer_contexts() {
+        // Two orderings of the same two peer contexts. A last-write-wins
+        // insert would pass one and fail the other.
+        let optional_first = r#"
+lockfileVersion: '9.0'
+packages:
+  waybill-fixture-multi@1.0.0: {}
+snapshots:
+  waybill-fixture-multi@1.0.0(a@1.0.0):
+    optional: true
+  waybill-fixture-multi@1.0.0(b@1.0.0): {}
+"#;
+        let optional_last = r#"
+lockfileVersion: '9.0'
+packages:
+  waybill-fixture-multi@1.0.0: {}
+snapshots:
+  waybill-fixture-multi@1.0.0(b@1.0.0): {}
+  waybill-fixture-multi@1.0.0(a@1.0.0):
+    optional: true
+"#;
+        for (label, yaml) in [
+            ("optional-first", optional_first),
+            ("optional-last", optional_last),
+        ] {
+            let root: serde_yaml::Value = serde_yaml::from_str(yaml)
+                .unwrap_or_else(|e| panic!("{label}: fixture must parse: {e}"));
+            let out = parse_pnpm_lock(&root, "/test.yaml", true);
+            use waybill_common::resolution::LifecycleScope;
+            let multi = entry_by_name(&out, "waybill-fixture-multi")
+                .unwrap_or_else(|| panic!("{label}: multi emitted"));
+            assert_ne!(
+                multi.lifecycle_scope,
+                Some(LifecycleScope::Optional),
+                "{label}: one non-optional peer context MUST cancel \
+                 optionality regardless of YAML order (FR-006)"
+            );
+        }
+
+        // Positive control: when EVERY context is optional, the fold
+        // must still yield optional -- otherwise the assertion above
+        // would pass for a reader that never classifies anything.
+        let all_optional = r#"
+lockfileVersion: '9.0'
+packages:
+  waybill-fixture-multi@1.0.0: {}
+snapshots:
+  waybill-fixture-multi@1.0.0(a@1.0.0):
+    optional: true
+  waybill-fixture-multi@1.0.0(b@1.0.0):
+    optional: true
+"#;
+        let root: serde_yaml::Value = serde_yaml::from_str(all_optional).unwrap();
+        let out = parse_pnpm_lock(&root, "/test.yaml", true);
+        use waybill_common::resolution::LifecycleScope;
+        assert_eq!(
+            entry_by_name(&out, "waybill-fixture-multi")
+                .expect("multi emitted")
+                .lifecycle_scope,
+            Some(LifecycleScope::Optional),
+            "control: all-optional contexts MUST fold to optional"
+        );
+    }
+
+    /// T018 / FR-009 — v9 peer-optional precedence, from the source v9
+    /// actually uses.
+    ///
+    /// A real v9 lockfile has no `peer:` key. The optional-peer marker
+    /// is `peerDependenciesMeta.<name>.optional: true` on the DECLARING
+    /// PARENT. Without reading it, this package would be classified
+    /// Optional and m178's PROVIDED_DEPENDENCY_OF would lose a
+    /// precedence FR-009 requires be preserved.
+    #[test]
+    fn m1272_v9_peer_optional_stays_peer_not_optional() {
+        let yaml = r#"
+lockfileVersion: '9.0'
+importers:
+  .:
+    optionalDependencies:
+      waybill-fixture-parent: {version: 1.0.0}
+packages:
+  waybill-fixture-parent@1.0.0:
+    peerDependencies:
+      waybill-fixture-peerish: '*'
+    peerDependenciesMeta:
+      waybill-fixture-peerish:
+        optional: true
+  waybill-fixture-peerish@4.0.0: {}
+snapshots:
+  waybill-fixture-parent@1.0.0(waybill-fixture-peerish@4.0.0):
+    optionalDependencies:
+      waybill-fixture-peerish: 4.0.0
+    optional: true
+  waybill-fixture-peerish@4.0.0:
+    optional: true
+"#;
+        let root: serde_yaml::Value = serde_yaml::from_str(yaml).unwrap();
+        let out = parse_pnpm_lock(&root, "/test.yaml", true);
+        use waybill_common::resolution::LifecycleScope;
+        let peerish =
+            entry_by_name(&out, "waybill-fixture-peerish").expect("peerish emitted");
+        assert_ne!(
+            peerish.lifecycle_scope,
+            Some(LifecycleScope::Optional),
+            "an optional PEER MUST NOT be classified Optional -- m178's \
+             PROVIDED_DEPENDENCY_OF wins (FR-009)"
+        );
+        assert!(
+            !peerish
+                .extra_annotations
+                .contains_key("waybill:optional-derivation"),
+            "FR-009: peer-optional MUST NOT carry the derivation annotation"
+        );
+        // The parent itself is plainly optional and must still be caught,
+        // so this fixture cannot pass by classifying nothing.
+        assert_eq!(
+            entry_by_name(&out, "waybill-fixture-parent")
+                .expect("parent emitted")
+                .lifecycle_scope,
+            Some(LifecycleScope::Optional),
+            "control: the optional parent MUST still be Optional, else \
+             this test would pass by doing nothing at all"
+        );
+    }
+
+    /// T017 / FR-002 — v6 keeps reading the `packages:` entry.
+    ///
+    /// The flag genuinely lives there for v6/v7. Only v9 moved it, so
+    /// only v9's source changes.
+    #[test]
+    fn m1272_v6_still_reads_the_packages_entry() {
+        let yaml = r#"
+lockfileVersion: '6.0'
+packages:
+  /waybill-fixture-legacy@1.0.0:
+    resolution: {integrity: sha512-legacy}
+    optional: true
+"#;
+        let root: serde_yaml::Value = serde_yaml::from_str(yaml).unwrap();
+        let out = parse_pnpm_lock(&root, "/test.yaml", true);
+        use waybill_common::resolution::LifecycleScope;
+        assert_eq!(
+            entry_by_name(&out, "waybill-fixture-legacy")
+                .expect("legacy emitted")
+                .lifecycle_scope,
+            Some(LifecycleScope::Optional),
+            "v6 MUST still read `optional` from the packages entry (FR-002)"
+        );
+    }
+
+    /// T008 / FR-011a + SC-008 — an unrecognized future format version
+    /// still reads every location the reader knows, and does not fail.
+    #[test]
+    fn m1272_unrecognized_version_still_reads_known_locations() {
+        let yaml = r#"
+lockfileVersion: '99.0'
+packages:
+  waybill-fixture-future@1.0.0: {}
+snapshots:
+  waybill-fixture-future@1.0.0:
+    optional: true
+"#;
+        let root: serde_yaml::Value = serde_yaml::from_str(yaml).unwrap();
+        let out = parse_pnpm_lock(&root, "/test.yaml", true);
+        use waybill_common::resolution::LifecycleScope;
+        assert_eq!(
+            entry_by_name(&out, "waybill-fixture-future")
+                .expect("future-version entry still emitted")
+                .lifecycle_scope,
+            Some(LifecycleScope::Optional),
+            "FR-011a: a newer format version MUST NOT stop the reader \
+             from attempting the locations it knows"
         );
     }
 }

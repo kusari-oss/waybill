@@ -85,9 +85,75 @@ pub(super) fn parse_yarn_lock(
     pkg_json: &serde_json::Value,
 ) -> Vec<PackageDbEntry> {
     if is_berry(text) {
+        warn_if_unrecognized_berry_version(text, source_path);
         parse_berry(text, source_path, pkg_json)
     } else {
+        warn_if_unrecognized_v1_version(text, source_path);
         parse_v1(text, source_path, pkg_json)
+    }
+}
+
+/// Milestone 1272 (T007, FR-011a) — yarn v1 declares its format in a
+/// header comment, `# yarn lockfile v1`. It is the one dialect with no
+/// structured version field, and measurement showed it is also the one
+/// whose root optional declaration the lockfile cannot carry at all.
+///
+/// A file that reaches this branch has no `__metadata:` block, so it is
+/// not Berry; if its header nonetheless names a version other than 1,
+/// the format is one the optional axis was never measured against.
+fn warn_if_unrecognized_v1_version(text: &str, source_path: &str) {
+    for line in text.lines().take(10) {
+        let t = line.trim();
+        if let Some(rest) = t.strip_prefix("# yarn lockfile v") {
+            let raw = rest.trim();
+            if raw != "1" {
+                super::warn_unrecognized_lockfile_version(
+                    "yarn.lock (v1 line format)",
+                    raw,
+                    "1",
+                    source_path,
+                );
+            }
+            return;
+        }
+    }
+}
+
+/// Milestone 1272 (T007, FR-011a) — Berry records its format version in
+/// the `__metadata:` block. The optional axis was measured against
+/// version 8; a newer one may have moved `dependenciesMeta`, so say so
+/// rather than letting an unfindable marker read as "not optional".
+///
+/// Read by line rather than by deserializing, because `parse_berry`
+/// strips `__metadata` before it walks the entries and a malformed
+/// block must not cost us the warning.
+fn warn_if_unrecognized_berry_version(text: &str, source_path: &str) {
+    let mut in_metadata = false;
+    for line in text.lines().take(50) {
+        if line.trim_start().starts_with("__metadata:") {
+            in_metadata = true;
+            continue;
+        }
+        if in_metadata {
+            // Leaving the block: a non-indented, non-empty line.
+            if !line.starts_with(' ') && !line.trim().is_empty() {
+                return;
+            }
+            if let Some(rest) = line.trim().strip_prefix("version:") {
+                let raw = rest.trim().trim_matches(|c| c == '"' || c == '\'');
+                if let Ok(found) = raw.parse::<u64>() {
+                    if found > super::KNOWN_BERRY_METADATA_VERSION {
+                        super::warn_unrecognized_lockfile_version(
+                            "yarn.lock (Berry)",
+                            &found.to_string(),
+                            &super::KNOWN_BERRY_METADATA_VERSION.to_string(),
+                            source_path,
+                        );
+                    }
+                }
+                return;
+            }
+        }
     }
 }
 

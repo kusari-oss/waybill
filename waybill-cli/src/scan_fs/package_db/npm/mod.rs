@@ -41,6 +41,61 @@ use crate::scan_fs::walk_registry::{
 };
 use std::sync::{Arc, Mutex};
 
+// -----------------------------------------------------------------------
+// Milestone 1272 (T004, FR-011a) — unrecognized-lockfile-version
+// diagnostic.
+//
+// This feature exists because pnpm MOVED the optional marker between
+// lockfile v7 and v9 and the reader kept answering "not optional" where
+// the only honest answer was "unknown". Nothing in the output
+// distinguished a package that is genuinely required from one whose
+// marker the reader could no longer find.
+//
+// So every npm-dialect reader that derives the optional axis says so
+// when it meets a format version newer than any this milestone was
+// measured against. It still attempts every location it knows — a
+// newer format usually keeps the old ones — but an incomplete axis
+// becomes a logged warning rather than a confident absence.
+//
+// The known values are the ones `specs/1272-npm-optional-scope/
+// measurements/findings.md` was established against, on pnpm 12.16.1,
+// bun 1.4.2, yarn 4.6.0 and yarn 1.22.22. Raise a constant here only
+// together with a probe re-run that confirms where the new format
+// records the axis.
+// -----------------------------------------------------------------------
+
+/// Highest `lockfileVersion` major measured for `pnpm-lock.yaml` (v9).
+pub(crate) const KNOWN_PNPM_LOCKFILE_MAJOR: u32 = 9;
+/// Highest `lockfileVersion` measured for `bun.lock`.
+pub(crate) const KNOWN_BUN_LOCKFILE_VERSION: u64 = 2;
+/// Highest `__metadata.version` measured for a Berry `yarn.lock`.
+pub(crate) const KNOWN_BERRY_METADATA_VERSION: u64 = 8;
+
+/// Warn that a lockfile's declared format version is newer than any
+/// version the optional axis was measured against (FR-011a).
+///
+/// Never fails the scan and never changes parsing: the caller still
+/// reads every location it knows. The point is that a reader which
+/// finds nothing can no longer be mistaken for a reader which found
+/// nothing *there*.
+pub(crate) fn warn_unrecognized_lockfile_version(
+    dialect: &str,
+    found: &str,
+    known: &str,
+    source_path: &str,
+) {
+    tracing::warn!(
+        dialect = %dialect,
+        found_version = %found,
+        highest_measured_version = %known,
+        source = %source_path,
+        "lockfile format version is newer than any version the optional \
+         axis was measured against; the known locations were still read, \
+         but the optional axis may be incomplete — an absent axis here is \
+         NOT a confirmed absence (#1324, FR-011a)"
+    );
+}
+
 /// Per-scan state — HashSet of project-root dirs (auto-dedupes when
 /// multiple markers land in the same dir, e.g. package.json + yarn.lock).
 #[derive(Default, Debug)]
@@ -1946,6 +2001,184 @@ mod tests {
             !mlly.depends.contains(&"pathe".to_string()),
             "mlly.depends should NOT carry the bare-name form (would route to hoisted); got: {:?}",
             mlly.depends
+        );
+    }
+}
+
+// ----------------------------------------------------------------------
+// Milestone 1272 (T008, FR-011a + SC-008) — the unrecognized-version
+// diagnostic, in all four dialects.
+//
+// This asserts the diagnostic ITSELF, not merely that the scan survives.
+// Surviving is the easy half; the requirement exists because a reader
+// that silently finds nothing is indistinguishable from one that
+// correctly found nothing. Capturing the log is the only way to tell
+// those two apart, which is the entire point of FR-011a.
+// ----------------------------------------------------------------------
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod m1272_version_diagnostics {
+    use std::io;
+    use std::sync::{Arc, Mutex};
+
+    /// Collects `tracing` output into a shared buffer so a test can
+    /// assert what was logged. `tracing-subscriber` is already a direct
+    /// dependency, so this adds no crate (FR-016).
+    #[derive(Clone, Default)]
+    struct Capture(Arc<Mutex<Vec<u8>>>);
+
+    impl io::Write for Capture {
+        fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+            let mut guard = match self.0.lock() {
+                Ok(g) => g,
+                Err(poisoned) => poisoned.into_inner(),
+            };
+            guard.extend_from_slice(buf);
+            Ok(buf.len())
+        }
+        fn flush(&mut self) -> io::Result<()> {
+            Ok(())
+        }
+    }
+
+    impl<'a> tracing_subscriber::fmt::MakeWriter<'a> for Capture {
+        type Writer = Capture;
+        fn make_writer(&'a self) -> Self::Writer {
+            self.clone()
+        }
+    }
+
+    /// Run `f` with a WARN-level subscriber installed and return
+    /// everything it logged.
+    fn logs_from(f: impl FnOnce()) -> String {
+        let cap = Capture::default();
+        let subscriber = tracing_subscriber::fmt()
+            .with_writer(cap.clone())
+            .with_max_level(tracing::Level::WARN)
+            .with_ansi(false)
+            .finish();
+        tracing::subscriber::with_default(subscriber, f);
+        let guard = match cap.0.lock() {
+            Ok(g) => g,
+            Err(poisoned) => poisoned.into_inner(),
+        };
+        String::from_utf8_lossy(&guard).into_owned()
+    }
+
+    fn assert_names_version(logs: &str, version: &str, dialect: &str) {
+        assert!(
+            logs.contains(version),
+            "{dialect}: the diagnostic MUST name the unrecognized version \
+             {version:?} (SC-008). Captured logs: {logs:?}"
+        );
+        assert!(
+            logs.contains("may be incomplete"),
+            "{dialect}: the diagnostic MUST say the optional axis may be \
+             incomplete, so an absent axis is not read as a confirmed \
+             absence (FR-011a). Captured logs: {logs:?}"
+        );
+    }
+
+    #[test]
+    fn pnpm_future_version_warns_and_still_parses() {
+        let yaml = r#"
+lockfileVersion: '99.0'
+packages:
+  waybill-fixture-future@1.0.0: {}
+snapshots:
+  waybill-fixture-future@1.0.0: {}
+"#;
+        let root: serde_yaml::Value = serde_yaml::from_str(yaml).unwrap();
+        let mut emitted = Vec::new();
+        let logs = logs_from(|| {
+            emitted = super::pnpm_lock::parse_pnpm_lock(&root, "/t.yaml", true);
+        });
+        assert_names_version(&logs, "99.0", "pnpm");
+        assert_eq!(emitted.len(), 1, "pnpm: the scan MUST NOT fail (SC-008)");
+    }
+
+    #[test]
+    fn bun_future_version_warns_and_still_parses() {
+        let json = r#"{
+  "lockfileVersion": 99,
+  "workspaces": { "": { "name": "waybill-fixture-root" } },
+  "packages": {}
+}"#;
+        let root: serde_json::Value = serde_json::from_str(json).unwrap();
+        let tmp = tempfile::tempdir().unwrap();
+        let logs = logs_from(|| {
+            let _ = super::bun_lock::parse_bun_lock(&root, "/t.lock", tmp.path());
+        });
+        assert_names_version(&logs, "99", "bun");
+    }
+
+    #[test]
+    fn berry_future_metadata_version_warns_and_still_parses() {
+        let text = r#"__metadata:
+  version: 99
+  cacheKey: 10c0
+
+"waybill-fixture-a@npm:1.0.0":
+  version: 1.0.0
+  resolution: "waybill-fixture-a@npm:1.0.0"
+"#;
+        let pkg_json = serde_json::json!({ "name": "waybill-fixture-root" });
+        let mut emitted = Vec::new();
+        let logs = logs_from(|| {
+            emitted = super::yarn_lock::parse_yarn_lock(text, "/yarn.lock", &pkg_json);
+        });
+        assert_names_version(&logs, "99", "yarn Berry");
+        assert!(
+            !emitted.is_empty(),
+            "Berry: the known locations MUST still be read (FR-011a); got {emitted:?}"
+        );
+    }
+
+    #[test]
+    fn yarn_v1_future_header_version_warns() {
+        let text = r#"# THIS IS AN AUTOGENERATED FILE.
+# yarn lockfile v99
+
+"waybill-fixture-a@^1.0.0":
+  version "1.0.0"
+"#;
+        let pkg_json = serde_json::json!({ "name": "waybill-fixture-root" });
+        let logs = logs_from(|| {
+            let _ = super::yarn_lock::parse_yarn_lock(text, "/yarn.lock", &pkg_json);
+        });
+        assert_names_version(&logs, "99", "yarn v1");
+    }
+
+    /// The control that makes the four tests above mean something: a
+    /// KNOWN version must produce NO such diagnostic. Without this, a
+    /// helper that warned unconditionally would pass all four.
+    #[test]
+    fn known_versions_emit_no_diagnostic() {
+        let yaml = r#"lockfileVersion: '9.0'
+packages:
+  waybill-fixture-a@1.0.0: {}
+"#;
+        let root: serde_yaml::Value = serde_yaml::from_str(yaml).unwrap();
+        let logs = logs_from(|| {
+            let _ = super::pnpm_lock::parse_pnpm_lock(&root, "/t.yaml", true);
+        });
+        assert!(
+            !logs.contains("may be incomplete"),
+            "pnpm v9 is a KNOWN version and MUST NOT warn; got {logs:?}"
+        );
+
+        let v1 = r#"# yarn lockfile v1
+
+"waybill-fixture-a@^1.0.0":
+  version "1.0.0"
+"#;
+        let pkg_json = serde_json::json!({ "name": "waybill-fixture-root" });
+        let logs = logs_from(|| {
+            let _ = super::yarn_lock::parse_yarn_lock(v1, "/yarn.lock", &pkg_json);
+        });
+        assert!(
+            !logs.contains("may be incomplete"),
+            "yarn v1 is a KNOWN version and MUST NOT warn; got {logs:?}"
         );
     }
 }
