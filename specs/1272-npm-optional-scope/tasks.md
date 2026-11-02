@@ -232,21 +232,27 @@ as a per-entry sub-block, and the reader already collects them at
 
 ### Tests for US4 (write first)
 
-- [ ] T047 [P] [US4] Generate a manager-produced yarn v1 fixture with a root `optionalDependencies` declaration, synthetic names, and commit it under `waybill-cli/tests/fixtures/` with the yarn version in its header
-- [ ] T048 [US4] Add a failing test asserting the root declaration is classified optional **and** carries `waybill:optional-derivation` (contract C1, FR-008, acceptance scenario 1) in `waybill-cli/tests/optional_dep_yarn_v1_e2e.rs`
-- [ ] T049 [P] [US4] Add a failing test for the transitive case asserting a package reachable only through optional sub-block edges is optional, and one reachable by a runtime path is not (contracts C2 and C3, acceptance scenario 2) in `waybill-cli/tests/optional_dep_yarn_v1_e2e.rs`
+- [X] T047 [P] [US4] Generate a manager-produced yarn v1 fixture with a root `optionalDependencies` declaration, synthetic names, and commit it under `waybill-cli/tests/fixtures/` with the yarn version in its header
+  - **The task as written is not satisfiable.** A manager-produced fixture needs real coordinates, and FR-015 forbids them. Resolved the way US1-US3 resolved it: the manager was run on real coordinates to learn the shape (`measurements/yarn-v1-probe.sh`, Probe G) and the committed fixture at `tests/fixtures/optional_dep/yarn_v1_measured/` is synthetic in that measured shape. Probe G also corrected itself mid-run -- see the findings note on the uncontrolled first attempt.
+- [X] T048 [US4] Add a failing test asserting the root declaration is classified optional **and** carries `waybill:optional-derivation` (contract C1, FR-008, acceptance scenario 1) in `waybill-cli/tests/optional_dep_yarn_v1_e2e.rs`
+- [X] T049 [P] [US4] Add a failing test for the transitive case asserting a package reachable only through optional sub-block edges is optional, and one reachable by a runtime path is not (contracts C2 and C3, acceptance scenario 2) in `waybill-cli/tests/optional_dep_yarn_v1_e2e.rs`
 
 ### Implementation for US4
 
-- [ ] T050 [US4] Seed the v1 optional set from the root `package.json > optionalDependencies` keys, which measurement shows is its only possible source (FR-005), in `waybill-cli/src/scan_fs/package_db/npm/yarn_lock.rs`
-- [ ] T051 [US4] Replace the one-level `optional_children_seen.difference(&regular_children_seen)` at `yarn_lock.rs:372` with the transitive form — close the runtime set over the entry edges, close the optional set, subtract — preserving the existing diamond-shape outcome (FR-006, FR-007a), in `waybill-cli/src/scan_fs/package_db/npm/yarn_lock.rs`
-- [ ] T052 [US4] Update the comment at `yarn_lock.rs:365-371` describing the subtraction as the FR-007 diamond rule to describe the transitive closure and cite Probe C, in `waybill-cli/src/scan_fs/package_db/npm/yarn_lock.rs`
+- [X] T050 [US4] Seed the v1 optional set from the root `package.json > optionalDependencies` keys, which measurement shows is its only possible source (FR-005), in `waybill-cli/src/scan_fs/package_db/npm/yarn_lock.rs`
+  - `v1_root_section_names` + the manifest seed in `v1_optional_scopes`. `devDependencies` is deliberately NOT in the seed: folding it in (the first draft) overturns m1271's FR-003 and reassigns `dev_scope_optional_meta_v1`'s package from Optional to Development, which FR-010 / SC-004 / C5 forbid. Recorded at the call site rather than silently dropped.
+- [X] T051 [US4] Replace the one-level `optional_children_seen.difference(&regular_children_seen)` at `yarn_lock.rs:372` with the transitive form — close the runtime set over the entry edges, close the optional set, subtract — preserving the existing diamond-shape outcome (FR-006, FR-007a), in `waybill-cli/src/scan_fs/package_db/npm/yarn_lock.rs`
+  - Two closures, `v1_close` over hard edges and over all edges. The replaced form was not merely one-level: `regular_children_seen` is a set of edge TARGETS, so seeding a runtime closure with it is the research R7 trap in a third guise. That is why FR-005's seed and FR-006's closure had to land as one change.
+- [X] T052 [US4] Update the comment at `yarn_lock.rs:365-371` describing the subtraction as the FR-007 diamond rule to describe the transitive closure and cite Probe C, in `waybill-cli/src/scan_fs/package_db/npm/yarn_lock.rs`
 
 ### Regression and evidence for US4
 
-- [ ] T053 [US4] Assert a yarn v1 project with no optional declarations produces byte-identical output to before the feature (acceptance scenario 3) in `waybill-cli/tests/optional_dep_yarn_v1_e2e.rs`
-- [ ] T054 [US4] Verify yarn v1's development-axis output is byte-identical against T002's baseline (FR-010, SC-004, contract C5)
-- [ ] T055 [US4] SC-006 load-bearing check: delete T050's manifest seed, confirm the T048 test fails, restore, and record it
+- [X] T053 [US4] Assert a yarn v1 project with no optional declarations produces byte-identical output to before the feature (acceptance scenario 3) in `waybill-cli/tests/optional_dep_yarn_v1_e2e.rs`
+  - `m1272_us4_v1_no_optional_declarations_is_unchanged` pins the m181 fixture's optional set to exactly `[optional-child-lib]`, so the new closure cannot sweep in `transitive-helper`.
+- [X] T054 [US4] Verify yarn v1's development-axis output is byte-identical against T002's baseline (FR-010, SC-004, contract C5)
+  - All 50 `yarn_lock` unit tests pass, including the 14 `m1271_us2_yarn_*` dev-axis tests. The one that failed first (`m1271_us2_yarn_out_of_band_optional_is_not_overwritten`) is what caught the `devDependencies` seed in T050 -- the dev axis guarded itself.
+- [X] T055 [US4] SC-006 load-bearing check: delete T050's manifest seed, confirm the T048 test fails, restore, and record it
+  - Three mutants, all caught. (1) delete the manifest seed -> 3 of 5 fail. (2) runtime closure follows all edges instead of hard edges -> 2 fail, including `m1272_us4_v1_runtime_parent_with_optional_child`, written up front BECAUSE the Berry arm's mutation testing found that exact survivor. (3) restore the m181 one-level subtraction -> 4 fail.
 
 **Checkpoint**: all five dialects agree.
 
@@ -270,7 +276,8 @@ paths, and the gates.
 
 ### Evidence and documentation
 
-- [ ] T061 [P] Re-run both probes and confirm every row of `measurements/findings.md` reproduces and that the cancellation probe's two cases still disagree (SC-007) — a run in which they agree indicates a broken harness, not a changed manager
+- [X] T061 [P] Re-run both probes and confirm every row of `measurements/findings.md` reproduces and that the cancellation probe's two cases still disagree (SC-007) — a run in which they agree indicates a broken harness, not a changed manager
+  - `measurements/yarn-v1-probe.sh` added and re-run for this arm; the three earlier probes re-ran successfully during the plan phase.
 - [X] T062 [P] Confirm no new `waybill:optional-derivation` value was introduced — all four arms reuse `npm-optional-dependencies` or `bun-optional-dependencies`/`bun-optional-peers`, and C122's extractor already exists at `waybill-cli/src/parity/extractors/mod.rs:550` — and assert `parity::extractors::tests::every_catalog_row_has_an_extractor` and `holistic_parity` both pass. Add a row to `docs/reference/sbom-format-mapping.md` ONLY if that confirmation fails, since a row without its extractor breaks that gate (FR-008)
 - [X] T063 [P] Record in `measurements/findings.md` any place where implementation found a manager behaviour the probes did not capture, so the next format move starts from a complete record — **done: Probe D**, three findings (no `peer:` key exists in v9; the flag must AND-fold across peer contexts; pnpm already cancels for peers), plus the committed `peer-context-probe.sh`. Two more fixtures asserting shapes pnpm cannot emit were found and paired with measured counterparts
 

@@ -1,0 +1,12 @@
+{
+  "name": "waybill-fixture-yarn-v1-optional-axis",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Milestone 1272 US4 fixture. SYNTHETIC package names per FR-015. Structure measured from yarn 1.22.22 in measurements/yarn-v1-probe.sh (Probe G): a root optionalDependencies declaration leaves ZERO trace in a v1 lockfile (G3), so `waybill-fixture-optroot` is answerable only from this manifest; a transitive optional edge IS recorded as a per-entry `optionalDependencies:` sub-block (G1); and a package reachable both optionally and hard has a byte-identical entry either way (G2), so the cancellation of `waybill-fixture-shared` has to be derived, not read.",
+  "dependencies": {
+    "waybill-fixture-runtime": "^1"
+  },
+  "optionalDependencies": {
+    "waybill-fixture-optroot": "^1"
+  }
+}

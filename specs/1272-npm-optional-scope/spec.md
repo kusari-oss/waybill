@@ -237,6 +237,15 @@ dependency optional; that component reports the optional scope.
   there the manifest is the more current statement of intent.
 - **FR-005**: The yarn v1 reader MUST derive the root optional axis from
   the manifest, which measurement shows is its only available source.
+  Probes B and C inferred this from the absence of a root entry; Probe G
+  measured it directly, installing a project whose only declaration is a
+  root `optionalDependencies` and finding **zero** occurrences of the
+  string `optional` in the resulting lockfile. yarn v1 is the only one
+  of the four dialects for which the lockfile cannot answer the root
+  question, which is why this arm's manifest seed and FR-006's closure
+  are a single change rather than two: the seed has nothing to subtract
+  from until the closure exists, and the closure has nothing to start
+  from until the seed does.
 - **FR-006**: A package reachable by any non-optional path MUST NOT be
   classified optional, in every reader. Measured in Probe C of
   `measurements/findings.md`: both reference implementations decline to
@@ -267,7 +276,16 @@ dependency optional; that component reports the optional scope.
 - **FR-010**: The development-axis classification of every reader this
   feature touches MUST be unchanged. A declaration being optional MUST
   NOT make it development, and MUST continue to disqualify it from
-  being development.
+  being development. This constrains the optional axis's own seed, and
+  not only its output: a root `devDependencies` declaration MUST NOT
+  enter the yarn v1 runtime seed, because milestone 1271's FR-003
+  decided — with a fixture and a mutation test behind it — that an
+  Optional assignment derived out of band survives a `devDependencies`
+  declaration of the same name. Seeding from the dev sections reassigns
+  that package to Development, which is a change to the development
+  axis's output and therefore out of bounds here. Whether 1271's FR-003
+  is itself the right rule is a question about that milestone, not this
+  one; an implementation is not the place to overturn it.
 - **FR-011**: A malformed or absent axis-bearing region MUST leave the
   axis unset and MUST NOT abort the parse.
 - **FR-011a**: When a lockfile declares a format version newer than any
