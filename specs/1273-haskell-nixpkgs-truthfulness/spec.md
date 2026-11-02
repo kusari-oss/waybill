@@ -235,7 +235,14 @@ carries a resolved version and an unresolved-reason.
 - A project whose `flake.lock` pins a nixpkgs revision not present in the local
   cache, under `--offline`.
 - A package in the cached set whose license field is absent, empty, or a Nix
-  expression rather than a string.
+  expression rather than a string. Phase 0 measured this: at the pinned
+  revision there is no absent case — all 19,437 derivation blocks declare
+  one — and the Nix-expression case is the majority, 14,481 of them being a
+  `lib.licenses.<attr>` reference rather than a string. The attribute
+  vocabulary is 15 names, so the mapping is a lookup table rather than a Nix
+  evaluation.
+- A package in the cached set whose license declaration asserts the license
+  is unknown (FR-011a), as distinct from one that is merely unversioned.
 
 ## Requirements *(mandatory)*
 
@@ -284,6 +291,42 @@ carries a resolved version and an unresolved-reason.
   condition is evaluated against defaults — are external behaviours of hpack and
   MUST be measured before a requirement depends on them, not read from its
   documentation alone.
+
+  Phase 0 performed that measurement against hpack 0.38.3
+  (`measurements/hpack-semantics.sh`, 12 cases; findings Probe A). Three
+  results constrain the implementation:
+
+  1. **Inheritance reaches every stanza kind**, `tests:` and `benchmarks:`
+     included — and those already carry `Development` scope in the `.cabal`
+     reader. A per-component list is *additive*, not a replacement.
+  2. **For a repeated name the last declaration wins outright**, replacing
+     the earlier constraint entirely. There is no intersection, and a bare
+     per-component entry discards a constraint the top level declared. This
+     was measured both across the inheritance boundary and within a single
+     list, so the rule is one ordered merge rather than a precedence between
+     levels. An implementation that intersected `>= 1.0` with `< 3` would
+     report a range the project does not declare.
+  3. **`when:` is not evaluated**, except that a literal `false` is pruned.
+     `os(...)` — and even `flag(...)` against a default declared in the same
+     file — is lowered to a Cabal `if` block verbatim. A `when:` block
+     therefore renders to exactly the construct the `.cabal` reader already
+     evaluates against flag defaults (`stanza_default_buildable`, milestone
+     955), so this feature MUST lower `when:` into that same representation
+     rather than add a second conditional evaluator. Two evaluators would
+     give one project two answers depending on which file declared its
+     dependencies, which is the defect class this milestone exists to
+     remove.
+
+  `source-dirs` was measured to be incapable of changing the dependency set;
+  it is in the modelled subset for evidence and module purposes only.
+
+  One further measured behaviour is deliberately NOT reproduced: hpack
+  rewrites constraints it renders, turning `base >= 4 && < 5` into
+  `base ==4.*`. That is a cosmetic normalisation of an equivalent range, and
+  waybill MUST record the range as the manifest declares it — which is also
+  what the `.cabal` reader already does (`DeclaredDep.range` / `all_ranges`,
+  milestone 895 FR-007). Reproducing the normalisation would be work in
+  service of matching an artifact this feature no longer reads.
 - **FR-001b**: A construct outside FR-001a's subset that could change the
   dependency set MUST be announced in the emitted document per FR-018, naming
   the construct and the file. `!include` and `defaults:` are both in this
@@ -293,6 +336,19 @@ carries a resolved version and an unresolved-reason.
   retrieving YAML from a remote repository; a manifest reader is not the place to
   introduce that, and it cannot be honoured under `--offline` at all. A manifest
   using `defaults:` is handled by FR-001b.
+
+  Measured in Phase 0 rather than read: given an unresolvable
+  `defaults: {github: …}`, hpack 0.38.3 refuses the **whole manifest** and
+  renders nothing, reporting the `raw.githubusercontent.com` URL it could
+  not fetch. There is no partial answer for waybill to reproduce offline,
+  which is the strongest form this requirement's justification can take.
+
+  The same probe measured `!include` of a sibling file, which resolves from
+  **disk** and needs no network. FR-001b announces both constructs, which
+  remains the right scope decision, but they are not the same kind of
+  construct: `!include` is a local file read and therefore a cheap later
+  win, `defaults:` is a network dependency and is not. Recorded so a future
+  milestone does not re-measure it.
 
 #### Completeness claims (US1)
 
@@ -325,6 +381,16 @@ carries a resolved version and an unresolved-reason.
 - **FR-011**: A declared license that cannot be canonicalised MUST be preserved
   as declared rather than dropped, and the document MUST record that it is
   uncanonicalised.
+- **FR-011a**: A declaration whose value asserts that the license is *not
+  known* MUST be treated as absent, not as an uncanonicalisable license.
+  Phase 0 measured the cached set's bare-string license values and found
+  `"unknown"` is 360 of 994 of them — 36% of that family. Publishing the
+  string `unknown` into a `licenses[]` array is worse than an absent field:
+  a consumer filtering for components with no license information would not
+  find it, so the document would answer "what is this licensed under" with
+  a value that is not a license. This is FR-012's reasoning applied to a
+  case FR-011 would otherwise capture. `"GPL"`, `"LGPL"` and `"AGPL"` (586
+  of 994) are genuine but unversioned declarations and remain FR-011's case.
 - **FR-012**: No license may be attached to a component the resolution did not
   resolve.
 
@@ -397,8 +463,20 @@ carries a resolved version and an unresolved-reason.
 - **SC-003**: A default-off-flag project classifies its flag-gated dependencies
   identically with and without a `flake.lock`, unless a non-seed closure path
   reaches them. Measured today: the two disagree on 2 of 2 directly-marked
-  components, and on 8 components in total on the public library #955 was filed
-  against.
+  components; on the public library #955 was filed against, **10** components
+  are reachable from the root only through those 2 — the pair itself plus 8
+  non-boot components below it.
+
+  The 10 replaces the 8 this spec first carried, which was the one figure
+  taken from an issue (#1281's sbomnix cross-check at 0.13.1) rather than
+  re-run. Phase 0 re-measured it at 0.14.0 and found both a different number
+  and a different composition: the figure cannot be read as a classification
+  disagreement at all, because the closure pass runs only in the
+  `flake.lock` case, so the fan-out components are *introduced* by the
+  closure rather than *re-classified* by the withdrawal. `pretty` is
+  excluded from the count as compiler-supplied, since it is present in every
+  build of the project. See `measurements/findings.md` Probe D; the probe is
+  committed as `measurements/sc003-public-library.sh`.
 - **SC-004**: Of the components resolved from a cached nixpkgs revision, the
   proportion carrying a declared license goes from the measured 0 of 66 to all
   of those the cached set declares one for.

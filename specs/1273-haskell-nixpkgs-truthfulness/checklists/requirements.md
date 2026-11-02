@@ -72,9 +72,36 @@ language, crate, function or module.
 is that a number describing external behaviour must be traceable to an
 observation. All four are, to
 `measurements/reproduce-1273.sh`, which is committed and re-runs. SC-003's
-8-component figure is the one number taken from an issue (#1281's sbomnix
-cross-check) rather than re-measured here; it is attributed in the spec and
-should be re-measured in Phase 0 before any task depends on it.
+8-component figure was the one number taken from an issue (#1281's sbomnix
+cross-check) rather than re-measured here; it was attributed in the spec and
+flagged for re-measurement in Phase 0 before any task depended on it.
+
+**Phase 0 discharged that, and the figure was wrong in two ways.** Probe D
+(`measurements/sc003-public-library.sh` + `fanout.py`) re-measured it at
+0.14.0 and found **10**, not 8 — and that the figure cannot be read as a
+classification disagreement at all, because the closure pass runs only in
+the `flake.lock` case, so the fan-out components are *introduced* by the
+closure rather than *re-classified* by the withdrawal. The composition
+differs too: `clock` and `extra` are new, and `pretty` is excluded as
+compiler-supplied. SC-003 is corrected in the spec against that
+measurement.
+
+Two further Phase 0 findings reached the spec as requirements or
+constraints, which is the same pattern the clarification round showed:
+
+- **FR-011a is new.** Probe B measured that `"unknown"` is 360 of the 994
+  bare-string license declarations in the cached set. Under FR-011 as
+  written it would have been published as an uncanonicalisable license —
+  putting the string `unknown` into `licenses[]`, which is worse than an
+  absent field because a consumer filtering for components with no license
+  information would not find it. A Principle IX breach the design would
+  otherwise have shipped.
+- **FR-001a gained three measured rules** from Probe A, one of which
+  decided the architecture: hpack does not evaluate `when:` conditions, so a
+  `when:` block *is* a Cabal conditional and must lower into the evaluator
+  the `.cabal` reader already has. Two evaluators would let one project get
+  two answers depending on which file declared its dependencies — the defect
+  class this milestone exists to remove.
 
 **On FR-017.** Added after re-measurement, not from the issues: two of the four
 defects (#1278's missing diagnostic, #1281's indistinguishable reconciliation
