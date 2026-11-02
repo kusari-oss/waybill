@@ -1,0 +1,13 @@
+{
+  "name": "waybill-fixture-pnpm-v9-optional",
+  "version": "1.0.0",
+  "description": "Milestone 1272 fixture - pnpm v9 project in the shape pnpm actually produces. Structure measured; names synthetic per FR-015.",
+  "private": true,
+  "dependencies": {
+    "waybill-fixture-runtime": "1.0.0"
+  },
+  "optionalDependencies": {
+    "waybill-fixture-optional": "2.0.0",
+    "waybill-fixture-contested": "1.0.0"
+  }
+}

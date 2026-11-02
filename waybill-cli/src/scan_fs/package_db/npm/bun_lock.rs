@@ -310,6 +310,21 @@ pub(crate) fn parse_bun_lock(
 ) -> Vec<PackageDbEntry> {
     let mut out = Vec::new();
 
+    // Milestone 1272 (T006, FR-011a) — the optional axis was measured
+    // against bun.lock `lockfileVersion: 2`. A newer version may have
+    // moved the declaration out of the `workspaces` map; say so rather
+    // than letting an unfindable marker read as "not optional".
+    if let Some(found) = root.get("lockfileVersion").and_then(|v| v.as_u64()) {
+        if found > super::KNOWN_BUN_LOCKFILE_VERSION {
+            super::warn_unrecognized_lockfile_version(
+                "bun.lock",
+                &found.to_string(),
+                &super::KNOWN_BUN_LOCKFILE_VERSION.to_string(),
+                source_path,
+            );
+        }
+    }
+
     // Extract `overrides` map; entries here win over any version
     // declared in `packages`. We apply at registry-package emission
     // time (the un-overridden version is NOT also emitted).
