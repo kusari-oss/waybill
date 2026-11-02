@@ -1,0 +1,12 @@
+{
+  "name": "waybill-fixture-cross-dialect-npm",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Milestone 1272 T056 / SC-002 + SC-003 + contract C10. ONE dependency graph, expressed in five npm-ecosystem dialects. Synthetic names per FR-015; each dialect's STRUCTURE is the one its manager was measured to emit (see specs/1272-npm-optional-scope/measurements/findings.md). The graph: root declares waybill-fixture-runtime as a plain dependency and waybill-fixture-optional under optionalDependencies; runtime has a hard edge to waybill-fixture-contested; optional has hard edges to waybill-fixture-transitive and waybill-fixture-contested. All five dialects MUST classify exactly {optional, transitive} optional -- transitive because it is reachable only through an optional package, contested NOT because a non-optional path reaches it (FR-006).",
+  "dependencies": {
+    "waybill-fixture-runtime": "1.0.0"
+  },
+  "optionalDependencies": {
+    "waybill-fixture-optional": "2.0.0"
+  }
+}

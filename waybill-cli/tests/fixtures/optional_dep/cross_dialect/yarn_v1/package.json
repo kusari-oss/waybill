@@ -1,0 +1,8 @@
+{
+  "name": "waybill-fixture-cross-dialect-yarn-v1",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Milestone 1272 T056 / SC-002 + SC-003 + contract C10 -- one graph, five dialects. Synthetic names per FR-015; the structure is the measured one for this dialect. All five MUST classify exactly {waybill-fixture-optional, waybill-fixture-transitive} optional. The root optionalDependencies declaration below is load-bearing: Probe G3 measured yarn v1 writing zero occurrences of the string 'optional' into a lockfile for one, so this manifest is the only possible source of this dialect's root answer.",
+  "dependencies": { "waybill-fixture-runtime": "1.0.0" },
+  "optionalDependencies": { "waybill-fixture-optional": "2.0.0" }
+}

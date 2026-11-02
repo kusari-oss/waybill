@@ -540,3 +540,55 @@ treated as a graph root, excluding any entry named by an optional
 declaration. That rule is what keeps a lockfile-only scan from reading
 its whole contents as optional, and it is the exact inverse failure of
 the R7 trap: one over-seeds the runtime set, the other under-seeds it.
+
+## Incidental — two yarn Berry identity defects, found by the T056 test
+
+Neither is an optional-axis defect and neither is fixed here. Both were
+surfaced by the five-dialect agreement test on its first run and both are
+**pre-existing**, confirmed against the m181-era fixture
+`tests/fixtures/optional_dep/yarn-berry/`, which milestone 1272 never
+touched.
+
+**1. Berry's workspace sentinel is emitted as a real PURL version.** A
+Berry lockfile spells a local workspace entry
+`<name>@workspace:<path>` with `version: 0.0.0-use.local` —
+a sentinel meaning "this is a local workspace, not a published package".
+The reader emits it as an ordinary package, so the SBOM carries
+
+```text
+pkg:npm/m181-yarn-berry-optional-fixture@0.0.0-use.local
+```
+
+a coordinate that cannot exist in any registry. The emission loop in
+`parse_berry` skips only `__metadata`; milestone 1272 US3 special-cased
+`@workspace:` entries inside `berry_optional_scopes` but deliberately
+left the emission path alone, being out of scope for an axis milestone.
+
+**2. When the manifest declares a version, the project is emitted
+twice.** The cross-dialect fixture's `package.json` says
+`"version": "1.0.0"` and its workspace entry says `0.0.0-use.local`, and
+both arrive:
+
+```text
+pkg:npm/waybill-fixture-cross-dialect-berry@0.0.0-use.local
+pkg:npm/waybill-fixture-cross-dialect-berry@1.0.0
+```
+
+The m181 fixture does not show this because its manifest version and the
+workspace entry collapse to one component there. So the defect is
+conditional on a shape that is entirely ordinary, and is invisible in the
+fixture that exists.
+
+Neither appears in any committed public-corpus golden (checked), so
+neither is masking golden churn.
+
+### And one thing that was NOT a defect, recorded because I reported it as one
+
+While diagnosing the above I read the Berry CDX as containing a
+**duplicate** `dependencies` entry for the main module, including a
+self-edge. It does not. My inspection script shortened each PURL for
+display by stripping the version, which collapsed the two distinct refs
+above into one name and made two different entries look like one entry
+twice. The six-versus-five entry count is real; the duplication was my
+display. A helper that normalises away the field under investigation is
+its own hazard.
