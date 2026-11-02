@@ -1,0 +1,13 @@
+{
+  "name": "waybill-fixture-cross-dialect-berry",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "yarn@4.6.0",
+  "description": "Milestone 1272 T056 / SC-002 + SC-003 + contract C10 -- one graph, five dialects. Synthetic names per FR-015; the structure is the measured one for this dialect. All five MUST classify exactly {waybill-fixture-optional, waybill-fixture-transitive} optional. This manifest declares its dependencies and deliberately has NO dependenciesMeta key: Probe F measured that `yarn install` leaves no such key behind, so the optional flag has to come from the lockfile's workspace entry. The FIRST draft of this fixture omitted the dependency sections too, which no real Berry project does -- and it made the root unreachable, collapsing the propagation pass's immunity set to 1 and letting the contested package inherit Optional transitively. The disagreement was the fixture's, not the reader's.",
+  "dependencies": {
+    "waybill-fixture-runtime": "1.0.0"
+  },
+  "optionalDependencies": {
+    "waybill-fixture-optional": "2.0.0"
+  }
+}

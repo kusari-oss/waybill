@@ -1,0 +1,30 @@
+// Milestone 1272 T056 — bun arm of the five-dialect agreement graph.
+//
+// Probe E measured that bun records the DECLARATION and the EDGE and
+// never a closure: a contested graph and an optional-only graph produce
+// a byte-identical `packages` map, and only the `workspaces` section
+// differs. So every classification from this file is waybill's own work.
+{
+  "lockfileVersion": 2,
+  "configVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "waybill-fixture-cross-dialect-bun",
+      "dependencies": {
+        "waybill-fixture-runtime": "1.0.0",
+      },
+      "optionalDependencies": {
+        "waybill-fixture-optional": "2.0.0",
+      },
+    },
+  },
+  "packages": {
+    "waybill-fixture-runtime": ["waybill-fixture-runtime@1.0.0", "", { "dependencies": { "waybill-fixture-contested": "4.0.0" } }, "sha512-cnVudGltZTEwMDBydW50aW1lMTAwMHJ1bnRpbWUxMDAwcnVudGltZTEwMDBydW50aW1lMTAwMHJ1bnRpbWUxMDAwcnVudGltZTEw"],
+
+    "waybill-fixture-optional": ["waybill-fixture-optional@2.0.0", "", { "dependencies": { "waybill-fixture-transitive": "3.0.0", "waybill-fixture-contested": "4.0.0" } }, "sha512-b3B0aW9uYWwyMDAwb3B0aW9uYWwyMDAwb3B0aW9uYWwyMDAwb3B0aW9uYWwyMDAwb3B0aW9uYWwyMDAwb3B0aW9uYWwyMDAwb3B0"],
+
+    "waybill-fixture-transitive": ["waybill-fixture-transitive@3.0.0", "", {}, "sha512-dHJhbnNpdGl2ZTMwMDB0cmFuc2l0aXZlMzAwMHRyYW5zaXRpdmUzMDAwdHJhbnNpdGl2ZTMwMDB0cmFuc2l0aXZlMzAwMHRyYW5z"],
+
+    "waybill-fixture-contested": ["waybill-fixture-contested@4.0.0", "", {}, "sha512-Y29udGVzdGVkNDAwMGNvbnRlc3RlZDQwMDBjb250ZXN0ZWQ0MDAwY29udGVzdGVkNDAwMGNvbnRlc3RlZDQwMDBjb250ZXN0ZWQ0"],
+  }
+}

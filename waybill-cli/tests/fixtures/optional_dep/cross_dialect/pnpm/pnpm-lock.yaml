@@ -1,0 +1,53 @@
+# Milestone 1272 T056 — pnpm v9 arm of the five-dialect agreement graph.
+# Bare keys, marker only under `snapshots:` — measured in Probe D.
+# pnpm computes the closure itself, so the markers below are what pnpm
+# was measured to write for this graph: set on the optional package and
+# on the one reachable only through it, ABSENT on the contested one.
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      waybill-fixture-runtime:
+        specifier: 1.0.0
+        version: 1.0.0
+    optionalDependencies:
+      waybill-fixture-optional:
+        specifier: 2.0.0
+        version: 2.0.0
+
+packages:
+
+  waybill-fixture-runtime@1.0.0:
+    resolution: {integrity: sha512-cnVudGltZTEwMDBydW50aW1lMTAwMHJ1bnRpbWUxMDAwcnVudGltZTEwMDBydW50aW1lMTAwMHJ1bnRpbWUxMDAwcnVudGlt=}
+
+  waybill-fixture-optional@2.0.0:
+    resolution: {integrity: sha512-b3B0aW9uYWwyMDAwb3B0aW9uYWwyMDAwb3B0aW9uYWwyMDAwb3B0aW9uYWwyMDAwb3B0aW9uYWwyMDAwb3B0aW9uYWwyMDA=}
+
+  waybill-fixture-transitive@3.0.0:
+    resolution: {integrity: sha512-dHJhbnNpdGl2ZTMwMDB0cmFuc2l0aXZlMzAwMHRyYW5zaXRpdmUzMDAwdHJhbnNpdGl2ZTMwMDB0cmFuc2l0aXZlMzAwMHRyYQ=}
+
+  waybill-fixture-contested@4.0.0:
+    resolution: {integrity: sha512-Y29udGVzdGVkNDAwMGNvbnRlc3RlZDQwMDBjb250ZXN0ZWQ0MDAwY29udGVzdGVkNDAwMGNvbnRlc3RlZDQwMDBjb250ZXM=}
+
+snapshots:
+
+  waybill-fixture-runtime@1.0.0:
+    dependencies:
+      waybill-fixture-contested: 4.0.0
+
+  waybill-fixture-optional@2.0.0:
+    dependencies:
+      waybill-fixture-transitive: 3.0.0
+      waybill-fixture-contested: 4.0.0
+    optional: true
+
+  waybill-fixture-transitive@3.0.0:
+    optional: true
+
+  waybill-fixture-contested@4.0.0: {}

@@ -265,14 +265,19 @@ paths, and the gates.
 
 ### The cross-dialect contract (the reason the feature exists)
 
-- [ ] T056 Build the same small dependency graph in all five dialects — one optional declaration, one runtime declaration, one transitively-optional package, one contested package — and assert all five produce identical optional classification (SC-002, SC-003, contract C10) in a new `waybill-cli/tests/optional_dep_cross_dialect.rs`
-- [ ] T057 Assert against the T001 baseline that SC-001 holds per dialect: exactly one optional component where the pre-feature output had zero
+- [X] T056 Build the same small dependency graph in all five dialects — one optional declaration, one runtime declaration, one transitively-optional package, one contested package — and assert all five produce identical optional classification (SC-002, SC-003, contract C10) in a new `waybill-cli/tests/optional_dep_cross_dialect.rs`
+  - `waybill-cli/tests/optional_dep_cross_dialect.rs`, 3 tests over 5 new fixtures under `tests/fixtures/optional_dep/cross_dialect/`. **It found a disagreement on its first run** -- yarn Berry classified the contested package optional and the other four did not. The cause was the fixture, not the reader: I had omitted the dependency sections from the Berry `package.json`, which no real project does, and that left the root unreachable, collapsed m1269's immunity set from 3 to 1, and let the contested package inherit Optional from the propagation pass. Diagnosed from the pass's own INFO line (`immune=1` vs `immune=3`), not guessed. The disagreement test is doing its job either way.
+- [X] T057 Assert against the T001 baseline that SC-001 holds per dialect: exactly one optional component where the pre-feature output had zero
+  - Covered by the per-arm exact-set assertions (`m1272_us1_*`, `m1272_us2_bun_*`, `m1272_us3_*`, `m1272_us4_v1_exact_optional_set`) plus T056's cross-dialect exact-set check, which additionally pins the component POPULATION first so a dialect that emitted nothing cannot agree vacuously.
 
 ### Error paths (FR-011, FR-012, contracts C8 and C9)
 
-- [ ] T058 [P] Assert an optional declaration naming a package with no lockfile entry is dropped with a diagnostic and fabricates no component, in each of the four dialects (FR-012, contract C8) in `waybill-cli/tests/optional_dep_classification.rs`
-- [ ] T059 [P] Assert a lockfile malformed in the axis-bearing region leaves the axis unset, does not abort the parse, and does not guess, in each of the four dialects (FR-011, contract C9) in `waybill-cli/tests/optional_dep_classification.rs`
-- [ ] T060 [P] Assert an optional declaration naming a workspace member or a `link:`/`file:`/`workspace:` target invents no registry identity, matching the development axis (spec Edge Cases) in `waybill-cli/tests/optional_dep_classification.rs`
+- [X] T058 [P] Assert an optional declaration naming a package with no lockfile entry is dropped with a diagnostic and fabricates no component, in each of the four dialects (FR-012, contract C8) in `waybill-cli/tests/optional_dep_classification.rs`
+  - `t058_unlocked_optional_declaration_fabricates_nothing`, all four dialects, each with a control asserting the locked package IS emitted.
+- [X] T059 [P] Assert a lockfile malformed in the axis-bearing region leaves the axis unset, does not abort the parse, and does not guess, in each of the four dialects (FR-011, contract C9) in `waybill-cli/tests/optional_dep_classification.rs`
+  - `t059_malformed_axis_region_leaves_the_axis_unset`. The first version was **vacuously satisfiable**: every fixture also has a `package.json`, so a lockfile reader that bailed on the whole file would leave the axis unset AND still see the component name emitted by the manifest reader. Added an assertion that the survivor's `waybill:source-files` names the lockfile; verified for all four dialects.
+- [X] T060 [P] Assert an optional declaration naming a workspace member or a `link:`/`file:`/`workspace:` target invents no registry identity, matching the development axis (spec Edge Cases) in `waybill-cli/tests/optional_dep_classification.rs`
+  - `t060_non_registry_optional_target_invents_no_identity`, four dialects x three protocols (`link:`, `file:`, `workspace:`).
 
 ### Evidence and documentation
 
@@ -284,7 +289,8 @@ paths, and the gates.
 ### Gates
 
 - [X] T064 Run the mandatory gate on default features with no `+toolchain` argument and assert on the positive signal: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`
-- [ ] T065 Enumerate every job's conclusion on the PR rather than reading one summary field, and note that the corpus goldens are `#[ignore]`d locally and skipped by the PR lane — a reader change of this shape surfaces as a red nightly, and goldens are never generated locally
+- [X] T065 Enumerate every job's conclusion on the PR rather than reading one summary field, and note that the corpus goldens are `#[ignore]`d locally and skipped by the PR lane — a reader change of this shape surfaces as a red nightly, and goldens are never generated locally
+  - Recorded in the PR body: every job enumerated rather than one summary field, plus the note that the 109 public-corpus goldens are `#[ignore]`d locally and skipped by the PR lane, so a reader change of this shape surfaces as a red nightly. Goldens are never generated locally.
 - [X] T066 Assert FR-016 deterministically: `git diff --stat main -- Cargo.lock '*/Cargo.toml'` shows no dependency-line change. `pre-pr.sh` runs clippy and tests and never inspects the manifests, so a new dependency would otherwise ship green (FR-016, SC-003's zero-new-deps posture)
 
 ---
