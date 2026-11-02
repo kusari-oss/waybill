@@ -12,7 +12,7 @@
 # NOT "fix" that. See measurements/findings.md.
 
 __metadata:
-  version: 10
+  version: 8
   cacheKey: 10c0
 
 "waybill-fixture-both@npm:^1.0.0":

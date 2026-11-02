@@ -1,0 +1,14 @@
+{
+  "name": "waybill-fixture-berry-optional",
+  "version": "1.0.0",
+  "description": "Milestone 1272 US3 fixture - the realistic Berry shape, with NO dependenciesMeta key in the manifest. Measured on yarn 4.6.0: after `yarn install` an ordinary project's package.json has no such key, and the lockfile's workspace entry carries the flag instead. Synthetic names per FR-015.",
+  "private": true,
+  "packageManager": "yarn@4.6.0",
+  "dependencies": {
+    "waybill-fixture-runtime": "1.0.0"
+  },
+  "optionalDependencies": {
+    "waybill-fixture-optional": "2.0.0",
+    "waybill-fixture-contested": "4.0.0"
+  }
+}

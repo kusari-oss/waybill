@@ -3,11 +3,25 @@
 #
 # Milestone 1271 FR-003 fixture — SYNTHETIC package names only.
 # The root workspace entry merges dependencies with devDependencies, as
-# measured; the optional status lives in package.json's
-# `dependenciesMeta` and nowhere else.
+# measured.
+#
+# Milestone 1272 correction: this header used to end "the optional
+# status lives in package.json's `dependenciesMeta` and nowhere else",
+# which this file's own body contradicts twice over -- it writes
+# `dependenciesMeta` into the lockfile on both a package entry and the
+# workspace entry. Measurement settles it (yarn 4.6.0, see
+# `specs/1272-npm-optional-scope/measurements/findings.md` Probe F): the
+# LOCKFILE is where Berry records it, and an ordinary project's
+# package.json has no `dependenciesMeta` key at all. The manifest
+# remains a valid hand-written source, which is what this fixture
+# exercises -- but it is not the only one, and it is not the one real
+# projects use.
+#
+# `__metadata.version` also corrected here, 10 -> 8. No yarn emits 10:
+# measured 6 on yarn 3.8.7, and 8 on both 4.6.0 and 4.9.4.
 
 __metadata:
-  version: 10
+  version: 8
   cacheKey: 10c0
 
 "waybill-fixture-devaux@npm:^1.0.0":

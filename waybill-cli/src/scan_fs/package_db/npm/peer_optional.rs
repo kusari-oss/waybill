@@ -35,11 +35,23 @@ use serde_json::Value;
 ///
 /// **Reader usage note** (m180 + m181):
 ///
-/// - **npm** (`package_lock.rs`) and **pnpm** (`pnpm_lock.rs`) do NOT
-///   call this helper. They short-circuit the peer-optional case using
-///   the per-entry `peer: true` lockfile flag — npm/pnpm set that flag
-///   on entries installed to satisfy a `peerDependencies` declaration,
-///   so their lockfiles already reflect the parent's manifest.
+/// - **npm** (`package_lock.rs`) does NOT call this helper. It
+///   short-circuits the peer-optional case using the per-entry
+///   `peer: true` lockfile flag, which npm sets on entries installed to
+///   satisfy a `peerDependencies` declaration.
+///
+/// - **pnpm** (`pnpm_lock.rs`) does not call this helper either, but the
+///   reason above was only ever true of its v6/v7 dialect. Milestone
+///   1272 measured that a v9 lockfile contains NO `peer:` key anywhere;
+///   v9 names optional peers from the declaring parent's
+///   `peerDependenciesMeta`, and the pnpm reader now reads that for v9
+///   while keeping the `peer:` flag for v6/v7.
+///
+/// - **yarn Berry** also carries `peerDependenciesMeta` per lockfile
+///   entry, which milestone 1272 added as a source alongside the
+///   manifest predicate below — the manifest can only describe the root,
+///   so a transitive package's optional-peer declaration was invisible
+///   to this helper on its own.
 ///
 /// - **yarn v1 + Berry** (`yarn_lock.rs`) DO call this helper. Yarn's
 ///   Plug'n'Play resolver moves peer metadata into `.pnp.cjs` or into
