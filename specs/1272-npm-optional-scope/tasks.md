@@ -147,24 +147,24 @@ mark optional.
 
 ### Tests for US2 (write first)
 
-- [ ] T021 [P] [US2] Generate a manager-produced bun fixture with a root `optionalDependencies` declaration and a runtime sibling, synthetic names, and commit it under `waybill-cli/tests/fixtures/` with the bun version in its header
-- [ ] T022 [US2] Create `waybill-cli/tests/optional_dep_bun_e2e.rs` with a failing test asserting the root optional declaration carries `LifecycleScope::Optional` **and** `waybill:optional-derivation = "bun-optional-dependencies"`, and the runtime sibling carries neither (contract C1, FR-008, acceptance scenario 1)
-- [ ] T023 [P] [US2] Add a failing test for the transitive case — a package reachable only through an optional edge is optional although nothing declares it so (contract C2, FR-007a) in `waybill-cli/tests/optional_dep_bun_e2e.rs`
-- [ ] T024 [P] [US2] Add a failing test for the cancellation case — a package declared optional by one workspace and runtime by another is not optional (contract C3, acceptance scenario 2) in `waybill-cli/tests/optional_dep_bun_e2e.rs`
+- [X] T021 [P] [US2] Generate a manager-produced bun fixture with a root `optionalDependencies` declaration and a runtime sibling, synthetic names, and commit it under `waybill-cli/tests/fixtures/` with the bun version in its header
+- [X] T022 [US2] Create `waybill-cli/tests/optional_dep_bun_e2e.rs` with a failing test asserting the root optional declaration carries `LifecycleScope::Optional` **and** `waybill:optional-derivation = "bun-optional-dependencies"`, and the runtime sibling carries neither (contract C1, FR-008, acceptance scenario 1)
+- [X] T023 [P] [US2] Add a failing test for the transitive case — a package reachable only through an optional edge is optional although nothing declares it so (contract C2, FR-007a) in `waybill-cli/tests/optional_dep_bun_e2e.rs`
+- [X] T024 [P] [US2] Add a failing test for the cancellation case — a package declared optional by one workspace and runtime by another is not optional (contract C3, acceptance scenario 2) in `waybill-cli/tests/optional_dep_bun_e2e.rs`
 
 ### Implementation for US2
 
-- [ ] T025 [US2] Collect the optional seed from every `workspaces.<path>.optionalDependencies` mapping, independently of `parent_key_to_out_idx` so workspace shapes are no longer excluded, in `waybill-cli/src/scan_fs/package_db/npm/bun_lock.rs`
-- [ ] T026 [US2] Collect the runtime seed from `workspaces.<path>.dependencies` **split from** the optional seed — see the research R7 trap: merging them as the development-axis helper does would make FR-006 subtract a set from itself — in `waybill-cli/src/scan_fs/package_db/npm/bun_lock.rs`
-- [ ] T027 [US2] Close the runtime seed transitively over the parent-metadata edge map to build `RuntimeClosure`, in `waybill-cli/src/scan_fs/package_db/npm/bun_lock.rs`
-- [ ] T028 [US2] Close the optional seed transitively, subtract `RuntimeClosure`, and use the result in place of the depth-1 `state.any_hard` guard in the finalize pass at `bun_lock.rs:808-860`, preserving the existing `-dependencies`-beats-`-peers` derivation-string precedence, in `waybill-cli/src/scan_fs/package_db/npm/bun_lock.rs`
-- [ ] T029 [US2] Replace the finalize pass's comments describing `any_hard` as the cancellation rule with the transitive form and a pointer to Probe C, in `waybill-cli/src/scan_fs/package_db/npm/bun_lock.rs`
+- [X] T025 [US2] Collect the optional seed from every `workspaces.<path>.optionalDependencies` mapping, independently of `parent_key_to_out_idx` so workspace shapes are no longer excluded, in `waybill-cli/src/scan_fs/package_db/npm/bun_lock.rs`
+- [X] T026 [US2] Collect the runtime seed from `workspaces.<path>.dependencies` **split from** the optional seed — see the research R7 trap: merging them as the development-axis helper does would make FR-006 subtract a set from itself — in `waybill-cli/src/scan_fs/package_db/npm/bun_lock.rs`
+- [X] T027 [US2] Close the runtime seed transitively over the parent-metadata edge map to build `RuntimeClosure`, in `waybill-cli/src/scan_fs/package_db/npm/bun_lock.rs`
+- [X] T028 [US2] Close the optional seed transitively, subtract `RuntimeClosure`, and use the result in place of the depth-1 `state.any_hard` guard in the finalize pass at `bun_lock.rs:808-860`, preserving the existing `-dependencies`-beats-`-peers` derivation-string precedence, in `waybill-cli/src/scan_fs/package_db/npm/bun_lock.rs`
+- [X] T029 [US2] Replace the finalize pass's comments describing `any_hard` as the cancellation rule with the transitive form and a pointer to Probe C, in `waybill-cli/src/scan_fs/package_db/npm/bun_lock.rs`
 
 ### Regression and evidence for US2
 
-- [ ] T030 [US2] Assert the m667 optional-peers behaviour and its `bun-optional-peers` derivation value are unchanged (FR-009, contract C4) in `waybill-cli/tests/bun_lock_edges_us1.rs`
-- [ ] T031 [US2] Verify bun's development-axis output is byte-identical against T002's baseline (FR-010, SC-004, contract C5)
-- [ ] T032 [US2] SC-006 load-bearing check: delete T025's workspace seed, confirm a named US2 test fails, restore, and record which test
+- [X] T030 [US2] Assert the m667 optional-peers behaviour and its `bun-optional-peers` derivation value are unchanged (FR-009, contract C4) — **the premise was wrong**: measurement (Probe E2) shows real bun emits `optionalPeers` as a JSON *array* while m667's Pass 2 reads every section with `as_object()`, so `seen_optional_peers` never fired and `bun-optional-peers` was an unreachable value. There was no behaviour to preserve. US2 makes it reachable by sourcing the derivation from its own array-aware closure; the separate `depends`-edge gap is left unfixed as a graph change out of scope
+- [X] T031 [US2] Verify bun's development-axis output is byte-identical against T002's baseline (FR-010, SC-004, contract C5) — the m1271 dev-axis helper `bun_workspace_dev_scopes` is untouched by this arm (verified by diff), and all 10 `m1271_us1_bun_*` tests pass, including `..._optional_is_never_demoted_to_development` and `..._dev_and_protected_sets_are_disjoint`
+- [X] T032 [US2] SC-006 load-bearing check: delete T025's workspace seed, confirm a named US2 test fails, restore, and record which test
 
 **Checkpoint**: three of five dialects agree. Shippable without US3 or US4.
 

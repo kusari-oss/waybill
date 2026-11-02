@@ -1,0 +1,53 @@
+// Milestone 1272 US2 fixture -- the shape bun ACTUALLY produces.
+//
+// Captured from `bun install` on bun 1.4.2 and rewritten with synthetic
+// package names per FR-015. The STRUCTURE is measured; only the
+// coordinates are invented, because a synthetic name cannot be
+// installed from a registry.
+//
+// What the measurement showed, and why this fixture is shaped this way:
+// bun records the DECLARATION and the EDGE, never a closure. A
+// contested graph and an optional-only graph produce a byte-identical
+// `packages` map -- the only difference is which `workspaces` section
+// names the package. So every classification below is waybill's own
+// work, and a reader that ignored the workspaces map would answer the
+// same for all of them.
+//
+// The cases, all measured against npm and pnpm in
+// `specs/1272-npm-optional-scope/measurements/findings.md` Probe C:
+//
+//   runtime     declared under `dependencies`              -> NOT optional
+//   optional    declared under `optionalDependencies`      -> optional
+//   transitive  reached only via `optional`'s hard edge    -> optional
+//   contested   declared optional at the root AND reached
+//               via `runtime`'s hard edge                  -> NOT optional
+//   peerish     an optional PEER of the optional package;
+//               note `optionalPeers` is an ARRAY, which is
+//               the form real bun emits                    -> optional, -peers
+{
+  "lockfileVersion": 2,
+  "configVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "waybill-fixture-bun-optional",
+      "dependencies": {
+        "waybill-fixture-runtime": "1.0.0",
+      },
+      "optionalDependencies": {
+        "waybill-fixture-optional": "2.0.0",
+        "waybill-fixture-contested": "4.0.0",
+      },
+    },
+  },
+  "packages": {
+    "waybill-fixture-runtime": ["waybill-fixture-runtime@1.0.0", "", { "dependencies": { "waybill-fixture-contested": "4.0.0" } }, "sha512-cnVudGltZTEwMDBydW50aW1lMTAwMHJ1bnRpbWUxMDAwcnVudGltZTEwMDBydW50aW1lMTAwMHJ1bnRpbWUxMDAwcnVudGltZTEw"],
+
+    "waybill-fixture-optional": ["waybill-fixture-optional@2.0.0", "", { "dependencies": { "waybill-fixture-transitive": "3.0.0" }, "peerDependencies": { "waybill-fixture-peerish": "*" }, "optionalPeers": ["waybill-fixture-peerish"] }, "sha512-b3B0aW9uYWwyMDAwb3B0aW9uYWwyMDAwb3B0aW9uYWwyMDAwb3B0aW9uYWwyMDAwb3B0aW9uYWwyMDAwb3B0aW9uYWwyMDAwb3B0"],
+
+    "waybill-fixture-transitive": ["waybill-fixture-transitive@3.0.0", "", {}, "sha512-dHJhbnNpdGl2ZTMwMDB0cmFuc2l0aXZlMzAwMHRyYW5zaXRpdmUzMDAwdHJhbnNpdGl2ZTMwMDB0cmFuc2l0aXZlMzAwMHRyYW5z"],
+
+    "waybill-fixture-contested": ["waybill-fixture-contested@4.0.0", "", {}, "sha512-Y29udGVzdGVkNDAwMGNvbnRlc3RlZDQwMDBjb250ZXN0ZWQ0MDAwY29udGVzdGVkNDAwMGNvbnRlc3RlZDQwMDBjb250ZXN0ZWQ0"],
+
+    "waybill-fixture-peerish": ["waybill-fixture-peerish@5.0.0", "", {}, "sha512-cGVlcmlzaDUwMDBwZWVyaXNoNTAwMHBlZXJpc2g1MDAwcGVlcmlzaDUwMDBwZWVyaXNoNTAwMHBlZXJpc2g1MDAwcGVlcmlzaDUw"],
+  }
+}
