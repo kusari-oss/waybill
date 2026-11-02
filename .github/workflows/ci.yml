@@ -566,11 +566,56 @@ jobs:
     name: Lint + test (linux-x86_64, --features ebpf-tracing)
     needs: changes
     if: needs.changes.outputs.ebpf == 'true' || github.event_name == 'push'
-    runs-on: ubuntu-latest
+    # Pinned rather than `ubuntu-latest` because the traced-root
+    # handshake this lane's container harness depends on is a property
+    # of the **kernel**, measured as an A/B from one commit with both
+    # arms started inside the same minute (#1321, run 18):
+    #
+    #   ubuntu-22.04    22.04.5  kernel 6.8.0-1070-azure   25/25 = 100%
+    #   ubuntu-latest   24.04.5  kernel 7.0.0-1017-azure     8/25 =  32%
+    #
+    # At the `ubuntu-latest` arm's own 32%, a clean sweep of 25 has
+    # probability 0.32^25 ~= 1.3e-12, so this is not the same race being
+    # won more often: the 6.8 arm emitted no diagnosis of any kind, and
+    # established a second faster per trace (median 2318ms against
+    # 3368ms). The control arm also reproduced three earlier runs
+    # (35/100 across four runs on two images), which is what licenses
+    # reading the experimental arm at all.
+    #
+    # The container shares the host kernel, so this label is the only
+    # lever over which kernel the probes attach to — a hosted runner's
+    # image version cannot be pinned, only its label chosen.
+    #
+    # **This is a stopgap, not a fix.** #1185 stays open: which change
+    # between 6.8.0 and 7.0.0 is responsible is not known, and that
+    # interval is wide. Two things to expect when it comes due:
+    #
+    #   - `ubuntu-22.04` is itself scheduled for retirement. When the
+    #     label goes, this lane goes red again with the kernel question
+    #     still unanswered.
+    #   - A 6.8 lane may surface #1252's `do_filp_open` kprobe attach
+    #     failure, which #1313's `wait_for_traced_root` guard has been
+    #     aborting ahead of since 2026-10-31. That would be the older
+    #     defect becoming visible again, not a new regression.
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false  # see lint-and-test job for rationale
+
+      # The kernel the pin above selects, printed so that a green run
+      # records which kernel it was green on. This is a measured need,
+      # not hygiene: when the lane went red across a runner image
+      # rollover, the kernel that changed underneath was unrecoverable
+      # for every one of those runs, because nothing printed it. Image
+      # version can be read back from the Actions log after the fact;
+      # `uname -r` cannot. If GitHub ever re-images the 22.04 label onto
+      # a newer kernel, this line is what will say so instead of the
+      # lane simply going red again for no visible reason.
+      - name: Kernel identity
+        run: |
+          uname -a
+          echo "kernel: $(uname -r)  arch: $(uname -m)"
 
       # #905: pins, apt deps, nightly + rust-src, stable, cache and the
       # rustup-init cleanup, shared with release.yml and ebpf-canary.yml.
