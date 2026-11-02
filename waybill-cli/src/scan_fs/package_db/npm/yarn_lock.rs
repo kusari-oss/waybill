@@ -189,17 +189,45 @@ fn parse_berry(
         return Vec::new();
     };
 
-    // Milestone 181 T012 — build the Berry optional-name set from
-    // `package.json > dependenciesMeta.<name>.optional = true` (m181
-    // FR-003). Berry's lockfile does NOT carry the flag (it lives in
-    // package.json only). Apply the peer-precedence guard immediately
-    // per m181 FR-005: names that ALSO satisfy m180's
-    // `is_peer_optional` predicate are removed from the set so m178's
-    // `PROVIDED_DEPENDENCY_OF` classification wins (KEEP-BOTH polarity).
-    let mut optional_names: std::collections::HashSet<String> =
+    // Milestone 1272 US3 (T038, FR-004 + FR-004a) — the optional axis
+    // comes from the UNION of two sources.
+    //
+    // m181 read only `package.json > dependenciesMeta`, on the stated
+    // grounds that "Berry's lockfile does NOT carry the flag (it lives
+    // in package.json only)". That is false, and measurement is
+    // unambiguous: after `yarn install`, an ordinary project's
+    // package.json has NO `dependenciesMeta` key at all -- `undefined`,
+    // measured on yarn 4.6.0 -- while the lockfile's workspace entry
+    // carries `dependenciesMeta.<name>.optional: true`. So the only
+    // source this reader had was the one real projects leave empty.
+    // See `specs/1272-npm-optional-scope/measurements/findings.md`,
+    // Probe F.
+    //
+    // The manifest is nonetheless kept as a source, not replaced:
+    // hand-writing `dependenciesMeta` is the documented way to mark a
+    // Berry dependency optional, and the two sources diverge only when
+    // the lockfile is stale relative to an edited manifest -- where the
+    // manifest is the more current statement of intent (FR-004a).
+    //
+    // The peer-precedence guard (m181 FR-005, now FR-009) is applied to
+    // the union: a name that ALSO satisfies the optional-peer predicate
+    // is removed so m178's `PROVIDED_DEPENDENCY_OF` wins.
+    let manifest_optional: std::collections::HashSet<String> =
         berry_optional_names_from_pkg_json(pkg_json);
+    let scopes = berry_optional_scopes(mapping, &manifest_optional);
+    let peer_optional_names = berry_peer_optional_names(mapping);
+    let mut optional_names: std::collections::HashSet<String> = scopes
+        .all_reachable
+        .difference(&scopes.runtime_closure)
+        .cloned()
+        .collect();
+    // A manifest declaration with no lockfile presence at all still
+    // counts -- the m181 path, preserved verbatim.
+    optional_names.extend(manifest_optional.iter().cloned());
     optional_names.retain(|n| {
-        !super::peer_optional::is_peer_optional(n, pkg_json)
+        !scopes.runtime_closure.contains(n)
+            && !peer_optional_names.contains(n)
+            && !super::peer_optional::is_peer_optional(n, pkg_json)
     });
 
     let mut out = Vec::new();
@@ -243,6 +271,172 @@ fn parse_berry(
         }
     }
     out
+}
+
+/// Milestone 1272 US3 (T037, T039) — the optional/runtime partition for
+/// a Berry `yarn.lock`, in BARE-NAME space.
+///
+/// Berry's entry bodies key their `dependencies` by bare name
+/// (`ms: "npm:2.1.2"`), and `dependenciesMeta` likewise, so the whole
+/// closure can be computed over names. That is why this reader needs no
+/// key-normalisation layer and why no shared closure helper is factored
+/// out across the three readers — pnpm keys by `name@version` and bun by
+/// packages-map key.
+///
+/// Measured shape (yarn 4.6.0, `measurements/findings.md` Probe F):
+/// Berry merges optional declarations INTO `dependencies` and marks
+/// them out of band, rather than keeping a separate section:
+///
+/// ```text
+/// "probe@workspace:.":
+///   dependencies:
+///     debug: "npm:4.3.4"
+///     ms: "npm:2.1.2"
+///   dependenciesMeta:
+///     ms:
+///       optional: true
+/// ```
+///
+/// So "the hard edges of an entry" is its `dependencies` MINUS the names
+/// its own `dependenciesMeta` marks optional.
+///
+/// The runtime closure follows hard edges only. An optional parent's
+/// hard edge does not make its child runtime-reachable — the parent may
+/// be absent, so the child may be too — and Probe C measured both
+/// reference implementations marking such a child optional.
+struct BerryOptionalScopes {
+    runtime_closure: std::collections::HashSet<String>,
+    all_reachable: std::collections::HashSet<String>,
+}
+
+/// Names an entry marks optional through its own `dependenciesMeta`.
+fn berry_entry_optional_names(
+    body: &serde_yaml::Mapping,
+) -> std::collections::HashSet<String> {
+    body.get(serde_yaml::Value::String("dependenciesMeta".into()))
+        .and_then(|v| v.as_mapping())
+        .into_iter()
+        .flat_map(|m| m.iter())
+        .filter(|(_, meta)| {
+            meta.get("optional").and_then(|v| v.as_bool()) == Some(true)
+        })
+        .filter_map(|(name, _)| name.as_str().map(str::to_string))
+        .collect()
+}
+
+/// Names declared as an OPTIONAL PEER by any entry, read from the
+/// lockfile's own `peerDependenciesMeta` (FR-009).
+///
+/// m181 sourced this from the root `package.json` alone, via
+/// `peer_optional::is_peer_optional`. That is the right source for a
+/// root declaration and no source at all for a transitive one: a
+/// package's optional-peer declaration lives in the lockfile entry for
+/// THAT package, measured — `peerDependenciesMeta.<name>.optional:
+/// true`, the same shape pnpm v9 uses. The manifest predicate is still
+/// applied in addition, so the root case is unchanged.
+fn berry_peer_optional_names(
+    mapping: &serde_yaml::Mapping,
+) -> std::collections::HashSet<String> {
+    let mut out = std::collections::HashSet::new();
+    for (key, entry) in mapping {
+        if key.as_str() == Some("__metadata") {
+            continue;
+        }
+        let Some(body) = entry.as_mapping() else { continue };
+        let Some(meta) = body
+            .get(serde_yaml::Value::String("peerDependenciesMeta".into()))
+            .and_then(|v| v.as_mapping())
+        else {
+            continue;
+        };
+        for (name, flags) in meta {
+            if flags.get("optional").and_then(|v| v.as_bool()) == Some(true) {
+                if let Some(name) = name.as_str() {
+                    out.insert(name.to_string());
+                }
+            }
+        }
+    }
+    out
+}
+
+fn berry_optional_scopes(
+    mapping: &serde_yaml::Mapping,
+    manifest_optional: &std::collections::HashSet<String>,
+) -> BerryOptionalScopes {
+    // Adjacency, built once over every entry.
+    let mut hard_edges: std::collections::HashMap<String, Vec<String>> =
+        Default::default();
+    let mut all_edges: std::collections::HashMap<String, Vec<String>> =
+        Default::default();
+    let mut runtime_seed: std::collections::HashSet<String> = Default::default();
+    let mut any_seed: std::collections::HashSet<String> = Default::default();
+
+    for (key, entry) in mapping {
+        let Some(key_str) = key.as_str() else { continue };
+        if key_str == "__metadata" {
+            continue;
+        }
+        let Some(body) = entry.as_mapping() else { continue };
+        let Some(name) = descriptor_to_name(key_str) else {
+            continue;
+        };
+        let deps: Vec<String> = body
+            .get(serde_yaml::Value::String("dependencies".into()))
+            .and_then(|v| v.as_mapping())
+            .map(|m| {
+                m.keys()
+                    .filter_map(|k| k.as_str().map(str::to_string))
+                    .collect()
+            })
+            .unwrap_or_default();
+        let own_optional = berry_entry_optional_names(body);
+
+        // A workspace entry is a ROOT of the graph, not a package.
+        // Berry spells them `<name>@workspace:<path>`.
+        if key_str.contains("@workspace:") {
+            for dep in &deps {
+                // FR-004a: a manifest declaration overrides the
+                // lockfile's section for that name. This is the stale-
+                // lockfile case -- the lockfile lists a plain hard dep
+                // because it predates the manifest edit, and the
+                // manifest is the more current statement of intent.
+                if !own_optional.contains(dep) && !manifest_optional.contains(dep) {
+                    runtime_seed.insert(dep.clone());
+                }
+                any_seed.insert(dep.clone());
+            }
+            continue;
+        }
+
+        let hard: Vec<String> = deps
+            .iter()
+            .filter(|d| !own_optional.contains(*d))
+            .cloned()
+            .collect();
+        hard_edges.insert(name.clone(), hard);
+        all_edges.insert(name, deps);
+    }
+
+    let close = |seed: std::collections::HashSet<String>,
+                 edges: &std::collections::HashMap<String, Vec<String>>|
+     -> std::collections::HashSet<String> {
+        let mut seen = seed;
+        let mut pending: Vec<String> = seen.iter().cloned().collect();
+        while let Some(name) = pending.pop() {
+            for target in edges.get(&name).into_iter().flatten() {
+                if seen.insert(target.clone()) {
+                    pending.push(target.clone());
+                }
+            }
+        }
+        seen
+    };
+
+    BerryOptionalScopes {
+        runtime_closure: close(runtime_seed, &hard_edges),
+        all_reachable: close(any_seed, &all_edges),
+    }
 }
 
 /// Milestone 181 T012 — extract the set of names declared as optional
@@ -2596,6 +2790,347 @@ __metadata:
             m1271_dev_names(&entries),
             Vec::<String>::new(),
             "with no manifest there is no evidence, so nothing is Development"
+        );
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    // Milestone 1272 US3 — the optional axis for yarn Berry.
+    //
+    // Every fixture below is in the shape yarn 4.6.0 actually emits,
+    // captured in `specs/1272-npm-optional-scope/measurements/findings.md`.
+    // Two measured facts drive them:
+    //
+    //   1. After `yarn install`, an ordinary project's package.json has
+    //      NO `dependenciesMeta` key -- `undefined`, measured. The
+    //      pre-1272 reader's only source was therefore empty for every
+    //      real Berry project.
+    //   2. The lockfile's workspace entry carries it instead, and Berry
+    //      merges optional deps INTO `dependencies` rather than keeping
+    //      a separate section:
+    //
+    //          "probe@workspace:.":
+    //            dependencies:
+    //              debug: "npm:4.3.4"
+    //              ms: "npm:2.1.2"
+    //            dependenciesMeta:
+    //              ms:
+    //                optional: true
+    // ──────────────────────────────────────────────────────────────
+
+    /// A Berry lockfile in the measured shape. `parent` has a hard edge
+    /// to `child`; the workspace entry's sections are the variable.
+    fn m1272_berry_lock(ws_deps: &str, ws_meta: &str) -> String {
+        format!(
+            r#"# This file is generated by running "yarn install" inside your project.
+__metadata:
+  version: 8
+  cacheKey: 10c0
+
+"waybill-fixture-parent@npm:1.0.0":
+  version: 1.0.0
+  resolution: "waybill-fixture-parent@npm:1.0.0"
+  dependencies:
+    waybill-fixture-child: "npm:2.0.0"
+  checksum: 10c0/aaaa
+  languageName: node
+  linkType: hard
+
+"waybill-fixture-child@npm:2.0.0":
+  version: 2.0.0
+  resolution: "waybill-fixture-child@npm:2.0.0"
+  checksum: 10c0/bbbb
+  languageName: node
+  linkType: hard
+
+"waybill-fixture-root@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "waybill-fixture-root@workspace:."
+  dependencies:
+{ws_deps}
+{ws_meta}  languageName: unknown
+  linkType: soft
+"#
+        )
+    }
+
+    /// The realistic manifest: NO `dependenciesMeta` key, as measured.
+    fn m1272_bare_manifest() -> serde_json::Value {
+        serde_json::json!({
+            "name": "waybill-fixture-root",
+            "version": "1.0.0",
+            "private": true,
+            "dependencies": { "waybill-fixture-parent": "1.0.0" }
+        })
+    }
+
+    fn m1272_scope(
+        entries: &[PackageDbEntry],
+        name: &str,
+    ) -> Option<waybill_common::resolution::LifecycleScope> {
+        entries
+            .iter()
+            .find(|e| e.name == name)
+            .unwrap_or_else(|| panic!("{name} emitted; got {entries:?}"))
+            .lifecycle_scope
+    }
+
+    /// T034 / FR-004 + C1 — the realistic shape: a manifest with NO
+    /// `dependenciesMeta` key at all, and the flag in the lockfile's
+    /// workspace entry.
+    ///
+    /// This is the test the Berry arm never had. Its absence is why a
+    /// reader that could not classify any real Berry project had passing
+    /// optional-classification tests.
+    #[test]
+    fn m1272_us3_berry_lockfile_workspace_entry_is_a_source() {
+        use waybill_common::resolution::LifecycleScope;
+        let text = m1272_berry_lock(
+            "    waybill-fixture-parent: \"npm:1.0.0\"\n",
+            "  dependenciesMeta:\n    waybill-fixture-parent:\n      optional: true\n",
+        );
+        let entries = parse_yarn_lock(&text, "/yarn.lock", &m1272_bare_manifest());
+        assert_eq!(
+            m1272_scope(&entries, "waybill-fixture-parent"),
+            Some(LifecycleScope::Optional),
+            "the lockfile's workspace-entry dependenciesMeta MUST be a \
+             source; the manifest has no such key, which is the shape \
+             every real Berry project has (FR-004)"
+        );
+        let parent = entries
+            .iter()
+            .find(|e| e.name == "waybill-fixture-parent")
+            .unwrap();
+        assert_eq!(
+            parent.extra_annotations.get("waybill:optional-derivation"),
+            Some(&serde_json::Value::String(
+                "npm-optional-dependencies".to_string()
+            )),
+            "FR-008: the newly Optional component MUST carry the derivation"
+        );
+    }
+
+    /// T035 / FR-007a + C2 — transitive propagation, which the manifest
+    /// source can never deliver because a manifest only describes the
+    /// root.
+    #[test]
+    fn m1272_us3_berry_transitive_optional_is_classified() {
+        use waybill_common::resolution::LifecycleScope;
+        let text = m1272_berry_lock(
+            "    waybill-fixture-parent: \"npm:1.0.0\"\n",
+            "  dependenciesMeta:\n    waybill-fixture-parent:\n      optional: true\n",
+        );
+        let entries = parse_yarn_lock(&text, "/yarn.lock", &m1272_bare_manifest());
+        assert_eq!(
+            m1272_scope(&entries, "waybill-fixture-child"),
+            Some(LifecycleScope::Optional),
+            "reachable only through an optional parent MUST be Optional \
+             (FR-007a) -- unreachable from the manifest source alone"
+        );
+    }
+
+    /// T024-equivalent / FR-006 + C3 — a runtime path cancels.
+    #[test]
+    fn m1272_us3_berry_runtime_path_cancels_optionality() {
+        use waybill_common::resolution::LifecycleScope;
+        let text = m1272_berry_lock(
+            "    waybill-fixture-parent: \"npm:1.0.0\"\n    \
+             waybill-fixture-child: \"npm:2.0.0\"\n",
+            "  dependenciesMeta:\n    waybill-fixture-child:\n      optional: true\n",
+        );
+        let entries = parse_yarn_lock(&text, "/yarn.lock", &m1272_bare_manifest());
+        assert_ne!(
+            m1272_scope(&entries, "waybill-fixture-child"),
+            Some(LifecycleScope::Optional),
+            "declared optional at the root but reached via the runtime \
+             parent's hard edge MUST NOT be Optional (FR-006, Probe C)"
+        );
+        assert!(
+            !entries
+                .iter()
+                .find(|e| e.name == "waybill-fixture-child")
+                .unwrap()
+                .extra_annotations
+                .contains_key("waybill:optional-derivation"),
+            "a cancelled component MUST NOT carry the derivation"
+        );
+    }
+
+    /// T036 / FR-004a — the manifest is retained as a source, and is
+    /// the more current statement when the lockfile is stale.
+    ///
+    /// The lockfile here lists the dependency as a plain hard dep with
+    /// NO `dependenciesMeta`, i.e. it predates the manifest edit. The
+    /// manifest marks it optional. The union must still classify it.
+    #[test]
+    fn m1272_us3_berry_stale_lockfile_manifest_still_wins() {
+        use waybill_common::resolution::LifecycleScope;
+        let text = m1272_berry_lock("    waybill-fixture-parent: \"npm:1.0.0\"\n", "");
+        let manifest = serde_json::json!({
+            "name": "waybill-fixture-root",
+            "version": "1.0.0",
+            "private": true,
+            "optionalDependencies": { "waybill-fixture-parent": "1.0.0" },
+            "dependenciesMeta": {
+                "waybill-fixture-parent": { "optional": true }
+            }
+        });
+        let entries = parse_yarn_lock(&text, "/yarn.lock", &manifest);
+        assert_eq!(
+            m1272_scope(&entries, "waybill-fixture-parent"),
+            Some(LifecycleScope::Optional),
+            "FR-004a: a hand-written manifest declaration MUST still be \
+             honoured when the lockfile predates it -- the manifest path \
+             is retained, not replaced"
+        );
+    }
+
+    /// The pair that makes the three closure tests mean something: the
+    /// SAME package entries, two workspace shapes, DIFFERENT answers.
+    #[test]
+    fn m1272_us3_berry_same_entries_two_answers() {
+        use waybill_common::resolution::LifecycleScope;
+        let optional_only = m1272_berry_lock(
+            "    waybill-fixture-parent: \"npm:1.0.0\"\n",
+            "  dependenciesMeta:\n    waybill-fixture-parent:\n      optional: true\n",
+        );
+        let contested = m1272_berry_lock(
+            "    waybill-fixture-parent: \"npm:1.0.0\"\n    \
+             waybill-fixture-child: \"npm:2.0.0\"\n",
+            "  dependenciesMeta:\n    waybill-fixture-child:\n      optional: true\n",
+        );
+        let m = m1272_bare_manifest();
+        let a = parse_yarn_lock(&optional_only, "/yarn.lock", &m);
+        let b = parse_yarn_lock(&contested, "/yarn.lock", &m);
+        let child_a = m1272_scope(&a, "waybill-fixture-child");
+        let child_b = m1272_scope(&b, "waybill-fixture-child");
+        assert_eq!(child_a, Some(LifecycleScope::Optional));
+        assert_ne!(child_b, Some(LifecycleScope::Optional));
+        assert_ne!(
+            child_a, child_b,
+            "the two cases MUST differ -- identical answers mean the \
+             workspace entry's sections are not being read"
+        );
+    }
+
+    /// FR-006 + FR-007a — a RUNTIME parent declaring an optional child.
+    ///
+    /// Added after mutation testing: switching the runtime closure from
+    /// hard edges to all edges left all six other US3 tests passing,
+    /// because in each of them the optional package IS the root
+    /// declaration, so the runtime seed is empty and the edge-kind
+    /// choice cannot matter. This is the shape that distinguishes them,
+    /// and it is also the common real one -- a runtime library declaring
+    /// a platform-specific dependency optional.
+    ///
+    /// The runtime closure must NOT follow the parent's optional edge.
+    /// If it does, the child is cancelled and the whole transitive case
+    /// silently disappears.
+    #[test]
+    fn m1272_us3_berry_runtime_parent_with_optional_child() {
+        use waybill_common::resolution::LifecycleScope;
+        let text = r#"# generated
+__metadata:
+  version: 8
+  cacheKey: 10c0
+
+"waybill-fixture-parent@npm:1.0.0":
+  version: 1.0.0
+  resolution: "waybill-fixture-parent@npm:1.0.0"
+  dependencies:
+    waybill-fixture-child: "npm:2.0.0"
+  dependenciesMeta:
+    waybill-fixture-child:
+      optional: true
+  checksum: 10c0/aaaa
+  languageName: node
+  linkType: hard
+
+"waybill-fixture-child@npm:2.0.0":
+  version: 2.0.0
+  resolution: "waybill-fixture-child@npm:2.0.0"
+  checksum: 10c0/bbbb
+  languageName: node
+  linkType: hard
+
+"waybill-fixture-root@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "waybill-fixture-root@workspace:."
+  dependencies:
+    waybill-fixture-parent: "npm:1.0.0"
+  languageName: unknown
+  linkType: soft
+"#;
+        let entries = parse_yarn_lock(text, "/yarn.lock", &m1272_bare_manifest());
+        assert_eq!(
+            m1272_scope(&entries, "waybill-fixture-child"),
+            Some(LifecycleScope::Optional),
+            "a runtime parent's OPTIONAL child MUST be Optional -- the \
+             runtime closure must not follow optional edges (FR-006)"
+        );
+        assert_ne!(
+            m1272_scope(&entries, "waybill-fixture-parent"),
+            Some(LifecycleScope::Optional),
+            "control: the runtime parent itself is NOT optional, so this \
+             test cannot pass by classifying everything"
+        );
+    }
+
+    /// FR-009 — peer-optional precedence, from the source Berry
+    /// actually uses. Measured: the lockfile entry carries
+    /// `peerDependenciesMeta.<name>.optional`, exactly as pnpm v9 does.
+    #[test]
+    fn m1272_us3_berry_peer_optional_stays_peer() {
+        use waybill_common::resolution::LifecycleScope;
+        let text = r#"# generated
+__metadata:
+  version: 8
+  cacheKey: 10c0
+
+"waybill-fixture-parent@npm:1.0.0":
+  version: 1.0.0
+  resolution: "waybill-fixture-parent@npm:1.0.0"
+  dependencies:
+    waybill-fixture-peerish: "npm:3.0.0"
+  peerDependencies:
+    waybill-fixture-peerish: "*"
+  peerDependenciesMeta:
+    waybill-fixture-peerish:
+      optional: true
+  checksum: 10c0/aaaa
+  languageName: node
+  linkType: hard
+
+"waybill-fixture-peerish@npm:3.0.0":
+  version: 3.0.0
+  resolution: "waybill-fixture-peerish@npm:3.0.0"
+  checksum: 10c0/cccc
+  languageName: node
+  linkType: hard
+
+"waybill-fixture-root@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "waybill-fixture-root@workspace:."
+  dependencies:
+    waybill-fixture-parent: "npm:1.0.0"
+  dependenciesMeta:
+    waybill-fixture-parent:
+      optional: true
+  languageName: unknown
+  linkType: soft
+"#;
+        let entries = parse_yarn_lock(text, "/yarn.lock", &m1272_bare_manifest());
+        assert_ne!(
+            m1272_scope(&entries, "waybill-fixture-peerish"),
+            Some(LifecycleScope::Optional),
+            "an optional PEER MUST NOT be classified Optional -- m178's \
+             PROVIDED_DEPENDENCY_OF wins (FR-009)"
+        );
+        // Control: the optional parent is still caught, so this cannot
+        // pass by classifying nothing at all.
+        assert_eq!(
+            m1272_scope(&entries, "waybill-fixture-parent"),
+            Some(LifecycleScope::Optional),
+            "control: the optional parent MUST still be Optional"
         );
     }
 }

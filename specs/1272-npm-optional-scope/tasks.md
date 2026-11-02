@@ -186,29 +186,29 @@ assert the lockfile does not carry the flag. Measurement says it does.
 
 ### Tests for US3 (write first)
 
-- [ ] T033 [P] [US3] Generate a manager-produced Berry fixture whose manifest declares a dependency optional and whose manifest has **no** `dependenciesMeta` key after install, confirming by inspection that the lockfile's root workspace entry carries `dependenciesMeta.<n>.optional: true`, and commit it under `waybill-cli/tests/fixtures/` with the yarn version in its header
-- [ ] T034 [US3] Add a failing test asserting the no-`dependenciesMeta`-manifest fixture classifies its optional dependency optional **and** carries `waybill:optional-derivation` (contract C1, FR-008, acceptance scenario 1, SC-005's Berry-specific clause) in `waybill-cli/tests/optional_dep_yarn_berry_e2e.rs`
-- [ ] T035 [P] [US3] Add a failing test for a non-root lockfile entry carrying `dependenciesMeta` — the named dependency is optional (acceptance scenario 2) in `waybill-cli/tests/optional_dep_yarn_berry_e2e.rs`
-- [ ] T036 [P] [US3] Add a failing test for the FR-004a stale-lockfile case — a manifest marking a dependency optional and a lockfile predating that edit still classifies it optional (acceptance scenario 4) in `waybill-cli/tests/optional_dep_yarn_berry_e2e.rs`
+- [X] T033 [P] [US3] Generate a manager-produced Berry fixture whose manifest declares a dependency optional and whose manifest has **no** `dependenciesMeta` key after install, confirming by inspection that the lockfile's root workspace entry carries `dependenciesMeta.<n>.optional: true`, and commit it under `waybill-cli/tests/fixtures/` with the yarn version in its header
+- [X] T034 [US3] Add a failing test asserting the no-`dependenciesMeta`-manifest fixture classifies its optional dependency optional **and** carries `waybill:optional-derivation` (contract C1, FR-008, acceptance scenario 1, SC-005's Berry-specific clause) in `waybill-cli/tests/optional_dep_yarn_berry_e2e.rs`
+- [X] T035 [P] [US3] Add a failing test for a non-root lockfile entry carrying `dependenciesMeta` — the named dependency is optional (acceptance scenario 2) in `waybill-cli/tests/optional_dep_yarn_berry_e2e.rs`
+- [X] T036 [P] [US3] Add a failing test for the FR-004a stale-lockfile case — a manifest marking a dependency optional and a lockfile predating that edit still classifies it optional (acceptance scenario 4) in `waybill-cli/tests/optional_dep_yarn_berry_e2e.rs`
 
 ### Implementation for US3
 
-- [ ] T037 [US3] Add a `berry_optional_names_from_lockfile` reader extracting `dependenciesMeta.<name>.optional == true` from every lockfile entry, root workspace and non-root alike, in `waybill-cli/src/scan_fs/package_db/npm/yarn_lock.rs`
-- [ ] T038 [US3] Union the lockfile source with the existing `berry_optional_names_from_pkg_json` result rather than replacing it, keeping the manifest path intact per FR-004a, at the `optional_names` construction at `yarn_lock.rs:133`, in `waybill-cli/src/scan_fs/package_db/npm/yarn_lock.rs`
-- [ ] T039 [US3] Build the Berry runtime and optional closures over the lockfile's entry edges and subtract, so a transitively optional package is classified and a runtime-reachable one is not (FR-006, FR-007a), in `waybill-cli/src/scan_fs/package_db/npm/yarn_lock.rs`
-- [ ] T040 [US3] Apply the existing `is_peer_optional` guard to the unioned set, preserving the current KEEP-BOTH polarity (FR-009), in `waybill-cli/src/scan_fs/package_db/npm/yarn_lock.rs`
+- [X] T037 [US3] Add a `berry_optional_names_from_lockfile` reader extracting `dependenciesMeta.<name>.optional == true` from every lockfile entry, root workspace and non-root alike, in `waybill-cli/src/scan_fs/package_db/npm/yarn_lock.rs`
+- [X] T038 [US3] Union the lockfile source with the existing `berry_optional_names_from_pkg_json` result rather than replacing it, keeping the manifest path intact per FR-004a, at the `optional_names` construction at `yarn_lock.rs:133`, in `waybill-cli/src/scan_fs/package_db/npm/yarn_lock.rs`
+- [X] T039 [US3] Build the Berry runtime and optional closures over the lockfile's entry edges and subtract, so a transitively optional package is classified and a runtime-reachable one is not (FR-006, FR-007a), in `waybill-cli/src/scan_fs/package_db/npm/yarn_lock.rs`
+- [X] T040 [US3] Apply the existing `is_peer_optional` guard to the unioned set, preserving the current KEEP-BOTH polarity (FR-009), in `waybill-cli/src/scan_fs/package_db/npm/yarn_lock.rs`
 
 ### FR-014 — the two texts that document the defect as a fact
 
-- [ ] T041 [US3] Correct the comment at `yarn_lock.rs:127-129` which asserts "Berry's lockfile does NOT carry the flag (it lives in package.json only)" to state both sources and cite `measurements/findings.md`, in `waybill-cli/src/scan_fs/package_db/npm/yarn_lock.rs`
-- [ ] T042 [US3] Correct the `dev_scope_optional_meta_berry` test's header, which claims the flag lives in package.json "and nowhere else" while the test's own body writes `dependenciesMeta` into the lockfile, in `waybill-cli/src/scan_fs/package_db/npm/yarn_lock.rs`
+- [X] T041 [US3] Correct the comment at `yarn_lock.rs:127-129` which asserts "Berry's lockfile does NOT carry the flag (it lives in package.json only)" to state both sources and cite `measurements/findings.md`, in `waybill-cli/src/scan_fs/package_db/npm/yarn_lock.rs`
+- [X] T042 [US3] Correct the `dev_scope_optional_meta_berry` fixture's header, which claims the flag lives in package.json "and nowhere else" while the test's own body writes `dependenciesMeta` into the lockfile, in `waybill-cli/src/scan_fs/package_db/npm/yarn_lock.rs`
 
 ### Regression and evidence for US3
 
-- [ ] T043 [US3] Assert a project that DOES hand-write `dependenciesMeta` classifies unchanged, proving the manifest source was retained and not replaced (acceptance scenario 3, FR-004a) in `waybill-cli/tests/optional_dep_yarn_berry_e2e.rs`
-- [ ] T044 [US3] Assert the existing yarn peer-precedence suite passes unchanged (contract C4) in `waybill-cli/tests/optional_dep_yarn_peer_precedence.rs`
-- [ ] T045 [US3] Verify Berry's development-axis output is byte-identical against T002's baseline (FR-010, SC-004, contract C5)
-- [ ] T046 [US3] SC-006 load-bearing check: delete T037's lockfile reader, confirm the T034 no-`dependenciesMeta` test fails, restore, and record it — this is the check that would have caught the original defect
+- [X] T043 [US3] Assert a project that DOES hand-write `dependenciesMeta` classifies unchanged, proving the manifest source was retained and not replaced (acceptance scenario 3, FR-004a) in `waybill-cli/tests/optional_dep_yarn_berry_e2e.rs`
+- [X] T044 [US3] Assert the existing yarn peer-precedence suite passes unchanged (contract C4) in `waybill-cli/tests/optional_dep_yarn_peer_precedence.rs`
+- [X] T045 [US3] Verify Berry's development-axis output is byte-identical against T002's baseline (FR-010, SC-004, contract C5) — all 14 `m1271_us2_yarn_*` tests pass, including `..._out_of_band_optional_is_not_overwritten`, whose fixture this arm corrected, and `..._v1_and_berry_classify_the_same_set`
+- [X] T046 [US3] SC-006 load-bearing check — **three mutants, and the third found a gap in my own tests**: removing the lockfile source fails 4 tests; removing FR-004a's manifest override fails 1; switching the runtime closure from hard edges to all edges initially failed **nothing**, because in all six tests the optional package was itself the root declaration so the runtime seed was empty. `m1272_us3_berry_runtime_parent_with_optional_child` was added for the distinguishing shape and fails under that mutant
 
 **Checkpoint**: four of five dialects agree, and the Berry arm's tests
 now assert a shape real projects produce.

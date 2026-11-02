@@ -342,3 +342,102 @@ Mutation-tested: switching the runtime closure to all four edge sections
 fails `parse_bun_lock_optional_dep_tagging`, an **m667** test rather
 than one of this milestone's, so the pre-existing suite guards the trap
 too.
+
+## Probe F — Berry's manifest is empty after install, and no yarn emits `__metadata.version: 10`
+
+Harness: the Berry half of `optional-axis-probe.sh`, plus a two-case
+comparison and a three-version sweep run during US3 implementation.
+
+### Finding F1 — `yarn install` leaves no `dependenciesMeta` in package.json
+
+Two projects were installed with yarn 4.6.0, one declaring a dependency
+optional at the root and one declaring it optional and also reachable at
+runtime. In **both**, afterwards:
+
+```
+package.json dependenciesMeta: undefined
+```
+
+The flag is in the lockfile's workspace entry instead:
+
+```yaml
+"probe@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "probe@workspace:."
+  dependencies:
+    debug: "npm:4.3.4"
+    ms: "npm:2.1.2"
+  dependenciesMeta:
+    ms:
+      optional: true
+```
+
+m181 read the manifest and only the manifest, on the stated grounds
+that "Berry's lockfile does NOT carry the flag (it lives in package.json
+only)". Measurement reverses that sentence exactly. The reader's only
+source was the one an installed project leaves empty, which is why the
+arm had passing optional-classification tests and could not classify any
+real Berry project.
+
+### Finding F2 — Berry merges optional declarations into `dependencies`
+
+Note the shape above: there is **no `optionalDependencies` section** in
+the lockfile. The optional dependency appears under `dependencies`
+alongside the runtime one, and is distinguished only by the out-of-band
+`dependenciesMeta` flag.
+
+So "the hard edges of an entry" is its `dependencies` **minus** the
+names its own `dependenciesMeta` marks optional. A reader that treated
+`dependencies` as wholly hard would cancel every optional declaration
+Berry makes.
+
+### Finding F3 — no yarn emits `__metadata.version: 10`
+
+Measured across three yarn versions, same project:
+
+| yarn | `__metadata.version` |
+|---|---|
+| 3.8.7 | 6 |
+| 4.6.0 | 8 |
+| 4.9.4 | 8 |
+
+Five committed m1271 fixtures declared `version: 10`. That value is
+invented; this milestone corrected all five to the measured `8`. The
+value is otherwise inert — `is_berry` only tests for the presence of the
+`__metadata:` key — so the correction changes no test's behaviour.
+
+It was found because FR-011a's new diagnostic fired on them. The right
+response was to fix the fixtures, **not** to raise
+`KNOWN_BERRY_METADATA_VERSION` to 10: a constant set to match an
+invented value would make the diagnostic describe nothing, and a warning
+that fires on five of eight committed fixtures teaches a reader to
+ignore it.
+
+### Finding F4 — Berry carries `peerDependenciesMeta` per entry, like pnpm v9
+
+```yaml
+"debug@npm:4.3.4":
+  peerDependenciesMeta:
+    supports-color:
+      optional: true
+```
+
+m181 sourced the peer-precedence guard from the root `package.json`
+alone. That is the right source for a root declaration and no source at
+all for a transitive one — a package's optional-peer declaration lives
+in the lockfile entry for that package. US3 reads both.
+
+### What mutation testing caught that six tests did not
+
+Switching the runtime closure from hard edges to all edges left **all
+six** of this arm's first tests passing. In every one of them the
+optional package IS the root declaration, so the runtime seed is empty
+and the edge-kind choice cannot matter.
+
+The distinguishing shape is a **runtime parent declaring an optional
+child** — the common real pattern, and the one case the six tests
+happened to omit. `m1272_us3_berry_runtime_parent_with_optional_child`
+was added for it, and fails under that mutant.
+
+Recorded because the six tests looked comprehensive. Only the mutant
+showed otherwise.

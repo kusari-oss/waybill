@@ -9,7 +9,7 @@
 # is what makes the FR-006 diagnostic's count non-zero.
 
 __metadata:
-  version: 10
+  version: 8
   cacheKey: 10c0
 
 "waybill-fixture-devonly@npm:^1.0.0":

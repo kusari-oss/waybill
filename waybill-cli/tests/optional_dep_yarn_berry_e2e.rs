@@ -16,6 +16,19 @@ fn fixture_path() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/optional_dep/yarn-berry")
 }
 
+/// Milestone 1272 US3 — the REALISTIC Berry shape: a manifest with no
+/// `dependenciesMeta` key, the flag on the lockfile's workspace entry.
+///
+/// `fixture_path()` above is the m181 fixture, which hand-writes
+/// `dependenciesMeta` into package.json. That is a valid source and is
+/// kept, but FR-013 forbids it being this arm's only evidence: measured,
+/// `yarn install` leaves no such key in the manifest, so the m181
+/// fixture is the one shape a real project does not have.
+fn measured_fixture_path() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests/fixtures/optional_dep/yarn_berry_measured")
+}
+
 fn run_scan(project_root: &Path) -> (Value, Value) {
     let out_dir = tempfile::tempdir().unwrap();
     let cdx_path = out_dir.path().join("out.cdx.json");
@@ -100,5 +113,89 @@ fn t017_yarn_berry_optional_full_mode_end_to_end() {
     assert!(
         has_optional_dep_of,
         "SPDX 2.3 MUST emit at least one OPTIONAL_DEPENDENCY_OF edge for Berry fixture"
+    );
+}
+
+// ----------------------------------------------------------------------
+// Milestone 1272 US3 — end-to-end against the measured Berry shape.
+// ----------------------------------------------------------------------
+
+/// The four classification cases through the full emission path, from a
+/// manifest that carries no optional information at all.
+#[test]
+fn m1272_berry_measured_shape_classifies_every_case() {
+    let (cdx, spdx23) = run_scan(&measured_fixture_path());
+
+    let optional = find_component_by_name(&cdx, "waybill-fixture-optional")
+        .expect("optional component in CDX");
+    assert_eq!(
+        optional.get("scope").and_then(|v| v.as_str()),
+        Some("excluded"),
+        "the lockfile workspace entry's dependenciesMeta MUST classify, \
+         with no manifest dependenciesMeta present at all (FR-004)"
+    );
+    assert_eq!(
+        find_property(optional, "waybill:optional-derivation").and_then(|v| v.as_str()),
+        Some("npm-optional-dependencies"),
+        "FR-008: the newly Optional component MUST carry the derivation"
+    );
+
+    assert_eq!(
+        find_component_by_name(&cdx, "waybill-fixture-transitive")
+            .expect("transitive component in CDX")
+            .get("scope")
+            .and_then(|v| v.as_str()),
+        Some("excluded"),
+        "FR-007a: transitive propagation, which the manifest source can \
+         never deliver because a manifest describes only the root"
+    );
+
+    assert_ne!(
+        find_component_by_name(&cdx, "waybill-fixture-runtime")
+            .expect("runtime component in CDX")
+            .get("scope")
+            .and_then(|v| v.as_str()),
+        Some("excluded"),
+        "a `dependencies` declaration MUST NOT be optional"
+    );
+
+    let contested = find_component_by_name(&cdx, "waybill-fixture-contested")
+        .expect("contested component in CDX");
+    assert_ne!(
+        contested.get("scope").and_then(|v| v.as_str()),
+        Some("excluded"),
+        "FR-006: declared optional at the root but reached via the \
+         runtime parent's hard edge (measured in Probe C)"
+    );
+    assert!(
+        find_property(contested, "waybill:optional-derivation").is_none(),
+        "a cancelled component MUST NOT carry the derivation annotation"
+    );
+
+    let mut excluded: Vec<&str> = cdx
+        .get("components")
+        .and_then(|v| v.as_array())
+        .expect("components array")
+        .iter()
+        .filter(|c| c.get("scope").and_then(|v| v.as_str()) == Some("excluded"))
+        .filter_map(|c| c.get("name").and_then(|v| v.as_str()))
+        .collect();
+    excluded.sort_unstable();
+    assert_eq!(
+        excluded,
+        ["waybill-fixture-optional", "waybill-fixture-transitive"],
+        "exactly the optional closure is optional"
+    );
+
+    let rels = spdx23
+        .get("relationships")
+        .and_then(|v| v.as_array())
+        .expect("SPDX 2.3 has relationships");
+    assert!(
+        rels.iter().any(|r| {
+            r.get("relationshipType").and_then(|v| v.as_str())
+                == Some("OPTIONAL_DEPENDENCY_OF")
+        }),
+        "SPDX 2.3 MUST emit OPTIONAL_DEPENDENCY_OF for the measured fixture"
     );
 }

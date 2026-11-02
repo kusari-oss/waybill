@@ -8,7 +8,7 @@
 # it wraps a genuine registry package, and still contributes no seed.
 
 __metadata:
-  version: 10
+  version: 8
   cacheKey: 10c0
 
 "waybill-fixture-filed@file:../tarballs/waybill-fixture-filed-1.0.0.tgz":

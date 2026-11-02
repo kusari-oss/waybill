@@ -14,7 +14,7 @@
 # NoManifest outcome and which the diagnostics contract calls silent.
 
 __metadata:
-  version: 10
+  version: 8
   cacheKey: 10c0
 
 "waybill-fixture-devonly-child@npm:^1.0.0":
