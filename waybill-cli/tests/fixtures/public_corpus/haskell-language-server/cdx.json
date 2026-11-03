@@ -401,7 +401,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either"
         },
         {
           "name": "waybill:workspace-member",
@@ -469,7 +469,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either"
         },
         {
           "name": "waybill:workspace-member",
@@ -515,6 +515,14 @@
           "content": "cd7e26d3d5ebf7f2c1a7525aebe251fbcbffee2a6362db634b4be23b9e354d85"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "Diff",
       "properties": [
         {
@@ -544,10 +552,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -586,6 +590,14 @@
           "content": "6af672ac8427d35cbd42d64142dc288feab266f0be92dae3c696e8860d8173c0"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "Glob",
       "properties": [
         {
@@ -611,10 +623,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -653,6 +661,14 @@
           "content": "a3b2216ddbaf481dbc82414b6120f8b726d969db3f0b51f20a7a45425ef36e7f"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "QuickCheck",
       "properties": [
         {
@@ -682,10 +698,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -759,7 +771,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either"
         },
         {
           "name": "waybill:workspace-member",
@@ -817,6 +829,14 @@
           "content": "4071f1aa7cf4fbe6c8887d24ed2fbd57b2744114994b035616ce620b7c02fa60"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "aeson",
       "properties": [
         {
@@ -842,10 +862,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -884,6 +900,14 @@
           "content": "2a21f2cd78adcb149ceba770239ed664519552911e7680172b18ff695cfa7ae5"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "aeson-pretty",
       "properties": [
         {
@@ -909,10 +933,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -951,6 +971,14 @@
           "content": "a3e08f2aebb4be512c5d7520546e6068624ddadd99842bff72ca90dead47de46"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "apply-refact",
       "properties": [
         {
@@ -976,10 +1004,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -1052,7 +1076,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either"
         },
         {
           "name": "waybill:workspace-member",
@@ -1102,6 +1126,14 @@
           "content": "148571bc188003101241da6c49131d07324e63a88ed283a84def2e9694599619"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "async",
       "properties": [
         {
@@ -1131,10 +1163,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -1227,7 +1255,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either"
         },
         {
           "name": "waybill:workspace-member",
@@ -1265,6 +1293,14 @@
           "content": "1d5a91143ef0e22157536093ec8e59d226a68220ec89378d5dcaeea86472c784"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "base16-bytestring",
       "properties": [
         {
@@ -1294,10 +1330,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -1366,7 +1398,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either"
         },
         {
           "name": "waybill:workspace-member",
@@ -1454,7 +1486,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either"
         },
         {
           "name": "waybill:workspace-member",
@@ -1492,6 +1524,14 @@
           "content": "af2b1afe9156f5722d4cb282de607d9ff34e5ea13448320186b957371f4aa039"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "cabal-add",
       "properties": [
         {
@@ -1521,10 +1561,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -1561,6 +1597,20 @@
         {
           "alg": "SHA-256",
           "content": "e281b20d128421908bcd7aa3326c6eb637b06001df21d825ba1c7cb41ba23672"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "GPL-3.0-or-later"
+          }
+        },
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "cabal-fmt",
@@ -1602,10 +1652,6 @@
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
         },
         {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
-        },
-        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -1641,6 +1687,14 @@
         {
           "alg": "SHA-256",
           "content": "9771f5fca9775de86bc9f1eb179e564716ae5ae4b9eb14e783ed7a0e2d0604de"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
         }
       ],
       "name": "cabal-gild",
@@ -1682,10 +1736,6 @@
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
         },
         {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
-        },
-        {
           "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
@@ -1723,6 +1773,14 @@
           "content": "296dc17e0c5f3dfb3d82ced83e4c9c44c338ecde749b278b6eae512f1d04e406"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "case-insensitive",
       "properties": [
         {
@@ -1748,10 +1806,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -1794,6 +1848,14 @@
           "content": "6457e9254d60b861d111da46fed8233b0ac7da1a06d1c5807596d820bf33c213"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MPL-2.0"
+          }
+        }
+      ],
       "name": "co-log-core",
       "properties": [
         {
@@ -1819,10 +1881,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -1907,7 +1965,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either"
         },
         {
           "name": "waybill:workspace-member",
@@ -1945,6 +2003,14 @@
           "content": "062bf47a43278dfe8725391b5e550905f185801c79ea772a9cdaa672b2ea2f51"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "criterion",
       "properties": [
         {
@@ -1974,10 +2040,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -2017,6 +2079,14 @@
           "content": "a4042c97ad02eb68e766577ca35c01970c33e96cfd74ccb4dd403e3476a23241"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "cryptohash-sha1",
       "properties": [
         {
@@ -2046,10 +2116,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -2100,6 +2166,14 @@
           "content": "fa7d5de70ccef7381a7f17cd64948de1c24b620de13e1cd55c36c26949870799"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "data-default",
       "properties": [
         {
@@ -2125,10 +2199,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -2209,7 +2279,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either"
         },
         {
           "name": "waybill:workspace-member",
@@ -2251,6 +2321,14 @@
           "content": "4da32e3c57a8afb1e61664bac9e79c3b410e31e839ffd78e0c7716be415a2cde"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "dependent-map",
       "properties": [
         {
@@ -2276,10 +2354,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -2322,6 +2396,14 @@
           "content": "826561ecf285abc857bde043e5aac50cb7a7157aaf24fd1aee26a25d4c2a3cbb"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "name": "LicenseRef-publicDomain"
+          }
+        }
+      ],
       "name": "dependent-sum",
       "properties": [
         {
@@ -2351,10 +2433,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -2439,7 +2517,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either"
         },
         {
           "name": "waybill:workspace-member",
@@ -2485,6 +2563,14 @@
           "content": "173d637328bb173fcc365f30d29ff4a94292a1e0e5558aeb3dfc11de81510115"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "dlist",
       "properties": [
         {
@@ -2510,10 +2596,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -2552,6 +2634,14 @@
           "content": "3e8885ee2f56ad4da940f043ae8f981ee2fe336b5e8e4ba3f7436cff4f526c4a"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "edit-distance",
       "properties": [
         {
@@ -2577,10 +2667,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -2623,6 +2709,14 @@
           "content": "74c805415005f065379d644b2f2530d297b1cff650e5ef269a479220afdf7070"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "enummapset",
       "properties": [
         {
@@ -2648,10 +2742,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -2724,7 +2814,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either"
         },
         {
           "name": "waybill:workspace-member",
@@ -2782,6 +2872,14 @@
           "content": "66a7d6d718646a7bda822d67550dc185c6e25ad1f7fecf06fc132e300098b598"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "extra",
       "properties": [
         {
@@ -2811,10 +2909,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -2853,6 +2947,14 @@
           "content": "5f18672eff936355557cdd163905451205d7ee22742edac313dd27cf42a3f415"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-2-Clause"
+          }
+        }
+      ],
       "name": "file-embed",
       "properties": [
         {
@@ -2882,10 +2984,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -2974,7 +3072,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either"
         },
         {
           "name": "waybill:workspace-member",
@@ -3012,6 +3110,14 @@
           "content": "87e0ae5fd8dfe57119b8a6a291f66b2aa9751fe3c6dfeff7f7de87d9fcdba2b8"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "fingertree",
       "properties": [
         {
@@ -3037,10 +3143,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -3083,6 +3185,14 @@
           "content": "e24b3f0438810302472697ab10280d1ec53bbc98c1ef6812c450301a016cc286"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "focus",
       "properties": [
         {
@@ -3112,10 +3222,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -3154,6 +3260,14 @@
           "content": "cad8f45180f7d375262f72887be5f48f4ec55e34b381b5cb71269f006e91500e"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "foldl",
       "properties": [
         {
@@ -3179,10 +3293,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -3221,6 +3331,14 @@
           "content": "957b7ff7681411bf4872120fcfef6a9182fe15a6d655a6db6c5a06f726935cf5"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "fourmolu",
       "properties": [
         {
@@ -3254,10 +3372,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -3296,6 +3410,14 @@
           "content": "3b0396f1549155431b3db656d2285f8bc4c6a5faa6b3d9f3ea7fbd5757fb8665"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "fuzzy",
       "properties": [
         {
@@ -3321,10 +3443,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -3469,7 +3587,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either"
         },
         {
           "name": "waybill:workspace-member",
@@ -3537,7 +3655,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either"
         },
         {
           "name": "waybill:workspace-member",
@@ -3575,6 +3693,14 @@
           "content": "60a751d657071ee1ef812ef9a8cf2446fc40e89ef51fadcb662d2e81419f5c92"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "ghc-exactprint",
       "properties": [
         {
@@ -3604,10 +3730,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -3646,6 +3768,14 @@
           "content": "5223528c0d91d1490213d383df2f9a363b93cefa3a08b15ea6b58721c909ef35"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "ghc-lib-parser",
       "properties": [
         {
@@ -3671,10 +3801,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -3713,6 +3839,14 @@
           "content": "624995f08a60b1a8ebf34314a2be3951ebfc42646fd2ae7d89a596f280721571"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "ghc-lib-parser-ex",
       "properties": [
         {
@@ -3738,10 +3872,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -3780,6 +3910,14 @@
           "content": "f0823e1f86797e31703d965abf49af3a72021c4f01d10f11870734f2c2d47438"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "ghc-trace-events",
       "properties": [
         {
@@ -3805,10 +3943,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -3847,6 +3981,14 @@
           "content": "ed0fd086cef17997624a104e0c9f9df2331c565a5f4376ba9ca507257faa647d"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-2-Clause"
+          }
+        }
+      ],
       "name": "ghc-typelits-knownnat",
       "properties": [
         {
@@ -3876,10 +4018,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -3988,6 +4126,14 @@
           "content": "1ad5e7c26bd9c9c4e4c3232206694b153845fe11f227e39d214eef0d95f330d4"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "githash",
       "properties": [
         {
@@ -4017,10 +4163,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -4059,6 +4201,14 @@
           "content": "a89964db24f56727b0e7b10c98fe7c116d721d8c46f52d6e77088669aaa38332"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "gitrev",
       "properties": [
         {
@@ -4084,10 +4234,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -4156,7 +4302,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either"
         },
         {
           "name": "waybill:workspace-member",
@@ -4206,6 +4352,14 @@
           "content": "ed0b7c10ce92c9ffe45420dadc38c6d39db486ff3633ff13567cc9f75f79b112"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "hashable",
       "properties": [
         {
@@ -4231,10 +4385,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -4346,6 +4496,14 @@
           "content": "d1a7096f013557bca277b518d5fcf303853dd68b80aa6d1fb476fe71e464f335"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "hie-bios",
       "properties": [
         {
@@ -4375,10 +4533,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -4421,6 +4575,14 @@
           "content": "96968942c30fe0ec44422c74817973a5374327ccaca59c0e78bf3dcac9970a56"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "hiedb",
       "properties": [
         {
@@ -4450,10 +4612,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -4492,6 +4650,14 @@
           "content": "d99672337c06b455884ac14418d562701143141d0d7e46af476817c2ae3efe37"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "hlint",
       "properties": [
         {
@@ -4521,10 +4687,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -4770,6 +4932,14 @@
           "content": "39e4c8c3bb2be08a4c61747ddff0365c6a07efc6185b3a80a7b88fbb6bec9756"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "hspec",
       "properties": [
         {
@@ -4799,10 +4969,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -4842,6 +5008,14 @@
           "content": "356c9d8df78df3033348be617ddf408914a41dd87c12b5ed787b0480face4652"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "hspec-discover",
       "properties": [
         {
@@ -4875,10 +5049,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -4918,6 +5088,14 @@
           "content": "ce8077e697e6e7e3d1038b9f44a8d54d28272adb3c1e17ecca9bae2758b1922a"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "hw-fingertree",
       "properties": [
         {
@@ -4943,10 +5121,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -4989,6 +5163,14 @@
           "content": "931814d6c1bb9f8f6d57161783eacb7b95e66398e1b20d652eca0759206def21"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "implicit-hie",
       "properties": [
         {
@@ -5022,10 +5204,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -5064,6 +5242,14 @@
           "content": "e28dd65bee8083b17210134e22e01c6349dc33c3b7bd17705973cd014e9f20ac"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "js-dgtable",
       "properties": [
         {
@@ -5089,10 +5275,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -5131,6 +5313,14 @@
           "content": "1ba2f2a6b8d85da76c41f526c98903cbb107f8642e506c072c1e7e3c20fe5e7a"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "js-flot",
       "properties": [
         {
@@ -5156,10 +5346,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -5198,6 +5384,14 @@
           "content": "a087fa01a1c52f5386d43f5355f64841c5a4b56b53720090d66b5aa00bfeb106"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "js-jquery",
       "properties": [
         {
@@ -5223,10 +5417,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -5281,6 +5471,14 @@
           "content": "d345dcf1fda4d4a127b84d42638b62f783cf52750bd8fd14ab1637510c1023c2"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-2-Clause"
+          }
+        }
+      ],
       "name": "lens",
       "properties": [
         {
@@ -5306,10 +5504,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -5360,6 +5554,14 @@
           "content": "7bbc6affe248c84dfda13576636ecb52e575ee0e796d8c29a76a28c3ad424c01"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "lens-aeson",
       "properties": [
         {
@@ -5385,10 +5587,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -5435,6 +5633,14 @@
           "content": "40928967728c7c96363309b372f415ca1729de0951c78ea1fa37f839687d6b46"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "list-t",
       "properties": [
         {
@@ -5460,10 +5666,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -5514,6 +5716,14 @@
           "content": "fc5ca60593791c2cdf1ce8bbe80498bfabdc525c7583634d795fc677376073fc"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "lsp",
       "properties": [
         {
@@ -5543,10 +5753,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -5589,6 +5795,14 @@
           "content": "4ab54f65f3ba50f661017691aecfb5644e1181a4e62b222cdc9d6142761f6ad5"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "lsp-test",
       "properties": [
         {
@@ -5618,10 +5832,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -5672,6 +5882,14 @@
           "content": "c6529b295fde341235d6051144af101a13154f762dc4153abe5ccb18eb38f879"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "lsp-types",
       "properties": [
         {
@@ -5701,10 +5919,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -5743,6 +5957,14 @@
           "content": "d38b18581fe4da33bcfcc5d368c48a88f27e9801035e4ace59776e14c7787b5a"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "markdown-unlit",
       "properties": [
         {
@@ -5772,10 +5994,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -5818,6 +6036,14 @@
           "content": "b9ed423625bf20ae7a72480d40d2dd16018a67e2ec45afb840a3607aa931ec97"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-2-Clause"
+          }
+        }
+      ],
       "name": "megaparsec",
       "properties": [
         {
@@ -5847,10 +6073,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -5889,6 +6111,14 @@
           "content": "d84b3c8f5ab9e7051e763a45057dd8835ab85861e114ebe5105cd80d3f8bf3b9"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "mod",
       "properties": [
         {
@@ -5914,10 +6144,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -6002,7 +6228,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either"
         },
         {
           "name": "waybill:workspace-member",
@@ -6040,6 +6266,14 @@
           "content": "9c188973126e893250b881f20e8811dca06c223c23402b06f7a1f2e995797228"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "network-uri",
       "properties": [
         {
@@ -6069,10 +6303,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -6116,6 +6346,14 @@
           "content": "e9bf1c3876de1be12e0cb1d7eeb758527e863989ea6f088a7241b2cb0493e415"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "Apache-2.0"
+          }
+        }
+      ],
       "name": "opentelemetry",
       "properties": [
         {
@@ -6145,10 +6383,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -6195,6 +6429,14 @@
           "content": "63811ab4fd26e829b8868364325a88be3acc79819f5bb5005b2dd3b961ecc491"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "optparse-applicative",
       "properties": [
         {
@@ -6220,10 +6462,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -6262,6 +6500,14 @@
           "content": "1d01d85c477b42e5a6ab6595def68c800d5bccbeff5a06ccf63c6a86967a7878"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "optparse-simple",
       "properties": [
         {
@@ -6287,10 +6533,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -6329,6 +6571,14 @@
           "content": "4d89f82ee87c3e4b4cafa490a1a8260ed3f5af1a81a48a43ddfd6fe435a902ba"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "ormolu",
       "properties": [
         {
@@ -6362,10 +6612,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -6404,6 +6650,14 @@
           "content": "170453a71a2a8b31cca63125533f7771d7debeb639700bdabdd779c34d8a6ef6"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "parallel",
       "properties": [
         {
@@ -6429,10 +6683,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -6471,6 +6721,14 @@
           "content": "9c506cc38f9df0fc23a942e739ed1f0799fc6c54515d770de044168ecff740bf"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "parser-combinators",
       "properties": [
         {
@@ -6500,10 +6758,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -6572,7 +6826,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either"
         },
         {
           "name": "waybill:workspace-member",
@@ -6618,6 +6872,14 @@
           "content": "5e6ea6903114fa118fcc359633dfb7ecddecb92c06c853d02a77b72b251f0b45"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-2-Clause"
+          }
+        }
+      ],
       "name": "prettyprinter",
       "properties": [
         {
@@ -6647,10 +6909,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -6689,6 +6947,14 @@
           "content": "813739308ad6050620578994effe21058a170a341716acf52573fae42b5b1db3"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-2-Clause"
+          }
+        }
+      ],
       "name": "prettyprinter-ansi-terminal",
       "properties": [
         {
@@ -6714,10 +6980,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -6756,6 +7018,14 @@
           "content": "44b4de41813c7bc5db8a57f87c3612a069b65086946268ba165097252ebd3d76"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "primitive",
       "properties": [
         {
@@ -6781,10 +7051,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -6857,7 +7123,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either"
         },
         {
           "name": "waybill:workspace-member",
@@ -6895,6 +7161,14 @@
           "content": "293e75f849254ce0ce0d7fa659681917e07a557c602505a2f9e20777467e984e"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "process-extras",
       "properties": [
         {
@@ -6924,10 +7198,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -6974,6 +7244,14 @@
           "content": "e9c81926a7d1e40328f645f73592b31efc9c631589669a7f130687b9cc3051dc"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "random",
       "properties": [
         {
@@ -6999,10 +7277,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -7041,6 +7315,14 @@
           "content": "06e6691279e4fcf176d79ad33a4ca6a8d7d831123d64d798f3e5aae4b7c45e40"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "name": "LicenseRef-publicDomain"
+          }
+        }
+      ],
       "name": "random-fu",
       "properties": [
         {
@@ -7070,10 +7352,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -7113,6 +7391,14 @@
           "content": "0ad029727797c8ca5d179c7abf1bfc135d86a7d72cf93785ee12ad243aeb1f6c"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "refact",
       "properties": [
         {
@@ -7138,10 +7424,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -7188,6 +7470,14 @@
           "content": "2e3dfb449a548484f7d3b4e2a1b1040b39be26c4f3182a47004dc5eddf028a78"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "regex-tdfa",
       "properties": [
         {
@@ -7217,10 +7507,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -7259,6 +7545,14 @@
           "content": "0ea98606fe49d69311800ae29200162dd2dd915088da197b8b9a9fe818b46e17"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "row-types",
       "properties": [
         {
@@ -7284,10 +7578,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -7334,6 +7624,14 @@
           "content": "3c51d8d50c9b60ff8bf94f942fd92e3bea9e62c5afa778dfc9f707b79da41ef6"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "safe-exceptions",
       "properties": [
         {
@@ -7359,10 +7657,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -7401,6 +7695,14 @@
           "content": "e48258e49542245ef6c58d7f419a83d1d1ab91b013d92c3b5c8c7c048daaa12e"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-2-Clause"
+          }
+        }
+      ],
       "name": "semigroupoids",
       "properties": [
         {
@@ -7426,10 +7728,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -7472,6 +7770,14 @@
           "content": "4176d6e38c3b7813f019f2377466d9f01db842056eec1cdaa8a23b80ceddcb8a"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "shake",
       "properties": [
         {
@@ -7497,10 +7803,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -7604,6 +7906,14 @@
           "content": "201be6607fc1bcfb84e9777dc9d216af06149cafe34831a132a31713b8bfb9f4"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "sorted-list",
       "properties": [
         {
@@ -7629,10 +7939,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -7675,6 +7981,14 @@
           "content": "38727d16060909a2b65c15914ba58a68d88fe9919c547078e701e50635e9323a"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "sqlite-simple",
       "properties": [
         {
@@ -7700,10 +8014,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -7742,6 +8052,14 @@
           "content": "5ac59c0836cc484476d849648e258ac83a0936d5cc11ea64182124e1ef0ac0d5"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MPL-2.0"
+          }
+        }
+      ],
       "name": "stan",
       "properties": [
         {
@@ -7771,10 +8089,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -7855,7 +8169,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either"
         },
         {
           "name": "waybill:workspace-member",
@@ -7901,6 +8215,14 @@
           "content": "6421b7393b0b509b16637747a566a1a2b1a0f492f88516bb04c38112452e0596"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "stm-containers",
       "properties": [
         {
@@ -7926,10 +8248,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -7968,6 +8286,14 @@
           "content": "88838540b080308174d4fa51f20f15f46ed928bf1cf664f533f9bda5ae1e0b8e"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "string-interpolate",
       "properties": [
         {
@@ -7997,10 +8323,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -8039,6 +8361,14 @@
           "content": "2940d3bc75770d7402a6234604cf66b8d6c5b04c9ba410103eb3c8b2d771c61b"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "stylish-haskell",
       "properties": [
         {
@@ -8068,10 +8398,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -8114,6 +8440,14 @@
           "content": "ec7c1e8822d62ab910386361cdcee40a22a26cd344c34741fadd982302291e60"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "syb",
       "properties": [
         {
@@ -8139,10 +8473,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -8181,6 +8511,14 @@
           "content": "3895f5b162c45cd934970c322e7eab2a65104e25fcec37462760bb5ffe0cae35"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "table-layout",
       "properties": [
         {
@@ -8206,10 +8544,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -8260,6 +8594,14 @@
           "content": "c76120141bd61c4418b3ed5efc5fe3094186d47cfe12d7be552320139f52c6c7"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "tasty",
       "properties": [
         {
@@ -8285,10 +8627,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -8331,6 +8669,14 @@
           "content": "cb07cc5ca62a6fd673ef54ae70b4bc5f9c12662fe835bea1f38b944684ee8f7e"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "tasty-expected-failure",
       "properties": [
         {
@@ -8356,10 +8702,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -8402,6 +8744,14 @@
           "content": "8f377fa3a21700c10f8895e01ab9fe3db6aa162429f8ae58fc00f2d391d70abc"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "tasty-golden",
       "properties": [
         {
@@ -8427,10 +8777,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -8469,6 +8815,14 @@
           "content": "d1a273cbe653c23422c14e99672f7cd64e07f85bb019f95fef095db8e5b461c2"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "tasty-hspec",
       "properties": [
         {
@@ -8502,10 +8856,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -8553,6 +8903,14 @@
           "content": "5af01fa7c1ef98b324da062e36f79986a8b1b83ff0cf6fd53f95d976b41e03f6"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "tasty-hunit",
       "properties": [
         {
@@ -8582,10 +8940,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -8628,6 +8982,14 @@
           "content": "e3d4de7455ed342f8874d84686def897b8a316ce198461da18106d8a1f63246a"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "tasty-quickcheck",
       "properties": [
         {
@@ -8657,10 +9019,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -8712,6 +9070,14 @@
           "content": "7e8a2d0be2df0e1c864bc8b5f4e7ecb261d112981e68e1b0186f611faa44a55f"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "tasty-rerun",
       "properties": [
         {
@@ -8737,10 +9103,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -8813,7 +9175,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either"
         },
         {
           "name": "waybill:workspace-member",
@@ -8855,6 +9217,14 @@
           "content": "8c442993694b5ffca823ce864af95bd2841fb5264ee511c61cf48cc71d879890"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "temporary",
       "properties": [
         {
@@ -8880,10 +9250,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -8972,7 +9338,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either"
         },
         {
           "name": "waybill:workspace-member",
@@ -9018,6 +9384,14 @@
           "content": "bfafee27b63885b19eb58120cc97771d127aa8ba9f141f03044d1ac476699337"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "text-rope",
       "properties": [
         {
@@ -9043,10 +9417,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -9127,7 +9497,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either"
         },
         {
           "name": "waybill:workspace-member",
@@ -9207,7 +9577,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either"
         },
         {
           "name": "waybill:workspace-member",
@@ -9245,6 +9615,14 @@
           "content": "9ccf0e356feecf90cee1c75c8e9932ae14ab23cfc8bb51a364e2ad811240d852"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MPL-2.0"
+          }
+        }
+      ],
       "name": "trial",
       "properties": [
         {
@@ -9270,10 +9648,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -9350,7 +9724,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
+          "value": "supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either"
         },
         {
           "name": "waybill:workspace-member",
@@ -9400,6 +9774,14 @@
           "content": "3bfc6f8dea6966c2c06df83e6d3f481bbd77531f58b8049c46738aad9268336e"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "unliftio",
       "properties": [
         {
@@ -9429,10 +9811,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -9475,6 +9853,14 @@
           "content": "99384cba8d56d9d61b85e38a313a93ebcdb78be6566367f0930ef580597fe3e3"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "unliftio-core",
       "properties": [
         {
@@ -9500,10 +9886,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -9554,6 +9936,14 @@
           "content": "708a60513d6da61e09b60b9a486106af703a889b5b43472a27c3b60bf35246ab"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "unordered-containers",
       "properties": [
         {
@@ -9583,10 +9973,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -9629,6 +10015,14 @@
           "content": "28f203c786cbf8ac6dc3fea3378ec36f34173d505fb4a1dd60fc8418ad91c423"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "vector",
       "properties": [
         {
@@ -9654,10 +10048,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -9696,6 +10086,14 @@
           "content": "ee74923ee5b0fef74413c58aaa20ea59baf5d29d256a62fb47cc279570d9dc2f"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "yaml",
       "properties": [
         {
@@ -9721,10 +10119,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in stack.yaml / .cabal; no stack.yaml.lock fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -10013,6 +10407,14 @@
           "content": "67216013b02b8ac5b534a1ef25f409f930eea1a85eae801933a01ad43145eef8"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "Boolean",
       "properties": [
         {
@@ -10052,6 +10454,14 @@
         {
           "alg": "SHA-256",
           "content": "0c1e2fb865093eb9456d5b05a4974abcba149c96d83678b39ddb949b9e6adf5b"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "Chart",
@@ -10095,6 +10505,14 @@
           "content": "f8dcd91926e6f46b47a21a131650f1dc026e410a63f276ff52ba092aab7662de"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "Chart-diagrams",
       "properties": [
         {
@@ -10134,6 +10552,14 @@
         {
           "alg": "SHA-256",
           "content": "b0b7538871ffc058486fc00740886d2f3172f8fa6869936bfe83a5e10bd744ab"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "HUnit",
@@ -10186,6 +10612,14 @@
           "content": "657ac91d3314b9767cbc1ba4a218905e5f28dafb8cd5abc3b553d7248c215b8d"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "GPL-2.0-only"
+          }
+        }
+      ],
       "name": "HsYAML",
       "properties": [
         {
@@ -10225,6 +10659,14 @@
         {
           "alg": "SHA-256",
           "content": "ca6e0aedd902a807b0deb5df297b1668686416e06317b7de992fbdf56673c989"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "GPL-2.0-or-later"
+          }
         }
       ],
       "name": "HsYAML-aeson",
@@ -10268,6 +10710,14 @@
           "content": "3e44ac5d3e684b65e9efaf60ca9a907a86edc879dfcf63f86eebc721e542864d"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "JuicyPixels",
       "properties": [
         {
@@ -10307,6 +10757,14 @@
         {
           "alg": "SHA-256",
           "content": "3bc7e503c204990b47cf977b9ffa498c564086165fba4700512afc6b5e3c69c4"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "ListLike",
@@ -10350,6 +10808,14 @@
           "content": "f7a6abf136eac1c6b370678e14e9519ed88c0c2adf75f06d6855b464db0c2420"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "MemoTrie",
       "properties": [
         {
@@ -10389,6 +10855,14 @@
         {
           "alg": "SHA-256",
           "content": "b012cbbe83650f741c7b7f6eafcc89dec299b0ac74a758b6f3a8cdfc5d3bbeda"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "MonadPrompt",
@@ -10441,6 +10915,14 @@
           "content": "b3103b475fa6cf4d14ef1b1bce0b4b00026d70b68e8842acfe87b894e4b178b6"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "MonadRandom",
       "properties": [
         {
@@ -10480,6 +10962,14 @@
         {
           "alg": "SHA-256",
           "content": "cbdb2a49346f59ceb5ab38592d7bc52e5205580d431d0ac6d852fd9880e59679"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "NumInstances",
@@ -10523,6 +11013,14 @@
           "content": "c504132551e9c8f5afe6c8c8d5bf1ed208f4da98b0cb4af59400bd9bd836e03e"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "OneTuple",
       "properties": [
         {
@@ -10562,6 +11060,14 @@
         {
           "alg": "SHA-256",
           "content": "ab7aa193e8c257d3bda6b0b3c1cbcf74cdaa85ab08cb20c2dd62ba248c1ab265"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "Only",
@@ -10605,6 +11111,14 @@
           "content": "288c5afbf5b266011d0c9226649319c68512dac576fbb7f383924db777404c08"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "SVGFonts",
       "properties": [
         {
@@ -10644,6 +11158,14 @@
         {
           "alg": "SHA-256",
           "content": "5e4b39da395656a59827b0280508aafdc70335798b50e5d6fd52596026251825"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "StateVar",
@@ -10687,6 +11209,14 @@
           "content": "615758872a6d65546e27ddc0164822b56fd030ad00459c82c0492a3372e41394"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "active",
       "properties": [
         {
@@ -10726,6 +11256,14 @@
         {
           "alg": "SHA-256",
           "content": "21408d9bd3c74331b557ce86281e592f56466e19d2a7e3f37e4065203a663145"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-2-Clause"
+          }
         }
       ],
       "name": "adjunctions",
@@ -10769,6 +11307,14 @@
           "content": "51159a0d18690ab51e6709e3c576275402f96f57d901f87d734da6854582e568"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "algebraic-graphs",
       "properties": [
         {
@@ -10808,6 +11354,14 @@
         {
           "alg": "SHA-256",
           "content": "9cf083cef2e2ba88a425f132c8a82bfa931eb4b0c38232b2017f8fcea2e23073"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "ansi-terminal",
@@ -10851,6 +11405,14 @@
           "content": "9fc9ce2157f1889bd99a4d22c9f1c64589590be0f797c3efe71c8fa17a11a689"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "ansi-terminal-types",
       "properties": [
         {
@@ -10890,6 +11452,14 @@
         {
           "alg": "SHA-256",
           "content": "231149b7fef09f5dd95af51228615e3b296dbd0faadeca053e0644a4b13b0ff6"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "assoc",
@@ -10933,6 +11503,14 @@
           "content": "b101e8dedc66da051a16022287d9b05c2dcb2f54f973fb09298b3486cd63ec2f"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "Apache-2.0"
+          }
+        }
+      ],
       "name": "atomic-counter",
       "properties": [
         {
@@ -10972,6 +11550,14 @@
         {
           "alg": "SHA-256",
           "content": "3f337fe58624565de12426f607c23e60c7b09c86b4e3adfc827ca188c9979e6c"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "attoparsec",
@@ -11015,6 +11601,14 @@
           "content": "fe9b2c23a16fe1ff8f41c329940cccc80aca7ac6a9ea314f7a77cf142d8f9edd"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "attoparsec-aeson",
       "properties": [
         {
@@ -11056,6 +11650,14 @@
           "content": "74e655541e645e8fc7aade1e6a1b6973561be0bca9369bc1623aa345019a35e9"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "base-compat",
       "properties": [
         {
@@ -11095,6 +11697,14 @@
         {
           "alg": "SHA-256",
           "content": "3d2bf42f04cd02c8f7ed346454e29e188e1c7865d075c4277ea25197e53828e1"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
         }
       ],
       "name": "base-compat-batteries",
@@ -11147,6 +11757,14 @@
           "content": "08cc283a31350f7bd28b2a5d31af693ee337f2593d3e7222999b72dd4954c72b"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "base-orphans",
       "properties": [
         {
@@ -11186,6 +11804,14 @@
         {
           "alg": "SHA-256",
           "content": "7942239f1804945fd6d319a953f26c53b64518076cd294141fda983f2ff1b2b6"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "base64",
@@ -11229,6 +11855,14 @@
           "content": "fbf8ed30edde271eb605352021431d8f1b055f95a56af31fe2eacf6bdfdc49c9"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "base64-bytestring",
       "properties": [
         {
@@ -11268,6 +11902,14 @@
         {
           "alg": "SHA-256",
           "content": "ad7a357f022f4c780c505040d73f1c06a4fd697b4a0bab6123bbd73b55d8115c"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "bifunctors",
@@ -11311,6 +11953,14 @@
           "content": "eb75c5c3fe65e3f51fc160baef549226408b8454ea7d0abbf5c952ea21779222"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "binary-instances",
       "properties": [
         {
@@ -11350,6 +12000,14 @@
         {
           "alg": "SHA-256",
           "content": "97407e4367e1ca93a12ccc1ec13350168359fc6a7ed3bd1e0dfe77b056fe6b9f"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "binary-orphans",
@@ -11393,6 +12051,14 @@
           "content": "1a42d33ce341973f4e4f3f0e10d00760056a0aca0e2a57180994bf2ac26c4e2b"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "bitvec",
       "properties": [
         {
@@ -11432,6 +12098,14 @@
         {
           "alg": "SHA-256",
           "content": "971d360428ac97af9a4e55e4f2c23649f6cedc0ce5d6e94d520e663f33ea5113"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "blaze-builder",
@@ -11475,6 +12149,14 @@
           "content": "65542ef39f7644a3d76afcadeb976d3e334c6947516b7313fcb59165cea1608f"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "blaze-html",
       "properties": [
         {
@@ -11514,6 +12196,14 @@
         {
           "alg": "SHA-256",
           "content": "8606ac8b4a1f7f8f1bbc0770b2752e9b6f88ccc9fbdcbb33aa20577d0e5930e8"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "blaze-markup",
@@ -11557,6 +12247,14 @@
           "content": "4c7c61e67381eeefa30b563004ae639679651aaac499a37ca457d49d7fe8165f"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "blaze-svg",
       "properties": [
         {
@@ -11596,6 +12294,14 @@
         {
           "alg": "SHA-256",
           "content": "dd2acac978433e4001302190e530829707203febbc664966c3d347ecac5717b2"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "blaze-textual",
@@ -11639,6 +12345,14 @@
           "content": "928baf1fff69b17658fb7014a1cc3e220b3b69b52271ae9c0452f82d67b3ef86"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "boring",
       "properties": [
         {
@@ -11678,6 +12392,14 @@
         {
           "alg": "SHA-256",
           "content": "100b305003b9f02d0218d4d43aece08cd34c875475482ce5907fd62d6346b548"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "bytes",
@@ -11721,6 +12443,20 @@
           "content": "56261522d0311f546f652404f53f0969ca7b8397ed217bbe9aa0e61804b8c28c"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "GPL-2.0-or-later"
+          }
+        },
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "cabal-install-parsers",
       "properties": [
         {
@@ -11762,6 +12498,14 @@
           "content": "430bcf8a3404f7e55319573c0b807b1356946f0c8f289bb3d9afb279c636b87b"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "call-stack",
       "properties": [
         {
@@ -11801,6 +12545,14 @@
         {
           "alg": "SHA-256",
           "content": "d40636f530737a99c0282084322230d04d6e1b445e779a0d0a5005f6285a495f"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "cassava",
@@ -11853,6 +12605,14 @@
           "content": "99905220661b26e5bd91130bd9772554938608a5b1d717240a6eb331121e0f6a"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "cereal",
       "properties": [
         {
@@ -11892,6 +12652,14 @@
         {
           "alg": "SHA-256",
           "content": "ff0685a6c39e7aae32f8b4165e2ae06f284c867298ad4f7b776c1c1b2859f933"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "cereal-vector",
@@ -11935,6 +12703,14 @@
           "content": "22de71fde38b236d3e9168a832b5e1e75d1fb4f4028667bdf747b3b4c8c1529c"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "character-ps",
       "properties": [
         {
@@ -11974,6 +12750,14 @@
         {
           "alg": "SHA-256",
           "content": "1ce8c6d444ae9d5685099fe118fda2744c4a6037559507d8213ff686dfca722d"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "charset",
@@ -12017,6 +12801,14 @@
           "content": "8cc11336c4b8003062bd23085ec90d17597db70d20b4221c0bdedc28def43e6d"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "choice",
       "properties": [
         {
@@ -12056,6 +12848,14 @@
         {
           "alg": "SHA-256",
           "content": "64ee44a90da3e5fe20d5b78bfe6eba93102a6b52c65f8a7b99af7799798ee81b"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "circle-packing",
@@ -12099,6 +12899,14 @@
           "content": "8b14503f0e19be3316a3f188b42c80b7be0315d827e94ae45088c08a2c8bcbfd"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "clay",
       "properties": [
         {
@@ -12138,6 +12946,14 @@
         {
           "alg": "SHA-256",
           "content": "6ae9898afe788a5e334cd5fad5d18a3c2e8e59fa09aaf7b957dbb38a4767df2e"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "clock",
@@ -12181,6 +12997,14 @@
           "content": "b8b12e7f8795cf13037bb062d453b86c788eae62558586f59e9419aabe6e9bef"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "cmdargs",
       "properties": [
         {
@@ -12220,6 +13044,14 @@
         {
           "alg": "SHA-256",
           "content": "b2f90e19c61ed8a6ff7295f7f123d4a9913c790d4cf2c6029bc299293fdb2aaa"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "code-page",
@@ -12272,6 +13104,14 @@
           "content": "1f3b1055675abe4e3362800cc9bf7ab9b92dfdf21a1f6c82b252611270be9680"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "colour",
       "properties": [
         {
@@ -12311,6 +13151,14 @@
         {
           "alg": "SHA-256",
           "content": "96afae0b54b12205a9871ecb4c7ee173e8b9f05363d843c15d373d394d08063c"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MPL-2.0"
+          }
         }
       ],
       "name": "colourista",
@@ -12354,6 +13202,14 @@
           "content": "f824b1d69925627a76277655aaccb0041b782fb3810fbe948dde3c2107af471b"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "commutative-semigroups",
       "properties": [
         {
@@ -12393,6 +13249,14 @@
         {
           "alg": "SHA-256",
           "content": "e9739df2bf5944958062a4ea73bde3bf35c0879cee0944edf7f05bebf993f9c1"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "comonad",
@@ -12436,6 +13300,14 @@
           "content": "69902af03ea7e4cb982fa83da42afe36973b62d0a52ea140ae5362e52854ba3f"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "conduit",
       "properties": [
         {
@@ -12475,6 +13347,14 @@
         {
           "alg": "SHA-256",
           "content": "491f3e8e9408f5d10ff8d02bf4d0edb11821e2537e7c22edbd6d64bf91388222"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
         }
       ],
       "name": "conduit-extra",
@@ -12518,6 +13398,14 @@
           "content": "07fb28868ce016b5e1b5fd033c9c73340a09c13140003f070a6952842a01acf5"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "name": "LicenseRef-publicDomain"
+          }
+        }
+      ],
       "name": "conduit-parse",
       "properties": [
         {
@@ -12557,6 +13445,14 @@
         {
           "alg": "SHA-256",
           "content": "808021e217c39eb4aaa76cf85abf43f4e5bf4396143d86bb2275068dd8bb6d39"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-2-Clause"
+          }
         }
       ],
       "name": "constraints",
@@ -12600,6 +13496,14 @@
           "content": "cc7fdb2625f1baeb16501176d8e2eb6da16a3448f2f0a37e188289c503cb482c"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "constraints-extras",
       "properties": [
         {
@@ -12639,6 +13543,14 @@
         {
           "alg": "SHA-256",
           "content": "65f3260354ee5fd1f2c7ffc54cff99d22b794c254f053734979ad37820e6efe3"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "contravariant",
@@ -12682,6 +13594,14 @@
           "content": "7fa78ae9a2a1d1c69179238e8849340ad26be6496b763a489bf2e0eb5b7c4c19"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "name": "LicenseRef-LGPL"
+          }
+        }
+      ],
       "name": "cpphs",
       "properties": [
         {
@@ -12721,6 +13641,14 @@
         {
           "alg": "SHA-256",
           "content": "a342e059049ed734115da73542cdd750d793d13b10ee6ffd0aa60be5d207f9a3"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "criterion-measurement",
@@ -12773,6 +13701,14 @@
           "content": "73a7dc7163871a80837495039a099967b11f5c4fe70a118277842f7a713c6bf6"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "cryptohash-sha256",
       "properties": [
         {
@@ -12812,6 +13748,14 @@
         {
           "alg": "SHA-256",
           "content": "e2e85e0cc78c2b65858bcd969d58bf36f1cd8e59531d361b6d710073939846e5"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "cubicbezier",
@@ -12855,6 +13799,14 @@
           "content": "0ae530c4fb0bd6c8a8ba399429ccd9c75f9c7696049117178f4ceeb2bd08d5b4"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "data-default-class",
       "properties": [
         {
@@ -12894,6 +13846,14 @@
         {
           "alg": "SHA-256",
           "content": "8df052d18c047ab9e9200536a8799b5af3997ebecbbb091a7384b6be8416ab37"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "data-fix",
@@ -12937,6 +13897,14 @@
           "content": "4b50077e7d59a1201485cc6f6d0f2cab11bb1e462f4fc5e17d9b5f210126e1a3"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "deferred-folds",
       "properties": [
         {
@@ -12976,6 +13944,14 @@
         {
           "alg": "SHA-256",
           "content": "f7777a7931b40332ebbc716f64abb63697cbab0128e5c1228d47760c5597f2d4"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-2-Clause"
+          }
         }
       ],
       "name": "dense-linear-algebra",
@@ -13028,6 +14004,14 @@
           "content": "3afb52ac0a82f543783cdd683b6e1aa9ea7ab018ca0a020ccdd269f74ff03677"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "deriving-aeson",
       "properties": [
         {
@@ -13067,6 +14051,14 @@
         {
           "alg": "SHA-256",
           "content": "d3105f45f9ba114dc206a9f7f866aa8dd2813dffc0d5bc0628cae1da8319bff4"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "diagrams-contrib",
@@ -13110,6 +14102,14 @@
           "content": "513dafdb255dbf2c55a63e144098e21b766853eb5e6ef5387415fb445ec57659"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "diagrams-core",
       "properties": [
         {
@@ -13149,6 +14149,14 @@
         {
           "alg": "SHA-256",
           "content": "6b9235a9f265ae0ef89f146a1e5e750c35dfe3c1f507489ff8a2a60b1cc48baa"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "diagrams-lib",
@@ -13192,6 +14200,14 @@
           "content": "16491d31d8393fcdcd893d6bdf01af234eac2cf01384eb854d472d059981541a"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "diagrams-postscript",
       "properties": [
         {
@@ -13231,6 +14247,14 @@
         {
           "alg": "SHA-256",
           "content": "ead5567384eeb30204dc6d31d5b202f29043a484e216e5d4c10bc187c0ac3ea7"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "diagrams-solve",
@@ -13274,6 +14298,14 @@
           "content": "a2586ecaff982cbad5e88c2a71ba63df52e6eea9a6e9c4c2793da5fed87621bc"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "diagrams-svg",
       "properties": [
         {
@@ -13313,6 +14345,14 @@
         {
           "alg": "SHA-256",
           "content": "a022a1d00f9d6fdf9e3d35858391ed9c67b58ef32935f0b966cbeac0724e1fe3"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "dir-traverse",
@@ -13356,6 +14396,14 @@
           "content": "5f2ace38a7a926363fe72b1ad882764d68333bba88709c0f8f036d26c9b4d0af"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "direct-sqlite",
       "properties": [
         {
@@ -13395,6 +14443,14 @@
         {
           "alg": "SHA-256",
           "content": "1ade8fbee13db15e8d22a1ecdca54794617cabc69911b51d46a65e12f4554ef7"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "Apache-2.0"
+          }
         }
       ],
       "name": "directory-ospath-streaming",
@@ -13438,6 +14494,14 @@
           "content": "aeeb028a23db9f9b073e24a6bd766b79b9d58c2b407b06bf33296c27e9264baa"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "distributive",
       "properties": [
         {
@@ -13477,6 +14541,14 @@
         {
           "alg": "SHA-256",
           "content": "6521d8b04b0b49f5a0d633874c9e5b3b5e2aa4abd94a9bae80f976c0932c7007"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "doclayout",
@@ -13520,6 +14592,14 @@
           "content": "755dcd0d475ab7f9fcc894feb29a3e67821b93bbc4a71df1ad3131a6d5cd9567"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "dual-tree",
       "properties": [
         {
@@ -13561,6 +14641,14 @@
           "content": "8000d6197b1d43b9b3cd0711c34f120420f358d0425167d2fb7e616d65470ae5"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "emojis",
       "properties": [
         {
@@ -13600,6 +14688,14 @@
         {
           "alg": "SHA-256",
           "content": "24f0b79c7e1d25cb2cd44c2258d7a464bf6db8079775b50b60b54a254616b337"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "erf",
@@ -13652,6 +14748,14 @@
           "content": "ed9d4645321a0e691fe422b293d1e2509fb3617ed780faa8d92c0ea6b3c341e5"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MPL-2.0"
+          }
+        }
+      ],
       "name": "extensions",
       "properties": [
         {
@@ -13693,6 +14797,14 @@
           "content": "6d5cdb1a5c539425a9665f740e364722e1d9d6ae37fbc55f30fe3dbbbb91d4a2"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "fail",
       "properties": [
         {
@@ -13732,6 +14844,14 @@
         {
           "alg": "SHA-256",
           "content": "45101ddc8b86402e866ec029bcfbc2662779e578e43b40acd971a9f411e2be95"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "fast-math",
@@ -13809,6 +14929,14 @@
           "content": "8836da17baaaf02ca080c9990ece4e0b0c8d6a128f458f8b64fd07b225ca9846"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "filemanip",
       "properties": [
         {
@@ -13848,6 +14976,14 @@
         {
           "alg": "SHA-256",
           "content": "cc445d439ea2f65cac7604d3578aa2c3a62e5a91dc989f4ce5b3390db9e59636"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "filepattern",
@@ -13891,6 +15027,14 @@
           "content": "be40b79abd9b6563a0146069b22313a4a7b8fb8cf7e3c4bc62fb7725f9a11215"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "filtrable",
       "properties": [
         {
@@ -13930,6 +15074,14 @@
         {
           "alg": "SHA-256",
           "content": "2dbdc1850e6768fd5f4e4c45d011ef6796d8b2d639ec200da7f4407ae02d09a6"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "fmlist",
@@ -13973,6 +15125,14 @@
           "content": "18771ea6cbe49b7c17131810c1fdf066f0656b1e0318db3259ecc39ac21e5a55"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "force-layout",
       "properties": [
         {
@@ -14012,6 +15172,14 @@
         {
           "alg": "SHA-256",
           "content": "72867f7c89173263765736e8d395e94291f1aaea626ecb1d673d72ce90b94f89"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "free",
@@ -14055,6 +15223,14 @@
           "content": "3d4138b74c7cd22697f8ffd02b197153dc31117ed7590014d3e933cf9ae5979d"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "generic-arbitrary",
       "properties": [
         {
@@ -14094,6 +15270,14 @@
         {
           "alg": "SHA-256",
           "content": "c91620a5c9159bbd7adde183520eac22c2d06f4e076dffe4e0b8650191e5d8ca"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "generic-deriving",
@@ -14137,6 +15321,14 @@
           "content": "868dc9c8cd02150b419859c3c8a53a62e5b41f5f3fd5d46bb355eb1074288b68"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "generic-lens",
       "properties": [
         {
@@ -14176,6 +15368,14 @@
         {
           "alg": "SHA-256",
           "content": "8ee6f17baa52db80763a46814be391418441861b2e519bed8c047db37c622422"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "generic-lens-core",
@@ -14287,6 +15487,14 @@
           "content": "6ecbe676d073cb07989c61ce4c5709c4e67cbefdd2d55a4095f9388b6fe2c484"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "ghc-paths",
       "properties": [
         {
@@ -14362,6 +15570,14 @@
           "content": "c7fbfe75b400a4a55fc9542b9009875da3effa6c2f9df778391ca4a9c8f0ecea"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-2-Clause"
+          }
+        }
+      ],
       "name": "ghc-tcplugins-extra",
       "properties": [
         {
@@ -14410,6 +15626,14 @@
         {
           "alg": "SHA-256",
           "content": "8a765dbe018a4d2cf8b58d27d633972cf64b529722f82ebc32cbda9d6d82d90f"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-2-Clause"
+          }
         }
       ],
       "name": "ghc-typelits-natnormalise",
@@ -14462,6 +15686,14 @@
           "content": "ce1e52a8be7effbd1f995eadf0ed34fa45c412656d372db8a38f9c955e43ac38"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "groups",
       "properties": [
         {
@@ -14501,6 +15733,14 @@
         {
           "alg": "SHA-256",
           "content": "9d76e1528106b1b32e6e465264e39381ca4b450b72a4b5331e7e5127640a1a41"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
         }
       ],
       "name": "haskell-lexer",
@@ -14553,6 +15793,14 @@
           "content": "67853047169fff7d3e5d87acef214ee185a6ab8c6a104ed9c59e389574cf6c05"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "haskell-src-exts",
       "properties": [
         {
@@ -14592,6 +15840,14 @@
         {
           "alg": "SHA-256",
           "content": "26eab63199d5f112748ec7700173cf2157e18f766ac5e78ee2986c98576b0dbe"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "haskell-src-meta",
@@ -14635,6 +15891,14 @@
           "content": "8763a4663a2d0b3c912400a547d66ae11b46a954403b6747272148e950aa0382"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "heaps",
       "properties": [
         {
@@ -14674,6 +15938,14 @@
         {
           "alg": "SHA-256",
           "content": "15686610410e41e3ded92a452022b4dc2f0948583f1e0260dfa361203e100554"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "Apache-2.0"
+          }
         }
       ],
       "name": "hie-compat",
@@ -14751,6 +16023,14 @@
           "content": "54ce30da55599e872fd38d927aa518369e2971b284acc67ed0caac6ae14cc77c"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "name": "LicenseRef-LGPL"
+          }
+        }
+      ],
       "name": "hscolour",
       "properties": [
         {
@@ -14790,6 +16070,14 @@
         {
           "alg": "SHA-256",
           "content": "6f903fcaa9c19809a432354f47fa22fa1bdbf64003d0c07a1ba579ef0c0d18ff"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
         }
       ],
       "name": "hspec-api",
@@ -14842,6 +16130,14 @@
           "content": "84b5176a525cb0df98070440201220814517b5d51e6fd15a52c0bc79da3b8a85"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "hspec-core",
       "properties": [
         {
@@ -14890,6 +16186,14 @@
         {
           "alg": "SHA-256",
           "content": "7b8dde7e230ecfda90c95fd80478b244a45e68602fb3dd4a76f4710619be21ff"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
         }
       ],
       "name": "hspec-expectations",
@@ -14942,6 +16246,14 @@
           "content": "1fa05fdc46c72ed4b28aabcee69695ce810d451bbd263fbe75f94b179e20441d"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "hw-prim",
       "properties": [
         {
@@ -14981,6 +16293,14 @@
         {
           "alg": "SHA-256",
           "content": "2e69bb2900bb7e562efffff7bcf3f72daf79f013232ce603263a57595412c398"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "indexed-profunctors",
@@ -15024,6 +16344,14 @@
           "content": "58be09afdf3ad5a25c2aa0d2a7df80d602df09f4e76d3abf2b7cdb0e75d03b22"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-2-Clause"
+          }
+        }
+      ],
       "name": "indexed-traversable",
       "properties": [
         {
@@ -15065,6 +16393,14 @@
           "content": "e69d41f23a95463c2e03aee03374a4f489c72f7bf235be251499c4cca9411fec"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-2-Clause"
+          }
+        }
+      ],
       "name": "indexed-traversable-instances",
       "properties": [
         {
@@ -15104,6 +16440,14 @@
         {
           "alg": "SHA-256",
           "content": "c18164a048073310f6353ebc64c9037b52a4b8299963ce05e027bcf60e22155a"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "integer-conversion",
@@ -15181,6 +16525,14 @@
           "content": "66dff6f1f778fe1ec689139fe125cd4e6a95643734c651c891eafa2c50669459"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "integer-logarithms",
       "properties": [
         {
@@ -15220,6 +16572,14 @@
         {
           "alg": "SHA-256",
           "content": "0c27385eadc10a580e78f7b7d4bc919c346b2c9b1e73aea7e7804d824d53582f"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "integration",
@@ -15263,6 +16623,14 @@
           "content": "d6b67c694b5f67d07e8d3376965451e7db3d2212a421b915a57d3df76ff81a1f"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "intervals",
       "properties": [
         {
@@ -15304,6 +16672,14 @@
           "content": "626bdec7c925fb0f15896dcc776992cb00a5fcf99211528c13e7535e72396e3a"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-2-Clause"
+          }
+        }
+      ],
       "name": "invariant",
       "properties": [
         {
@@ -15343,6 +16719,14 @@
         {
           "alg": "SHA-256",
           "content": "0a08efdd35bd1b8f293f9163f59305f31835304b74c3e3a1a840fc94bbc9bd0e"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
         }
       ],
       "name": "js-chart",
@@ -15395,6 +16779,14 @@
           "content": "f76daa44a80d423c849d5fb552e2a20b1e2f47b638c889a34cb1a5bd1ab08d21"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "kan-extensions",
       "properties": [
         {
@@ -15434,6 +16826,14 @@
         {
           "alg": "SHA-256",
           "content": "d6297ec9b1ebb4e4b580a4357d840d08a6f53e13a10c0c53ee74b973bba6fa13"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "libyaml",
@@ -15477,6 +16877,14 @@
           "content": "04526bc54e5fcf471c2bd22854e6b519e162a6e3d654e866cd8862103c725149"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "libyaml-clib",
       "properties": [
         {
@@ -15516,6 +16924,14 @@
         {
           "alg": "SHA-256",
           "content": "c70987f4e5a81fd3ab1360fc0056780b8298b467aad925c4f2d7f0533485fa22"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "linear",
@@ -15559,6 +16975,14 @@
           "content": "189ae6f81c8e68d94ecf8ce6440954e3c7ca3f237973ef6600896ee8fc46abef"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "logict",
       "properties": [
         {
@@ -15598,6 +17022,14 @@
         {
           "alg": "SHA-256",
           "content": "bbe62357e944549ce7f45c8f998e82b4d90c5aff6462446fb01cf32cddb744f4"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "lucid",
@@ -15641,6 +17073,20 @@
           "content": "72d86f8aa625b461f4397f737346f78a1700a7ffbff55cf6375c5e18916e986d"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "GPL-2.0-or-later"
+          }
+        },
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "lukko",
       "properties": [
         {
@@ -15680,6 +17126,14 @@
         {
           "alg": "SHA-256",
           "content": "2441d8dd50eff445356048b2a0cdf88c4a7ba0f56614293d4975e1b081faf8fa"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-2-Clause"
+          }
         }
       ],
       "name": "math-functions",
@@ -15732,6 +17186,14 @@
           "content": "fd013f0b061f7fd006242340fb6bc936114c8fc7d255ba58bd54cd1d66391d4d"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "matrices",
       "properties": [
         {
@@ -15771,6 +17233,14 @@
         {
           "alg": "SHA-256",
           "content": "093fe312090e7e59355c8d23efb54cfe9bd0f81a2fbfec6c138d34f03a188f81"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "mfsolve",
@@ -15814,6 +17284,14 @@
           "content": "c63ca8f8f292d72bb90503fa526c858a4ab67d706485238866ff186f257d5613"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "GPL-3.0-only"
+          }
+        }
+      ],
       "name": "microaeson",
       "properties": [
         {
@@ -15853,6 +17331,14 @@
         {
           "alg": "SHA-256",
           "content": "56792a613e4fb0634bdedf54dcb773ac4baae8be0fec8bd88e1bb8b7a649922e"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "microlens",
@@ -15896,6 +17382,14 @@
           "content": "fbd79c72e1f2a533cfe376ecdad73807db437c2a3cf3488bf7a8523d4377848f"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "microlens-mtl",
       "properties": [
         {
@@ -15937,6 +17431,14 @@
           "content": "1d762c027ca332ae906cb031e87a423c2bbedebe3bb9d988188692a5de4c0a94"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "microlens-th",
       "properties": [
         {
@@ -15976,6 +17478,14 @@
         {
           "alg": "SHA-256",
           "content": "6888d3d8a6efc704baba5b0f18039e83d675f53000fa0b37fa33be389cc27d98"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "microstache",
@@ -16028,6 +17538,14 @@
           "content": "58fcbb04e1cb8e7c36c05823b02dce2faaa989c53d745a7f36192de2fc98b5f8"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "mmap",
       "properties": [
         {
@@ -16067,6 +17585,14 @@
         {
           "alg": "SHA-256",
           "content": "dd6f2d2b3b6776544fc6fefe914c9ba4016ca911755383ec639d6ede417b9faf"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "mmorph",
@@ -16110,6 +17636,14 @@
           "content": "ae0baea04d99375ef788140367179994a7178d400a8ce0d9026846546772713c"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "monad-control",
       "properties": [
         {
@@ -16149,6 +17683,14 @@
         {
           "alg": "SHA-256",
           "content": "7eaaaf6bc43661e9e86e310ff8c56fbea16eb6bf13c31a2e28103138ac164c18"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "name": "LicenseRef-publicDomain"
+          }
         }
       ],
       "name": "monad-loops",
@@ -16201,6 +17743,14 @@
           "content": "4dd93ea334c0169500402f07aa39c98dbb7bffe55dc63fdf228da2cc22c7c5cd"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "mono-traversable",
       "properties": [
         {
@@ -16240,6 +17790,14 @@
         {
           "alg": "SHA-256",
           "content": "44463850f07a459365cdd4d483df081f643b9d81b2f20cd2448e589acba50009"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "monoid-extras",
@@ -16283,6 +17841,14 @@
           "content": "16afba4025da689a76c98643d30ea1be53d2bc16f3ddc9de15621c21760e5c96"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "monoid-subclasses",
       "properties": [
         {
@@ -16324,6 +17890,14 @@
           "content": "1955398fe2115674f47f553b2caaf928c6aa3424271a5cd13bc191e54bfe3a9e"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "mtl-compat",
       "properties": [
         {
@@ -16363,6 +17937,14 @@
         {
           "alg": "SHA-256",
           "content": "f6ef4059090802713979ed7f8c526fe60fd80354251b6cfd75d79b5bfc43479d"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-2-Clause"
+          }
         }
       ],
       "name": "mwc-random",
@@ -16415,6 +17997,14 @@
           "content": "51788e5eeb7d77264f260acd48df8055a4dbc2477e8d634a8493677bb15c5fc8"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "network",
       "properties": [
         {
@@ -16454,6 +18044,14 @@
         {
           "alg": "SHA-256",
           "content": "a1ac6052020a09f1bc5000a141d2edd4b31a82f95ce5957b7eedad40c065a74e"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "newtype-generics",
@@ -16497,6 +18095,14 @@
           "content": "dbaf8bf6b888fb98845705079296a23c3f40ee2f449df7312f7f7f1de18d7b50"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "old-locale",
       "properties": [
         {
@@ -16538,6 +18144,14 @@
           "content": "2c440d3bc2680defcb379a4b5e6469c5dff1d3400374aac60523cef78c3d96ab"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "old-time",
       "properties": [
         {
@@ -16577,6 +18191,14 @@
         {
           "alg": "SHA-256",
           "content": "857da8b2b155a9f799c3f6eb34b158454ce7a0116a89f07d9fda05f1eadda6b7"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "operational",
@@ -16688,6 +18310,14 @@
           "content": "dd9e538b7a9e732a5a4241d6de01d298aff4bb19a9582e9464ee4ba660c626bc"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "parsers",
       "properties": [
         {
@@ -16727,6 +18357,14 @@
         {
           "alg": "SHA-256",
           "content": "395b89ed9901e9b19eaa652d2a17b9d1ed04c111b2cd92b8996868bea642bfd6"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "name": "LicenseRef-LGPL"
+          }
         }
       ],
       "name": "polyparse",
@@ -16770,6 +18408,14 @@
           "content": "3a51aa5c987bba79c2bc75b14b28b2bcba7862f18162431811476512be2dae1f"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "pretty-simple",
       "properties": [
         {
@@ -16809,6 +18455,14 @@
         {
           "alg": "SHA-256",
           "content": "74d66558fb638ea4d31eae2fe1a294cb5a9d64491314305d74a11d93f277c65b"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "primes",
@@ -16852,6 +18506,14 @@
           "content": "c4add825d820bc680dcf2895c181aa0d973daad1e7827fd2b91bc738932d3825"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "primitive-extras",
       "properties": [
         {
@@ -16891,6 +18553,14 @@
         {
           "alg": "SHA-256",
           "content": "c9ec46305a1c2ade05c8399e3eeb2b56cb859692d539b4f7fd4485dbca06211b"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "primitive-unlifted",
@@ -16934,6 +18604,14 @@
           "content": "b9c6f427368d2e811e4c48b59005218672458fd2f00a02cbefb8be9c751c0ef3"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "profunctors",
       "properties": [
         {
@@ -16975,6 +18653,14 @@
           "content": "6803cd547b027bcab7b029a69ad8428e28af842b7709113eb6a43ab2f2f08866"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "quickcheck-instances",
       "properties": [
         {
@@ -17014,6 +18700,14 @@
         {
           "alg": "SHA-256",
           "content": "fb779119d79fe08ff4d502fb6869a70c9a8d5fd8ae0959f605c3c937efd96422"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
         }
       ],
       "name": "quickcheck-io",
@@ -17066,6 +18760,14 @@
           "content": "52704411f040fd0bf2361dad162e35dc13caa6535b2e4908d3513c00a95d0615"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "random-shuffle",
       "properties": [
         {
@@ -17116,6 +18818,14 @@
           "content": "c6a7d5e41ad0ee1a05c660acf4fd34b21f38330eec165d246b7fffb398e59fb3"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "reflection",
       "properties": [
         {
@@ -17155,6 +18865,14 @@
         {
           "alg": "SHA-256",
           "content": "8a0404896452272d18bd9db078bd7d982b6268aa5bcf0d6fe5aa5256f174fedb"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "regex",
@@ -17198,6 +18916,14 @@
           "content": "1769a479c3ff953bc5a99a89e5648a6f01c5ff54fc9a09acceb9e029e2352636"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "regex-applicative",
       "properties": [
         {
@@ -17237,6 +18963,14 @@
         {
           "alg": "SHA-256",
           "content": "e8ca2dee598c790dd1c1c4359bdd1e495d9b881f5aa1f539c22f0dd5563747bf"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "regex-base",
@@ -17280,6 +19014,14 @@
           "content": "cacea6a45faf93df8afbf50ecb09f87acabfed0477cba4746205649eb52ec55e"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "regex-pcre-builtin",
       "properties": [
         {
@@ -17319,6 +19061,14 @@
         {
           "alg": "SHA-256",
           "content": "91eda82d135af2f15fa9adf050f35e22bb01710192cdede9fb8ce8d8145dc5a0"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
         }
       ],
       "name": "relude",
@@ -17362,6 +19112,14 @@
           "content": "ec601785ee42a201f32adb205b8685c983f18757b1bd33d2e806d571e0f9996b"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "resourcet",
       "properties": [
         {
@@ -17401,6 +19159,14 @@
         {
           "alg": "SHA-256",
           "content": "5138d0758a04e4d8125272d665d8b918f039f65fd1cd84f2266b4908cbef88d6"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "name": "LicenseRef-publicDomain"
+          }
         }
       ],
       "name": "rvar",
@@ -17453,6 +19219,14 @@
           "content": "2c81fea42bbe79ec488774043c1ec54f30efba059df9a4f3681ce83d85007f01"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "safe",
       "properties": [
         {
@@ -17492,6 +19266,14 @@
         {
           "alg": "SHA-256",
           "content": "ad3781be149dfc7936e62eb9c3ad78ded0e9985b4dae16d2f62d9ba957ccdcfe"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "scientific",
@@ -17535,6 +19317,14 @@
           "content": "dbfb4be71c7956f54e099c34ffe538dfaa99ed3911208df5828563da22b6aee3"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "selective",
       "properties": [
         {
@@ -17574,6 +19364,14 @@
         {
           "alg": "SHA-256",
           "content": "8ce1f72e7f259422c3af72996e2656ca4a5d69828cad9005ba571b9447607a08"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "semialign",
@@ -17617,6 +19415,14 @@
           "content": "bf4c71224397c3777e6a79145f5c9c31d5a13f27548345e55138461d87348ffe"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "semigroups",
       "properties": [
         {
@@ -17656,6 +19462,14 @@
         {
           "alg": "SHA-256",
           "content": "8fc80ae222196de2c7426e4be011d1f0ba3ee55ac5d268a705c5beeb83fe5de6"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "semirings",
@@ -17699,6 +19513,14 @@
           "content": "4b11f09ee92ca1c60cd69e708bcd933a5b8cd252bf5f80e5f1037441f07ea2c8"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MPL-2.0"
+          }
+        }
+      ],
       "name": "slist",
       "properties": [
         {
@@ -17738,6 +19560,14 @@
         {
           "alg": "SHA-256",
           "content": "e043225004071840d1a13f3a2d6fba537144188e7995a978ab82086ce158fe1f"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "smallcheck",
@@ -17790,6 +19620,14 @@
           "content": "f7a606ad5df4a07459986364f7d739eb653495fbbe1d7158582fb29a4584bfb9"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "some",
       "properties": [
         {
@@ -17829,6 +19667,14 @@
         {
           "alg": "SHA-256",
           "content": "52da404e8397c1ab238354c8d4fd9a7e9c5cac8849cc2ce2e45facc85e74a913"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "split",
@@ -17872,6 +19718,14 @@
           "content": "a61d4e8b30f5a16526d7d31171b674ae7924d2207f378060d13363bd8794de8c"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "splitmix",
       "properties": [
         {
@@ -17913,6 +19767,14 @@
           "content": "cd55733032b34d671852c7b6d05c1645cea2f280ac35221d480cf721d5c7879c"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "statestack",
       "properties": [
         {
@@ -17952,6 +19814,14 @@
         {
           "alg": "SHA-256",
           "content": "de716430f95505903a397b4dcbb00c5c82d8956487826ab2e81ffee711b41b42"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-2-Clause"
+          }
         }
       ],
       "name": "statistics",
@@ -18004,6 +19874,14 @@
           "content": "3eb48a02954843ed3d34f13b66a435d2bd95fa18c5909d3b936ec481ec32cc8f"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "stm-hamt",
       "properties": [
         {
@@ -18043,6 +19921,14 @@
         {
           "alg": "SHA-256",
           "content": "33d16c0c6080795800d9f0e490203ea3e50bd5034e5d077a0ddc04d33ea4dc6e"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
         }
       ],
       "name": "streaming-commons",
@@ -18086,6 +19972,14 @@
           "content": "77719280c2a86312e748227bfa732eeaae0e7df48d57acc3c2e5b7b07afe2f8b"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "strict",
       "properties": [
         {
@@ -18125,6 +20019,14 @@
         {
           "alg": "SHA-256",
           "content": "4fd0e3f2cbc5601fc69e7eab41588cbfa1150dc508d9d86bf5f3d393880382cc"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "svg-builder",
@@ -18168,6 +20070,14 @@
           "content": "6daad88ebb414ba6a556d2898d2cbe7650e4276010e3a6eed939daf54b956784"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "tagged",
       "properties": [
         {
@@ -18209,6 +20119,14 @@
           "content": "7949a50004a80993000512079bc03ebcad4872414fc181f45b3883d743c0f3aa"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "tar",
       "properties": [
         {
@@ -18248,6 +20166,14 @@
         {
           "alg": "SHA-256",
           "content": "d5cbd7a2a7100e4afd3aaac01a8fa1b7814fb074d93aeff1b51240b687e54f33"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
         }
       ],
       "name": "tasty-smallcheck",
@@ -18300,6 +20226,14 @@
           "content": "b0f070d6926cdaacf3a412c5518e5c23afca1e0ed00808a5328c96e468b67f49"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "terminal-size",
       "properties": [
         {
@@ -18339,6 +20273,14 @@
         {
           "alg": "SHA-256",
           "content": "c8770fba789ce80334cae628285103c49abec0fa074773cbb5a88e26f5a7725d"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "ISC"
+          }
         }
       ],
       "name": "text-conversions",
@@ -18382,6 +20324,14 @@
           "content": "603b68d1135e9373edf2c20a993ea226b9f1fec11189c1b2b8a647262ceb8b3e"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "text-iso8601",
       "properties": [
         {
@@ -18421,6 +20371,14 @@
         {
           "alg": "SHA-256",
           "content": "83669f402354274fbcdc75126443af733267b955e451f72c0c6d86ae8da87416"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "text-short",
@@ -18464,6 +20422,14 @@
           "content": "946654bcd8ea2dff7d0058061861a8c898be9addf20c92d3cfa53b679e737622"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "ISC"
+          }
+        }
+      ],
       "name": "th-abstraction",
       "properties": [
         {
@@ -18503,6 +20469,14 @@
         {
           "alg": "SHA-256",
           "content": "9e26f12230d38ae56dcf94f8c139799dc3b7376f3434d35ce74847a0a24fd5ff"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "th-compat",
@@ -18546,6 +20520,14 @@
           "content": "fc01b166df6ba45f6ce157165eb786da208dbab41252fd81134f8ba02cf3f505"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "th-env",
       "properties": [
         {
@@ -18585,6 +20567,14 @@
         {
           "alg": "SHA-256",
           "content": "18e19967329c89f376cfc9ec04bd7871854ce0c70f803a1af15532be00c6ef0f"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "th-expand-syns",
@@ -18628,6 +20618,14 @@
           "content": "dd157c626cb0b0fa71adac3690305aeafccf503583fce387628b210fadc69806"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "th-lift",
       "properties": [
         {
@@ -18667,6 +20665,14 @@
         {
           "alg": "SHA-256",
           "content": "9c67fb484c9f1e7f761ed7de453f73c087c4c46123d9bf41a9038156aa5e9062"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "th-orphans",
@@ -18710,6 +20716,14 @@
           "content": "9d250e61242f2fb887dedc9d28c0141832ff256e63bebc2bf5abff81037be4a5"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "th-reify-many",
       "properties": [
         {
@@ -18749,6 +20763,14 @@
         {
           "alg": "SHA-256",
           "content": "17d6d933365edabf801a16842c1403bdd37cc5300faa2fcca980decdab22e4de"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "these",
@@ -18792,6 +20814,14 @@
           "content": "90fadded53cf9c15855eebf809e9536af8f85d00e32b82f7c8b506d2fadf7c25"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "time-compat",
       "properties": [
         {
@@ -18831,6 +20861,14 @@
         {
           "alg": "SHA-256",
           "content": "07ff1566de7d851423a843b2de385442319348c621d4f779b3d365ce91ac502c"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "time-locale-compat",
@@ -18874,6 +20912,14 @@
           "content": "a0992bea52a636e2aa2597b0ab25c54f0fb389e0052fe5a6436fe53acef956ab"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MPL-2.0"
+          }
+        }
+      ],
       "name": "tomland",
       "properties": [
         {
@@ -18913,6 +20959,14 @@
         {
           "alg": "SHA-256",
           "content": "b43de3b3b9d658d504e8a0309356602ddc53c8dad3fdbbc3359abcb5439b41d8"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "transformers-base",
@@ -18956,6 +21010,14 @@
           "content": "b62c7304c9f3cbc9463d0739aa85cb9489f217ea092b9d625d417514fbcc9d6a"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "transformers-compat",
       "properties": [
         {
@@ -18995,6 +21057,14 @@
         {
           "alg": "SHA-256",
           "content": "f63d2594a505f1ed1d006a619fd41ed7cddeeb9354d029f2f8e9b6e0ec7717c1"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MPL-2.0"
+          }
         }
       ],
       "name": "trial-optparse-applicative",
@@ -19038,6 +21108,14 @@
           "content": "43f430b974a208e87a32e2d45cf9e6f3c22f5873770ca379968b58a90a76748a"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MPL-2.0"
+          }
+        }
+      ],
       "name": "trial-tomland",
       "properties": [
         {
@@ -19077,6 +21155,14 @@
         {
           "alg": "SHA-256",
           "content": "9400966013b541df2e54ac8d57c3a670fc28bde2be87767ce98f13bbe2aa43a0"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
         }
       ],
       "name": "typed-process",
@@ -19120,6 +21206,14 @@
           "content": "59ad7e53bfe32ffbf0e703b31490d41d14c70e4745ed49e8adf592ed68dd6185"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "unbounded-delays",
       "properties": [
         {
@@ -19159,6 +21253,14 @@
         {
           "alg": "SHA-256",
           "content": "e777c94628445556a71f135a42cf72d2cfbaccba5849cc42fbfec8b2182e3ad2"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "uniplate",
@@ -19202,6 +21304,14 @@
           "content": "3f9611624a100c75e672d900e63fe7a0e595615a34e6605662edaff151e44054"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "unix-compat",
       "properties": [
         {
@@ -19241,6 +21351,14 @@
         {
           "alg": "SHA-256",
           "content": "ee48deada7600370728c4156cb002441de770d0121ae33a68139a9ed9c19b09a"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "utf8-string",
@@ -19284,6 +21402,14 @@
           "content": "9f00f278b9711104b6acc1404d9f0d45c1183b4987cf9c07403bebc05c0c3024"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "uuid-types",
       "properties": [
         {
@@ -19323,6 +21449,14 @@
         {
           "alg": "SHA-256",
           "content": "9a884e97e6a64f2cacadec8d5ea7e8ba7562d0c8fa9ab7cd5c34055eaec64987"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MPL-2.0"
+          }
         }
       ],
       "name": "validation-selective",
@@ -19366,6 +21500,14 @@
           "content": "d2b674676802670d8a682b357da6b6b5741b4a33b191f0ffe5f2b2bc40558eb2"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "vector-algorithms",
       "properties": [
         {
@@ -19405,6 +21547,14 @@
         {
           "alg": "SHA-256",
           "content": "b72e3b2109a02c75cb8f07ef0aabba0dba6ec0148e21321a0a2b2197c9a2f54d"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "vector-binary-instances",
@@ -19448,6 +21598,14 @@
           "content": "8917d1041232165f090c9200af07dd98e793fb89e2e0bc0a83ea900f309feb25"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "vector-space",
       "properties": [
         {
@@ -19489,6 +21647,14 @@
           "content": "d0f507334bdea5431a2f07f525a97f29e76522c32210f5de6d5a2b4f1d42bf7c"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "vector-stream",
       "properties": [
         {
@@ -19528,6 +21694,14 @@
         {
           "alg": "SHA-256",
           "content": "8aa4ca464e842706e5b5234b8242d1aafec9ee755659b0e3ff44ecde13a80149"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "vector-th-unbox",
@@ -19580,6 +21754,14 @@
           "content": "48434cc1e465b13cbc0133a90c3ec0d827c93b77ce95807fe0a38b65f4918cd1"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "witherable",
       "properties": [
         {
@@ -19621,6 +21803,14 @@
           "content": "32d1a1a9f21a59176d84697f96ae3a13a0198420e3e4f1c48abbab7d2425013d"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "xml",
       "properties": [
         {
@@ -19660,6 +21850,14 @@
         {
           "alg": "SHA-256",
           "content": "bf95ab01ed924be800addea195fba5ca97ec69f378368f6ff466bdc29666c1c1"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "zlib",
@@ -25236,7 +27434,7 @@
       },
       {
         "name": "waybill:nixpkgs-haskell-resolution",
-        "value": "{\"disagreements\":5,\"resolved\":97,\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"unresolved\":{\"absent-from-package-set\":1,\"compiler-supplied\":24}}"
+        "value": "{\"disagreements\":5,\"optional-reconciliation\":{\"declined\":0,\"reviewed\":0,\"withdrawn\":[]},\"resolved\":97,\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"unresolved\":{\"absent-from-package-set\":1,\"compiler-supplied\":24}}"
       },
       {
         "name": "waybill:nixpkgs-haskell-closure",
@@ -25272,7 +27470,7 @@
       },
       {
         "name": "waybill:graph-completeness-reason",
-        "value": "orphaned-components-detected: 6 component(s) not reachable from root; transitive-edges-unresolvable: generic, hackage, pypi"
+        "value": "orphaned-components-detected: 6 component(s) not reachable from root; transitive-edges-unresolvable: generic, hackage, pypi; manifest-unread: 1 haskell manifest(s) found but not read"
       },
       {
         "name": "waybill:workspaces-detected",
@@ -25285,6 +27483,10 @@
       {
         "name": "waybill:cabal-entries-skipped",
         "value": "0"
+      },
+      {
+        "name": "waybill:hpack-read-outcome",
+        "value": "{\"generated-cabal-suppressed\":[],\"manifests-partial\":[],\"manifests-read\":[],\"manifests-seen\":[\"/home/runner/.cache/waybill/corpus/ac3746a76d11c911/1b4b3c6bdd2bf8d1e1182e2e770f5dea9198db80/repo/plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/packageYaml/package.yaml\"],\"manifests-unread\":[{\"detail\":\"no `name:` field; not an hpack package manifest\",\"file\":\"/home/runner/.cache/waybill/corpus/ac3746a76d11c911/1b4b3c6bdd2bf8d1e1182e2e770f5dea9198db80/repo/plugins/hls-cabal-plugin/test/testdata/cabal-add-testdata/packageYaml/package.yaml\",\"reason\":\"not-a-manifest\"}]}"
       }
     ],
     "supplier": {

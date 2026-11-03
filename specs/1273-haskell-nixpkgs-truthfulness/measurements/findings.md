@@ -683,3 +683,53 @@ targets wrote goldens, and the per-target diff matched the prediction
 exactly — and its goldens were still wrong to land. "The workflow succeeded"
 and "the artifact is correct" are different claims; only reading the C200
 payload and the main module's licenses told them apart.
+
+### H7 — the goldens, landed (T075–T077 complete)
+
+Run 41573489917, scanned commit `e7c58bc3`. Five checks, all passing — the
+fifth exists only because checks 1–4 passed on an earlier run whose goldens
+were still wrong to land.
+
+| # | check | result |
+|---|---|---|
+| 1 | scanned commit is this branch, read from the run log | `e7c58bc3` ✓ |
+| 2 | every target wrote goldens (#1286 guard) | 17 of 17 ✓ |
+| 3 | diff matches Probe E, control included | 3 changed, **14 unchanged** ✓ |
+| 4 | `nix-closure-moat` READS its manifest (T077) | `read: 1, unread: 0` ✓ |
+| 5 | `moat`'s main module keeps its license | `evidence=hpack-manifest`, `MIT` ✓ |
+
+**Nine files landed**: three targets × three formats. No other golden touched.
+
+#### What the three documents now say
+
+| | moat | security-advisories | language-server |
+|---|---|---|---|
+| hackage components | 53 | 248 | 360 |
+| carrying a license | 1 → **33** | 6 → **221** | 6 → **327** |
+| carrying a reason | 19 → 7 | 53 → 14 | 122 → 25 |
+| **resolved AND reasoned** | 12 → **0** | 39 → **0** | 97 → **0** |
+
+Across three real projects: #1279's self-contradiction **148 → 0**, licenses
+**13 → 581**. `haskell-aeson` byte-identical throughout.
+
+#### Cross-format agreement
+
+CycloneDX and SPDX 2.3 agree exactly on the licensed-component count for all
+four targets (33/33, 221/221, 327/327, 5/5). SPDX 3's element count is lower
+because it **deduplicates** license expressions into shared elements
+(milestone 166) — checked rather than assumed: the distinct-value counts
+line up, and the residual difference is document-wide SPDX 3 elements against
+a hackage-only CycloneDX filter, i.e. an artefact of the comparison and not
+of the data.
+
+#### The check that only exists because of a miss
+
+Check 5 was added after run 41572401991 passed checks 1–4 — green at every
+step, #1286 guard satisfied, right commit, T077's claim met, per-target diff
+matching the prediction exactly — and still produced goldens that would have
+pinned `moat` with no license.
+
+**A prediction confirmed is not an artifact verified**, particularly when the
+same person wrote the prediction and the code. The diff said *which* targets
+changed; only reading the component payloads said whether each change was a
+gain or a loss.

@@ -89,7 +89,7 @@
           },
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "moat.cabal"
+            "location": "package.yaml"
           }
         ]
       },
@@ -97,11 +97,11 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"examples/readme/readme.cabal\",\"moat.cabal\"]"
+          "value": "[\"examples/readme/readme.cabal\",\"package.yaml\"]"
         },
         {
           "name": "waybill:requirement-ranges",
-          "value": "[\">=4.11 && <4.22\",\">=4.14 && <4.15\"]"
+          "value": "[\">= 4.11 && < 4.22\",\">=4.14 && <4.15\"]"
         },
         {
           "name": "waybill:source-type",
@@ -133,7 +133,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+          "value": "supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either"
         },
         {
           "name": "waybill:workspace-member",
@@ -161,7 +161,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "moat.cabal"
+            "location": "package.yaml"
           }
         ]
       },
@@ -169,11 +169,11 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"moat.cabal\"]"
+          "value": "[\"package.yaml\"]"
         },
         {
           "name": "waybill:requirement-ranges",
-          "value": "[\">=0.10 && <0.13\"]"
+          "value": "[\">= 0.10 && < 0.13\"]"
         },
         {
           "name": "waybill:source-type",
@@ -185,7 +185,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:ghc-stdlib",
@@ -205,7 +205,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+          "value": "supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either"
         },
         {
           "name": "waybill:workspace-member",
@@ -233,7 +233,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "moat.cabal"
+            "location": "package.yaml"
           }
         ]
       },
@@ -243,15 +243,23 @@
           "content": "296dc17e0c5f3dfb3d82ced83e4c9c44c338ecde749b278b6eae512f1d04e406"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "case-insensitive",
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"moat.cabal\"]"
+          "value": "[\"package.yaml\"]"
         },
         {
           "name": "waybill:requirement-ranges",
-          "value": "[\"==1.2.*\"]"
+          "value": "[\">= 1.2 && < 1.3\"]"
         },
         {
           "name": "waybill:source-type",
@@ -263,7 +271,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:closure-role",
@@ -276,10 +284,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"a799d3e3886da994fa307f817a6bc705ae538eeb\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -308,7 +312,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "moat.cabal"
+            "location": "package.yaml"
           }
         ]
       },
@@ -318,15 +322,23 @@
           "content": "958cfb3bd54b1bfa9e1e2d9cd1748e76c10d2b30a3cceeab3f6a852205c1a869"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "cmark-gfm",
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"moat.cabal\"]"
+          "value": "[\"package.yaml\"]"
         },
         {
           "name": "waybill:requirement-ranges",
-          "value": "[\">=0.2.5 && <0.3.0\"]"
+          "value": "[\">= 0.2.5 && < 0.3.0\"]"
         },
         {
           "name": "waybill:source-type",
@@ -338,7 +350,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:closure-role",
@@ -351,10 +363,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"a799d3e3886da994fa307f817a6bc705ae538eeb\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -383,7 +391,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "moat.cabal"
+            "location": "package.yaml"
           }
         ]
       },
@@ -391,11 +399,11 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"moat.cabal\"]"
+          "value": "[\"package.yaml\"]"
         },
         {
           "name": "waybill:requirement-ranges",
-          "value": "[\">=0.5.9 && <0.9\"]"
+          "value": "[\">= 0.5.9 && < 0.9\"]"
         },
         {
           "name": "waybill:source-type",
@@ -407,7 +415,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:ghc-stdlib",
@@ -427,7 +435,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+          "value": "supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either"
         },
         {
           "name": "waybill:workspace-member",
@@ -455,7 +463,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "moat.cabal"
+            "location": "package.yaml"
           }
         ]
       },
@@ -465,15 +473,23 @@
           "content": "7c075ec9a378b0a2d9d605e72135201e6c7ff316564f2c974113582f43bea20a"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-2-Clause"
+          }
+        }
+      ],
       "name": "haddock-library",
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"moat.cabal\"]"
+          "value": "[\"package.yaml\"]"
         },
         {
           "name": "waybill:requirement-ranges",
-          "value": "[\">=1.10 && <1.12\"]"
+          "value": "[\">= 1.10 && < 1.12\"]"
         },
         {
           "name": "waybill:source-type",
@@ -485,7 +501,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:closure-role",
@@ -498,10 +514,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"a799d3e3886da994fa307f817a6bc705ae538eeb\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -530,7 +542,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "moat.cabal"
+            "location": "package.yaml"
           }
         ]
       },
@@ -540,11 +552,19 @@
           "content": "39e4c8c3bb2be08a4c61747ddff0365c6a07efc6185b3a80a7b88fbb6bec9756"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "hspec",
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"moat.cabal\"]"
+          "value": "[\"package.yaml\"]"
         },
         {
           "name": "waybill:lifecycle-scope",
@@ -560,7 +580,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:closure-role",
@@ -573,10 +593,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"a799d3e3886da994fa307f817a6bc705ae538eeb\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -606,7 +622,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "moat.cabal"
+            "location": "package.yaml"
           }
         ]
       },
@@ -616,11 +632,19 @@
           "content": "356c9d8df78df3033348be617ddf408914a41dd87c12b5ed787b0480face4652"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "hspec-discover",
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"moat.cabal\"]"
+          "value": "[\"package.yaml\"]"
         },
         {
           "name": "waybill:lifecycle-scope",
@@ -636,11 +660,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
-        },
-        {
-          "name": "waybill:cabal-build-tool-executable",
-          "value": "hspec-discover"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:closure-role",
@@ -653,10 +673,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"a799d3e3886da994fa307f817a6bc705ae538eeb\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -686,7 +702,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "moat.cabal"
+            "location": "package.yaml"
           }
         ]
       },
@@ -696,11 +712,19 @@
           "content": "7af11c6f5ccafa762d601b9d03a1615492d48d114917679007f98d8e284df6f2"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "hspec-golden",
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"moat.cabal\"]"
+          "value": "[\"package.yaml\"]"
         },
         {
           "name": "waybill:lifecycle-scope",
@@ -716,7 +740,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:closure-role",
@@ -729,10 +753,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"a799d3e3886da994fa307f817a6bc705ae538eeb\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -762,7 +782,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "moat.cabal"
+            "location": "package.yaml"
           }
         ]
       },
@@ -778,7 +798,7 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"moat.cabal\"]"
+          "value": "[\"package.yaml\"]"
         },
         {
           "name": "waybill:source-type",
@@ -790,7 +810,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:demoted-from-main-module",
@@ -827,7 +847,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "moat.cabal"
+            "location": "package.yaml"
           }
         ]
       },
@@ -835,11 +855,11 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"moat.cabal\"]"
+          "value": "[\"package.yaml\"]"
         },
         {
           "name": "waybill:requirement-ranges",
-          "value": "[\">=2.2 && <2.4\"]"
+          "value": "[\">= 2.2 && < 2.4\"]"
         },
         {
           "name": "waybill:source-type",
@@ -851,7 +871,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:ghc-stdlib",
@@ -871,7 +891,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+          "value": "supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either"
         },
         {
           "name": "waybill:workspace-member",
@@ -899,7 +919,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "moat.cabal"
+            "location": "package.yaml"
           }
         ]
       },
@@ -909,15 +929,23 @@
           "content": "44b4de41813c7bc5db8a57f87c3612a069b65086946268ba165097252ebd3d76"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "primitive",
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"moat.cabal\"]"
+          "value": "[\"package.yaml\"]"
         },
         {
           "name": "waybill:requirement-ranges",
-          "value": "[\">=0.6.4 && <0.10\"]"
+          "value": "[\">= 0.6.4 && < 0.10\"]"
         },
         {
           "name": "waybill:source-type",
@@ -929,7 +957,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:closure-role",
@@ -942,10 +970,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"a799d3e3886da994fa307f817a6bc705ae538eeb\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -1031,7 +1055,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "moat.cabal"
+            "location": "package.yaml"
           }
         ]
       },
@@ -1039,11 +1063,11 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"moat.cabal\"]"
+          "value": "[\"package.yaml\"]"
         },
         {
           "name": "waybill:requirement-ranges",
-          "value": "[\">=2.11 && <2.25\"]"
+          "value": "[\">= 2.11 && < 2.25\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1055,7 +1079,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:ghc-stdlib",
@@ -1075,7 +1099,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+          "value": "supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either"
         },
         {
           "name": "waybill:workspace-member",
@@ -1103,7 +1127,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "moat.cabal"
+            "location": "package.yaml"
           }
         ]
       },
@@ -1111,11 +1135,11 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"moat.cabal\"]"
+          "value": "[\"package.yaml\"]"
         },
         {
           "name": "waybill:requirement-ranges",
-          "value": "[\">=1.2 && <2.2\"]"
+          "value": "[\">= 1.2 && < 2.2\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1127,7 +1151,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:ghc-stdlib",
@@ -1147,7 +1171,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+          "value": "supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either"
         },
         {
           "name": "waybill:workspace-member",
@@ -1175,7 +1199,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "moat.cabal"
+            "location": "package.yaml"
           }
         ]
       },
@@ -1185,15 +1209,23 @@
           "content": "946654bcd8ea2dff7d0058061861a8c898be9addf20c92d3cfa53b679e737622"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "ISC"
+          }
+        }
+      ],
       "name": "th-abstraction",
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"moat.cabal\"]"
+          "value": "[\"package.yaml\"]"
         },
         {
           "name": "waybill:requirement-ranges",
-          "value": "[\">=0.3 && <0.8\"]"
+          "value": "[\">= 0.3 && < 0.8\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1205,7 +1237,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:closure-role",
@@ -1218,10 +1250,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"a799d3e3886da994fa307f817a6bc705ae538eeb\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -1250,7 +1278,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "moat.cabal"
+            "location": "package.yaml"
           }
         ]
       },
@@ -1260,15 +1288,23 @@
           "content": "9e26f12230d38ae56dcf94f8c139799dc3b7376f3434d35ce74847a0a24fd5ff"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "th-compat",
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"moat.cabal\"]"
+          "value": "[\"package.yaml\"]"
         },
         {
           "name": "waybill:requirement-ranges",
-          "value": "[\">=0.1.0 && <0.2\"]"
+          "value": "[\">= 0.1.0 && < 0.2\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1280,7 +1316,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:closure-role",
@@ -1293,10 +1329,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"a799d3e3886da994fa307f817a6bc705ae538eeb\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -1325,7 +1357,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "moat.cabal"
+            "location": "package.yaml"
           }
         ]
       },
@@ -1333,11 +1365,11 @@
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"moat.cabal\"]"
+          "value": "[\"package.yaml\"]"
         },
         {
           "name": "waybill:requirement-ranges",
-          "value": "[\">=1.8 && <2.0\"]"
+          "value": "[\">= 1.8 && < 2.0\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1349,7 +1381,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:ghc-stdlib",
@@ -1369,7 +1401,7 @@
         },
         {
           "name": "waybill:unresolved-reason",
-          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
+          "value": "supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either"
         },
         {
           "name": "waybill:workspace-member",
@@ -1397,7 +1429,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "moat.cabal"
+            "location": "package.yaml"
           }
         ]
       },
@@ -1407,15 +1439,23 @@
           "content": "708a60513d6da61e09b60b9a486106af703a889b5b43472a27c3b60bf35246ab"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "unordered-containers",
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"moat.cabal\"]"
+          "value": "[\"package.yaml\"]"
         },
         {
           "name": "waybill:requirement-ranges",
-          "value": "[\"==0.2.*\"]"
+          "value": "[\">= 0.2 && < 0.3\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1427,7 +1467,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:closure-role",
@@ -1440,10 +1480,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"a799d3e3886da994fa307f817a6bc705ae538eeb\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -1472,7 +1508,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "moat.cabal"
+            "location": "package.yaml"
           }
         ]
       },
@@ -1482,15 +1518,23 @@
           "content": "9f00f278b9711104b6acc1404d9f0d45c1183b4987cf9c07403bebc05c0c3024"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "uuid-types",
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"moat.cabal\"]"
+          "value": "[\"package.yaml\"]"
         },
         {
           "name": "waybill:requirement-ranges",
-          "value": "[\"==1.0.*\"]"
+          "value": "[\">= 1.0 && < 1.1\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1502,7 +1546,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:closure-role",
@@ -1515,10 +1559,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"a799d3e3886da994fa307f817a6bc705ae538eeb\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -1547,7 +1587,7 @@
         "occurrences": [
           {
             "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
-            "location": "moat.cabal"
+            "location": "package.yaml"
           }
         ]
       },
@@ -1557,15 +1597,23 @@
           "content": "28f203c786cbf8ac6dc3fea3378ec36f34173d505fb4a1dd60fc8418ad91c423"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "vector",
       "properties": [
         {
           "name": "waybill:source-files",
-          "value": "[\"moat.cabal\"]"
+          "value": "[\"package.yaml\"]"
         },
         {
           "name": "waybill:requirement-ranges",
-          "value": "[\">=0.12 && <0.14\"]"
+          "value": "[\">= 0.12 && < 0.14\"]"
         },
         {
           "name": "waybill:source-type",
@@ -1577,7 +1625,7 @@
         },
         {
           "name": "waybill:evidence-kind",
-          "value": "cabal-pkg-descriptor"
+          "value": "hpack-manifest"
         },
         {
           "name": "waybill:closure-role",
@@ -1590,10 +1638,6 @@
         {
           "name": "waybill:nixpkgs-resolved-via",
           "value": "{\"matched-by\":\"root-input-name\",\"pin-state\":\"branch-or-tag\",\"revision\":\"a799d3e3886da994fa307f817a6bc705ae538eeb\",\"source\":\"nixpkgs\"}"
-        },
-        {
-          "name": "waybill:unresolved-reason",
-          "value": "declared in .cabal / package.yaml; no cabal.project.freeze fallback"
         },
         {
           "name": "waybill:workspace-member",
@@ -1624,6 +1668,14 @@
         {
           "alg": "SHA-256",
           "content": "b0b7538871ffc058486fc00740886d2f3172f8fa6869936bfe83a5e10bd744ab"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "HUnit",
@@ -1680,6 +1732,14 @@
           "content": "a3b2216ddbaf481dbc82414b6120f8b726d969db3f0b51f20a7a45425ef36e7f"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "QuickCheck",
       "properties": [
         {
@@ -1734,6 +1794,14 @@
           "content": "9cf083cef2e2ba88a425f132c8a82bfa931eb4b0c38232b2017f8fcea2e23073"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "ansi-terminal",
       "properties": [
         {
@@ -1777,6 +1845,14 @@
         {
           "alg": "SHA-256",
           "content": "9fc9ce2157f1889bd99a4d22c9f1c64589590be0f797c3efe71c8fa17a11a689"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "ansi-terminal-types",
@@ -1901,6 +1977,14 @@
           "content": "430bcf8a3404f7e55319573c0b807b1356946f0c8f289bb3d9afb279c636b87b"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "call-stack",
       "pedigree": {
         "patches": [
@@ -1960,6 +2044,14 @@
         {
           "alg": "SHA-256",
           "content": "1f3b1055675abe4e3362800cc9bf7ab9b92dfdf21a1f6c82b252611270be9680"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
         }
       ],
       "name": "colour",
@@ -2152,6 +2244,14 @@
           "content": "ed0b7c10ce92c9ffe45420dadc38c6d39db486ff3633ff13567cc9f75f79b112"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "hashable",
       "properties": [
         {
@@ -2195,6 +2295,14 @@
         {
           "alg": "SHA-256",
           "content": "9d76e1528106b1b32e6e465264e39381ca4b450b72a4b5331e7e5127640a1a41"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
         }
       ],
       "name": "haskell-lexer",
@@ -2251,6 +2359,14 @@
           "content": "84b5176a525cb0df98070440201220814517b5d51e6fd15a52c0bc79da3b8a85"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "hspec-core",
       "properties": [
         {
@@ -2305,6 +2421,14 @@
           "content": "7b8dde7e230ecfda90c95fd80478b244a45e68602fb3dd4a76f4710619be21ff"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "hspec-expectations",
       "properties": [
         {
@@ -2357,6 +2481,14 @@
         {
           "alg": "SHA-256",
           "content": "63811ab4fd26e829b8868364325a88be3acc79819f5bb5005b2dd3b961ecc491"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "optparse-applicative",
@@ -2479,6 +2611,14 @@
           "content": "5e6ea6903114fa118fcc359633dfb7ecddecb92c06c853d02a77b72b251f0b45"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-2-Clause"
+          }
+        }
+      ],
       "name": "prettyprinter",
       "properties": [
         {
@@ -2522,6 +2662,14 @@
         {
           "alg": "SHA-256",
           "content": "813739308ad6050620578994effe21058a170a341716acf52573fae42b5b1db3"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-2-Clause"
+          }
         }
       ],
       "name": "prettyprinter-ansi-terminal",
@@ -2603,6 +2751,14 @@
           "content": "fb779119d79fe08ff4d502fb6869a70c9a8d5fd8ae0959f605c3c937efd96422"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
+        }
+      ],
       "name": "quickcheck-io",
       "properties": [
         {
@@ -2657,6 +2813,14 @@
           "content": "e9c81926a7d1e40328f645f73592b31efc9c631589669a7f130687b9cc3051dc"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "random",
       "properties": [
         {
@@ -2700,6 +2864,14 @@
         {
           "alg": "SHA-256",
           "content": "a61d4e8b30f5a16526d7d31171b674ae7924d2207f378060d13363bd8794de8c"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "splitmix",
@@ -2781,6 +2953,14 @@
           "content": "6daad88ebb414ba6a556d2898d2cbe7650e4276010e3a6eed939daf54b956784"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "tagged",
       "properties": [
         {
@@ -2824,6 +3004,14 @@
         {
           "alg": "SHA-256",
           "content": "c76120141bd61c4418b3ed5efc5fe3094186d47cfe12d7be552320139f52c6c7"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "MIT"
+          }
         }
       ],
       "name": "tasty",
@@ -2905,6 +3093,14 @@
           "content": "b62c7304c9f3cbc9463d0739aa85cb9489f217ea092b9d625d417514fbcc9d6a"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "name": "transformers-compat",
       "properties": [
         {
@@ -2982,6 +3178,14 @@
         {
           "alg": "SHA-256",
           "content": "d0f507334bdea5431a2f07f525a97f29e76522c32210f5de6d5a2b4f1d42bf7c"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
         }
       ],
       "name": "vector-stream",
@@ -15921,7 +16125,7 @@
       },
       {
         "name": "waybill:nixpkgs-haskell-resolution",
-        "value": "{\"disagreements\":0,\"resolved\":12,\"revision\":\"a799d3e3886da994fa307f817a6bc705ae538eeb\",\"unresolved\":{\"compiler-supplied\":7}}"
+        "value": "{\"disagreements\":0,\"optional-reconciliation\":{\"declined\":0,\"reviewed\":0,\"withdrawn\":[]},\"resolved\":12,\"revision\":\"a799d3e3886da994fa307f817a6bc705ae538eeb\",\"unresolved\":{\"compiler-supplied\":7}}"
       },
       {
         "name": "waybill:nixpkgs-haskell-closure",
@@ -15970,6 +16174,10 @@
       {
         "name": "waybill:cabal-entries-skipped",
         "value": "0"
+      },
+      {
+        "name": "waybill:hpack-read-outcome",
+        "value": "{\"generated-cabal-suppressed\":[\"/home/runner/.cache/waybill/corpus/53983fe1021353b3/d06905558ba68b49b17f36c875e97f7234a9c19b/repo/moat.cabal\"],\"manifests-partial\":[],\"manifests-read\":[\"/home/runner/.cache/waybill/corpus/53983fe1021353b3/d06905558ba68b49b17f36c875e97f7234a9c19b/repo/package.yaml\"],\"manifests-seen\":[\"/home/runner/.cache/waybill/corpus/53983fe1021353b3/d06905558ba68b49b17f36c875e97f7234a9c19b/repo/package.yaml\"],\"manifests-unread\":[]}"
       },
       {
         "name": "waybill:nixpkgs-security",

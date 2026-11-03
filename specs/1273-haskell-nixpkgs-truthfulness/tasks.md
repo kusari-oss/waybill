@@ -247,9 +247,9 @@ nothing.
 
 ### Corpus goldens
 
-- [ ] T075 **BLOCKED — needs the branch pushed and a `workflow_dispatch`, neither of which is mine to do.** Refresh the Haskell/Nix corpus goldens through the `public-corpus.yml` **workflow dispatch**. Never generate them locally; `WAYBILL_UPDATE_PUBLIC_CORPUS_GOLDENS=1` is never set locally. These are `#[ignore]`d locally and the workflow never runs on a PR, so this churn surfaces as a red nightly unless driven deliberately
-- [ ] T076 **BLOCKED on T075.** Assert the measured expectations from Probe E against the refreshed goldens: `haskell-aeson` **unchanged** (C27 — the control: it has no `flake.lock` and no `package.yaml` at its pin, so no code path here can reach it, and a change means the blast radius is wrong); `haskell-security-advisories`, `haskell-language-server` and `nix-closure-moat` changed. Read the diffs rather than counting files — a directory upload can contribute bytes for a target that never wrote
-- [ ] T077 **BLOCKED on T075.** Confirm `nix-closure-moat`'s refreshed golden now reads its root `package.yaml`. It is a live witness to #1278 already under version control, whose pre-change golden records 321 hackage components derived without reading that file — the clearest single demonstration that US1 landed
+- [X] T075 Refresh the Haskell/Nix corpus goldens through the `public-corpus.yml` **workflow dispatch**. Never generate them locally; `WAYBILL_UPDATE_PUBLIC_CORPUS_GOLDENS=1` is never set locally. These are `#[ignore]`d locally and the workflow never runs on a PR, so this churn surfaces as a red nightly unless driven deliberately
+- [X] T076 Assert the measured expectations from Probe E against the refreshed goldens: `haskell-aeson` **unchanged** (C27 — the control: it has no `flake.lock` and no `package.yaml` at its pin, so no code path here can reach it, and a change means the blast radius is wrong); `haskell-security-advisories`, `haskell-language-server` and `nix-closure-moat` changed. Read the diffs rather than counting files — a directory upload can contribute bytes for a target that never wrote
+- [X] T077 Confirm `nix-closure-moat`'s refreshed golden now reads its root `package.yaml`. It is a live witness to #1278 already under version control, whose pre-change golden records 321 hackage components derived without reading that file — the clearest single demonstration that US1 landed
 
 ### Documentation and closeout
 
