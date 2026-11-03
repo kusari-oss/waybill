@@ -1,0 +1,16 @@
+cabal-version: 2.4
+name:          waybill-fixture-licproj
+version:       0.1.0
+license:       MIT
+
+library
+  build-depends:
+      waybill-fixture-attr-bsd3
+    , waybill-fixture-spdx-mit
+    , waybill-fixture-compound
+    , waybill-fixture-unversioned
+    , waybill-fixture-unknown-lic
+    , waybill-fixture-public-domain
+    , waybill-fixture-absent
+  exposed-modules: Lib
+  hs-source-dirs:  src

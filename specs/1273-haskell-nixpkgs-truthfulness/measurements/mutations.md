@@ -74,6 +74,51 @@ The general shape: **a test that passes before the code exists is not a
 passing test.** This is the third time in this milestone that a green result
 turned out to be measuring nothing.
 
+## US3 — licenses from the cached package set (#1280)
+
+Suites: `haskell_nixpkgs_license_us3` (integration) and
+`package_set.rs::license_tests` + `mod.rs::license_attach_tests` (unit, over
+inline literals — no cache).
+
+| # | requirement | mutation | verdict | test(s) that failed |
+|---|---|---|---|---|
+| M19 | FR-010 | never attach the license | **CAUGHT** | 3 integration tests |
+| M20 | FR-011a | publish `"unknown"` as a license | **CAUGHT** | `unknown_yields_no_license`, 2 unit |
+| M21 | FR-011 | drop an attribute absent from the mapping table | **CAUGHT** | `uncanonicalisable…`, 2 unit |
+| M22 | FR-010 | map `bsd3` to the wrong SPDX id | **CAUGHT** | 2 integration, 2 unit |
+| M23 | precedence | remove the "do not overwrite an existing license" guard | **CAUGHT** *(after a new test)* | `an_existing_license_is_not_overwritten` |
+
+### M23 — a guard that was dead, and what to do about that
+
+M23 survived, and the investigation is the useful part. No component reaching
+`apply_resolved` can have a pre-existing license today: `build_main_module`
+is the only reader path that sets one, and the main module carries a version,
+so `is_enrichable` excludes it. The guard was therefore **untested defensive
+code** — unreachable by any scan input.
+
+Deleting it was the other option. It stays because the precedence invariant
+is one a near-future caller needs — milestone 1010's manifest-declared
+licenses are exactly such a caller — and because the alternative to deleting
+untested code is *testing* it. `attach_declared_license` is now tested
+directly, where the case is reachable without inventing a scan input that
+does not exist. Re-run after that, M23 is caught.
+
+Contrast with **M5**, where the surviving mutant's field was actively
+overwritten downstream: that assignment was deleted, because it implied the
+field was load-bearing when nothing read it. A dead *guard* and a dead
+*assignment* get opposite treatment, and the difference is whether the code
+states an invariant someone will need or merely looks like it does something.
+
+### A process deviation, recorded
+
+US3's implementation (T050–T053) was written **before** its integration tests
+(T043–T049), inverting the order every phase of `tasks.md` specifies. The
+guarantee TDD ordering buys — that a test can actually fail — was therefore
+not established by construction here, and the mutation table above is the
+only thing that establishes it. That is why M23's survival mattered: with the
+tests written first it would have been visible immediately as a test that
+never ran red.
+
 ---
 
 ## The two mutants that did real work

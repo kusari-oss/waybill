@@ -158,6 +158,14 @@ pub(crate) enum ResolutionOutcome {
         source_hash: Option<String>,
         /// The revision this came from, recorded as provenance (FR-007).
         revision: String,
+        /// Milestone 1273 (FR-010) — the license this entry declares.
+        ///
+        /// Carried on the outcome rather than looked up again at the call
+        /// site, for the same reason `source_hash` is: `classify` resolves
+        /// aliases, so the entry it matched may live under a different
+        /// attribute name than the component's, and a second lookup by the
+        /// component's own name would miss it.
+        license: Option<package_set::DeclaredLicense>,
     },
     Unresolved {
         reason: UnresolvedReason,
@@ -284,6 +292,7 @@ pub(crate) fn classify(
             version: entry.version.clone(),
             source_hash: entry.source_hash.clone(),
             revision: revision.to_string(),
+            license: entry.license.clone(),
         },
         None => ResolutionOutcome::unresolved(UnresolvedReason::AbsentFromPackageSet),
     }
@@ -1048,14 +1057,18 @@ pub(crate) fn enrich(
                 version,
                 source_hash,
                 revision,
+                license,
             } => {
                 apply_resolved(
                     c,
-                    &version,
-                    source_hash.as_deref(),
-                    &revision,
-                    pinned.matched_by,
-                    pinned.pin_state,
+                    ResolvedFacts {
+                        version: &version,
+                        source_hash: source_hash.as_deref(),
+                        revision: &revision,
+                        matched_by: pinned.matched_by,
+                        pin_state: pinned.pin_state,
+                        license: license.as_ref(),
+                    },
                     &mut summary.renames,
                 );
                 summary.resolved += 1;
@@ -1119,14 +1132,22 @@ pub(crate) fn enrich(
                 // #962 -- `os-string`, reached through
                 // `directory-ospath-streaming`.
                 match classify(&c.name, &packages, &boot, &aliases, &pinned.revision) {
-                    ResolutionOutcome::Resolved { version, source_hash, revision } => {
+                    ResolutionOutcome::Resolved {
+                        version,
+                        source_hash,
+                        revision,
+                        license,
+                    } => {
                         apply_resolved(
                             &mut c,
-                            &version,
-                            source_hash.as_deref(),
-                            &revision,
-                            pinned.matched_by,
-                            pinned.pin_state,
+                            ResolvedFacts {
+                                version: &version,
+                                source_hash: source_hash.as_deref(),
+                                revision: &revision,
+                                matched_by: pinned.matched_by,
+                                pin_state: pinned.pin_state,
+                                license: license.as_ref(),
+                            },
                             &mut summary.renames,
                         );
                     }
@@ -1438,16 +1459,99 @@ const ANN_NIX_EVAL_ORIGIN: &str = "waybill:nix-eval-origin";
 /// that catches the next one.
 const ANN_NIX_EVAL_SUPERSEDED: &str = "waybill:nix-eval-superseded-version";
 
+/// Milestone 1273 (#1280, FR-010/FR-011/FR-012) — attach the license the
+/// pinned revision declares.
+///
+/// Called only from [`apply_resolved`], which is the single place this pass
+/// assigns a version. That is what makes FR-012 structural rather than
+/// asserted: a component the resolution did not resolve is never reached by
+/// this code, so no license can be invented for it.
+///
+/// A canonical expression goes into `licenses`, the field every emitter
+/// already maps to its own format's **native** license slot. Principle V's
+/// primary case: no `waybill:` annotation carries the license itself.
+///
+/// Which slot each format uses is deliberately NOT named here. This is
+/// resolution code and must stay format-neutral, an invariant
+/// `spdx3_us3_acceptance::scenario_1` enforces by grepping this tree for
+/// format-specific identifiers — prose included, which is how naming one in
+/// this very comment turned the gate red. The per-format mapping lives in
+/// `docs/reference/sbom-format-mapping.md` and in the emitters.
+///
+/// FR-011's uncanonicalisable declaration becomes `LicenseRef-<sanitized>`
+/// through the shared `sanitize_license_operand_to_ref` helper — the standard
+/// mechanism for a license that is not on the SPDX list, and the one
+/// milestone 185 (rpm) and milestone 202 already emit, byte-identically
+/// across formats. The `LicenseRef-` prefix **is** the record that the value
+/// is not a canonical identifier, so FR-011's "record that it is
+/// uncanonicalised" is satisfied by a standards-native construct rather than
+/// a new annotation.
+fn attach_declared_license(
+    c: &mut ResolvedComponent,
+    license: Option<&package_set::DeclaredLicense>,
+) {
+    use waybill_common::types::license::{
+        sanitize_license_operand_to_ref, SpdxExpression,
+    };
+    // A license already present outranks this one: a project-local
+    // declaration (milestone 1010) or an earlier enrichment is closer to the
+    // artifact than a distro's package set.
+    if !c.licenses.is_empty() {
+        return;
+    }
+    let Some(declared) = license else { return };
+    // FR-020 — the signal is logged as well as emitted, so an operator can
+    // see what the revision declared and whether it canonicalised without
+    // diffing the document.
+    tracing::debug!(
+        component = %c.name,
+        declared = %declared.as_declared(),
+        canonical = declared.is_canonical(),
+        "nixpkgs-haskell: attaching the license the pinned revision declares"
+    );
+    match declared {
+        package_set::DeclaredLicense::Canonical(e) => c.licenses.push(e.clone()),
+        package_set::DeclaredLicense::Uncanonical(raw) => {
+            if let Some(id) = sanitize_license_operand_to_ref(raw) {
+                if let Ok(e) = SpdxExpression::new(&format!("LicenseRef-{id}")) {
+                    c.licenses.push(e);
+                }
+            }
+        }
+    }
+}
+
+/// What the pinned revision says about one resolved component.
+///
+/// A struct rather than eight positional parameters. Milestone 1273 added the
+/// license and crossed clippy's argument threshold, which is a fair signal:
+/// `version`, `source_hash` and `license` all come from the same package-set
+/// entry and `revision`, `matched_by` and `pin_state` all describe the same
+/// pin, so passing them separately was already losing that structure.
+pub(crate) struct ResolvedFacts<'a> {
+    pub(crate) version: &'a str,
+    pub(crate) source_hash: Option<&'a str>,
+    pub(crate) revision: &'a str,
+    pub(crate) matched_by: NixpkgsMatch,
+    pub(crate) pin_state: &'a str,
+    pub(crate) license: Option<&'a package_set::DeclaredLicense>,
+}
+
 fn apply_resolved(
     c: &mut ResolvedComponent,
-    version: &str,
-    source_hash: Option<&str>,
-    revision: &str,
-    matched_by: NixpkgsMatch,
-    pin_state: &str,
+    facts: ResolvedFacts<'_>,
     renames: &mut Vec<(String, String)>,
 ) {
+    let ResolvedFacts {
+        version,
+        source_hash,
+        revision,
+        matched_by,
+        pin_state,
+        license,
+    } = facts;
     c.version = version.to_string();
+    attach_declared_license(c, license);
     // The PURL must carry the version too, or the component is versioned in
     // one place and not the other.
     //
@@ -2015,6 +2119,90 @@ mod enrich_tests {
         assert_eq!(s.disagreements, 0);
         assert!(!comps[0].extra_annotations.contains_key(ANN_VERSION_DISAGREEMENT));
         std::env::remove_var(cache::CACHE_ENV);
+    }
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod license_attach_tests {
+    //! Milestone 1273 US3 (#1280) — `attach_declared_license`, tested
+    //! directly.
+    //!
+    //! The precedence guard ("a license already present outranks this one")
+    //! survived mutation M23, and investigation showed why: no component
+    //! reaching `apply_resolved` can have a pre-existing license today.
+    //! `build_main_module` is the only reader path that sets one, and the
+    //! main module carries a version, so `is_enrichable` excludes it.
+    //!
+    //! That made the guard **untested defensive code**. Rather than delete a
+    //! precedence invariant that a future caller would need — the m1010
+    //! manifest-declared licenses are exactly such a caller — it is tested
+    //! here against the helper, where the case is reachable without inventing
+    //! a scan input that does not exist.
+
+    use super::enrich_tests::comp;
+    use super::*;
+    use package_set::DeclaredLicense;
+    use waybill_common::types::license::SpdxExpression;
+
+    #[test]
+    fn a_canonical_declaration_lands_in_the_native_field() {
+        let mut c = comp("waybill-fixture-x");
+        let lic = DeclaredLicense::Canonical(
+            SpdxExpression::try_canonical("BSD-3-Clause").unwrap(),
+        );
+        attach_declared_license(&mut c, Some(&lic));
+        assert_eq!(c.licenses.len(), 1);
+        assert_eq!(c.licenses[0].as_str(), "BSD-3-Clause");
+    }
+
+    #[test]
+    fn an_uncanonical_declaration_becomes_a_license_ref() {
+        let mut c = comp("waybill-fixture-x");
+        let lic = DeclaredLicense::Uncanonical("GPL".to_string());
+        attach_declared_license(&mut c, Some(&lic));
+        assert_eq!(c.licenses.len(), 1);
+        // SPDX's own mechanism for a license off its list. The prefix IS the
+        // record that the value is not a canonical identifier (FR-011).
+        assert_eq!(c.licenses[0].as_str(), "LicenseRef-GPL");
+    }
+
+    /// The case mutation M23 removed. A license already on the component —
+    /// a project-local declaration (milestone 1010), or an earlier
+    /// enrichment — is closer to the artifact than a distro's package set,
+    /// so it stands.
+    #[test]
+    fn an_existing_license_is_not_overwritten() {
+        let mut c = comp("waybill-fixture-x");
+        c.licenses
+            .push(SpdxExpression::try_canonical("MIT").unwrap());
+        let lic = DeclaredLicense::Canonical(
+            SpdxExpression::try_canonical("BSD-3-Clause").unwrap(),
+        );
+        attach_declared_license(&mut c, Some(&lic));
+        assert_eq!(
+            c.licenses.iter().map(|l| l.as_str()).collect::<Vec<_>>(),
+            vec!["MIT"],
+            "the package set must not displace a closer declaration"
+        );
+    }
+
+    /// FR-012 — nothing is invented when the revision declares nothing.
+    #[test]
+    fn no_declaration_attaches_nothing() {
+        let mut c = comp("waybill-fixture-x");
+        attach_declared_license(&mut c, None);
+        assert!(c.licenses.is_empty());
+    }
+
+    /// A declaration that sanitizes to nothing attaches nothing rather than
+    /// an empty `LicenseRef-`.
+    #[test]
+    fn an_unsanitizable_declaration_attaches_nothing() {
+        let mut c = comp("waybill-fixture-x");
+        let lic = DeclaredLicense::Uncanonical("!@#$".to_string());
+        attach_declared_license(&mut c, Some(&lic));
+        assert!(c.licenses.is_empty());
     }
 }
 
