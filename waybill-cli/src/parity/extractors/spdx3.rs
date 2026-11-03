@@ -826,6 +826,9 @@ spdx3_anno!(c200_spdx3, "waybill:hpack-read-outcome",                 document);
 // C201 — milestone 1275: what the closure-identity pass concluded.
 spdx3_anno!(c201_spdx3, "waybill:closure-identity", component);
 
+// C202 — milestone 1276: the scope-exemption record.
+spdx3_anno!(c202_spdx3, "waybill:scope-exemptions", document);
+
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.
 spdx3_anno!(c113_spdx3, "waybill:synthetic-built-in",               component);

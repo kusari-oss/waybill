@@ -692,6 +692,12 @@ fn push_document_fields(
         );
     }
 
+    // Milestone 1276 (#1340) — the scope-exemption record, emitted whenever
+    // the propagation ran, including when it exempted nothing.
+    if let Some(v) = scan.scope_exemptions {
+        push(out, "waybill:scope-exemptions", json!(v));
+    }
+
     // Milestone 133 US3 (C93/C94/C95): file-tier walker diagnostic
     // skip counters. Constitution Principle X. See CDX +
     // SPDX 2.3 twins.

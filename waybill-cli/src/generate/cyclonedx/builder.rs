@@ -209,6 +209,7 @@ pub struct CycloneDxBuilder {
     nix_eval_system: Option<String>,
     /// Milestone 985 (#962, C175) — the closure's record, pre-rendered JSON.
     nixpkgs_haskell_closure: Option<String>,
+    scope_exemptions: Option<String>,
     /// Milestone 133 US4 — `--file-inventory` mode label. Only
     /// `Some("full")` triggers the document-level override marker
     /// (Constitution Strict Boundary §5).
@@ -283,6 +284,7 @@ impl CycloneDxBuilder {
             vex_statements: Vec::new(),
             nix_eval_system: None,
             nixpkgs_haskell_closure: None,
+            scope_exemptions: None,
             file_inventory_mode: None,
             file_inventory_source_shapes: None,
             collisions_summary: None,
@@ -397,6 +399,12 @@ impl CycloneDxBuilder {
     }
 
     /// Milestone 985 (#962) — record what the transitive runtime closure did.
+    /// Milestone 1276 (#1340) — the scope-exemption record.
+    pub fn with_scope_exemptions(mut self, value: Option<String>) -> Self {
+        self.scope_exemptions = value;
+        self
+    }
+
     pub fn with_nixpkgs_haskell_closure(mut self, value: Option<String>) -> Self {
         self.nixpkgs_haskell_closure = value;
         self
@@ -996,6 +1004,7 @@ impl CycloneDxBuilder {
                 vex_claims_omitted: vex_claims_omitted.as_deref(),
                 nix_eval_system: self.nix_eval_system.as_deref(),
                 nixpkgs_haskell_closure: self.nixpkgs_haskell_closure.as_deref(),
+                scope_exemptions: self.scope_exemptions.as_deref(),
             },
         );
         // Milestone 076 — track per-component identifier matches so

@@ -174,6 +174,7 @@ impl SbomSerializer for CycloneDxJsonSerializer {
             .with_nixpkgs_haskell_resolution(
                 scan.nixpkgs_haskell_resolution.map(str::to_string),
             )
+            .with_scope_exemptions(scan.scope_exemptions.map(str::to_string))
             .with_nixpkgs_haskell_closure(
                 scan.nixpkgs_haskell_closure.map(str::to_string),
             )

@@ -147,9 +147,13 @@ the shape that gets misread as a regression in the project.
 
 1. **Given** a scan that exempts components, **When** the document is emitted,
    **Then** it records the count at document scope.
-2. **Given** a scan that exempts none, **When** the document is emitted,
-   **Then** it records zero rather than omitting the record — "the rule
-   exempted nothing" and "the rule did not run" are different facts.
+2. **Given** a scan where the rule **applied** and exempted none, **When** the
+   document is emitted, **Then** it records zero rather than omitting the
+   record — "the rule applied and exempted nothing" and "the rule did not
+   apply" are different facts.
+3. **Given** a scan where the rule was **not applicable**, because no compiler
+   configuration was read, **When** the document is emitted, **Then** the
+   record is absent, which is how that third state is carried.
 
 ---
 
@@ -265,8 +269,15 @@ the shape that gets misread as a regression in the project.
     the same change. Milestone 1275 recorded the cost of treating this as a
     formality: its plan asserted C151 was reusable, the catalogue forbade it,
     and the correction arrived three commits later.
-- **FR-007**: The document MUST record how many components the rule exempted,
-  including zero, so the correction is visible rather than silent.
+- **FR-007**: Where the rule is **applicable** — a pinned compiler
+  configuration was read, so an exempt class exists — the document MUST record
+  how many components it exempted, including zero, so the correction is visible
+  rather than silent. Where it is **not** applicable the record MUST be absent,
+  and absence carries that fact: a scan of a project that is not Nix-built
+  Haskell has no exempt class and nothing to report. Measured during
+  implementation: emitting it unconditionally put a Haskell-specific property
+  on every document in every ecosystem and failed 35 golden byte-identity
+  tests, for a row that on such a project can only ever say zero.
 - **FR-008**: Scopes other than the exempt class MUST be unchanged in every
   other ecosystem. No OS-package, file-tier, npm, Go, cargo, Maven or Python
   component changes scope.

@@ -456,6 +456,28 @@ version, and waybill deliberately does not use it: that version is not what
 the build uses, and emitting it would look authoritative while being wrong.
 This is the same set `cabal v2-freeze` declines to pin.
 
+**A compiler-supplied package never carries a non-runtime scope** (milestone
+1276, #1340). It can be reachable in the dependency graph only through a
+component that is itself development- or test-only — a `buildable: False`
+stanza, say — and milestone 1269's transitive propagation would then mark it
+`optional` or `excluded`. That is false of it: GHC links it into every build
+whatever the flags say. CycloneDX 1.6 defines `optional` as "not capable of
+being called due to them **not being installed**", and instructs that a
+component which is installed but prohibited from being called "must be scoped
+as `required`"; `excluded` as "not reachable within a call graph at runtime".
+So the propagation treats these packages as immune, the way it already treats
+anything a runtime path reaches. The exempt set is the nulled names of the
+compiler series the flake names — never a list maintained in waybill — and it
+is empty when that configuration cannot be read, which exempts nothing.
+
+The count is recorded at document scope as C202 `waybill:scope-exemptions`,
+with `exempt-class` saying whether a configuration was read at all: a scan
+that exempted nothing because the rule found nothing and a scan that exempted
+nothing because no rule applied are different facts.
+
+Invariant **I9** asserts the property, and **I3** carries the matching
+exemption so the two partition rather than contradict.
+
 **Internal mirrors work.** The retrieval target comes from the lock entry's
 own type, owner, repository and host — a fork or self-hosted mirror is
 retrieved from itself, never from upstream. If the scanning environment cannot

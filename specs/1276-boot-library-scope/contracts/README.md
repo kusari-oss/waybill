@@ -62,7 +62,10 @@ Measured direct-mark population: **0** — all 10 are `transitive` — so this
 invariant is expected green from the start, which is why SC-007a requires it
 be demonstrated to fail. (FR-002a, SC-007a)
 
-**C10 — the document records the exemption count, including zero.** A
+**C10 — the document records the exemption count wherever the rule applies,
+including zero, and omits it where the rule does not apply.** Three states:
+absent (no compiler configuration, so no exempt class), `0` (a class applied
+and matched nothing), `N`. A
 document-scope row, because its reader is comparing two documents and a log
 line cannot serve that. Audited in research R4: no native carrier in CDX 1.6,
 SPDX 2.3 or SPDX 3.0.1; KEEP-NO-NATIVE, parity-bridge, same shape as C184 and
@@ -89,9 +92,18 @@ below a disabled stanza look runtime. (FR-011, SC-007)
 **C15 — every committed probe re-runs and reproduces its finding.** (SC-008)
 
 **C16 — every other ecosystem's scopes are untouched.** No OS-package,
-file-tier, npm, Go, cargo, Maven or Python component changes scope, and a
-non-Haskell fixture's emission is byte-identical after masking
-content-addressed identifiers and timestamps. Distinct from C4, which is about
+file-tier, npm, Go, cargo, Maven or Python component changes scope.
+
+A non-Haskell fixture's emission is byte-identical after masking
+content-addressed identifiers and timestamps **except for the C202
+document-scope record**, which FR-007 requires on every scan where the
+propagation ran — and it runs for every ecosystem. The original wording of
+this contract asked for unqualified byte identity, which FR-007 makes
+unachievable; measured on the `cargo` and `pip` fixtures the entire
+difference is four lines, and all four are that one property. The
+exception is stated rather than the requirement weakened, because a
+document-scope record whose absence means "this rule did not run" has to be
+present wherever it did. Distinct from C4, which is about
 components **inside** an affected document: this one bounds the blast radius
 across ecosystems, which is where an over-broad predicate would show up first.
 Measured context: OS-package (142) and file-tier (175) components carry no

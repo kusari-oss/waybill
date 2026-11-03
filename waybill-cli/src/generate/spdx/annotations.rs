@@ -679,6 +679,12 @@ pub fn annotate_document(
         );
     }
 
+    // Milestone 1276 (#1340) — the scope-exemption record, emitted whenever
+    // the propagation ran, including when it exempted nothing.
+    if let Some(v) = artifacts.scope_exemptions {
+        push(&mut out, "waybill:scope-exemptions", json!(v));
+    }
+
     // Milestone 133 US3 (C93/C94/C95): file-tier walker diagnostic
     // skip counters. Constitution Principle X — operators get
     // transparent visibility into what the orphan/full walker

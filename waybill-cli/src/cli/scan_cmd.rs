@@ -4802,6 +4802,12 @@ pub async fn execute(
         None => {}
     }
 
+    // Milestone 1276 — `None` means the exemption rule was not applicable:
+    // no compiler configuration was read, which is every scan of a project
+    // that is not Nix-built Haskell. Set by the propagation block below when
+    // an exempt class exists.
+    let mut scope_exemption_json: Option<String> = None;
+
     // #1209 — propagate non-runtime lifecycle scope transitively.
     //
     // Three constraints pin this to exactly here (research R1):
@@ -4900,13 +4906,51 @@ pub async fn execute(
             .and_then(|s| s.boot_libraries.clone())
             .map(|b| b.into_iter().collect())
             .unwrap_or_default();
-        crate::resolve::scope_propagation::propagate_non_runtime_scope(
-            &mut components,
-            &relationships,
-            &seeds,
-            &ecosystems_with_root,
-            &boot_libraries,
-        );
+        let scope_propagation_summary =
+            crate::resolve::scope_propagation::propagate_non_runtime_scope(
+                &mut components,
+                &relationships,
+                &seeds,
+                &ecosystems_with_root,
+                &boot_libraries,
+            );
+        // Milestone 1276 (#1340) — FR-007. Recorded at document scope because
+        // its reader is comparing two documents of one project across waybill
+        // versions and needs to see that a RULE changed rather than the
+        // project. `PropagationSummary` has always held the figure and only
+        // ever logged it, which is the gap C174 exists to close for the
+        // neighbouring pass.
+        //
+        // `Some` whenever the propagation ran, including when it exempted
+        // nothing: "the rule exempted nothing" and "the rule did not run" are
+        // different facts.
+        //
+        // Emitted only when the exempt class was AVAILABLE — a compiler
+        // configuration was read — and then always, including a count of
+        // zero. Three states, carried by presence and value together:
+        //
+        //   absent              the rule was not applicable; no compiler
+        //                       configuration exists, which is every scan of
+        //                       a project that is not Nix-built Haskell
+        //   {"…":0}             applicable, and it exempted nothing
+        //   {"…":N}             applicable, and it exempted N
+        //
+        // The first draft emitted the record unconditionally with a second
+        // `exempt-class` key to distinguish those states. T028 measured the
+        // cost: every document in every ecosystem gained a Haskell-specific
+        // property, and 35 golden byte-identity tests failed — for a row that
+        // on a Cargo or Python project can only ever say zero. US3's operator
+        // is the one scanning Haskell, so applicability is the right gate, and
+        // absence is a clearer way to say "not applicable" than a key saying
+        // so on every document in the repository.
+        if !boot_libraries.is_empty() {
+            scope_exemption_json = Some(
+                serde_json::json!({
+                    "compiler-supplied": scope_propagation_summary.immune_compiler_supplied,
+                })
+                .to_string(),
+            );
+        }
         // Re-type edges into anything the pass just marked. The
         // function skips every edge that is no longer a plain
         // `DependsOn`, so this types exactly the newly-marked targets'
@@ -5336,6 +5380,7 @@ pub async fn execute(
         nixpkgs_haskell_degraded,
         nixpkgs_haskell_resolution: nixpkgs_haskell_resolution_json.as_deref(),
         nixpkgs_haskell_closure: nixpkgs_haskell_closure_json.as_deref(),
+        scope_exemptions: scope_exemption_json.as_deref(),
         unresolved_declared_dep_count,
         target_name: &target_name,
         components: &components,

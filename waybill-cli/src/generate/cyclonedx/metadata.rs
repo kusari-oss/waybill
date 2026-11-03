@@ -238,6 +238,8 @@ pub struct MetadataExtras<'a> {
     // insertion could silently re-bind an adjacent argument with no type
     // error. #844 tracks the shape itself.
     pub nixpkgs_haskell_closure: Option<&'a str>,
+    /// Milestone 1276 (#1340) — the scope-exemption record.
+    pub scope_exemptions: Option<&'a str>,
 }
 /// Build the CycloneDX `metadata` section.
 ///
@@ -306,6 +308,7 @@ pub fn build_metadata(
         vex_claims_omitted,
         nix_eval_system,
         nixpkgs_haskell_closure,
+        scope_exemptions,
     } = extras;
 
     let version = crate::version::VERSION;
@@ -483,6 +486,19 @@ pub fn build_metadata(
     if let Some(v) = nixpkgs_haskell_resolution {
         properties.push(json!({
             "name": "waybill:nixpkgs-haskell-resolution",
+            "value": v,
+        }));
+    }
+
+    // Milestone 1276 (#1340) — how many components a scope rule exempted.
+    //
+    // Emitted whenever the propagation ran, INCLUDING when it exempted
+    // nothing: "the rule exempted nothing" and "the rule did not run" are
+    // different facts, and `PropagationSummary`'s own `skipped_unrooted`
+    // counter exists because they once looked identical from outside.
+    if let Some(v) = scope_exemptions {
+        properties.push(json!({
+            "name": "waybill:scope-exemptions",
             "value": v,
         }));
     }
