@@ -204,3 +204,42 @@ existed, which is the shape of a test that proves nothing — and M4 shows it
 does: remove the narrowing and it fails. The figures are what make it
 checkable rather than rhetorical, since the union exempts up to 15 names a
 given series does not.
+
+## F6 — a control that cannot move, caught before it was reported (T027)
+
+T027 asks for the 569-of-579 survivor figure by running
+`scope-always-present.py` and diffing against T001's baseline. The probe reads
+the **committed goldens**, which this feature does not regenerate — so it
+reports 579 and 10 before and after, identically, whether the code is right or
+wrong.
+
+The near-miss is worth recording because of how it differs from F3. There, I9
+read stale goldens and **failed**, loudly, with the exact populations. Here the
+check would have **passed**, and "569 of 579 survived" would have gone into a
+measurement file as a result when it was an artefact of an unchanged fixture.
+A control that cannot move is not a control — the same lesson as
+`feedback_a_passing_test_may_exercise_nothing`, arriving through a probe
+rather than a test.
+
+What is actually verified of FR-003 at each level, and what is deferred, is in
+`after-1276.md`. The corpus figure is now written down as a **prediction for
+the refresh diff** rather than a result: 2 targets, scope only, 10 components,
+and the two I9 declarations removed.
+
+## F7 — the feature works on its subject project, against a verified baseline (T033)
+
+```
+  [baseline 6dd75678]  optional in B but not A (9): [... pretty ...]
+  [after]              optional in B but not A (8): [the same 8, no pretty]
+```
+
+The two differ by exactly one element and it is the boot library. SC-001 and
+SC-003 both met: one component corrected, the eight non-boot controls
+untouched.
+
+The baseline was built in a detached worktree at the commit before US1, and
+its `scope_propagation.rs` contains **0** occurrences of `compiler_supplied` —
+stated because milestone 1275's first attempt at this comparison used
+`git stash`, which reverts to HEAD, and HEAD already held the feature being
+measured. A baseline that cannot be shown to lack the feature is not a
+baseline.

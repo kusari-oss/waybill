@@ -102,3 +102,79 @@ SBOMNIX=<sbomnix binary> PROJ=<flake dir> WAYBILL=./target/debug/waybill \
 
 sbomnix 1.9.0 is in the local nix store from a prior milestone's work; it is
 not on `PATH`. `--buildtime` and the flakeref form are both load-bearing.
+
+## Where the 944-component difference actually comes from
+
+Decomposed rather than attributed to "waybill filters more". The closure holds
+**1,290** derivations; sbomnix emits **1,289** components and waybill **345**.
+
+### 1. 800 derivations that nothing in the closure references — 107 of them named `source`
+
+A derivation no other derivation reaches through `buildInputs`,
+`propagatedBuildInputs`, `nativeBuildInputs` or `propagatedNativeBuildInputs`.
+What they are, by name:
+
+```
+  107  source                            <- fetchurl / fetchgit source derivations
+    9  gnu-config
+    7  apple-sdk-14.4
+    7  expand-response-params
+    6  clang-wrapper
+    5  sdk-hook.sh
+    5  xcode-project-check-hook
+    5  CoreSymbolication
+```
+
+These are source fetches, setup hooks and compiler wrappers — the machinery of
+*how* a build runs, not packages that end up identifiable in an artifact. The
+107 `source` derivations are the clearest case, and sbomnix's own output
+confirms it from the other side: its most repeated component names are
+`source` ×107, `gnu-config` ×9, `apple-sdk` ×8,
+`cctools-binutils-darwin-wrapper` ×7, `die-hook` ×7. **All 107 `source`
+components are among its 107 carrying no PURL at all** — a component named
+`source` with no identifier is one no vulnerability feed or license policy can
+match.
+
+waybill drops these by role, with one deliberate exception: it keeps the **47**
+unreferenced derivations that apply a patch. Milestone 1035 measured why — `jq`
+and `lua` are unreferenced in one project's closure and carried 6 of its 18
+CVEs, so dropping them would have taken the patches with them.
+
+### 2. 183 derivations collapsed as build variants of 146 identities
+
+Among the referenced derivations, 287 distinct `(pname, version)` pairs are
+produced by 470 derivations. The worst cases:
+
+```
+  die-hook 26.05pre-git                              7 derivations
+  perl 5.42.0                                        6 derivations
+  update-autotools-gnu-config-scripts-hook 26.05…    6 derivations
+```
+
+waybill merges these to one component per identity and unions their roles.
+sbomnix emits each derivation, which is why `die-hook` appears seven times in
+its document.
+
+### 3. ~21 referenced derivations with no `pname`
+
+No name to build an identity from, so no component.
+
+### So the difference is a modelling choice, stated plainly
+
+**sbomnix models the build graph**: one component per derivation, sources and
+hooks and per-variant duplicates included. **waybill models the package set**:
+one component per identifiable package, with the build machinery dropped and
+variants merged.
+
+Neither is wrong for its own question. For "reproduce or audit this build",
+sbomnix's 1,289 is the more faithful record and waybill's role filter discards
+information. For "what software is in this artifact, and can I match it
+against a feed", 944 of those components are machinery — and 107 of them carry
+no identifier at all, which is the form in which the difference stops being a
+matter of taste.
+
+The honest summary of both halves of this comparison: **sbomnix sees more of
+the build, waybill sees more of the packages.** The boot libraries are the
+sharpest instance — six packages genuinely in the artifact that a
+derivation-walk cannot reach, and 944 derivations that a package model
+deliberately does not keep.
