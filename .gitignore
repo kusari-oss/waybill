@@ -40,7 +40,7 @@ waybill.openvex.json
 # Goldens diff-debug scratch files written by regression tests on
 # failure (alongside the pinned golden). Never commit; the pinned
 # `.json` is the source of truth.
-waybill-cli/tests/fixtures/golden/**/*.actual.json
+waybill-cli/tests/**/*.actual.json
 
 # Local release-test staging (downloaded tarballs, per-alpha extracts)
 .release-test/
