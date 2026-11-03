@@ -122,9 +122,19 @@ const IFD_REFUSED_CLAUSE: &str =
     "because the option 'allow-import-from-derivation' is disabled";
 ```
 
-Applied to the salient line, which already excludes warnings by construction
-— the second of FR-005a's two conditions is satisfied by the selection rather
-than by a separate check.
+~~Applied to the salient line, which already excludes warnings by
+construction — the second of FR-005a's two conditions is satisfied by the
+selection rather than by a separate check.~~
+
+**Corrected at implementation (finding F5).** This was wrong, and the
+paragraph below says why: FR-005c requires the refusal to win even when
+another error is printed *after* it, so the classifier cannot read only the
+selected line. It searches every error line for the clause and checks
+`is_error_line` itself, so **both** of FR-005a's conditions are explicit
+rather than inherited. The sentence is struck rather than replaced because
+research R2's "the two decisions are not independent" and `tasks.md`'s phase
+ordering were both built on it — see `measurements/findings.md` F5 and
+mutation M1.
 
 **FR-005c precedence**: where both a refusal and another error appear, the
 refusal wins. With `rposition` that is not automatic — the last error line

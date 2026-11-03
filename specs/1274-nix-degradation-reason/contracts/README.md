@@ -51,7 +51,7 @@ clause.
 ## C5 — one rule, both paths
 
 FR-008, SC-005. The closure path and the version-resolution path select the
-salient line by the same rule, and produce the same detail for the same
+explanatory line by the same rule, and produce the same detail for the same
 stderr.
 
 The defect this milestone fixes is that they do not. Two implementations of

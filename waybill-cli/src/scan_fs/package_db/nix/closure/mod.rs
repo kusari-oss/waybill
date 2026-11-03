@@ -29,6 +29,7 @@ use std::time::Duration;
 use super::eval::invoke::{argv_is_safe, is_safe_attribute_name, run_bounded, verify_ifd_refusal};
 use super::eval::preflight::IFD_SETTING;
 use super::eval::reason::DegradationReason;
+use super::eval::stderr::{classify_failure, salient_stderr};
 use super::eval::result::NixSystem;
 use classify::DerivationRole;
 use derivation::RawClosure;
@@ -307,9 +308,17 @@ pub(crate) fn resolve(
             tracing::info!(attribute = %attribute, "nix-closure: the flake does not provide that path");
             return Err(DegradationReason::NoEvaluableAttribute);
         }
-        return Err(DegradationReason::EvaluationFailed(
-            out.stderr.trim().chars().take(200).collect(),
-        ));
+        // T020 / T027 (m1274, #1283 part 1) — the one rule, not a second
+        // one. This line used to be `stderr.trim().chars().take(200)`: a
+        // blind prefix that returned nix's leading git warning and truncated
+        // 855 characters before the line explaining the failure. The fix
+        // already existed in `eval::stderr` — a hundred lines away in the
+        // sibling module, with a doc comment quoting *this* milestone's
+        // motivating cabal2nix message as its case — and had never been
+        // applied here. Measured on the probe: the operator read
+        // `evaluation-failed` with a git warning attached, for a refusal nix
+        // had explained in full.
+        return Err(classify_failure(out.stderr.trim()));
     }
 
     let raw = RawClosure::parse(&out.stdout).map_err(|e| {
@@ -407,7 +416,12 @@ fn list_attributes(
     if !listed.status_success {
         tracing::debug!(
             flakeref,
-            stderr = %listed.stderr.trim().chars().take(200).collect::<String>(),
+            // The one rule here too (m1274, FR-008). This is a debug field
+            // rather than a document detail, so it was not in the
+            // milestone's scope — but it had the same defect in miniature,
+            // and carving an exception for it in the "exactly one rule"
+            // test is how the next copy gets in.
+            stderr = %salient_stderr(listed.stderr.trim()),
             "nix-closure: output not listable"
         );
         return Ok(None);

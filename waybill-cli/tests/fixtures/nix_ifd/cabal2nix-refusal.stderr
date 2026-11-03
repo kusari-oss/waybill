@@ -1,0 +1,29 @@
+warning: Git tree '/private/FIXTURE' has uncommitted changes
+warning: creating lock file "/private/FIXTURE/flake.lock": 
+• Added input 'nixpkgs':
+    'github:NixOS/nixpkgs/a799d3e' (2026-06-06)
+error:
+       … in the left operand of the update (//) operator
+         at «github:NixOS/nixpkgs/a799d3e»/pkgs/development/haskell-modules/lib/compose.nix:48:5:
+           47|     ))
+           48|     // {
+             |     ^
+           49|       overrideScope = scope: overrideCabal f (drv.overrideScope scope);
+
+       … in the left operand of the update (//) operator
+         at «github:NixOS/nixpkgs/a799d3e»/pkgs/development/haskell-modules/lib/compose.nix:48:5:
+           47|     ))
+           48|     // {
+             |     ^
+           49|       overrideScope = scope: overrideCabal f (drv.overrideScope scope);
+
+       … while calling a functor (an attribute set with a '__functor' attribute)
+         at «github:NixOS/nixpkgs/a799d3e»/pkgs/development/haskell-modules/make-package-set.nix:158:5:
+          157|     in
+          158|     lib.makeOverridable drvScope (auto // manualArgs);
+             |     ^
+          159|
+
+       (stack trace truncated; use '--show-trace' to show the full, detailed trace)
+
+       error: cannot build '/nix/store/yh7ywq97mmg2x8mclr96gb62da0xr3xl-cabal2nix-waybill-fixture-ifd.drv^out' during evaluation because the option 'allow-import-from-derivation' is disabled

@@ -416,11 +416,37 @@ fn t017_real_nix_package_and_configuration() {
 
 const C190: &str = "waybill:nix-closure-degraded";
 
-fn c190(s: &Scan) -> Option<String> {
+/// The raw C190 value, after checking all three formats agree.
+///
+/// Milestone 1274 (#1283 part 1) changed this value from a bare wire string
+/// to `{"reason": ..., "detail": ...}`. The assertions below were
+/// **corrected** to read the `reason` field rather than pinned to whatever
+/// the new shape happens to produce (spec FR-016): each one still names the
+/// reason it named before, which is what proves the published wire strings
+/// survived the shape change (FR-013).
+fn c190_raw(s: &Scan) -> Option<String> {
     let [a, b, c] = s.doc_value(C190);
     assert_eq!(a, b, "C190 CycloneDX vs SPDX 2.3");
     assert_eq!(a, c, "C190 CycloneDX vs SPDX 3");
     a
+}
+
+/// The `reason` field of the C190 object.
+fn c190(s: &Scan) -> Option<String> {
+    let raw = c190_raw(s)?;
+    let v: Value = serde_json::from_str(&raw)
+        .unwrap_or_else(|e| panic!("C190 must be a JSON object since m1274: {raw:?} ({e})"));
+    let obj = v.as_object().unwrap_or_else(|| panic!("C190 must be an object: {raw:?}"));
+    assert!(
+        !obj.contains_key("detail") || obj["detail"].is_string(),
+        "`detail` is omitted or a string, never null: {raw:?}"
+    );
+    Some(
+        obj["reason"]
+            .as_str()
+            .unwrap_or_else(|| panic!("C190 carries a `reason`: {raw:?}"))
+            .to_string(),
+    )
 }
 
 #[test]

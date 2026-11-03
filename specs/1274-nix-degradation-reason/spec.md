@@ -328,7 +328,9 @@ explanatory line.
 - **Import-from-derivation**: building a derivation during evaluation. nix
   refuses it when `allow-import-from-derivation` is disabled, which is how
   waybill invokes it.
-- **Salient line**: the line of nix's stderr that explains a failure, as
+- **Explanatory line** (the code calls it the *salient* line, and the
+  function is `salient_stderr`): the line of nix's stderr that explains a
+  failure, as
   distinct from the first line, which is often a warning.
 - **The closure path / the resolution path**: the two nix invocations that
   can fail. Today they select a detail by different rules.

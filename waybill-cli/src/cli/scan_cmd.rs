@@ -5229,10 +5229,15 @@ pub async fn execute(
         });
     // C190 (m1066, #1115): requested and no closure recorded, for any reason,
     // including the offline refusal before any nix process starts.
-    let nix_closure_degraded: Option<&'static str> = match &nix_closure {
-        Some(Err(reason)) => Some(reason.wire()),
+    // m1274 (#1283 part 1): the value is `{"reason": ...}` with a `"detail"`
+    // when the reason carries one, not a bare wire string. Built by
+    // `to_document_value` so all three emitters receive the same bytes and no
+    // emitter learns about any individual variant (FR-002a, FR-004).
+    let nix_closure_degraded_json: Option<String> = match &nix_closure {
+        Some(Err(reason)) => Some(reason.to_document_value()),
         _ => None,
     };
+    let nix_closure_degraded: Option<&str> = nix_closure_degraded_json.as_deref();
     let nix_eval_degraded: Option<&str> = nixpkgs_haskell_summary
         .as_ref()
         .and_then(|s| s.nix_eval.as_ref())

@@ -2285,6 +2285,38 @@ first runs by default.
    build-tooling, both, unreferenced) rather than `dependsOn` edges,
    because a store reference is not a declared dependency.
 
+### When the closure tier degrades, it says why
+
+`waybill:nix-closure-degraded` carries a JSON object — `{"reason": ...}`
+plus a `"detail"` when the reason has one — and is present only when
+`--nix-closure` was requested and no closure was recorded. The scan still
+succeeds and still emits the manifest-derived set; a degradation is a gap
+named in the document, never a failure (Constitution XII.3).
+
+Since milestone 1274 (#1283) a **refused import-from-derivation is named as
+such**: `import-from-derivation-required`, rather than the generic
+`evaluation-failed`. It is the common case for Haskell flakes —
+`callCabal2nix` must build cabal2nix during evaluation to produce the
+derivation, which is import-from-derivation — and the tier refuses that on
+purpose. Before 1274 a `callCabal2nix` flake and a genuinely broken one
+produced documents an operator could not tell apart, so a deliberate policy
+decision read as a bug in waybill. The new reason tells the operator what
+they would have to accept; the refusal itself is unchanged, and whether to
+offer an opt-in is still open (#1283 part 2).
+
+Do not confuse it with `ifd-refusal-unverified`, which is close to its
+opposite: there the installed `nix` did not confirm
+`allow-import-from-derivation = false` is in effect, so nothing was evaluated
+at all and the remedy is to upgrade `nix` (#1114).
+
+The `detail` is the line of nix's stderr that explains the failure, not the
+first line of it. Nix prints the stack trace first and the cause **last** —
+measured on a real refusal, the cause sat 855 characters past the end of the
+old window, and what an operator actually read was `warning: Git tree ... has
+uncommitted changes`. One selection rule now serves both the evaluation and
+the closure paths, so the same failure reads the same way whichever tier hit
+it.
+
 Haskell members of a nixpkgs closure additionally get versions and
 SHA-256 hashes from the pinned revision's `hackage-packages.nix`
 (milestone 926), cached per revision under
