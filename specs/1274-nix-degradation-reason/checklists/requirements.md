@@ -61,12 +61,55 @@ fails rather than carrying on to report findings about something else. Noted
 because a harness that contradicts itself one line apart is worse than one
 that says nothing.
 
-**One clarification was asked and answered in-session**: whether the new
-reason should name import-from-derivation specifically or describe a general
-"declined by policy" class. Specific, because the operator's next action
-differs per cause — which is why `DegradationReason` is a closed set and why
-`offline-requested`, `tool-absent` and `ifd-refusal-unverified` are already
-three variants rather than one.
+## Clarification round, 2026-11-03
+
+Four clarifications now recorded — one during spec-writing, three in the
+`/speckit.clarify` pass. **All three of the new ones produced requirements
+rather than wording**, and two of them found defects in the spec itself.
+
+| # | question | answer | produced |
+|---|---|---|---|
+| 1 | where the explanatory detail lives | document **and** log, inside the existing annotation | FR-002a, FR-002b, FR-016; SC-002 sharpened |
+| 2 | what the classifier anchors on | the disabled-clause, on an error line only | FR-005a, FR-005b; SC-004 and an edge case sharpened |
+| 3 | precedence when both failures appear | the refusal wins, detail keeps both lines | FR-005c; a dangling cross-reference repaired |
+
+**Q1 changed the scope.** Putting the detail in the document means the
+annotation's shape goes from a bare string to an object, so committed goldens
+churn and any consumer keying on the string breaks. FR-016 was added for the
+goldens, and FR-002b records that extending a row with three existing
+extractors is not *adding* a row, so FR-014's condition stays out of play.
+The log-only alternative was rejected because this feature exists precisely
+because the *artifact* cannot say why the tier declined.
+
+**Q2 was measured before it was asked.** The question names a false positive
+I verified during the session rather than one I imagined: a flake whose
+`nixConfig` requests `allow-import-from-derivation` and then fails on a
+missing attribute emits
+
+```
+warning: ignoring untrusted flake configuration setting 'allow-import-from-derivation'.
+error: attribute 'this-attribute-does-not-exist' missing
+```
+
+so the obvious anchor — the bare setting name — reports a missing attribute
+as a policy refusal. Real flakes carry such settings (`slack-web` sets this
+one), so it is not hypothetical, and FR-005's own warning about
+over-matching would have been violated by the simplest implementation.
+
+**Q3 found a cross-reference to a rule that did not exist.** Assumptions
+claimed precedence was "settled by FR-005's ordering"; FR-005 contained no
+ordering. The gap was invisible from FR-005's own text and surfaced only
+because the pass went looking for the rule the sentence pointed at. FR-005c
+now states the precedence, and the Assumptions paragraph records the error
+rather than quietly replacing it — a spec that cites itself can be wrong
+about itself, and the citation reads as settled either way.
+
+**One clarification was asked and answered during spec-writing**: whether the
+new reason should name import-from-derivation specifically or describe a
+general "declined by policy" class. Specific, because the operator's next
+action differs per cause — which is why `DegradationReason` is a closed set
+and why `offline-requested`, `tool-absent` and `ifd-refusal-unverified` are
+already three variants rather than one.
 
 **Deliberately narrow.** #1283's second question (whether to support these
 flakes), #1282, and #1340 are all listed Out of Scope with the reason. The

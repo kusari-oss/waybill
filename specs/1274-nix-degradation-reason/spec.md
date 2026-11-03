@@ -84,6 +84,45 @@ and is worth having under every one.
 
 ### Session 2026-11-03
 
+- Q: Where does the explanatory *detail* live — the document, the log, or
+  both?
+  → A: **Both, carried inside the existing annotation.**
+  `waybill:nix-closure-degraded` becomes a small JSON object with `reason`
+  and `detail`, the shape C173 and C175 already use for the nixpkgs records.
+  A log reaches only the operator who ran the scan, and this feature exists
+  because the *artifact* cannot say why the tier declined — putting the fix
+  in the log alone would leave that untouched (milestone 1273's FR-018). It
+  also keeps FR-014 out of play: extending an annotation that already has
+  three extractors adds no catalog row. The cost taken deliberately is that
+  the annotation's shape changes from a bare string to an object, so every
+  committed golden carrying it churns and consumers keying on the string must
+  be checked.
+
+- Q: What must the classifier anchor on, given that a flake requesting the
+  setting puts its name in stderr even when the failure is unrelated?
+  → A: **nix's consequence clause, and only on a line identified as an
+  error.** Both conditions, because either alone is insufficient. Measured
+  during this session: a flake whose `nixConfig` requests
+  `allow-import-from-derivation` and then fails on a missing attribute emits
+  `warning: ignoring untrusted flake configuration setting
+  'allow-import-from-derivation'.` followed by `error: attribute '…'
+  missing` — so matching the bare setting name anywhere in stderr
+  mis-classifies that as a policy refusal. Real flakes do this; `slack-web`
+  sets the option. A reworded nix message falls through to the generic reason
+  under FR-006 rather than being guessed at.
+
+- Q: When stderr carries both an import-from-derivation refusal and an
+  unrelated error, which reason wins?
+  → A: **The refusal.** It is a fact about waybill's own policy and is
+  actionable — the operator learns what they would have to accept — whereas a
+  co-occurring flake error is frequently a *consequence* of the refusal
+  rather than an independent failure. The cost accepted is that a genuine
+  flake bug can sit behind a policy note, which FR-005c mitigates by keeping
+  both lines in the detail. Rejected: classifying on whichever error nix
+  printed first, because that makes the recorded reason depend on nix's
+  output ordering, which is not a stability contract and could differ between
+  versions for the same two failures.
+
 - Q: Should the new reason be specific to import-from-derivation, or a
   general "the tier declined by policy" class?
   → A: **Specific.** The operator's next action differs per cause, which is
@@ -156,15 +195,17 @@ explanatory line.
 - A flake that requests `allow-import-from-derivation` through its own
   `nixConfig`. waybill does not pass `--accept-flake-config`, so the request
   is ignored and the refusal still applies — the reason must be the refusal,
-  not something about the flake's config.
+  not something about the flake's config. **And the converse, measured:**
+  such a flake failing for an unrelated cause emits a *warning* naming the
+  setting, which must NOT be classified as a refusal (FR-005a).
 - A flake needing import-from-derivation for an attribute **other** than the
   one being evaluated, so evaluation succeeds. No degradation, no reason.
 - nix wording changes between versions. The classifier keys on text, so a
   reworded message must degrade to the existing generic reason rather than
   being mis-classified or crashing.
 - Both failures at once: an unrelated error *and* an
-  import-from-derivation refusal in one stderr. One reason has to win, and
-  which it is must be defined rather than incidental.
+  import-from-derivation refusal in one stderr. The refusal wins (FR-005c),
+  and the detail keeps both lines.
 - A `nix` old enough not to recognise the setting at all — already covered by
   the existing `ifd-refusal-unverified` reason, which must keep its meaning
   and not be displaced by the new one.
@@ -182,6 +223,21 @@ explanatory line.
   only in the scan log. A log reaches only the operator who ran the scan; the
   document is what is read later. (The same requirement milestone 1273's
   FR-018 states for its own signals.)
+- **FR-002a**: The explanatory detail MUST be in the document too, carried
+  **inside the existing `waybill:nix-closure-degraded` annotation** as a
+  structured value with a `reason` and a `detail` — the shape C173 and C175
+  already use. A reason alone answers "was this policy?"; the detail answers
+  "what did it object to?", and an operator reading the artifact months later
+  has no log to fall back on.
+
+  The annotation's shape therefore changes from a bare string to an object.
+  That is a wire change: every committed golden carrying it churns, and any
+  consumer keying on the bare string breaks. Both are consequences this
+  feature accepts rather than discovers, and FR-016 covers the goldens.
+- **FR-002b**: Because the carrier already exists in all three formats with
+  three parity extractors, this feature MUST NOT add a catalog row for the
+  detail. Extending a row is not adding one; FR-014's condition applies only
+  if a row is nonetheless introduced.
 - **FR-003**: The reason MUST also be logged, so an operator can act before
   the SBOM is published rather than only discover it afterwards.
 - **FR-004**: The reason MUST reuse the existing degradation-reason carrier
@@ -190,6 +246,36 @@ explanatory line.
 - **FR-005**: An evaluation failure that is **not** an import-from-derivation
   refusal MUST keep the generic reason. A classifier that over-matches turns
   one uninformative answer into one misleading answer, which is worse.
+- **FR-005a**: The classifier MUST require **both** of: nix's consequence
+  clause naming the disabled option, **and** that the clause appear on a line
+  identified as an error rather than a warning. Each condition alone is
+  insufficient.
+
+  Measured, not reasoned: a flake whose `nixConfig` requests
+  `allow-import-from-derivation` and then fails for an unrelated cause emits
+
+  ```
+  warning: ignoring untrusted flake configuration setting 'allow-import-from-derivation'.
+  error: attribute 'this-attribute-does-not-exist' missing
+  ```
+
+  so a classifier keyed on the bare setting name reports a missing attribute
+  as a policy refusal. Real flakes carry such settings — `slack-web` sets
+  this one — so the false positive is not hypothetical. The probe under
+  `measurements/` covers this case as a negative test.
+- **FR-005c**: Where stderr carries an import-from-derivation refusal **and**
+  another error, the refusal MUST be the recorded reason, and the detail MUST
+  retain the other error's line as well. Precedence is fixed by this
+  requirement rather than by whichever branch of the classifier happens to
+  run first, and it does NOT depend on the order nix printed the lines in —
+  that order is not a stability contract.
+
+  Keeping both lines is what stops this masking a genuine flake bug: the
+  reason names the policy, and the detail still shows everything that failed.
+- **FR-005b**: The matched text is an external behaviour of nix, so a change
+  in its wording MUST degrade to the generic reason (FR-006) rather than
+  being mis-classified, and MUST NOT panic or fail the scan. The probe is
+  committed so the match can be re-verified when nix changes.
 - **FR-006**: Where the cause cannot be determined from nix's output, the
   generic reason MUST be used. Degrading to the catch-all is correct
   behaviour, not a failure of this feature.
@@ -228,6 +314,11 @@ explanatory line.
   when the behaviour is removed, and the classifier MUST have a negative test
   — an evaluation failure that is not a refusal — because an over-matching
   classifier is the likely way to get this wrong.
+- **FR-016**: Any committed golden or fixture asserting the annotation's old
+  bare-string shape MUST be corrected rather than pinned, and the correction
+  MUST be justified against a measurement rather than against this spec. A
+  pre-change baseline MUST therefore be captured before the first reader or
+  emitter change.
 
 ### Key Entities
 
@@ -249,14 +340,18 @@ explanatory line.
 - **SC-001**: Scanning a `callCabal2nix` flake with `--nix-closure` yields a
   document naming import-from-derivation as the cause. Measured today:
   `evaluation-failed`, with no mention of it anywhere in the document.
-- **SC-002**: The recorded detail for that scan contains nix's explanatory
-  line. Measured today: it contains `warning: Git tree '…' has uncommitted
-  changes`, and the explanatory line appears nowhere.
+- **SC-002**: The **document** for that scan contains nix's explanatory line,
+  readable without access to the scan log. Measured today: the document
+  carries no detail at all, and the log's detail contains
+  `warning: Git tree '…' has uncommitted changes` while the explanatory line
+  appears nowhere.
 - **SC-003**: A flake that evaluates today still evaluates, with
   byte-identical output. Measured today on the control: 1,170 derivations
   classified, 304 components, no degradation recorded.
 - **SC-004**: An evaluation failure that is not a refusal keeps the generic
-  reason.
+  reason — including the measured false-positive case, where a flake requests
+  the setting through its own `nixConfig` and then fails on a missing
+  attribute.
 - **SC-005**: The closure path and the resolution path produce the same detail
   for the same stderr.
 - **SC-006**: Every requirement is covered by a test that fails when the
@@ -281,8 +376,14 @@ explanatory line.
   assumes the defence is correct and makes it legible.
 - **One reason wins per degradation.** The carrier records a single reason
   today, and this feature does not change that shape. Which reason wins when
-  two causes are present is settled by FR-005's ordering rather than left to
-  whichever branch runs first.
+  two causes are present is settled by **FR-005c** — the refusal — rather
+  than by whichever branch of the classifier runs first.
+
+  An earlier draft of this paragraph cited "FR-005's ordering", and FR-005
+  contained no ordering: a cross-reference to a rule that did not exist. It
+  is recorded here because the gap was invisible from the requirement's own
+  text and only surfaced when the clarification pass went looking for the
+  rule it pointed at.
 - **`salient_stderr`'s rule is the right rule.** It was measured and
   documented in milestone 1034 and is not re-derived here; this feature
   applies it where it is missing. If the rule is wrong, it is wrong in both
