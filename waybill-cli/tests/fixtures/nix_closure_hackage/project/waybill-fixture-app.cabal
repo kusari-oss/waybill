@@ -1,0 +1,12 @@
+cabal-version:      2.4
+name:               waybill-fixture-app
+version:            0.1.0
+
+-- A declared dependency, so the nixpkgs-haskell enrichment engages and hands
+-- its parsed package set to the closure-identity pass. The closure_only
+-- fixture beside this one deliberately has no .cabal, which is the case
+-- research R2 names: `is_enrichable` finds nothing and `enrich` returns
+-- before loading anything.
+library
+    build-depends:    base, waybill-fixture-text
+    default-language: Haskell2010

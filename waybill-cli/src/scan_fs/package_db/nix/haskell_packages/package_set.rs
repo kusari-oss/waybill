@@ -183,7 +183,11 @@ pub(crate) struct PackageSetEntry {
 }
 
 /// The name → (version, hash) mapping carried by one pinned revision.
-#[derive(Debug, Clone, Default)]
+///
+/// `PartialEq`/`Eq` so the set can travel in `EnrichmentSummary` to the
+/// milestone 1275 closure-identity pass, which needs the same parsed value.
+/// Measured: re-parsing it instead costs 1,121 ms (T005).
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub(crate) struct PackageSet {
     entries: HashMap<String, PackageSetEntry>,
 }

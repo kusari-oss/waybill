@@ -20,6 +20,7 @@
 
 pub(crate) mod boot_libraries;
 pub(crate) mod closure;
+pub(crate) mod closure_identity;
 pub(crate) mod cache;
 pub(crate) mod fetch;
 pub(crate) mod nix_base32;
@@ -532,6 +533,14 @@ pub(crate) struct EnrichmentSummary {
     /// operator opted in. `None` when `--nix-eval` was absent, which is what
     /// keeps the default path byte-identical (spec FR-002).
     pub(crate) nix_eval: Option<NixEvalSummary>,
+    /// Milestone 1275 — the parsed package set this pass loaded, handed on to
+    /// the closure-identity pass so the scan parses it once.
+    ///
+    /// Measured: re-parsing costs 1,121 ms for a 16 MB file the process
+    /// already read (T005, findings F2). Deliberately NOT rendered into
+    /// `to_document_value` — it is 19,437 entries of input, not a record of
+    /// what the pass did.
+    pub(crate) package_set: Option<package_set::PackageSet>,
 }
 
 /// What the evaluation tier did for one scan.
@@ -806,87 +815,23 @@ pub(crate) fn enrich(
     if !components.iter().any(is_enrichable) {
         return None;
     }
-    let lock_path = scan_root.join("flake.lock");
-    if !lock_path.exists() {
-        return None;
-    }
-    let doc = match super::lockfile::parse_flake_lock(&lock_path) {
-        Ok(d) => d,
-        Err(e) => {
-            tracing::debug!(error = ?e, "nixpkgs-haskell: flake.lock unparseable");
-            return None;
-        }
-    };
-    // Gate half 1: a nixpkgs-shaped input pinned to an exact revision.
-    let pinned = match pinned_nixpkgs(&doc) {
-        Ok(p) => p,
-        Err(reason) => return Some(degrade_all(components, reason)),
-    };
-    // #975: the offline check used to sit HERE, above every retrieval, so a
-    // scan with the pinned revision already cached resolved nothing. It now
-    // lives inside `cached_or_fetch`, which refuses the network call but
-    // still reads the cache, and surfaces `OfflineCacheMiss` when the cache
-    // genuinely lacks the artifact. A cold offline scan degrades exactly as
-    // it did before.
-    let Some(location) = pinned.location.clone() else {
-        return Some(degrade_all(components, UnresolvedReason::SourceUnsupported));
-    };
-
-    // Retrieve the package set, preferring the cache (FR-010, SC-005).
-    let text = match cached_or_fetch(
-        source,
-        &location,
-        &pinned.revision,
-        HACKAGE_PACKAGES_PATH,
-        HACKAGE_PACKAGES_KEY,
+    // The acquisition sequence lives in `load_package_set` so the milestone
+    // 1275 closure-identity pass can reach the same package set without
+    // inheriting the two gates above. Those gates are correct for THIS pass
+    // and wrong for that one: `is_enrichable` accepts only versionless
+    // components, so a repository whose only Haskell content arrives through
+    // the derivation closure returns `None` here -- and that is exactly the
+    // scan #1282 is about.
+    let (pinned, location, mut packages) = match load_package_set(
+        scan_root,
         opts.offline,
+        source,
     ) {
-        Ok(t) => t,
-        Err(e) => {
-            let reason = UnresolvedReason::from(&e);
-            tracing::info!(
-                revision = %pinned.revision,
-                reason = reason.as_str(),
-                "nixpkgs-haskell: degrading, package set unavailable"
-            );
-            return Some(degrade_all(components, reason));
-        }
+        PackageSetLoad::NoLockfile => return None,
+        PackageSetLoad::Degraded(reason) => return Some(degrade_all(components, reason)),
+        PackageSetLoad::Loaded(l) => (l.pinned, l.location, l.packages),
     };
-    let mut packages = package_set::parse(&text);
     let mut nix_eval_divergences = Vec::new();
-    // Issue #1033 — apply the shared override file's version rebinds.
-    //
-    // Best-effort by design: this file supplements the generated set, so if it
-    // cannot be retrieved the resolution proceeds on the generated versions
-    // exactly as it did before. Degrading the whole scan because a supplement
-    // is unavailable would trade a small, bounded inaccuracy for none at all.
-    match cached_or_fetch(
-        source,
-        &location,
-        &pinned.revision,
-        CONFIGURATION_COMMON_PATH,
-        CONFIGURATION_COMMON_KEY,
-        opts.offline,
-    ) {
-        Ok(common) => {
-            let rebinds = package_set::parse_top_level_version_rebinds(&common);
-            let changed = packages.apply_version_rebinds(&rebinds);
-            tracing::debug!(
-                revision = %pinned.revision,
-                rebinds = rebinds.len(),
-                changed,
-                "nixpkgs-haskell: applied configuration-common.nix version rebinds"
-            );
-        }
-        Err(e) => {
-            tracing::info!(
-                revision = %pinned.revision,
-                error = ?e,
-                "nixpkgs-haskell: configuration-common.nix unavailable; \
-                 resolving on the generated package set alone (#1033)"
-            );
-        }
-    }
 
     // Milestone 1034 (#971 part A) — the opt-in evaluation tier.
     //
@@ -1347,6 +1292,11 @@ pub(crate) fn enrich(
         annotate_nix_eval_provenance(components, &nix_eval_asked, &nix_eval_divergences);
     }
 
+    // Milestone 1275 — hand the parsed set on rather than making the
+    // closure-identity pass re-read it. Moved, not cloned, and set here
+    // because this is the first point at which nothing else needs it.
+    // Measured: a second parse of this file costs 1,121 ms (T005).
+    summary.package_set = Some(packages);
 
     Some(summary)
 }
@@ -1518,7 +1468,10 @@ const ANN_NIX_EVAL_SUPERSEDED: &str = "waybill:nix-eval-superseded-version";
 /// is not a canonical identifier, so FR-011's "record that it is
 /// uncanonicalised" is satisfied by a standards-native construct rather than
 /// a new annotation.
-fn attach_declared_license(
+/// Shared with the milestone 1275 closure-identity pass, so that "by the same
+/// rules the existing resolution uses" (FR-002, C3) is one implementation
+/// rather than two that agree today.
+pub(crate) fn attach_declared_license(
     c: &mut ResolvedComponent,
     license: Option<&package_set::DeclaredLicense>,
 ) {
@@ -1550,6 +1503,28 @@ fn attach_declared_license(
                 }
             }
         }
+    }
+}
+
+/// Attach the revision's source hash, or no hash at all.
+///
+/// `ContentHash::sha256` validates both the alphabet and the 64-char width. A
+/// value that fails here contributes no hash rather than a malformed one,
+/// which is the same posture the base32 decoder takes (Principle IX). It
+/// should be unreachable: the decoder already rejected anything that was not
+/// 32 bytes.
+///
+/// Shared with the milestone 1275 closure-identity pass (FR-003, C4), so the
+/// "hex or nothing, never malformed" rule has one implementation.
+pub(crate) fn attach_source_hash(c: &mut ResolvedComponent, source_hash: Option<&str>) {
+    let Some(hex) = source_hash else { return };
+    match ContentHash::sha256(hex) {
+        Ok(h) => c.hashes.push(h),
+        Err(e) => tracing::debug!(
+            error = %e,
+            package = %c.name,
+            "nixpkgs-haskell: refusing a source hash that failed validation"
+        ),
     }
 }
 
@@ -1618,21 +1593,7 @@ fn apply_resolved(
         }
         c.purl = p;
     }
-    if let Some(hex) = source_hash {
-        // `ContentHash::sha256` validates both the alphabet and the 64-char
-        // width. A value that fails here contributes no hash rather than a
-        // malformed one, which is the same posture the decoder takes
-        // (Principle IX). It should be unreachable: the decoder already
-        // rejected anything that was not 32 bytes.
-        match ContentHash::sha256(hex) {
-            Ok(h) => c.hashes.push(h),
-            Err(e) => tracing::debug!(
-                error = %e,
-                package = %c.name,
-                "nixpkgs-haskell: refusing a source hash that failed validation"
-            ),
-        }
-    }
+    attach_source_hash(c, source_hash);
     c.sbom_tier = Some("source".to_string());
     c.extra_annotations.insert(
         ANN_RESOLVED_VIA.to_string(),
@@ -1672,6 +1633,134 @@ fn degrade_all(
 /// and the key is the pinned revision — immutable, so a hit cannot be stale.
 /// Before #975 the offline check sat in `enrich`, above this function, so a
 /// fully-hydrated cache resolved nothing.
+/// What acquiring the pinned package set concluded.
+///
+/// Three variants because `enrich` has always had three behaviours here, and
+/// collapsing them loses the distinction between "there is nothing to resolve
+/// against" and "there is, and we could not reach it" (Principle X). An
+/// `Option<Result<_, _>>` would carry the same information and say nothing
+/// about what the outer `None` meant.
+pub(crate) enum PackageSetLoad {
+    /// No `flake.lock`, or one that does not parse. Nothing is pinned, so
+    /// there is nothing to resolve against and nothing to report.
+    NoLockfile,
+    /// A revision was pinned, and the package set could not be obtained.
+    Degraded(UnresolvedReason),
+    /// The set is in hand.
+    Loaded(LoadedPackageSet),
+}
+
+/// The pinned revision's Haskell package set, and where it came from.
+pub(crate) struct LoadedPackageSet {
+    /// The nixpkgs input as `flake.lock` records it.
+    pub(crate) pinned: PinnedNixpkgs,
+    /// Retrieval location, retained because callers fetch further files from
+    /// the same revision (the compiler configurations, for one).
+    pub(crate) location: Location,
+    /// Parsed, with `configuration-common.nix`'s version rebinds applied.
+    pub(crate) packages: package_set::PackageSet,
+}
+
+/// Acquire the pinned revision's Haskell package set.
+///
+/// Extracted from `enrich` (milestone 1275, T004) so that a second pass can
+/// read the same set without inheriting `enrich`'s enrichability gate. The
+/// sequence is unchanged: lockfile, pinned revision, retrieval location,
+/// `hackage-packages.nix` preferring the cache, then
+/// `configuration-common.nix`'s rebinds applied best-effort.
+///
+/// Retrieval goes through `cached_or_fetch`, so an already-warmed per-revision
+/// cache costs no network call -- which is what lets a second caller read the
+/// set without a second fetch. It does cost a second PARSE; the measured cost
+/// is recorded in `specs/1275-closure-hackage-identity/measurements/findings.md`.
+pub(crate) fn load_package_set(
+    scan_root: &Path,
+    offline: bool,
+    source: &dyn fetch::RevisionSource,
+) -> PackageSetLoad {
+    let lock_path = scan_root.join("flake.lock");
+    if !lock_path.exists() {
+        return PackageSetLoad::NoLockfile;
+    }
+    let doc = match super::lockfile::parse_flake_lock(&lock_path) {
+        Ok(d) => d,
+        Err(e) => {
+            tracing::debug!(error = ?e, "nixpkgs-haskell: flake.lock unparseable");
+            return PackageSetLoad::NoLockfile;
+        }
+    };
+    // A nixpkgs-shaped input pinned to an exact revision.
+    let pinned = match pinned_nixpkgs(&doc) {
+        Ok(p) => p,
+        Err(reason) => return PackageSetLoad::Degraded(reason),
+    };
+    // #975: the offline check used to sit HERE, above every retrieval, so a
+    // scan with the pinned revision already cached resolved nothing. It now
+    // lives inside `cached_or_fetch`, which refuses the network call but
+    // still reads the cache, and surfaces `OfflineCacheMiss` when the cache
+    // genuinely lacks the artifact. A cold offline scan degrades exactly as
+    // it did before.
+    let Some(location) = pinned.location.clone() else {
+        return PackageSetLoad::Degraded(UnresolvedReason::SourceUnsupported);
+    };
+
+    // Retrieve the package set, preferring the cache (FR-010, SC-005).
+    let text = match cached_or_fetch(
+        source,
+        &location,
+        &pinned.revision,
+        HACKAGE_PACKAGES_PATH,
+        HACKAGE_PACKAGES_KEY,
+        offline,
+    ) {
+        Ok(t) => t,
+        Err(e) => {
+            let reason = UnresolvedReason::from(&e);
+            tracing::info!(
+                revision = %pinned.revision,
+                reason = reason.as_str(),
+                "nixpkgs-haskell: degrading, package set unavailable"
+            );
+            return PackageSetLoad::Degraded(reason);
+        }
+    };
+    let mut packages = package_set::parse(&text);
+    // Issue #1033 — apply the shared override file's version rebinds.
+    //
+    // Best-effort by design: this file supplements the generated set, so if it
+    // cannot be retrieved the resolution proceeds on the generated versions
+    // exactly as it did before. Degrading the whole scan because a supplement
+    // is unavailable would trade a small, bounded inaccuracy for none at all.
+    match cached_or_fetch(
+        source,
+        &location,
+        &pinned.revision,
+        CONFIGURATION_COMMON_PATH,
+        CONFIGURATION_COMMON_KEY,
+        offline,
+    ) {
+        Ok(common) => {
+            let rebinds = package_set::parse_top_level_version_rebinds(&common);
+            let changed = packages.apply_version_rebinds(&rebinds);
+            tracing::debug!(
+                revision = %pinned.revision,
+                rebinds = rebinds.len(),
+                changed,
+                "nixpkgs-haskell: applied configuration-common.nix version rebinds"
+            );
+        }
+        Err(e) => {
+            tracing::info!(
+                revision = %pinned.revision,
+                error = ?e,
+                "nixpkgs-haskell: configuration-common.nix unavailable; \
+                 resolving on the generated package set alone (#1033)"
+            );
+        }
+    }
+    PackageSetLoad::Loaded(LoadedPackageSet { pinned, location, packages })
+}
+
 fn cached_or_fetch(
     source: &dyn fetch::RevisionSource,
     location: &Location,
@@ -2390,5 +2479,59 @@ mod closure_reconcile_tests {
         assert_eq!(v["reviewed"], 1);
         assert_eq!(v["declined"], 1);
         assert_eq!(v["withdrawn"].as_array().map(Vec::len), Some(0));
+    }
+}
+
+/// Milestone 1275 T005 — what a second parse of the package set costs.
+///
+/// Not a test of behaviour: a committed, re-runnable probe answering one
+/// question the plan asserted rather than measured. `enrich` and the
+/// closure-identity pass both need the parsed set, and `EnrichmentSummary`
+/// cannot carry it between them (adding a `PackageSet` field breaks that
+/// struct's `PartialEq`). The per-revision disk cache means the second
+/// caller performs no second FETCH; it does perform a second PARSE, and
+/// whether that is material decides whether a per-scan memo is worth its
+/// own failure modes.
+///
+/// `#[ignore]` and env-gated: it reads a real 16 MB `hackage-packages.nix`,
+/// which no ordinary test may do (Principle VII). Run it deliberately:
+///
+/// ```sh
+/// WAYBILL_T005_PACKAGE_SET=~/.cache/waybill/nixpkgs/<rev>/hackage-packages.nix \
+///   cargo test -p waybill --lib m1275_t005 -- --ignored --nocapture
+/// ```
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod t005_parse_cost_probe {
+    use super::package_set;
+
+    #[test]
+    #[ignore = "reads a real package set; env-gated probe, not a behaviour test"]
+    fn m1275_t005_second_parse_cost() {
+        let Ok(path) = std::env::var("WAYBILL_T005_PACKAGE_SET") else {
+            eprintln!("WAYBILL_T005_PACKAGE_SET unset; nothing measured");
+            return;
+        };
+        let text = std::fs::read_to_string(&path).unwrap();
+        let mut ms: Vec<u128> = Vec::new();
+        // N=5. One run is not a measurement -- a single observation was read
+        // as a property twice in one session on this project.
+        for _ in 0..5 {
+            let t = std::time::Instant::now();
+            let set = package_set::parse(&text);
+            let elapsed = t.elapsed().as_millis();
+            // Consume the result so the parse cannot be optimised away.
+            assert!(set.len() > 0, "a package set that parsed to nothing");
+            ms.push(elapsed);
+        }
+        ms.sort_unstable();
+        eprintln!(
+            "T005 parse of {} bytes, N=5: min={}ms median={}ms max={}ms (entries={})",
+            text.len(),
+            ms[0],
+            ms[2],
+            ms[4],
+            package_set::parse(&text).len(),
+        );
     }
 }

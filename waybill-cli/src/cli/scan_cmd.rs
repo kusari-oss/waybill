@@ -4733,6 +4733,55 @@ pub async fn execute(
                 existing = components.len() - appended,
                 "nix-closure: supplementing the manifest-derived set"
             );
+
+            // Milestone 1275 (#1282) — give a closure-appended member the
+            // identity the pinned package set already holds for it.
+            //
+            // HERE, after the merge, and that placement is measured rather
+            // than preferred. Milestone 1035 tried the obvious alternative --
+            // moving the merge above `haskell_packages::enrich` so the
+            // existing pass would reach these components -- and measured 41
+            // PURLs DOWNGRADED from `pkg:hackage/QuickCheck@2.15.0.1` to
+            // `pkg:generic/...`; see the comment above. And `is_enrichable`
+            // accepts only versionless components, while a closure member
+            // always carries the version nix recorded, so that pass would
+            // skip them whatever the order.
+            //
+            // The package set comes from `enrich` when it ran, which costs
+            // nothing: re-parsing the 16 MB file measures 1,121 ms (T005).
+            // When `enrich` declined -- a repository whose only Haskell
+            // content arrives through the closure, which research R2 says is
+            // the scan #1282 is about -- the set is loaded from the
+            // per-revision cache WITHOUT a network fetch, so FR-010 holds and
+            // a cold cache degrades through `PackageSetUnavailable` rather
+            // than reaching for the network (findings F3).
+            use scan_fs::package_db::nix::haskell_packages as nhp;
+            let loaded_set: Option<nhp::package_set::PackageSet> =
+                match nixpkgs_haskell_summary.as_ref().and_then(|s| s.package_set.clone()) {
+                    Some(set) => Some(set),
+                    None => match nhp::load_package_set(&root_path, true, &nhp::fetch::HttpSource::new(args.nixpkgs_timeout_secs)) {
+                        nhp::PackageSetLoad::Loaded(l) => Some(l.packages),
+                        nhp::PackageSetLoad::NoLockfile => None,
+                        nhp::PackageSetLoad::Degraded(reason) => {
+                            tracing::info!(
+                                reason = reason.as_str(),
+                                "nix-closure: identity pass degrading, package set unavailable"
+                            );
+                            None
+                        }
+                    },
+                };
+            let identity = nhp::closure_identity::reclassify(
+                &mut components,
+                &mut relationships,
+                classified,
+                loaded_set.as_ref(),
+            );
+            tracing::info!(
+                confirmed = identity.confirmed(),
+                outcomes = %identity.to_document_value(),
+                "nix-closure: identity pass"
+            );
         }
         None => {}
     }
