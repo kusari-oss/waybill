@@ -1,0 +1,12 @@
+warning: Git tree '/private/FIXTURE' has uncommitted changes
+warning: ignoring untrusted flake configuration setting 'allow-import-from-derivation'.
+Pass '--accept-flake-config' to trust it
+warning: creating lock file "/private/FIXTURE/flake.lock": 
+• Added input 'nixpkgs':
+    'github:NixOS/nixpkgs/a799d3e' (2026-06-06)
+error: attribute 'waybillFixtureNoSuchAttribute' missing
+       at /private/FIXTURE/flake.nix:6:44:
+            5|     let p = nixpkgs.legacyPackages.aarch64-darwin;
+            6|     in { packages.aarch64-darwin.default = p.waybillFixtureNoSuchAttribute; };
+             |                                            ^
+            7| }

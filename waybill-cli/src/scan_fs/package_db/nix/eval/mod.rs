@@ -26,6 +26,7 @@
 pub(crate) mod invoke;
 pub(crate) mod preflight;
 pub(crate) mod reason;
+pub(crate) mod stderr;
 pub(crate) mod result;
 
 use std::collections::BTreeMap;
