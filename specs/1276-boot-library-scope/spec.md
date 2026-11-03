@@ -61,6 +61,13 @@ takes no position on them. That is a measurement, not an assumption — and it
 is reported with its positive control, because a bare zero cannot distinguish
 "never mis-scoped" from "never examined".
 
+## Clarifications
+
+### Session 2026-11-03
+
+- Q: When several GHC series are candidates, which series' configuration determines the exempt set? → A: Narrow to the series the flake names when it names one; union across candidates only as the fallback (Option B).
+- Q: Does the implementation build for a direct mark on a boot library, and how? → A: Fix it in the propagation's immune set, and add a document-level invariant so an unanticipated origin fails visibly rather than being silently corrected (Option B).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - what the compiler ships is not reported as absent (Priority: P1)
@@ -149,10 +156,16 @@ the shape that gets misread as a regression in the project.
 ### Edge Cases
 
 - **A boot library that is directly marked rather than reached by
-  propagation.** The schema's reasoning does not depend on how the scope
-  arose, so the rule applies uniformly. Measured: on `slack-web` the affected
-  component is propagation-reached and not directly marked, so this path is
-  currently unexercised and needs a fixture (FR-011).
+  propagation.** Measured population: **0** — all 10 affected components
+  across the corpus carry
+  `waybill:lifecycle-scope-derivation = transitive`. The schema's reasoning
+  does not depend on how the scope arose, so such a mark would still be wrong;
+  FR-002a makes it visible as a failing invariant rather than building a
+  suppression path for a population that does not exist.
+- **A project whose flake names no compiler series.** The exempt set falls
+  back to the union across candidates, which over-exempts by up to 15 names
+  (FR-004a). That is a bounded, measured cost rather than an unknown, and it
+  is the same posture m926 already takes for version resolution.
 - **A boot library that is also genuinely runtime-reachable.** Its scope is
   already correct and must not change; this is the control that keeps the rule
   from being "set every boot library to runtime".
@@ -179,10 +192,22 @@ the shape that gets misread as a regression in the project.
 
 - **FR-001**: A component the pinned revision identifies as compiler-supplied
   MUST NOT carry a non-runtime lifecycle scope.
-- **FR-002**: The rule MUST apply however the scope would otherwise have
-  arisen — transitive propagation or a direct mark — because the schema's
-  definitions turn on whether the package is installed, not on how waybill
-  reached it.
+- **FR-002**: The rule MUST be enforced in the transitive propagation, by
+  treating a compiler-supplied package as immune to it. Immunity is the right
+  shape rather than a repair: the propagation already maintains an immune set
+  for runtime-reachable components, and a package the compiler ships is
+  runtime-present for the same reason — so the propagation should never reach
+  it, rather than reaching it and being corrected afterwards.
+- **FR-002a**: A compiler-supplied component carrying a non-runtime scope from
+  **any** origin MUST be detectable as a defect, not silently corrected. A
+  document-level invariant MUST assert that no compiler-supplied component
+  carries a non-runtime scope, so a direct mark — or a future producer this
+  specification did not anticipate — surfaces as a failing invariant.
+  Measured: all **10** affected components derive their scope transitively
+  (`waybill:lifecycle-scope-derivation = transitive`), so the direct-mark
+  population is **0** today. Building a second suppression path for it would
+  be speculative; leaving it undetectable would let the defect return
+  silently, which is the asymmetry this requirement resolves.
 - **FR-003**: A component that is **not** compiler-supplied MUST keep the
   scope it has today. The correction is confined to the exempt class; the 8
   non-boot components below `slack-web`'s disabled stanza are the measured
@@ -191,6 +216,17 @@ the shape that gets misread as a regression in the project.
   compiler configuration, never from a package-name list maintained in
   waybill. A package the compiler supplies at one revision and not another
   MUST be exempt only where the revision says so.
+- **FR-004a**: When the project's flake names a compiler series, the exempt
+  set MUST be that series' configuration alone. The union across candidate
+  series is permitted **only** as the fallback for a project that names none.
+  Measured at revision `a799d3e3`: the union across 8 series holds 50 names,
+  32 of which every series nulls, so the union exempts up to **15** names a
+  given series does not — packages that compiler does not ship. Over-exempting
+  is the same defect as the one being fixed, pointing the other way, and
+  FR-011 names it the plausible wrong implementation. The narrower path is
+  also the common one: `slack-web`'s per-revision cache holds only
+  `configuration-ghc-9.10.x.nix`, which means its flake named a series and no
+  union was ever formed.
 - **FR-005**: When the compiler configuration cannot be read, the exempt set
   MUST be empty, the scan MUST still succeed, and no component may be treated
   as immune by default.
@@ -265,8 +301,17 @@ the shape that gets misread as a regression in the project.
   presence is owed to the compiler, and no document records an exemption
   count, because neither exists yet.
 - **SC-006**: All three formats report the same scope for every component.
+- **SC-006a**: For a project whose flake names a compiler series, the exempt
+  set equals that series' nulled names exactly. Measured at revision
+  `a799d3e3`: 41 names for `9.10.x`, against 50 for the union — so a correct
+  implementation exempts 41 and an over-exempting one 50, and the two are
+  distinguishable by count alone.
 - **SC-007**: Every requirement is covered by a test that fails when the
   behaviour is removed, mutation-tested.
+- **SC-007a**: The document-level invariant of FR-002a holds on every corpus
+  target, and is demonstrated to fail when a compiler-supplied component is
+  given a non-runtime scope by any means. An invariant never seen to fail is
+  not yet evidence of anything.
 - **SC-008**: Every probe committed under `measurements/` re-runs and
   reproduces its recorded finding.
 
