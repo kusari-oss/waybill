@@ -27437,6 +27437,10 @@
         "value": "{\"disagreements\":5,\"optional-reconciliation\":{\"declined\":0,\"reviewed\":0,\"withdrawn\":[]},\"resolved\":97,\"revision\":\"cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73\",\"unresolved\":{\"absent-from-package-set\":1,\"compiler-supplied\":24}}"
       },
       {
+        "name": "waybill:scope-exemptions",
+        "value": "{\"compiler-supplied\":32}"
+      },
+      {
         "name": "waybill:nixpkgs-haskell-closure",
         "value": "{\"declared\":128,\"relations-walked\":2349,\"transitive\":232,\"unresolved\":{\"compiler-supplied\":8}}"
       },

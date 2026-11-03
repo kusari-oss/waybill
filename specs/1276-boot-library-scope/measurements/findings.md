@@ -462,3 +462,75 @@ has now cost three separate pieces of reasoning: **a check that reads a
 committed golden cannot detect a change the golden predates.** It cuts both
 ways — F3's case failed loudly and was easy to see, F6's and M5's passed
 quietly and were not.
+
+## F13 — all five refresh predictions held, including the two inferred ones (T027)
+
+`public-corpus.yml` run 41720889486, branch `1276-boot-library-scope`,
+`regen_goldens=true`, scanning `0a667816`. Checked against
+`refresh-prediction.md`, committed before the run reported.
+
+| | prediction | outcome |
+|---|---|---|
+| P1 | 10 scopes removed: 8 + 2 | **exact.** `haskell-security-advisories` 83 → 75, `nix-closure-moat` 13 → 11 |
+| P2 | the other targets byte-identical | **held** for all 13 non-Haskell targets |
+| P3 | C202 on 3 targets, `haskell-aeson` the uncertain case | **held**, and `haskell-aeson` is `ABSENT` — it carries no pinned compiler configuration |
+| P4 | nonzero C202 with no scope diff on `haskell-language-server` | **held.** `{"compiler-supplied":32}`, zero scope change |
+| P5 | the two I9 declarations go stale | **held, by the mechanism rather than by inspection** |
+
+All ten removals were `excluded`, all `transitive`, and every one a boot
+library: `array`, `binary`, `deepseq`, `exceptions`, `ghc-prim`,
+`os-string`, `stm`, `unix` on `haskell-security-advisories`; `array` and
+`directory` on `nix-closure-moat`. Those are the ten packages the two
+declarations had named, at the two counts they had predicted.
+
+P5 is the one worth dwelling on. The refresh did not merely make the
+declarations wrong — the harness **failed the lane and named them**:
+`I9 / haskell-security-advisories: StaleDeclaration — holds`, and the same
+for `nix-closure-moat`. 116 cells passed, 2 failed, and both failures were
+declarations whose subject had been fixed. A declaration that outlives its
+cause is the milestone pair's recurring shape (*a check that reads a
+committed golden cannot detect a change the golden predates*), and the
+staleness check is the one piece of machinery that catches it from the other
+side. T027's original form — reading the committed goldens for a count that
+could not move — is what this replaces.
+
+The C202 counts are component counts, not correction counts, which P4
+predicted from reading `compiler_supplied()`: 32 on
+`haskell-language-server`, 27 on `haskell-security-advisories`, 22 on
+`nix-closure-moat`. So the two targets that needed correcting were exempting
+49 components between them and mis-scoping 10 of those.
+
+Having been wrong twice in milestone 1275 about this same diff — predicting
+a scope change that did not happen, then explaining it with a mechanism that
+measured false — I am recording the hit rate rather than only the hits.
+
+## F14 — in regen mode the corpus summary's "Drifted" list measures something else (T027)
+
+The run summary reported two drifted targets. **Three goldens changed.**
+
+`compare_golden` returns `Ok` without comparing when the regen gate is set
+(`layer2_golden.rs`): it writes the golden and returns. So in a
+`regen_goldens=true` run the layer-2 drift path cannot fire for any target,
+and `N of 3 formats drifted for <target>` is never printed. The workflow's
+`Extract failing targets` step then falls through to its second pattern,
+`test corpus_<name> ... FAILED`, and the summary prints those names under
+the heading **Drifted**.
+
+Here the two coincided closely enough to look right: the two I9-stale
+failures are two of the three targets whose goldens moved. The one that
+moved without failing — `haskell-language-server`, which gained C202 and
+nothing else — appears nowhere in the summary. A reviewer auditing which
+goldens changed from the summary alone would have missed it entirely, and
+would have had no reason to suspect anything was absent, because "Drifted:
+2" reads as a count of changed goldens rather than a count of failed tests.
+
+This is #1286's shape again, one layer up: the heading names a measurement
+the step did not make. It is not a defect in waybill's output, and the
+`Assert every target regenerated its goldens` step does correctly confirm
+all 17 targets wrote all 3 formats — which is why the audit in this
+milestone enumerated the 51 files and compared each against its committed
+counterpart instead of trusting the heading. Filed as **#1345** so the
+heading either stops claiming drift in regen mode or the step computes it —
+`git status --porcelain waybill-cli/tests/fixtures/public_corpus/` after the
+regen names exactly the changed goldens, which is the question a reviewer
+actually brings to the summary.
