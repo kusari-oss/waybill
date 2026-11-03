@@ -631,3 +631,55 @@ no longer exists.
 The refresh has to be re-dispatched against the branch with the H3 fix on it.
 Until then the three changed targets' goldens remain un-landed, and that is
 the correct state rather than a partial one.
+
+### H5 — a second corpus finding: FR-002 dropped a license
+
+The re-dispatched run (41572401991, scanned commit `0b629fe4`) satisfied
+T077 — `nix-closure-moat` reports `manifests-read: 1, manifests-unread: 0` —
+and the diff still matched Probe E exactly, control included. But reading the
+golden's substance rather than its diff found a **regression this milestone
+introduced**:
+
+| | buggy run | fixed run |
+|---|---|---|
+| `moat`'s own main module | `evidence=cabal-pkg-descriptor`, `licenses=['MIT']` | `evidence=hpack-manifest`, `licenses=[]` |
+
+The evidence change is FR-002 working. The license loss is not.
+
+**hpack *infers* the license from a `LICENSE` file** and writes it into the
+generated `*.cabal`; it is never a `license:` key in the manifest. Verified
+against the real files: `moat`'s `package.yaml` has no license field, and its
+generated `moat.cabal` carries `license: MIT` / `license-file: LICENSE`. So
+suppressing the generated file under FR-002 lost the main module's license
+outright.
+
+Carrying it forward is **not** a second source of truth. FR-002 settles which
+file answers for the *dependency set*; a field the manifest never mentions
+has no competing answer to choose between, and the generated file is that
+same manifest rendered by the tool that owns it. Milestone 954 added the main
+module's license precisely because it is usually not a published package —
+there is no registry to enrich from, so a drop is permanent.
+
+Fixed, with `manifest_without_license/` as the regression fixture and **M35**
+confirming the test catches the loss.
+
+### H6 — what the corpus caught that nothing else could
+
+Two real defects, neither reachable by anything in this milestone's own
+test apparatus:
+
+| defect | why the fixtures could not find it |
+|---|---|
+| `version: 0.1` rejected (H3) | every synthetic manifest used a quoted or three-component version |
+| the inferred license dropped (H5) | no fixture had a manifest *without* a license beside a generated `*.cabal` *with* one |
+
+Both are shapes a fixture set written by the parser's own author does not
+contain, and a mutation pass can only probe shapes the set already has. 17
+fixtures, 5 suites, 35 mutants and nine green gates all passed over both.
+
+It also shows what a green workflow does and does not establish. Run
+41571149440 was green at every step, its #1286 guard confirmed 17 of 17
+targets wrote goldens, and the per-target diff matched the prediction
+exactly — and its goldens were still wrong to land. "The workflow succeeded"
+and "the artifact is correct" are different claims; only reading the C200
+payload and the main module's licenses told them apart.

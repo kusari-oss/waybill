@@ -987,7 +987,7 @@ pub(crate) fn finalize(
         hpack_outcome.seen.push(path.clone());
         let Some(dir) = path.parent() else { continue };
         match hpack::read_manifest(path) {
-            Ok((manifest, unmodelled)) => {
+            Ok((mut manifest, unmodelled)) => {
                 for c in unmodelled {
                     // FR-001b — a knowably partial answer that says so.
                     tracing::warn!(
@@ -1011,6 +1011,39 @@ pub(crate) fn finalize(
                 // here, and a generated `*.cabal` whose `package.yaml`
                 // could NOT be read still reaches `emit_hpack_warnings`
                 // unchanged, so neither case double-warns.
+                // Milestone 1273 — carry forward a field the manifest does
+                // NOT declare but its generated output does.
+                //
+                // hpack INFERS the license from a `LICENSE` file and writes
+                // it into the `*.cabal`; it is not a `license:` key in the
+                // manifest. Suppressing the generated file therefore lost
+                // it: `MercuryTechnologies/moat` went from `MIT` to no
+                // license at all, found by the corpus refresh and not by any
+                // fixture here.
+                //
+                // This is not a second source of truth. FR-002 settles which
+                // file answers for the DEPENDENCY SET; a field the manifest
+                // never mentions has no competing answer to choose between,
+                // and the generated file is that same manifest rendered by
+                // the tool that owns it. Milestone 954 added the main
+                // module's license precisely because it is usually not a
+                // published package, so there is no registry to enrich from
+                // and a drop here is permanent.
+                let inherited_license = cabal_manifests
+                    .iter()
+                    .find(|(cp, m)| cp.parent() == Some(dir) && m.hpack_generated)
+                    .and_then(|(_, m)| m.license.clone());
+                if manifest.license.is_none() {
+                    if let Some(l) = inherited_license {
+                        tracing::debug!(
+                            package_yaml = %path.display(),
+                            license = %l,
+                            "haskell: package.yaml declares no license; taking the \
+                             one hpack inferred into the generated *.cabal"
+                        );
+                        manifest.license = Some(l);
+                    }
+                }
                 cabal_manifests.retain(|(cabal_path, m)| {
                     let same_dir = cabal_path.parent() == Some(dir);
                     if same_dir && m.hpack_generated {

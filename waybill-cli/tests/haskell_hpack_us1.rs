@@ -258,6 +258,68 @@ fn m1273_us1_an_unquoted_numeric_version_is_accepted() {
     assert_eq!(main, Some("0.1"), "the declared version survives as declared");
 }
 
+/// A second regression from the corpus: FR-002 dropped a license.
+///
+/// hpack **infers** the license from a `LICENSE` file and writes it into the
+/// generated `*.cabal`; it is never a `license:` key in the manifest. So
+/// suppressing the generated file under FR-002 lost the main module's
+/// license outright — `MercuryTechnologies/moat` went from `MIT` to nothing.
+///
+/// Carrying it forward is not a second source of truth. FR-002 settles which
+/// file answers for the **dependency set**; a field the manifest never
+/// mentions has no competing answer to choose between, and the generated file
+/// is that same manifest rendered by the tool that owns it. Milestone 954
+/// added the main module's license precisely because it is usually not a
+/// published package, so there is no registry to enrich from and a drop is
+/// permanent.
+#[test]
+fn m1273_us1_a_license_only_in_the_generated_cabal_is_not_lost() {
+    let s = scan(&fixture("manifest_without_license"));
+
+    // The manifest is still the source of truth for dependencies.
+    let got = hackage_names(&s.doc);
+    assert!(
+        got.iter().any(|n| n == "waybill-fixture-base"),
+        "the manifest's dependency is emitted; got {got:?}"
+    );
+    assert!(
+        !got.iter().any(|n| n == "waybill-fixture-stale"),
+        "and the generated file's is not — FR-002 is unchanged; got {got:?}"
+    );
+
+    // But its license survives, because the manifest declares none.
+    let licenses: Vec<String> = s
+        .doc
+        .pointer("/metadata/component/licenses")
+        .and_then(|v| v.as_array())
+        .map(|arr| {
+            arr.iter()
+                .filter_map(|e| {
+                    e.pointer("/license/id")
+                        .or_else(|| e.pointer("/license/name"))
+                        .or_else(|| e.get("expression"))
+                        .and_then(|v| v.as_str())
+                })
+                .map(str::to_string)
+                .collect()
+        })
+        .unwrap_or_default();
+    assert_eq!(
+        licenses,
+        vec!["MIT".to_string()],
+        "the license hpack inferred into the generated *.cabal must survive \
+         its suppression; got {licenses:?}"
+    );
+    // And the version is still the manifest's, not the generated file's.
+    assert_eq!(
+        s.doc
+            .pointer("/metadata/component/version")
+            .and_then(|v| v.as_str()),
+        Some("0.2"),
+        "the manifest still wins where it DOES declare a value"
+    );
+}
+
 // ───────────────────────────────────────────────────────────────────────
 // T008 / C3 — inheritance reaches every stanza kind, with its own scope
 // ───────────────────────────────────────────────────────────────────────
