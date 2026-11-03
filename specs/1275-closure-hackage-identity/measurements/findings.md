@@ -224,3 +224,91 @@ and still needed the test, exactly as research R7 argued for FR-008.
 Neighbouring suites after US1: `nix_config_closure` 14/14 (C17 holds),
 m926 41/41, license_us3 5/5, degradation_detail 6/6, ifd_reason 7/7,
 eval_tier 16/16, nixpkgs_declarations 5/5.
+
+## F7 — the most important test in the milestone was not testing what it claimed (T020–T027)
+
+`t020` is the C5/FR-004 negative test, and spec.md, tasks.md and its own
+doc comment all call it the test that matters most: it is what keeps
+`pkg:hackage/bash@5.3p9` out of a document. **Mutation showed it was not
+testing FR-004 at all.**
+
+M4 relaxes the version comparison to a name match — the precise rule FR-004
+forbids. It was CAUGHT, but by `t023`, the annotation test, and **not** by
+`t020`:
+
+```
+M4  version rule relaxed   CAUGHT  t023          <- before
+M4  version rule relaxed   CAUGHT  t023, t020    <- after
+```
+
+The cause is a property of the fixture that research R5 had already measured
+and nobody connected to the test design: **the GHC signal rejects all 26 real
+collisions on its own.** The fixture's collision, `shell 5.3p9`, is a
+non-Haskell package, so its derivation is not GHC-built either — and with the
+version rule removed it was still protected, by the *other* rule. Two
+independent guards over one case means neither is tested in isolation, so
+"matching on name alone is forbidden" was unasserted while looking asserted.
+
+Fixed by adding `waybill-fixture-ghcshell 7.7.7` against a set version of
+`0.2.0`: a collision that **is** GHC-built, so the version rule is the only
+thing between it and a wrong coordinate. M4 is now caught by `t020`.
+
+**This is the finding this milestone's mutation budget paid for.** The test
+passed, the feature was correct, and the coverage claim was false — and the
+only reason it surfaced is that M4's verdict named *which* test caught it.
+A mutation harness that printed CAUGHT without the test names would have
+confirmed the gap instead of exposing it, which is worth remembering about
+`mutate.py`'s output format.
+
+### US2's tests could not be watched to fail (a departure)
+
+T024 asked for T020–T023 to be observed failing first. They passed on
+arrival: `decide` was written with both signals in T008, so US2's
+implementation tasks (T025 the hard gate, T026 the annotation) were already
+satisfied by the US1 work rather than being separate steps. Rather than
+reverting the gate to manufacture a red run, the teeth were established by
+mutation — M3 (GHC conjunct dropped), M4 (version rule relaxed) and M10
+(annotation never emitted), all caught. That is stronger evidence than a
+red test against an unimplemented feature, but it is not what the task said,
+so it is recorded as a departure rather than a completion.
+
+## F8 — a non-hermetic test, and the R2 case nothing was covering (T028–T034)
+
+`t030` (C10 / FR-009, the unavailable package set) failed on arrival with
+`not-in-package-set` where `package-set-unavailable` was expected. **The
+verdict was right and the test was wrong**, in a way worth recording because
+nothing in the suite would have caught it:
+
+the `project` fixture has a `.cabal`, so `is_enrichable` is satisfied,
+`enrich` runs, and `enrich` is **not** offline — it fetched the real 16 MB
+`hackage-packages.nix` for the pinned revision over the network and handed
+the pass a genuine nixpkgs package set, in which no `waybill-fixture-*` name
+appears. So `not-in-package-set` was the correct answer to the question the
+test actually asked. Verified rather than assumed: a `RUST_LOG=info` scan with
+the cache pointed at a nonexistent directory logs
+`version resolution complete … revision=Some("a799d3e3…") degraded=None`, and
+`cache_root` honours `WAYBILL_NIXPKGS_CACHE` with no `$HOME` fallback, so the
+miss was real and the retrieval was a network call.
+
+Fixed by pointing `t030` at the `closure_only` fixture, which has no `.cabal`:
+`enrich` returns before any retrieval, and the pass's own cache-only load
+misses and degrades. **Second signal that the fetch is gone: the suite's wall
+time fell from 3.29 s to 0.58 s.**
+
+### The gap the fix exposed
+
+Every other test in the suite uses `project`, where `enrich` runs and hands
+its set over. So **nothing covered research R2's case** — a repository whose
+only Haskell content arrives through the closure, which R2 calls the scan
+#1282 is about. A pass gated on `enrich` having run would have skipped
+precisely those documents, and the whole suite would still have been green.
+
+`t030b` now covers it: `closure_only` with a **seeded** cache must still
+confirm, with a license and a hash, proving the cache-only load does real
+work rather than returning an empty set whose output coincidentally matches
+the degraded one. M11 — replacing the fallback load with `NoLockfile`, i.e.
+making the pass inherit the gate — is CAUGHT by `t030b` and by nothing else.
+
+Mutants: M5 (`no-version-recorded` collapsed into `not-in-package-set`) caught
+by t029; M6 (the unavailable path mislabelled) caught by t030; M11 caught by
+t030b.

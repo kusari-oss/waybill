@@ -112,17 +112,17 @@ feed for GNU bash with a small unrelated Haskell library's coordinate.
 
 ### Tests for User Story 2 (write first, watch fail)
 
-- [ ] T020 [P] [US2] Add the C5 negative test to `waybill-cli/tests/nix_closure_hackage_identity.rs`: a fixture member whose name is in the set at a **different** version keeps `pkg:generic`, and **no** component in the whole document carries a `pkg:hackage` PURL whose version is absent from the set for that name. This is the single most important test in the milestone (FR-004, SC-003, quickstart "the three things to hold on to" #2).
-- [ ] T021 [P] [US2] Add the C6 two-signal test to `waybill-cli/tests/nix_closure_hackage_identity.rs`: the `SignalsDisagree` fixture row — an exact pair whose derivation references no GHC — is **not** reclassified. This exercises the variant real data has never produced (0 of 60), which is why T010 built a fixture for it.
-- [ ] T022 [P] [US2] Add the C9 test to `waybill-cli/tests/nix_closure_hackage_identity.rs`: no two components in the document share one identity (FR-008, SC-005). Research R7 says this is satisfied by construction — `merge_closure_components` keys on `(name, version)` and reclassification changes neither — but "satisfied by construction" is a claim about code that can change, so FR-008 gets a test rather than an argument.
-- [ ] T023 [US2] Add the US2 scenario-2 test to `waybill-cli/tests/nix_closure_hackage_identity.rs`: the collision member carries an annotation recording that a same-named Hackage package exists and was deliberately not used, so the decision is auditable rather than silent. Uses T006's carrier.
-- [ ] T024 [US2] Run T020–T023 and record that each fails, and how, in `findings.md`.
+- [X] T020 [P] [US2] Add the C5 negative test to `waybill-cli/tests/nix_closure_hackage_identity.rs`: a fixture member whose name is in the set at a **different** version keeps `pkg:generic`, and **no** component in the whole document carries a `pkg:hackage` PURL whose version is absent from the set for that name. This is the single most important test in the milestone (FR-004, SC-003, quickstart "the three things to hold on to" #2).
+- [X] T021 [P] [US2] Add the C6 two-signal test to `waybill-cli/tests/nix_closure_hackage_identity.rs`: the `SignalsDisagree` fixture row — an exact pair whose derivation references no GHC — is **not** reclassified. This exercises the variant real data has never produced (0 of 60), which is why T010 built a fixture for it.
+- [X] T022 [P] [US2] Add the C9 test to `waybill-cli/tests/nix_closure_hackage_identity.rs`: no two components in the document share one identity (FR-008, SC-005). Research R7 says this is satisfied by construction — `merge_closure_components` keys on `(name, version)` and reclassification changes neither — but "satisfied by construction" is a claim about code that can change, so FR-008 gets a test rather than an argument.
+- [X] T023 [US2] Add the US2 scenario-2 test to `waybill-cli/tests/nix_closure_hackage_identity.rs`: the collision member carries an annotation recording that a same-named Hackage package exists and was deliberately not used, so the decision is auditable rather than silent. Uses T006's carrier.
+- [X] T024 [US2] Run T020–T023 and record that each fails, and how, in `findings.md`.
 
 ### Implementation for User Story 2
 
-- [ ] T025 [US2] Make the GHC signal a hard gate in `closure_identity.rs`: `Confirmed` requires **both** signals, and an exact pair without the GHC signal yields `SignalsDisagree`, not `Confirmed`. A name-or-version-only path must not exist in the code at all (FR-005, C6).
-- [ ] T026 [US2] Emit the collision annotation in `waybill-cli/src/scan_fs/package_db/nix/haskell_packages/closure_identity.rs` for `VersionDisagrees` and `SignalsDisagree` through T006's carrier, naming the set version that did not match.
-- [ ] T027 [US2] Verify T020–T023 pass, then run mutation M3 (drop the GHC-signal conjunct, leaving the name-and-version match alone) and M4 (relax the version comparison to a name match) and confirm both are CAUGHT by T020 specifically. Record in `findings.md`. If M4 is caught only by a neighbouring suite, say so — m1274's M8b was, and the reason was a control that could not fail.
+- [X] T025 [US2] Make the GHC signal a hard gate in `closure_identity.rs`: `Confirmed` requires **both** signals, and an exact pair without the GHC signal yields `SignalsDisagree`, not `Confirmed`. A name-or-version-only path must not exist in the code at all (FR-005, C6).
+- [X] T026 [US2] Emit the collision annotation in `waybill-cli/src/scan_fs/package_db/nix/haskell_packages/closure_identity.rs` for `VersionDisagrees` and `SignalsDisagree` through T006's carrier, naming the set version that did not match.
+- [X] T027 [US2] Verify T020–T023 pass, then run mutation M3 (drop the GHC-signal conjunct, leaving the name-and-version match alone) and M4 (relax the version comparison to a name match) and confirm both are CAUGHT by T020 specifically. Record in `findings.md`. If M4 is caught only by a neighbouring suite, say so — m1274's M8b was, and the reason was a control that could not fail.
 
 **Checkpoint**: US1 + US2 together are shippable. The reclassification is now safe by measurement rather than by intention.
 
@@ -139,16 +139,16 @@ and that the five outcomes are distinguishable from each other on the wire.
 
 ### Tests for User Story 3 (write first, watch fail)
 
-- [ ] T028 [P] [US3] Add the C8 coverage test to `waybill-cli/tests/nix_closure_hackage_identity.rs`: **every** `pkg:generic` closure member in the emitted document carries a reason. Assert the count equals the generic-member count, not merely that some reasons exist — a check that did not run looks identical to a check that passed.
-- [ ] T029 [P] [US3] Add the five-outcome test to `waybill-cli/tests/nix_closure_hackage_identity.rs`: `NotInPackageSet`, `VersionDisagrees`, `SignalsDisagree`, `NoVersionRecorded` and `PackageSetUnavailable` each produce a distinct wire value. `NoVersionRecorded` must be distinguishable from a failed lookup — the lookup was *impossible*, which is a different fact and calls for different action (US3 scenario 2, FR-007).
-- [ ] T030 [P] [US3] Add the C10 degradation test: with the package set unavailable (point `WAYBILL_NIXPKGS_CACHE` at an empty dir and run offline, as `nix_haskell_resolution_m926.rs:167` does), every member stays `pkg:generic`, the **scan still succeeds**, and the document records that the pass did not run (FR-009, Principle XI). Assert on the recorded value's presence — not on the absence of Hackage PURLs, which a crashed pass would also produce.
-- [ ] T031 [US3] Run T028–T030 and record that each fails, and how, in `findings.md`.
+- [X] T028 [P] [US3] Add the C8 coverage test to `waybill-cli/tests/nix_closure_hackage_identity.rs`: **every** `pkg:generic` closure member in the emitted document carries a reason. Assert the count equals the generic-member count, not merely that some reasons exist — a check that did not run looks identical to a check that passed.
+- [X] T029 [P] [US3] Add the five-outcome test to `waybill-cli/tests/nix_closure_hackage_identity.rs`: `NotInPackageSet`, `VersionDisagrees`, `SignalsDisagree`, `NoVersionRecorded` and `PackageSetUnavailable` each produce a distinct wire value. `NoVersionRecorded` must be distinguishable from a failed lookup — the lookup was *impossible*, which is a different fact and calls for different action (US3 scenario 2, FR-007).
+- [X] T030 [P] [US3] Add the C10 degradation test: with the package set unavailable (point `WAYBILL_NIXPKGS_CACHE` at an empty dir and run offline, as `nix_haskell_resolution_m926.rs:167` does), every member stays `pkg:generic`, the **scan still succeeds**, and the document records that the pass did not run (FR-009, Principle XI). Assert on the recorded value's presence — not on the absence of Hackage PURLs, which a crashed pass would also produce.
+- [X] T031 [US3] Run T028–T030 and record that each fails, and how, in `findings.md`.
 
 ### Implementation for User Story 3
 
-- [ ] T032 [US3] Emit the reason for every non-`Confirmed` variant in `closure_identity.rs` through T006's carrier. The enum is exhaustive, so this is a total match with no fallback arm — a `_ => None` is how a later variant silently loses its reason (#1218, #892, Principle IV).
-- [ ] T033 [US3] Handle `PackageSetUnavailable` in the `scan_cmd.rs` call site: when T004's loader returns an `UnresolvedReason`, every member lands in that variant and the document records that the pass did not run. Nothing fails, nothing panics.
-- [ ] T034 [US3] Verify T028–T030 pass, then run mutation M5 (collapse `NoVersionRecorded` into `NotInPackageSet`) and M6 (make the unavailable path emit nothing rather than a recorded reason) and confirm both are CAUGHT. Record in `findings.md`.
+- [X] T032 [US3] Emit the reason for every non-`Confirmed` variant in `closure_identity.rs` through T006's carrier. The enum is exhaustive, so this is a total match with no fallback arm — a `_ => None` is how a later variant silently loses its reason (#1218, #892, Principle IV).
+- [X] T033 [US3] Handle `PackageSetUnavailable` in the `scan_cmd.rs` call site: when T004's loader returns an `UnresolvedReason`, every member lands in that variant and the document records that the pass did not run. Nothing fails, nothing panics.
+- [X] T034 [US3] Verify T028–T030 pass, then run mutation M5 (collapse `NoVersionRecorded` into `NotInPackageSet`) and M6 (make the unavailable path emit nothing rather than a recorded reason) and confirm both are CAUGHT. Record in `findings.md`.
 
 **Checkpoint**: all three stories are independently functional. 59 members matchable, 217 that say why they are not.
 
