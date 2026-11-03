@@ -267,8 +267,14 @@ carries a resolved version and an unresolved-reason.
   Berry reader resolves the same tension in milestone 1272's FR-004a, where a
   manifest declaration overrides a lockfile that predates an edit.
 - **FR-003**: A `package.yaml` that is present but cannot be parsed MUST produce
-  a diagnostic naming the file and the reason, and MUST NOT leave the scan
-  looking like a scan of a project with no dependencies.
+  a diagnostic naming the file and the reason.
+
+  Scoped to the diagnostic alone. An earlier wording added "and MUST NOT leave
+  the scan looking like a scan of a project with no dependencies", which is
+  FR-005 restated — the two were then tested and mutated separately, so one
+  behaviour was being counted twice and a reader could not tell which
+  requirement owned the completeness claim. FR-005 owns it exclusively; this
+  requirement owns the diagnostic that names the file.
 - **FR-004**: A disagreement between a `package.yaml` and its generated
   `*.cabal` MUST remain visible to the operator. Milestone 143 shipped a warning
   for this case, and measurement shows it fires ONLY for it — the warning loop

@@ -19,6 +19,12 @@ command below runs `--offline`**:
 | `a799d3e3886da994fa307f817a6bc705ae538eeb` | `reproduce-1273.sh`, `license-shapes.sh` |
 | `5ae3b07d8d6527c42f17c876e404993199144b6a` | `sc003-public-library.sh` (the library's own lock) |
 
+**The test suite needs neither.** Only the probes read the shared cache, and
+only read-only. A test that read `~/.cache/waybill/nixpkgs/` would pass here
+and fail on CI, which has no such cache — so tests seed a
+`tempfile::tempdir()` with a synthetic package set instead, per `seed_cache()`
+at `waybill-cli/tests/nix_haskell_resolution_m926.rs:116`.
+
 `hpack` is **not** a prerequisite for waybill or for its tests — FR-021 and
 FR-022 forbid depending on it. It is needed only to re-run the semantics
 probe:
