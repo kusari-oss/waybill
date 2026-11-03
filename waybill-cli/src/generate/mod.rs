@@ -119,6 +119,15 @@ pub struct ScanArtifacts<'a> {
     /// dependencies, no `flake.lock`, or `--no-nixpkgs-haskell-closure` stays
     /// byte-identical to the pre-feature output (FR-015, FR-017).
     pub nixpkgs_haskell_closure: Option<&'a str>,
+    /// Milestone 1276 (#1340) — how many components a scope rule exempted,
+    /// as a JSON object encoded for the wire. `Some("{}")` when nothing was
+    /// exempted; `None` only when the pass did not run.
+    ///
+    /// Appended at the end, like its two predecessors: this list is
+    /// positional in several construction sites and a mid-list insertion
+    /// could silently re-bind an adjacent `Option<&str>` with no type error
+    /// (#844).
+    pub scope_exemptions: Option<&'a str>,
     /// Milestone 1034 (#971 part A, C178) — document-scope record of what the
     /// opt-in `nix eval` tier did: the revision and platform it evaluated
     /// for, how many attributes it resolved, and how many file-parsed

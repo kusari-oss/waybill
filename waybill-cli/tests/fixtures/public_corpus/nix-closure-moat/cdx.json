@@ -1897,10 +1897,6 @@
       "name": "array",
       "properties": [
         {
-          "name": "waybill:lifecycle-scope",
-          "value": "development"
-        },
-        {
           "name": "waybill:sbom-tier",
           "value": "design"
         },
@@ -1909,16 +1905,11 @@
           "value": "compiler-supplied"
         },
         {
-          "name": "waybill:lifecycle-scope-derivation",
-          "value": "transitive"
-        },
-        {
           "name": "waybill:nixpkgs-component-origin",
           "value": "transitive"
         }
       ],
       "purl": "pkg:hackage/array",
-      "scope": "excluded",
       "type": "library"
     },
     {
@@ -2130,10 +2121,6 @@
       "name": "directory",
       "properties": [
         {
-          "name": "waybill:lifecycle-scope",
-          "value": "development"
-        },
-        {
           "name": "waybill:sbom-tier",
           "value": "design"
         },
@@ -2142,16 +2129,11 @@
           "value": "compiler-supplied"
         },
         {
-          "name": "waybill:lifecycle-scope-derivation",
-          "value": "transitive"
-        },
-        {
           "name": "waybill:nixpkgs-component-origin",
           "value": "transitive"
         }
       ],
       "purl": "pkg:hackage/directory",
-      "scope": "excluded",
       "type": "library"
     },
     {
@@ -19695,6 +19677,10 @@
       {
         "name": "waybill:nixpkgs-haskell-resolution",
         "value": "{\"disagreements\":0,\"optional-reconciliation\":{\"declined\":0,\"reviewed\":0,\"withdrawn\":[]},\"resolved\":12,\"revision\":\"a799d3e3886da994fa307f817a6bc705ae538eeb\",\"unresolved\":{\"compiler-supplied\":7}}"
+      },
+      {
+        "name": "waybill:scope-exemptions",
+        "value": "{\"compiler-supplied\":22}"
       },
       {
         "name": "waybill:nixpkgs-haskell-closure",

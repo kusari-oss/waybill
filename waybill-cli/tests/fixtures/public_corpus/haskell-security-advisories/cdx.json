@@ -5358,10 +5358,6 @@
       "name": "array",
       "properties": [
         {
-          "name": "waybill:lifecycle-scope",
-          "value": "development"
-        },
-        {
           "name": "waybill:sbom-tier",
           "value": "design"
         },
@@ -5370,16 +5366,11 @@
           "value": "compiler-supplied"
         },
         {
-          "name": "waybill:lifecycle-scope-derivation",
-          "value": "transitive"
-        },
-        {
           "name": "waybill:nixpkgs-component-origin",
           "value": "transitive"
         }
       ],
       "purl": "pkg:hackage/array",
-      "scope": "excluded",
       "type": "library"
     },
     {
@@ -6208,10 +6199,6 @@
       "name": "binary",
       "properties": [
         {
-          "name": "waybill:lifecycle-scope",
-          "value": "development"
-        },
-        {
           "name": "waybill:sbom-tier",
           "value": "design"
         },
@@ -6220,16 +6207,11 @@
           "value": "compiler-supplied"
         },
         {
-          "name": "waybill:lifecycle-scope-derivation",
-          "value": "transitive"
-        },
-        {
           "name": "waybill:nixpkgs-component-origin",
           "value": "transitive"
         }
       ],
       "purl": "pkg:hackage/binary",
-      "scope": "excluded",
       "type": "library"
     },
     {
@@ -8007,10 +7989,6 @@
       "name": "deepseq",
       "properties": [
         {
-          "name": "waybill:lifecycle-scope",
-          "value": "development"
-        },
-        {
           "name": "waybill:sbom-tier",
           "value": "design"
         },
@@ -8019,16 +7997,11 @@
           "value": "compiler-supplied"
         },
         {
-          "name": "waybill:lifecycle-scope-derivation",
-          "value": "transitive"
-        },
-        {
           "name": "waybill:nixpkgs-component-origin",
           "value": "transitive"
         }
       ],
       "purl": "pkg:hackage/deepseq",
-      "scope": "excluded",
       "type": "library"
     },
     {
@@ -8552,10 +8525,6 @@
       "name": "exceptions",
       "properties": [
         {
-          "name": "waybill:lifecycle-scope",
-          "value": "development"
-        },
-        {
           "name": "waybill:sbom-tier",
           "value": "design"
         },
@@ -8564,16 +8533,11 @@
           "value": "compiler-supplied"
         },
         {
-          "name": "waybill:lifecycle-scope-derivation",
-          "value": "transitive"
-        },
-        {
           "name": "waybill:nixpkgs-component-origin",
           "value": "transitive"
         }
       ],
       "purl": "pkg:hackage/exceptions",
-      "scope": "excluded",
       "type": "library"
     },
     {
@@ -8712,10 +8676,6 @@
       "name": "ghc-prim",
       "properties": [
         {
-          "name": "waybill:lifecycle-scope",
-          "value": "development"
-        },
-        {
           "name": "waybill:sbom-tier",
           "value": "design"
         },
@@ -8724,16 +8684,11 @@
           "value": "compiler-supplied"
         },
         {
-          "name": "waybill:lifecycle-scope-derivation",
-          "value": "transitive"
-        },
-        {
           "name": "waybill:nixpkgs-component-origin",
           "value": "transitive"
         }
       ],
       "purl": "pkg:hackage/ghc-prim",
-      "scope": "excluded",
       "type": "library"
     },
     {
@@ -10530,10 +10485,6 @@
       "name": "os-string",
       "properties": [
         {
-          "name": "waybill:lifecycle-scope",
-          "value": "development"
-        },
-        {
           "name": "waybill:sbom-tier",
           "value": "design"
         },
@@ -10542,16 +10493,11 @@
           "value": "compiler-supplied"
         },
         {
-          "name": "waybill:lifecycle-scope-derivation",
-          "value": "transitive"
-        },
-        {
           "name": "waybill:nixpkgs-component-origin",
           "value": "transitive"
         }
       ],
       "purl": "pkg:hackage/os-string",
-      "scope": "excluded",
       "type": "library"
     },
     {
@@ -12075,10 +12021,6 @@
       "name": "stm",
       "properties": [
         {
-          "name": "waybill:lifecycle-scope",
-          "value": "development"
-        },
-        {
           "name": "waybill:sbom-tier",
           "value": "design"
         },
@@ -12087,16 +12029,11 @@
           "value": "compiler-supplied"
         },
         {
-          "name": "waybill:lifecycle-scope-derivation",
-          "value": "transitive"
-        },
-        {
           "name": "waybill:nixpkgs-component-origin",
           "value": "transitive"
         }
       ],
       "purl": "pkg:hackage/stm",
-      "scope": "excluded",
       "type": "library"
     },
     {
@@ -13647,10 +13584,6 @@
       "name": "unix",
       "properties": [
         {
-          "name": "waybill:lifecycle-scope",
-          "value": "development"
-        },
-        {
           "name": "waybill:sbom-tier",
           "value": "design"
         },
@@ -13659,16 +13592,11 @@
           "value": "compiler-supplied"
         },
         {
-          "name": "waybill:lifecycle-scope-derivation",
-          "value": "transitive"
-        },
-        {
           "name": "waybill:nixpkgs-component-origin",
           "value": "transitive"
         }
       ],
       "purl": "pkg:hackage/unix",
-      "scope": "excluded",
       "type": "library"
     },
     {
@@ -17287,6 +17215,10 @@
       {
         "name": "waybill:nixpkgs-haskell-resolution",
         "value": "{\"disagreements\":4,\"optional-reconciliation\":{\"declined\":0,\"reviewed\":0,\"withdrawn\":[]},\"resolved\":39,\"revision\":\"567a49d1913ce81ac6e9582e3553dd90a955875f\",\"unresolved\":{\"compiler-supplied\":14}}"
+      },
+      {
+        "name": "waybill:scope-exemptions",
+        "value": "{\"compiler-supplied\":27}"
       },
       {
         "name": "waybill:nixpkgs-haskell-closure",

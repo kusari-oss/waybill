@@ -281,4 +281,3 @@ was never created and the dedup drops the only carrier of the module
 identity. A reproduction that needs no container image is inlined in #1216.
 """
 issue = 1216
-

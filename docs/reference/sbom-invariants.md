@@ -1,3 +1,45 @@
+### I9
+
+**Catches**: a component the pinned revision's compiler supplies carrying
+`optional` or `excluded`. Milestone 1276 (#1340).
+
+The claim is a conformance one rather than a preference. CycloneDX 1.6
+defines `optional` as "not capable of being called due to them **not
+being installed** or otherwise accessible by any means", and instructs
+that a component which IS installed but is prohibited from being called
+"must be scoped as `required`"; `excluded` as "not reachable within a
+call graph at runtime". A GHC boot library is installed in every build —
+the compiler ships it, whatever the flags say — and is in the artifact's
+call graph, so both values are false of it by the schema's own text. A
+consumer filtering on scope to learn what is in the artifact would
+wrongly drop it.
+
+**Boundary with I3**: these two partition. I3 asserts that a component
+reachable only through non-runtime edges carries a non-runtime marker
+*unless the compiler supplies it*; this row asserts that one the compiler
+supplies carries no such marker at all. Every component satisfies exactly
+one of the two preconditions. Both identify the class from the same
+signal — C170 `waybill:haskell-version-unresolved-reason` =
+`compiler-supplied` — and they must continue to, or the pair becomes
+locally satisfiable while jointly incoherent.
+
+**When it fires**: find how the scope was assigned. If it was propagated
+transitively, the propagation's compiler-supplied immunity has stopped
+working — that is the population milestone 1276 fixed, measured at 10
+components across two targets, all of them `transitive`. If it was
+assigned directly by a reader, this is the origin milestone 1276
+deliberately did not build a suppression path for, on the grounds that
+its population was zero; the fix is to decide where the mark should be
+suppressed rather than to relax this row.
+
+**What it does not catch**: a component that is runtime-present for some
+other reason — an OS package in a rootfs scan, a language stdlib
+collapsed by the file tier. Measured at the time this row was added,
+those classes carry no lifecycle scope at all (142 and 175 components,
+every one scope-free), so they are not in this row's population. If a
+future feature gives them scopes, the same reasoning applies and this
+note is where to start.
+
 # SBOM Invariant Catalog
 
 **Version**: v1 | **Canonical home**: this file (`docs/reference/sbom-invariants.md`).
@@ -37,12 +79,13 @@ For the per-annotation wire shapes these invariants read, see
 |---|---|---|---|---|
 | I1 | No dependency edge targets a file-tier component | document contains at least one file-tier component | `file-tier-dependency-edge` | Active |
 | I2 | `(name, version, type)` identifies at most one component | at least two components | `duplicate-library-identity`, `duplicate-file-identity`, `duplicate-application-identity`, `duplicate-other-identity` | Active |
-| I3 | A component reachable from the subject only through non-runtime edges carries a non-runtime marker | the document declares at least one non-runtime dependency edge | `unmarked-non-runtime-reachable` | Active |
+| I3 | A component reachable from the subject only through non-runtime edges carries a non-runtime marker, unless the compiler supplies it | the document declares at least one non-runtime dependency edge | `unmarked-non-runtime-reachable` | Active |
 | I4 | CycloneDX and SPDX 2.3 agree on the subject's direct dependency set | both documents emitted, each with a resolvable subject | `root-direct-only-in-cdx`, `root-direct-only-in-spdx` | Active |
 | I5 | A `complete` graph-completeness verdict implies nothing was excluded from the judgement | document-scope completeness verdict is `complete` | `complete-with-unreachable` | Active |
 | I6 | A package does not appear under several different unknown-version spellings | at least one component carries an unknown-version sentinel | `mixed-unknown-version-spelling` | Active |
 | I7 | A component not reachable from the subject by any dependency edge carries a marker explaining why | subject resolvable and at least one non-subject component | `unreachable-and-unexplained` | Active |
 | I8 | A component with no version carries an annotation explaining why it has none | at least one component has an absent or empty version | `versionless-and-unexplained` | Active |
+| I9 | A component the compiler supplies carries no non-runtime scope | at least one component is marked compiler-supplied | `compiler-supplied-non-runtime` | Active |
 
 ### I1
 

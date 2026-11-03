@@ -533,6 +533,23 @@ pub(crate) struct EnrichmentSummary {
     /// operator opted in. `None` when `--nix-eval` was absent, which is what
     /// keeps the default path byte-identical (spec FR-002).
     pub(crate) nix_eval: Option<NixEvalSummary>,
+    /// Milestone 1276 — the packages the pinned revision's compiler supplies,
+    /// handed on to the lifecycle-scope propagation.
+    ///
+    /// This pass computes the set to classify with and then drops it. The
+    /// propagation needs it to treat a compiler-supplied package as immune
+    /// (#1340): such a package is installed in every build, so the CycloneDX
+    /// definitions of `optional` and `excluded` are both false of it, and a
+    /// non-runtime scope propagated to it is a conformance defect.
+    ///
+    /// Carried here rather than re-derived because the propagation runs for
+    /// scans that never enable `--nix-closure` — the two affected corpus
+    /// targets are both offline scans — so milestone 1275's boot-set load,
+    /// which lives inside the closure arm, is unreachable from there.
+    ///
+    /// `None` when this pass did not run or degraded, which exempts nothing
+    /// (FR-005). Unearned immunity is the dangerous default.
+    pub(crate) boot_libraries: Option<BTreeSet<String>>,
     /// Milestone 1275 — the parsed package set this pass loaded, handed on to
     /// the closure-identity pass so the scan parses it once.
     ///
@@ -1292,6 +1309,11 @@ pub(crate) fn enrich(
         annotate_nix_eval_provenance(components, &nix_eval_asked, &nix_eval_divergences);
     }
 
+    // Milestone 1276 — hand the compiler-supplied set on to the scope
+    // propagation, which cannot re-derive it: it runs for scans with no
+    // `--nix-closure`, where nothing else reads the compiler configurations.
+    summary.boot_libraries = Some(boot.clone());
+
     // Milestone 1275 — hand the parsed set on rather than making the
     // closure-identity pass re-read it. Moved, not cloned, and set here
     // because this is the first point at which nothing else needs it.
@@ -1877,6 +1899,49 @@ fn candidate_series(scan_root: &Path) -> Vec<String> {
 mod enrich_tests {
     use super::*;
     use crate::testing::EnvGuard;
+
+    /// C6 / FR-004 / FR-004a — the exempt class comes from the series the
+    /// flake names, with the union across candidates only as the fallback.
+    ///
+    /// **Asserted, not built**: `candidate_series` already behaves this way
+    /// (milestone 1276 research R2), and that is a claim about code which can
+    /// change. The figures make the distinction checkable rather than
+    /// rhetorical: at revision `a799d3e3` the union across eight series holds
+    /// 50 nulled names while `9.10.x` alone holds 41, so an implementation
+    /// that silently unioned would exempt up to **15** packages a given
+    /// compiler does not ship — over-exemption, which is the defect milestone
+    /// 1276 fixes pointing the other way.
+    #[test]
+    fn m1276_candidate_series_narrows_to_what_the_flake_names() {
+        let dir = tempfile::tempdir().unwrap();
+        // A flake naming one series, in the attribute spelling nixpkgs uses.
+        std::fs::write(
+            dir.path().join("flake.nix"),
+            "{ outputs = { self, nixpkgs }: {\n  packages.default =\n    nixpkgs.haskell.packages.ghc910.waybill-fixture-app;\n}; }\n",
+        )
+        .unwrap();
+        let named = candidate_series(dir.path());
+        assert_eq!(
+            named,
+            vec!["9.10.x".to_string()],
+            "the named series was not the only candidate; got {named:?}"
+        );
+
+        // No flake.nix at all: every known series, which is the conservative
+        // fallback and the only case where a union is formed.
+        let empty = tempfile::tempdir().unwrap();
+        let fallback = candidate_series(empty.path());
+        assert_eq!(
+            fallback.len(),
+            KNOWN_GHC_SERIES.len(),
+            "the fallback is not the full candidate list"
+        );
+        assert!(
+            fallback.len() > named.len(),
+            "the fallback must be strictly wider than a named series, or the \
+             narrowing this test exists to assert is not happening"
+        );
+    }
 
     const LOCK: &str = r#"{
       "nodes": {

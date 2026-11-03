@@ -437,6 +437,7 @@ mod tests {
             nix_eval_system: None,
             nixpkgs_haskell_resolution: None,
             nixpkgs_haskell_closure: None,
+            scope_exemptions: None,
             file_inventory_mode: None,
             file_inventory_source_shapes: None,
             root_override: crate::generate::RootComponentOverride::default(),
