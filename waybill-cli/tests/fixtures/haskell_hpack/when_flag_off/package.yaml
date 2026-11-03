@@ -1,0 +1,15 @@
+name: waybill-fixture-agree
+version: 0.1.0
+flags:
+  cli:
+    description: Build the optional CLI.
+    manual: true
+    default: false
+library:
+  source-dirs: src
+  dependencies:
+    - waybill-fixture-base
+  when:
+    - condition: flag(cli)
+      dependencies:
+        - waybill-fixture-optdep

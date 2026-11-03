@@ -673,12 +673,19 @@ pub fn build_document(
     // Milestone 1069 (#878): computed here, before the relationships, because
     // it also decides their native `completeness` through the predicate
     // CycloneDX `compositions[]` uses.
+    // Milestone 1273 FR-005 — see the CycloneDX builder.
+    let m1273_unread: Vec<(&str, usize)> = scan
+        .haskell_parse_summary
+        .as_ref()
+        .map(|s| vec![("haskell", s.hpack_unread)])
+        .unwrap_or_default();
     let m158_graph_completeness =
         crate::generate::graph_completeness::compute_graph_completeness(
             scan.components,
             &m194_classifier_relationships,
             &m158_selection,
             &m158_target_ref,
+            &m1273_unread,
         );
     let m1069_claims = crate::generate::cyclonedx::compositions::dependency_claims(
         scan.components,

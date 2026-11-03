@@ -1,0 +1,8 @@
+name: waybill-fixture-repeated
+version: 0.1.0
+dependencies:
+  - waybill-fixture-text >= 1.0
+library:
+  source-dirs: src
+  dependencies:
+    - waybill-fixture-text < 3

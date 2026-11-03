@@ -1,0 +1,9 @@
+name: waybill-fixture-hpack-only
+version: 0.1.0
+license: MIT
+dependencies:
+  - waybill-fixture-base
+  - waybill-fixture-text
+  - waybill-fixture-aeson
+library:
+  source-dirs: src

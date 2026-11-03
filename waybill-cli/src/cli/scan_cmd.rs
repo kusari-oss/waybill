@@ -4662,19 +4662,37 @@ pub async fn execute(
             );
         }
 
-        // Issue #955 + the cabal2nix pipeline. See
-        // `haskell_packages::reconcile_optional_with_closure` for why the
-        // closure's answer is the one that stands.
-        let restored = scan_fs::package_db::nix::haskell_packages::reconcile_optional_with_closure(
-            &s.closure_edges,
-            &mut components,
-        );
-        if restored > 0 {
-            tracing::info!(
-                restored,
-                "nixpkgs-haskell: components marked optional from .cabal flag defaults are in \
-                 the pinned nixpkgs runtime closure, so the closure's answer stands"
-            );
+        // Milestone 1273 (#1281) — the optional-mark reconciliation now runs
+        // inside `haskell_packages::enrich`, because deciding it needs a
+        // closure seeded WITHOUT the marked set and therefore needs the
+        // relation lookup, which only exists in there. What is left here is
+        // the operator-facing report (FR-020).
+        //
+        // FR-008 — three states, where there used to be one. `restored=0` and
+        // "the reconciliation never ran" were the same line, which is the
+        // condition under which a feature that cannot fire looks like a
+        // feature with nothing to do.
+        match s.optional_reconciliation.as_ref() {
+            None => tracing::info!(
+                "nixpkgs-haskell: optional-mark reconciliation DID NOT RUN \
+                 (the closure is disabled or the pass degraded); any \
+                 `buildable: False` mark stands unexamined"
+            ),
+            Some(r) if r.withdrawn.is_empty() => tracing::info!(
+                reviewed = r.reviewed,
+                declined = r.declined,
+                "nixpkgs-haskell: optional-mark reconciliation ran and \
+                 withdrew nothing; every mark reviewed is reached only by \
+                 the marked set itself"
+            ),
+            Some(r) => tracing::info!(
+                reviewed = r.reviewed,
+                withdrawn = r.withdrawn.len(),
+                declined = r.declined,
+                justifications = ?r.withdrawn,
+                "nixpkgs-haskell: optional-mark reconciliation withdrew marks \
+                 a non-seed closure path reaches"
+            ),
         }
     }
 

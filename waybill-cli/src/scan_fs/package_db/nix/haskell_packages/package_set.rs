@@ -33,6 +33,130 @@ use regex::Regex;
 
 use super::nix_base32;
 
+/// A license as the pinned revision declares it (milestone 1273, FR-010).
+///
+/// Two states rather than one string, so FR-011's "uncanonicalised" is a
+/// property of the type rather than a convention a caller has to remember.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum DeclaredLicense {
+    /// Canonicalised through `SpdxExpression::try_canonical`.
+    Canonical(waybill_common::types::license::SpdxExpression),
+    /// FR-011 — preserved exactly as declared, and recorded as
+    /// uncanonicalised rather than presented as a canonical expression.
+    ///
+    /// Measured population at revision `a799d3e3`: 586 unversioned strings
+    /// (`"GPL"` 438, `"LGPL"` 143, `"AGPL"` 5) plus `publicDomain` (313),
+    /// which has no clean SPDX identifier.
+    Uncanonical(String),
+}
+
+impl DeclaredLicense {
+    pub(crate) fn as_declared(&self) -> String {
+        match self {
+            Self::Canonical(e) => e.as_str().to_string(),
+            Self::Uncanonical(s) => s.clone(),
+        }
+    }
+
+    pub(crate) fn is_canonical(&self) -> bool {
+        matches!(self, Self::Canonical(_))
+    }
+}
+
+/// `lib.licenses.<attr>` → SPDX identifier.
+///
+/// The whole vocabulary at revision `a799d3e3`: **15 names**, measured by
+/// `specs/1273-haskell-nixpkgs-truthfulness/measurements/license-shapes.sh`,
+/// covering 14,481 of 19,437 declarations. A lookup table, not a nixpkgs
+/// evaluation — which is what makes FR-010 affordable without the `nix`
+/// binary FR-021 and FR-022 forbid.
+///
+/// A name absent from this table is NOT guessed at. It becomes
+/// `Uncanonical`, carrying the attribute name as declared, because inventing
+/// an SPDX id for an attribute nobody measured is how a license field stops
+/// being evidence.
+fn spdx_for_attribute(attr: &str) -> Option<&'static str> {
+    Some(match attr {
+        "bsd3" => "BSD-3-Clause",
+        "bsd2" => "BSD-2-Clause",
+        "bsdOriginal" => "BSD-4-Clause",
+        "mit" => "MIT",
+        "isc" => "ISC",
+        "asl20" => "Apache-2.0",
+        "mpl20" => "MPL-2.0",
+        "gpl2Only" => "GPL-2.0-only",
+        "gpl3Only" => "GPL-3.0-only",
+        "lgpl2Only" => "LGPL-2.0-only",
+        "lgpl21Only" => "LGPL-2.1-only",
+        "lgpl21Plus" => "LGPL-2.1-or-later",
+        "lgpl3Only" => "LGPL-3.0-only",
+        "agpl3Only" => "AGPL-3.0-only",
+        // `publicDomain` is deliberately absent: nixpkgs means "no
+        // copyright asserted", and SPDX has no identifier for that. It is
+        // FR-011's case and reaches the document as declared.
+        _ => return None,
+    })
+}
+
+/// Classify one `license = ...;` right-hand side.
+///
+/// Three families, measured to partition the file exactly (14,481 + 3,962 +
+/// 994 = 19,437 declarations at revision `a799d3e3`):
+///
+/// 1. `lib.licenses.<attr>` — mapped through [`spdx_for_attribute`].
+/// 2. `lib.meta.getLicenseFromSpdxId "<id>"` — already SPDX; canonicalised.
+/// 3. a bare string — canonicalised if it parses (48 of 994 do), otherwise
+///    preserved.
+///
+/// `None` for a declaration that asserts the license is **not known**
+/// (FR-011a). `"unknown"` is 360 of the 994 bare strings, and publishing the
+/// string `unknown` into a `licenses[]` array is worse than an absent field:
+/// a consumer filtering for components with no license information would not
+/// find it, so the document would answer "what is this licensed under" with
+/// a value that is not a license.
+fn classify_license(raw: &str) -> Option<DeclaredLicense> {
+    use waybill_common::types::license::SpdxExpression;
+    let t = raw.trim();
+
+    let canonical_or_declared = |text: &str| -> DeclaredLicense {
+        match SpdxExpression::try_canonical(text) {
+            Ok(e) => DeclaredLicense::Canonical(e),
+            Err(_) => DeclaredLicense::Uncanonical(text.to_string()),
+        }
+    };
+
+    // Family 2 — an explicit SPDX id.
+    if let Some(rest) = t.strip_prefix("lib.meta.getLicenseFromSpdxId") {
+        let inner = rest.trim().trim_start_matches('"').trim_end_matches('"');
+        if inner.is_empty() {
+            return None;
+        }
+        return Some(canonical_or_declared(inner));
+    }
+    // Family 1 — a nixpkgs license attribute.
+    if let Some(attr) = t.strip_prefix("lib.licenses.") {
+        let attr = attr.trim();
+        if attr.is_empty() {
+            return None;
+        }
+        return Some(match spdx_for_attribute(attr) {
+            Some(id) => canonical_or_declared(id),
+            None => DeclaredLicense::Uncanonical(attr.to_string()),
+        });
+    }
+    // Family 3 — a bare string.
+    if t.starts_with('"') && t.ends_with('"') && t.len() >= 2 {
+        let inner = &t[1..t.len() - 1];
+        // FR-011a — a declaration that the license is not known.
+        if inner.is_empty() || inner.eq_ignore_ascii_case("unknown") {
+            return None;
+        }
+        return Some(canonical_or_declared(inner));
+    }
+    // A shape the file was measured not to contain. Not guessed at.
+    None
+}
+
 /// One package as the pinned revision records it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct PackageSetEntry {
@@ -48,6 +172,14 @@ pub(crate) struct PackageSetEntry {
     /// parse time. `None` when the revision records no hash, or records one
     /// that is not 32 bytes — never a malformed value (Principle IX).
     pub(crate) source_hash: Option<String>,
+    /// The license this revision declares (milestone 1273, FR-010).
+    ///
+    /// `None` only when the declaration asserts the license is not known
+    /// (FR-011a) or the shape is one the file was measured not to contain —
+    /// never because the field went unparsed. Probe B measured that every
+    /// one of the 19,437 derivation blocks declares a license, so a `None`
+    /// from a parse miss would be indistinguishable from a genuine absence.
+    pub(crate) license: Option<DeclaredLicense>,
 }
 
 /// The name → (version, hash) mapping carried by one pinned revision.
@@ -86,6 +218,20 @@ fn version_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
         Regex::new(r#"version\s*=\s*"([^"]+)"\s*;"#).expect("static version regex")
+    })
+}
+
+/// `license = <expr>;`
+///
+/// Line-oriented, which Probe B's measurement is what justifies: at revision
+/// `a799d3e3` **all 19,437** declarations are single-line, with zero
+/// multi-line forms, zero `with lib.licenses; [ ... ]` blocks and zero
+/// list-valued declarations. `license-shapes.sh` asserts those zeroes against
+/// the real file, so the assumption is re-checkable rather than inherited.
+fn license_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| {
+        Regex::new(r#"license\s*=\s*([^;]+);"#).expect("static license regex")
     })
 }
 
@@ -204,11 +350,20 @@ pub(crate) fn parse(text: &str) -> PackageSet {
             // (Principle IX).
             .and_then(|m| nix_base32::sha256_to_hex(m.as_str()));
 
+        // Milestone 1273 (FR-010) — the license this revision declares. The
+        // body is already bounded to one attribute, which is what keeps one
+        // package's `license` from pairing with a later package's.
+        let license = license_re()
+            .captures(body)
+            .and_then(|c| c.get(1))
+            .and_then(|m| classify_license(m.as_str()));
+
         entries.insert(
             name.clone(),
             PackageSetEntry {
                 version,
                 source_hash,
+                license,
                 runtime_relations: runtime_relations_of(body),
             },
         );
@@ -827,6 +982,7 @@ in
             version: v.to_string(),
             runtime_relations: vec![],
             source_hash: None,
+            license: None,
         }
     }
 
@@ -856,5 +1012,161 @@ in
     fn a_file_with_no_rebinds_is_a_no_op() {
         assert!(parse_top_level_version_rebinds("self: super: {\n}\n").is_empty());
         assert!(parse_top_level_version_rebinds("").is_empty());
+    }
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod license_tests {
+    //! Milestone 1273 US3 (#1280) — the three license-declaration families.
+    //!
+    //! Over inline `&str` literals, so these need **no cache at all**. The
+    //! parser's own coverage belongs here rather than in an integration test:
+    //! a unit test over a literal cannot accidentally read the host's
+    //! `~/.cache/waybill/nixpkgs/`, which Principle VII forbids.
+    //!
+    //! Every form below is one `license-shapes.sh` found in the real file at
+    //! revision `a799d3e3`, not an invented shape.
+
+    use super::*;
+
+    fn declared(raw: &str) -> Option<String> {
+        classify_license(raw).map(|l| l.as_declared())
+    }
+
+    /// Family 1 — `lib.licenses.<attr>`, 14,481 of 19,437 declarations.
+    #[test]
+    fn family_1_attributes_map_to_spdx_ids() {
+        assert_eq!(declared("lib.licenses.bsd3").as_deref(), Some("BSD-3-Clause"));
+        assert_eq!(declared("lib.licenses.mit").as_deref(), Some("MIT"));
+        assert_eq!(declared("lib.licenses.asl20").as_deref(), Some("Apache-2.0"));
+        assert_eq!(
+            declared("lib.licenses.gpl3Only").as_deref(),
+            Some("GPL-3.0-only")
+        );
+        assert_eq!(
+            declared("lib.licenses.lgpl21Plus").as_deref(),
+            Some("LGPL-2.1-or-later")
+        );
+        assert!(classify_license("lib.licenses.bsd3").unwrap().is_canonical());
+    }
+
+    /// `publicDomain` (313 occurrences) has no clean SPDX identifier, so it
+    /// is FR-011's case: preserved as declared, flagged uncanonicalised.
+    /// Inventing an id for it would make the field stop being evidence.
+    #[test]
+    fn family_1_public_domain_is_preserved_not_invented() {
+        let l = classify_license("lib.licenses.publicDomain").unwrap();
+        assert!(!l.is_canonical());
+        assert_eq!(l.as_declared(), "publicDomain");
+    }
+
+    /// An attribute nobody measured is not guessed at.
+    #[test]
+    fn family_1_an_unmeasured_attribute_is_not_guessed() {
+        let l = classify_license("lib.licenses.somethingNewInNixpkgs").unwrap();
+        assert!(!l.is_canonical());
+        assert_eq!(l.as_declared(), "somethingNewInNixpkgs");
+    }
+
+    /// Family 2 — an explicit SPDX id, 3,962 declarations. Pass-through.
+    #[test]
+    fn family_2_spdx_ids_pass_through() {
+        for id in ["MIT", "Apache-2.0", "BSD-3-Clause", "0BSD", "EUPL-1.2"] {
+            let raw = format!("lib.meta.getLicenseFromSpdxId \"{id}\"");
+            let l = classify_license(&raw)
+                .unwrap_or_else(|| panic!("{id} must classify"));
+            assert!(l.is_canonical(), "{id} must canonicalise");
+        }
+    }
+
+    /// Family 3 — a bare string. 48 of 994 are real SPDX expressions,
+    /// several compound.
+    #[test]
+    fn family_3_compound_expressions_canonicalise() {
+        for expr in [
+            "(BSD-2-Clause OR Apache-2.0)",
+            "(Apache-2.0 OR MPL-2.0)",
+            "GPL-2.0-or-later AND BSD-3-Clause",
+            "(MIT OR Apache-2.0)",
+        ] {
+            let l = classify_license(&format!("\"{expr}\""))
+                .unwrap_or_else(|| panic!("{expr} must classify"));
+            assert!(l.is_canonical(), "{expr} must canonicalise; got {l:?}");
+        }
+    }
+
+    /// FR-011 — 586 unversioned declarations. Real, but not expressions.
+    #[test]
+    fn family_3_unversioned_strings_are_preserved_uncanonicalised() {
+        for s in ["GPL", "LGPL", "AGPL"] {
+            let l = classify_license(&format!("\"{s}\""))
+                .unwrap_or_else(|| panic!("{s} must classify"));
+            assert!(!l.is_canonical(), "{s} must NOT canonicalise");
+            assert_eq!(l.as_declared(), s, "and must survive as declared");
+        }
+    }
+
+    /// FR-011a — `"unknown"` is 360 of 994, and is not a license.
+    ///
+    /// Publishing the string into a `licenses[]` array is worse than an
+    /// absent field: a consumer filtering for components with no license
+    /// information would not find it.
+    #[test]
+    fn family_3_unknown_is_absent_not_uncanonicalised() {
+        assert_eq!(classify_license("\"unknown\""), None);
+        assert_eq!(classify_license("\"\""), None);
+    }
+
+    /// The three families partition the file. A shape outside them is not
+    /// guessed at — Probe B asserted there are none at the pinned revision,
+    /// and `license-shapes.sh` re-checks that against the real file.
+    #[test]
+    fn a_shape_outside_the_three_families_yields_nothing() {
+        assert_eq!(classify_license("with lib.licenses; [ mit bsd3 ]"), None);
+        assert_eq!(classify_license("[ mit ]"), None);
+        assert_eq!(classify_license("someFn arg"), None);
+    }
+
+    /// End to end over a derivation block in the real file's shape: the
+    /// license must pair with its own attribute, not a neighbour's.
+    #[test]
+    fn the_license_pairs_with_its_own_attribute() {
+        let text = r#"
+  waybill-fixture-one = callPackage ({ mkDerivation }: mkDerivation {
+      pname = "waybill-fixture-one";
+      version = "1.0.0";
+      license = lib.licenses.bsd3;
+  }) { };
+  waybill-fixture-two = callPackage ({ mkDerivation }: mkDerivation {
+      pname = "waybill-fixture-two";
+      version = "2.0.0";
+      license = lib.meta.getLicenseFromSpdxId "MIT";
+  }) { };
+  waybill-fixture-three = callPackage ({ mkDerivation }: mkDerivation {
+      pname = "waybill-fixture-three";
+      version = "3.0.0";
+      license = "unknown";
+  }) { };
+"#;
+        let set = parse(text);
+        assert_eq!(
+            set.get("waybill-fixture-one")
+                .unwrap()
+                .license
+                .as_ref()
+                .map(|l| l.as_declared()),
+            Some("BSD-3-Clause".to_string())
+        );
+        assert_eq!(
+            set.get("waybill-fixture-two")
+                .unwrap()
+                .license
+                .as_ref()
+                .map(|l| l.as_declared()),
+            Some("MIT".to_string())
+        );
+        // FR-011a — absent, not the string `unknown`.
+        assert!(set.get("waybill-fixture-three").unwrap().license.is_none());
     }
 }

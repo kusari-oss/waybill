@@ -1044,6 +1044,8 @@ pub(super) fn c185_cdx(doc: &Value) -> BTreeSet<String> {
 cdx_anno!(c161_cdx, "waybill:resolve-ownership",                     document);
 cdx_anno!(c163_cdx, "waybill:document-resolve",                     document);
 cdx_anno!(c162_cdx, "waybill:cabal-entries-skipped",                 document);
+// Milestone 1273 (#1278): C200 doc-scope hpack read outcome.
+cdx_anno!(c200_cdx, "waybill:hpack-read-outcome",                 document);
 
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.

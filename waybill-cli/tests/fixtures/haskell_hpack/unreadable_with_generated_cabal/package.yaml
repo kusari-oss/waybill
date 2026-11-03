@@ -1,0 +1,7 @@
+name: waybill-fixture-unreadable
+version: 0.1.0
+dependencies:
+  - waybill-fixture-base
+ library:
+    source-dirs: [src
+      broken: "unterminated

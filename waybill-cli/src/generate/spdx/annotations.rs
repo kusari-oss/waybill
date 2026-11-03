@@ -928,12 +928,16 @@ pub fn annotate_document(
     // Milestone 895 (#891) — C162 doc-scope count of `.cabal` dependency
     // entries that were not valid package names and were skipped. Absent iff
     // no `.cabal` file was read; present including zero otherwise.
-    if let Some(summary) = artifacts.haskell_parse_summary {
+    if let Some(summary) = artifacts.haskell_parse_summary.as_ref() {
         push(
             &mut out,
             "waybill:cabal-entries-skipped",
             json!(summary.skipped_entries.to_string()),
         );
+        // Milestone 1273 (#1278) — C200 hpack read outcome.
+        if let Some(v) = summary.hpack_read.as_ref() {
+            push(&mut out, "waybill:hpack-read-outcome", json!(v.to_string()));
+        }
     }
 
     // Milestone 161 (T044): doc-scope Go-workspace-mode annotation

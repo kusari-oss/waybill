@@ -1,0 +1,6 @@
+name: waybill-fixture-gen
+version: 0.2.0
+library:
+  source-dirs: src
+  dependencies:
+    - waybill-fixture-from-manifest

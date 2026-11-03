@@ -695,12 +695,20 @@ pub fn build_document(
             .chain(m158_workspace_peer_edges.iter().cloned())
             .collect()
     };
+    // Milestone 1273 FR-005 — see the CycloneDX builder for why this is
+    // carried rather than inferred.
+    let m1273_unread: Vec<(&str, usize)> = artifacts
+        .haskell_parse_summary
+        .as_ref()
+        .map(|s| vec![("haskell", s.hpack_unread)])
+        .unwrap_or_default();
     let m158_graph_completeness =
         crate::generate::graph_completeness::compute_graph_completeness(
             artifacts.components,
             &m194_classifier_relationships,
             &selection,
             &m158_target_ref,
+            &m1273_unread,
         );
 
     // Issue #236: when `synthesize_root` fires (multi-top-level

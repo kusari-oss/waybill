@@ -88,6 +88,24 @@ pub enum ReasonCode {
     TransitiveEdgesUnresolvable {
         ecosystems: Vec<String>,
     },
+    /// Milestone 1273 (FR-005) — a manifest was dispatched to a reader and
+    /// not read, so the component set's emptiness (or thinness) is a reader
+    /// outcome rather than a property of the project.
+    ///
+    /// This exists because `compute_graph_completeness` cannot infer it.
+    /// `trivially_complete()` is correct for a genuinely dependency-free
+    /// project and wrong for one whose manifest went unread, and at that
+    /// point in the code the *reason* the set is empty is out of scope — so
+    /// the fact is carried here from the reader.
+    ///
+    /// The detail deliberately carries a COUNT and an ecosystem, never a
+    /// file path: this value is pinned by goldens compared across hosts, and
+    /// a path would make the same project's document differ by machine. The
+    /// files themselves are named by C200 `waybill:hpack-read-outcome`.
+    ManifestUnread {
+        ecosystem: String,
+        count: usize,
+    },
 }
 
 impl ReasonCode {
@@ -124,6 +142,9 @@ impl ReasonCode {
             Self::TransitiveEdgesUnresolvable { ecosystems } => format!(
                 "transitive-edges-unresolvable: {}",
                 ecosystems.join(", ")
+            ),
+            Self::ManifestUnread { ecosystem, count } => format!(
+                "manifest-unread: {count} {ecosystem} manifest(s) found but not read"
             ),
         }
     }

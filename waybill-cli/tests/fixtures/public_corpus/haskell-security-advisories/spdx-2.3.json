@@ -17,7 +17,7 @@
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
       "annotator": "Tool: waybill-<masked>",
-      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-haskell-resolution\",\"value\":\"{\\\"disagreements\\\":4,\\\"resolved\\\":39,\\\"revision\\\":\\\"567a49d1913ce81ac6e9582e3553dd90a955875f\\\",\\\"unresolved\\\":{\\\"compiler-supplied\\\":14}}\"}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:nixpkgs-haskell-resolution\",\"value\":\"{\\\"disagreements\\\":4,\\\"optional-reconciliation\\\":{\\\"declined\\\":0,\\\"reviewed\\\":0,\\\"withdrawn\\\":[]},\\\"resolved\\\":39,\\\"revision\\\":\\\"567a49d1913ce81ac6e9582e3553dd90a955875f\\\",\\\"unresolved\\\":{\\\"compiler-supplied\\\":14}}\"}"
     },
     {
       "annotationDate": "<masked>",
@@ -435,7 +435,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -519,12 +519,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"code/hsec-tools\\\",\\\"code/osv\\\",\\\"code/purl\\\"]\"}"
         }
       ],
@@ -544,7 +538,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "aeson",
       "versionInfo": "2.2.4.1"
     },
@@ -615,12 +609,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"code/hsec-tools\\\"]\"}"
         }
       ],
@@ -640,7 +628,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "aeson-pretty",
       "versionInfo": "0.8.10"
     },
@@ -705,12 +693,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"code/hsec-tools\\\"]\"}"
         }
       ],
@@ -730,7 +712,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "CC0-1.0",
       "name": "atom-conduit",
       "versionInfo": "0.9.0.2"
     },
@@ -807,7 +789,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -903,7 +885,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -987,12 +969,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"code/purl\\\"]\"}"
         }
       ],
@@ -1012,7 +988,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "case-insensitive",
       "versionInfo": "1.2.1.0"
     },
@@ -1077,12 +1053,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"code/hsec-tools\\\"]\"}"
         }
       ],
@@ -1102,7 +1072,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "commonmark",
       "versionInfo": "0.2.6.1"
     },
@@ -1167,12 +1137,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"code/hsec-tools\\\"]\"}"
         }
       ],
@@ -1192,7 +1156,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "commonmark-pandoc",
       "versionInfo": "0.2.3"
     },
@@ -1257,12 +1221,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"code/hsec-tools\\\"]\"}"
         }
       ],
@@ -1282,7 +1240,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "MIT",
       "name": "conduit",
       "versionInfo": "1.3.6.1"
     },
@@ -1347,12 +1305,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"code/hsec-tools\\\"]\"}"
         }
       ],
@@ -1372,7 +1324,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "MIT",
       "name": "conduit-extra",
       "versionInfo": "1.3.8"
     },
@@ -1449,7 +1401,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1611,12 +1563,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"code/hsec-tools\\\"]\"}"
         }
       ],
@@ -1636,7 +1582,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "data-default",
       "versionInfo": "0.8.0.2"
     },
@@ -1713,7 +1659,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -1797,12 +1743,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"code/hsec-sync\\\"]\"}"
         }
       ],
@@ -1822,7 +1762,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "either",
       "versionInfo": "5.0.3"
     },
@@ -1887,12 +1827,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"code/hsec-sync\\\",\\\"code/hsec-tools\\\"]\"}"
         }
       ],
@@ -1912,7 +1846,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "extra",
       "versionInfo": "1.8.1"
     },
@@ -1977,12 +1911,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"code/hsec-tools\\\"]\"}"
         }
       ],
@@ -2002,7 +1930,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-2-Clause",
       "name": "file-embed",
       "versionInfo": "0.0.16.0"
     },
@@ -2079,7 +2007,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -2169,12 +2097,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"code/hsec-tools\\\"]\"}"
         }
       ],
@@ -2194,7 +2116,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "hedgehog",
       "versionInfo": "1.5"
     },
@@ -2487,12 +2409,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"code/hsec-sync\\\"]\"}"
         }
       ],
@@ -2512,7 +2428,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "MIT",
       "name": "http-client",
       "versionInfo": "0.7.19"
     },
@@ -2577,12 +2493,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"code/purl\\\"]\"}"
         }
       ],
@@ -2602,7 +2512,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "http-types",
       "versionInfo": "0.12.4"
     },
@@ -2667,12 +2577,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"code/hsec-sync\\\",\\\"code/hsec-tools\\\"]\"}"
         }
       ],
@@ -2692,7 +2596,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-2-Clause",
       "name": "lens",
       "versionInfo": "5.3.6"
     },
@@ -2757,12 +2661,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"code/hsec-tools\\\"]\"}"
         }
       ],
@@ -2782,7 +2680,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "lucid2",
       "versionInfo": "0.0.20250303"
     },
@@ -2859,7 +2757,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -2943,12 +2841,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"code/hsec-core\\\",\\\"code/hsec-tools\\\"]\"}"
         }
       ],
@@ -2968,7 +2860,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "network-uri",
       "versionInfo": "2.6.4.2"
     },
@@ -3033,12 +2925,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"code/hsec-sync\\\",\\\"code/hsec-tools\\\"]\"}"
         }
       ],
@@ -3058,7 +2944,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "optparse-applicative",
       "versionInfo": "0.18.1.0"
     },
@@ -3201,12 +3087,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"code/hsec-tools\\\"]\"}"
         }
       ],
@@ -3226,7 +3106,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "GPL-2.0-or-later",
       "name": "pandoc",
       "versionInfo": "3.7.0.2"
     },
@@ -3291,12 +3171,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"code/hsec-core\\\",\\\"code/hsec-tools\\\"]\"}"
         }
       ],
@@ -3316,7 +3190,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "pandoc-types",
       "versionInfo": "1.23.1.1"
     },
@@ -3393,7 +3267,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3489,7 +3363,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3579,12 +3453,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"code/hsec-tools\\\"]\"}"
         }
       ],
@@ -3604,7 +3472,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "pretty-simple",
       "versionInfo": "4.1.4.0"
     },
@@ -3669,12 +3537,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"code/hsec-tools\\\"]\"}"
         }
       ],
@@ -3694,7 +3556,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-2-Clause",
       "name": "prettyprinter",
       "versionInfo": "1.7.1"
     },
@@ -3771,7 +3633,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -3927,12 +3789,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"code/hsec-tools\\\"]\"}"
         }
       ],
@@ -3952,7 +3808,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "MIT",
       "name": "refined",
       "versionInfo": "0.8.2"
     },
@@ -4017,12 +3873,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"code/hsec-tools\\\"]\"}"
         }
       ],
@@ -4042,7 +3892,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "resourcet",
       "versionInfo": "1.3.0"
     },
@@ -4107,12 +3957,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"code/hsec-core\\\"]\"}"
         }
       ],
@@ -4132,7 +3976,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "safe",
       "versionInfo": "0.3.21"
     },
@@ -4197,12 +4041,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"code/hsec-sync\\\"]\"}"
         }
       ],
@@ -4222,7 +4060,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "tar",
       "versionInfo": "0.6.4.0"
     },
@@ -4293,12 +4131,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"code/cvss\\\",\\\"code/hsec-core\\\",\\\"code/hsec-sync\\\",\\\"code/hsec-tools\\\",\\\"code/osv\\\",\\\"code/purl\\\"]\"}"
         }
       ],
@@ -4318,7 +4150,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "MIT",
       "name": "tasty",
       "versionInfo": "1.5.4"
     },
@@ -4389,12 +4221,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"code/hsec-tools\\\"]\"}"
         }
       ],
@@ -4414,7 +4240,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "MIT",
       "name": "tasty-golden",
       "versionInfo": "2.3.6"
     },
@@ -4485,12 +4311,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"code/hsec-tools\\\"]\"}"
         }
       ],
@@ -4510,7 +4330,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "tasty-hedgehog",
       "versionInfo": "1.4.0.2"
     },
@@ -4581,12 +4401,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"code/cvss\\\",\\\"code/hsec-core\\\",\\\"code/hsec-sync\\\",\\\"code/purl\\\"]\"}"
         }
       ],
@@ -4606,7 +4420,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "MIT",
       "name": "tasty-hunit",
       "versionInfo": "0.10.2"
     },
@@ -4671,12 +4485,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"code/cvss\\\"]\"}"
         }
       ],
@@ -4696,7 +4504,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "MIT",
       "name": "tasty-quickcheck",
       "versionInfo": "0.11.1"
     },
@@ -4773,7 +4581,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -4857,12 +4665,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"code/hsec-sync\\\"]\"}"
         }
       ],
@@ -4882,7 +4684,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "temporary",
       "versionInfo": "1.3"
     },
@@ -4959,7 +4761,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -5055,7 +4857,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -5139,12 +4941,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"code/hsec-tools\\\"]\"}"
         }
       ],
@@ -5164,7 +4960,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "ISC",
       "name": "toml-parser",
       "versionInfo": "2.0.2.0"
     },
@@ -5241,7 +5037,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"supplied by the compiler; nixpkgs has no version to give and a freeze file would not pin it either\"}"
         },
         {
           "annotationDate": "<masked>",
@@ -5325,12 +5121,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"code/hsec-tools\\\"]\"}"
         }
       ],
@@ -5350,7 +5140,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "uri-bytestring",
       "versionInfo": "0.4.0.1"
     },
@@ -5415,12 +5205,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"code/hsec-tools\\\"]\"}"
         }
       ],
@@ -5440,7 +5224,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "MPL-2.0",
       "name": "validation-selective",
       "versionInfo": "0.2.0.0"
     },
@@ -5505,12 +5289,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"code/hsec-sync\\\"]\"}"
         }
       ],
@@ -5530,7 +5308,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "wreq",
       "versionInfo": "0.5.4.4"
     },
@@ -5595,12 +5373,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"code/hsec-tools\\\"]\"}"
         }
       ],
@@ -5620,7 +5392,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "MIT",
       "name": "xml-conduit",
       "versionInfo": "1.10.1.0"
     },
@@ -5685,12 +5457,6 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: waybill-<masked>",
-          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"declared in .cabal / package.yaml; no cabal.project.freeze fallback\"}"
-        },
-        {
-          "annotationDate": "<masked>",
-          "annotationType": "OTHER",
-          "annotator": "Tool: waybill-<masked>",
           "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"code/hsec-sync\\\"]\"}"
         }
       ],
@@ -5710,7 +5476,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "zlib",
       "versionInfo": "0.7.1.1"
     },
@@ -5758,7 +5524,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "Glob",
       "versionInfo": "0.10.2"
     },
@@ -5806,7 +5572,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "JuicyPixels",
       "versionInfo": "3.3.9"
     },
@@ -5866,7 +5632,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "OneTuple",
       "versionInfo": "0.4.2.1"
     },
@@ -5914,7 +5680,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "Only",
       "versionInfo": "0.1"
     },
@@ -5974,7 +5740,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "QuickCheck",
       "versionInfo": "2.15.0.1"
     },
@@ -6022,7 +5788,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "RSA",
       "versionInfo": "2.4.1"
     },
@@ -6070,7 +5836,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "SHA",
       "versionInfo": "1.6.4.4"
     },
@@ -6130,7 +5896,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "StateVar",
       "versionInfo": "1.2.2"
     },
@@ -6178,7 +5944,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-2-Clause",
       "name": "adjunctions",
       "versionInfo": "4.4.4"
     },
@@ -6238,7 +6004,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "ansi-terminal",
       "versionInfo": "1.1.5"
     },
@@ -6298,7 +6064,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "ansi-terminal-types",
       "versionInfo": "1.1.3"
     },
@@ -6346,7 +6112,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "appar",
       "versionInfo": "0.1.8"
     },
@@ -6448,7 +6214,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "asn1-encoding",
       "versionInfo": "0.9.6"
     },
@@ -6496,7 +6262,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "asn1-parse",
       "versionInfo": "0.9.5"
     },
@@ -6544,7 +6310,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "asn1-types",
       "versionInfo": "0.3.4"
     },
@@ -6604,7 +6370,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "assoc",
       "versionInfo": "1.1.1"
     },
@@ -6664,7 +6430,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "async",
       "versionInfo": "2.2.6"
     },
@@ -6724,7 +6490,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "attoparsec",
       "versionInfo": "0.14.4"
     },
@@ -6784,7 +6550,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "attoparsec-aeson",
       "versionInfo": "2.2.2.0"
     },
@@ -6832,7 +6598,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "authenticate-oauth",
       "versionInfo": "1.7"
     },
@@ -6892,7 +6658,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "barbies",
       "versionInfo": "2.1.1.0"
     },
@@ -6952,7 +6718,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "MIT",
       "name": "base-compat",
       "versionInfo": "0.14.1"
     },
@@ -7012,7 +6778,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "MIT",
       "name": "base-orphans",
       "versionInfo": "0.9.4"
     },
@@ -7060,7 +6826,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "base16-bytestring",
       "versionInfo": "1.0.2.0"
     },
@@ -7108,7 +6874,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "base64-bytestring",
       "versionInfo": "1.2.1.0"
     },
@@ -7156,7 +6922,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "basement",
       "versionInfo": "0.0.16"
     },
@@ -7216,7 +6982,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "bifunctors",
       "versionInfo": "5.6.3"
     },
@@ -7318,7 +7084,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "bitvec",
       "versionInfo": "1.1.6.0"
     },
@@ -7366,7 +7132,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "blaze-builder",
       "versionInfo": "0.4.4.1"
     },
@@ -7414,7 +7180,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "blaze-html",
       "versionInfo": "0.9.2.0"
     },
@@ -7462,7 +7228,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "blaze-markup",
       "versionInfo": "0.8.3.0"
     },
@@ -7522,7 +7288,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "boring",
       "versionInfo": "0.2.2"
     },
@@ -7570,7 +7336,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "byteorder",
       "versionInfo": "1.0.4"
     },
@@ -7630,7 +7396,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "MIT",
       "name": "call-stack",
       "versionInfo": "0.4.0"
     },
@@ -7678,7 +7444,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "cassava",
       "versionInfo": "0.5.4.1"
     },
@@ -7726,7 +7492,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "cborg",
       "versionInfo": "0.2.10.0"
     },
@@ -7774,7 +7540,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "cereal",
       "versionInfo": "0.5.8.3"
     },
@@ -7834,7 +7600,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "character-ps",
       "versionInfo": "0.1"
     },
@@ -7882,7 +7648,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "charset",
       "versionInfo": "0.3.12"
     },
@@ -7930,7 +7696,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-2-Clause",
       "name": "citeproc",
       "versionInfo": "0.9.0.1"
     },
@@ -7978,7 +7744,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "clock",
       "versionInfo": "0.8.4"
     },
@@ -8038,7 +7804,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "cmdargs",
       "versionInfo": "0.10.22"
     },
@@ -8098,7 +7864,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "MIT",
       "name": "colour",
       "versionInfo": "2.3.7"
     },
@@ -8146,7 +7912,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "commonmark-extensions",
       "versionInfo": "0.2.6"
     },
@@ -8194,7 +7960,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "commutative-semigroups",
       "versionInfo": "0.2.0.2"
     },
@@ -8254,7 +8020,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "comonad",
       "versionInfo": "5.0.10"
     },
@@ -8314,7 +8080,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-2-Clause",
       "name": "concurrent-output",
       "versionInfo": "1.10.21"
     },
@@ -8374,7 +8140,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-2-Clause",
       "name": "constraints",
       "versionInfo": "0.14.4"
     },
@@ -8434,7 +8200,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "contravariant",
       "versionInfo": "1.5.6"
     },
@@ -8482,7 +8248,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "MIT",
       "name": "cookie",
       "versionInfo": "0.5.1"
     },
@@ -8530,7 +8296,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "crypto-api",
       "versionInfo": "0.13.3"
     },
@@ -8578,7 +8344,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "crypto-pubkey-types",
       "versionInfo": "0.4.3"
     },
@@ -8626,7 +8392,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "crypton",
       "versionInfo": "1.0.6"
     },
@@ -8674,7 +8440,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "crypton-connection",
       "versionInfo": "0.4.5"
     },
@@ -8722,7 +8488,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "crypton-socks",
       "versionInfo": "0.6.2"
     },
@@ -8770,7 +8536,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "crypton-x509",
       "versionInfo": "1.7.7"
     },
@@ -8818,7 +8584,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "crypton-x509-store",
       "versionInfo": "1.6.14"
     },
@@ -8866,7 +8632,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "crypton-x509-system",
       "versionInfo": "1.6.8"
     },
@@ -8914,7 +8680,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "crypton-x509-validation",
       "versionInfo": "1.6.14"
     },
@@ -8962,7 +8728,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "data-default-class",
       "versionInfo": "0.2.0.0"
     },
@@ -9022,7 +8788,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "data-fix",
       "versionInfo": "0.3.4"
     },
@@ -9124,7 +8890,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-2-Clause",
       "name": "digest",
       "versionInfo": "0.0.2.1"
     },
@@ -9226,7 +8992,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "distributive",
       "versionInfo": "0.6.3"
     },
@@ -9274,7 +9040,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "MIT",
       "name": "djot",
       "versionInfo": "0.1.4"
     },
@@ -9334,7 +9100,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "dlist",
       "versionInfo": "1.0"
     },
@@ -9382,7 +9148,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "doclayout",
       "versionInfo": "0.5.0.1"
     },
@@ -9430,7 +9196,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "doctemplates",
       "versionInfo": "0.11.0.1"
     },
@@ -9478,7 +9244,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "emojis",
       "versionInfo": "0.1.4.1"
     },
@@ -9526,7 +9292,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "entropy",
       "versionInfo": "0.4.1.11"
     },
@@ -9586,7 +9352,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "erf",
       "versionInfo": "2.0.0.0"
     },
@@ -9730,7 +9496,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "free",
       "versionInfo": "5.2"
     },
@@ -9874,7 +9640,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "MIT",
       "name": "gridtables",
       "versionInfo": "0.1.1.0"
     },
@@ -9964,7 +9730,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "half",
       "versionInfo": "0.3.3"
     },
@@ -10024,7 +9790,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "hashable",
       "versionInfo": "1.5.1.0"
     },
@@ -10084,7 +9850,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "MIT",
       "name": "haskell-lexer",
       "versionInfo": "1.2.1"
     },
@@ -10132,7 +9898,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "hourglass",
       "versionInfo": "0.2.12"
     },
@@ -10180,7 +9946,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "MIT",
       "name": "http-client-tls",
       "versionInfo": "0.3.6.4"
     },
@@ -10240,7 +10006,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-2-Clause",
       "name": "indexed-traversable",
       "versionInfo": "0.1.4"
     },
@@ -10300,7 +10066,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-2-Clause",
       "name": "indexed-traversable-instances",
       "versionInfo": "0.1.2.1"
     },
@@ -10360,7 +10126,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "integer-conversion",
       "versionInfo": "0.1.1"
     },
@@ -10462,7 +10228,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "MIT",
       "name": "integer-logarithms",
       "versionInfo": "1.0.5"
     },
@@ -10510,7 +10276,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-2-Clause",
       "name": "invariant",
       "versionInfo": "0.6.5"
     },
@@ -10558,7 +10324,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "iproute",
       "versionInfo": "1.7.15"
     },
@@ -10606,7 +10372,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "ipynb",
       "versionInfo": "0.2"
     },
@@ -10654,7 +10420,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "MIT",
       "name": "jira-wiki-markup",
       "versionInfo": "1.5.1"
     },
@@ -10702,7 +10468,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "kan-extensions",
       "versionInfo": "5.2.8"
     },
@@ -10750,7 +10516,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "MIT",
       "name": "lens-aeson",
       "versionInfo": "1.2.3"
     },
@@ -10798,7 +10564,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "libyaml",
       "versionInfo": "0.1.4"
     },
@@ -10846,7 +10612,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "MIT",
       "name": "libyaml-clib",
       "versionInfo": "0.2.5"
     },
@@ -10906,7 +10672,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "lifted-async",
       "versionInfo": "0.10.2.7"
     },
@@ -10966,7 +10732,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "lifted-base",
       "versionInfo": "0.2.3.12"
     },
@@ -11014,7 +10780,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "lucid",
       "versionInfo": "2.11.20250303"
     },
@@ -11062,7 +10828,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "memory",
       "versionInfo": "0.18.0"
     },
@@ -11110,7 +10876,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "microlens",
       "versionInfo": "0.4.14.0"
     },
@@ -11158,7 +10924,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "microlens-th",
       "versionInfo": "0.4.3.17"
     },
@@ -11206,7 +10972,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "MIT",
       "name": "mime-types",
       "versionInfo": "0.1.2.2"
     },
@@ -11266,7 +11032,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "mmorph",
       "versionInfo": "1.2.2"
     },
@@ -11326,7 +11092,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "monad-control",
       "versionInfo": "1.0.3.1"
     },
@@ -11374,7 +11140,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "MIT",
       "name": "mono-traversable",
       "versionInfo": "1.0.21.0"
     },
@@ -11422,7 +11188,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "monoid-subclasses",
       "versionInfo": "1.2.6.1"
     },
@@ -11470,7 +11236,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "network",
       "versionInfo": "3.2.8.0"
     },
@@ -11518,7 +11284,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "old-locale",
       "versionInfo": "1.0.0.7"
     },
@@ -11566,7 +11332,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "old-time",
       "versionInfo": "1.1.1.0"
     },
@@ -11614,7 +11380,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "ordered-containers",
       "versionInfo": "0.2.4"
     },
@@ -11716,7 +11482,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "parallel",
       "versionInfo": "3.2.2.0"
     },
@@ -11764,7 +11530,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "parsers",
       "versionInfo": "0.12.12"
     },
@@ -11812,7 +11578,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "pem",
       "versionInfo": "0.2.4"
     },
@@ -11872,7 +11638,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "MIT",
       "name": "pretty-show",
       "versionInfo": "1.10"
     },
@@ -11932,7 +11698,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-2-Clause",
       "name": "prettyprinter-ansi-terminal",
       "versionInfo": "1.1.3"
     },
@@ -11980,7 +11746,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "primes",
       "versionInfo": "0.2.1.0"
     },
@@ -12040,7 +11806,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "primitive",
       "versionInfo": "0.9.1.0"
     },
@@ -12088,7 +11854,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "profunctors",
       "versionInfo": "5.6.3"
     },
@@ -12136,7 +11902,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "psqueues",
       "versionInfo": "0.2.8.3"
     },
@@ -12196,7 +11962,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "random",
       "versionInfo": "1.2.1.3"
     },
@@ -12244,7 +12010,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "reflection",
       "versionInfo": "2.1.9"
     },
@@ -12292,7 +12058,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "regex-base",
       "versionInfo": "0.94.0.3"
     },
@@ -12340,7 +12106,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "regex-tdfa",
       "versionInfo": "1.3.2.5"
     },
@@ -12388,7 +12154,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "MIT",
       "name": "relude",
       "versionInfo": "1.2.2.2"
     },
@@ -12448,7 +12214,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "MIT",
       "name": "safe-exceptions",
       "versionInfo": "0.1.7.4"
     },
@@ -12508,7 +12274,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "scientific",
       "versionInfo": "0.3.8.1"
     },
@@ -12556,7 +12322,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "MIT",
       "name": "selective",
       "versionInfo": "0.7.0.1"
     },
@@ -12616,7 +12382,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "semialign",
       "versionInfo": "1.3.1.1"
     },
@@ -12676,7 +12442,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-2-Clause",
       "name": "semigroupoids",
       "versionInfo": "6.0.2"
     },
@@ -12724,7 +12490,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "serialise",
       "versionInfo": "0.2.6.1"
     },
@@ -12772,7 +12538,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "GPL-2.0-only",
       "name": "skylighting",
       "versionInfo": "0.14.7"
     },
@@ -12820,7 +12586,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "skylighting-core",
       "versionInfo": "0.14.7"
     },
@@ -12868,7 +12634,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "skylighting-format-ansi",
       "versionInfo": "0.1"
     },
@@ -12916,7 +12682,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "skylighting-format-blaze-html",
       "versionInfo": "0.1.2"
     },
@@ -12964,7 +12730,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "skylighting-format-context",
       "versionInfo": "0.1.0.2"
     },
@@ -13012,7 +12778,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "skylighting-format-latex",
       "versionInfo": "0.1"
     },
@@ -13060,7 +12826,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "skylighting-format-typst",
       "versionInfo": "0.1"
     },
@@ -13108,7 +12874,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "split",
       "versionInfo": "0.2.5"
     },
@@ -13168,7 +12934,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "splitmix",
       "versionInfo": "0.1.3.2"
     },
@@ -13270,7 +13036,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "MIT",
       "name": "streaming-commons",
       "versionInfo": "0.2.3.1"
     },
@@ -13330,7 +13096,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "strict",
       "versionInfo": "0.5.1"
     },
@@ -13378,7 +13144,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "syb",
       "versionInfo": "0.7.2.4"
     },
@@ -13438,7 +13204,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "tagged",
       "versionInfo": "0.8.9"
     },
@@ -13486,7 +13252,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "tagsoup",
       "versionInfo": "0.14.8"
     },
@@ -13546,7 +13312,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "terminal-size",
       "versionInfo": "0.3.4"
     },
@@ -13594,7 +13360,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "GPL-2.0-only",
       "name": "texmath",
       "versionInfo": "0.12.10.3"
     },
@@ -13642,7 +13408,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "ISC",
       "name": "text-conversions",
       "versionInfo": "0.3.1.1"
     },
@@ -13702,7 +13468,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "text-iso8601",
       "versionInfo": "0.1.1.1"
     },
@@ -13762,7 +13528,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "text-short",
       "versionInfo": "0.1.6.1"
     },
@@ -13822,7 +13588,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "ISC",
       "name": "th-abstraction",
       "versionInfo": "0.7.2.0"
     },
@@ -13882,7 +13648,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "th-compat",
       "versionInfo": "0.1.7"
     },
@@ -13930,7 +13696,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "th-lift",
       "versionInfo": "0.8.7"
     },
@@ -13978,7 +13744,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "th-lift-instances",
       "versionInfo": "0.1.20"
     },
@@ -14038,7 +13804,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "these",
       "versionInfo": "1.2.1"
     },
@@ -14086,7 +13852,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "these-skinny",
       "versionInfo": "0.7.6"
     },
@@ -14146,7 +13912,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "time-compat",
       "versionInfo": "1.9.9"
     },
@@ -14194,7 +13960,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "time-locale-compat",
       "versionInfo": "0.1.1.5"
     },
@@ -14242,7 +14008,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "timerep",
       "versionInfo": "2.1.0.0"
     },
@@ -14290,7 +14056,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "tls",
       "versionInfo": "2.1.8"
     },
@@ -14350,7 +14116,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "transformers-base",
       "versionInfo": "0.4.6.1"
     },
@@ -14410,7 +14176,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "transformers-compat",
       "versionInfo": "0.7.2"
     },
@@ -14470,7 +14236,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "MIT",
       "name": "typed-process",
       "versionInfo": "0.2.13.0"
     },
@@ -14518,7 +14284,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "typst",
       "versionInfo": "0.8.0.2"
     },
@@ -14566,7 +14332,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "MIT",
       "name": "typst-symbols",
       "versionInfo": "0.1.8.1"
     },
@@ -14614,7 +14380,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-2-Clause",
       "name": "unicode-collation",
       "versionInfo": "0.1.3.6"
     },
@@ -14662,7 +14428,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "Apache-2.0",
       "name": "unicode-data",
       "versionInfo": "0.6.0"
     },
@@ -14710,7 +14476,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "unicode-transforms",
       "versionInfo": "0.4.0.1"
     },
@@ -14758,7 +14524,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "uniplate",
       "versionInfo": "1.6.13"
     },
@@ -14860,7 +14626,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "unix-time",
       "versionInfo": "0.4.17"
     },
@@ -14920,7 +14686,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "MIT",
       "name": "unliftio-core",
       "versionInfo": "0.2.1.0"
     },
@@ -14980,7 +14746,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "unordered-containers",
       "versionInfo": "0.2.20.1"
     },
@@ -15028,7 +14794,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "utf8-string",
       "versionInfo": "1.0.2"
     },
@@ -15088,7 +14854,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "uuid-types",
       "versionInfo": "1.0.6.1"
     },
@@ -15148,7 +14914,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "vector",
       "versionInfo": "0.13.2.0"
     },
@@ -15196,7 +14962,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "vector-algorithms",
       "versionInfo": "0.9.1.0"
     },
@@ -15256,7 +15022,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "vector-stream",
       "versionInfo": "0.1.0.1"
     },
@@ -15316,7 +15082,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "witherable",
       "versionInfo": "0.5"
     },
@@ -15376,7 +15142,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "wl-pprint-annotated",
       "versionInfo": "0.1.0.1"
     },
@@ -15424,7 +15190,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "xml",
       "versionInfo": "1.3.14"
     },
@@ -15472,7 +15238,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "MIT",
       "name": "xml-types",
       "versionInfo": "0.3.8"
     },
@@ -15520,7 +15286,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "yaml",
       "versionInfo": "0.11.11.2"
     },
@@ -15568,7 +15334,7 @@
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "BSD-3-Clause",
       "name": "zip-archive",
       "versionInfo": "0.4.3.2"
     }

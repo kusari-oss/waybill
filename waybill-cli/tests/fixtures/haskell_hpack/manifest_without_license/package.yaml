@@ -1,0 +1,12 @@
+# No `license:` key. hpack INFERS the license from a LICENSE file and writes
+# it into the generated *.cabal -- it is never a key here. Suppressing that
+# file under FR-002 therefore dropped the main module's license entirely, as
+# measured on MercuryTechnologies/moat (MIT -> absent). Found by the corpus
+# refresh; no fixture in this milestone had a manifest without a license
+# beside a generated *.cabal that had one.
+name: waybill-fixture-nolicense
+version: 0.2
+dependencies:
+  - waybill-fixture-base
+library:
+  source-dirs: src

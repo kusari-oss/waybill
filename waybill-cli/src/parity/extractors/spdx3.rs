@@ -820,6 +820,8 @@ pub(super) fn c194_spdx3(doc: &Value) -> BTreeSet<String> {
 }
 spdx3_anno!(c163_spdx3, "waybill:document-resolve",                     document);
 spdx3_anno!(c162_spdx3, "waybill:cabal-entries-skipped",                 document);
+// Milestone 1273 (#1278): C200 doc-scope hpack read outcome.
+spdx3_anno!(c200_spdx3, "waybill:hpack-read-outcome",                 document);
 
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.

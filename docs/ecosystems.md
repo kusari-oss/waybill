@@ -13,9 +13,9 @@ diving into the [architecture docs](architecture/overview.md).
 | [deb](#deb) | `/var/lib/dpkg/status` + `.list` files | DB (`Depends:`) | Per-file SHA-256 (deep hash) or `.md5sums` fallback | — / Planned | Implemented |
 | [gem](#gem) | `Gemfile.lock` + `specifications/*.gemspec` | Lockfile indent-6 | — | — / ✓ | Implemented |
 | [golang](#golang) | `go.mod` / `go.sum` + module cache; `runtime/debug.BuildInfo` for binaries | Cache walker (source); **none** (binaries) | `go.sum` H1 (Merkle trie, not CDX) | ✓ / ✓ | Implemented |
-| [haskell](#haskell) | `cabal.project.freeze`, `cabal.project`, `stack.yaml.lock`, `stack.yaml`, `package.yaml`, `*.cabal` | Lockfile pin set (freeze / stack lock); `build-depends:` unioned across all stanzas for the main module | — | — / — | Implemented (milestones 143, 895) |
+| [haskell](#haskell) | `cabal.project.freeze`, `cabal.project`, `stack.yaml.lock`, `stack.yaml`, `package.yaml`, `*.cabal` | Lockfile pin set (freeze / stack lock); `build-depends:` unioned across all stanzas for the main module; hpack `package.yaml` parsed and preferred over a generated `*.cabal` | — | — / — | Implemented (milestones 143, 895, 1273) |
 | [maven](#maven) | Project `pom.xml` + JAR `META-INF/maven` + `~/.m2` + deps.dev fallback + Gradle `gradle.lockfile` / `buildscript-gradle.lockfile` | Layered: local → JAR → `~/.m2` BFS → parent POM chain → deps.dev. Gradle lockfile = flat | JAR sidecar `.sha512` > `.sha256` > `.sha1` | ✓ / ✓ | Implemented |
-| [nix](#nix) | `flake.lock` + `flake.nix`; runtime-closure and `nix eval` tiers behind `--nix-closure` | `flake.lock` node graph (flake inputs). Closure references drive component *roles*, not `dependsOn` edges | nixpkgs `hackage-packages.nix` SHA-256 (Haskell members) | — / — | Implemented (milestones 925, 926, 1034, 1035, 1050, 1066) |
+| [nix](#nix) | `flake.lock` + `flake.nix`; runtime-closure and `nix eval` tiers behind `--nix-closure` | `flake.lock` node graph (flake inputs). Closure references drive component *roles*, not `dependsOn` edges | nixpkgs `hackage-packages.nix` SHA-256 **and declared license** (Haskell members) | — / — | Implemented (milestones 925, 926, 1034, 1035, 1050, 1066, 1273) |
 | [npm](#npm) | `package-lock.json` v2/v3, `pnpm-lock.yaml`, `bun.lock`, `yarn.lock` (v1 + Berry), `node_modules/` | Lockfile (full tree) | Lockfile `integrity` (package-lock / pnpm-lock only) | ✓ / ✓ | Implemented |
 | [nuget](#nuget) | `*.csproj` / `*.vbproj` / `*.fsproj` + `packages.lock.json` + `Directory.Packages.props` | Lockfile (full tree) when present; otherwise direct-deps only | — | ✓ / — | Implemented |
 | [pip](#pip) | venv `dist-info/METADATA` + Poetry/Pipfile + `uv.lock` + `requirements.txt` | Lockfile (Poetry / Pipfile / uv), flat (venv) | `--hash=alg:hex` flags | ✓ / ✓ | Implemented |
@@ -2183,8 +2183,8 @@ identity; other entries in the same file still emit.
 
 ## haskell
 
-Waybill's Haskell reader (milestone 143, extended by milestone 895)
-parses six file shapes, matched by exact basename and then by the
+Waybill's Haskell reader (milestone 143, extended by milestones 895 and
+1273) parses six file shapes, matched by exact basename and then by the
 `.cabal` extension:
 
 | File | Role |
@@ -2193,7 +2193,7 @@ parses six file shapes, matched by exact basename and then by the
 | `stack.yaml.lock` | Authoritative pin set — Stack's resolved snapshot |
 | `cabal.project` | Project topology: which directories hold packages |
 | `stack.yaml` | Project topology, plus the resolver; Hpack projects are detected here |
-| `package.yaml` | Hpack source — detected and reported, since it generates the `.cabal` |
+| `package.yaml` | Hpack source — **parsed**, and the source of truth where both it and a generated `.cabal` are present (milestone 1273) |
 | `*.cabal` | Per-package metadata and `build-depends:` declarations |
 
 Components carry `pkg:hackage/<name>@<version>` PURLs. The main
@@ -2206,6 +2206,54 @@ Neither deps.dev nor ClearlyDefined indexes Hackage, so both
 enrichment columns are `—`: the lookups are skipped rather than
 attempted and failed. No content hash is emitted — the freeze and lock
 formats do not carry one.
+
+### hpack `package.yaml` (milestone 1273)
+
+Milestone 143 chose to **detect** `package.yaml` and warn rather than parse
+it, to avoid a second source of truth. That produced **zero** components for
+an hpack-only project — the common shape, since a project that `.gitignore`s
+its generated `*.cabal` is following hpack's own documented workflow — while
+the document asserted graph completeness over the nothing. Milestone 1273
+reverses the decision and resolves the two-sources question in one direction
+instead.
+
+**`package.yaml` wins.** hpack's own model makes the manifest the source and
+the `*.cabal` generated output, so the manifest is the more current statement
+of intent. Where both are present and the `*.cabal` carries hpack's
+generation header, the generated file is **suppressed** rather than merged;
+a hand-written `*.cabal` beside a manifest is not hpack output and is read
+normally. Each component records which file described it
+(`waybill:evidence-kind` = `hpack-manifest` or `cabal-pkg-descriptor`).
+
+**What is modelled**, measured against hpack 0.38.3 rather than read from its
+documentation:
+
+- top-level `dependencies`, inherited by **every** stanza kind — library,
+  executables, tests and benchmarks;
+- per-component `dependencies`, which **add** to the inherited list;
+- `when:` blocks, which hpack does not evaluate: it prunes a literal `false`
+  and lowers everything else, including `flag(x)` against a default declared
+  in the same file, to a Cabal `if`. Waybill therefore lowers a `when:` block
+  into the same representation its `.cabal` reader already evaluates against
+  flag defaults, so one project cannot get two answers depending on which
+  file declared its dependencies;
+- `source-dirs`, for evidence only — measured to be incapable of changing
+  the dependency set.
+
+For a repeated name the **last declaration wins and replaces** the earlier
+constraint; there is no intersection. `text >= 1.0` followed by `text < 3`
+yields `< 3`, which is what hpack renders. The range is recorded as the
+manifest declares it, not as hpack normalises it (`>= 4 && < 5` stays, rather
+than becoming `==4.*`).
+
+**What is not modelled is announced, not passed over.** `!include` and
+`defaults:` both appear in `waybill:hpack-read-outcome`, naming the construct
+and the file, so a manifest using one yields a partial answer that says it is
+partial. `defaults:` is never fetched: hpack resolves it by retrieving YAML
+from a remote repository, which a manifest reader is not the place to
+introduce and which `--offline` could not honour anyway. A manifest that
+cannot be parsed is likewise named, with a reason, and does **not** leave the
+scan claiming completeness.
 
 ---
 
@@ -2242,6 +2290,24 @@ SHA-256 hashes from the pinned revision's `hackage-packages.nix`
 (milestone 926), cached per revision under
 `~/.cache/waybill/nixpkgs/<rev>/`. Milestone 1050 adds a per-member
 security-declaration pass over the same revision.
+
+Since milestone 1273 they also carry the **license** that revision declares.
+`hackage-packages.nix` declares one for every package in it — 19,437
+declarations at the revision this was measured against — and the resolution
+already downloads, parses and caches the file, so this costs no extra I/O.
+Three declaration shapes are read: `lib.licenses.<attr>` (mapped through a
+15-entry table covering the whole attribute vocabulary at that revision),
+`lib.meta.getLicenseFromSpdxId "<id>"` (passed through), and a bare string
+(canonicalised where it parses).
+
+A declaration that will not canonicalise is **preserved** as
+`LicenseRef-<sanitized>` rather than dropped — the standard mechanism for a
+license that is not on the SPDX list, so the prefix itself records that the
+value is not a canonical identifier. A declaration of `"unknown"` yields an
+**absent** license field rather than the string `unknown`, because a consumer
+filtering for components with no license information would not find the
+latter. No license is attached to a component the resolution did not
+resolve.
 
 `pkg:generic/` is indexed by neither deps.dev nor ClearlyDefined, so
 both enrichment columns are `—`.

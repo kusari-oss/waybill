@@ -1,0 +1,9 @@
+cabal-version: 2.4
+name:          waybill-fixture-hand-cab
+version:       0.3.0
+license:       MIT
+
+library
+  build-depends: waybill-fixture-from-handwritten
+  exposed-modules: Lib
+  hs-source-dirs: src

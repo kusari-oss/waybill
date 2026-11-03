@@ -78,6 +78,12 @@
 //! Zero new Cargo dependencies — reuses workspace `regex`, `serde_yaml`,
 //! `serde_json`, `tracing`, `anyhow`.
 
+// Milestone 1273 (#1278) — the hpack `package.yaml` reader. A sibling module
+// rather than more of this file, which is already past 3000 lines; the split
+// follows `nix/haskell_packages/`, where parsing, caching, the closure and
+// boot libraries each own a file under one module.
+mod hpack;
+
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
@@ -323,6 +329,16 @@ struct StackSnapshot {
     sha256: Option<String>,
 }
 
+/// Which file a `CabalManifest` was read from (milestone 1273, FR-002).
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+enum ManifestOrigin {
+    /// A `*.cabal` file.
+    #[default]
+    Cabal,
+    /// An hpack `package.yaml`, lowered by `hpack::read_manifest`.
+    Hpack,
+}
+
 #[derive(Debug, Clone, Default)]
 struct CabalManifest {
     name: Option<String>,
@@ -337,6 +353,12 @@ struct CabalManifest {
     license: Option<SpdxExpression>,
     stanzas: Vec<CabalStanza>,
     hpack_generated: bool,
+    /// Milestone 1273 (FR-002) — which file this manifest was read FROM.
+    ///
+    /// The choice is recordable rather than implicit, so a suppressed
+    /// `*.cabal` is distinguishable from one that was read, and no operator
+    /// has to guess which of two files the document describes.
+    origin: ManifestOrigin,
     /// Milestone 895 (FR-012a) — dependency entries in this file that could
     /// not be read. Carried on the manifest so the per-file figure survives
     /// to the scan-wide total without a side channel.
@@ -688,9 +710,22 @@ pub fn read(
 /// `None` when no `.cabal` file was found: a project with no Haskell content
 /// must stay byte-identical, and reporting an honest zero everywhere would
 /// change every other document in the corpus (SEC-2).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct HaskellParseSummary {
     pub skipped_entries: usize,
+    /// Milestone 1273 (FR-003, FR-005, FR-018) — what the hpack reader did,
+    /// rendered for the document.
+    ///
+    /// Folded in here rather than given a side channel: this struct already
+    /// carries exactly this kind of reader-outcome fact ("whether a `.cabal`
+    /// file was read at all", milestone 895 FR-012a/b) and already reaches all
+    /// three emitters. `None` when no `package.yaml` was seen, so a project
+    /// with no hpack manifest stays byte-identical.
+    pub hpack_read: Option<serde_json::Value>,
+    /// Did a `package.yaml` go unread? FR-005's trigger, carried separately
+    /// from the rendered value because the completeness pass needs the fact
+    /// rather than the prose.
+    pub hpack_unread: usize,
 }
 
 pub(crate) fn finalize(
@@ -782,11 +817,21 @@ pub(crate) fn finalize(
     }
 
     // FR-008 / SC-004: no-op when no Haskell artifacts present.
+    //
+    // Milestone 1273 (#1278) added `package_yaml_paths` to this list, and it
+    // is the second half of that defect rather than a tidy-up. A
+    // `package.yaml` IS a Haskell artifact; omitting it here returned before
+    // Phase D2 could run, so an hpack-only project produced no components AND
+    // no diagnostic — and any diagnostic added downstream of this point was
+    // unreachable for the one input that needed it. That is the same shape as
+    // the defect US1 exists to fix, which is why FR-017 makes reachability a
+    // requirement rather than a hope.
     if cabal_paths.is_empty()
         && freeze_paths.is_empty()
         && cabal_project_paths.is_empty()
         && stack_lock_paths.is_empty()
         && stack_yaml_paths.is_empty()
+        && package_yaml_paths.is_empty()
     {
         return (out, None);
     }
@@ -924,7 +969,119 @@ pub(crate) fn finalize(
         }
     }
 
-    // Phase E — Q3 Hpack detect-and-warn (FR-015).
+    // Phase D2 — read hpack `package.yaml` manifests (milestone 1273, FR-001).
+    //
+    // Milestone 143's Q3 chose "detect and warn, do not parse", to avoid a
+    // second source of truth. FR-001 reverses that in the spec: the cost it
+    // avoided is real but smaller than publishing a project's dependency set
+    // as empty, which is what it produced for every hpack-only project.
+    //
+    // FR-002 keeps the thing Q3 was right to fear from happening. Exactly one
+    // file is the source of truth per package, and it is the manifest: hpack's
+    // own model makes `package.yaml` the source and the `*.cabal` generated
+    // output, so the manifest is the more current statement of intent. A
+    // sibling carrying the hpack generation header is therefore suppressed
+    // rather than merged.
+    let mut hpack_outcome = hpack::HpackReadOutcome::default();
+    for path in &package_yaml_paths {
+        hpack_outcome.seen.push(path.clone());
+        let Some(dir) = path.parent() else { continue };
+        match hpack::read_manifest(path) {
+            Ok((mut manifest, unmodelled)) => {
+                for c in unmodelled {
+                    // FR-001b — a knowably partial answer that says so.
+                    tracing::warn!(
+                        path = %path.display(),
+                        construct = c.as_str(),
+                        "haskell: package.yaml uses a construct outside the modelled \
+                         subset, so its dependency set may be incomplete (FR-001b)",
+                    );
+                    hpack_outcome.partial.push((path.clone(), c));
+                }
+                // FR-002 — drop a GENERATED sibling in this directory. A
+                // hand-written `*.cabal` is not hpack output, so the manifest
+                // is not its source and it is left alone.
+                //
+                // The warning fires HERE, not in `emit_hpack_warnings`.
+                // That function iterates `cabal_manifests` looking for
+                // `hpack_generated`, so suppressing the entry removes the
+                // very manifest it keys on — fixing FR-002 silently broke
+                // FR-004, and the FR-004 test is what caught it. The two
+                // paths now partition cleanly: a suppressed sibling warns
+                // here, and a generated `*.cabal` whose `package.yaml`
+                // could NOT be read still reaches `emit_hpack_warnings`
+                // unchanged, so neither case double-warns.
+                // Milestone 1273 — carry forward a field the manifest does
+                // NOT declare but its generated output does.
+                //
+                // hpack INFERS the license from a `LICENSE` file and writes
+                // it into the `*.cabal`; it is not a `license:` key in the
+                // manifest. Suppressing the generated file therefore lost
+                // it: `MercuryTechnologies/moat` went from `MIT` to no
+                // license at all, found by the corpus refresh and not by any
+                // fixture here.
+                //
+                // This is not a second source of truth. FR-002 settles which
+                // file answers for the DEPENDENCY SET; a field the manifest
+                // never mentions has no competing answer to choose between,
+                // and the generated file is that same manifest rendered by
+                // the tool that owns it. Milestone 954 added the main
+                // module's license precisely because it is usually not a
+                // published package, so there is no registry to enrich from
+                // and a drop here is permanent.
+                let inherited_license = cabal_manifests
+                    .iter()
+                    .find(|(cp, m)| cp.parent() == Some(dir) && m.hpack_generated)
+                    .and_then(|(_, m)| m.license.clone());
+                if manifest.license.is_none() {
+                    if let Some(l) = inherited_license {
+                        tracing::debug!(
+                            package_yaml = %path.display(),
+                            license = %l,
+                            "haskell: package.yaml declares no license; taking the \
+                             one hpack inferred into the generated *.cabal"
+                        );
+                        manifest.license = Some(l);
+                    }
+                }
+                cabal_manifests.retain(|(cabal_path, m)| {
+                    let same_dir = cabal_path.parent() == Some(dir);
+                    if same_dir && m.hpack_generated {
+                        tracing::warn!(
+                            package_yaml = %path.display(),
+                            generated_cabal = %cabal_path.display(),
+                            "haskell: Hpack-generated *.cabal detected alongside \
+                             package.yaml — the package.yaml is the source of truth \
+                             and the generated file is suppressed (FR-002); if the \
+                             two disagree, the document describes the package.yaml",
+                        );
+                        hpack_outcome.suppressed_cabal.push(cabal_path.clone());
+                        false
+                    } else {
+                        true
+                    }
+                });
+                hpack_outcome.read.push(path.clone());
+                cabal_manifests.push((path.clone(), manifest));
+            }
+            Err(reason) => {
+                // FR-003 — name the file and the reason. This must NOT degrade
+                // into the silence US1 exists to remove: the outcome is
+                // carried to the document, where FR-005 uses it.
+                tracing::warn!(
+                    path = %path.display(),
+                    reason = reason.as_str(),
+                    detail = %reason.detail(),
+                    "haskell: package.yaml found but could not be read (FR-003)",
+                );
+                hpack_outcome.unreadable.push((path.clone(), reason));
+            }
+        }
+    }
+    // Keep emission order deterministic regardless of discovery order.
+    cabal_manifests.sort_by(|a, b| a.0.cmp(&b.0));
+
+    // Phase E — Q3 Hpack detect-and-warn (FR-015), as amended by FR-004a.
     emit_hpack_warnings(&cabal_manifests, &package_yaml_paths);
 
     // Every package DEFINED in this scan. A `build-depends:` naming one of
@@ -1058,7 +1215,20 @@ pub(crate) fn finalize(
             skipped_entries,
         );
     }
-    (out, Some(HaskellParseSummary { skipped_entries }))
+    (
+        out,
+        Some(HaskellParseSummary {
+            skipped_entries,
+            // `None` when no `package.yaml` was seen, so a project without one
+            // emits nothing new and stays byte-identical (FR-015).
+            hpack_read: if hpack_outcome.is_empty() {
+                None
+            } else {
+                Some(hpack_outcome.to_document_value())
+            },
+            hpack_unread: hpack_outcome.unreadable.len(),
+        }),
+    )
 }
 
 // -----------------------------------------------------------------------
@@ -1362,6 +1532,7 @@ fn parse_cabal_manifest(path: &Path) -> anyhow::Result<CabalManifest> {
         license,
         stanzas,
         hpack_generated,
+        origin: ManifestOrigin::Cabal,
         skipped_entries,
     })
 }
@@ -2161,7 +2332,17 @@ fn build_main_module(
         source_type: Some("hackage-main-module".to_string()),
         buildinfo_status: None,
         sbom_tier: Some(sbom_tier.to_string()),
-        evidence_kind: Some("cabal-pkg-descriptor".to_string()),
+        // FR-002 — the document records WHICH file was the source of truth.
+        // An operator filtering on evidence can tell a project described from
+        // its hpack manifest from one described from a `*.cabal`, which is the
+        // whole point of resolving the two-sources question in one direction.
+        evidence_kind: Some(
+            match manifest.origin {
+                ManifestOrigin::Hpack => "hpack-manifest",
+                ManifestOrigin::Cabal => "cabal-pkg-descriptor",
+            }
+            .to_string(),
+        ),
         binary_class: None,
         binary_stripped: None,
         linkage_kind: None,
@@ -2389,7 +2570,14 @@ fn build_design_tier_components(
             source_type: Some("hackage-cabal-design".to_string()),
             buildinfo_status: None,
             sbom_tier: Some("design".to_string()),
-            evidence_kind: Some("cabal-pkg-descriptor".to_string()),
+            // FR-002, as above: the evidence names the file kind it came from.
+            evidence_kind: Some(
+                match manifest.origin {
+                    ManifestOrigin::Hpack => "hpack-manifest",
+                    ManifestOrigin::Cabal => "cabal-pkg-descriptor",
+                }
+                .to_string(),
+            ),
             binary_class: None,
             binary_stripped: None,
             linkage_kind: None,
@@ -2436,7 +2624,18 @@ fn emit_hpack_warnings(
         tracing::warn!(
             cabal_path = %cabal_path.display(),
             package_yaml = %package_yaml.display(),
-            "haskell: Hpack-generated *.cabal detected alongside package.yaml — run 'hpack' to regenerate before scanning if package.yaml has been edited",
+            // FR-004a — the old text ended "run 'hpack' to regenerate before
+            // scanning if package.yaml has been edited". That was sound while
+            // the generated file was the only thing read: regenerating it was
+            // the operator's only way to be described accurately. Under FR-002
+            // waybill reads the manifest, so regenerating changes nothing
+            // about the document — and instructing an operator to perform a
+            // step that cannot affect the output is worse than silence,
+            // because it looks like a remedy.
+            "haskell: Hpack-generated *.cabal detected alongside package.yaml — \
+             the package.yaml is the source of truth and the generated file is \
+             suppressed (FR-002); if the two disagree, the document describes \
+             the package.yaml",
         );
     }
 }
@@ -2747,6 +2946,7 @@ version: 0.1.0
                 },
             ],
             hpack_generated: false,
+            origin: ManifestOrigin::Cabal,
             skipped_entries: 0,
         };
         let unioned: HashMap<String, LifecycleScope> = collect_design_tier_deps(&manifest)
@@ -2850,6 +3050,7 @@ version: 0.1.0
                 default_buildable: true,
             }],
             hpack_generated: false,
+            origin: ManifestOrigin::Cabal,
             skipped_entries: 0,
         }
     }
@@ -2989,6 +3190,7 @@ executable slack-web-cli
             license: None,
             stanzas,
             hpack_generated: false,
+            origin: ManifestOrigin::Cabal,
             skipped_entries: skipped,
         }
     }

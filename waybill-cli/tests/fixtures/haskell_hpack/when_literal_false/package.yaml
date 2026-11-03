@@ -1,0 +1,10 @@
+name: waybill-fixture-falsewhen
+version: 0.1.0
+dependencies:
+  - waybill-fixture-base
+when:
+  - condition: false
+    dependencies:
+      - waybill-fixture-pruned
+library:
+  source-dirs: src

@@ -1030,6 +1030,14 @@ pub fn build_metadata(
             "name": "waybill:cabal-entries-skipped",
             "value": summary.skipped_entries.to_string(),
         }));
+        // Milestone 1273 (#1278) — C200 hpack read outcome. Emitted iff a
+        // `package.yaml` was seen, so a project without one is unchanged.
+        if let Some(v) = summary.hpack_read.as_ref() {
+            properties.push(json!({
+                "name": "waybill:hpack-read-outcome",
+                "value": v.to_string(),
+            }));
+        }
     }
 
     // Milestone 161 (T042) — doc-scope Go-workspace-mode annotation.

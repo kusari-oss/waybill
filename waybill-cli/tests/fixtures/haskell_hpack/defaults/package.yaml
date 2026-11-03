@@ -1,0 +1,9 @@
+name: waybill-fixture-defaults
+version: 0.1.0
+defaults:
+  github: waybill-fixture/does-not-exist
+  ref: main
+library:
+  source-dirs: src
+  dependencies:
+    - waybill-fixture-base

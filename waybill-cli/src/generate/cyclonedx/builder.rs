@@ -897,6 +897,14 @@ impl CycloneDxBuilder {
             .chain(m158_workspace_peer_edges.iter().cloned())
             .collect();
 
+        // Milestone 1273 FR-005 — manifests a reader found and could not
+        // read. Carried from the reader because the completeness pass cannot
+        // infer why a component set is thin.
+        let m1273_unread: Vec<(&str, usize)> = self
+            .haskell_parse_summary
+            .as_ref()
+            .map(|s| vec![("haskell", s.hpack_unread)])
+            .unwrap_or_default();
         // FR-008 multi-root BFS on the AUGMENTED + REWRITTEN graph.
         let graph_completeness =
             crate::generate::graph_completeness::compute_graph_completeness(
@@ -904,6 +912,7 @@ impl CycloneDxBuilder {
                 &metadata_relationships_augmented,
                 &m158_selection,
                 &target_ref,
+                &m1273_unread,
             );
 
         // FR-013 tracing log line (research §R8). Grep-friendly for
@@ -1666,6 +1675,12 @@ impl CycloneDxBuilder {
                             | "cabal-freeze"
                             | "stack-yaml-lock"
                             | "cabal-pkg-descriptor"
+                            // Milestone 1273 (#1278) — the hpack reader. A
+                            // component described from a `package.yaml` is
+                            // distinguishable from one described from a
+                            // `*.cabal`, which is how FR-002's "the document
+                            // MUST record which" is satisfied per component.
+                            | "hpack-manifest"
                             // Milestone 925 (#946) — Nix flake.lock reader.
                             | "nix-flake-lock"
                             // Milestone 169 (T013, closes #500) — ipk
@@ -1694,7 +1709,7 @@ impl CycloneDxBuilder {
                      cocoapods-podfile | cocoapods-manifest-lock | mix-lock | mix-exs | \
                      rebar-lock | rebar-config | app-src | sbt-lock | sbt-build | \
                      cabal-freeze | stack-yaml-lock | cabal-pkg-descriptor | \
-                     nix-flake-lock | \
+                     hpack-manifest | nix-flake-lock | \
                      ipk-file | opkg-status-db)"
                 );
                 properties.push(json!({

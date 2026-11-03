@@ -1,0 +1,6 @@
+name: waybill-fixture-range
+version: 0.1.0
+library:
+  source-dirs: src
+  dependencies:
+    - waybill-fixture-base >= 4 && < 5

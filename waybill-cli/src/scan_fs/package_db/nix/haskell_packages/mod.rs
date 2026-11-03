@@ -158,6 +158,14 @@ pub(crate) enum ResolutionOutcome {
         source_hash: Option<String>,
         /// The revision this came from, recorded as provenance (FR-007).
         revision: String,
+        /// Milestone 1273 (FR-010) — the license this entry declares.
+        ///
+        /// Carried on the outcome rather than looked up again at the call
+        /// site, for the same reason `source_hash` is: `classify` resolves
+        /// aliases, so the entry it matched may live under a different
+        /// attribute name than the component's, and a second lookup by the
+        /// component's own name would miss it.
+        license: Option<package_set::DeclaredLicense>,
     },
     Unresolved {
         reason: UnresolvedReason,
@@ -284,6 +292,7 @@ pub(crate) fn classify(
             version: entry.version.clone(),
             source_hash: entry.source_hash.clone(),
             revision: revision.to_string(),
+            license: entry.license.clone(),
         },
         None => ResolutionOutcome::unresolved(UnresolvedReason::AbsentFromPackageSet),
     }
@@ -503,6 +512,14 @@ pub(crate) struct EnrichmentSummary {
     /// converts them to relationships and MUST apply `renames` to them in the
     /// same step identities are rewritten (#980).
     pub(crate) closure_edges: Vec<closure::ClosureEdge>,
+    /// Milestone 1273 (FR-007, FR-008) — what the optional-mark
+    /// reconciliation did.
+    ///
+    /// `None` means it **did not run**. `Some` with an empty `withdrawn`
+    /// means it ran and withdrew nothing. Those were the same output before
+    /// this milestone, which is the condition under which a feature that
+    /// *cannot* fire looks like a feature with nothing to do.
+    pub(crate) optional_reconciliation: Option<OptionalReconciliation>,
     /// PURL rewrites this pass performed, as `(before, after)` (#980).
     ///
     /// Assigning a version changes the component's PURL, and the PURL is the
@@ -584,12 +601,31 @@ impl EnrichmentSummary {
     /// here (no `preserve_order` feature), so field order is sorted and
     /// stable across runs — a golden can pin the string.
     pub(crate) fn to_document_value(&self) -> serde_json::Value {
-        serde_json::json!({
+        let mut v = serde_json::json!({
             "resolved": self.resolved,
             "unresolved": self.unresolved,
             "disagreements": self.disagreements,
             "revision": self.revision,
-        })
+        });
+        // Milestone 1273 (FR-007, FR-008, FR-018) — the optional-mark
+        // reconciliation, in the DOCUMENT and not only the log. Additive to
+        // C173 rather than a new catalog row, which is what FR-019 asks for:
+        // this annotation already means "what the nixpkgs pass concluded".
+        //
+        // The key is ABSENT when the reconciliation did not run, which keeps
+        // a scan that never reached it byte-identical and makes FR-008's
+        // three states readable from the artifact: no C173 at all (the pass
+        // did not run), C173 without this key (the closure is disabled or
+        // the pass degraded), C173 with it (it ran, and says what it did).
+        if let Some(r) = self.optional_reconciliation.as_ref() {
+            if let Some(map) = v.as_object_mut() {
+                map.insert(
+                    "optional-reconciliation".to_string(),
+                    r.to_document_value(),
+                );
+            }
+        }
+        v
     }
 
     fn note_unresolved(&mut self, reason: &UnresolvedReason) {
@@ -600,53 +636,131 @@ impl EnrichmentSummary {
     }
 }
 
+/// Milestone 1273 (FR-007, FR-008, FR-009) — the account of one
+/// optional-mark reconciliation, for the document.
+///
+/// `BTreeMap` rather than `HashMap`: this reaches the emitted document and a
+/// golden has to be able to pin the string, so iteration order is part of the
+/// contract. Same reasoning as `ClosureSummary`.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub(crate) struct OptionalReconciliation {
+    /// Marks under review — components carrying
+    /// `cabal-flag-disabled-stanza`.
+    pub(crate) reviewed: usize,
+    /// FR-007 — each withdrawal, mapped to the non-seed parent whose closure
+    /// edge justified it, so an operator can tell which path was taken.
+    pub(crate) withdrawn: std::collections::BTreeMap<String, String>,
+    /// FR-009 — declined, so both the scope and its derivation stand.
+    pub(crate) declined: usize,
+}
+
+impl OptionalReconciliation {
+    /// The document-scope value. Keys sort through `serde_json::Map`, which is
+    /// a `BTreeMap` here, so the string is stable across runs.
+    pub(crate) fn to_document_value(&self) -> serde_json::Value {
+        serde_json::json!({
+            "reviewed": self.reviewed,
+            "withdrawn": self
+                .withdrawn
+                .iter()
+                .map(|(k, v)| serde_json::json!({
+                    "component": k,
+                    "justified-by": v,
+                }))
+                .collect::<Vec<_>>(),
+            "declined": self.declined,
+        })
+    }
+}
+
 /// Is this a Haskell component this pass is concerned with at all?
-/// Issue #955 + the cabal2nix pipeline: evidence beats inference.
+/// Issue #955 + #1281 — withdraw an optional mark only on evidence that is
+/// not the mark itself.
 ///
 /// The `.cabal` reader marks a dependency `Optional` when the only stanza
 /// declaring it is excluded by `buildable:` under the flag defaults the
-/// manifest DECLARES. nixpkgs' Haskell package set is generated by cabal2nix,
-/// which finalises each package under ITS flag assignment — usually those same
-/// defaults, but nixpkgs overrides flags per package, and where it does the two
-/// disagree.
+/// manifest DECLARES (milestone 955 / PR #1030). nixpkgs' Haskell package set
+/// is generated by cabal2nix, which finalises each package under ITS flag
+/// assignment — usually those same defaults, but nixpkgs overrides flags per
+/// package, and where it does the two disagree. Left alone the document would
+/// say both "optional, not in the default build" and, through a closure edge,
+/// "runtime dependency", with nothing to tell a consumer that the two
+/// sentences describe different build configurations.
 ///
-/// Left alone, the document would then say both "optional, not in the default
-/// build" and, through a closure edge, "runtime dependency", with nothing to
-/// tell a consumer that the two sentences describe different build
-/// configurations.
+/// # Why the previous test could only ever confirm the mark
 ///
-/// The closure wins. It is an observation of the configuration the SBOM
-/// actually describes; the mark is an inference from what a manifest declares.
-/// A component the runtime closure reached is built, whatever the defaults say.
+/// The withdrawal used to ask whether the marked name appeared anywhere in
+/// the closure's edge endpoints:
 ///
-/// Returns how many marks were withdrawn.
+/// ```text
+/// in_closure := { e.from } ∪ { e.to }   for every edge e
+/// withdraw c ⟸ c.marked ∧ c.name ∈ in_closure
+/// ```
+///
+/// A marked component is a closure **seed** — the walk is seeded from the
+/// declared dependency set, which contains it — so the walk expands it and it
+/// appears as `e.from` of its own out-edges. Membership was therefore true by
+/// construction for every marked component, and `restored=2` on the measured
+/// fixture meant only that two marks had been handed in. Nothing in the
+/// project reached either one.
+///
+/// # What replaces it
+///
+/// A second closure, seeded from `declared \ marked`. A component that walk
+/// still reaches really is built; one it does not reach keeps its mark, and so
+/// does everything below it.
+///
+/// Two cheaper-looking fixes were considered and are both wrong:
+///
+/// - **`e.to` only.** Still unsound: a marked component reached by another
+///   marked component is a `to`, so a pair of marks confirms itself.
+/// - **`reached_from` with one parent outside the marked set.** Correct for a
+///   directly-marked component, wrong one level down. Probe D measured 8
+///   non-boot components reachable from the root *only* through the marked
+///   pair on the public library #955 was filed against; each has a parent that
+///   is not itself marked, so a parent-local test withdraws nothing for the
+///   pair and still publishes all 8 as runtime-reachable. The error fans out,
+///   so the test has to be global.
+///
+/// Re-seeding costs one extra breadth-first walk over an already-parsed
+/// in-memory package set: no new I/O, no fetch.
 pub(crate) fn reconcile_optional_with_closure(
-    closure_edges: &[closure::ClosureEdge],
+    reachable_without_marks: &std::collections::BTreeMap<String, std::collections::BTreeSet<String>>,
     components: &mut [ResolvedComponent],
-) -> usize {
-    if closure_edges.is_empty() {
-        return 0;
-    }
-    let in_closure: std::collections::HashSet<&str> = closure_edges
-        .iter()
-        .flat_map(|e| [e.from.as_str(), e.to.as_str()])
-        .collect();
-    let mut restored = 0usize;
+) -> OptionalReconciliation {
+    let mut record = OptionalReconciliation::default();
     for c in components.iter_mut() {
         let marked = c
             .extra_annotations
             .get("waybill:optional-derivation")
             .and_then(|v| v.as_str())
             == Some("cabal-flag-disabled-stanza");
-        if marked && in_closure.contains(c.name.as_str()) {
-            // Back to what it was before the mark: the reader only ever
-            // overrides a Runtime scope, so Runtime is what it displaced.
-            c.lifecycle_scope = Some(waybill_common::resolution::LifecycleScope::Runtime);
-            c.extra_annotations.remove("waybill:optional-derivation");
-            restored += 1;
+        if !marked {
+            continue;
         }
+        record.reviewed += 1;
+        let Some(parents) = reachable_without_marks.get(c.name.as_str()) else {
+            // FR-009 — declined. The scope AND its derivation both stand;
+            // restoring one without the other would publish a scope with no
+            // account of where it came from.
+            record.declined += 1;
+            continue;
+        };
+        // FR-007 — name the parent that justified it. A seed of the second
+        // walk has no parent, in which case the project declares it directly
+        // through a stanza that IS built.
+        let justification = parents
+            .iter()
+            .next()
+            .cloned()
+            .unwrap_or_else(|| "declared by a buildable stanza".to_string());
+        // Back to what it was before the mark: the reader only ever overrides
+        // a Runtime scope, so Runtime is what it displaced.
+        c.lifecycle_scope = Some(waybill_common::resolution::LifecycleScope::Runtime);
+        c.extra_annotations.remove("waybill:optional-derivation");
+        record.withdrawn.insert(c.name.clone(), justification);
     }
-    restored
+    record
 }
 
 /// Is this the project being scanned, rather than one of its dependencies?
@@ -943,14 +1057,18 @@ pub(crate) fn enrich(
                 version,
                 source_hash,
                 revision,
+                license,
             } => {
                 apply_resolved(
                     c,
-                    &version,
-                    source_hash.as_deref(),
-                    &revision,
-                    pinned.matched_by,
-                    pinned.pin_state,
+                    ResolvedFacts {
+                        version: &version,
+                        source_hash: source_hash.as_deref(),
+                        revision: &revision,
+                        matched_by: pinned.matched_by,
+                        pin_state: pinned.pin_state,
+                        license: license.as_ref(),
+                    },
                     &mut summary.renames,
                 );
                 summary.resolved += 1;
@@ -967,6 +1085,30 @@ pub(crate) fn enrich(
                         c.extra_annotations
                             .insert(ANN_CANDIDATE_COMPILERS.to_string(), v);
                     }
+                    // Milestone 1273 (#1279, FR-014) — correct the reader's
+                    // C151, which an operator filters on.
+                    //
+                    // The reader stamped "no cabal.project.freeze fallback",
+                    // which was its best answer with no version in hand. For
+                    // a package the COMPILER supplies it is the wrong answer:
+                    // a freeze file would not pin it either. `cabal
+                    // v2-freeze` declines to pin exactly this set (#938) —
+                    // two independent tools declining for the same reason —
+                    // so an operator told to go and produce one is being
+                    // sent after something that does not exist.
+                    //
+                    // FR-014 asks that the reason distinguish
+                    // compiler-supplied from undeterminable. This is where
+                    // the pass learns which of the two it is, so this is
+                    // where C151 is corrected rather than left stale.
+                    c.extra_annotations.insert(
+                        "waybill:unresolved-reason".to_string(),
+                        serde_json::Value::String(
+                            "supplied by the compiler; nixpkgs has no version \
+                             to give and a freeze file would not pin it either"
+                                .to_string(),
+                        ),
+                    );
                 }
             }
         }
@@ -1014,14 +1156,22 @@ pub(crate) fn enrich(
                 // #962 -- `os-string`, reached through
                 // `directory-ospath-streaming`.
                 match classify(&c.name, &packages, &boot, &aliases, &pinned.revision) {
-                    ResolutionOutcome::Resolved { version, source_hash, revision } => {
+                    ResolutionOutcome::Resolved {
+                        version,
+                        source_hash,
+                        revision,
+                        license,
+                    } => {
                         apply_resolved(
                             &mut c,
-                            &version,
-                            source_hash.as_deref(),
-                            &revision,
-                            pinned.matched_by,
-                            pinned.pin_state,
+                            ResolvedFacts {
+                                version: &version,
+                                source_hash: source_hash.as_deref(),
+                                revision: &revision,
+                                matched_by: pinned.matched_by,
+                                pin_state: pinned.pin_state,
+                                license: license.as_ref(),
+                            },
                             &mut summary.renames,
                         );
                     }
@@ -1071,6 +1221,65 @@ pub(crate) fn enrich(
         );
         summary.closure_edges = std::mem::take(&mut result.edges);
         summary.closure = Some(result.summary);
+
+        // Milestone 1273 (#1281) — the optional-mark reconciliation.
+        //
+        // A SECOND walk, seeded from the declared set with the marked names
+        // removed. The first walk cannot answer the question: it is seeded
+        // from the set containing those names, so it reaches every one of
+        // them by construction and can only confirm the marks it was handed.
+        //
+        // Reuses the same `RelationLookup` over the same already-parsed
+        // package set, so this is one extra breadth-first traversal and no
+        // new I/O.
+        let marked: std::collections::BTreeSet<String> = components
+            .iter()
+            .filter(|c| {
+                c.extra_annotations
+                    .get("waybill:optional-derivation")
+                    .and_then(|v| v.as_str())
+                    == Some("cabal-flag-disabled-stanza")
+            })
+            .map(|c| c.name.clone())
+            .collect();
+        let reconciliation = if marked.is_empty() {
+            // Ran, with nothing to review. Distinct from "did not run"
+            // (FR-008), which is `None`.
+            OptionalReconciliation::default()
+        } else {
+            let unmarked_seed: Vec<String> = declared
+                .iter()
+                .filter(|n| !marked.contains(*n))
+                .cloned()
+                .collect();
+            let without = closure::walk(&unmarked_seed, &lookup);
+            let reachable: std::collections::BTreeMap<
+                String,
+                std::collections::BTreeSet<String>,
+            > = without
+                .members
+                .into_iter()
+                .map(|m| (m.name, m.reached_from))
+                .collect();
+            reconcile_optional_with_closure(&reachable, components)
+        };
+        // DEBUG, not INFO. `scan_cmd` owns the operator-facing report and
+        // distinguishes all three FR-008 states there; a second INFO line
+        // here said roughly the same thing twice.
+        //
+        // Mutation M31 is what surfaced it: demoting this line changed
+        // nothing any test could observe, because the report that matters
+        // still fired. A log nobody would miss is a log that should not be
+        // competing for an operator's attention at INFO.
+        tracing::debug!(
+            reviewed = reconciliation.reviewed,
+            withdrawn = reconciliation.withdrawn.len(),
+            declined = reconciliation.declined,
+            "nixpkgs-haskell: optional-mark reconciliation computed; a mark is \
+             withdrawn only where a closure seeded WITHOUT the marked set \
+             still reaches the component (#1281)"
+        );
+        summary.optional_reconciliation = Some(reconciliation);
     }
 
     // Phase 2 of the tier: the closure has now added components the first
@@ -1282,16 +1491,114 @@ const ANN_NIX_EVAL_ORIGIN: &str = "waybill:nix-eval-origin";
 /// that catches the next one.
 const ANN_NIX_EVAL_SUPERSEDED: &str = "waybill:nix-eval-superseded-version";
 
+/// Milestone 1273 (#1280, FR-010/FR-011/FR-012) — attach the license the
+/// pinned revision declares.
+///
+/// Called only from [`apply_resolved`], which is the single place this pass
+/// assigns a version. That is what makes FR-012 structural rather than
+/// asserted: a component the resolution did not resolve is never reached by
+/// this code, so no license can be invented for it.
+///
+/// A canonical expression goes into `licenses`, the field every emitter
+/// already maps to its own format's **native** license slot. Principle V's
+/// primary case: no `waybill:` annotation carries the license itself.
+///
+/// Which slot each format uses is deliberately NOT named here. This is
+/// resolution code and must stay format-neutral, an invariant
+/// `spdx3_us3_acceptance::scenario_1` enforces by grepping this tree for
+/// format-specific identifiers — prose included, which is how naming one in
+/// this very comment turned the gate red. The per-format mapping lives in
+/// `docs/reference/sbom-format-mapping.md` and in the emitters.
+///
+/// FR-011's uncanonicalisable declaration becomes `LicenseRef-<sanitized>`
+/// through the shared `sanitize_license_operand_to_ref` helper — the standard
+/// mechanism for a license that is not on the SPDX list, and the one
+/// milestone 185 (rpm) and milestone 202 already emit, byte-identically
+/// across formats. The `LicenseRef-` prefix **is** the record that the value
+/// is not a canonical identifier, so FR-011's "record that it is
+/// uncanonicalised" is satisfied by a standards-native construct rather than
+/// a new annotation.
+fn attach_declared_license(
+    c: &mut ResolvedComponent,
+    license: Option<&package_set::DeclaredLicense>,
+) {
+    use waybill_common::types::license::{
+        sanitize_license_operand_to_ref, SpdxExpression,
+    };
+    // A license already present outranks this one: a project-local
+    // declaration (milestone 1010) or an earlier enrichment is closer to the
+    // artifact than a distro's package set.
+    if !c.licenses.is_empty() {
+        return;
+    }
+    let Some(declared) = license else { return };
+    // FR-020 — the signal is logged as well as emitted, so an operator can
+    // see what the revision declared and whether it canonicalised without
+    // diffing the document.
+    tracing::debug!(
+        component = %c.name,
+        declared = %declared.as_declared(),
+        canonical = declared.is_canonical(),
+        "nixpkgs-haskell: attaching the license the pinned revision declares"
+    );
+    match declared {
+        package_set::DeclaredLicense::Canonical(e) => c.licenses.push(e.clone()),
+        package_set::DeclaredLicense::Uncanonical(raw) => {
+            if let Some(id) = sanitize_license_operand_to_ref(raw) {
+                if let Ok(e) = SpdxExpression::new(&format!("LicenseRef-{id}")) {
+                    c.licenses.push(e);
+                }
+            }
+        }
+    }
+}
+
+/// What the pinned revision says about one resolved component.
+///
+/// A struct rather than eight positional parameters. Milestone 1273 added the
+/// license and crossed clippy's argument threshold, which is a fair signal:
+/// `version`, `source_hash` and `license` all come from the same package-set
+/// entry and `revision`, `matched_by` and `pin_state` all describe the same
+/// pin, so passing them separately was already losing that structure.
+pub(crate) struct ResolvedFacts<'a> {
+    pub(crate) version: &'a str,
+    pub(crate) source_hash: Option<&'a str>,
+    pub(crate) revision: &'a str,
+    pub(crate) matched_by: NixpkgsMatch,
+    pub(crate) pin_state: &'a str,
+    pub(crate) license: Option<&'a package_set::DeclaredLicense>,
+}
+
 fn apply_resolved(
     c: &mut ResolvedComponent,
-    version: &str,
-    source_hash: Option<&str>,
-    revision: &str,
-    matched_by: NixpkgsMatch,
-    pin_state: &str,
+    facts: ResolvedFacts<'_>,
     renames: &mut Vec<(String, String)>,
 ) {
+    let ResolvedFacts {
+        version,
+        source_hash,
+        revision,
+        matched_by,
+        pin_state,
+        license,
+    } = facts;
     c.version = version.to_string();
+    attach_declared_license(c, license);
+    // Milestone 1273 (#1279, FR-013) — the reader's C151 is now stale.
+    //
+    // It was correct when stamped: at read time the component had no version
+    // and the reason named the artifact that would have supplied one
+    // (`no cabal.project.freeze fallback`, `no stack.yaml.lock fallback`).
+    // This pass has just supplied it from the pinned revision, so the
+    // annotation describes a situation that no longer exists — and a
+    // consumer filtering on it to find what waybill could not identify is
+    // actively misled rather than merely under-informed.
+    //
+    // Removed HERE, in the same mutation that assigns the version, rather
+    // than swept at emission time. The fact changed here; a sweep would also
+    // have to decide what to do about every other reader's C151, which
+    // FR-015 puts out of scope.
+    c.extra_annotations.remove("waybill:unresolved-reason");
     // The PURL must carry the version too, or the component is versioned in
     // one place and not the other.
     //
@@ -1864,13 +2171,104 @@ mod enrich_tests {
 
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
-mod closure_reconcile_tests {
-    //! Issue #955 + cabal2nix — where the `.cabal` flag defaults and the
-    //! nixpkgs package set disagree, the closure is the one that observed the
-    //! configuration the SBOM describes.
+mod license_attach_tests {
+    //! Milestone 1273 US3 (#1280) — `attach_declared_license`, tested
+    //! directly.
+    //!
+    //! The precedence guard ("a license already present outranks this one")
+    //! survived mutation M23, and investigation showed why: no component
+    //! reaching `apply_resolved` can have a pre-existing license today.
+    //! `build_main_module` is the only reader path that sets one, and the
+    //! main module carries a version, so `is_enrichable` excludes it.
+    //!
+    //! That made the guard **untested defensive code**. Rather than delete a
+    //! precedence invariant that a future caller would need — the m1010
+    //! manifest-declared licenses are exactly such a caller — it is tested
+    //! here against the helper, where the case is reachable without inventing
+    //! a scan input that does not exist.
 
     use super::enrich_tests::comp;
     use super::*;
+    use package_set::DeclaredLicense;
+    use waybill_common::types::license::SpdxExpression;
+
+    #[test]
+    fn a_canonical_declaration_lands_in_the_native_field() {
+        let mut c = comp("waybill-fixture-x");
+        let lic = DeclaredLicense::Canonical(
+            SpdxExpression::try_canonical("BSD-3-Clause").unwrap(),
+        );
+        attach_declared_license(&mut c, Some(&lic));
+        assert_eq!(c.licenses.len(), 1);
+        assert_eq!(c.licenses[0].as_str(), "BSD-3-Clause");
+    }
+
+    #[test]
+    fn an_uncanonical_declaration_becomes_a_license_ref() {
+        let mut c = comp("waybill-fixture-x");
+        let lic = DeclaredLicense::Uncanonical("GPL".to_string());
+        attach_declared_license(&mut c, Some(&lic));
+        assert_eq!(c.licenses.len(), 1);
+        // SPDX's own mechanism for a license off its list. The prefix IS the
+        // record that the value is not a canonical identifier (FR-011).
+        assert_eq!(c.licenses[0].as_str(), "LicenseRef-GPL");
+    }
+
+    /// The case mutation M23 removed. A license already on the component —
+    /// a project-local declaration (milestone 1010), or an earlier
+    /// enrichment — is closer to the artifact than a distro's package set,
+    /// so it stands.
+    #[test]
+    fn an_existing_license_is_not_overwritten() {
+        let mut c = comp("waybill-fixture-x");
+        c.licenses
+            .push(SpdxExpression::try_canonical("MIT").unwrap());
+        let lic = DeclaredLicense::Canonical(
+            SpdxExpression::try_canonical("BSD-3-Clause").unwrap(),
+        );
+        attach_declared_license(&mut c, Some(&lic));
+        assert_eq!(
+            c.licenses.iter().map(|l| l.as_str()).collect::<Vec<_>>(),
+            vec!["MIT"],
+            "the package set must not displace a closer declaration"
+        );
+    }
+
+    /// FR-012 — nothing is invented when the revision declares nothing.
+    #[test]
+    fn no_declaration_attaches_nothing() {
+        let mut c = comp("waybill-fixture-x");
+        attach_declared_license(&mut c, None);
+        assert!(c.licenses.is_empty());
+    }
+
+    /// A declaration that sanitizes to nothing attaches nothing rather than
+    /// an empty `LicenseRef-`.
+    #[test]
+    fn an_unsanitizable_declaration_attaches_nothing() {
+        let mut c = comp("waybill-fixture-x");
+        let lic = DeclaredLicense::Uncanonical("!@#$".to_string());
+        attach_declared_license(&mut c, Some(&lic));
+        assert!(c.licenses.is_empty());
+    }
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod closure_reconcile_tests {
+    //! Issue #955 + #1281 — a mark is withdrawn only where a closure seeded
+    //! WITHOUT the marked set still reaches the component.
+    //!
+    //! These were written against the pre-#1281 signature, which took the
+    //! closure's edge list. They now take the reachability map of the
+    //! re-seeded walk, which is the input that can actually answer the
+    //! question: the edge list could not, because a marked component is a
+    //! seed of the walk that produced it and therefore appears in its own
+    //! out-edges.
+
+    use super::enrich_tests::comp;
+    use super::*;
+    use std::collections::{BTreeMap, BTreeSet};
     use waybill_common::resolution::LifecycleScope;
 
     fn marked(name: &str) -> ResolvedComponent {
@@ -1883,22 +2281,37 @@ mod closure_reconcile_tests {
         c
     }
 
-    fn edge(from: &str, to: &str) -> closure::ClosureEdge {
-        closure::ClosureEdge { from: from.to_string(), to: to.to_string() }
+    /// `name` reached by `parents` in the walk seeded without the marks.
+    fn reached(pairs: &[(&str, &[&str])]) -> BTreeMap<String, BTreeSet<String>> {
+        pairs
+            .iter()
+            .map(|(n, ps)| {
+                (
+                    (*n).to_string(),
+                    ps.iter().map(|p| (*p).to_string()).collect(),
+                )
+            })
+            .collect()
     }
 
     #[test]
-    fn a_marked_component_in_the_closure_has_its_mark_withdrawn() {
+    fn a_mark_the_unmarked_closure_reaches_is_withdrawn() {
         let mut comps = vec![marked("butcher"), marked("monad-loops")];
-        // nixpkgs enabled the flag, so `butcher` really is a build input.
-        let edges = vec![edge("slack-web", "butcher")];
-        let n = reconcile_optional_with_closure(&edges, &mut comps);
-        assert_eq!(n, 1);
+        // The walk seeded WITHOUT the marks still reaches `butcher`, through
+        // `slack-web` — so it really is built and the mark goes.
+        let r = reached(&[("butcher", &["slack-web"])]);
+        let record = reconcile_optional_with_closure(&r, &mut comps);
+
+        assert_eq!(record.reviewed, 2);
+        assert_eq!(record.withdrawn.len(), 1);
+        assert_eq!(record.declined, 1);
+        // FR-007 — the withdrawal names the non-seed parent.
+        assert_eq!(record.withdrawn["butcher"], "slack-web");
 
         assert_eq!(comps[0].lifecycle_scope, Some(LifecycleScope::Runtime));
         assert!(!comps[0].extra_annotations.contains_key("waybill:optional-derivation"));
 
-        // Not in the closure: nixpkgs agrees it is not built, so the mark stands.
+        // FR-009 — not reached, so BOTH the scope and its derivation stand.
         assert_eq!(comps[1].lifecycle_scope, Some(LifecycleScope::Optional));
         assert_eq!(
             comps[1].extra_annotations["waybill:optional-derivation"].as_str(),
@@ -1906,10 +2319,43 @@ mod closure_reconcile_tests {
         );
     }
 
+    /// #1281's defect, as a unit test. Before the fix the input was the edge
+    /// list of a walk seeded FROM the marked set, so a marked component was
+    /// present by construction. Here the re-seeded walk reaches neither, and
+    /// both marks must stand — the case the old implementation could not
+    /// produce.
+    #[test]
+    fn marks_reached_only_by_the_marked_set_all_stand() {
+        let mut comps = vec![marked("butcher"), marked("monad-loops")];
+        let record = reconcile_optional_with_closure(&reached(&[]), &mut comps);
+        assert_eq!(record.reviewed, 2);
+        assert!(record.withdrawn.is_empty());
+        assert_eq!(record.declined, 2);
+        for c in &comps {
+            assert_eq!(c.lifecycle_scope, Some(LifecycleScope::Optional));
+        }
+    }
+
+    /// A component the re-seeded walk reaches as a SEED of its own has no
+    /// parent. It is still built — the project declares it through a stanza
+    /// that is not excluded — so the mark goes, with a justification saying
+    /// so rather than an empty string.
+    #[test]
+    fn a_seed_of_the_unmarked_walk_is_withdrawn_with_a_reason() {
+        let mut comps = vec![marked("butcher")];
+        let record = reconcile_optional_with_closure(&reached(&[("butcher", &[])]), &mut comps);
+        assert_eq!(record.withdrawn.len(), 1);
+        assert_eq!(
+            record.withdrawn["butcher"],
+            "declared by a buildable stanza"
+        );
+        assert_eq!(comps[0].lifecycle_scope, Some(LifecycleScope::Runtime));
+    }
+
     /// The pass touches ONLY components this reader marked. An optional
     /// classification from any other ecosystem mechanism — cargo's
     /// `optional = true`, npm's `optionalDependencies` — is not ours to
-    /// withdraw, whatever the closure contains.
+    /// withdraw, whatever the closure contains. (FR-015.)
     #[test]
     fn an_optional_from_another_mechanism_is_left_alone() {
         let mut c = comp("some-lib");
@@ -1919,15 +2365,30 @@ mod closure_reconcile_tests {
             serde_json::Value::String("cargo-optional-true".to_string()),
         );
         let mut comps = vec![c];
-        let n = reconcile_optional_with_closure(&[edge("x", "some-lib")], &mut comps);
-        assert_eq!(n, 0, "only `cabal-flag-disabled-stanza` marks are ours to withdraw");
+        let record =
+            reconcile_optional_with_closure(&reached(&[("some-lib", &["x"])]), &mut comps);
+        assert_eq!(
+            record.reviewed, 0,
+            "only `cabal-flag-disabled-stanza` marks are ours to review"
+        );
+        assert!(record.withdrawn.is_empty());
         assert_eq!(comps[0].lifecycle_scope, Some(LifecycleScope::Optional));
     }
 
+    /// FR-008 — "ran and withdrew nothing" is a record, not an absence. The
+    /// absence is reserved for "did not run", which `enrich` represents by
+    /// leaving `optional_reconciliation` as `None`.
     #[test]
-    fn no_closure_edges_is_a_no_op() {
+    fn an_empty_reachability_map_still_produces_a_record() {
         let mut comps = vec![marked("butcher")];
-        assert_eq!(reconcile_optional_with_closure(&[], &mut comps), 0);
+        let record = reconcile_optional_with_closure(&reached(&[]), &mut comps);
+        assert_eq!(record.reviewed, 1);
+        assert!(record.withdrawn.is_empty());
         assert_eq!(comps[0].lifecycle_scope, Some(LifecycleScope::Optional));
+        // And it renders for the document rather than being log-only.
+        let v = record.to_document_value();
+        assert_eq!(v["reviewed"], 1);
+        assert_eq!(v["declined"], 1);
+        assert_eq!(v["withdrawn"].as_array().map(Vec::len), Some(0));
     }
 }

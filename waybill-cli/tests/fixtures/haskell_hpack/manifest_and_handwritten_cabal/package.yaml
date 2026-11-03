@@ -1,0 +1,6 @@
+name: waybill-fixture-hand-mf
+version: 0.1.0
+library:
+  source-dirs: src
+  dependencies:
+    - waybill-fixture-from-manifest

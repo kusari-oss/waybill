@@ -434,6 +434,8 @@ Auto-generated from all feature plans. Last updated: 2026-11-02
 - Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly. No `+toolchain` argument when running the gate (#1189). + Existing only — `serde_json` (bun lockfile, yarn manifests), `serde_yaml` (Berry lockfile), `regex` (yarn v1 line format), `globset` (workspace-pattern expansion, already a direct dep since milestone 113), `tracing`, `anyhow`. **Zero new Cargo dependencies** (FR-008). (1271-yarn-bun-dev-scope)
 - N/A — all state in-process per scan, as with every reader since milestone 002. (1271-yarn-bun-dev-scope)
 - Rust stable, workspace toolchain pinned by + Existing only — `serde_yaml` (pnpm + Berry (1272-npm-optional-scope)
+- Rust stable, workspace toolchain pinned by + existing only. (1273-haskell-nixpkgs-truthfulness)
+- N/A for new state — all in-process per scan, as with every reader (1273-haskell-nixpkgs-truthfulness)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -656,9 +658,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 1273-haskell-nixpkgs-truthfulness: Added Rust stable, workspace toolchain pinned by + existing only.
 - 1272-npm-optional-scope: Added Rust stable, workspace toolchain pinned by + Existing only — `serde_yaml` (pnpm + Berry
 - 1271-yarn-bun-dev-scope: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly. No `+toolchain` argument when running the gate (#1189). + Existing only — `serde_json` (bun lockfile, yarn manifests), `serde_yaml` (Berry lockfile), `regex` (yarn v1 line format), `globset` (workspace-pattern expansion, already a direct dep since milestone 113), `tracing`, `anyhow`. **Zero new Cargo dependencies** (FR-008).
-- 1270-pnpm-v9-dev-scope: Added Rust pinned 1.98.1. + Existing serde_yaml and standard collections only.
 
 
 <!-- MANUAL ADDITIONS START -->
