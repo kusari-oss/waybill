@@ -524,3 +524,57 @@ a scope at all (142 OS-package and 175 file-tier components, every one
 no-scope), so they are not participants in the question. The probe is
 `scope-always-present.py`, to be committed into #1340's own measurements
 directory.
+
+## F13 — the refresh matched the prediction on every count but one, and my explanation for the exception was also wrong
+
+Run 41709905001, `regen_goldens=true` against this branch. The summary artifact
+names both SHAs, which is #1287's fix working: **scanned `def75035`** (this
+branch's tip) against a workflow definition from `001fa505`. The job name
+confirms the branch input took effect — `Run public corpus
+(1275-closure-hackage-identity): success`.
+
+**3 files changed, 48 byte-identical**, enumerated per file rather than
+trusting a count (#1286).
+
+| | committed | regenerated |
+|---|---|---|
+| components | 384 | 387 |
+| closure members | 362 | **362 — unchanged** |
+| closure `pkg:hackage` | 32 | **134** |
+| licensed / hashed | 32 / 32 | **134 / 134** |
+| closure out-edges | 139 | **756** |
+| components carrying C201 | 0 | **330** |
+| non-runtime scopes | 13 | **13 — unchanged** |
+| added | — | `exceptions`, `ghc-heap`, `pretty` |
+
+The +102 identities land almost exactly on #1282's own independent figure for a
+real library ("103 exact of 316"), which is the strongest corroboration this
+milestone has: a number measured by someone else, on a different project,
+reproduced by the implementation.
+
+### The prediction that failed, and the explanation that also failed
+
+I predicted **scope changes on this target**, on the strength of findings F12:
+this milestone's declared edges feed milestone 1269's propagation, and 10 of
+moat's 13 non-runtime components are closure members that now have out-edges.
+Measured: non-runtime scopes **unchanged at 13**.
+
+My first explanation was that in a real project a test dependency's
+dependencies are usually also runtime-reachable, so m1269's existing immunity
+protects them where my synthetic fixture had no runtime path. **Measured, that
+is false**: the 10 non-runtime closure members have 50 new out-edges to 23
+distinct targets, and **0 of those 23** are reachable from the root by a
+runtime-only path. They are not immune, and they were not marked.
+
+So something else prevents the propagation reaching them, and I do not know
+what. Candidates not yet tested: m1269's unrooted-ecosystem skip (its
+`skipped_unrooted` counter exists for exactly this shape), or an ordering
+detail between the identity pass at `scan_cmd.rs:4789` and the propagation at
+`4805`. **Recorded as an open question rather than a third guess** — the
+project's standard is that a theory gets tested before anything is built on
+it, and I have now been wrong twice in a row about this interaction.
+
+**It does not block the refresh.** The goldens are what the code produces, and
+every other figure matches. What it blocks is any claim that F12's interaction
+is understood; milestone 1276's `t057` pins the behaviour on a fixture where
+it demonstrably occurs, which is the right place for it until this is run down.
