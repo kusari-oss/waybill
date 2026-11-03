@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [X] No [NEEDS CLARIFICATION] markers remain
 - [X] Requirements are testable and unambiguous
 - [X] Success criteria are measurable
 - [X] Success criteria are technology-agnostic (no implementation details)
@@ -31,15 +31,21 @@
 
 ## Notes
 
-**Two [NEEDS CLARIFICATION] markers remain, both deliberate** — FR-004 (the
-`unreferenced` role's scope) and FR-005 (whether the compiler-supplied
-exemption suppresses the assignment or I9 is amended). #1342 itself names
-the first as "the only genuinely open one" and says it "should be decided
-from the schema text rather than from convenience". The second is forced by
-the measurement in `measurements/baseline.md`: the two populations overlap
-in principle and the invariant added last milestone forbids exactly that
-combination, so a default would be a decision disguised as a default. Both
-go to `/speckit.clarify`.
+**Both [NEEDS CLARIFICATION] markers are resolved** in `/speckit.clarify`
+Session 2026-11-03 and recorded in the spec's Clarifications section. FR-004
+takes `excluded` for the `unreferenced` role; FR-005 keeps milestone 1276's
+exemption and leaves invariant I9 unamended. The second answer's losing
+argument is recorded alongside it, because the overlap's population is zero
+and I9 failing is the event that makes the question answerable with data.
+
+**One requirement rests on something unmeasured, and says so.** FR-004a asks
+whether the role classifier's seven field names cover the dependency keys
+real derivations carry. Every fixture in the tree carries only those seven,
+so they cannot answer it, and a real closure needs a host `nix` — so this is
+a probe the plan must schedule, not a number quoted into a requirement.
+SC-009 therefore asks for the count to be *known and recorded*, not to be
+zero: quoting zero without the enumeration is exactly the assumption the
+requirement exists to retire.
 
 **Content-quality note on "no implementation details".** The spec names
 CycloneDX `scope` values, the C182 annotation and nix's own field names

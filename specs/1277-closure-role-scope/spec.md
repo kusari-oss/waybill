@@ -101,6 +101,13 @@ tested, but it must be tested against a synthetic fixture. A corpus
 assertion would pass whether the rule works or not, which is the failure
 milestone 1275 found in its own most-important test (F7 there).
 
+## Clarifications
+
+### Session 2026-11-03
+
+- Q: What CycloneDX scope should an `unreferenced` closure member carry? → A: `excluded`, the same as `build-tooling`. The categories the classifier documents for that role — fetched sources, patches, setup hooks, bootstrap stages — are none of them reachable in a runtime call graph, which is the schema's own definition of `excluded`. Leaving the scope absent is not the neutral option: the schema reads absent as `required`, so it claims a patch file ships.
+- Q: When a closure member is both compiler-supplied and in a tooling role, does the milestone-1276 exemption win or the role-derived `excluded`? → A: The exemption wins and invariant I9 stays exactly as milestone 1276 wrote it. The measured population is zero, so the two answers are indistinguishable on real data and the choice is only about which statement the code makes when the case appears. Keeping I9 as written makes it **fail loudly** at that moment, so the decision is taken with data rather than speculatively now. The opposing reading was recorded rather than discarded: `excluded` means "not reachable within a call graph at runtime", and a `build-tooling` role is positive evidence of non-presence where the dependency edge m1276 reasoned about was not — so if I9 ever fires on this overlap, that argument is the one to weigh, not a bug to patch.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - a build tool stops reading as shipped (Priority: P1)
@@ -185,7 +192,8 @@ that a component scoped by neither carries no such annotation.
 
 ### Edge Cases
 
-- **A member in the `unreferenced` role that applies a patch.** Nothing references it, yet it contributes a patch to something that ships. The 17 on the corpus exist precisely because m1035 measured `jq` and `lua` in this position carrying 6 of one project's 18 CVEs. See FR-004.
+- **A member in the `unreferenced` role that applies a patch.** Nothing references it, yet it contributes a patch to something that ships. Per FR-004 it carries `excluded`: the patched code ships, the patch does not, and the component is the patch. The 17 on the corpus exist precisely because m1035 measured `jq` and `lua` in this position carrying 6 of one project's 18 CVEs — `excluded` keeps them in the document, which is where that finding needs them, while stopping them reading as shipped.
+- **A member that `unreferenced` catches because waybill did not read the field that references it.** The role is derived by absence from two explicit field lists — 3 artifact fields and 4 tooling fields — while nixpkgs' stdenv sets more dependency keys than those seven. Such a member would acquire `excluded` under FR-004 while genuinely shipping. Whether any real derivation does this is **unmeasured**: every fixture in the tree carries only the seven fields the code already knows, so they cannot answer it, and a real closure requires a host `nix`. See FR-004a.
 - **A member whose variants disagree about their role.** The classifier unions the flags rather than picking one — measured, 13 of 97 duplicated identities in a real closure disagree, and `flex 2.6.4` is `Both` as one variant and `Unreferenced` as another. The scope must be derived from the unioned role, never from a single variant.
 - **A member already scoped by the lifecycle propagation.** Both mechanisms only ever assign a non-runtime scope and neither asserts `required`, so the cases compose: tooling-and-dev-only → `excluded` from either, tooling-and-runtime → `excluded` from the role, artifact-input-and-dev-only → `excluded` from the propagation. There is no combination in which one must overrule the other.
 - **A scan where the closure tier degraded.** No roles are emitted, so no scope is assigned — the same fail-closed posture as m1276's `None` boot set. An absent role must never be treated as `build-tooling`.
@@ -198,8 +206,10 @@ that a component scoped by neither carries no such annotation.
 - **FR-001**: The system MUST assign CycloneDX `scope: excluded` to every closure member whose unioned C182 role is `build-tooling`.
 - **FR-002**: The system MUST NOT assign any scope to a member whose role is `artifact-input` or `both`, and MUST leave a scope such a member already carries byte-identical. Absence of a scope is the schema's `required`, and `artifact-input` is measured to include test dependencies, so asserting `required` there would be a claim this feature cannot support.
 - **FR-003**: The system MUST derive the scope from the unioned role, never from an individual derivation variant.
-- **FR-004**: The system MUST assign [NEEDS CLARIFICATION: what scope, if any, does an `unreferenced` member carry? It is referenced by neither field set, yet patch-appliers in this role contribute to what ships and were emitted deliberately for that reason] to a member whose role is `unreferenced`.
-- **FR-005**: The system MUST NOT assign a role-derived scope to a component that is compiler-supplied, so that invariant I9 continues to hold. [NEEDS CLARIFICATION: does the exemption suppress the assignment entirely, or does I9 need amending to permit `excluded` on a compiler-supplied package in a tooling role? A boot library reached only through `nativeBuildInputs` is in the *tooling's* closure rather than the artifact's, which is an argument for `excluded`; m1276's premise that the compiler supplies it in every build is an argument against]
+- **FR-004**: The system MUST assign CycloneDX `scope: excluded` to every closure member whose unioned C182 role is `unreferenced`. A fetched source, a patch, a setup hook and a bootstrap stage are each a build-time input that is not reachable in a runtime call graph. The patched code ships; the patch does not.
+- **FR-004a**: The field lists the role classifier reads MUST be shown to cover the dependency keys real derivations carry, by enumerating the distinct dependency-shaped env keys present in a real closure and reporting any that neither list names. A key found outside both lists means `unreferenced` conflates "nothing references it" with "we did not read the reference", which would make FR-004's assignment unsound for that member; the finding is then recorded and scoped, not silently absorbed.
+- **FR-005**: The system MUST NOT assign a role-derived scope to a component that is compiler-supplied, in any role. Invariant I9 MUST remain exactly as milestone 1276 wrote it — unamended — so that a member in this overlap fails the invariant rather than silently acquiring a scope.
+- **FR-005a**: The system MUST NOT suppress the C182 role annotation for an exempt member. The exemption withholds the native scope; it does not withhold the classification, which is what lets a reader see that the member is tooling and that something deliberately declined to scope it.
 - **FR-006**: The system MUST preserve every C182 `waybill:closure-role` annotation value unchanged. This feature adds a native field; it does not replace the annotation, which carries a four-way distinction `scope` cannot express.
 - **FR-007**: The system MUST assign no scope when the closure tier degraded or emitted no roles. An absent role is not `build-tooling`.
 - **FR-008**: The system MUST emit documents byte-identical to the pre-feature output for every scan that does not enable `--nix-closure`.
@@ -218,13 +228,15 @@ that a component scoped by neither carries no such annotation.
 ### Measurable Outcomes
 
 - **SC-001**: On `nix-closure-moat`, all **80** `build-tooling` members carry `excluded`, up from 0.
+- **SC-001a**: On `nix-closure-moat`, all **17** `unreferenced` members carry `excluded`, up from 0, so **97 of 362** members stop reading as `required`.
 - **SC-002**: On `nix-closure-moat`, the **265** members in `artifact-input` or `both` roles carry exactly the scopes they carry today — the same 10 `excluded` and no others — so the feature adds no scope outside the roles it targets.
-- **SC-003**: A consumer filtering to `required` scope on `nix-closure-moat` sees at least 80 fewer components than today, and every one removed is a member nix referenced only through a tooling field.
+- **SC-003**: A consumer filtering to `required` scope on `nix-closure-moat` sees **97** fewer components than today, and every one removed is a member nix referenced through a tooling field or through neither field set.
 - **SC-004**: The 16 corpus targets that do not carry closure roles emit byte-identical documents.
-- **SC-005**: Invariant I9 passes on all 17 corpus targets with no declaration, as it does today.
+- **SC-005**: Invariant I9, unamended, passes on all 17 corpus targets with no declaration, as it does today. An amended I9 passing would not satisfy this criterion.
 - **SC-006**: The new invariant asserting FR-001 fails on a document in which a `build-tooling` member's scope has been removed, demonstrated by a planted mutation rather than by assertion.
 - **SC-007**: The compiler-supplied exemption is demonstrated on a synthetic fixture in which it changes the outcome — the component carries `excluded` without the rule and no scope with it. A criterion stated against the corpus would be satisfied vacuously, since the overlap's measured population there is zero.
-- **SC-008**: Every scoped component on `nix-closure-moat` names the mechanism that scoped it, and the count naming the role equals the count from SC-001.
+- **SC-008**: Every scoped component on `nix-closure-moat` names the mechanism that scoped it, and the count naming the role equals 97 (SC-001 plus SC-001a).
+- **SC-009**: The dependency-shaped env keys present in a real closure are enumerated, and the count neither field list names is reported. The criterion is that the number is **known and recorded**, not that it is zero — a non-zero answer is a finding to scope, and quoting zero without the enumeration would be the assumption FR-004a exists to retire.
 
 ## Assumptions
 

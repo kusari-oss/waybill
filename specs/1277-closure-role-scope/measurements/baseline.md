@@ -129,5 +129,14 @@ explicitly.
 | corpus targets emitting no closure role | **16** | SC-004 |
 | compiler-supplied ∩ tooling role | **0** | SC-007 |
 
-`unreferenced` is deliberately absent from that table: FR-004 is unresolved,
-so no criterion quotes a number for its 17 members yet.
+| `unreferenced` members to be scoped | **17** | SC-001a |
+
+Resolved in clarification (Session 2026-11-03): `unreferenced` carries
+`excluded`, so the population this feature scopes is **97 of 362**.
+
+One number is deliberately not in the table. Whether the role classifier's
+seven field names cover the dependency keys real derivations carry is
+**unmeasured** — every fixture in the tree carries only those seven, so
+testing against them is circular, and a real closure needs a host `nix`.
+FR-004a makes the enumeration a requirement and SC-009 asks for the count to
+be *known*, not to be zero.
