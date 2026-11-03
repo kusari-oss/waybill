@@ -1640,6 +1640,12 @@ fn degrade_all(
 /// against" and "there is, and we could not reach it" (Principle X). An
 /// `Option<Result<_, _>>` would carry the same information and say nothing
 /// about what the outer `None` meant.
+// `Loaded` carries a 19,437-entry package set and the other two carry almost
+// nothing, which clippy flags as a large size difference. Boxing it would add
+// an allocation to the only variant on the hot path to save stack on two that
+// are returned once per scan, so the lint is allowed here with that reasoning
+// rather than silenced by a `Box` nobody wanted.
+#[allow(clippy::large_enum_variant)]
 pub(crate) enum PackageSetLoad {
     /// No `flake.lock`, or one that does not parse. Nothing is pinned, so
     /// there is nothing to resolve against and nothing to report.
@@ -1792,7 +1798,10 @@ const KNOWN_GHC_SERIES: &[&str] = &[
 /// project's flake when one is found, and from every known series otherwise.
 /// A configuration that cannot be retrieved contributes nothing rather than
 /// aborting: a missing series is not a reason to stop resolving.
-fn boot_set(
+/// Shared with the milestone 1275 closure-identity pass, which needs the
+/// same nulled set to tell a GHC boot library from a package the closure
+/// merely lacks (FR-012c).
+pub(crate) fn boot_set(
     source: &dyn fetch::RevisionSource,
     location: &Location,
     rev: &str,
@@ -1828,13 +1837,13 @@ fn boot_set(
 ///
 /// Both halves come from the same files and are always read together, so they
 /// travel together rather than as a widening tuple.
-struct BootSet {
+pub(crate) struct BootSet {
     /// Names the compiler supplies; never resolved from Hackage.
-    boot: BTreeSet<String>,
+    pub(crate) boot: BTreeSet<String>,
     /// #984 — bare name → the versioned attribute it actually refers to.
-    aliases: std::collections::BTreeMap<String, String>,
+    pub(crate) aliases: std::collections::BTreeMap<String, String>,
     /// The GHC series considered, for the document-scope record.
-    candidates: Vec<String>,
+    pub(crate) candidates: Vec<String>,
 }
 
 /// Which compiler package sets the project might build against.
@@ -2521,7 +2530,7 @@ mod t005_parse_cost_probe {
             let set = package_set::parse(&text);
             let elapsed = t.elapsed().as_millis();
             // Consume the result so the parse cannot be optimised away.
-            assert!(set.len() > 0, "a package set that parsed to nothing");
+            assert!(!set.is_empty(), "a package set that parsed to nothing");
             ms.push(elapsed);
         }
         ms.sort_unstable();

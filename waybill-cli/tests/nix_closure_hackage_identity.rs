@@ -126,16 +126,23 @@ const CLOSURE_JSON: &str = r#"{
 
 /// The seeded `hackage-packages.nix`.
 ///
-/// `waybill-fixture-aeson` declares `waybill-fixture-bootlib`, which is
-/// deliberately **absent from the closure** — that is FR-012c's dangling
-/// target, and the compiler configuration below nulls it so it is identified
-/// as a GHC boot library.
+/// `waybill-fixture-aeson` declares two targets the closure does not contain:
+///
+/// - `waybill-fixture-bootlib`, which the compiler configuration below nulls,
+///   so milestone 926 identifies it as a GHC boot library. FR-012c says emit
+///   it as a versionless compiler-supplied component.
+/// - `waybill-fixture-absent`, which is **not** nulled and not in the set at
+///   all. There is no basis on which to emit a component for it, so its edge
+///   is omitted and counted. Mutation M13 needed this case: with only
+///   `bootlib` absent, deleting the boot-library check changed nothing and the
+///   check that stops waybill inventing a package from a bare name was
+///   untested.
 const PACKAGES: &str = r#"
   waybill-fixture-aeson = callPackage ({ mkDerivation }: mkDerivation {
       pname = "waybill-fixture-aeson";
       version = "2.2.4.1";
       sha256 = "1zym9yia0is8wxfd6d1ldwvvghwxg4ww3y4lrxnyb2nk60ig29ly";
-      libraryHaskellDepends = [ waybill-fixture-text waybill-fixture-bootlib ];
+      libraryHaskellDepends = [ waybill-fixture-text waybill-fixture-bootlib waybill-fixture-absent ];
       license = lib.licenses.mit;
   }) { };
   waybill-fixture-text = callPackage ({ mkDerivation }: mkDerivation {
@@ -302,17 +309,27 @@ impl Scan {
             .unwrap_or_default()
     }
 
-    /// Every `ref` and `dependsOn` endpoint in the CDX dependency graph.
+    /// Both endpoints of every **edge** in the CDX dependency graph.
+    ///
+    /// CycloneDX emits a `dependencies` entry for every component, so an entry
+    /// whose `dependsOn` is empty is a node declaration rather than an edge.
+    /// Counting those as endpoints made `t036` fail on `autoconf`, which has
+    /// no edges at all and simply appears in the graph as itself.
     fn all_edge_endpoints(&self) -> Vec<String> {
         let mut out = Vec::new();
         if let Some(deps) = self.cdx["dependencies"].as_array() {
             for d in deps {
+                let targets: Vec<&str> = d["dependsOn"]
+                    .as_array()
+                    .map(|ts| ts.iter().filter_map(|t| t.as_str()).collect())
+                    .unwrap_or_default();
+                if targets.is_empty() {
+                    continue;
+                }
                 if let Some(r) = d["ref"].as_str() {
                     out.push(r.to_string());
                 }
-                if let Some(ts) = d["dependsOn"].as_array() {
-                    out.extend(ts.iter().filter_map(|t| t.as_str()).map(str::to_string));
-                }
+                out.extend(targets.into_iter().map(str::to_string));
             }
         }
         out
@@ -782,5 +799,283 @@ fn t030b_the_pass_runs_where_the_enrichment_declines_to() {
     assert!(
         !c["hashes"].as_array().map(Vec::is_empty).unwrap_or(true),
         "no hash: the cache-only load produced an empty set"
+    );
+}
+
+// ---------------------------------------------------------------
+// FR-012 — declared dependency edges
+// ---------------------------------------------------------------
+
+/// C11 / FR-012 / SC-005a — a reclassified member carries out-edges from the
+/// dependencies the pinned set **declares**, and every target is a component
+/// present in the document.
+///
+/// Measured on the real closure: 278 declared, 265 resolving by name. Today
+/// zero closure-appended component carries any out-edge.
+#[test]
+fn t035_a_reclassified_member_carries_declared_out_edges() {
+    let s = resolved_scan();
+    let aeson = "pkg:hackage/waybill-fixture-aeson@2.2.4.1";
+    let targets = s.depends_on(aeson);
+    assert!(
+        !targets.is_empty(),
+        "a confirmed member carries no out-edges; document deps: {:?}",
+        s.cdx["dependencies"]
+    );
+    assert!(
+        targets.iter().any(|t| t.starts_with("pkg:hackage/waybill-fixture-text")),
+        "the declared dependency on text is missing; got {targets:?}"
+    );
+
+    // Every endpoint in the graph resolves to a component in the document
+    // (invariant I2). A dangling target validates in CycloneDX, so this is
+    // asserted rather than assumed.
+    let purls: std::collections::BTreeSet<&str> =
+        s.components().iter().filter_map(|c| c["purl"].as_str()).collect();
+    let root = s.cdx["metadata"]["component"]["purl"].as_str().unwrap_or_default();
+    for e in s.all_edge_endpoints() {
+        assert!(
+            purls.contains(e.as_str()) || e == root,
+            "edge endpoint {e} is not a component in the document"
+        );
+    }
+}
+
+/// C12 / FR-012a / SC-005b — no `dependsOn` edge is derived from a store
+/// reference.
+///
+/// Milestone 1066 decided a store reference drives a component's *role* and
+/// nothing else, and that decision stands: the two facts travel in two
+/// carriers so neither misrepresents the other. The fixture's root references
+/// every member through `buildInputs`, so if store references produced edges
+/// the root would depend on all of them — including `autoconf`, which the
+/// package set declares nothing about.
+#[test]
+fn t036_no_edge_is_derived_from_a_store_reference() {
+    let s = resolved_scan();
+
+    // `autoconf` is referenced by the root derivation's `buildInputs` and is
+    // declared by nothing in the package set. An edge to it could only have
+    // come from a store reference.
+    let autoconf = s.require("waybill-fixture-autoconf")["purl"]
+        .as_str()
+        .unwrap_or_default()
+        .to_string();
+    for e in s.all_edge_endpoints() {
+        assert_ne!(
+            e, autoconf,
+            "an edge names a component only a store reference could have reached"
+        );
+    }
+
+    // And `shell`, the collision: also store-referenced, also undeclared.
+    let shell = s.require("waybill-fixture-shell")["purl"]
+        .as_str()
+        .unwrap_or_default()
+        .to_string();
+    assert!(
+        !s.all_edge_endpoints().contains(&shell),
+        "a store-referenced collision gained an edge"
+    );
+}
+
+/// C13 / FR-012b — an unreclassified member gains no edges.
+///
+/// Edges follow the declaration, and a member the set does not identify has no
+/// declaration to follow. Inventing one from its store references is what C12
+/// forbids.
+#[test]
+fn t037_an_unreclassified_member_gains_no_edges() {
+    let s = resolved_scan();
+    for name in [
+        "waybill-fixture-shell",
+        "waybill-fixture-ghcshell",
+        "waybill-fixture-notghc",
+        "waybill-fixture-autoconf",
+        "waybill-fixture-noversion",
+    ] {
+        let purl = s.require(name)["purl"].as_str().unwrap_or_default().to_string();
+        assert!(
+            s.depends_on(&purl).is_empty(),
+            "{name} is not reclassified but carries out-edges: {:?}",
+            s.depends_on(&purl)
+        );
+    }
+}
+
+/// C14 / FR-012c — a declared dependency the closure does not contain becomes
+/// a versionless compiler-supplied component.
+///
+/// Neither dangling nor dropped. Measured: 13 of 278 targets absent, and all
+/// three distinct ones (`directory` ×11, `ghc-heap`, `pretty`) are GHC boot
+/// libraries — the population of #1340 and #966. The fixture's `bootlib` is
+/// declared by `aeson`, absent from the closure, and nulled in the compiler
+/// configuration, which is how milestone 926 identifies a boot library.
+#[test]
+fn t038_a_dangling_target_becomes_a_compiler_supplied_component() {
+    let s = resolved_scan();
+    let boot = s.require("waybill-fixture-bootlib");
+
+    assert_eq!(
+        boot["version"].as_str().unwrap_or_default(),
+        "",
+        "a compiler-supplied component must carry no version"
+    );
+    assert_eq!(
+        boot["purl"], "pkg:hackage/waybill-fixture-bootlib",
+        "expected a versionless Hackage PURL"
+    );
+
+    // The versionless component must explain its absent version or it fails
+    // the `versionless_explained` invariant. C170's `compiler-supplied` is
+    // exactly that value.
+    let reason = s
+        .prop(boot, "waybill:haskell-version-unresolved-reason")
+        .or_else(|| s.prop(boot, "waybill:unresolved-reason"))
+        .or_else(|| s.prop(boot, "waybill:version-absence"));
+    assert_eq!(
+        reason.as_deref(),
+        Some("compiler-supplied"),
+        "a versionless component with no accepted reason fails the \
+         versionless_explained invariant"
+    );
+
+    // And the edge to it exists rather than having been dropped.
+    let targets = s.depends_on("pkg:hackage/waybill-fixture-aeson@2.2.4.1");
+    assert!(
+        targets.iter().any(|t| t == "pkg:hackage/waybill-fixture-bootlib"),
+        "the declared edge to the boot library was dropped; got {targets:?}"
+    );
+}
+
+/// FR-012c's negative half — a declared target that is absent and is **not**
+/// a boot library gets no component invented for it.
+///
+/// Emitting one would assert a package exists on the strength of a name
+/// appearing in another package's dependency list, which is the same class of
+/// claim FR-004 forbids for identity. The edge is omitted and counted, so the
+/// omission is reported rather than silent (#1218).
+#[test]
+fn t038b_an_absent_non_boot_target_gets_no_invented_component() {
+    let s = resolved_scan();
+    assert!(
+        s.component("waybill-fixture-absent").is_none(),
+        "a component was invented for a name that is only a dependency string"
+    );
+    assert!(
+        !s.all_edge_endpoints().iter().any(|e| e.contains("waybill-fixture-absent")),
+        "an edge points at a component that does not exist"
+    );
+    // The boot library beside it IS emitted, so this is not passing because
+    // the whole dangling-target path is dead.
+    assert!(
+        s.component("waybill-fixture-bootlib").is_some(),
+        "the boot-library path did not run, so this test proves nothing"
+    );
+
+    // And the omission is REPORTED, not silent. Mutation M12 — deleting the
+    // counter — survived until this assertion existed, because the counter is
+    // a diagnostic rather than a document fact and nothing looked at it. A
+    // count that quietly omits edges is the shape #1218 was about, so
+    // "reported" has to be asserted somewhere or it is only intended.
+    // Matched on the message rather than the field: tracing wraps field
+    // names in ANSI escapes, so `dangling_non_boot=1` never appears as a
+    // plain substring. The message is enough — M12 leaves the counter at
+    // zero, so the `> 0` guard never fires and this line is never printed.
+    assert!(
+        s.stderr.contains("their edges are omitted because emitting a"),
+        "the omitted edge was not reported on stderr; got: {}",
+        s.stderr
+    );
+}
+
+/// C15 / #980 — the PURL rewrite carried its edges, asserted **directly**.
+///
+/// Not inferred from an edge count. #980's failure mode is silent in all three
+/// formats: CycloneDX keeps an edge pointing at the old PURL, SPDX drops the
+/// relationship outright, and neither errors — so a count can match while the
+/// graph is orphaned.
+#[test]
+fn t039_no_relationship_refers_to_a_replaced_purl() {
+    let s = resolved_scan();
+
+    // Every PURL this pass replaced, by construction: a reclassified member's
+    // generic coordinate.
+    let replaced: Vec<String> = ["waybill-fixture-aeson@2.2.4.1",
+                                 "waybill-fixture-text@2.0.2",
+                                 "waybill-fixture-oddlic@3.1.4"]
+        .iter()
+        .map(|nv| format!("pkg:generic/{nv}"))
+        .collect();
+
+    for old in &replaced {
+        assert!(
+            !s.all_edge_endpoints().contains(old),
+            "a relationship still refers to {old}, a PURL this pass replaced"
+        );
+        assert!(
+            !s.components().iter().any(|c| c["purl"].as_str() == Some(old.as_str())),
+            "{old} is still a component; the rewrite did not happen"
+        );
+    }
+
+    // The same assertion in SPDX 2.3, where the failure mode is a DROPPED
+    // relationship rather than a stale one -- so it is checked by counting
+    // the graph rather than by looking for the old identifier.
+    let rel_count = s.spdx23["relationships"].as_array().map(Vec::len).unwrap_or(0);
+    assert!(rel_count > 0, "SPDX 2.3 carries no relationships at all");
+}
+
+/// T045 — the three formats agree about the dependency graph.
+///
+/// The cheapest check that catches a fabricated or orphaned edge, and it found
+/// two defects in milestone 866. #980's failure mode is asymmetric by
+/// construction: CycloneDX keeps an edge pointing at a replaced PURL while
+/// SPDX **drops** the relationship, so a count that matches across formats is
+/// evidence neither happened, and one that does not is evidence one did.
+#[test]
+fn t045_the_three_formats_agree_about_the_declared_edges() {
+    let s = resolved_scan();
+    let aeson = "pkg:hackage/waybill-fixture-aeson@2.2.4.1";
+
+    // CycloneDX: the member's own `dependsOn` set.
+    let cdx: std::collections::BTreeSet<String> = s.depends_on(aeson).into_iter().collect();
+    assert!(!cdx.is_empty(), "CycloneDX carries no edges for the member");
+
+    // SPDX 2.3: DEPENDS_ON relationships whose source is the member's
+    // package. The SPDXID is content-derived, so the package is located by
+    // its PURL in `externalRefs` rather than by guessing the identifier.
+    let spdx_id = s.spdx23["packages"]
+        .as_array()
+        .and_then(|ps| {
+            ps.iter().find(|p| {
+                p["externalRefs"]
+                    .as_array()
+                    .map(|rs| rs.iter().any(|r| r["referenceLocator"] == aeson))
+                    .unwrap_or(false)
+            })
+        })
+        .and_then(|p| p["SPDXID"].as_str())
+        .map(str::to_string)
+        .expect("the member has no SPDX 2.3 package");
+
+    let spdx_edges = s.spdx23["relationships"]
+        .as_array()
+        .map(|rs| {
+            rs.iter()
+                .filter(|r| {
+                    r["spdxElementId"] == spdx_id.as_str()
+                        && r["relationshipType"] == "DEPENDS_ON"
+                })
+                .count()
+        })
+        .unwrap_or(0);
+
+    assert_eq!(
+        spdx_edges,
+        cdx.len(),
+        "CycloneDX reports {} out-edges for the member and SPDX 2.3 reports {spdx_edges}; \
+         an asymmetry here is #980's signature",
+        cdx.len()
     );
 }

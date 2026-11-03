@@ -312,3 +312,92 @@ making the pass inherit the gate — is CAUGHT by `t030b` and by nothing else.
 Mutants: M5 (`no-version-recorded` collapsed into `not-in-package-set`) caught
 by t029; M6 (the unavailable path mislabelled) caught by t030; M11 caught by
 t030b.
+
+## F9 — the edges, and two more mutants that found untested guards (T035–T045)
+
+Three implementation facts worth recording:
+
+1. **A CycloneDX `dependencies` entry is not an edge.** CDX emits one per
+   component, so an entry whose `dependsOn` is empty is a node declaration.
+   The first `all_edge_endpoints` helper counted those as endpoints, and
+   `t036` (C12, no store-reference edges) failed on `autoconf` — a component
+   with no edges at all that simply appears in the graph as itself. The helper
+   now skips entries with no targets.
+2. **`ResolvedComponent` has no `Default`**, so FR-012c's compiler-supplied
+   component is written out in full. That is a good constraint rather than an
+   annoyance: a component with every field defaulted is a component nobody
+   decided anything about.
+3. **`apply_resolved` could not be reused** (F6), and neither could the
+   existing closure-edge conversion in `scan_cmd.rs` — it filters
+   `purl_of` to `pkg:hackage/` components and is fed by `EnrichmentSummary`,
+   which the closure pass does not produce. The edge emission is new code that
+   reuses `declared_relations`, `is_boot_library` and the same dedup discipline.
+
+### M13 and M12 both survived first, for the same reason
+
+```
+M13  boot-library check deleted      SURVIVED  -> CAUGHT by t038b
+M12  dangling counter not incremented SURVIVED -> CAUGHT by t038b
+```
+
+**M13**: the fixture's only absent declared target was `bootlib`, which *is* a
+boot library — so deleting the check that distinguishes a boot library from
+any other absent name changed nothing. The guard that stops waybill inventing
+a `pkg:hackage/<name>` component from a string in someone else's dependency
+list was untested. Added `waybill-fixture-absent`: declared by `aeson`, absent
+from the closure, **not** nulled. Now M13 is caught.
+
+**M12**: the `dangling_non_boot` counter exists so the omission is "reported,
+not silent" (#1218). Nothing asserted the report, so deleting the increment
+was invisible. `t038b` now asserts the warning reaches stderr — and the first
+version of that assertion looked for `dangling_non_boot=1`, which never
+appears: `tracing` wraps field *names* in ANSI escapes, so the field is not a
+plain substring. Matching the message text works and is sufficient, because
+M12 leaves the counter at zero and the `> 0` guard then never fires.
+
+Both are the same lesson in two places: **a guard whose two branches are never
+both exercised is not tested, however many tests pass through it.** That is
+the same shape as F7, where the collision was protected twice over.
+
+Mutants: M7 (targets bound to the set's version instead of resolved by name)
+caught by t035; M8 (the #980 mutant — edges built before the rename rather
+than after) caught by t035 and t038; M12 and M13 as above.
+
+T045: CycloneDX and SPDX 2.3 report the same out-edge count for the
+reclassified member. #980's failure mode is asymmetric by construction — CDX
+keeps a stale edge where SPDX drops the relationship — so agreement is
+evidence neither happened.
+
+## F10 — the first "before" document was not a before document (T055)
+
+Full numbers in `after-1275.md`. The finding worth keeping is the control.
+
+The first attempt produced the baseline with `git stash` plus a rebuild, and
+reported closure `pkg:hackage` as **106 both before and after** while the pass
+logged `confirmed=59`. Three figures that cannot all be true, and the kind of
+result it is tempting to explain rather than investigate.
+
+`git stash` reverts the worktree to **HEAD** — and HEAD already contained
+US1–US3, because the identity pass was committed in `e224e842` several steps
+earlier. So the "before" was the feature *minus Phase 6's edges*. Worse, it
+looked plausible: it still showed +278 edges and +3 components, exactly the
+Phase 6 delta, so every number in the table was real and the label on the
+column was wrong.
+
+Caught by grepping the baseline's own log for `identity pass` and finding one
+line. The real baseline is a detached `git worktree` at `001fa50`, and its log
+contains **zero** — which is now stated at the top of `after-1275.md` as the
+control, because a baseline that cannot be shown to lack the feature is not a
+baseline.
+
+Against the true baseline every criterion is met, and three figures confirm
+the research rather than merely agreeing with it: **+278** out-edges is exactly
+R6's independently measured declared-dependency count with **0** dangling; the
+three added components are precisely R6's three distinct boot libraries
+(`directory`, `ghc-heap`, `pretty`); and the one exact pair that does **not**
+reclassify is `hashable 1.4.7.0`, whose mechanism is now pinned down rather
+than inferred — the pinned revision has no default `hashable` attribute at
+all, only versioned aliases, so `set.get("hashable")` returns nothing and the
+member is reported `not-in-package-set`. That is also why that bucket reads
+177 here against the sizing probe's 176 absent-with-version. R4's alias gap
+costs exactly 1, and this is the row it costs.

@@ -531,6 +531,22 @@ pub(crate) struct ClosureIdentitySummary {
     /// the relationship endpoints; `reclassify` does it for the edges that
     /// exist when it runs, and returns them so a later producer can too.
     pub(crate) renames: Vec<(String, String)>,
+    /// Declared edges emitted (FR-012).
+    pub(crate) edges: usize,
+    /// Declared edges whose target was already in the graph.
+    pub(crate) edges_duplicate: usize,
+    /// Boot-library components synthesised for a target the closure does not
+    /// contain (FR-012c). Measured 13 of 278 on the real closure, all three
+    /// distinct targets being GHC boot libraries.
+    pub(crate) boot_targets: usize,
+    /// Declared targets absent from the document that are **not** boot
+    /// libraries, so there is no basis on which to emit a component for them.
+    ///
+    /// Counted rather than silently skipped: measured 0 on the real closure,
+    /// and a count that quietly omitted edges is the shape #1218 was about. A
+    /// nonzero value here means FR-012c has a population its research did not
+    /// predict, and the log line says so.
+    pub(crate) dangling_non_boot: usize,
 }
 
 impl ClosureIdentitySummary {
@@ -574,10 +590,11 @@ fn is_unidentified_closure_member(c: &ResolvedComponent) -> bool {
 /// every member lands in `PackageSetUnavailable` and the scan still succeeds
 /// (FR-009, Principle XI).
 pub(crate) fn reclassify(
-    components: &mut [ResolvedComponent],
-    relationships: &mut [waybill_common::resolution::Relationship],
+    components: &mut Vec<ResolvedComponent>,
+    relationships: &mut Vec<waybill_common::resolution::Relationship>,
     closure: &ClassifiedClosure,
     set: Option<&PackageSet>,
+    boot: &BTreeSet<String>,
 ) -> ClosureIdentitySummary {
     // Derivations by the identity a consumer sees. A closure holds several
     // derivations per `(pname, version)` -- build variants -- and the GHC
@@ -648,5 +665,180 @@ pub(crate) fn reclassify(
             "nix-closure: rewrote dependency-edge endpoints after reclassification"
         );
     }
+
+    emit_declared_edges(components, relationships, set, boot, &mut summary);
     summary
+}
+
+/// FR-012 — give each confirmed member the out-edges the pinned set declares.
+///
+/// Runs after the rename, so every endpoint is a final identity and #980's
+/// failure mode cannot apply to these edges: they are built from the PURLs the
+/// document will carry rather than from ones a later pass rewrites.
+fn emit_declared_edges(
+    components: &mut Vec<ResolvedComponent>,
+    relationships: &mut Vec<waybill_common::resolution::Relationship>,
+    set: Option<&PackageSet>,
+    boot: &BTreeSet<String>,
+    summary: &mut ClosureIdentitySummary,
+) {
+    let Some(set) = set else { return };
+
+    // Which members this pass confirmed, and their final PURLs.
+    let confirmed: Vec<(String, String)> = components
+        .iter()
+        .filter(|c| {
+            c.extra_annotations
+                .get(ANN_CLOSURE_IDENTITY)
+                .and_then(|v| v.as_str())
+                == Some("confirmed")
+        })
+        .map(|c| (c.name.clone(), c.purl.as_str().to_string()))
+        .collect();
+    if confirmed.is_empty() {
+        return;
+    }
+
+    // Targets resolve BY NAME against the document, never by the set's
+    // version. This is load-bearing and measured: 165 of 278 declared targets
+    // are present at a version the set does not declare, because the closure
+    // carries what GHC actually shipped. Binding to the set's version would
+    // point 59% of edges at components that do not exist.
+    let mut purl_of: std::collections::HashMap<String, String> = components
+        .iter()
+        .map(|c| (c.name.clone(), c.purl.as_str().to_string()))
+        .collect();
+
+    let mut present: std::collections::HashSet<(String, String)> = relationships
+        .iter()
+        .filter(|r| {
+            r.relationship_type == waybill_common::resolution::RelationshipType::DependsOn
+        })
+        .map(|r| (r.from.clone(), r.to.clone()))
+        .collect();
+
+    for (name, from_purl) in &confirmed {
+        let Some(entry) = set.get(name) else { continue };
+        for target in declared_relations(entry) {
+            let to_purl = match purl_of.get(&target) {
+                Some(p) => p.clone(),
+                None => {
+                    // FR-012c — the closure does not contain this declared
+                    // dependency. Measured: 13 of 278, every distinct one a
+                    // GHC boot library, because the compiler ships them
+                    // inside its own derivation rather than beside it.
+                    if !super::boot_libraries::is_boot_library(&target, boot) {
+                        // No basis to emit a component: inventing one would
+                        // assert a package exists on the strength of a name.
+                        // Counted so the omission is reported, not silent.
+                        summary.dangling_non_boot += 1;
+                        continue;
+                    }
+                    let Some(c) = compiler_supplied_component(&target) else { continue };
+                    let p = c.purl.as_str().to_string();
+                    purl_of.insert(target.clone(), p.clone());
+                    components.push(c);
+                    summary.boot_targets += 1;
+                    p
+                }
+            };
+            if from_purl == &to_purl {
+                continue;
+            }
+            if !present.insert((from_purl.clone(), to_purl.clone())) {
+                summary.edges_duplicate += 1;
+                continue;
+            }
+            relationships.push(waybill_common::resolution::Relationship {
+                from: from_purl.clone(),
+                to: to_purl,
+                relationship_type: waybill_common::resolution::RelationshipType::DependsOn,
+                // Principle X — the edge says where it came from, so a
+                // consumer can tell a relation read from the pinned nixpkgs
+                // apart from one the project declared itself.
+                provenance: waybill_common::resolution::EnrichmentProvenance {
+                    source: "nixpkgs".to_string(),
+                    data_type: "nix-closure-declared".to_string(),
+                },
+            });
+            summary.edges += 1;
+        }
+    }
+
+    if summary.dangling_non_boot > 0 {
+        tracing::warn!(
+            dangling_non_boot = summary.dangling_non_boot,
+            "nix-closure: declared targets absent from the document and not              boot libraries; their edges are omitted because emitting a              component for a bare name would assert a package exists"
+        );
+    }
+    tracing::info!(
+        edges = summary.edges,
+        duplicate = summary.edges_duplicate,
+        boot_targets = summary.boot_targets,
+        "nix-closure: declared dependency edges emitted"
+    );
+}
+
+/// A declared dependency the compiler supplies: versionless, with the reason
+/// that says so.
+///
+/// The shape the design tier already uses for a boot library, which milestone
+/// 1273's US4 test asserts. Versionless **and** explained, because a
+/// versionless component with no accepted reason fails the
+/// `versionless_explained` invariant — "the compiler supplies this" and
+/// "waybill could not resolve it" call for completely different action.
+fn compiler_supplied_component(name: &str) -> Option<ResolvedComponent> {
+    let purl = waybill_common::types::purl::Purl::new(&format!("pkg:hackage/{name}")).ok()?;
+    // Written out in full because `ResolvedComponent` has no `Default`, which
+    // is itself deliberate: a component with every field defaulted is a
+    // component nobody decided anything about.
+    let mut c = ResolvedComponent {
+        build_inclusion: None,
+        name: name.to_string(),
+        version: String::new(),
+        purl,
+        evidence: waybill_common::resolution::ResolutionEvidence {
+            technique: waybill_common::resolution::ResolutionTechnique::UrlPattern,
+            confidence: 0.95,
+            source_connection_ids: vec![],
+            source_file_paths: vec![],
+            deps_dev_match: None,
+        },
+        licenses: vec![],
+        concluded_licenses: vec![],
+        hashes: vec![],
+        supplier: None,
+        cpes: vec![],
+        advisories: vec![],
+        occurrences: vec![],
+        lifecycle_scope: None,
+        requirement_ranges: Vec::new(),
+        source_type: None,
+        sbom_tier: Some("build".to_string()),
+        buildinfo_status: None,
+        evidence_kind: None,
+        binary_class: None,
+        binary_stripped: None,
+        linkage_kind: None,
+        detected_go: None,
+        confidence: None,
+        binary_packed: None,
+        npm_role: None,
+        raw_version: None,
+        parent_purl: None,
+        co_owned_by: None,
+        shade_relocation: None,
+        external_references: vec![],
+        extra_annotations: Default::default(),
+        binary_role: None,
+    };
+    c.extra_annotations.insert(
+        super::ANN_UNRESOLVED_REASON.to_string(),
+        serde_json::Value::from(super::UnresolvedReason::CompilerSupplied.as_str()),
+    );
+    c.extra_annotations.insert(
+        ANN_CLOSURE_IDENTITY.to_string(),
+        serde_json::Value::from("compiler-supplied-target"),
+    );
+    Some(c)
 }

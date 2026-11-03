@@ -4771,11 +4771,27 @@ pub async fn execute(
                         }
                     },
                 };
+            // FR-012c's targets are GHC boot libraries, identified from the
+            // revision's own configuration rather than from a maintained list
+            // (m926). Cache-only, like the package set above.
+            let boot = match nhp::load_package_set(&root_path, true, &nhp::fetch::HttpSource::new(args.nixpkgs_timeout_secs)) {
+                nhp::PackageSetLoad::Loaded(l) => nhp::boot_set(
+                    &nhp::fetch::HttpSource::new(args.nixpkgs_timeout_secs),
+                    &l.location,
+                    &l.pinned.revision,
+                    &root_path,
+                    true,
+                )
+                .map(|b| b.boot)
+                .unwrap_or_default(),
+                _ => Default::default(),
+            };
             let identity = nhp::closure_identity::reclassify(
                 &mut components,
                 &mut relationships,
                 classified,
                 loaded_set.as_ref(),
+                &boot,
             );
             tracing::info!(
                 confirmed = identity.confirmed(),

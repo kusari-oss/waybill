@@ -45,9 +45,13 @@ via `measurements/mutate.py`.
 **Target Platform**: any host with `nix`; the suite's stub-driven tests need
 neither `nix` nor network.
 **Project Type**: CLI (single Rust workspace).
-**Performance Goals**: no measurable change. The pass is one lookup per
-closure component against a `HashMap` already built — 276 lookups on the
-measured fixture. No new I/O, so there is nothing for it to be slow at.
+**Performance Goals**: no measurable change — **true only because the parsed
+set is handed over rather than re-read.** T005 measured a second parse of the
+16,634,427-byte package set at 1,121 ms median (min 1120, max 1125, N=5), so
+the naive two-parse implementation this row originally assumed free would have
+added 1.1 s to every `--nix-closure` Haskell scan. `enrich` now passes its
+parsed set through `EnrichmentSummary`. The pass itself is one `HashMap`
+lookup per closure component — 276 on the measured fixture.
 **Constraints**: FR-011 — the closure's membership, derivation count and role
 classification must be byte-identical. FR-010 — no new surface. #980 — a PURL
 rewrite must move its edges in the same step, because the alternative
@@ -66,7 +70,7 @@ validates.
 | **II. eBPF-Only Observation** | Not engaged. User-space only; `waybill-ebpf` untouched. |
 | **III. Fail Closed** | Scoped by its own text to the eBPF trace path. For enrichment, Principle XI governs — see below. |
 | **IV. Type-Driven Correctness** | `HackageIdentity` is an exhaustive enum with a variant per outcome, not `Option<Purl>` plus a comment. FR-007's reason is then a value rather than a reconstruction, and a later variant cannot silently lose its reason the way #1218 and #892 record. No `unwrap` outside `#[cfg(test)]`. |
-| **V. Specification Compliance** | **Standards-native first, and it applies here.** The feature emits no new `waybill:` property for identity, license, hash or edges: `purl`, `licenses`, `hashes` and `dependsOn` are all native CycloneDX/SPDX carriers. Only FR-007's reason and FR-013's tier marker need an annotation, and both reuse existing rows (`waybill:unresolved-reason`, the existing tier marker) rather than adding one. |
+| **V. Specification Compliance** | **Standards-native first, and it applies here.** The feature emits no new `waybill:` property for identity, license, hash or edges: `purl`, `licenses`, `hashes` and `dependsOn` are all native CycloneDX/SPDX carriers. **Corrected after T006** (this row originally claimed FR-007's reason could reuse `waybill:unresolved-reason`): C151 is emitted *iff* the component carries `waybill:sbom-tier: "design"` and closure members are build tier — the same constraint #1268 hit — and C170 answers why a declared dependency has no *version*, where these components have one. The audit against the vendored schemas found no native carrier either, so FR-007 takes **one new row, C201 `waybill:closure-identity`**, with its justification clause and its parity extractor. FR-013 needs no new field: C182 and C5 already sit on this population and FR-011 preserves them. The audit is cited in spec.md FR-007a and FR-013a, as Principle V requires of the spec's Functional Requirements. |
 | **VI. Three-Crate Architecture** | The pass lives in `waybill-cli`, beside the tier it serves. `waybill-common` gains nothing. |
 | **VII. Test Isolation** | Mandatory and called out in `quickstart.md`: every test seeds a `tempfile::tempdir()` and points `WAYBILL_NIXPKGS_CACHE` at it. **No test reads the host's `~/.cache/waybill/nixpkgs/`.** Fixtures use `waybill-fixture-*` names only (#285, #640). |
 | **VIII. Completeness** | This is the principle the feature serves. 276 components currently matchable by nothing become 59 matchable ones plus 217 that say why they are not. |
