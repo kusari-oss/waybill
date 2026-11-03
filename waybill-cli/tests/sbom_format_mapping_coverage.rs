@@ -92,6 +92,22 @@ fn collect_expected() -> BTreeSet<Expected> {
         if path.extension().and_then(|e| e.to_str()) != Some("json") {
             continue;
         }
+        // Skip the `*.actual.json` diagnostics a failing byte-identity test
+        // writes beside the goldens. They are gitignored (`.gitignore:43`)
+        // and so never present on a fresh checkout — which is why this can
+        // only mis-fire locally, and why it does so confusingly: a stale
+        // diagnostic from a previous failing run makes this test report a
+        // property the current code does not emit, pointing at the map when
+        // the map is correct. Encountered exactly that way: a leftover from
+        // a milestone-1276 run reported `waybill:scope-exemptions` missing a
+        // row on a branch whose source never mentions it.
+        if path
+            .file_name()
+            .and_then(|n| n.to_str())
+            .is_some_and(|n| n.ends_with(".actual.json"))
+        {
+            continue;
+        }
         let raw = std::fs::read_to_string(&path).expect("read golden");
         let doc: serde_json::Value =
             serde_json::from_str(&raw).expect("golden is valid JSON");

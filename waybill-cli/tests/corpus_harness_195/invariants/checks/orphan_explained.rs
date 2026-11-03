@@ -199,11 +199,25 @@ mod tests {
     /// parameterising `check` would make the comparison vacuous by
     /// construction.
     fn check_without_version_absence(sboms: &super::super::EmittedSboms) -> CellOutcome {
+        // Every arm of `is_explained` EXCEPT the C197 one under test. The
+        // name says "pre_1156" because C197 is what milestone 1156 added, not
+        // because this stops at that milestone: an arm added later and omitted
+        // here makes the two predicates differ for a reason the test does not
+        // name, and the assertion then blames C197 for it.
+        //
+        // That is exactly what happened when milestone 1275 added the C170 arm
+        // to `is_explained` and not to this copy. Nothing failed until
+        // `nix-closure-moat`'s goldens were refreshed and gained three
+        // versionless compiler-supplied components — `exceptions`, `ghc-heap`
+        // and `pretty` — which `is_explained` accounts for and this did not.
+        // The gap was invisible for as long as no golden held a component of
+        // that shape.
         fn explained_pre_1156(component: &serde_json::Value) -> bool {
             cdx_prop(component, "waybill:orphan-reason").is_some()
                 || cdx_prop(component, "waybill:component-tier") == Some("file")
                 || cdx_prop(component, "waybill:unresolved-reason").is_some()
                 || cdx_prop(component, "waybill:closure-role").is_some()
+                || cdx_prop(component, "waybill:haskell-version-unresolved-reason").is_some()
         }
         let cdx = &sboms.cdx;
         let components = cdx_components(cdx);
