@@ -766,6 +766,9 @@ spdx23_anno!(c162_spdx23, "waybill:cabal-entries-skipped",                 docum
 // Milestone 1273 (#1278): C200 doc-scope hpack read outcome.
 spdx23_anno!(c200_spdx23, "waybill:hpack-read-outcome",                 document);
 
+// C201 — milestone 1275: what the closure-identity pass concluded.
+spdx23_anno!(c201_spdx23, "waybill:closure-identity", component);
+
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.
 spdx23_anno!(c113_spdx23, "waybill:synthetic-built-in",               component);

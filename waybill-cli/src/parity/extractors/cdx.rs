@@ -1047,6 +1047,9 @@ cdx_anno!(c162_cdx, "waybill:cabal-entries-skipped",                 document);
 // Milestone 1273 (#1278): C200 doc-scope hpack read outcome.
 cdx_anno!(c200_cdx, "waybill:hpack-read-outcome",                 document);
 
+// C201 — milestone 1275: what the closure-identity pass concluded.
+cdx_anno!(c201_cdx, "waybill:closure-identity", component);
+
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.
 cdx_anno!(c113_cdx, "waybill:synthetic-built-in",               component);

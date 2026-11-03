@@ -438,6 +438,8 @@ Auto-generated from all feature plans. Last updated: 2026-11-03
 - N/A for new state — all in-process per scan, as with every reader (1273-haskell-nixpkgs-truthfulness)
 - Rust stable, workspace toolchain pinned by + existing only — `serde_json` (the object value), (1274-nix-degradation-reason)
 - N/A. In-process per scan; the only durable output is C190's value (1274-nix-degradation-reason)
+- Rust stable, workspace toolchain pinned by + Existing only — `serde`/`serde_json` (annotation (1275-closure-hackage-identity)
+- N/A — in-process per scan. The per-revision package-set cache a (1275-closure-hackage-identity)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -660,9 +662,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 1275-closure-hackage-identity: Added Rust stable, workspace toolchain pinned by + Existing only — `serde`/`serde_json` (annotation
 - 1274-nix-degradation-reason: Added Rust stable, workspace toolchain pinned by + existing only — `serde_json` (the object value),
 - 1273-haskell-nixpkgs-truthfulness: Added Rust stable, workspace toolchain pinned by + existing only.
-- 1272-npm-optional-scope: Added Rust stable, workspace toolchain pinned by + Existing only — `serde_yaml` (pnpm + Berry
 
 
 <!-- MANUAL ADDITIONS START -->
