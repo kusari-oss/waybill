@@ -1900,6 +1900,49 @@ mod enrich_tests {
     use super::*;
     use crate::testing::EnvGuard;
 
+    /// C6 / FR-004 / FR-004a — the exempt class comes from the series the
+    /// flake names, with the union across candidates only as the fallback.
+    ///
+    /// **Asserted, not built**: `candidate_series` already behaves this way
+    /// (milestone 1276 research R2), and that is a claim about code which can
+    /// change. The figures make the distinction checkable rather than
+    /// rhetorical: at revision `a799d3e3` the union across eight series holds
+    /// 50 nulled names while `9.10.x` alone holds 41, so an implementation
+    /// that silently unioned would exempt up to **15** packages a given
+    /// compiler does not ship — over-exemption, which is the defect milestone
+    /// 1276 fixes pointing the other way.
+    #[test]
+    fn m1276_candidate_series_narrows_to_what_the_flake_names() {
+        let dir = tempfile::tempdir().unwrap();
+        // A flake naming one series, in the attribute spelling nixpkgs uses.
+        std::fs::write(
+            dir.path().join("flake.nix"),
+            "{ outputs = { self, nixpkgs }: {\n  packages.default =\n    nixpkgs.haskell.packages.ghc910.waybill-fixture-app;\n}; }\n",
+        )
+        .unwrap();
+        let named = candidate_series(dir.path());
+        assert_eq!(
+            named,
+            vec!["9.10.x".to_string()],
+            "the named series was not the only candidate; got {named:?}"
+        );
+
+        // No flake.nix at all: every known series, which is the conservative
+        // fallback and the only case where a union is formed.
+        let empty = tempfile::tempdir().unwrap();
+        let fallback = candidate_series(empty.path());
+        assert_eq!(
+            fallback.len(),
+            KNOWN_GHC_SERIES.len(),
+            "the fallback is not the full candidate list"
+        );
+        assert!(
+            fallback.len() > named.len(),
+            "the fallback must be strictly wider than a named series, or the \
+             narrowing this test exists to assert is not happening"
+        );
+    }
+
     const LOCK: &str = r#"{
       "nodes": {
         "nixpkgs": {

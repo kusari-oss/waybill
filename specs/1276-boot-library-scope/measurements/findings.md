@@ -144,3 +144,63 @@ M2 is the one worth keeping in view. It drops `is_haskell_purl`, leaving a
 bare-name match — and the nulled set at the measured revision contains
 `binary`, `array`, `unix`, `directory` and `pretty`, every one a plausible
 package name in another ecosystem. Four tests catch it.
+
+## F4 — sbomnix cannot see the components #1340 is about (comparison)
+
+Full write-up in `sbomnix-comparison.md`; harness in `compare-sbomnix.sh`.
+Two results matter here.
+
+**Milestone 1275's inherited edge figure is confirmed.** Its spec carried
+"sbomnix emits 8,230 edges on the same project" from #1282 rather than from an
+observation. Measured on the same closure: **8,497** against waybill's **527**,
+a different sbomnix version and the same order. 16×, and the cause is the one
+the spec named — a store reference treated as a dependency versus only what
+the package set declares.
+
+**sbomnix emits no component for any GHC boot library.** `pretty`,
+`directory`, `ghc-heap`, `array`, `binary`, `deepseq` — none of them, and the
+reason is structural rather than an implementation gap: a boot library is not
+a separate derivation, the compiler ships it inside its own, so a tool that
+walks derivations cannot see one however well it walks.
+
+So the defect #1340 describes **cannot arise** in sbomnix: there is no
+component to mis-scope. That is not a point in its favour. The dependency is
+real and in the artifact, and waybill can mis-scope these components only
+because it emits them at all — which it does by reading declared
+dependencies. The 8,497-vs-527 gap and the six-vs-zero gap are the same design
+choice measured in two directions: one tool sees more edges, the other sees
+more packages.
+
+Also measured, and relevant to milestone 1275's identity work: **107 of
+sbomnix's components carry no PURL at all**, and its other 1,182 use
+`pkg:nix`, which is not a purl-spec type — the reason waybill's closure
+emitter uses `pkg:generic`, and `pkg:hackage` where the pinned set confirms
+it. Zero of its components carry a hash; waybill emits 106.
+
+**A measurement error avoided.** The first run used a bare store path and
+reported 0 licenses for sbomnix. Its own log said why — "No nixpkgs metadata
+source is available for store-path targets… Use a flakeref target instead" —
+and with a flakeref it emits 183. Reporting the first number would have been a
+false claim about the tool rather than about the invocation. The harness takes
+a flakeref and says so in a comment.
+
+## F5 — US2's three tests all passed on arrival, and M4 is why that is still evidence (T015–T019)
+
+A departure from T018, which asked for them to be watched failing first. They
+could not be: T006 built the predicate with exactly these properties, and
+FR-004a was already satisfied by `candidate_series` before this milestone
+began (research R2).
+
+Rather than reverting working code to manufacture a red run, the teeth were
+established by mutation:
+
+```
+M4  candidate_series unions unconditionally   CAUGHT by the FR-004a test
+M3b an empty boot set exempts everything      CAUGHT by the FR-005 test
+```
+
+M4 is the one that matters. FR-004a's test asserts a behaviour that already
+existed, which is the shape of a test that proves nothing — and M4 shows it
+does: remove the narrowing and it fails. The figures are what make it
+checkable rather than rhetorical, since the union exempts up to 15 names a
+given series does not.

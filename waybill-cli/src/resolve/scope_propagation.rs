@@ -564,6 +564,66 @@ mod tests {
         );
     }
 
+    /// C5 / FR-006 — every exempted component is one C170 explains.
+    ///
+    /// No new property: the exemption's basis is already on the wire. Both
+    /// the exempt class and C170 derive from the same nulled-name set through
+    /// `classify()`, so they coincide — and research R3 argued that while the
+    /// plan recorded that an argument is not a measurement. T007 measured it
+    /// and found the apparent counterexamples were an artefact of probing a
+    /// set the code never forms (findings F2). This asserts the property the
+    /// predicate actually guarantees: an exempted component is a Hackage
+    /// component whose name the revision nulls, which is exactly the
+    /// condition under which the reader emits C170.
+    #[test]
+    fn m1276_the_exempt_class_is_the_class_c170_describes() {
+        let comps = vec![
+            mk_component("pkg:hackage/pretty@1.1.3.6"),
+            mk_component("pkg:hackage/aeson@2.2.4.1"),
+            mk_component("pkg:npm/pretty@2.0.0"),
+        ];
+        let exempt = compiler_supplied(&comps, &boot_set(&["pretty"]));
+        // Exactly the Hackage component whose name is nulled: the same two
+        // conditions `classify()` uses before emitting `compiler-supplied`.
+        assert_eq!(exempt.len(), 1);
+        assert!(exempt.contains("pkg:hackage/pretty@1.1.3.6"));
+        assert!(
+            !exempt.contains("pkg:npm/pretty@2.0.0"),
+            "a component the reader would never mark compiler-supplied was exempted"
+        );
+    }
+
+    /// C7 / FR-005 — a scan with no compiler configuration exempts nothing,
+    /// **even where names collide**.
+    ///
+    /// Asserted against a real corpus shape rather than an invented one
+    /// (findings F2). `haskell-aeson` carries **zero** C170 components,
+    /// because the nixpkgs-haskell pass never ran for it, while 11 of its
+    /// components share names with a nulled set and one of them —
+    /// `directory` — is non-runtime. A predicate fed a set assembled any
+    /// other way than from the scan's own pass would wrongly exempt it.
+    ///
+    /// This is the fail-closed direction for this feature: unearned immunity
+    /// is the dangerous default, because it reports a genuinely test-only
+    /// component as present in the artifact.
+    #[test]
+    fn m1276_no_compiler_configuration_exempts_nothing_even_on_name_collisions() {
+        let comps = vec![
+            // haskell-aeson's shape: Hackage components whose names are in
+            // some revision's nulled set, in a scan that learned nothing
+            // about any revision.
+            mk_component("pkg:hackage/directory@1.3.8.5"),
+            mk_component("pkg:hackage/binary@0.8.9.2"),
+            mk_component("pkg:hackage/deepseq@1.5.1.0"),
+        ];
+        let exempt = compiler_supplied(&comps, &HashSet::new());
+        assert!(
+            exempt.is_empty(),
+            "a scan with no compiler configuration exempted {} component(s)",
+            exempt.len()
+        );
+    }
+
     // ---- milestone 1276 (#1340): the exempt class ----
 
     #[test]
