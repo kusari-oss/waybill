@@ -1,0 +1,14 @@
+# `version: 0.1` unquoted is a YAML FLOAT, not a string. A real corpus target
+# (MercuryTechnologies/moat) declares exactly this, and the first version of
+# this reader rejected the whole manifest with
+#   invalid type: floating point `0.1`, expected a string
+# so a perfectly good project was reported as unreadable. Real hpack accepts
+# it. Every synthetic fixture in this milestone used a quoted or
+# three-component version, so 15 fixtures and a full mutation pass all missed
+# the shape.
+name: waybill-fixture-numeric
+version: 0.1
+dependencies:
+  - waybill-fixture-base
+library:
+  source-dirs: src

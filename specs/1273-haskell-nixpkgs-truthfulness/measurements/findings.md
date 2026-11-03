@@ -553,3 +553,81 @@ difference is invisible in the summary line, and the summary line is what
 gets read. `run-all.sh` now refuses to run at all rather than produce that
 ambiguity, which is the same principle as `mutate.py` refusing to report a
 verdict for a mutation it could not apply.
+
+---
+
+## Probe H — the corpus refresh, and a defect it found (T075–T077)
+
+`public-corpus.yml` dispatched against this branch with `regen_goldens=true`,
+run 41571149440. **17 of 17 targets wrote goldens** (the #1286 guard), and the
+run's own log confirms the scanned commit was `e0ebe6e9` — this branch's
+closeout — not `main`. That check matters: on a `workflow_dispatch` the
+display shows `headBranch=main`, because the workflow definition loads from
+the default branch while Checkout uses `inputs.branch`.
+
+### H1 — Probe E's predictions held exactly
+
+| target | predicted | measured |
+|---|---|---|
+| `haskell-aeson` | **unchanged** (the control) | **unchanged** |
+| `haskell-security-advisories` | changed | changed, 3 formats |
+| `haskell-language-server` | changed | changed, 3 formats |
+| `nix-closure-moat` | changed | changed, 3 formats |
+| the other 13 targets | not predicted | **all unchanged** |
+
+Thirteen unrelated targets byte-identical is the blast-radius answer, and
+`haskell-aeson` holding is the control doing its job: it has no `flake.lock`
+and no `package.yaml` at its pin, so no code path in this milestone can reach
+it. Had it moved, the milestone would be wrong whatever the other three did.
+
+### H2 — the three real projects, before and after
+
+| | moat | security-advisories | language-server |
+|---|---|---|---|
+| hackage components | 53 | 248 | 360 |
+| carrying a license | 1 → **33** | 6 → **221** | 6 → **327** |
+| carrying a reason | 19 → 7 | 53 → 14 | 122 → 25 |
+| **resolved AND reasoned** | 12 → **0** | 39 → **0** | 97 → **0** |
+
+**#1279's self-contradiction across three real projects: 148 → 0.** Licenses:
+13 → 581. These are the numbers the synthetic fixtures were standing in for.
+
+### H3 — the corpus found a defect 15 fixtures and 33 mutants did not
+
+`nix-closure-moat`'s root `package.yaml` came back **unread**:
+
+```
+reason: not-a-manifest
+detail: invalid type: floating point `0.1`, expected a string
+```
+
+The manifest declares `version: 0.1`. Unquoted in YAML that is a **float**,
+and the reader declared `version: Option<String>`, so `serde_yaml` refused
+the whole document. Real hpack accepts it. A perfectly good project was
+reported as having an unreadable manifest — FR-003's diagnostic firing
+correctly over a bug of mine, which is at least the honest failure mode.
+
+Every synthetic fixture in this milestone used a quoted or three-component
+version (`0.1.0`, `"1.2.3"`), so **15 fixtures, 4 integration suites and 33
+mutants all missed it**. A fixture set written by whoever wrote the parser
+shares its blind spots; this came from scanning somebody else's repository.
+Fixed with a `Scalar` deserializer that accepts what hpack accepts, a
+regression fixture (`numeric_version/`), and **M34**, which confirms the test
+catches the original behaviour.
+
+The other unread manifest is **correct**:
+`haskell-language-server`'s only `package.yaml` is test data for its
+cabal-add plugin and genuinely has no `name:` field, so `not-a-manifest` is
+the right answer and FR-003 names it rather than passing over it.
+
+### H4 — T077's claim is NOT yet satisfied, and the goldens are not landed
+
+T077 asserts that `nix-closure-moat`'s refreshed golden "now reads its root
+`package.yaml`". It does not: the golden from this run records it as unread,
+because of H3. The fix is in the tree but **the goldens in that artifact
+predate it**, so landing them would commit a document asserting a defect that
+no longer exists.
+
+The refresh has to be re-dispatched against the branch with the H3 fix on it.
+Until then the three changed targets' goldens remain un-landed, and that is
+the correct state rather than a partial one.

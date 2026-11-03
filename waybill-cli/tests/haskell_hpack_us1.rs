@@ -217,6 +217,47 @@ fn m1273_us1_hpack_only_emits_declared_dependencies() {
     );
 }
 
+/// A regression from the corpus, not from a fixture.
+///
+/// `version: 0.1` unquoted is a YAML **float**. The first version of this
+/// reader declared `version: Option<String>`, so `serde_yaml` refused the
+/// whole manifest with `invalid type: floating point 0.1, expected a string`
+/// — and a real project (`MercuryTechnologies/moat`, a committed corpus
+/// target) was reported as having an unreadable manifest when hpack reads it
+/// fine.
+///
+/// Fifteen synthetic fixtures and a full mutation pass missed it, because
+/// every one of them used a quoted or three-component version. A fixture set
+/// written by whoever wrote the parser shares its blind spots; this one came
+/// from scanning somebody else's repository.
+#[test]
+fn m1273_us1_an_unquoted_numeric_version_is_accepted() {
+    let s = scan(&fixture("numeric_version"));
+    // Read, not merely survived: the dependency is emitted and C200 reports
+    // the manifest as read rather than unreadable.
+    assert!(
+        hackage_names(&s.doc)
+            .iter()
+            .any(|n| n == "waybill-fixture-base"),
+        "the manifest must be read, not rejected; got {:?}",
+        hackage_names(&s.doc)
+    );
+    let o = hpack_outcome(&s.doc);
+    assert_eq!(
+        o["manifests-read"].as_array().map(Vec::len),
+        Some(1),
+        "C200 must report it READ; outcome was {o}"
+    );
+    assert_eq!(
+        o["manifests-unread"].as_array().map(Vec::len),
+        Some(0),
+        "and not unreadable; outcome was {o}"
+    );
+    // The version reaches the main module as hpack would render it.
+    let main = s.doc.pointer("/metadata/component/version").and_then(|v| v.as_str());
+    assert_eq!(main, Some("0.1"), "the declared version survives as declared");
+}
+
 // ───────────────────────────────────────────────────────────────────────
 // T008 / C3 — inheritance reaches every stanza kind, with its own scope
 // ───────────────────────────────────────────────────────────────────────

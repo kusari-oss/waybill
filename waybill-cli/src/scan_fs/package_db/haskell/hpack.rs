@@ -235,6 +235,42 @@ impl OneOrMany {
     }
 }
 
+/// A scalar hpack accepts as a string but YAML may hand us as a number.
+///
+/// `version: 0.1` is the shape that found this: unquoted in YAML it is a
+/// **float**, and a plain `Option<String>` field rejects it with
+/// `invalid type: floating point 0.1, expected a string`. Real hpack accepts
+/// it, so refusing the manifest means reporting a perfectly good project as
+/// unreadable.
+///
+/// Found by a real corpus target rather than by a fixture. Every synthetic
+/// manifest in this milestone's own tests used a quoted or three-component
+/// version, so 15 fixtures and a mutation pass all missed it — which is a
+/// fair reminder that a fixture set written by the same person as the parser
+/// shares its blind spots.
+#[derive(Debug, Clone)]
+struct Scalar(String);
+
+impl<'de> serde::Deserialize<'de> for Scalar {
+    fn deserialize<D>(d: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let v = serde_yaml::Value::deserialize(d)?;
+        let s = match &v {
+            serde_yaml::Value::String(s) => s.clone(),
+            serde_yaml::Value::Number(n) => n.to_string(),
+            serde_yaml::Value::Bool(b) => b.to_string(),
+            other => {
+                return Err(serde::de::Error::custom(format!(
+                    "expected a scalar, got {other:?}"
+                )))
+            }
+        };
+        Ok(Scalar(s))
+    }
+}
+
 #[derive(Debug, Deserialize, Default)]
 #[serde(default)]
 struct HpackFlag {
@@ -269,9 +305,9 @@ struct HpackWhen {
 #[derive(Debug, Deserialize, Default)]
 #[serde(default, rename_all = "kebab-case")]
 struct HpackManifest {
-    name: Option<String>,
-    version: Option<String>,
-    license: Option<String>,
+    name: Option<Scalar>,
+    version: Option<Scalar>,
+    license: Option<Scalar>,
     dependencies: OneOrMany,
     build_tools: OneOrMany,
     flags: BTreeMap<String, HpackFlag>,
@@ -503,7 +539,7 @@ fn lower(m: HpackManifest) -> CabalManifest {
         components.push((StanzaKind::Library, Some(label), c));
     }
     if let Some(exe) = m.executable {
-        components.push((StanzaKind::Executable, m.name.clone(), exe));
+        components.push((StanzaKind::Executable, m.name.clone().map(|s| s.0), exe));
     }
     for (label, c) in m.executables {
         components.push((StanzaKind::Executable, Some(label), c));
@@ -573,12 +609,14 @@ fn lower(m: HpackManifest) -> CabalManifest {
     }
 
     CabalManifest {
-        name: m.name,
-        version: m.version,
+        name: m.name.map(|s| s.0),
+        version: m.version.map(|s| s.0),
         license: m
             .license
-            .as_deref()
-            .and_then(|l| waybill_common::types::license::SpdxExpression::try_canonical(l).ok()),
+            .as_ref()
+            .and_then(|l| {
+                waybill_common::types::license::SpdxExpression::try_canonical(&l.0).ok()
+            }),
         stanzas,
         hpack_generated: false,
         skipped_entries: 0,
