@@ -95,6 +95,15 @@ const ANCHORING_EDGE_SOURCES: &[&str] = &[
 /// into an SBOM.
 #[derive(Debug, Default, PartialEq, Eq)]
 pub(crate) struct PropagationSummary {
+    /// Milestone 1276 (#1340) — components immune because the compiler ships
+    /// them, counted separately from the runtime-reachable immunity.
+    ///
+    /// Separate because the two answer different questions: one says "a
+    /// runtime path reaches this", the other "no path has to". Collapsing
+    /// them would make the exemption invisible in the record that FR-007
+    /// emits, and "the rule exempted nothing" would be indistinguishable
+    /// from "the rule did not run".
+    pub immune_compiler_supplied: usize,
     /// Size of the runtime-reachable immunity set.
     pub immune: usize,
     /// How many components were assigned each scope.
@@ -159,6 +168,58 @@ fn declared_adjacency(relationships: &[Relationship]) -> HashMap<&str, Vec<&str>
 
 /// Phase A. Components reachable from `seeds` over declared edges
 /// without passing through anything already scoped non-runtime.
+/// Milestone 1276 (#1340) — packages the compiler ships, which no scope may
+/// report as absent from the artifact.
+///
+/// # Why this is immunity rather than a correction
+///
+/// CycloneDX 1.6 defines `optional` as "not capable of being called due to
+/// them **not being installed** or otherwise accessible by any means", and
+/// states that a component which IS installed but is prohibited from being
+/// called "must be scoped as `required`". It defines `excluded` as "not
+/// reachable within a call graph at runtime". A GHC boot library is installed
+/// — the compiler ships it in every build, whatever the flags say — and is in
+/// the artifact's call graph. Both values are therefore false of it by the
+/// schema's own text, which makes a propagated non-runtime scope a
+/// conformance defect rather than a debatable reading.
+///
+/// So such a package belongs in the immune set beside the runtime-reachable
+/// ones: the propagation should never reach it, rather than reaching it and
+/// being corrected afterwards. The difference is visible in
+/// `PropagationSummary` — immune, never assigned — and that is what C3
+/// asserts.
+///
+/// `boot` is the nulled-name set from the pinned revision's own compiler
+/// configuration, carried here by `EnrichmentSummary::boot_libraries`. It is
+/// **empty** when that configuration could not be read, which exempts nothing
+/// (FR-005): unearned immunity is the dangerous default.
+fn compiler_supplied<'a>(
+    components: &'a [ResolvedComponent],
+    boot: &HashSet<String>,
+) -> HashSet<&'a str> {
+    if boot.is_empty() {
+        return HashSet::new();
+    }
+    components
+        .iter()
+        .filter(|c| is_haskell_purl(c.purl.as_str()) && boot.contains(c.name.as_str()))
+        .map(|c| c.purl.as_str())
+        .collect()
+}
+
+/// Whether a PURL names a Hackage package.
+///
+/// The nulled set holds bare package names, which are not unique across
+/// ecosystems — `binary`, `array`, `unix`, `directory` and `pretty` are all in
+/// it, and all are plausible names elsewhere. Matching on the name alone
+/// would exempt an npm or Go package that happens to share one, which is the
+/// over-exemption failure mode C4 exists to catch. This is the same
+/// two-condition discipline milestone 1275 used for closure identity, where a
+/// name match alone would have minted `pkg:hackage/bash@5.3p9` for GNU bash.
+fn is_haskell_purl(purl: &str) -> bool {
+    purl.starts_with("pkg:hackage/")
+}
+
 fn runtime_reachable<'a>(
     components: &'a [ResolvedComponent],
     adj: &HashMap<&'a str, Vec<&'a str>>,
@@ -215,6 +276,9 @@ pub(crate) fn propagate_non_runtime_scope(
     relationships: &[Relationship],
     seeds: &HashSet<String>,
     ecosystems_with_root: &HashSet<String>,
+    // Milestone 1276 — the packages the pinned revision's compiler supplies.
+    // Empty when unknown, which exempts nothing (FR-005).
+    boot_libraries: &HashSet<String>,
 ) -> PropagationSummary {
     assert_no_anchoring_edges(relationships);
 
@@ -223,8 +287,19 @@ pub(crate) fn propagate_non_runtime_scope(
     // Phase A, and the borrow of `components` ends with it: the
     // assignment map below is keyed by owned PURL strings so the
     // mutation pass can take `&mut`.
+    // Milestone 1276 (#1340) — packages the compiler ships are immune.
+    //
+    // Computed before the loop and merged into the runtime-reachable immunity
+    // rather than filtered at assignment time, so the two are one concept at
+    // the point of decision: the propagation does not reach these components.
+    // The counts stay separate in the summary, because "a runtime path
+    // reaches this" and "no path has to" answer different questions.
+    let exempt = compiler_supplied(components, boot_libraries);
+    let immune_compiler_supplied = exempt.len();
+
     let (immune, assigned, skipped_unrooted): (usize, HashMap<String, LifecycleScope>, usize) = {
-        let immune = runtime_reachable(components, &adj, seeds);
+        let mut immune = runtime_reachable(components, &adj, seeds);
+        immune.extend(exempt.iter().copied());
 
         let scope_by_purl: HashMap<&str, LifecycleScope> = components
             .iter()
@@ -295,6 +370,7 @@ pub(crate) fn propagate_non_runtime_scope(
     let mut rooted: Vec<String> = ecosystems_with_root.iter().cloned().collect();
     rooted.sort();
     let mut summary = PropagationSummary {
+        immune_compiler_supplied,
         immune,
         seeded_from: components
             .iter()
@@ -381,6 +457,167 @@ mod tests {
         purls.iter().map(|p| (*p).to_string()).collect()
     }
 
+    fn boot_set(names: &[&str]) -> HashSet<String> {
+        names.iter().map(|n| (*n).to_string()).collect()
+    }
+
+    // ---- milestone 1276 (#1340): the propagation ----
+
+    /// C2 / FR-001 — a compiler-supplied component reachable only through
+    /// non-runtime edges is not assigned a non-runtime scope, and carries no
+    /// scope at all.
+    ///
+    /// Both halves. "No non-runtime scope" is also satisfied by an explicit
+    /// `required`, which would pass every other contract while making these
+    /// components inconsistent with the 68 boot libraries that already carry
+    /// none; the spec's Assumptions choose absence and this enforces it.
+    #[test]
+    fn m1276_a_compiler_supplied_component_is_not_scoped() {
+        let mut comps = vec![
+            mk_component("pkg:hackage/root@1.0.0"),
+            scoped("pkg:hackage/testdep@1.0.0", LifecycleScope::Test),
+            mk_component("pkg:hackage/pretty@1.1.3.6"),
+        ];
+        let rels = vec![
+            mk_rel("pkg:hackage/root@1.0.0", "pkg:hackage/testdep@1.0.0"),
+            mk_rel("pkg:hackage/testdep@1.0.0", "pkg:hackage/pretty@1.1.3.6"),
+        ];
+        let summary = propagate_non_runtime_scope(
+            &mut comps,
+            &rels,
+            &seeds(&["pkg:hackage/root@1.0.0"]),
+            &ecosystems(&["hackage"]),
+            &boot_set(&["pretty"]),
+        );
+        assert_eq!(
+            scope_of(&comps, "pkg:hackage/pretty@1.1.3.6"),
+            None,
+            "the compiler-supplied component carries a scope"
+        );
+        assert!(
+            summary.immune_compiler_supplied >= 1,
+            "the component was not counted as immune; summary={summary:?}"
+        );
+    }
+
+    /// C3 / FR-002 — the exemption is immunity, not repair.
+    ///
+    /// A pass that assigned the scope and then removed it would produce the
+    /// same document and a different summary, and the summary is the only
+    /// thing that distinguishes them.
+    #[test]
+    fn m1276_the_exemption_is_immunity_not_repair() {
+        let mut comps = vec![
+            mk_component("pkg:hackage/root@1.0.0"),
+            scoped("pkg:hackage/testdep@1.0.0", LifecycleScope::Test),
+            mk_component("pkg:hackage/pretty@1.1.3.6"),
+        ];
+        let rels = vec![
+            mk_rel("pkg:hackage/root@1.0.0", "pkg:hackage/testdep@1.0.0"),
+            mk_rel("pkg:hackage/testdep@1.0.0", "pkg:hackage/pretty@1.1.3.6"),
+        ];
+        let summary = propagate_non_runtime_scope(
+            &mut comps,
+            &rels,
+            &seeds(&["pkg:hackage/root@1.0.0"]),
+            &ecosystems(&["hackage"]),
+            &boot_set(&["pretty"]),
+        );
+        assert_eq!(summary.immune_compiler_supplied, 1);
+        assert_eq!(
+            summary.assigned_by_scope.values().sum::<usize>(),
+            0,
+            "a scope was assigned and then removed rather than never assigned"
+        );
+    }
+
+    /// C4 / FR-003 — the control. A component that is NOT compiler-supplied,
+    /// reachable only through non-runtime edges, still receives the scope.
+    ///
+    /// This is the test for the mirror-image defect. An over-exempting
+    /// implementation makes every component below a disabled stanza look
+    /// runtime, which is this feature's failure mode rather than a
+    /// hypothetical one: measured, 8 such components on `slack-web` must keep
+    /// their scope.
+    #[test]
+    fn m1276_a_non_boot_component_still_receives_the_scope() {
+        let mut comps = vec![
+            mk_component("pkg:hackage/root@1.0.0"),
+            scoped("pkg:hackage/testdep@1.0.0", LifecycleScope::Test),
+            mk_component("pkg:hackage/clock@0.8.4"),
+        ];
+        let rels = vec![
+            mk_rel("pkg:hackage/root@1.0.0", "pkg:hackage/testdep@1.0.0"),
+            mk_rel("pkg:hackage/testdep@1.0.0", "pkg:hackage/clock@0.8.4"),
+        ];
+        propagate_non_runtime_scope(
+            &mut comps,
+            &rels,
+            &seeds(&["pkg:hackage/root@1.0.0"]),
+            &ecosystems(&["hackage"]),
+            &boot_set(&["pretty"]),
+        );
+        assert!(
+            scope_of(&comps, "pkg:hackage/clock@0.8.4")
+                .is_some_and(|s| s.is_non_runtime()),
+            "a non-boot component lost its non-runtime scope: over-exemption"
+        );
+    }
+
+    // ---- milestone 1276 (#1340): the exempt class ----
+
+    #[test]
+    fn m1276_a_nulled_hackage_package_is_compiler_supplied() {
+        let comps = vec![mk_component("pkg:hackage/pretty@1.1.3.6")];
+        let exempt = compiler_supplied(&comps, &boot_set(&["pretty"]));
+        assert_eq!(exempt.len(), 1);
+        assert!(exempt.contains("pkg:hackage/pretty@1.1.3.6"));
+    }
+
+    #[test]
+    fn m1276_a_hackage_package_the_revision_does_not_null_is_not() {
+        let comps = vec![mk_component("pkg:hackage/aeson@2.2.4.1")];
+        assert!(compiler_supplied(&comps, &boot_set(&["pretty"])).is_empty());
+    }
+
+    #[test]
+    fn m1276_a_same_named_package_in_another_ecosystem_is_not() {
+        // The nulled set holds bare names, and `binary`, `array`, `unix`,
+        // `directory` and `pretty` are all in it at the measured revision --
+        // every one a plausible name elsewhere. Matching on the name alone
+        // would exempt these, which is the over-exemption failure mode C4
+        // catches at document scale and this catches at the predicate.
+        let comps = vec![
+            mk_component("pkg:npm/pretty@2.0.0"),
+            mk_component("pkg:golang/directory@1.0.0"),
+            mk_component("pkg:cargo/binary@0.1.0"),
+        ];
+        assert!(
+            compiler_supplied(&comps, &boot_set(&["pretty", "directory", "binary"])).is_empty(),
+            "a bare-name match exempted a package from another ecosystem"
+        );
+    }
+
+    #[test]
+    fn m1276_an_empty_boot_set_exempts_nothing() {
+        // FR-005. The compiler configuration could not be read, so nothing is
+        // known to be compiler-supplied. Unearned immunity is the dangerous
+        // default, and this is the arm that refuses it.
+        let comps = vec![mk_component("pkg:hackage/pretty@1.1.3.6")];
+        assert!(compiler_supplied(&comps, &HashSet::new()).is_empty());
+    }
+
+    #[test]
+    fn m1276_the_versionless_boot_shape_is_recognised() {
+        // A boot library is routinely emitted versionless, because the
+        // revision gives it no version to resolve -- `pkg:hackage/directory`
+        // with no `@`. That is the shape `nix-closure-moat` carries, so a
+        // predicate keyed on a versioned PURL would miss the real population.
+        let comps = vec![mk_component("pkg:hackage/directory")];
+        let exempt = compiler_supplied(&comps, &boot_set(&["directory"]));
+        assert_eq!(exempt.len(), 1, "the versionless boot shape was not matched");
+    }
+
     fn ecosystems(names: &[&str]) -> HashSet<String> {
         names.iter().map(|p| (*p).to_string()).collect()
     }
@@ -439,6 +676,7 @@ mod tests {
             &relationships,
             &seeds(&[ROOT]),
             &ecosystems(&["npm"]),
+            &HashSet::new(),
         );
 
         assert_eq!(
@@ -469,6 +707,7 @@ mod tests {
             &relationships,
             &seeds(&[ROOT]),
             &ecosystems(&["npm"]),
+            &HashSet::new(),
         );
 
         assert_eq!(
@@ -499,6 +738,7 @@ mod tests {
             &relationships,
             &seeds(&[ROOT]),
             &ecosystems(&["npm"]),
+            &HashSet::new(),
         );
 
         assert_eq!(scope_of(&components, PY_TRANSITIVE), None);
@@ -522,6 +762,7 @@ mod tests {
             &relationships,
             &seeds(&[ROOT]),
             &ecosystems(&["npm"]),
+            &HashSet::new(),
         );
 
         assert_eq!(
@@ -557,6 +798,7 @@ mod tests {
             &relationships,
             &seeds(&[ROOT]),
             &ecosystems(&["npm"]),
+            &HashSet::new(),
         );
 
         assert_eq!(
@@ -599,7 +841,8 @@ mod tests {
                 &relationships,
                 &seeds(&[ROOT]),
                 &ecosystems(&["npm"]),
-            );
+            &HashSet::new(),
+        );
 
             assert_eq!(
                 scope_of(&components, DEVDEP),
@@ -636,6 +879,7 @@ mod tests {
             &relationships,
             &seeds(&[ROOT]),
             &ecosystems(&["npm"]),
+            &HashSet::new(),
         );
 
         assert_eq!(
@@ -671,6 +915,7 @@ mod tests {
             &relationships,
             &seeds(&[ROOT]),
             &ecosystems(&["npm"]),
+            &HashSet::new(),
         );
 
         assert_eq!(scope_of(&components, A), Some(LifecycleScope::Test));
@@ -696,6 +941,7 @@ mod tests {
             &relationships,
             &seeds(&[ROOT]),
             &ecosystems(&["npm"]),
+            &HashSet::new(),
         );
 
         assert_eq!(summary.assigned_total(), 0);
@@ -734,7 +980,8 @@ mod tests {
                 &relationships,
                 &seeds(&[ROOT]),
                 &ecosystems(&["npm", "generic"]),
-            );
+            &HashSet::new(),
+        );
 
             assert_eq!(
                 scope_of(&components, BRIDGED),
@@ -773,6 +1020,7 @@ mod tests {
             &[anchored],
             &seeds(&[ROOT]),
             &ecosystems(&["npm"]),
+            &HashSet::new(),
         );
     }
 
@@ -796,6 +1044,7 @@ mod tests {
             &relationships,
             &seeds(&[ROOT]),
             &ecosystems(&["npm"]),
+            &HashSet::new(),
         );
 
         assert_eq!(
@@ -814,6 +1063,7 @@ mod tests {
             &[],
             &seeds(&[ROOT]),
             &ecosystems(&["npm"]),
+            &HashSet::new(),
         );
         assert_eq!(
             s,
@@ -829,6 +1079,7 @@ mod tests {
             &[mk_rel(ROOT, DEVDEP)],
             &seeds(&[ROOT]),
             &ecosystems(&["npm"]),
+            &HashSet::new(),
         );
         assert_eq!(s.assigned_total(), 0);
         assert_eq!(s.seeded_from, 0);
@@ -871,6 +1122,7 @@ mod tests {
             &relationships,
             &seeds(&[ROOT]),
             &ecosystems(&["npm"]),
+            &HashSet::new(),
         );
 
         assert_eq!(summary.assigned_total(), 1, "exactly one inference");
@@ -940,6 +1192,7 @@ mod tests {
             &relationships,
             &seeds(&[ROOT]),
             &ecosystems(&["npm", "golang"]),
+            &HashSet::new(),
         );
 
         assert_eq!(

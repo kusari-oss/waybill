@@ -4888,11 +4888,24 @@ pub async fn execute(
             );
         let ecosystems_with_root: std::collections::HashSet<String> =
             per_ecosystem_root.into_keys().collect();
+        // Milestone 1276 (#1340) — the packages the compiler ships, which no
+        // scope may report as absent from the artifact. Carried out of the
+        // nixpkgs-haskell pass, which computes the set to classify with and
+        // would otherwise drop it; `None` when that pass did not run, which
+        // exempts nothing (FR-005). Measured: `haskell-aeson` is exactly that
+        // case, and one of its components would be wrongly exempted by a set
+        // assembled any other way (findings F2).
+        let boot_libraries: std::collections::HashSet<String> = nixpkgs_haskell_summary
+            .as_ref()
+            .and_then(|s| s.boot_libraries.clone())
+            .map(|b| b.into_iter().collect())
+            .unwrap_or_default();
         crate::resolve::scope_propagation::propagate_non_runtime_scope(
             &mut components,
             &relationships,
             &seeds,
             &ecosystems_with_root,
+            &boot_libraries,
         );
         // Re-type edges into anything the pass just marked. The
         // function skips every edge that is no longer a plain

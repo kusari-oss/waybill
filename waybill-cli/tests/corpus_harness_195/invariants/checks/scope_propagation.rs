@@ -5,6 +5,32 @@
 //! runtime one gives a consumer filtering to runtime components
 //! something that is not in the shipped artifact.
 //!
+//! **Exemption, milestone 1276 (#1340)**: a package the compiler ships is
+//! excluded from this invariant's population. CycloneDX 1.6 defines
+//! `optional` as "not capable of being called due to them **not being
+//! installed**", and instructs that a component which IS installed but is
+//! prohibited from being called "must be scoped as `required`"; `excluded` as
+//! "not reachable within a call graph at runtime". A GHC boot library is
+//! installed in every build and is in the call graph, so demanding a
+//! non-runtime marker for it would demand a value the schema says is false.
+//! Measured: without this exemption all **10** such components across the
+//! corpus become violations of this row the moment milestone 1276 stops
+//! marking them — 8 on `haskell-security-advisories`, 2 on
+//! `nix-closure-moat` — and since this row has no declarations they would be
+//! *undeclared*, which fails the lane.
+//!
+//! The exemption is identified the same way the propagation identifies it:
+//! C170 `waybill:haskell-version-unresolved-reason = compiler-supplied`,
+//! which the pass emits for exactly the packages the pinned revision's
+//! compiler configuration nulls. **Both must read one source**, or this row
+//! and the propagation disagree about one document and each is locally
+//! satisfiable while the pair is not.
+//!
+//! **Boundary with the milestone-1276 complement**: that row asserts no
+//! compiler-supplied component *carries* a non-runtime scope; this one
+//! asserts every other reachable-only-through-non-runtime component *does*.
+//! Together they partition, the way this row already partitions with I7.
+//!
 //! **Boundary with I7**: this invariant's population is components that
 //! *are* reachable, by a path that is entirely non-runtime. I7's is
 //! components not reachable at all. Every component is one or the other,
@@ -78,9 +104,25 @@ pub fn check(sboms: &super::EmittedSboms) -> CellOutcome {
         }
     }
 
+    // Milestone 1276 — the compiler-supplied exemption. See the module
+    // comment: demanding a non-runtime marker for a package the compiler
+    // ships would demand a value CycloneDX defines as false of it.
+    let compiler_supplied: HashSet<&str> = components
+        .iter()
+        .filter(|c| {
+            super::cdx_prop(c, "waybill:haskell-version-unresolved-reason")
+                == Some("compiler-supplied")
+        })
+        .filter_map(cdx_component_ref)
+        .collect();
+
     let mut offenders: Vec<String> = all_reachable
         .iter()
-        .filter(|r| !runtime_reachable.contains(*r) && !marked.contains(*r))
+        .filter(|r| {
+            !runtime_reachable.contains(*r)
+                && !marked.contains(*r)
+                && !compiler_supplied.contains(*r)
+        })
         .map(|r| (*r).to_string())
         .collect();
     if offenders.is_empty() {

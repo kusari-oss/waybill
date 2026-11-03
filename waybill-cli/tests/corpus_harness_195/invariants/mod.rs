@@ -135,7 +135,7 @@ pub static REGISTRY: &[Invariant] = &[
     Invariant {
         id: "I3",
         statement: "A component reachable from the subject only through non-runtime edges \
-                    carries a non-runtime marker",
+                    carries a non-runtime marker, unless the compiler supplies it",
         precondition: "the document declares at least one non-runtime dependency edge",
         kinds: checks::scope_propagation::KINDS,
         checker: checks::scope_propagation::check,
@@ -177,6 +177,13 @@ pub static REGISTRY: &[Invariant] = &[
         precondition: "at least one component has an absent or empty version",
         kinds: checks::versionless_explained::KINDS,
         checker: checks::versionless_explained::check,
+    },
+    Invariant {
+        id: "I9",
+        statement: "A component the compiler supplies carries no non-runtime scope",
+        precondition: "at least one component is marked compiler-supplied",
+        kinds: checks::compiler_supplied_scope::KINDS,
+        checker: checks::compiler_supplied_scope::check,
     },
 ];
 

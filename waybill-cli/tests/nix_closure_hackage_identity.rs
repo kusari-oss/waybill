@@ -1153,23 +1153,22 @@ fn t056_a_synthesised_boot_component_carries_an_accepted_orphan_marker() {
 /// In this fixture `waybill-fixture-aeson` is reachable only through a
 /// `buildable: False` stanza, so it is non-runtime. Before FR-012 it had no
 /// out-edges, so its scope propagated nowhere. Now it has three, and all three
-/// targets inherit the scope — including `waybill-fixture-bootlib`, **a boot
-/// library the compiler ships in every build whatever the flags say.**
+/// targets inherited the scope — including `waybill-fixture-bootlib`, **a
+/// boot library the compiler ships in every build whatever the flags say.**
 ///
-/// That is exactly issue #1340: the scope is a true statement about the
-/// dependency relationship and a false one about whether the artifact contains
-/// the package, and #1340 says settling which reading wins "needs a decision
-/// rather than a patch" in milestone 1269. This milestone does not take that
-/// decision — it has no requirement covering lifecycle scope, and FR-011's
-/// invariants are about membership and roles. What it must not do is leave the
-/// interaction undocumented, so that a scope change in a corpus golden arrives
-/// as an unexplained diff.
+/// That was exactly issue #1340, and **milestone 1276 fixed it**: the scope
+/// was a true statement about the dependency relationship and a false one
+/// about whether the artifact contains the package, and CycloneDX 1.6's own
+/// definitions make the second reading the standard's. A package the pinned
+/// revision's compiler supplies is now immune to the propagation, so the two
+/// non-boot targets below still inherit the scope and the boot library does
+/// not.
 ///
-/// Measured corpus population of #1340 before this milestone: 10 of 78
-/// boot-library components, in `haskell-security-advisories` (8) and
-/// `nix-closure-moat` (2). `nix-closure-moat` has 10 non-runtime closure
-/// members that now gain declared out-edges, so expect that figure to rise
-/// when its goldens are refreshed.
+/// Measured population of #1340 at the point milestone 1276 fixed it: 10 of
+/// 78 boot-library components, in `haskell-security-advisories` (8) and
+/// `nix-closure-moat` (2). All ten were `transitive` — propagated rather than
+/// directly marked — which is why immunity in the propagation is the whole
+/// fix.
 #[test]
 fn t057_declared_edges_propagate_non_runtime_scope_including_to_boot_libraries() {
     let cache = seed_cache();
@@ -1205,13 +1204,22 @@ fn t057_declared_edges_propagate_non_runtime_scope_including_to_boot_libraries()
         "a declared dependency of a non-runtime member did not inherit its scope"
     );
 
-    // And the part that is #1340: a boot library inherits it too. The compiler
-    // ships this package in every build; `excluded` is a claim about the edge,
-    // not about the artifact's contents.
+    // And the part that WAS #1340, now corrected by milestone 1276: a boot
+    // library does **not** inherit it. The compiler ships this package in
+    // every build, so `excluded` would be a claim about the edge and a false
+    // one about the artifact's contents — and CycloneDX 1.6 defines both
+    // `optional` and `excluded` in terms of the artifact, instructing that an
+    // installed component prohibited from being called "must be scoped as
+    // `required`".
+    //
+    // Inverted rather than deleted (m1276 FR-010): the fixture is the only
+    // deterministic reproduction of a boot library reached through
+    // closure-derived edges, and the premise assertions above are what stop
+    // this passing vacuously now that the scope is gone.
     assert_eq!(
         scope_of("waybill-fixture-bootlib").as_deref(),
-        Some("excluded"),
-        "#1340's shape has changed; re-read the issue before adjusting this"
+        None,
+        "a boot library inherited a non-runtime scope; #1340 has regressed"
     );
     assert_eq!(
         s.prop(s.require("waybill-fixture-bootlib"),

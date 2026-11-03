@@ -533,6 +533,23 @@ pub(crate) struct EnrichmentSummary {
     /// operator opted in. `None` when `--nix-eval` was absent, which is what
     /// keeps the default path byte-identical (spec FR-002).
     pub(crate) nix_eval: Option<NixEvalSummary>,
+    /// Milestone 1276 — the packages the pinned revision's compiler supplies,
+    /// handed on to the lifecycle-scope propagation.
+    ///
+    /// This pass computes the set to classify with and then drops it. The
+    /// propagation needs it to treat a compiler-supplied package as immune
+    /// (#1340): such a package is installed in every build, so the CycloneDX
+    /// definitions of `optional` and `excluded` are both false of it, and a
+    /// non-runtime scope propagated to it is a conformance defect.
+    ///
+    /// Carried here rather than re-derived because the propagation runs for
+    /// scans that never enable `--nix-closure` — the two affected corpus
+    /// targets are both offline scans — so milestone 1275's boot-set load,
+    /// which lives inside the closure arm, is unreachable from there.
+    ///
+    /// `None` when this pass did not run or degraded, which exempts nothing
+    /// (FR-005). Unearned immunity is the dangerous default.
+    pub(crate) boot_libraries: Option<BTreeSet<String>>,
     /// Milestone 1275 — the parsed package set this pass loaded, handed on to
     /// the closure-identity pass so the scan parses it once.
     ///
@@ -1291,6 +1308,11 @@ pub(crate) fn enrich(
         }
         annotate_nix_eval_provenance(components, &nix_eval_asked, &nix_eval_divergences);
     }
+
+    // Milestone 1276 — hand the compiler-supplied set on to the scope
+    // propagation, which cannot re-derive it: it runs for scans with no
+    // `--nix-closure`, where nothing else reads the compiler configurations.
+    summary.boot_libraries = Some(boot.clone());
 
     // Milestone 1275 — hand the parsed set on rather than making the
     // closure-identity pass re-read it. Moved, not cloned, and set here
