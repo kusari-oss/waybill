@@ -446,3 +446,62 @@ extra section into a runtime seed there silently reassigned a component from
 Optional to Development, a change to the *development* axis forbidden by that
 milestone's FR-010. The re-seeded closure here removes the marked names and
 changes nothing else about the seed.
+
+---
+
+## Probe F — US4's population, re-measured after US2 and US3 landed (T057)
+
+The spec's Assumptions say US4's remaining population "must be measured after
+US2 lands rather than predicted now", because the 2 contradicting components
+are the same 2 US2 is about. This is that measurement, taken with US1, US2
+and US3 on the branch.
+
+`reproduce-1273.sh`, same fixture and cached revision as Probe C.
+
+| | at 0.14.0 | now |
+|---|---|---|
+| #1278 hpack-only components (3 declared) | **0** | **3** |
+| #1278 `graph-completeness` | `complete` | `partial` |
+| #1278 document record of the hpack read | **absent** | `seen=1 read=1 unread=0 partial=0` |
+| #1281 `aeson`/`async` with a `flake.lock` | runtime, no derivation | **optional**, derivation intact |
+| #1281 reconciliation | `restored=2` | `reviewed=2 withdrawn=0 declined=2` |
+| #1280 components carrying a license | **0 / 66** | **47 / 66** |
+| #1279 resolved AND unresolved-reasoned | **2** | **2** |
+
+### F1 — the spec's expectation about US4 was wrong, and that is why it was measured
+
+The spec said "part of it may resolve as a consequence of US2". It did not.
+`aeson` and `async` keep their optional mark now (US2 working), and the
+nixpkgs pass still assigns them a version — those are independent facts. A
+component can be optional *and* version-resolved, and it is the **version**
+that makes its `waybill:unresolved-reason` stale, not its scope.
+
+So US4's population is unchanged at 2, and the fix is exactly what R5
+described: strip the annotation where the version is assigned. Had this been
+predicted rather than measured, the natural prediction — "US2 fixes one or
+both" — would have been wrong in a way that made T058 look unnecessary.
+
+### F2 — 47 of 66, not 66 of 66, and that is correct
+
+SC-004 asks for "all of those the cached set declares one for", not all 66.
+The 19 without a license are the components the pass did not resolve (FR-012
+forbids inventing one) plus any whose declaration is `"unknown"` (FR-011a
+treats that as absent). The figure is a floor that moves with the fixture, so
+the success criterion is stated against what the set declares rather than
+against a count.
+
+### F3 — the probe had stopped printing
+
+Two of `reproduce-1273.sh`'s four sections silently vanished once the #1281
+fix changed the log line it keyed on: `grep -o "restored=[0-9]*"` matched
+nothing, exited 1, and `set -o pipefail` killed the script mid-run. The
+output simply ended after the closure line, with exit status 0 visible
+nowhere in the terminal.
+
+This is the zero-match-grep hazard the project has hit before, and it is
+worth noting what it looked like from outside: **not an error, a short
+report.** A probe that stops measuring half of what it claims to measure
+reads exactly like a probe whose later findings are unchanged. Corrected with
+`|| true` on each grep and a pattern that accepts both the old and new log
+lines, so the script keeps working against a binary from either side of the
+fix.

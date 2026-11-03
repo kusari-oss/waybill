@@ -56,9 +56,26 @@ PY
 # is sharper than the issue states, so it is asserted here.
 sed 's/\x1b\[[0-9;]*m//g' "$work/hpack.log" | grep -o '"haskell": [0-9]*' | head -1 \
   | sed 's/^/  per_reader_dispatch_counts /'
-echo -n "  diagnostic naming package.yaml: "
+echo -n "  log diagnostic naming package.yaml: "
 if sed 's/\x1b\[[0-9;]*m//g' "$work/hpack.log" | grep -qi "package\.yaml"; then
-  echo "PRESENT"; else echo "ABSENT  <-- the defect"; fi
+  echo "PRESENT"; else echo "ABSENT"; fi
+# After US1 the document itself carries the account (C200), which is the half
+# FR-018 is about: a log reaches only the operator who ran the scan.
+echo -n "  document record of what the hpack reader did: "
+python3 - "$work/hpack.json" <<'PY' || true
+import json, sys
+c = json.load(open(sys.argv[1]))
+props = {p["name"]: p["value"] for p in (c.get("metadata", {}).get("properties") or [])}
+raw = props.get("waybill:hpack-read-outcome")
+if not raw:
+    print("ABSENT  <-- the defect (#1278)")
+else:
+    o = json.loads(raw)
+    print(f'seen={len(o.get("manifests-seen", []))} '
+          f'read={len(o.get("manifests-read", []))} '
+          f'unread={len(o.get("manifests-unread", []))} '
+          f'partial={len(o.get("manifests-partial", []))}')
+PY
 
 # ── #1281 — the optional mark, with and without flake.lock ─────────
 mkdir -p "$work/flag"
@@ -128,14 +145,20 @@ echo
 echo "=== #1281 — case B: + flake.lock pinning nixpkgs (the mark is withdrawn) ==="
 RUST_LOG=info scan "$work/flag" "$work/flagB.json" > "$work/flagB.log" || true
 report_scope "$work/flagB.json"
-echo "  the seed that justifies the withdrawal:"
+echo "  the closure, and what the reconciliation did:"
+# `|| true` on every grep: a zero match exits 1 and `set -o pipefail` would
+# kill the script, which is how this probe silently stopped printing its last
+# two sections after the #1281 fix changed the log line it keyed on.
 sed 's/\x1b\[[0-9;]*m//g' "$work/flagB.log" \
-  | grep -o "runtime closure resolved declared=[0-9]* transitive=[0-9]*" \
-  | sed 's/^/    /'
-sed 's/\x1b\[[0-9;]*m//g' "$work/flagB.log" | grep -o "restored=[0-9]*" \
-  | sed 's/^/    /'
-echo "    (declared=5 CONTAINS aeson and async, so the closure reaches them"
-echo "     by construction -- nothing in the library reaches either)"
+  | grep -oE "runtime closure resolved declared=[0-9]+ transitive=[0-9]+" \
+  | sed 's/^/    /' || true
+sed 's/\x1b\[[0-9;]*m//g' "$work/flagB.log" \
+  | grep -oE "reviewed=[0-9]+ withdrawn=[0-9]+ declined=[0-9]+|restored=[0-9]+" \
+  | sed 's/^/    /' || true
+echo "    (declared=5 CONTAINS aeson and async. Before the #1281 fix that was"
+echo "     the whole problem: the closure reached them by construction and"
+echo "     withdrew both marks. After it, a second closure seeded from"
+echo "     declared-minus-marked reaches neither, so both marks stand.)"
 
 # ── #1280 and #1279 — read off case B's resolved document ──────────
 echo

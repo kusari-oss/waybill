@@ -1,0 +1,13 @@
+cabal-version: 2.4
+name:          waybill-fixture-urproj
+version:       0.1.0
+license:       MIT
+
+library
+  build-depends:
+      waybill-fixture-resolvable-a
+    , waybill-fixture-resolvable-b
+    , waybill-fixture-boot-lib
+    , waybill-fixture-nowhere
+  exposed-modules: Lib
+  hs-source-dirs:  src

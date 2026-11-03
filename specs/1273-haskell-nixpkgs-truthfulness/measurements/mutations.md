@@ -119,6 +119,29 @@ only thing that establishes it. That is why M23's survival mattered: with the
 tests written first it would have been visible immediately as a test that
 never ran red.
 
+## US4 — reconciling unresolved-reason (#1279). Suite: `haskell_unresolved_reason_us4`
+
+| # | requirement | mutation | verdict | test(s) that failed |
+|---|---|---|---|---|
+| M24 | FR-013 | leave the reader's stale C151 on a resolved component | **CAUGHT** | `resolved_and_unresolved_are_mutually_exclusive`, `a_resolved_component_carries_no_reason_by_design` |
+| M25 | FR-014 | do not correct a compiler-supplied component's reason | **CAUGHT** | `unresolved_component_distinguishes_compiler_supplied` |
+| M26 | FR-014 | emit no pass-side reason (C170) at all | **CAUGHT — by another suite** | `nix_haskell_resolution_m926`, 4 tests |
+
+### M26 — "survived" is relative to the suite you ran
+
+M26 first reported SURVIVED, because the mutation removes C170
+(`waybill:haskell-version-unresolved-reason`) and this story's tests assert
+on C151 (`waybill:unresolved-reason`) — a different annotation, owned by
+milestone 926. Re-run against that suite, the mutant kills **4** tests.
+
+So C170 is covered, by the milestone that owns it, which is where that
+coverage belongs. The lesson is about the harness rather than the code: a
+mutation run scoped to one suite can report a survivor the wider suite
+catches, and the verdict is meaningless without naming which suite it is
+relative to. Every SURVIVED row in this file was re-checked against the
+plausible owning suite before being accepted as a gap — M5, M7 and M23 are
+genuine (and explained), M26 was not.
+
 ---
 
 ## The two mutants that did real work

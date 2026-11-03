@@ -1085,6 +1085,30 @@ pub(crate) fn enrich(
                         c.extra_annotations
                             .insert(ANN_CANDIDATE_COMPILERS.to_string(), v);
                     }
+                    // Milestone 1273 (#1279, FR-014) — correct the reader's
+                    // C151, which an operator filters on.
+                    //
+                    // The reader stamped "no cabal.project.freeze fallback",
+                    // which was its best answer with no version in hand. For
+                    // a package the COMPILER supplies it is the wrong answer:
+                    // a freeze file would not pin it either. `cabal
+                    // v2-freeze` declines to pin exactly this set (#938) —
+                    // two independent tools declining for the same reason —
+                    // so an operator told to go and produce one is being
+                    // sent after something that does not exist.
+                    //
+                    // FR-014 asks that the reason distinguish
+                    // compiler-supplied from undeterminable. This is where
+                    // the pass learns which of the two it is, so this is
+                    // where C151 is corrected rather than left stale.
+                    c.extra_annotations.insert(
+                        "waybill:unresolved-reason".to_string(),
+                        serde_json::Value::String(
+                            "supplied by the compiler; nixpkgs has no version \
+                             to give and a freeze file would not pin it either"
+                                .to_string(),
+                        ),
+                    );
                 }
             }
         }
@@ -1552,6 +1576,21 @@ fn apply_resolved(
     } = facts;
     c.version = version.to_string();
     attach_declared_license(c, license);
+    // Milestone 1273 (#1279, FR-013) — the reader's C151 is now stale.
+    //
+    // It was correct when stamped: at read time the component had no version
+    // and the reason named the artifact that would have supplied one
+    // (`no cabal.project.freeze fallback`, `no stack.yaml.lock fallback`).
+    // This pass has just supplied it from the pinned revision, so the
+    // annotation describes a situation that no longer exists — and a
+    // consumer filtering on it to find what waybill could not identify is
+    // actively misled rather than merely under-informed.
+    //
+    // Removed HERE, in the same mutation that assigns the version, rather
+    // than swept at emission time. The fact changed here; a sweep would also
+    // have to decide what to do about every other reader's C151, which
+    // FR-015 puts out of scope.
+    c.extra_annotations.remove("waybill:unresolved-reason");
     // The PURL must carry the version too, or the component is versioned in
     // one place and not the other.
     //
