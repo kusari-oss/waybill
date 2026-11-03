@@ -401,3 +401,60 @@ all, only versioned aliases, so `set.get("hashable")` returns nothing and the
 member is reported `not-in-package-set`. That is also why that bucket reads
 177 here against the sizing probe's 176 absent-with-version. R4's alias gap
 costs exactly 1, and this is the row it costs.
+
+## F11 — the milestone created three I7 offenders, found before the goldens were refreshed
+
+Caught by a post-implementation `/speckit.analyze` pass, not by CI, and worth
+recording because the sequencing is the lesson.
+
+FR-012c's components are unreachable from the root **by construction**:
+nothing depends on a GHC boot library except the closure members that are
+themselves unreachable. The corpus invariant `orphan_explained` (I7) requires
+every unreachable component to carry one of a closed set of markers —
+`waybill:orphan-reason`, `waybill:unresolved-reason`, `waybill:closure-role`,
+`waybill:version-absence = by-construction`, `waybill:component-tier = file`.
+These components carried only C170 `compiler-supplied` and `sbom-tier`, and
+**C170 was not in that set.**
+
+`invariant-declarations.toml` has I7 rows for `haskell-security-advisories`
+(3), `maven-guice` (3) and `python-flask` (13) and **none for
+`nix-closure-moat`** — the one target that runs `--nix-closure`. So that
+target sits at zero offenders today, and this milestone would have taken it to
+three.
+
+Measured, by replicating `is_explained` over the real documents:
+
+```
+baseline 001fa50   either way        components=342 unreachable=276 I7=0
+1275  without the C170 arm           components=345 unreachable=279 I7=3
+1275  with    the C170 arm           components=345 unreachable=279 I7=0
+```
+
+The third row is the fix; **the first row is why the fix is not an amnesty.**
+The arm moves no cell on the pre-1275 document, so it accounts for exactly
+the population this milestone created and masks nothing pre-existing.
+
+C170 is now in both marker sets — `generate/orphan_reason.rs::already_explained`
+and the invariant's own `is_explained`, which the former's comment requires to
+mirror each other. `compiler-supplied` is a real explanation: the component
+exists because a package set declared it, and it has no version because GHC
+ships it inside its own derivation.
+
+Two mutants, both caught: **M14** (the invariant's arm removed) by its own unit
+test, **M15** (the component stops carrying C170) by `t038` and the new `t056`.
+
+### Why this had to come before the golden refresh
+
+The refresh was one dispatch away. Had it gone first, it would have baked in
+three new I7 offenders on `nix-closure-moat`, and the path of least resistance
+would then have been to **declare** them in `invariant-declarations.toml` —
+recording a defect this milestone created as a known limitation, which is how
+a declaration file stops meaning anything. It also falsifies the diff
+prediction written before the dispatch, which said 3 files changed and nothing
+else; the honest prediction now adds "and `nix-closure-moat` gains no I7
+offenders".
+
+`orphan_reason`'s emit-time classifier only ever looks at Go and npm
+components, so **zero** `waybill:orphan-reason` annotations in a Nix document
+is correct and not a second defect. That was checked before concluding
+anything, because 0 of 279 looked exactly like a pass that had not run.

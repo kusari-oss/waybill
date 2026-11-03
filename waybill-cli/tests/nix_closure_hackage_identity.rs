@@ -1079,3 +1079,64 @@ fn t045_the_three_formats_agree_about_the_declared_edges() {
         cdx.len()
     );
 }
+
+/// The synthesised boot-library component satisfies the corpus I7 invariant.
+///
+/// `orphan_explained` requires every component unreachable from the root to
+/// carry one of a closed set of markers. FR-012c's components are unreachable
+/// **by construction** — nothing depends on a boot library except the closure
+/// members that are themselves unreachable from the root — and they carry no
+/// `waybill:closure-role`, because they are not closure members: nix never put
+/// them in the closure.
+///
+/// Milestone 1275 therefore added C170 to that marker set, in
+/// `generate/orphan_reason.rs::already_explained` and in the invariant's own
+/// `is_explained`, which its comment requires to mirror each other. This test
+/// is the guard at the document level: if the component stops carrying an
+/// accepted marker, `nix-closure-moat` gains three I7 offenders where it has
+/// none, and the tempting fix becomes declaring a defect this milestone
+/// created rather than fixing it.
+#[test]
+fn t056_a_synthesised_boot_component_carries_an_accepted_orphan_marker() {
+    let s = resolved_scan();
+    let boot = s.require("waybill-fixture-bootlib");
+
+    // The marker set `orphan_explained::is_explained` accepts, verbatim.
+    let accepted = [
+        ("waybill:orphan-reason", None),
+        ("waybill:version-absence", Some("by-construction")),
+        ("waybill:component-tier", Some("file")),
+        ("waybill:unresolved-reason", None),
+        ("waybill:closure-role", None),
+        ("waybill:haskell-version-unresolved-reason", None),
+    ];
+    let satisfied: Vec<&str> = accepted
+        .iter()
+        .filter(|(k, want)| match (s.prop(boot, k), want) {
+            (Some(v), Some(w)) => v == *w,
+            (Some(_), None) => true,
+            (None, _) => false,
+        })
+        .map(|(k, _)| *k)
+        .collect();
+    assert!(
+        !satisfied.is_empty(),
+        "the synthesised boot component carries no accepted orphan marker, so it \
+         is unreachable-and-unexplained (I7); it has: {:?}",
+        boot["properties"]
+    );
+    assert!(
+        satisfied.contains(&"waybill:haskell-version-unresolved-reason"),
+        "expected C170 to be the marker; got {satisfied:?}"
+    );
+
+    // And it really is unreachable: nothing in the document depends on it
+    // except reclassified closure members, which are not reachable from the
+    // root either. If this stops holding the test above is still correct but
+    // is no longer guarding anything, and the comment should change with it.
+    let root = s.cdx["metadata"]["component"]["purl"].as_str().unwrap_or_default();
+    assert!(
+        !s.depends_on(root).iter().any(|t| t == "pkg:hackage/waybill-fixture-bootlib"),
+        "the root now depends on a boot library; this test's premise has changed"
+    );
+}

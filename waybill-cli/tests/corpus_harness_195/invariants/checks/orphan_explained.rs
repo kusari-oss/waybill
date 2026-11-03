@@ -34,6 +34,16 @@ fn is_explained(component: &serde_json::Value) -> bool {
         || cdx_prop(component, "waybill:component-tier") == Some("file")
         || cdx_prop(component, "waybill:unresolved-reason").is_some()
         || cdx_prop(component, "waybill:closure-role").is_some()
+        // C170, added by milestone 1275 — and it moves cells, unlike the
+        // forward-looking arm above. The closure-identity pass emits a
+        // versionless `compiler-supplied` component for a declared dependency
+        // the closure does not contain, which is unreachable by construction
+        // and carries no `closure-role` because it is not a closure member.
+        // `nix-closure-moat` gains three of them (`directory`, `ghc-heap`,
+        // `pretty`), and without this arm it gains three I7 offenders where it
+        // has none today — a defect created by the milestone that would then
+        // have to be declared rather than fixed.
+        || cdx_prop(component, "waybill:haskell-version-unresolved-reason").is_some()
 }
 
 pub fn check(sboms: &super::EmittedSboms) -> CellOutcome {
@@ -90,6 +100,45 @@ mod tests {
             "purl": format!("pkg:generic/{reference}"),
             "properties": props
         })
+    }
+
+    /// Milestone 1275 — a compiler-supplied boot library is explained by
+    /// C170, and nothing weaker counts.
+    ///
+    /// Unlike the C197 arm below, this one **moves cells**:
+    /// `nix-closure-moat` gains three components of exactly this shape
+    /// (`directory`, `ghc-heap`, `pretty`), emitted for declared
+    /// dependencies the closure does not contain because GHC ships them
+    /// inside its own derivation. They are unreachable from the root by
+    /// construction — nothing depends on a boot library except closure
+    /// members that are themselves unreachable — and they carry no
+    /// `waybill:closure-role`, because they are not closure members.
+    #[test]
+    fn a_compiler_supplied_boot_library_is_explained() {
+        let explained = versionless_edgeless(
+            "waybill-fixture-bootlib",
+            serde_json::json!([
+                { "name": "waybill:haskell-version-unresolved-reason",
+                  "value": "compiler-supplied" }
+            ]),
+        );
+        assert!(is_explained(&explained));
+
+        // The negative control that matters: `sbom-tier` alone, which is
+        // what these components carried before the C170 arm existed, is
+        // NOT an explanation. Without this the test would pass for a
+        // component carrying nothing of substance.
+        let tier_only = versionless_edgeless(
+            "waybill-fixture-bootlib-tier-only",
+            serde_json::json!([
+                { "name": "waybill:sbom-tier", "value": "build" }
+            ]),
+        );
+        assert!(!is_explained(&tier_only));
+
+        // And no properties at all is not an explanation either.
+        let bare = versionless_edgeless("waybill-fixture-bare", serde_json::json!([]));
+        assert!(!is_explained(&bare));
     }
 
     /// FR-007 — a versionless, edgeless component carrying C197 is

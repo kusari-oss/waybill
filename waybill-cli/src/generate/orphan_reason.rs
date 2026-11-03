@@ -397,7 +397,24 @@ pub fn classify_orphans(
             || c.extra_annotations
                 .get("waybill:component-tier")
                 .and_then(|v| v.as_str())
-                == Some("file");
+                == Some("file")
+            // C170, added by milestone 1275. The closure-identity pass emits a
+            // versionless component for a declared dependency the closure does
+            // not contain, when the revision's own configuration says the
+            // compiler supplies it — `directory`, `ghc-heap` and `pretty` on
+            // the measured project. Those components are unreachable from the
+            // root by construction: nothing depends on a boot library except
+            // the closure members that are themselves unreachable.
+            //
+            // They are explained, and `compiler-supplied` is the explanation:
+            // the component exists because a package set declared it, and it
+            // has no version because GHC ships it inside its own derivation.
+            // They carry no `waybill:closure-role` — they are not closure
+            // members, nix never put them in the closure — so without this arm
+            // they are unreachable-and-unexplained, and `nix-closure-moat`
+            // gains three I7 offenders where it has none today.
+            || c.extra_annotations
+                .contains_key("waybill:haskell-version-unresolved-reason");
         if already_explained {
             continue;
         }
