@@ -247,15 +247,26 @@ not", and "no version recorded".
   has no declaration to follow, and inventing one from its store references is
   what FR-012a forbids.
 - **FR-012c**: An edge whose target is not itself a component in the document
-  MUST NOT be emitted as a dangling reference. Where the package set declares
-  a dependency that the closure does not contain, the document MUST carry the
-  target as a versionless compiler-supplied component — never point at nothing,
-  and never silently drop the edge. Measured: 13 of 278 such targets, and all
-  three distinct ones (`directory` ×11, `ghc-heap`, `pretty`) are GHC boot
-  libraries, which m926's `boot_libraries` already identifies from the
-  revision's own configuration (research R6). Dropping the edge was considered
-  and rejected: the dependency is real and declared, and a count that silently
-  omits 13 edges is the shape #1218 was about.
+  MUST NOT be emitted as a dangling reference, and MUST NOT be dropped in
+  silence. Two branches, by whether the absent target is a GHC boot library:
+  - **A boot library** MUST be carried as a versionless compiler-supplied
+    component. Measured: 13 of 278 such targets, and all three distinct ones
+    (`directory` ×11, `ghc-heap`, `pretty`) are boot libraries, which m926's
+    `boot_libraries` already identifies from the revision's own configuration
+    (research R6). Dropping these was considered and rejected: the dependency
+    is real and declared, and a count that silently omits 13 edges is the
+    shape #1218 was about.
+  - **Anything else** MUST have its edge omitted and the omission **reported**.
+    There is no basis on which to emit a component for it: the only evidence
+    it exists is its name appearing in another package's dependency list, and
+    minting a component from that is the same class of claim FR-004 forbids
+    for identity. Measured 0 such targets on the real closure, so this is the
+    branch that must not be left to chance rather than the common one.
+
+  An earlier draft of this requirement said simply "MUST carry the target as a
+  versionless compiler-supplied component", which the second branch cannot
+  satisfy without inventing a package. The two-branch form is what the
+  implementation does and what the tests assert.
 - **FR-013**: Every component whose identity this feature changes MUST record
   that the closure tier is where it came from, so a consumer can tell a
   closure-derived `pkg:hackage` component from a manifest-derived one.

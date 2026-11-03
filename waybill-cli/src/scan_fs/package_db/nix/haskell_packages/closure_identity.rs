@@ -836,9 +836,13 @@ fn compiler_supplied_component(name: &str) -> Option<ResolvedComponent> {
         super::ANN_UNRESOLVED_REASON.to_string(),
         serde_json::Value::from(super::UnresolvedReason::CompilerSupplied.as_str()),
     );
-    c.extra_annotations.insert(
-        ANN_CLOSURE_IDENTITY.to_string(),
-        serde_json::Value::from("compiler-supplied-target"),
-    );
+    // Deliberately NO `waybill:closure-identity` here. C201 declares a closed
+    // enum of six values, every one of them an outcome the pass reached about
+    // a closure MEMBER — and this component is not one: it is synthesised as
+    // an edge target because the compiler ships it inside its own derivation.
+    // Emitting a seventh value would make a row that says "closed" not be,
+    // which is the defect `enum_allowlist_falls_out_of_date` records. What
+    // this component owes a reader is why it has no version, and C170 above
+    // says exactly that.
     Some(c)
 }

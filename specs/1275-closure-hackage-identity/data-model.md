@@ -40,11 +40,17 @@ enum HackageIdentity {
     Confirmed { attribute: String },
     /// FR-004 — the name is in the set under a different version. The
     /// collision population: `bash 5.3p9` against Hackage's `bash 0.1.8`.
-    VersionDisagrees { set_version: String },
+    ///
+    /// **No payload.** An earlier draft carried `set_version: String`. The
+    /// set's version is deliberately not carried: C201's value stays a closed
+    /// enum, which is what makes the per-component assertion a set comparison
+    /// rather than a parse, and the version is recoverable from the pinned
+    /// revision and the name (findings F4).
+    VersionDisagrees,
     /// The exact pair matched but the derivation was not built by a GHC, so
-    /// the two signals disagree. Measured 0 of 60 — kept because a variant
+    /// the two signals disagree. Measured 0 of 105 — kept because a variant
     /// that cannot occur today is cheaper than discovering it occurred.
-    SignalsDisagree { set_version: String },
+    SignalsDisagree,
     /// The pinned set has no attribute of that name at all. 190 of 276.
     NotInPackageSet,
     /// nix recorded no version, so no pair could be formed. 14 of 276.

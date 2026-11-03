@@ -53,14 +53,47 @@ the two signals agree on 60 of 60 exact-pair rows
 
 ## Running the suites
 
+**`scan_fs` unit tests live in the BIN target, not the lib.** `scan_fs` is
+declared in `main.rs`, so `cargo test -p waybill --lib <filter>` reports
+`0 passed; … 218 filtered out` for a test that exists and runs perfectly well
+under `--bin waybill`. The filtered-out count looks like a filter typo rather
+than the wrong target, which is why this note is here.
+
 ```sh
 cargo test -p waybill --test nix_closure_hackage_identity
+cargo test -p waybill --bin waybill closure_identity   # the 15 unit tests
 cargo test -p waybill --test nix_config_closure        # must stay 14/14
 cargo test -p waybill --test nix_haskell_resolution_m926
 ./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh
 ```
 
 No `+toolchain` argument (#1189).
+
+## The two committed probes
+
+Both are `#[ignore]`d and env-gated, because they read a real 16 MB package
+set and a real 6 MB closure, which no ordinary test may do (Principle VII).
+They are instruments, not behaviour tests: FR-006 requires the signals'
+agreement be *measured*, and a disagreement is a finding to explain rather
+than a test failure.
+
+```sh
+# T005 — what a second parse of the package set costs (findings F2).
+WAYBILL_T005_PACKAGE_SET=~/.cache/waybill/nixpkgs/<rev>/hackage-packages.nix \
+  cargo test -p waybill --bin waybill m1275_t005 -- --ignored --nocapture
+
+# T009 — FR-006's agreement, measured against THIS code rather than a Python
+# re-implementation of its rules (findings F5).
+WAYBILL_T009_CLOSURE=/path/to/closure.json \
+WAYBILL_T009_PACKAGE_SET=~/.cache/waybill/nixpkgs/<rev>/hackage-packages.nix \
+  cargo test -p waybill --bin waybill m1275_t009 -- --ignored --nocapture
+```
+
+`measurements/size-closure-members.py` reads the emitted document and reports
+the **276 closure-appended** members; the T009 probe reads the closure and
+reports the **323 the tier emits**. The 47-member difference is the components
+that merge into design-tier twins, and every bucket reconciles once that is
+accounted for — see findings F5 before concluding the two disagree.
 
 ## Fixtures
 

@@ -26,9 +26,14 @@ pinned set for that name. The measured 26 — `bash 5.3p9`, `curl 8.20.0`,
 `ghc 9.4.8`, `brotli 1.2.0` among them — stay `pkg:generic`. (FR-004, SC-003)
 
 **C6 — identity rests on two independent signals.** The exact pair *and* the
-derivation having been built by a GHC. Measured agreement: 60 of 60, with the
-GHC signal rejecting all 26 collisions on its own. A component where the two
-disagree is not reclassified. (FR-005)
+derivation having been built by a GHC. A component where the two disagree is
+not reclassified. Measured agreement, over two populations and stated with
+them because the figures differ: **60 of 60** exact-pair rows among the 276
+closure-**appended** members (the sizing probe, reading the emitted document),
+and **105 of 105** among the 323 members the tier **emits** (the T009 probe,
+running this feature's own code — the difference is the 47 that merge into
+design-tier components). The GHC signal rejects all 26 collisions on its own
+in both. (FR-005, FR-006)
 
 **C7 — the agreement is measured, not asserted.** The committed probe reports
 the two signals' agreement, and a disagreement on any component is a finding
@@ -37,7 +42,16 @@ to explain before the pass is trusted. (FR-006)
 **C8 — every unreclassified member says why.** One of: the name is absent from
 the set; the name matches but no version does; the signals disagree; no
 version was recorded so no lookup was possible; the set was unavailable.
-Measured today: 0 of 276 carry any reason. (FR-007, SC-004)
+Measured today: 0 of 276 carry any reason.
+
+The row is **also** emitted on `confirmed` members, above FR-007's floor. That
+is deliberate: it makes the same row answer FR-013 — a closure-derived
+`pkg:hackage` component carries `confirmed`, a manifest-derived one carries
+nothing — which is a cleaner tier signal than inferring it from
+`waybill:closure-role`, a property about how nix *referenced* a member. It is
+**not** emitted on the components FR-012c synthesises for absent boot-library
+targets: those are not members the pass examined, and a seventh value would
+make a row that declares a closed set not have one. (FR-007, FR-013, SC-004)
 
 **C9 — no two components share one identity.** Reclassification does not
 change `(name, version)`, which is what the existing merge keys on, so it

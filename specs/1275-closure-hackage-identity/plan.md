@@ -107,15 +107,31 @@ specs/1275-closure-hackage-identity/
 waybill-cli/src/scan_fs/package_db/nix/
 ├── closure/
 │   ├── emit.rs              # unchanged — see research R1
+│   ├── classify.rs          # unchanged — reused by the T009 probe
 │   └── mod.rs               # unchanged
 └── haskell_packages/
-    ├── package_set.rs       # unchanged — every field already parsed
-    ├── boot_libraries.rs    # reused for FR-012c's targets
-    ├── closure_identity.rs  # NEW — the pass, the enum, the two signals
+    ├── package_set.rs       # + `PartialEq`/`Eq` on `PackageSet`, so the
+    │                        #   parsed set can ride in `EnrichmentSummary`
+    │                        #   rather than be re-parsed (T005: 1,121 ms)
+    ├── boot_libraries.rs    # unchanged — `is_boot_library` reused for
+    │                        #   FR-012c's targets
+    ├── closure_identity.rs  # NEW — the pass, the enum, the two signals,
+    │                        #   the declared edges, two committed probes
     └── mod.rs               # + `mod closure_identity;`
+                             # + `load_package_set` / `PackageSetLoad`
+                             #   extracted out of `enrich` (T004)
+                             # + `attach_declared_license`, `attach_source_hash`
+                             #   and `boot_set` shared with the new pass
+                             # + `EnrichmentSummary.package_set`
 
 waybill-cli/src/cli/scan_cmd.rs
     # one call site, AFTER merge_closure_components (4729), before emission
+
+waybill-cli/src/parity/extractors/{mod,cdx,spdx2,spdx3}.rs
+    # C201 `waybill:closure-identity` — a new row, because the Principle V
+    # audit found no native carrier and neither C151 nor C170 is reusable
+    # (spec FR-007a). A catalogue row without an extractor fails
+    # `every_catalog_row_has_an_extractor`, so the four land together.
 
 waybill-cli/tests/
 ├── nix_closure_hackage_identity.rs   # NEW — US1, US2, US3
