@@ -56,12 +56,30 @@ measured that `!include` resolves from a sibling file on disk, unlike
 `defaults:`; FR-001b announces both, so this milestone only needs to
 *detect* it.
 
-**Inference, not measured:** that `serde_yaml` rejects an unresolved
-`!include` tag as a deserialization error rather than yielding a value. If
-it instead parses to a tagged value, detection can read that value and the
-pre-parse text scan is unnecessary. The first implementation task settles
-it with a unit test either way, because the two cases need different code
-and guessing would put the wrong one in.
+**Measured in T004, and the earlier inference was wrong.** This section
+previously recorded as inference that `serde_yaml` rejects an unresolved
+`!include` tag as a deserialization error, which would have made detection a
+scan of the file text. Two unit tests
+(`haskell/hpack.rs::include_tests`) measured it:
+
+1. `serde_yaml` 0.9 parses the tag into a **`Value::Tagged`** —
+   `TaggedValue { tag: !include, value: String("common.yaml") }`. It is not
+   an error at the `Value` level, so detection reads the **parsed document**,
+   and a text scan is unnecessary.
+2. Deserializing the same document straight into a typed field **fails**,
+   with `invalid type: string "common.yaml", expected a sequence` — an error
+   that says nothing about `!include`.
+
+The second result sets the parse order, and is why guessing would have been
+costly rather than merely untidy. Taking the typed path first reports an
+`!include` manifest as **unparseable** (FR-003) when it is **partial**
+(FR-001b) — two different requirements, two different signals, and an
+operator told to fix a file that is not broken.
+
+So the reader: parses the text to `serde_yaml::Value` once, walks it for
+`Value::Tagged` nodes to detect unmodelled constructs, and deserializes
+that same `Value` into `HpackManifest` afterwards. One parse, one cheap
+walk.
 
 ```rust
 #[derive(Debug, Deserialize, Default)]

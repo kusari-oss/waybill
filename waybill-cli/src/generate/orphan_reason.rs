@@ -598,11 +598,18 @@ pub fn classify_orphans_pre_emit(
         .chain(peer_edges)
         .collect();
 
+    // Milestone 1273 FR-005 — `&[]` deliberately. This call exists for its
+    // `reachable_set`, which orphan classification needs; its reason codes are
+    // discarded and never reach a document. The published completeness verdict
+    // is computed by the three emitters, which do pass the unread-manifest
+    // facts. Passing them here too would change nothing and would imply this
+    // result is the one consumers see.
     let gc = compute_graph_completeness(
         components,
         &augmented,
         &selection,
         &target_ref,
+        &[],
     );
 
     let counts = classify_orphans(components, &gc.reachable_set);

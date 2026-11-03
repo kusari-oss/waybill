@@ -1,0 +1,12 @@
+name: waybill-fixture-testsonly-proj
+version: 0.1.0
+# No library and no executables. The ONLY stanza is a test suite, and the
+# ONLY declaration of its dependency is the top-level list. A reader that
+# inherited the top-level list into the library alone would emit nothing
+# here, which is what makes Probe A1's rule observable (mutant M2).
+dependencies:
+  - waybill-fixture-inherited-into-tests
+tests:
+  spec:
+    main: Spec.hs
+    source-dirs: test

@@ -115,6 +115,20 @@ pub(crate) fn degraded_ecosystems(
             ReasonCode::GoTransitiveCoverageDegraded { .. } => {
                 degraded.insert("golang".to_string());
             }
+            // Milestone 1273 FR-005 — an ecosystem whose manifest went
+            // unread has not completed its resolution, which is exactly
+            // what this function reports.
+            //
+            // The `_ => {}` arm below is why this arm has to be written
+            // explicitly: without it the new variant is silently dropped
+            // here, CycloneDX's native `compositions[]` keeps saying
+            // `complete`, and `waybill:graph-completeness` says otherwise —
+            // the disagreement this function's doc comment exists to
+            // prevent. An enum allowlist falling out of date has bitten
+            // this repository before (#892, ~2 years undetected).
+            ReasonCode::ManifestUnread { ecosystem, .. } => {
+                degraded.extend(ecosystem.split(", ").map(str::to_string));
+            }
             _ => {}
         }
     }

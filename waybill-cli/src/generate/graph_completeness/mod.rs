@@ -141,11 +141,21 @@ impl GraphCompletenessResult {
 ///           fallback.
 ///
 /// O(V + E) — meets FR-008.
+/// Manifests a reader found and could not read, as `(ecosystem, count)`.
+///
+/// Milestone 1273 FR-005. Passed in rather than inferred because the reason a
+/// component set is empty is not knowable here — see
+/// [`ReasonCode::ManifestUnread`]. A caller with nothing to report passes
+/// `&[]`; the parameter is explicit so that adding a call site is a decision
+/// rather than an omission.
+pub type UnreadManifests<'a> = &'a [(&'a str, usize)];
+
 pub fn compute_graph_completeness(
     components: &[ResolvedComponent],
     relationships: &[Relationship],
     selection: &RootSelectionResult,
     target_ref: &str,
+    unread_manifests: UnreadManifests<'_>,
 ) -> GraphCompletenessResult {
     // Milestone 194 US3: file-tier components (m133) carry
     // `waybill:component-tier: file` and have no dep-graph edges by
@@ -173,6 +183,13 @@ pub fn compute_graph_completeness(
     // missing). Also handles the pathological "no components emitted"
     // path.
     if total_count == 0 {
+        // Milestone 1273 FR-005 — an empty component set is a well-defined
+        // complete graph ONLY when it is empty because the project has no
+        // dependencies. If a manifest was found and not read, the emptiness
+        // is a reader outcome and claiming completeness over it is #1278.
+        if let Some(code) = manifest_unread_code(unread_manifests) {
+            return GraphCompletenessResult::unknown(0, vec![code]);
+        }
         return GraphCompletenessResult::trivially_complete();
     }
 
@@ -365,6 +382,9 @@ pub fn compute_graph_completeness(
     // `GoTransitiveCoverageDegraded` has existed in the reason-code
     // vocabulary since m158 with a formatter and a unit test, and was
     // never constructed. This is its first production caller.
+    if let Some(code) = manifest_unread_code(unread_manifests) {
+        reason_codes.push(code);
+    }
     if let Some(code) = classify_go_transitive_coverage_degraded(components) {
         reason_codes.push(code);
     }
@@ -390,6 +410,25 @@ pub fn compute_graph_completeness(
 }
 
 /// Milestone 866 (FR-003) — did Go transitive resolution actually
+/// Milestone 1273 FR-005 — one reason code for every unread manifest.
+///
+/// Counts are summed per call rather than per ecosystem pair, and the
+/// ecosystems are sorted, so the rendered string is stable across runs and a
+/// golden can pin it.
+fn manifest_unread_code(unread: UnreadManifests<'_>) -> Option<ReasonCode> {
+    let mut named: Vec<(&str, usize)> = unread.iter().copied().filter(|(_, n)| *n > 0).collect();
+    if named.is_empty() {
+        return None;
+    }
+    named.sort_by(|a, b| a.0.cmp(b.0));
+    let total = named.iter().map(|(_, n)| *n).sum();
+    let ecosystems: Vec<&str> = named.iter().map(|(e, _)| *e).collect();
+    Some(ReasonCode::ManifestUnread {
+        ecosystem: ecosystems.join(", "),
+        count: total,
+    })
+}
+
 /// complete?
 ///
 /// Counts components whose own evidence says their transitive edges
@@ -811,7 +850,7 @@ mod tests {
 
     #[test]
     fn empty_components_is_trivially_complete() {
-        let result = compute_graph_completeness(&[], &[], &selection_with_main_module(0), "");
+        let result = compute_graph_completeness(&[], &[], &selection_with_main_module(0), "", &[]);
         assert_eq!(result.value, GraphCompletenessValue::Complete);
         assert_eq!(result.total_count, 0);
         assert_eq!(result.reachable_count, 0);
@@ -839,6 +878,7 @@ mod tests {
             &relationships,
             &selection_with_main_module(0),
             "",
+            &[],
         );
         assert_eq!(result.value, GraphCompletenessValue::Complete);
         assert!(result.reason_codes.is_empty());
@@ -867,6 +907,7 @@ mod tests {
             &relationships,
             &selection_with_main_module(0),
             "",
+            &[],
         );
         assert_eq!(result.value, GraphCompletenessValue::Partial);
         assert_eq!(result.orphan_count, 1);
@@ -906,6 +947,7 @@ mod tests {
             &relationships,
             &selection_with_main_module(0),
             "",
+            &[],
         );
         assert_eq!(result.value, GraphCompletenessValue::Complete);
         assert!(result.reason_codes.is_empty());
@@ -940,6 +982,7 @@ mod tests {
             &relationships,
             &selection_with_main_module(0),
             "",
+            &[],
         );
         assert_eq!(result.value, GraphCompletenessValue::Partial);
         // Should have BOTH reason codes.
@@ -975,7 +1018,7 @@ mod tests {
             heuristic: None,
             losers: Vec::new(),
         };
-        let result = compute_graph_completeness(&components, &[], &selection, "");
+        let result = compute_graph_completeness(&components, &[], &selection, "", &[]);
         assert_eq!(result.value, GraphCompletenessValue::Partial);
         assert!(result.reason_codes.iter().any(|c| matches!(
             c,

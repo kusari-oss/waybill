@@ -1,0 +1,27 @@
+name: waybill-fixture-inherit
+version: 0.1.0
+dependencies:
+  - waybill-fixture-shared
+library:
+  source-dirs: src
+  dependencies:
+    - waybill-fixture-libonly
+executables:
+  cli:
+    main: Main.hs
+    source-dirs: app
+    dependencies:
+      - waybill-fixture-exeonly
+tests:
+  spec:
+    main: Main.hs
+    source-dirs: app
+    dependencies:
+      - waybill-fixture-testonly
+      - waybill-fixture-libonly
+benchmarks:
+  bench:
+    main: Main.hs
+    source-dirs: bench
+    dependencies:
+      - waybill-fixture-benchonly

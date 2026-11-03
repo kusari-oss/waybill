@@ -1,0 +1,23 @@
+cabal-version: 2.4
+name:          waybill-fixture-agree
+version:       0.1.0
+license:       MIT
+
+flag cli
+  description: Build the optional CLI.
+  default:     False
+  manual:      True
+
+library
+  build-depends: waybill-fixture-base
+  exposed-modules: Lib
+  hs-source-dirs: src
+
+library waybill-fixture-agree-opt
+  visibility: public
+  if flag(cli)
+    buildable: True
+  else
+    buildable: False
+  build-depends: waybill-fixture-optdep
+  hs-source-dirs: src

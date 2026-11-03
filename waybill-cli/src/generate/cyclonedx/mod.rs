@@ -76,7 +76,7 @@ impl SbomSerializer for CycloneDxJsonSerializer {
             .with_unresolved_declared_dep_count(scan.unresolved_declared_dep_count)
             .with_pants_resolve_summary(scan.pants_resolve_summary.clone())
             .with_resolve_identity(scan.resolve_identity.clone())
-            .with_haskell_parse_summary(scan.haskell_parse_summary)
+            .with_haskell_parse_summary(scan.haskell_parse_summary.clone())
             // Milestone 173 — propagate the doc-scope Go cache-warming
             // outcome from ScanArtifacts into the builder for the
             // C118 (mode) + C119 (failed) metadata properties.
