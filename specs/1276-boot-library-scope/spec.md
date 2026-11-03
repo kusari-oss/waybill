@@ -162,7 +162,7 @@ the shape that gets misread as a regression in the project.
   does not depend on how the scope arose, so such a mark would still be wrong;
   FR-002a makes it visible as a failing invariant rather than building a
   suppression path for a population that does not exist.
-- **A project whose flake names no compiler series.** The exempt set falls
+- **A project whose flake names no compiler series.** The exempt class falls
   back to the union across candidates, which over-exempts by up to 15 names
   (FR-004a). That is a bounded, measured cost rather than an unknown, and it
   is the same posture m926 already takes for version resolution.
@@ -212,7 +212,7 @@ the shape that gets misread as a regression in the project.
   scope it has today. The correction is confined to the exempt class; the 8
   non-boot components below `slack-web`'s disabled stanza are the measured
   control.
-- **FR-004**: The exempt set MUST be derived from the pinned revision's own
+- **FR-004**: The exempt class MUST be derived from the pinned revision's own
   compiler configuration, never from a package-name list maintained in
   waybill. A package the compiler supplies at one revision and not another
   MUST be exempt only where the revision says so.
@@ -227,20 +227,44 @@ the shape that gets misread as a regression in the project.
   also the common one: `slack-web`'s per-revision cache holds only
   `configuration-ghc-9.10.x.nix`, which means its flake named a series and no
   union was ever formed.
-- **FR-005**: When the compiler configuration cannot be read, the exempt set
+- **FR-005**: When the compiler configuration cannot be read, the exempt class
   MUST be empty, the scan MUST still succeed, and no component may be treated
   as immune by default.
 - **FR-006**: Each exempted component MUST record that its runtime presence is
   owed to the compiler, distinguishably from a component that is runtime
   because a runtime path reaches it.
-- **FR-006a**: **Principle V audit for FR-006's carrier.** If FR-006 is
-  satisfied by a new `waybill:*` property, this specification MUST cite the
-  audit of each target format for an existing native construct, performed
-  against the vendored schemas rather than from memory. The constitution
-  requires the citation in the Functional Requirements, and milestone 1275
-  recorded what happens when a plan asserts a reuse without checking it: C151
-  is design-tier-only and C170 answers a different question, so that feature
-  needed a new row after all.
+- **FR-006a**: **Principle V audit for FR-006's carrier: no new field.**
+  Resolved — FR-006 is satisfied by an **existing** row. C170
+  `waybill:haskell-version-unresolved-reason = compiler-supplied` already
+  states the fact the exemption rests on, and it is present on every component
+  in the exempt class because both it and the class derive from the same
+  nulled-name set through `classify()` (research R3). No `waybill:*` property
+  is introduced for FR-006, so the constitution's citation requirement is
+  discharged by this finding rather than by an audit. The coincidence is
+  nevertheless **asserted** rather than trusted (C5): a component in the boot
+  set that did not carry C170 would be exempt without recording why.
+- **FR-007a**: **Principle V audit for FR-007's carrier.** FR-007 **does**
+  introduce one new `waybill:*` property, so the audit is cited here as the
+  constitution requires of the Functional Requirements. Performed against the
+  vendored schemas at `waybill-cli/tests/fixtures/schemas/` rather than from
+  memory:
+  - *CycloneDX 1.6* — `compositions[].aggregate` describes the completeness of
+    the **component list**, not a pass's exemption count. No document-level
+    field carries "how many components a scope rule exempted".
+    `metadata.properties[]` is the generic bag.
+  - *SPDX 2.3* — document-level `annotations[]` only; no native member.
+  - *SPDX 3.0.1* — a document-subject `Annotation` only; no native member.
+  - *An existing row was audited too*: `PropagationSummary` already holds the
+    figure, but it is **logged and never emitted**, and the only scope-related
+    rows are per-component (C42 `waybill:lifecycle-scope`, C62 its
+    derivation). A log line cannot serve an operator comparing two documents,
+    which is the gap C174 exists to close for the neighbouring pass.
+  - *Therefore*: one new document-scope row, **KEEP-NO-NATIVE**,
+    parity-bridge, documented in `docs/reference/sbom-format-mapping.md` with
+    this justification clause and landing with its three parity extractors in
+    the same change. Milestone 1275 recorded the cost of treating this as a
+    formality: its plan asserted C151 was reusable, the catalogue forbade it,
+    and the correction arrived three commits later.
 - **FR-007**: The document MUST record how many components the rule exempted,
   including zero, so the correction is visible rather than silent.
 - **FR-008**: Scopes other than the exempt class MUST be unchanged in every
@@ -273,7 +297,7 @@ the shape that gets misread as a regression in the project.
 - **Non-runtime lifecycle scope**: `optional` or `excluded`. The schema
   defines both as claims about whether the package can be called at runtime,
   not about why the graph reaches it.
-- **The exempt class**: the compiler-supplied packages, and only those. 10 of
+- **The exempt class**: the compiler-supplied packages, and only those. Named "the exempt class" throughout; the Clarifications bullet above says "exempt set" because it records a question as it was asked. 10 of
   the 78 are mis-scoped today; the other 68 already carry no scope.
 - **The propagation's immune set**: the components a non-runtime scope is not
   propagated to. The concept already exists — it is how runtime-reachable

@@ -8,9 +8,18 @@ it serves and how it is checked.
 **C1 — the CLI surface is unchanged.** No new flag, no changed default.
 `waybill sbom scan --help` is byte-identical to the parent commit. (FR-013)
 
-**C2 — a compiler-supplied component carries no non-runtime scope.** Measured
-population: 10 of 78, in `haskell-security-advisories` (8) and
-`nix-closure-moat` (2); 1 on `slack-web` (`pretty`). (FR-001, SC-001, SC-002)
+**C2 — a compiler-supplied component carries no non-runtime scope, and no
+scope at all.** Measured population: 10 of 78, in `haskell-security-advisories`
+(8) and `nix-closure-moat` (2); 1 on `slack-web` (`pretty`).
+
+The second half is not redundant. "Carries no **non-runtime** scope" is also
+satisfied by an explicit `required`, so an implementation that stamped
+`required` on the 10 would pass every other contract and success criterion —
+including SC-004's 569-survivor count — while making those 10 inconsistent
+with the 68 boot-library components that already carry no scope. The spec's
+Assumptions choose absence, on the schema's own statement that an unspecified
+scope SHOULD be assumed `required`; this is the assertion that keeps that
+choice from being unenforced. (FR-001, SC-001, SC-002, Assumptions)
 
 **C3 — the exemption is immunity, not repair.** The propagation does not
 assign the scope, rather than assigning and later removing it. Checked by the
@@ -78,3 +87,13 @@ plausible wrong implementation over-exempts and would make every component
 below a disabled stanza look runtime. (FR-011, SC-007)
 
 **C15 — every committed probe re-runs and reproduces its finding.** (SC-008)
+
+**C16 — every other ecosystem's scopes are untouched.** No OS-package,
+file-tier, npm, Go, cargo, Maven or Python component changes scope, and a
+non-Haskell fixture's emission is byte-identical after masking
+content-addressed identifiers and timestamps. Distinct from C4, which is about
+components **inside** an affected document: this one bounds the blast radius
+across ecosystems, which is where an over-broad predicate would show up first.
+Measured context: OS-package (142) and file-tier (175) components carry no
+scope at all, so any movement there means the predicate is matching on
+something other than the nulled-name set. (FR-008, SC-004)
