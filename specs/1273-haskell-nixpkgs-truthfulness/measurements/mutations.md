@@ -39,6 +39,41 @@ asserts both halves — that the warning fires, and that it no longer advises
 regenerating. Their mutation rows belong to T061's batch and are recorded
 there once US1's PR lands with it.
 
+## US2 — the optional-mark closure (#1281). Suite: `haskell_optional_closure_us2`
+
+| # | requirement | mutation | verdict | test(s) that failed |
+|---|---|---|---|---|
+| M14 | FR-006 | re-seed the second walk with the marked set still in it (the original defect) | **CAUGHT** | `mark_survives…`, `declined_withdrawal…`, `fanout…` |
+| M15 | FR-006 | walk the full declared set, i.e. R3's "any closure membership counts" | **CAUGHT** | same three |
+| M16 | FR-009 | withdraw every reviewed mark regardless of reach | **CAUGHT** | same three |
+| M17 | FR-007 | record the withdrawal without its justification | **CAUGHT** | `withdrawal_names_its_justification` |
+| M18 | FR-008 | emit no reconciliation record, collapsing the three states | **CAUGHT** | `withdrawal_names_its_justification`, `ran_and_withdrew_nothing_differs_from_did_not_run` |
+
+M14 and M15 are the two forms `research.md` R3 rejected, and both are caught
+by **three** tests rather than one — including the fan-out test, which is the
+one a shallow fix would slip past. R3's third rejected form (a parent-local
+`reached_from` test) is not expressible as a small edit here because the
+re-seeded walk replaced the parent-local structure entirely; the fan-out test
+is what would catch it, and M14/M15 exercise that test.
+
+### A vacuous fixture, caught before the fix existed
+
+T032 **passed before the implementation did**, which is the signal that
+matters. The fixture had no `flake.nix`, so `candidate_series` returned every
+`KNOWN_GHC_SERIES`, and an offline cache miss on any one of them degrades the
+whole pass (#975). The log said it plainly —
+`degrading, compiler configuration unavailable ... reason="offline"` — and
+with the pass degraded no withdrawal ran, so the marks survived for the wrong
+reason and the test reported green over a defect that was fully present.
+
+Fixed by giving the fixtures a `flake.nix` naming one compiler series and
+seeding `configuration-common.nix` alongside the per-series file. After that,
+5 of 7 tests failed as they should have from the start.
+
+The general shape: **a test that passes before the code exists is not a
+passing test.** This is the third time in this milestone that a green result
+turned out to be measuring nothing.
+
 ---
 
 ## The two mutants that did real work

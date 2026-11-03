@@ -372,3 +372,77 @@ a red nightly rather than a red PR unless it is driven deliberately.
 `WAYBILL_UPDATE_PUBLIC_CORPUS_GOLDENS=1` is never set locally; the refresh
 goes through the workflow dispatch. The plan schedules that as its own task
 rather than leaving it to the nightly.
+
+---
+
+## Probe G — US2 re-measured after the fix (#1281)
+
+`sc003-public-library.sh` + `fanout.py`, same subject and same pinned
+revision as Probe D, re-run with the re-seeded closure in place.
+
+### G1 — the marks survive, and SC-003 is met
+
+| | before | after |
+|---|---|---|
+| optional in case A, NOT optional in case B | **2** | **0** |
+| `butcher` / `monad-loops` still marked with `flake.lock` | neither | **both** |
+| `restored=` / withdrawn | 2 | 0 |
+
+SC-003 reads "classifies its flag-gated dependencies identically with and
+without a `flake.lock`, unless a non-seed closure path reaches them". The
+disagreement is now zero.
+
+### G2 — the fan-out is no longer published as unqualified runtime
+
+Case B now classifies **9** further components Optional that case A does not
+emit at all: `clock`, `deque`, `extra`, `microlens`, `microlens-th`,
+`multistate`, `pretty`, `strict-list`, `unsafe`.
+
+These are not a disagreement — case A emits 44 hackage components and case B
+190, because the closure pass runs only in the `flake.lock` case, so they do
+not exist in A to disagree with. They are the blast radius: reachable from
+the root only through the marked pair, and now carried as Optional by
+milestone 1269's scope-propagation pass rather than as runtime dependencies
+of a build that does not contain them.
+
+So the defect's full measured population of **10** is addressed: 2 marks that
+survive, plus 8 non-boot components below them that stop being published as
+unqualified runtime dependencies. **No code in this milestone propagates to
+the fan-out** — m1269's Phase B does it, once the mark it depends on stops
+being withdrawn. That interaction was predicted in the plan and is now
+measured rather than assumed.
+
+### G3 — a finding recorded, deliberately not fixed here
+
+`pretty` is among the 9. It is a **compiler-supplied (boot) library**:
+nixpkgs binds it to `null` in `configuration-ghc-9.10.x.nix`, so GHC ships it
+in every build of the project whatever the flags say. Classifying it Optional
+is a statement about the *dependency relationship* — the only path to it runs
+through an optional component — and not about whether the artifact contains
+it, which it always does.
+
+Neither the old answer nor the new one is precise: before this change it was
+runtime-reachable through a mark that should never have been withdrawn, which
+was wrong for a different reason. The imprecision belongs to how m1269's
+propagation treats boot libraries, which no FR in US2 covers, so it is
+recorded here rather than fixed under this story. Worth a follow-up issue
+alongside the `dependency_claims` disagreement in `mutations.md`.
+
+### G4 — FR-015 / SC-007 blast radius, checked rather than assumed
+
+Every adjacent suite run unchanged:
+
+```
+optional_dep_classification     3 passed    scope_propagation_ecosystems    7 passed
+optional_dep_yarn_v1_e2e        6 passed    haskell_suppression_scope_m938  4 passed
+optional_dep_cross_dialect      3 passed    pnpm_v9_scope                   5 passed
+optional_dep_error_paths        3 passed    haskell_cabal_baseline          3 passed
+nix_haskell_resolution_m926    41 passed    haskell_edge_cases              8 passed
+nix_config_closure             14 passed    nixpkgs_declarations            5 passed
+```
+
+m1272's measured near-miss is the reason this is a listed check: folding an
+extra section into a runtime seed there silently reassigned a component from
+Optional to Development, a change to the *development* axis forbidden by that
+milestone's FR-010. The re-seeded closure here removes the marked names and
+changes nothing else about the seed.
