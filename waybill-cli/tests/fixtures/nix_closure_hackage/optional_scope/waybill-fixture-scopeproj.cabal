@@ -1,0 +1,37 @@
+cabal-version: 2.4
+name:          waybill-fixture-scopeproj
+version:       0.1.0
+license:       MIT
+
+-- Milestone 1275 — the scope-propagation case.
+--
+-- `waybill-fixture-aeson` is reachable ONLY through a stanza that is
+-- `buildable: False` by default, so the Haskell reader marks it non-runtime
+-- and milestone 1269 propagates that along its out-edges. It is ALSO a
+-- confirmed closure member, so milestone 1275 gives it declared edges to
+-- `waybill-fixture-text` and the boot library `waybill-fixture-bootlib` —
+-- edges that did not exist before, and that m1269 now has to traverse.
+--
+-- This is #1340's shape: a boot library inheriting a non-runtime scope
+-- because its only path runs through a non-runtime component, although the
+-- compiler ships it in every build.
+
+flag cli
+  description: Build the optional CLI.
+  default:     False
+  manual:      True
+
+library
+  build-depends:   base
+  exposed-modules: Lib
+  hs-source-dirs:  src
+
+executable waybill-fixture-scopeproj-cli
+  main-is: Main.hs
+  hs-source-dirs: src
+  if flag(cli)
+    buildable: True
+  else
+    buildable: False
+  build-depends:
+      waybill-fixture-aeson

@@ -458,3 +458,69 @@ offenders".
 components, so **zero** `waybill:orphan-reason` annotations in a Nix document
 is correct and not a second defect. That was checked before concluding
 anything, because 0 of 279 looked exactly like a pass that had not run.
+
+## F12 — the declared edges grow #1340's population, measured and not fixed here
+
+Found while doing #1340's groundwork, which is the only reason it was found at
+all: nothing in this milestone's own verification could have.
+
+`scan_cmd.rs` runs this pass at **4789** and milestone 1209/1269's transitive
+non-runtime scope propagation at **4805**. So every edge FR-012 adds is an
+edge the propagation then traverses — and before FR-012, a non-runtime closure
+member had no out-edges, so its scope propagated nowhere.
+
+**Why no test here could have caught it.** The `project` fixture has no
+non-runtime component at all, and the measured real project has exactly one
+whose count is unchanged before and after (`excluded: 1` both sides). The
+suite had **zero** scope assertions. So the path was invisible to every check
+this milestone ran, and `nix-closure-moat` — where **10 of 13** non-runtime
+components are closure members — would have been the first real exercise of
+it, arriving as an unexplained golden diff.
+
+Measured on a fixture built for it (`optional_scope`, a `buildable: False`
+stanza whose only dependency is a confirmed closure member):
+
+```
+waybill-fixture-aeson    excluded   (reachable only through the disabled stanza)
+  -> waybill-fixture-text     excluded   (inherited, via a FR-012 edge)
+  -> waybill-fixture-bootlib  excluded   (inherited — and it is a BOOT LIBRARY)
+  -> waybill-fixture-absent   excluded   (inherited)
+```
+
+The third line is issue #1340 exactly: the compiler ships `bootlib` in every
+build whatever the flags say, so `excluded` is a true statement about the
+dependency relationship and a false one about whether the artifact contains
+the package.
+
+**Not fixed here, deliberately.** #1340 says settling which reading wins
+"needs a decision rather than a patch", and names it a milestone-1269 change.
+This milestone has no requirement covering lifecycle scope; FR-011's
+invariants are membership and roles. Taking the decision inside a milestone
+about identity would be scope creep on a semantics question that has two
+defensible answers. What was not optional was documenting it, so `t057` pins
+the behaviour and names the issue.
+
+### What this means for the golden refresh
+
+The prediction is corrected a second time. Expect on `nix-closure-moat`:
+
+- 3 files changed, 48 byte-identical — unchanged from before;
+- **scope changes on existing components**, because its 10 non-runtime closure
+  members now have declared out-edges. This is new and was not in either
+  earlier prediction;
+- **0–2 new components, not 3**: moat's goldens already carry `directory` as a
+  versionless `pkg:hackage/directory`, so that edge binds to the existing
+  component rather than synthesising one;
+- no new I7 declaration (F11).
+
+### #1340's population, measured for its spec
+
+Corpus-wide, from the committed goldens: **10 of 78 boot-library components
+carry a non-runtime scope**, in `haskell-security-advisories` (8) and
+`nix-closure-moat` (2). The issue's open question — whether an exemption
+implies the same for OS packages in a rootfs scan or stdlibs in the file tier —
+is answered by mechanism rather than by a bare zero: those classes never carry
+a scope at all (142 OS-package and 175 file-tier components, every one
+no-scope), so they are not participants in the question. The probe is
+`scope-always-present.py`, to be committed into #1340's own measurements
+directory.

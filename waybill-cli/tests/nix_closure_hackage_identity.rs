@@ -1140,3 +1140,83 @@ fn t056_a_synthesised_boot_component_carries_an_accepted_orphan_marker() {
         "the root now depends on a boot library; this test's premise has changed"
     );
 }
+
+/// The declared edges feed milestone 1269's scope propagation, and that grows
+/// #1340's population. **Measured and pinned here; deliberately not fixed.**
+///
+/// `scan_cmd.rs` runs this pass at 4789 and m1209/m1269's transitive
+/// non-runtime scope propagation at 4805, so every edge FR-012 adds is an edge
+/// the propagation then traverses. Nothing else in this suite exercises that:
+/// the `project` fixture has no non-runtime component at all, and the measured
+/// real project has exactly one whose count does not change.
+///
+/// In this fixture `waybill-fixture-aeson` is reachable only through a
+/// `buildable: False` stanza, so it is non-runtime. Before FR-012 it had no
+/// out-edges, so its scope propagated nowhere. Now it has three, and all three
+/// targets inherit the scope — including `waybill-fixture-bootlib`, **a boot
+/// library the compiler ships in every build whatever the flags say.**
+///
+/// That is exactly issue #1340: the scope is a true statement about the
+/// dependency relationship and a false one about whether the artifact contains
+/// the package, and #1340 says settling which reading wins "needs a decision
+/// rather than a patch" in milestone 1269. This milestone does not take that
+/// decision — it has no requirement covering lifecycle scope, and FR-011's
+/// invariants are about membership and roles. What it must not do is leave the
+/// interaction undocumented, so that a scope change in a corpus golden arrives
+/// as an unexplained diff.
+///
+/// Measured corpus population of #1340 before this milestone: 10 of 78
+/// boot-library components, in `haskell-security-advisories` (8) and
+/// `nix-closure-moat` (2). `nix-closure-moat` has 10 non-runtime closure
+/// members that now gain declared out-edges, so expect that figure to rise
+/// when its goldens are refreshed.
+#[test]
+fn t057_declared_edges_propagate_non_runtime_scope_including_to_boot_libraries() {
+    let cache = seed_cache();
+    let s = scan(&fixture("optional_scope"), Some(cache.path()), CLOSURE_JSON, &[]);
+
+    let scope_of = |name: &str| -> Option<String> {
+        let c = s.require(name);
+        c["scope"]
+            .as_str()
+            .map(str::to_string)
+            .or_else(|| s.prop(c, "waybill:lifecycle-scope"))
+    };
+
+    // The premise: the member reachable only through the disabled stanza is
+    // non-runtime. If this stops holding the rest of the test proves nothing.
+    assert_eq!(
+        scope_of("waybill-fixture-aeson").as_deref(),
+        Some("excluded"),
+        "the fixture's premise is gone: the flag-disabled dependency is not non-runtime"
+    );
+
+    // FR-012's edges exist and are what the propagation traverses.
+    let targets = s.depends_on("pkg:hackage/waybill-fixture-aeson@2.2.4.1");
+    assert!(
+        targets.iter().any(|t| t.starts_with("pkg:hackage/waybill-fixture-text")),
+        "no declared edge to text, so this test is not exercising propagation: {targets:?}"
+    );
+
+    // The observed consequence, pinned.
+    assert_eq!(
+        scope_of("waybill-fixture-text").as_deref(),
+        Some("excluded"),
+        "a declared dependency of a non-runtime member did not inherit its scope"
+    );
+
+    // And the part that is #1340: a boot library inherits it too. The compiler
+    // ships this package in every build; `excluded` is a claim about the edge,
+    // not about the artifact's contents.
+    assert_eq!(
+        scope_of("waybill-fixture-bootlib").as_deref(),
+        Some("excluded"),
+        "#1340's shape has changed; re-read the issue before adjusting this"
+    );
+    assert_eq!(
+        s.prop(s.require("waybill-fixture-bootlib"),
+               "waybill:haskell-version-unresolved-reason").as_deref(),
+        Some("compiler-supplied"),
+        "the component this asserts about is no longer identified as a boot library"
+    );
+}
