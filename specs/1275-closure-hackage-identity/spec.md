@@ -178,9 +178,49 @@ not", and "no version recorded".
   recorded, not assumed. A signal that disagrees with the other on any
   component is a finding to explain before it is trusted.
 - **FR-007**: A component left generic MUST carry a reason distinguishing: the
-  name is absent from the set; the name matches but no version does; no
-  version was recorded so no lookup was possible; and the package set was
-  unavailable.
+  name is absent from the set; the name matches but no version does; the two
+  signals disagree; no version was recorded so no lookup was possible; and the
+  package set was unavailable.
+- **FR-007a**: **Principle V audit for FR-007's carrier.** Audited against the
+  vendored schemas at `waybill-cli/tests/fixtures/schemas/`, not from memory
+  (the m1156 method). **No native construct carries "why a candidate identity
+  was rejected for this component", so a parity-bridging `waybill:*` row is
+  required.**
+  - *CycloneDX 1.6* — `component.evidence.identity[]`
+    (`componentIdentityEvidence`) is the only native construct about identity
+    determination: `field` (enum including `purl`), `confidence` (number 0–1),
+    `concludedValue` (string), and `methods[]` carrying `technique` (closed
+    enum: `source-code-analysis`, `binary-analysis`, `manifest-analysis`,
+    `ast-fingerprint`, `hash-comparison`, `instrumentation`,
+    `dynamic-analysis`, `filename`, `attestation`, `other`), `confidence` and
+    `value`. It grades confidence in a **concluded** value and names the
+    technique used to reach it; it has no slot for a rejection reason.
+    `confidence: 0` would assert "unsure what the PURL is", which collapses all
+    five FR-007 outcomes into one number and says something different from
+    "the pinned set has no such package" — the same rejection m1156 recorded
+    for the adjacent semantic. `pedigree.notes` describes lineage from an
+    ancestor.
+  - *SPDX 2.3* — `Package` has `comment` (untyped free text, no schema),
+    `sourceInfo` ("how the package was acquired and/or changed from the
+    original source"), `primaryPackagePurpose` (closed enum of purposes:
+    `OTHER`/`INSTALL`/…/`FILE`, about what a package **is**), and
+    `annotations[]`. No member carries an identity-resolution outcome.
+  - *SPDX 3.0.1* — `software_Package`'s effective members are `comment`,
+    `description`, `summary`, `software_sourceInfo`, `software_primaryPurpose`,
+    `software_additionalPurpose`, `software_packageUrl`, `externalIdentifier`,
+    `externalRef` and the artifact/element bases. None expresses why an
+    identifier was not concluded; the first three are untyped prose.
+  - *Existing `waybill:` rows are not reusable either.* **C151
+    `waybill:unresolved-reason`** is defined as emitted "iff and only if the
+    same component carries `waybill:sbom-tier: "design"`", the same
+    constraint #1268 hit at `generate/cpe.rs:63`; closure components are build
+    tier. **C170 `waybill:haskell-version-unresolved-reason`** is a closed enum
+    answering why a declared dependency has no **version**, and every
+    component here has one — what is unresolved is identity.
+  - *Therefore*: one new row, documented in
+    `docs/reference/sbom-format-mapping.md` with this justification clause and
+    landing with its parity extractor in the same change (next free id is C201
+    at time of writing).
 - **FR-008**: Reclassification MUST NOT produce two components for one
   identity. A reclassified closure member and an identically-identified
   design-tier component MUST reconcile to one.
@@ -208,11 +248,26 @@ not", and "no version recorded".
   what FR-012a forbids.
 - **FR-012c**: An edge whose target is not itself a component in the document
   MUST NOT be emitted as a dangling reference. Where the package set declares
-  a dependency that the closure does not contain, the document MUST either
-  carry the target as a component or omit the edge — never point at nothing.
+  a dependency that the closure does not contain, the document MUST carry the
+  target as a versionless compiler-supplied component — never point at nothing,
+  and never silently drop the edge. Measured: 13 of 278 such targets, and all
+  three distinct ones (`directory` ×11, `ghc-heap`, `pretty`) are GHC boot
+  libraries, which m926's `boot_libraries` already identifies from the
+  revision's own configuration (research R6). Dropping the edge was considered
+  and rejected: the dependency is real and declared, and a count that silently
+  omits 13 edges is the shape #1218 was about.
 - **FR-013**: Every component whose identity this feature changes MUST record
   that the closure tier is where it came from, so a consumer can tell a
   closure-derived `pkg:hackage` component from a manifest-derived one.
+- **FR-013a**: **Principle V audit for FR-013's carrier: no new field.** The
+  signal already exists and is already audited. **C182
+  `waybill:closure-role`** is emitted only under `--nix-closure` and therefore
+  sits on exactly this population, and **C5 `waybill:sbom-tier`** records the
+  tier; both carry their own Principle V audits in
+  `docs/reference/sbom-format-mapping.md`. FR-011 keeps both unchanged through
+  reclassification, which is what makes FR-013 a property to **preserve and
+  assert** rather than one to add — and preservation through a PURL rewrite is
+  exactly the kind of claim #980 showed can fail silently.
 - **FR-014**: Every requirement MUST be covered by a test that fails when the
   behaviour is removed, mutation-tested rather than assumed. The negative case
   — FR-004's forbidden name-only match — MUST have its own test, because an
@@ -235,15 +290,24 @@ not", and "no version recorded".
 - **Name collision**: a closure member whose name is in the pinned set under a
   different version. 26 of 276 measured; the population FR-004 protects.
 - **Corroborating signal**: whatever second, package-set-independent fact
-  FR-005 requires before an identity is minted.
+  FR-005 requires before an identity is minted. Realised as the **GHC-built
+  signal** — the derivation's `nativeBuildInputs` referencing a GHC store path
+  — which is the name plan.md, the contracts and the tasks use for it
+  (research R5).
 
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
-- **SC-001**: On the measured fixture, the 60 closure members whose
+- **SC-001**: On the measured fixture, **59 of the 60** closure members whose
   `(name, version)` is an exact pair in the pinned set carry `pkg:hackage`
-  PURLs. Measured today: 0 of 60.
+  PURLs. Measured today: 0 of 60. The 60th is `hashable 1.4.7.0`, which the
+  pinned set holds only under the versioned alias `hashable_1_4_7_0`: the
+  default-attribute rule reaches 59, and the reverse `pname → attributes`
+  index that would reach the 60th is deferred because it introduces a new
+  ambiguity when two aliases share a version (research R4, plan Risks). The
+  gap is measured and stated rather than discovered — a criterion of 60 would
+  report a milestone that met its design as having failed.
 - **SC-002**: Those components carry licenses at no lower a rate than the
   already-resolved components do. Measured today: 0 of 60 closure members,
   against 47 of 65 resolved ones.
