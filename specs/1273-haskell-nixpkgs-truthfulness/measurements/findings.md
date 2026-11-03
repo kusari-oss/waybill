@@ -505,3 +505,51 @@ reads exactly like a probe whose later findings are unchanged. Corrected with
 `|| true` on each grep and a pattern that accepts both the old and new log
 lines, so the script keeps working against a binary from either side of the
 fix.
+
+---
+
+## Probe re-run after all four stories (T080 / SC-008)
+
+`run-all.sh`, with all four stories on the branch:
+
+```
+──── Probe B — license shapes: PASS
+──── Probe C — the four issues: PASS
+──── Probe D — SC-003 public library: PASS
+──── Probe A — hpack semantics: PASS
+all probes that ran reproduced their finding
+```
+
+**Each probe's recorded finding is now post-fix.** Probe C and Probe D
+describe the fixed behaviour; the pre-fix numbers they used to print are
+preserved in `baseline-0.14.0.md`, captured by T003 before any reader was
+touched. That is what FR-016 is for: a correction justified against a
+measurement rather than against the spec, and the measurement has to predate
+the change to be worth anything.
+
+### The harness failed before the probes did, twice
+
+First run of `run-all.sh` reported **Probe C: FAIL** and **Probe D: FAIL**.
+Neither finding had regressed. The script `cd`s into its own directory and
+the probes it calls do not, so `WAYBILL=./target/debug/waybill` — the natural
+thing to type from the repo root — pointed nowhere once the `cd` had
+happened. Every scan failed to launch and both probes reported their findings
+unreproducible.
+
+The fix then failed a second time, differently: `REPO_ROOT` was derived from
+`$0` *after* the `cd`, and `$0` is relative to the caller's original
+directory, so it no longer resolved. `run-all.sh` now absolutises the binary
+path, resolves a relative one against `$OLDPWD` (where the caller actually
+stood), and **exits 2 with a build hint** if the binary is not executable —
+rather than letting every probe fail and look like a regression.
+
+Verified from three invocation points: repo root with an explicit relative
+path, repo root with no `WAYBILL` at all, and from inside the measurements
+directory.
+
+This is the shape worth remembering. A probe that cannot find its subject
+reports the same thing as a probe whose subject is broken: **FAIL**. The
+difference is invisible in the summary line, and the summary line is what
+gets read. `run-all.sh` now refuses to run at all rather than produce that
+ambiguity, which is the same principle as `mutate.py` refusing to report a
+verdict for a mutation it could not apply.

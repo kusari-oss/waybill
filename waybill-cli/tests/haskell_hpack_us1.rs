@@ -569,6 +569,53 @@ fn m1273_us1_defaults_performs_no_network_request() {
     );
 }
 
+/// FR-004 / FR-004a for the one input that still reaches
+/// `emit_hpack_warnings`.
+///
+/// Mutation M32 — restoring the old "run 'hpack' to regenerate" advice in
+/// that function — **survived**, and the reason is an FR-017 problem rather
+/// than a missing assertion. Once FR-002 suppresses a generated sibling at
+/// the suppression site, `emit_hpack_warnings` is reachable only when a
+/// `package.yaml` is present, has a generated `*.cabal` beside it, and
+/// **could not be read** — so the manifest never entered `cabal_manifests`
+/// and the generated file was never suppressed.
+///
+/// No fixture exercised that path, which made the function's text
+/// unobservable: exactly the "diagnostic no input can trigger" defect this
+/// milestone exists to remove, reintroduced while removing it. This fixture
+/// is that input.
+#[test]
+fn m1273_us1_generated_cabal_warning_fires_when_the_manifest_is_unreadable() {
+    let s = scan(&fixture("unreadable_with_generated_cabal"));
+
+    // The manifest could not be read, so the generated sibling stands and is
+    // the document's source for this package.
+    let got = hackage_names(&s.doc);
+    assert!(
+        got.iter().any(|n| n == "waybill-fixture-from-generated"),
+        "with the manifest unreadable, the generated *.cabal is not \
+         suppressed and is what describes the package; got {got:?}"
+    );
+    // FR-003 — and the unreadable manifest is still announced.
+    assert_eq!(unread_reasons(&s.doc), vec!["malformed-yaml".to_string()]);
+
+    // FR-004 — the operator is told the two files coexist.
+    assert!(
+        s.stderr.contains("package.yaml"),
+        "stderr:\n{}",
+        s.stderr
+    );
+    // FR-004a — with advice that is true. Under FR-002 waybill reads the
+    // manifest when it can, so "regenerate before scanning" describes a step
+    // that cannot change the document for a readable manifest; and for THIS
+    // input the remedy is to fix the YAML, not to regenerate.
+    assert!(
+        !s.stderr.contains("regenerate before scanning"),
+        "FR-004a: the regenerate advice must not return; stderr:\n{}",
+        s.stderr
+    );
+}
+
 // ───────────────────────────────────────────────────────────────────────
 // T030 / C22 / FR-004 — the disagreement warning still fires
 // ───────────────────────────────────────────────────────────────────────

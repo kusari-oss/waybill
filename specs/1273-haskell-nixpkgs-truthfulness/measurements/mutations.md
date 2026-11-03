@@ -142,6 +142,92 @@ relative to. Every SURVIVED row in this file was re-checked against the
 plausible owning suite before being accepted as a gap — M5, M7 and M23 are
 genuine (and explained), M26 was not.
 
+## Cross-cutting — announcement, transparency, blast radius (T068)
+
+| # | requirement | mutation | verdict | test(s) that failed |
+|---|---|---|---|---|
+| M27 | FR-004 | demote the disagreement warning below the log level an operator sees | **CAUGHT** | `disagreement_warning_still_fires` |
+| M28 | FR-001c | stop detecting `defaults:`, so it is silently honoured | **CAUGHT** | `defaults_performs_no_network_request`, `unmodelled_construct_is_announced` |
+| M29 | FR-015 / FR-006 | fold the marked names back into the runtime seed — the shape that bit m1272 | **CAUGHT** | 3 US2 tests |
+| M30 | FR-018 | move the hpack read outcome to the log only | **CAUGHT** | 4 US1 tests |
+| M31 | FR-020 | demote the reconciliation log | **SURVIVED** — equivalent, and it found duplication | — |
+| M32 | FR-004a | restore the old "regenerate before scanning" advice | **CAUGHT** *(after a new fixture)* | `generated_cabal_warning_fires_when_the_manifest_is_unreadable` |
+
+### M31 — a survivor that was really duplication
+
+Demoting the reconciliation's `info!` changed nothing observable, because
+there were **two** log sites saying nearly the same thing: the one I added
+inside `enrich`, and `scan_cmd`'s three-state report, which is the
+operator-facing one and distinguishes all of FR-008's states.
+
+So the mutant is equivalent, and the finding is about the code: the
+`enrich`-side line was redundant at INFO. It is now `debug!`. *A log nobody
+would miss is a log that should not be competing for an operator's attention
+at INFO.*
+
+It also exposed a genuine gap on the way: nothing asserted that the signal is
+logged **at all**. FR-018 (the document) and FR-020 (the log) are two
+requirements, and SC-009 deliberately forbids satisfying the first by reading
+the second — so FR-020 needs its own coverage or it is unverified.
+`m1273_us2_reconciliation_is_logged_at_info` is that coverage.
+
+### M32 — an unreachable diagnostic, reintroduced while removing one
+
+M32 survived, and the cause was not a missing assertion. Once FR-002
+suppresses a generated sibling at the suppression site,
+`emit_hpack_warnings` became reachable **only** when a `package.yaml` is
+present, has a generated `*.cabal` beside it, and **cannot be read** — so the
+manifest never enters `cabal_manifests` and nothing is suppressed.
+
+No fixture exercised that path, so the function's text was unobservable.
+That is precisely the defect class US1 and US2 are instances of — a
+diagnostic no input can trigger — reintroduced inside the milestone that
+exists to remove it, which FR-017 names as the worst available outcome.
+`unreadable_with_generated_cabal/` is that input, and M32 is caught against
+it.
+
+---
+
+## Mutation exemptions (T069)
+
+Recorded with the reason, so that "a mutation step per requirement" is either
+true or visibly qualified. An unstated exemption is indistinguishable from an
+oversight.
+
+| requirement | why no mutation step |
+|---|---|
+| **FR-016** | A process requirement about how a fixture correction is *justified* (against a measurement, not against the spec). It has no runtime behaviour to remove. Discharged by `baseline-0.14.0.md`, captured before any reader was touched. |
+| **FR-019** | Enforced by a pre-existing gate rather than by one of this milestone's tests — and the gate was **shown to bite**, not assumed to. Removing C200's `ParityExtractor` row while leaving its documentation row in place makes `parity::extractors::tests::every_catalog_row_has_an_extractor` fail with `catalog rows without extractors: ["C200"]`. Recorded as **M33**. Note the gate is the `--lib` unit test; `mapping_doc_bidirectional` and `holistic_parity` (12 tests) pass under that mutation, so naming the wrong suite would have reported a toothless gate. |
+| **FR-021** | An absence requirement: the mutation is "add a CLI flag", which is not a code change a mutant expresses. T082 asserts it positively instead, by diffing `--help`. |
+| **FR-022** | Likewise: the mutation is "read `PATH`". T082 asserts no `Command` and no HTTP call was added on any path this milestone touches. |
+
+## Totals
+
+**33 mutants across the four stories, the cross-cutting pass and the
+catalog gate.**
+
+- **28 caught.**
+- **3 genuine equivalents**, each explained rather than accepted: M5 (field
+  recomputed downstream — the dead assignment was deleted), M7
+  (`degraded_ecosystems` unreachable in scan mode — measured by diffing
+  `compositions[]` under mutant and fix), M31 (duplicate log — the redundant
+  one was demoted).
+- **2 false SURVIVEDs** from harness error, both since made impossible:
+  M12 edited the wrong file, M32's search string did not match. Plus three
+  *caught* mutants first misreported as `DID-NOT-COMPILE` because the
+  classifier read `error: test failed` as a build failure.
+- **4 found real test defects**: M2 (a rule asserted but never isolated), M10
+  (a test satisfied by its own fixture's name), M23 (an untested guard), M32
+  (an unreachable diagnostic). M31 found duplication and a missing FR-020
+  test.
+
+`mutate.py` was written after the third harness error and refuses to report a
+verdict it cannot justify: a replacement that does not change the file is an
+**ERROR**, not a SURVIVED. A mutant that survives because it was never
+applied looks exactly like a missing test, and is the more dangerous of the
+two — it invites writing a test for a hole that is not there, or accepting a
+gap that is.
+
 ---
 
 ## The two mutants that did real work

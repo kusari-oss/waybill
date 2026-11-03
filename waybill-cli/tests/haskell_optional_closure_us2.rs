@@ -376,6 +376,41 @@ fn m1273_us2_fanout_below_a_marked_component_is_not_published_as_runtime() {
 }
 
 // ───────────────────────────────────────────────────────────────────────
+// FR-020 — the signal is logged as well as emitted
+// ───────────────────────────────────────────────────────────────────────
+
+/// FR-018 and FR-020 are two requirements, not one.
+///
+/// FR-018 puts every signal in the document, and SC-009 insists the document
+/// assertions be made *without* consulting the log — which is why every other
+/// test in this suite reads the emitted JSON. But FR-020 separately requires
+/// the signal be logged, "so an operator can act before the SBOM is published
+/// rather than only discover it afterwards", and that half needs its own
+/// coverage or it is an unverified requirement.
+///
+/// Mutation M31 found exactly that hole: demoting the reconciliation's
+/// `info!` to `debug!` changed nothing any test observed.
+#[test]
+fn m1273_us2_reconciliation_is_logged_at_info() {
+    let cache = seed_cache();
+    let s = scan(&fixture("optional_closure"), Some(cache.path()));
+    assert!(
+        s.stderr.contains("optional-mark reconciliation"),
+        "FR-020 — the reconciliation must report at INFO, which is what \
+         `RUST_LOG=info` captures here. stderr:\n{}",
+        s.stderr
+    );
+    // And it must carry the three-state counts, not merely announce itself.
+    for field in ["reviewed", "withdrawn", "declined"] {
+        assert!(
+            s.stderr.contains(field),
+            "the log line must carry `{field}`; stderr:\n{}",
+            s.stderr
+        );
+    }
+}
+
+// ───────────────────────────────────────────────────────────────────────
 // FR-015 / C25 — the dev axis is untouched
 // ───────────────────────────────────────────────────────────────────────
 

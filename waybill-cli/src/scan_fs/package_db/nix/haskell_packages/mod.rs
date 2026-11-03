@@ -1263,11 +1263,19 @@ pub(crate) fn enrich(
                 .collect();
             reconcile_optional_with_closure(&reachable, components)
         };
-        tracing::info!(
+        // DEBUG, not INFO. `scan_cmd` owns the operator-facing report and
+        // distinguishes all three FR-008 states there; a second INFO line
+        // here said roughly the same thing twice.
+        //
+        // Mutation M31 is what surfaced it: demoting this line changed
+        // nothing any test could observe, because the report that matters
+        // still fired. A log nobody would miss is a log that should not be
+        // competing for an operator's attention at INFO.
+        tracing::debug!(
             reviewed = reconciliation.reviewed,
             withdrawn = reconciliation.withdrawn.len(),
             declined = reconciliation.declined,
-            "nixpkgs-haskell: optional-mark reconciliation ran; a mark is \
+            "nixpkgs-haskell: optional-mark reconciliation computed; a mark is \
              withdrawn only where a closure seeded WITHOUT the marked set \
              still reaches the component (#1281)"
         );

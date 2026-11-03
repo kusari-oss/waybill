@@ -1,0 +1,17 @@
+-- This file has been generated from package.yaml by hpack version 0.38.3.
+--
+-- see: https://github.com/sol/hpack
+
+cabal-version: 1.12
+name:           waybill-fixture-unreadable
+version:        0.1.0
+build-type:     Simple
+
+library
+  exposed-modules:
+      Lib
+  hs-source-dirs:
+      src
+  build-depends:
+      waybill-fixture-from-generated
+  default-language: Haskell2010
