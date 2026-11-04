@@ -1422,6 +1422,33 @@ impl CycloneDxBuilder {
                 entry["scope"] = json!("excluded");
             }
 
+            // Milestone 1277 (#1342): a closure member whose nix role says it
+            // is not in the artifact emits `scope: "excluded"` — the CDX 1.6
+            // enum value defined as "not reachable within a call graph at
+            // runtime".
+            //
+            // **Unconditional, like the m112 block above and for the same
+            // reason.** How nix referenced a derivation is a build-graph
+            // fact read from nix's own dependency fields, not a
+            // lifecycle-scope preference the operator can toggle. Routing it
+            // through `lifecycle_scope` instead would have put it inside the
+            // `include_dev` gate, so a default scan would set no scope at
+            // all — and would have made `--exclude-scope build` able to drop
+            // these components, which is the opposite of the intent: the
+            // `unreferenced` ones are emitted precisely because m1035
+            // measured `jq` and `lua` there carrying 6 of one project's 18
+            // CVEs. See specs/1277-closure-role-scope/research.md R1-R2.
+            //
+            // The four-way role distinction stays in `waybill:closure-role`,
+            // which CDX's three-value enum cannot express; this field
+            // carries only what it can.
+            if component
+                .artifact_presence
+                .is_some_and(|p| p.is_absent_from_artifact())
+            {
+                entry["scope"] = json!("excluded");
+            }
+
             // Include hashes if configured.
             if self.config.include_hashes && !component.hashes.is_empty() {
                 let hashes: Vec<serde_json::Value> = component
