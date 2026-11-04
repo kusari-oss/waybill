@@ -441,3 +441,36 @@ re-run it on another platform and on another closure:
 WAYBILL_TEST_CLOSURE_JSON=/path/to/closure.json \
   cargo test -p waybill --bin waybill m1277_field_coverage -- --ignored --nocapture
 ```
+
+## F18 — I committed on red, by the same mistake as F16, two commits later
+
+The command was
+
+```sh
+cargo test -p waybill --bin waybill m1277 2>&1 | grep 'test result' && git add -A && git commit ...
+```
+
+`grep` found the line `test result: FAILED. 11 passed; 2 failed` and exited
+**0**, so the `&&` chain ran and the commit landed with two failing tests.
+The failure was printed on screen, in the output I had just read.
+
+The two tests were a real consequence of F13's design change — the exempt
+state is now `Some(ExemptCompilerSupplied)`, and two unit assertions still
+expected `None`. A trivial fix. The process defect is the finding.
+
+**This is F16 again, two commits later, in the same shape**: reading a
+pipeline's exit status as the status of the thing inside it. F16 lost
+clippy's; this lost the test suite's. CLAUDE.md states the rule — "a shell
+pipeline reports the status of its *last* command" — and `scripts/gate.sh`
+exists because of it.
+
+The fix is a habit, not a note: run the check, redirect to a log, read its
+own `$?`, and only then act.
+
+```sh
+cargo test -p waybill --test X > log 2>&1; echo "exit=$?"; grep '^test result' log
+```
+
+Every suite in this milestone's final verification was re-run that way, and
+all seven report `exit=0` individually rather than as one collapsed
+pipeline.

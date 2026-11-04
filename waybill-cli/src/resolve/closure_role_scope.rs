@@ -341,10 +341,17 @@ mod tests {
         let mut c = vec![component("pkg:hackage/containers@0.6.7", Some("build-tooling"))];
         let boot: HashSet<String> = ["containers".to_string()].into_iter().collect();
         let s = assign_role_scope(&mut c, &boot);
+        let p = presence(&c, "pkg:hackage/containers@0.6.7");
         assert_eq!(
-            presence(&c, "pkg:hackage/containers@0.6.7"),
-            None,
-            "a compiler-supplied member must not be reported absent from the artifact"
+            p,
+            Some(ArtifactPresence::ExemptCompilerSupplied),
+            "the exemption is recorded, not collapsed into absence -- a member the \
+             rule left alone and one it never reached must be distinguishable"
+        );
+        assert!(
+            !p.unwrap().is_absent_from_artifact(),
+            "and the recorded state must NOT claim the member is absent from the \
+             artifact, which is the whole point of the exemption"
         );
         assert_eq!(s.exempt_compiler_supplied, 1);
         assert_eq!(s.assigned(), 0);
@@ -385,7 +392,11 @@ mod tests {
         ];
         let boot: HashSet<String> = ["containers".to_string()].into_iter().collect();
         let s = assign_role_scope(&mut c, &boot);
-        assert_eq!(presence(&c, "pkg:hackage/containers@0.6.7"), None, "exempt");
+        assert_eq!(
+            presence(&c, "pkg:hackage/containers@0.6.7"),
+            Some(ArtifactPresence::ExemptCompilerSupplied),
+            "exempt, and recorded as such"
+        );
         assert_eq!(
             presence(&c, "pkg:hackage/happy@2.1.7"),
             Some(ArtifactPresence::NotInArtifact),
