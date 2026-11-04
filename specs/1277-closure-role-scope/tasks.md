@@ -146,8 +146,8 @@ is satisfied without a `waybill:*` substitute anywhere in the mapping.
 
 ### Mutation testing
 
-- [ ] T033 [P] Plant and catch a mutant per rule: (M1) `build-tooling` assigns nothing; (M2) `artifact-input` assigns `excluded`; (M3) the exemption is removed; (M4) the role is read from one variant rather than the union; (M5) the CDX emission moves back inside the `include_dev` gate; (M6) C203 is emitted unconditionally. Record each in `measurements/mutations.md` with which test caught it.
-- [ ] T034 For any mutant that **survives**, decide whether it is an invalid mutation or a real gap, and say which in writing. m1276 discarded two candidates as invalid rather than counting them — one mutated an optimisation, one could not be caught while the committed goldens still carried the markers the fix removed — and replaced them rather than claiming six of six.
+- [X] T033 [P] Plant and catch a mutant per rule: (M1) `build-tooling` assigns nothing; (M2) `artifact-input` assigns `excluded`; (M3) the exemption is removed; (M4) the role is read from one variant rather than the union; (M5) the CDX emission moves back inside the `include_dev` gate; (M6) C203 is emitted unconditionally. Record each in `measurements/mutations.md` with which test caught it.
+- [X] T034 For any mutant that **survives**, decide whether it is an invalid mutation or a real gap, and say which in writing. m1276 discarded two candidates as invalid rather than counting them — one mutated an optimisation, one could not be caught while the committed goldens still carried the markers the fix removed — and replaced them rather than claiming six of six.
 
 ### Goldens
 
