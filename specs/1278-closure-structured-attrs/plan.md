@@ -111,16 +111,28 @@ waybill-cli/src/generate/
 │                               #   a demotion input (research R2)
 └── spdx/                       # reads the same answer via the shared helper
 
+waybill-cli/src/resolve/
+└── closure_role_scope.rs       # NOT widened -- read to confirm FR-008 already
+                                #   follows from m1277's rule; see research R6
+
 waybill-cli/src/parity/extractors/   # the new row's three extractors
 docs/reference/sbom-format-mapping.md # the new row (C204; next free number)
 
 waybill-cli/tests/
+├── closure_structured_attrs.rs              # new integration tests
 ├── fixtures/nix_closure_structured_attrs/   # new typed-form fixtures
-└── fixtures/public_corpus/nix-closure-moat/ # refreshed by dispatch only
+├── fixtures/public_corpus/nix-closure-moat/ # refreshed by dispatch only
+└── corpus_harness_195/
+    ├── expectations.rs                 # corrected census, components, patches
+    ├── manifest.rs                     # the mislabelled-census comment
+    └── invariant-declarations.toml     # reconciled after the refresh (FR-017)
 ```
 
 **Structure Decision**: no new modules. The feature is a widening at one
 existing seam plus a disclosure threaded through the existing emission path.
+`src/resolve/closure_role_scope.rs` is listed because a task reads it, not
+because it is widened — the distinction matters, because research R6's
+confinement argument is what SC-009's byte-identity claim rests on.
 The strongest argument for the seam is FR-007: four consumers must not each
 grow their own resolution, because two that resolve differently would disagree
 about the same derivation.

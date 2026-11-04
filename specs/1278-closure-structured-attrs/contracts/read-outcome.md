@@ -77,18 +77,26 @@ an unread field cannot masquerade as an absent one.
 
 ## Parity
 
-All three formats carry the annotation with equal content, checked by the
-existing cross-format machinery — three extractors, one per format, landing in
-the same change as the row. A documented row that nothing emits fails the
-catalog's own completeness test, so documentation and emission are not
-separable here.
+All three formats carry the annotation with **identical payload**, checked by
+the existing cross-format machinery — three extractors, one per format,
+landing in the same change as the row. A documented row that nothing emits
+fails the catalog's own completeness test, so documentation and emission are
+not separable here.
+
+**SPDX 2.3 adds nothing to the payload to compensate for its missing native
+field.** Its annotation says what the other two say, and the fact of
+incompleteness is carried there by the annotation's *presence*. The
+alternative — a format-specific extra field — would make the payloads unequal
+and force the row to be `PresenceOnly`, giving up the equal-content check for
+a redundancy. Equal payload, format-specific meaning of presence, is the
+weaker-looking option that is actually checkable.
 
 **Principle V audit, per row:**
 
 | Claim | Native carrier | Disposition |
 |---|---|---|
 | the graph is incomplete | CDX `aggregate`, SPDX 3 `completeness` | **USE NATIVE.** Both. |
-| the graph is incomplete (SPDX 2.3) | none in the schema | **KEEP-NO-NATIVE.** Annotation carries it. |
+| the graph is incomplete (SPDX 2.3) | none in the schema | **KEEP-NO-NATIVE.** Carried by the annotation's presence, not by an extra field, so the payload stays equal across formats. |
 | *which* fields went unconsulted | none in any format | **KEEP-NO-NATIVE.** |
 | how many declarations and derivations | none in any format | **KEEP-NO-NATIVE.** |
 | which output shape it was read from | none in any format | **KEEP-NO-NATIVE.** |

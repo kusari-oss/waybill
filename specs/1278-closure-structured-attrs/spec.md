@@ -252,14 +252,11 @@ milestone fixes, asserted against the pre-fix behaviour, not merely pass after.
   otherwise tell a fully-read closure from a partially-read one, which is the
   defect #1115 fixed for total closure degradation and this requirement
   extends to partial.
-- **FR-015**: The **fact** of incompleteness MUST be carried by each format's
-  own completeness vocabulary where one exists, and a document with an
-  unconsulted declaration MUST NOT carry a native claim that its dependency
-  relationships are complete. The disclosure of FR-009 carries the detail
-  those vocabularies cannot express, and carries the fact as well only in the
-  format that has no completeness field. A native field asserting `complete`
-  beside an extension saying otherwise is worse than either alone, because
-  every consumer that does not know waybill believes the native one.
+- **FR-010**: The committed corpus goldens MUST be refreshed in this milestone,
+  through the existing workflow dispatch, never generated locally.
+- **FR-011**: The milestone MUST record the corrected role census against the
+  committed one, so the figures in the earlier closure milestones' research can
+  be read as what they were measured through.
 - **FR-012**: The disclosure of FR-009 MUST additionally record the
   `nix derivation show` output format version the closure was read from, so
   which attribute shapes a document was built from is a fact in the document
@@ -274,13 +271,34 @@ milestone fixes, asserted against the pre-fix behaviour, not merely pass after.
   consult, not only the seven it does. This is diagnostic: it MUST NOT change
   any member's role, so that this milestone's census remains attributable to
   the attribute-shape fix alone.
-- **FR-010**: The committed corpus goldens MUST be refreshed in this milestone,
-  through the existing workflow dispatch, never generated locally.
-- **FR-011**: The milestone MUST record the corrected role census against the
-  committed one, so the figures in the earlier closure milestones' research can
-  be read as what they were measured through.
+- **FR-015**: The **fact** of incompleteness MUST be carried by each format's
+  own completeness vocabulary where one exists, and a document with an
+  unconsulted declaration MUST NOT carry a native claim that its dependency
+  relationships are complete. The disclosure of FR-009 carries the detail
+  those vocabularies cannot express. Its payload MUST be identical in all
+  three formats; in SPDX 2.3, which has no completeness field, the
+  disclosure's **presence** is the fact, so nothing is added to its payload to
+  say so. A native field asserting `complete` beside an extension saying
+  otherwise is worse than either alone, because every consumer that does not
+  know waybill believes the native one.
+- **FR-016**: The expected effect of the golden refresh MUST be recorded
+  **before** the refresh is dispatched, and scored against the diff afterwards
+  with any miss and what it corrected. A refresh whose expectations are
+  written after the diff is a description of the diff, and cannot catch a
+  change nobody anticipated.
+- **FR-017**: The committed invariant declarations MUST be reconciled with the
+  refreshed goldens: a declaration the fix makes stale is retired, and any new
+  offender is declared with its reason and count. A stale declaration is a
+  recorded expectation of a defect that no longer exists, which makes the next
+  reader trust a passing run that proves nothing.
 
 ### Key Entities
+
+Two names for one thing, used deliberately: this specification says **flat
+map** and **typed attribute object** because they are what a reader of the
+emitted document can reason about, while the plan, data model and tasks say
+`env` and `structuredAttrs`, which are what nix calls them. They are the same
+two carriers throughout.
 
 - **Derivation record**: one closure member as nix reports it. Carries a flat
   attribute map, an optional typed attribute object, declared outputs, and a
@@ -345,13 +363,17 @@ are the invariants, and the rest are the figures observed on 2026-11-04.
   produces byte-identical goldens; targets that do scan one change only by
   gaining the FR-009 disclosure and, for `nix-closure-moat`, the corrections
   of SC-003 through SC-008.
+- **SC-010**: Removing the typed-form reads makes the US4 guard fail, asserted
+  by a test that holds the pre-fix behaviour. A guard that only passes after
+  the fix is not evidence that it can fail.
 - **SC-011**: The disclosure of FR-009 is absent from a document whose closure
   was read completely, and present with equal content in all three formats
   when it was not. Equal content across the three is checked, not assumed:
   documenting the field without emitting it, or emitting it in one format
   only, both fail.
-- **SC-012**: The disclosure records the format version observed. On the pinned
-  corpus target today that value is `4`.
+- **SC-012**: The disclosure records the format version observed, asserted by a
+  test rather than inferred from the emitted document. On the pinned corpus
+  target today that value is `4`.
 - **SC-013**: The disclosure names every store-path-holding field that
   classification does not consult. Measured on the pinned closure, the
   classifier consults 7 fields; the disclosure is expected to name the
@@ -367,9 +389,6 @@ are the invariants, and the rest are the figures observed on 2026-11-04.
   declarations went unconsulted. Both the CycloneDX and the SPDX 3 answers
   must move together, from the one place that decides them, so the two formats
   cannot disagree.
-- **SC-010**: Removing the typed-form reads makes the US4 guard fail, asserted
-  by a test that holds the pre-fix behaviour. A guard that only passes after
-  the fix is not evidence that it can fail.
 
 ## Assumptions
 

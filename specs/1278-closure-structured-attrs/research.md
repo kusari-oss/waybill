@@ -169,6 +169,16 @@ from `nix derivation show` output.
 it to a type only the closure path constructs bounds the blast radius by
 construction, not by review.
 
+**The one file outside that boundary, named rather than left implicit**:
+`waybill-cli/src/resolve/closure_role_scope.rs` sits on the general resolution
+path, and FR-008 concerns its behaviour. The confinement still holds, for a
+reason worth writing down instead of assuming: that pass acts only on
+components carrying closure-role data, and such components exist only under
+`--nix-closure`. So a scan without the flag reaches it with nothing to act on.
+If a task finds itself *changing* that file rather than confirming it, this
+argument has been invalidated and SC-009 needs re-checking against every
+non-closure target, not just asserted.
+
 ---
 
 ## R7 — Where the measured figures come from, and what can move them

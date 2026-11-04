@@ -101,3 +101,30 @@ store-path field classification does not consult, and states no expected count.
 That number is #1346's coverage gap, and this milestone measures it rather than
 assuming it — quoting a figure here would be the derived-arithmetic-as-
 measurement error the repository's rules name explicitly.
+
+## Analyze session 2026-11-04
+
+Eight findings, no CRITICAL, no constitution violations. All eight remediated;
+coverage is now 32/32 requirements with at least one task (17 FR, 15 SC).
+
+| ID | Severity | What it was | How it was closed |
+|---|---|---|---|
+| F1 | HIGH | FR-009 and SC-011 required the disclosure "present in all three formats with equal content" while FR-015 had SPDX 2.3's payload carry the fact the other two put natively. Both could not hold, and it decided the parity row's directionality. | FR-015 now requires an **identical payload** in all three, with SPDX 2.3's *presence* carrying the fact rather than an extra field. Recorded in `contracts/read-outcome.md` with the reasoning: a format-specific field would force the row to `PresenceOnly` and give up the equal-content check for a redundancy. |
+| F2 | HIGH | SC-012 had no task. The format version was produced (T008/T009) and emitted (T034) with nothing asserting it. | New **T051**, appended rather than inserted so no existing ID moved and no citation broke. Its out-of-sequence number is explained in the dependency section. SC-012 now also says "asserted by a test rather than inferred". |
+| F3 | MEDIUM | Both requirement lists were out of numeric order after the clarify and plan insertions — FR-015 sat between FR-009 and FR-012, and SC-010 sat last. | Both reordered numerically. Reordering only, never renumbering, so every task citation still resolves — verified mechanically after the edit. |
+| F4 | MEDIUM | T043, T045 and T047 did work no requirement asked for, so nothing failed if they were skipped. | Added **FR-016** (the refresh prediction is committed before the dispatch and scored after) and **FR-017** (invariant declarations are reconciled with the refreshed goldens). The three tasks now cite them. |
+| F5 | MEDIUM | The plan's source tree omitted five files tasks modify, including `src/resolve/closure_role_scope.rs` — which sits outside the module research R6 names as the confinement boundary that SC-009's byte-identity claim rests on. | All five added. R6 now names that file explicitly and states why confinement still holds (the pass acts only on components carrying closure-role data, which exist only under `--nix-closure`) **and** what to do if a task finds itself changing rather than confirming it: the argument is invalidated and SC-009 needs re-checking against every target. |
+| F6 | MEDIUM | SC-005 fixes exact per-direction transition counts; T021 asserted the census and the nine components but not the directions, so a right total by wrong transitions would pass. | T021 now asserts the transition table per direction plus "nothing moves toward `unreferenced`". |
+| F7 | LOW | T012 onward create a new integration test crate; only T011 mentioned the `clippy::unwrap_used` allow, and that was for the in-module test. Verified against the sibling `tests/closure_role_scope.rs`, which carries the allow at crate level with 23 `.unwrap()` calls. | T012 is now explicitly the task that creates the file with its crate-level attributes, including whether `#![cfg(unix)]` applies — and, if so, gating the whole file rather than shimming a non-unix early return. |
+| F8 | LOW | Terminology drift: the spec says "flat map" / "typed attribute object"; everything downstream says `env` / `structuredAttrs`. | A glossary line in Key Entities stating that both names refer to the same two carriers, and why the spec prefers the reader-facing ones. |
+
+Two of these were worth the pass on their own. **F1** would not have surfaced
+until the parity test failed, after the extractors were written — the
+artifacts disagreed about something only an implementer would discover. **F2**
+is the sharper one: a requirement about recording provenance was itself going
+to ship unverified, in a milestone whose whole premise is that unverified
+things look identical to correct ones.
+
+All 16 original checklist items re-validated after remediation and still pass.
+Task format re-validated: 51 tasks, unique IDs, story labels only in story
+phases, every description naming a path.
