@@ -178,6 +178,161 @@ mod tests {
     /// it. The reference figures come from the committed Python classifier at
     /// `specs/1034-nix-eval-tier/measurements/`, which was validated against
     /// two real projects.
+    /// Milestone 1277 FR-004a / SC-009 — do these two field lists cover the
+    /// dependency keys real derivations actually carry?
+    ///
+    /// The `Unreferenced` role is derived by **absence** from
+    /// `ARTIFACT_FIELDS` (3 names) and `TOOLING_FIELDS` (4 names), while
+    /// nixpkgs' stdenv sets more dependency attributes than those seven. If
+    /// any of the others appears in a real derivation then `unreferenced`
+    /// conflates "nothing references it" with "we did not read the
+    /// reference" — and milestone 1277 assigns a non-runtime marker to that
+    /// role, which would be unsound for such a member.
+    ///
+    /// **This cannot be answered from the in-tree fixtures.** They carry
+    /// only the seven names the code already knows, because they were
+    /// written from these lists, so a grep over them returns the answer it
+    /// was built from. It needs a real closure, hence a probe.
+    ///
+    /// `#[ignore]`d rather than early-returning on a missing env var: a
+    /// gated test that prints `skipping` and reports `ok` is
+    /// indistinguishable from one that ran, and the neighbouring probe below
+    /// predates that rule.
+    ///
+    /// ```sh
+    /// WAYBILL_TEST_CLOSURE_JSON=/path/to/closure.json \
+    ///   cargo test -p waybill --bin waybill m1277_field_coverage -- --ignored --nocapture
+    /// ```
+    ///
+    /// SC-009 asks for the count to be **known and recorded**, not to be
+    /// zero. A non-zero answer is a finding to scope, not a test failure.
+    #[test]
+    #[ignore = "FR-004a probe; needs a real closure via WAYBILL_TEST_CLOSURE_JSON"]
+    fn m1277_field_coverage() {
+        let path = std::env::var("WAYBILL_TEST_CLOSURE_JSON")
+            .expect("set WAYBILL_TEST_CLOSURE_JSON to a real closure dump");
+        let json = std::fs::read_to_string(&path).expect("closure json");
+        let closure = RawClosure::parse(&json).expect("parses");
+
+        // Every env key whose value names at least one store path, counted
+        // by how many derivations carry it. Store paths are what a
+        // dependency attribute holds, so this is the shape worth auditing;
+        // keys like `pname` and `buildPhase` are excluded by it.
+        let mut carriers: BTreeMap<&str, usize> = BTreeMap::new();
+        for drv in closure.derivations.values() {
+            for (key, value) in &drv.env {
+                if value.contains("/nix/store/") {
+                    *carriers.entry(key.as_str()).or_default() += 1;
+                }
+            }
+        }
+
+        let known: BTreeSet<&str> =
+            ARTIFACT_FIELDS.iter().chain(TOOLING_FIELDS.iter()).copied().collect();
+
+        // nixpkgs' stdenv dependency attributes, the only keys whose absence
+        // from the two lists can misclassify a member.
+        //
+        // **The distinction matters, and the first version of this probe got
+        // it wrong.** A store path appears in `builder` (677 derivations
+        // here), `buildCommand`, `checkPhase`, `installPhase`, and in the
+        // `bin` / `dev` / `doc` / `dist` keys that name a multi-output
+        // derivation's *own* outputs. None is a dependency. Counting all of
+        // them said 287 derivations were referenced through an unread key,
+        // which is an upper bound on nothing in particular — a patch file
+        // named in `patches` is not a dependency the classifier missed.
+        const DEPENDENCY_ATTRS: &[&str] = &[
+            "buildInputs",
+            "checkInputs",
+            "depsBuildBuild",
+            "depsBuildBuildPropagated",
+            "depsBuildHost",
+            "depsBuildHostPropagated",
+            "depsBuildTarget",
+            "depsBuildTargetPropagated",
+            "depsHostHost",
+            "depsHostHostPropagated",
+            "depsHostTarget",
+            "depsHostTargetPropagated",
+            "depsTargetTarget",
+            "depsTargetTargetPropagated",
+            "installCheckInputs",
+            "nativeBuildInputs",
+            "nativeCheckInputs",
+            "nativeInstallCheckInputs",
+            "propagatedBuildInputs",
+            "propagatedNativeBuildInputs",
+        ];
+
+        eprintln!(
+            "\n{}: {} derivations\n",
+            path,
+            closure.derivations.len()
+        );
+        eprintln!("store-path-carrying env keys, and whether a field list names them:");
+        for (key, n) in &carriers {
+            eprintln!(
+                "  {:<34} {:>5} derivations   {}",
+                key,
+                n,
+                if known.contains(*key) { "READ" } else { "NOT READ" }
+            );
+        }
+
+        // The answer SC-009 asks for: dependency attributes this closure
+        // carries that neither field list names.
+        let unread_deps: Vec<(&&str, &usize)> = carriers
+            .iter()
+            .filter(|(k, _)| DEPENDENCY_ATTRS.contains(*k) && !known.contains(**k))
+            .collect();
+        eprintln!(
+            "\nFR-004a: {} store-path-carrying keys in all; {} are nixpkgs dependency \
+             attributes; {} of THOSE are named by neither field list:",
+            carriers.len(),
+            carriers.iter().filter(|(k, _)| DEPENDENCY_ATTRS.contains(*k)).count(),
+            unread_deps.len()
+        );
+        for (key, n) in &unread_deps {
+            eprintln!("  {key:<34} {n:>5} derivations");
+        }
+
+        // The population FR-004's marker would be unsound for: members
+        // classified `Unreferenced` that are in fact referenced through a
+        // dependency attribute neither list reads.
+        let roles = classify(&closure);
+        let index = closure.output_index();
+        let unread_dep_keys: BTreeSet<&str> =
+            unread_deps.iter().map(|(k, _)| **k).collect();
+        let mut misclassified: Vec<String> = Vec::new();
+        for (key, drv) in &closure.derivations {
+            if roles.get(key).copied() != Some(DerivationRole::Unreferenced) {
+                continue;
+            }
+            let referenced = closure.derivations.values().any(|other| {
+                unread_dep_keys.iter().any(|k| {
+                    other.paths_in(k).any(|p| {
+                        index.get(store_basename(p)).map(|id| *id == key.as_str())
+                            == Some(true)
+                    })
+                })
+            });
+            if referenced {
+                misclassified.push(drv.pname().unwrap_or(key).to_string());
+            }
+        }
+        misclassified.sort();
+        misclassified.dedup();
+        eprintln!(
+            "\nunreferenced members actually referenced through an unread DEPENDENCY \
+             attribute: {}",
+            misclassified.len()
+        );
+        if !misclassified.is_empty() {
+            eprintln!("  {misclassified:?}");
+        }
+        eprintln!();
+    }
+
     #[test]
     fn agrees_with_a_real_closure_when_one_is_supplied() {
         let Ok(path) = std::env::var("WAYBILL_TEST_CLOSURE_JSON") else {

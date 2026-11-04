@@ -361,3 +361,83 @@ command whose purpose was verification. The fix is mechanical: run the gate
 standalone, redirect to a log, and read its own exit status —
 `cargo clippy ... > log 2>&1; echo "EXIT=$?"` — never chained behind a
 pipeline whose status is something else's.
+
+## F17 — FR-004a's answer is not zero: the role classifier reads 7 of about 20 dependency attributes (T031, T032)
+
+Measured against a **real** closure, produced locally with the same command
+waybill runs:
+
+```sh
+nix --extra-experimental-features 'nix-command flakes' \
+    --option allow-import-from-derivation false \
+    derivation show -r '.#packages.aarch64-darwin.default'
+```
+
+on the cached `nix-closure-moat` (`MercuryTechnologies/moat`) checkout —
+1,275 derivations, 6.0 MB.
+
+| | count |
+|---|---|
+| env keys carrying at least one store path | 104 |
+| of those, nixpkgs **dependency attributes** | 6 |
+| dependency attributes named by neither field list | **2** |
+| members classified `Unreferenced` that are referenced through one | **6** |
+
+The two unread attributes, and where each belongs:
+
+| attribute | derivations | belongs in |
+|---|---|---|
+| `propagatedNativeBuildInputs` | 3 | `TOOLING_FIELDS` — propagated *native* inputs run on the build machine |
+| `depsTargetTargetPropagated` | 7 | `ARTIFACT_FIELDS` — the propagated form of `depsTargetTarget` |
+
+The six members: `bootstrap-stage0-compiler-rt`, `bootstrap-stage0-libcxx`,
+`compiler-rt`, `compiler-rt-libc`, `libcxx`, `nss-cacert`. Two of them —
+`compiler-rt` and `compiler-rt-libc` — carry a `patches` key, which is the
+only way an `unreferenced` member is emitted at all
+(`emit::emits_as_component`), so those two would receive FR-004's `excluded`
+while in fact being referenced as dependencies. `nss-cacert` is the one that
+reads worst on inspection: CA certificates are a runtime input, and the role
+says nothing references them.
+
+### Two caveats, both load-bearing
+
+**The count is platform-specific; the incomplete lists are not.** This
+evaluation is `aarch64-darwin` and the corpus goldens are produced on Linux
+x86_64. None of the six appears in the committed golden, and `compiler-rt`,
+`libcxx` and `nss-cacert` are LLVM/darwin-shaped. So **the corpus does not
+currently exhibit this**, and that is a platform accident rather than a
+guarantee. The CI figure is unknown and would need the same probe run there.
+
+**The first version of this probe reported 287, and that number was
+meaningless.** It counted every env key carrying a store path, which
+includes `builder` (677 derivations), `buildCommand`, `checkPhase`,
+`installPhase`, and the `bin` / `dev` / `doc` / `dist` keys naming a
+multi-output derivation's *own* outputs. A patch file named in `patches` is
+not a dependency the classifier missed. Restricting to the 20 real nixpkgs
+dependency attributes took the answer from 287 to 6. Recorded because 287 is
+exactly the kind of figure that reads as a measurement and is arithmetic over
+an unexamined assumption.
+
+### Scope
+
+The lists read 7 names: `buildInputs`, `propagatedBuildInputs`,
+`depsHostHost`, `nativeBuildInputs`, `depsBuildBuild`, `depsBuildHost`,
+`nativeCheckInputs`. nixpkgs' stdenv defines about 20. Beyond the two above,
+`checkInputs`, `installCheckInputs`, `nativeInstallCheckInputs`,
+`depsBuildTarget`, `depsHostTarget`, `depsTargetTarget` and the remaining
+`*Propagated` forms are all unread — they simply do not appear in *this*
+closure, so this probe cannot say whether they appear in others.
+
+**SC-009 is satisfied by the number being known and recorded.** It is not
+zero, which makes it a finding to scope rather than a detail to absorb: the
+lists predate this milestone, the defect is in the classifier rather than in
+anything 1277 added, and 1277 is what makes it consequential by attaching a
+conformance claim to the role. Filed as **#1346**.
+
+The probe is committed, `#[ignore]`d and env-gated, so the next person can
+re-run it on another platform and on another closure:
+
+```sh
+WAYBILL_TEST_CLOSURE_JSON=/path/to/closure.json \
+  cargo test -p waybill --bin waybill m1277_field_coverage -- --ignored --nocapture
+```

@@ -140,9 +140,9 @@ is satisfied without a `waybill:*` substitute anywhere in the mapping.
 
 ### FR-004a — the probe
 
-- [ ] T030 Write the `#[ignore]`d, env-gated probe `m1277_field_coverage` in `waybill-cli/src/scan_fs/package_db/nix/closure/classify.rs`'s test module: read a closure JSON from `WAYBILL_T_CLOSURE_FIELDS`, enumerate the distinct dependency-shaped env keys present, and report every key that neither `ARTIFACT_FIELDS` nor `TOOLING_FIELDS` names.
-- [ ] T031 Run T030 against a real closure and record the result in `specs/1277-closure-role-scope/measurements/findings.md`. **Do not substitute a grep over the in-tree fixtures** — they carry only the seven keys the code already knows, because they were written from those lists, so the answer they give is the answer they were built from (research R7).
-- [ ] T032 Satisfy SC-009 by recording the count as *known*, not as zero. A non-zero answer is a finding to scope — it would mean `unreferenced` conflates "nothing references it" with "we did not read the reference", making FR-004's assignment unsound for that member — and it gets its own issue rather than being absorbed into this milestone.
+- [X] T030 Write the `#[ignore]`d, env-gated probe `m1277_field_coverage` in `waybill-cli/src/scan_fs/package_db/nix/closure/classify.rs`'s test module: read a closure JSON from `WAYBILL_T_CLOSURE_FIELDS`, enumerate the distinct dependency-shaped env keys present, and report every key that neither `ARTIFACT_FIELDS` nor `TOOLING_FIELDS` names.
+- [X] T031 Run T030 against a real closure and record the result in `specs/1277-closure-role-scope/measurements/findings.md`. **Do not substitute a grep over the in-tree fixtures** — they carry only the seven keys the code already knows, because they were written from those lists, so the answer they give is the answer they were built from (research R7).
+- [X] T032 Satisfy SC-009 by recording the count as *known*, not as zero. A non-zero answer is a finding to scope — it would mean `unreferenced` conflates "nothing references it" with "we did not read the reference", making FR-004's assignment unsound for that member — and it gets its own issue rather than being absorbed into this milestone.
 
 ### Mutation testing
 
