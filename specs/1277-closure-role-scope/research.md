@@ -175,45 +175,30 @@ detail. Three ways forward, for the record:
    recommended**: `BUILD_TOOL_OF` is a close match, and the constitution
    names this family as its canonical case, so the argument would be thin.
 
-**Recommendation: 2**, with the follow-up filed in the same milestone so the
-gap is recorded rather than lost. It matches the precedent this plan already
-follows for the harder half of the problem, keeps the change reviewable, and
-Principle V's parity-bridge clause covers it — provided the catalog row says
-plainly which native field is missing and why.
+**Resolved against this recommendation by `/speckit.analyze` C1.** The
+recommendation above was option 2 — CycloneDX only, SPDX gap filed as a
+follow-up, on the strength of m112's precedent. The analysis pass found the
+objection sharper than the one weighed here: under option 2 the SPDX
+formats carry the classification **not at all**, and that is not what
+Principle V's parity-bridge clause licenses. Read again, the clause covers a
+`waybill:*` annotation "to bridge a parity gap when one format has the
+native field but **another doesn't**". SPDX does have the native field. So
+the clause cannot cover either an annotation substitute *or*, by extension,
+the reasoning that made silence look acceptable: the premise it rests on —
+that the construct is missing there — is false.
 
-## R7 — FR-004a needs a host `nix`, so it cannot run in the ordinary suite
+Option 2 also mis-read the precedent. m112 pairs its CycloneDX field with an
+SPDX **annotation**, so no format is silent; option 2 would have been
+weaker than the thing it cited.
 
-The role is derived by **absence** from two explicit lists —
-`ARTIFACT_FIELDS` is 3 keys, `TOOLING_FIELDS` is 4 (`closure/classify.rs:13-26`)
-— and `paths_in` reads the derivation's env map (`derivation.rs:70`).
-nixpkgs' stdenv sets more dependency keys than those seven
-(`propagatedNativeBuildInputs`, `depsBuildTarget`, `checkInputs`,
-`depsTargetTarget` and the `*Propagated` variants are all real attribute
-names). If any appears in a real derivation then `unreferenced` conflates
-"nothing references it" with "we did not read the reference", and FR-004's
-`excluded` is unsound for that member.
+**Decision: option 1.** The native construct in all three formats, as
+US4 — FR-012 (`BUILD_TOOL_OF`), FR-013 (`LifecycleScopedRelationship` with
+`LifecycleScopeType/build`), FR-014 (the FR-005 exemption governs every
+format), SC-010 and SC-011.
 
-**It cannot be tested against the tree.** Every closure fixture carries only
-the seven keys the code already knows — they were written from those lists —
-so a grep over fixtures is circular and returns the answer it was built
-from. A real closure requires `nix derivation show -r`.
-
-**Decision**: an `#[ignore]`d, env-gated probe taking a closure JSON path,
-the same shape as milestone 1275's T005/T009 instruments, which exist
-because a real 16 MB package set and a real 6 MB closure are things no
-ordinary test may read (Principle VII). The closure can be produced where
-`nix` already runs: `public-corpus.yml` has a `Resolution oracle (nix eval)`
-step. SC-009's criterion is that the count is **known and recorded**, not
-that it is zero — a non-zero answer is a finding to scope, and quoting zero
-without the enumeration is the assumption the requirement exists to retire.
-
-## R8 — what the corpus can and cannot verify
-
-One target carries closure roles: `nix-closure-moat`, 362 of 387 components
-(`measurements/baseline.md`). The other 16 emit none and are a byte-identity
-control. The compiler-supplied overlap FR-005 governs has a **measured
-population of zero**, so SC-007 is satisfiable only by a synthetic fixture
-built to make the rule load-bearing. Milestone 1275's F7 is the precedent:
-the test its spec called most important was protected by two independent
-rules at once, so it could not fail, and the fix was a fixture engineered to
-remove the second protection.
+The risk that made option 2 attractive is real and unchanged, which is what
+SC-011 is for: new relations for 97 components change the relationship graph
+that graph completeness, the orphan-reason rows and the I-series invariants
+all read. It is a reason to predict the movement before the refresh and
+audit it after, not a reason to leave two of three formats unable to answer
+the question the feature exists to answer.

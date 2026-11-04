@@ -61,3 +61,37 @@ native `scope`; ten do. The spec states the corrected figure and carries the
 consequence into FR-002 rather than restating the issue. A spec that
 inherited the wrong premise would have specified `artifact-input → required`,
 which `hspec` falsifies on real data.
+
+**Post-`/speckit.analyze` remediation (2026-11-03).** Twelve findings, zero
+critical, two high. All six items recommended for action were applied:
+
+- **C1 (HIGH)** — the classification was to be carried in CycloneDX only,
+  leaving both SPDX formats silent. Resolved **against the plan's own
+  recommendation**: US4, FR-012, FR-013, FR-014, SC-010, SC-011 bring the
+  native constructs in scope. The analysis also corrected an error in its own
+  first recommendation — "carry it in SPDX as a parity bridge" — since that
+  carve-out applies only where a format *lacks* the native field, and SPDX
+  does not.
+- **I1 (HIGH)** — FR-009 said "which mechanism assigned the scope" while the
+  plan and data model implemented "the provenance of the classification".
+  The requirement now says what is built. This is the class of defect
+  milestone 1275 hit when its plan asserted something false about its spec:
+  a downstream document silently correcting an upstream one.
+- **U1** — FR-011 named only FR-001; I10 covers both roles, so the task was
+  broader than the requirement it cited. FR-011 now names FR-004 too.
+- **G1 / G2 / G5** — SC-003 and SC-008 had no task and the three headline
+  counts were verified only through a golden diff. T049 produces a
+  post-feature census with the same committed harness as the baseline, which
+  verifies them against a measurement rather than against a prediction.
+  SC-012 states the criterion.
+- **G3** — FR-006 says "every" C182 value preserved; T019 asserted it for
+  the exempt role only, and now covers all four.
+- **G4** — SC-005 requires I9 to pass *with no declaration*, and absence was
+  being inferred from a green lane. T050 greps for it.
+- **T1** — requirement ids added to the implementation tasks, so traceability
+  survives a grep.
+
+Two findings were deliberately not actioned: **D1** (FR-001 and FR-004 are
+structurally identical, but have distinct provenance and the contract table
+reads better with both) and **A1** (the plan's "no measurable change" needs
+no benchmark for one pass over an already-materialised slice).

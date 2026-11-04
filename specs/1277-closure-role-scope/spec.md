@@ -107,6 +107,7 @@ milestone 1275 found in its own most-important test (F7 there).
 
 - Q: What CycloneDX scope should an `unreferenced` closure member carry? → A: `excluded`, the same as `build-tooling`. The categories the classifier documents for that role — fetched sources, patches, setup hooks, bootstrap stages — are none of them reachable in a runtime call graph, which is the schema's own definition of `excluded`. Leaving the scope absent is not the neutral option: the schema reads absent as `required`, so it claims a patch file ships.
 - Q: When a closure member is both compiler-supplied and in a tooling role, does the milestone-1276 exemption win or the role-derived `excluded`? → A: The exemption wins and invariant I9 stays exactly as milestone 1276 wrote it. The measured population is zero, so the two answers are indistinguishable on real data and the choice is only about which statement the code makes when the case appears. Keeping I9 as written makes it **fail loudly** at that moment, so the decision is taken with data rather than speculatively now. The opposing reading was recorded rather than discarded: `excluded` means "not reachable within a call graph at runtime", and a `build-tooling` role is positive evidence of non-presence where the dependency edge m1276 reasoned about was not — so if I9 ever fires on this overlap, that argument is the one to weigh, not a bug to patch.
+- Q: `/speckit.analyze` finding C1 — the classification was to be carried in CycloneDX only, leaving both SPDX formats silent. Is that acceptable? → A: No. Both SPDX formats have a native construct for this semantic (2.3 `BUILD_TOOL_OF`, 3.0.1 `LifecycleScopedRelationship` + `LifecycleScopeType/build`), and Principle V's parity-bridge carve-out applies only "when one format has the native field but another doesn't" — so a `waybill:*` substitute is forbidden here and silence is the weakest remaining position, weaker than milestone 112's own. US4, FR-012, FR-013, FR-014, SC-010 and SC-011 added. The plan's earlier recommendation — CycloneDX only, with the gap filed as a follow-up — is superseded; the analysis showed SPDX would carry the classification *not at all*, which is a stronger objection than the one the plan weighed.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -190,6 +191,41 @@ that a component scoped by neither carries no such annotation.
 2. **Given** a component scoped by the lifecycle propagation, **When** the document is emitted, **Then** its existing derivation annotation is unchanged and this feature adds nothing.
 3. **Given** a component with no scope, **When** the document is emitted, **Then** no scope-source annotation is present — absence means "nothing set it", not "set by default".
 
+---
+
+### User Story 4 - the same question answered in SPDX (Priority: P2)
+
+An operator consuming SPDX rather than CycloneDX asks the same question —
+what is actually in this artifact. SPDX has no `scope` field; it answers
+through relationship types, and both SPDX formats carry a native construct
+for exactly this semantic. After this story a member in a tooling role is
+related to the artifact as a build tool rather than as a plain dependency,
+so the SPDX consumer is not left with the one reading CycloneDX now
+forbids.
+
+**Why this priority**: Principle V states that where a native construct
+exists, waybill MUST use it as the primary signal — and both exist: SPDX 2.3
+`BUILD_TOOL_OF` and SPDX 3.0.1 `LifecycleScopedRelationship` with
+`LifecycleScopeType/build`. Principle V's parity-bridge carve-out cannot
+cover a `waybill:*` substitute here, because it applies only "when one
+format has the native field but another doesn't", and SPDX has one. Emitting
+nothing in SPDX is therefore the weakest of the available positions, and
+weaker than milestone 112's own, which pairs its CycloneDX field with an
+SPDX annotation. P2 rather than P1 because CycloneDX is where the defect was
+reported and US1 remains the shippable MVP.
+
+**Independent Test**: emit SPDX 2.3 and SPDX 3 for a Nix-built project with
+`--nix-closure`; every member in a tooling role carries the native
+build-tool relation, every `artifact-input` and `both` member's relations
+are unchanged, and the I-series invariants still pass.
+
+**Acceptance Scenarios**:
+
+1. **Given** a closure member whose unioned role is `build-tooling` or `unreferenced`, **When** SPDX 2.3 is emitted, **Then** it carries a `BUILD_TOOL_OF` relationship to the artifact.
+2. **Given** the same member, **When** SPDX 3 is emitted, **Then** it carries a `LifecycleScopedRelationship` whose scope is `build`.
+3. **Given** a compiler-supplied member in a tooling role, **When** either SPDX format is emitted, **Then** no build-tool relation is added — the FR-005 exemption governs every format, not only CycloneDX.
+4. **Given** the new relations, **When** the corpus invariants run, **Then** graph completeness, the orphan-reason rows and every I-series row still pass, because added relations change the relationship graph those rows read.
+
 ### Edge Cases
 
 - **A member in the `unreferenced` role that applies a patch.** Nothing references it, yet it contributes a patch to something that ships. Per FR-004 it carries `excluded`: the patched code ships, the patch does not, and the component is the patch. The 17 on the corpus exist precisely because m1035 measured `jq` and `lua` in this position carrying 6 of one project's 18 CVEs — `excluded` keeps them in the document, which is where that finding needs them, while stopping them reading as shipped.
@@ -213,14 +249,17 @@ that a component scoped by neither carries no such annotation.
 - **FR-006**: The system MUST preserve every C182 `waybill:closure-role` annotation value unchanged. This feature adds a native field; it does not replace the annotation, which carries a four-way distinction `scope` cannot express.
 - **FR-007**: The system MUST assign no scope when the closure tier degraded or emitted no roles. An absent role is not `build-tooling`.
 - **FR-008**: The system MUST emit documents byte-identical to the pre-feature output for every scan that does not enable `--nix-closure`.
-- **FR-009**: The system MUST record, per scoped component, which mechanism assigned the scope, distinguishing a role-derived scope from a lifecycle-propagated one, and MUST emit nothing for a component with no scope.
+- **FR-009**: The system MUST record, per classified component, the **provenance of the non-runtime classification** — distinguishing one derived from the closure role from one propagated through the dependency graph — and MUST emit nothing for a component carrying no such classification. The record is about the classification, not about "which mechanism wrote the CycloneDX `scope` field": the second phrasing names a field SPDX 2.3 and SPDX 3 do not have, while the first is a coherent claim in all three formats.
 - **FR-010**: The system MUST carry any new annotation introduced by FR-009 through all three output formats under a catalog row with a Principle V standards-native audit, performed against the vendored schemas rather than from memory.
-- **FR-011**: The system MUST keep invariant I9 passing on every corpus target, and MUST add an invariant asserting FR-001 — that no `build-tooling` member lacks a non-runtime scope — so the defect cannot return silently.
+- **FR-011**: The system MUST keep invariant I9 passing on every corpus target, and MUST add an invariant asserting **FR-001 and FR-004** — that no member whose unioned role is `build-tooling` or `unreferenced` lacks a non-runtime marker — so neither half of the defect can return silently. An invariant covering only `build-tooling` would leave the 17 `unreferenced` members unguarded.
+- **FR-012**: The system MUST emit the SPDX 2.3 native construct for a member in a tooling role — `BUILD_TOOL_OF`, relating the member to the artifact — rather than leaving the classification unexpressed in that format or substituting a `waybill:*` annotation for it. Principle V audit: `relationshipType` in the vendored `spdx-2.3.json` carries `BUILD_TOOL_OF`, `BUILD_DEPENDENCY_OF`, `PATCH_FOR` and `PATCH_APPLIED`; `BUILD_TOOL_OF` is the match for "builds the artifact and is not in it".
+- **FR-013**: The system MUST emit the SPDX 3.0.1 native construct for the same member — a `LifecycleScopedRelationship` whose `scope` is `LifecycleScopeType/build`. Principle V audit: the vendored `spdx-3.0.1.json` defines `LifecycleScopeType` with `build`, `design`, `development`, `other`, `runtime` and `test`, and `LifecycleScopedRelationship` to carry it.
+- **FR-014**: The FR-005 exemption MUST govern all three formats. A compiler-supplied member in a tooling role acquires no CycloneDX scope, no `BUILD_TOOL_OF` and no build-scoped relationship.
 
 ### Key Entities
 
 - **Closure role**: how nix referenced a member, unioned across that member's derivation variants. One of `artifact-input`, `build-tooling`, `both`, `unreferenced`. Already emitted as C182.
-- **Role-derived scope**: a CycloneDX `scope` value computed from the closure role, as distinct from one propagated through the dependency graph by milestone 1269.
+- **Role-derived non-runtime classification**: the conclusion, drawn from the closure role, that a member is not in the artifact — as distinct from the same conclusion propagated through the dependency graph by milestone 1269. Each format expresses it with its own native construct: CycloneDX `scope: excluded`, SPDX 2.3 `BUILD_TOOL_OF`, SPDX 3 `LifecycleScopeType/build`. Named for the conclusion rather than for CycloneDX's field, because two of the three formats have no such field.
 - **Compiler-supplied set**: the packages the pinned revision's compiler configurations null out, carried by milestone 1276 and exempt from non-runtime scope.
 
 ## Success Criteria *(mandatory)*
@@ -236,6 +275,9 @@ that a component scoped by neither carries no such annotation.
 - **SC-006**: The new invariant asserting FR-001 fails on a document in which a `build-tooling` member's scope has been removed, demonstrated by a planted mutation rather than by assertion.
 - **SC-007**: The compiler-supplied exemption is demonstrated on a synthetic fixture in which it changes the outcome — the component carries `excluded` without the rule and no scope with it. A criterion stated against the corpus would be satisfied vacuously, since the overlap's measured population there is zero.
 - **SC-008**: Every scoped component on `nix-closure-moat` names the mechanism that scoped it, and the count naming the role equals 97 (SC-001 plus SC-001a).
+- **SC-010**: On `nix-closure-moat`, all 97 members in a tooling role carry the native build-tool construct in SPDX 2.3 and in SPDX 3, and the 265 members in `artifact-input` or `both` roles gain no such relation.
+- **SC-011**: With the new relations emitted, every I-series invariant row passes on all 17 corpus targets, and the graph-completeness and orphan-reason counts move only by amounts the refresh prediction states in advance.
+- **SC-012**: The post-feature census, produced by the same committed harness as the baseline and diffed against it, confirms all five counts in one place: 80, 17, 265, 10 unchanged, 16 byte-identical. A count verified only through a golden diff is verified against a prediction, not against a measurement.
 - **SC-009**: The dependency-shaped env keys present in a real closure are enumerated, and the count neither field list names is reported. The criterion is that the number is **known and recorded**, not that it is zero — a non-zero answer is a finding to scope, and quoting zero without the enumeration would be the assumption FR-004a exists to retire.
 
 ## Assumptions

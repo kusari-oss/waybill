@@ -3,15 +3,21 @@
 The complete mapping, with its one exemption. Every row is derived from the
 **unioned** role.
 
-| C182 role | compiler-supplied? | native CDX `scope` | FR |
-|---|---|---|---|
-| `artifact-input` | either | **unset by this feature** | FR-002 |
-| `both` | either | **unset by this feature** | FR-002 |
-| `build-tooling` | no | `excluded` | FR-001 |
-| `build-tooling` | **yes** | **unset** | FR-005 |
-| `unreferenced` | no | `excluded` | FR-004 |
-| `unreferenced` | **yes** | **unset** | FR-005 |
-| absent (no role) | either | **unset** | FR-007 |
+| C182 role | compiler-supplied? | CDX `scope` | SPDX 2.3 | SPDX 3.0.1 | FR |
+|---|---|---|---|---|---|
+| `artifact-input` | either | **unset by this feature** | unchanged | unchanged | FR-002 |
+| `both` | either | **unset by this feature** | unchanged | unchanged | FR-002 |
+| `build-tooling` | no | `excluded` | `BUILD_TOOL_OF` | `LifecycleScopedRelationship`, scope `build` | FR-001, FR-012, FR-013 |
+| `build-tooling` | **yes** | **unset** | **none added** | **none added** | FR-005, FR-014 |
+| `unreferenced` | no | `excluded` | `BUILD_TOOL_OF` | `LifecycleScopedRelationship`, scope `build` | FR-004, FR-012, FR-013 |
+| `unreferenced` | **yes** | **unset** | **none added** | **none added** | FR-005, FR-014 |
+| absent (no role) | either | **unset** | unchanged | unchanged | FR-007 |
+
+Every row names a **native** construct. No row is carried by a `waybill:*`
+annotation, because all three formats have one for this semantic and
+Principle V's parity-bridge carve-out applies only where a format lacks it
+(research R6). The one `waybill:*` row this feature adds — C203 — carries
+the classification's **provenance**, which no format expresses.
 
 "Unset by this feature" is not "unset". A member in an `artifact-input` role
 may still carry `excluded` from the milestone-1269 lifecycle propagation —
