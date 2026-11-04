@@ -442,6 +442,8 @@ Auto-generated from all feature plans. Last updated: 2026-11-03
 - N/A — in-process per scan. The per-revision package-set cache a (1275-closure-hackage-identity)
 - Rust stable, workspace toolchain pinned by + Existing only — `serde`/`serde_json` (the (1276-boot-library-scope)
 - N/A — in-process per scan. The per-revision cache a (1276-boot-library-scope)
+- Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly. `waybill-ebpf` untouched. + Existing only — `serde`/`serde_json` (annotation values, document construction), `std::collections::{BTreeSet, HashSet}`, `tracing` (one INFO summary). **Zero new Cargo dependencies.** (1277-closure-role-scope)
+- N/A — all state in-process per scan; the classification is emitted into the SBOM and never read back. (1277-closure-role-scope)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -664,9 +666,9 @@ changes — an undocumented limit is one that can move without notice.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 1277-closure-role-scope: Added Rust stable, workspace toolchain pinned by `rust-toolchain.toml` (1.98.1). No nightly. `waybill-ebpf` untouched. + Existing only — `serde`/`serde_json` (annotation values, document construction), `std::collections::{BTreeSet, HashSet}`, `tracing` (one INFO summary). **Zero new Cargo dependencies.**
 - 1276-boot-library-scope: Added Rust stable, workspace toolchain pinned by + Existing only — `serde`/`serde_json` (the
 - 1275-closure-hackage-identity: Added Rust stable, workspace toolchain pinned by + Existing only — `serde`/`serde_json` (annotation
-- 1274-nix-degradation-reason: Added Rust stable, workspace toolchain pinned by + existing only — `serde_json` (the object value),
 
 
 <!-- MANUAL ADDITIONS START -->
