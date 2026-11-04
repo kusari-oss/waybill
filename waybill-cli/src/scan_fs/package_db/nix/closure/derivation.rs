@@ -178,14 +178,36 @@ impl RawDerivation {
             .collect()
     }
 
-    /// Every field this derivation declares that holds store paths.
+    /// Every field this derivation declares that is a nixpkgs **dependency
+    /// attribute** and holds at least one store path.
     ///
-    /// Used to find the fields classification does **not** consult (FR-014),
-    /// which is this milestone's measurement of the gap #1346 describes. A
-    /// field counts when its name ends in a dependency-ish suffix and its
-    /// value resolves to at least one `/nix/store/` path — a shape test, not a
-    /// name allowlist, because an allowlist is the thing that fell out of date
-    /// in the first place.
+    /// Used to find the dependency attributes classification does **not**
+    /// consult (FR-014), which is this milestone's measurement of the gap
+    /// #1346 describes.
+    ///
+    /// **The name test is load-bearing, and an earlier version of this
+    /// function did without it and was useless.** That version asked only
+    /// whether a field's value contained a `/nix/store/` path — a pure shape
+    /// test, chosen on the argument that a name allowlist is what fell out of
+    /// date and produced #1348 in the first place. Measured on the real
+    /// corpus closure, it reported **98,342 "unconsulted declarations" across
+    /// 1,610 of 1,749 derivations**, naming 113 fields including `PATH`,
+    /// `SHELL`, `mkdir`, `builder` and `buildPhase`. Nearly every attribute a
+    /// derivation has mentions a store path; almost none of them declare a
+    /// dependency. A disclosure saying 98,342 would tell a consumer the
+    /// document is worthless when the truth is that 554 dependency entries
+    /// were missed.
+    ///
+    /// The earlier argument conflated two different allowlists. The one that
+    /// fell out of date is the list of fields we **classify** — seven of
+    /// roughly twenty, which is #1346. Deciding which fields *are* dependency
+    /// attributes is a separate question, and nixpkgs' naming convention is
+    /// the actual contract for it: `*Inputs`, and `deps<Host><Target>` with
+    /// an optional `Propagated` suffix. A shape test cannot answer that
+    /// question, as the measurement above shows.
+    ///
+    /// Still a conservative filter rather than a fixed list: any future
+    /// `somethingInputs` or `depsWhatever` is caught without an edit here.
     pub(crate) fn store_path_fields(&self) -> Vec<&str> {
         let mut out: Vec<&str> = Vec::new();
         let flat = self.env.keys().map(String::as_str);
@@ -194,7 +216,7 @@ impl RawDerivation {
             _ => Vec::new(),
         };
         for key in flat.chain(typed) {
-            if out.contains(&key) || key == "out" || key == "outputs" {
+            if out.contains(&key) || !is_dependency_attribute(key) {
                 continue;
             }
             if self
@@ -207,6 +229,24 @@ impl RawDerivation {
         }
         out
     }
+}
+
+/// Whether a field name is a nixpkgs dependency attribute.
+///
+/// nixpkgs names them by convention, and the convention is the contract: a
+/// list of dependencies is either `<something>Inputs` (`buildInputs`,
+/// `nativeBuildInputs`, `propagatedBuildInputs`, `nativeCheckInputs`,
+/// `extraNativeBuildInputs`, …) or `deps<Host><Target>` with an optional
+/// `Propagated` suffix (`depsBuildHost`, `depsTargetTargetPropagated`, …).
+///
+/// Matching the convention rather than enumerating the members means a
+/// dependency attribute nixpkgs adds later is still *reported* as unconsulted
+/// rather than silently ignored — which is the whole point of the FR-014
+/// diagnostic.
+fn is_dependency_attribute(name: &str) -> bool {
+    name.ends_with("Inputs")
+        || name.ends_with("InputsPropagated")
+        || (name.starts_with("deps") && name.len() > 4)
 }
 
 /// The basename of a store path, which is the only form in which two sides of
@@ -586,6 +626,67 @@ mod tests {
         );
         assert_eq!(outcome.declarations_unconsulted, 2);
         assert_eq!(outcome.derivations_affected, 2);
+    }
+
+    #[test]
+    fn m1278_env_vars_that_mention_store_paths_are_not_dependency_declarations() {
+        // The test the earlier fixtures were too clean to provide.
+        //
+        // Nearly every attribute of a real derivation mentions a store path:
+        // `PATH`, `SHELL`, `builder`, `buildPhase`, `src`, `stdenv`, and
+        // coreutils binaries referenced by name. None of them declares a
+        // dependency. A shape-only filter reported 98,342 "unconsulted
+        // declarations" across 1,610 of 1,749 derivations on the real corpus
+        // closure and named 113 fields -- a disclosure that would tell a
+        // consumer the document is worthless when 554 entries were missed.
+        //
+        // Every unit and integration test passed with that filter in place,
+        // because the fixtures held only tidy fields. A fixture modelled on
+        // the SHAPE of real data can still omit its MESS.
+        let c = fixture("real_world_noise.json");
+        let d = &c.derivations["bbb-waybill-fixture-noisy-1.0.drv"];
+
+        assert_eq!(
+            d.store_path_fields(),
+            vec!["depsBuildTarget"],
+            "only the dependency attribute counts -- everything else here \
+             holds a store path and declares nothing"
+        );
+
+        let outcome = c.read_outcome(&["buildInputs", "nativeBuildInputs", "patches"]);
+        assert_eq!(
+            outcome.fields_unconsulted.iter().cloned().collect::<Vec<String>>(),
+            vec!["depsBuildTarget".to_string()]
+        );
+        assert_eq!(
+            outcome.declarations_unconsulted, 1,
+            "one declaration, not nine: {outcome:?}"
+        );
+    }
+
+    #[test]
+    fn m1278_the_dependency_attribute_test_follows_nixpkgs_naming() {
+        // Matching the convention, not enumerating members, so an attribute
+        // nixpkgs adds later is still reported rather than silently ignored.
+        for yes in [
+            "buildInputs",
+            "nativeBuildInputs",
+            "propagatedBuildInputs",
+            "propagatedNativeBuildInputs",
+            "nativeCheckInputs",
+            "extraNativeBuildInputs",
+            "depsBuildBuild",
+            "depsTargetTargetPropagated",
+            "somethingEntirelyNewInputs",
+        ] {
+            assert!(is_dependency_attribute(yes), "{yes} should count");
+        }
+        for no in [
+            "PATH", "SHELL", "builder", "buildPhase", "src", "mkdir", "stdenv",
+            "out", "outputs", "deps", "LD_LIBRARY_PATH", "configureFlags",
+        ] {
+            assert!(!is_dependency_attribute(no), "{no} should not count");
+        }
     }
 
     #[test]

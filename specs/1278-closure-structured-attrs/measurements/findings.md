@@ -137,3 +137,52 @@ Not a defect, and not worth a refactor here. Recorded because it is the cost
 of the seam being shared, which is the same property that made the fix itself
 a four-accessor change rather than a four-consumer change. The cost landed in
 the direction worth paying.
+
+## F6 — a shape test where a naming convention was the contract
+
+FR-014 asks for "every field a derivation declares that holds store paths and
+that role classification does not consult". Implemented literally, with a pure
+shape test — does the value contain `/nix/store/`? — and justified in code
+comments, in the catalog row and in the spec on the argument that a name
+allowlist is what fell out of date and produced #1348.
+
+Measured on the refreshed corpus golden, that disclosure read:
+
+```
+"declarations-unconsulted": 98342,
+"derivations-affected": 1610,
+"fields-unconsulted": ["CPATH","FILECMD","LD_LIBRARY_PATH","PATH","SHELL",
+                       "builder","buildPhase","mkdir","src","stdenv", ...113 total]
+```
+
+Nearly every attribute of a derivation mentions a store path. Almost none
+declares a dependency. A consumer reading "98,342 declarations unconsulted"
+would conclude the document was worthless, when the truth is 554 dependency
+entries were missed — so the disclosure was worse than useless, it was
+actively misleading, in the field whose entire job is to be trustworthy.
+
+**The argument was wrong because it conflated two allowlists.** The one that
+fell out of date is the list of fields we *classify* — seven of roughly
+twenty, which is #1346. Deciding which fields *are* dependency attributes is a
+different question, and nixpkgs' naming convention is the actual contract for
+it. A shape test cannot answer it.
+
+Fixed by matching the convention (`*Inputs`, `deps<Host><Target>` with an
+optional `Propagated` suffix) rather than enumerating members, so an attribute
+nixpkgs adds later is still reported.
+
+**Why no test caught it.** All 27 tests passed before the fix and after it.
+Every fixture held only tidy fields — `buildInputs`, `nativeBuildInputs`,
+`depsBuildTarget` — because they were modelled on the *shape* of real
+derivations without their *mess*. A fixture built by picking the interesting
+fields out of real data inherits the shape and discards exactly the noise that
+breaks a shape-based rule.
+
+`real_world_noise.json` now carries `PATH`, `SHELL`, `builder`, `buildPhase`,
+`src`, `stdenv` and a coreutils binary path alongside one real dependency
+attribute, and asserts that exactly one field is reported.
+
+**The rule**: when a rule's correctness depends on what real inputs look like,
+the fixture has to include the parts that are not interesting. "Modelled on
+real data" is not the same as "containing what real data contains", and the
+difference is invisible until something counts 98,342 of something.
