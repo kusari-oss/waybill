@@ -5,6 +5,13 @@ Reads committed goldens only -- no scan, no network, no nix. Run with -I so a
 planted module beside the goldens cannot be imported.
 
     python3 -I specs/1277-closure-role-scope/measurements/roles-and-scopes.py
+    python3 -I .../roles-and-scopes.py --census    # the per-target scope census
+
+`--census` prints one row per corpus target: components, how many carry a
+CycloneDX `scope`, which values, and how many carry the C203 classification
+source. It is the instrument for T003's before-census and T049's
+after-census, so both read the same code and a diff of the two outputs is a
+measurement rather than a comparison of two hand-written tables.
 
 Package coordinates printed here are real (hspec, QuickCheck, happy): this is
 a measurement of real corpus targets, not a fixture. Fixtures use synthetic
@@ -24,7 +31,46 @@ def props(obj):
     return {p["name"]: p["value"] for p in obj.get("properties", [])}
 
 
+CLASSIFICATION_SOURCE = "waybill:scope-classification-source"
+
+
+def census():
+    """One row per corpus target: scope and classification-source counts."""
+    rows = []
+    for t in sorted(p.name for p in CORPUS.iterdir() if p.is_dir()):
+        cdx = CORPUS / t / "cdx.json"
+        if not cdx.exists():
+            continue
+        doc = json.loads(cdx.read_text())
+        comps = doc.get("components", [])
+        scopes = collections.Counter()
+        roles = collections.Counter()
+        src = collections.Counter()
+        for c in comps:
+            pr = props(c)
+            if c.get("scope"):
+                scopes[c["scope"]] += 1
+            if pr.get(ROLE):
+                roles[pr[ROLE]] += 1
+            if pr.get(CLASSIFICATION_SOURCE):
+                src[pr[CLASSIFICATION_SOURCE]] += 1
+        rows.append((t, len(comps), sum(roles.values()), sum(scopes.values()),
+                     dict(scopes), sum(src.values()), dict(src)))
+    w = max(len(r[0]) for r in rows)
+    print("| %-*s | comps | roles | scoped | scope values | C203 | C203 values |" % (w, "target"))
+    print("|%s|-------|-------|--------|--------------|------|-------------|" % ("-" * (w + 2)))
+    for t, n, nr, ns, sv, nc, cv in rows:
+        print("| %-*s | %5d | %5d | %6d | %-12s | %4d | %-11s |"
+              % (w, t, n, nr, ns, (sv or "-"), nc, (cv or "-")))
+    tot = lambda i: sum(r[i] for r in rows)
+    print("\ntotals: %d components, %d with a role, %d scoped, %d with C203, across %d targets"
+          % (tot(1), tot(2), tot(3), tot(5), len(rows)))
+    return 0
+
+
 def main():
+    if "--census" in sys.argv:
+        return census()
     targets = sorted(p.name for p in CORPUS.iterdir() if p.is_dir())
     with_roles, without = [], []
     for t in targets:

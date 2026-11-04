@@ -140,3 +140,53 @@ seven field names cover the dependency keys real derivations carry is
 testing against them is circular, and a real closure needs a host `nix`.
 FR-004a makes the enumeration a requirement and SC-009 asks for the count to
 be *known*, not to be zero.
+
+## T003 — the before-census, corpus-wide
+
+Produced by the same instrument T049 will re-run after the feature
+(`--census`), so the two outputs diff as a measurement rather than as two
+hand-written tables.
+
+```
+| target                      | comps | roles | scoped | scope values | C203 | C203 values |
+|-----------------------------|-------|-------|--------|--------------|------|-------------|
+| go-cobra                    |     8 |     0 |      0 | -            |    0 | -           |
+| go-opentelemetry            |   334 |     0 |     12 | {'excluded': 12} |    0 | -           |
+| haskell-aeson               |    63 |     0 |     11 | {'excluded': 11} |    0 | -           |
+| haskell-language-server     |   399 |     0 |     45 | {'excluded': 45} |    0 | -           |
+| haskell-security-advisories |   251 |     0 |     75 | {'excluded': 75} |    0 | -           |
+| image-postgres16            |   263 |     0 |      0 | -            |    0 | -           |
+| maven-guice                 |    61 |     0 |     24 | {'excluded': 24} |    0 | -           |
+| nix-closure-moat            |   387 |   362 |     11 | {'excluded': 11} |    0 | -           |
+| npm-express                 |    45 |     0 |     16 | {'excluded': 16} |    0 | -           |
+| pants-clojure-polyglot      |    55 |     0 |      0 | -            |    0 | -           |
+| pants-example-django        |    47 |     0 |      0 | -            |    0 | -           |
+| pants-example-golang        |     6 |     0 |      0 | -            |    0 | -           |
+| pants-example-javascript    |   303 |     0 |    302 | {'excluded': 302} |    0 | -           |
+| pants-example-jvm           |    29 |     0 |      0 | -            |    0 | -           |
+| pants-example-python        |    12 |     0 |      0 | -            |    0 | -           |
+| python-flask                |   108 |     0 |     73 | {'excluded': 73} |    0 | -           |
+| rust-ripgrep                |    68 |     0 |      0 | -            |    0 | -           |
+
+totals: 2439 components, 362 with a role, 569 scoped, 0 with C203, across 17 targets
+```
+
+Three things to take from it.
+
+**569 scoped components corpus-wide reconciles with milestone 1276.** That
+milestone measured 579 non-runtime scopes before its fix and removed exactly
+10; 579 − 10 = 569. Two independently-derived numbers agreeing is the
+cheapest confirmation available that this census reads the same field the
+previous milestone did.
+
+**`nix-closure-moat` shows 11 scoped, not the 10 quoted above.** The
+eleventh is `pkg:github/nixos/nixpkgs`, which carries `lifecycle=build` and
+no closure role, so it is not a closure member and no row of
+`contracts/role-scope.md` applies to it. FR-008's byte-identity requirement
+covers it: this feature must not touch it.
+
+**Every scope in the corpus today is `excluded`.** No target emits
+`optional` or an explicit `required`, so this feature introduces no new
+value — only new components carrying an existing one. That matters for
+FR-002: the schema's `"default": "required"` is the claim an absent field
+already makes, and nothing in the corpus writes `required` explicitly.
