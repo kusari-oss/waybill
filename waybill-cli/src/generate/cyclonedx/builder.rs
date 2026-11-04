@@ -1047,6 +1047,15 @@ impl CycloneDxBuilder {
             // `dependencies` (graph-is-complete) claim.
             Some(&graph_completeness.reachable_set),
             &degraded_ecosystems,
+            // Milestone 1278 (#1348): a closure read that skipped a
+            // declaration withholds the root's dependency-completeness
+            // claim. Before this, the document asserted
+            // `aggregate: "complete"` -- CycloneDX's "no further
+            // dependencies are known to exist" -- over a closure measured
+            // to have skipped 554 of them.
+            self.nix_closure_summary
+                .as_ref()
+                .is_some_and(|s| s.read_outcome.has_gap()),
         );
         // Milestone 084 — when override has dropped main-module components,
         // closure-invariant fix: relationships whose `from` is one of the

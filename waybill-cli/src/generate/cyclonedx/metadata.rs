@@ -1127,6 +1127,15 @@ pub fn build_metadata(
                 "value": grade.as_str().unwrap_or_default(),
             }));
         }
+        // Milestone 1278 (#1348): C204, present only when the reader saw a
+        // declaration it did not consult. Absent means nothing went
+        // unconsulted -- never "not checked".
+        if let Some(read) = summary.nix_closure_read_wire() {
+            properties.push(json!({
+                "name": closure_summary::ANN_NIX_CLOSURE_READ,
+                "value": read,
+            }));
+        }
     }
 
     // Milestone 665 T021: doc-scope `waybill:binary-scan-suppressed`

@@ -708,6 +708,7 @@ mod tests {
             attribute: "default".into(),
             raw,
             roles,
+            read_outcome: Default::default(),
         })
         .pop()
         .expect("the seed closure yields a component");

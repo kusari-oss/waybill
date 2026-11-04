@@ -35,10 +35,10 @@ Single Rust workspace, three crates. Everything here is in `waybill-cli`.
 shapes measured in the real closure, not invented — a hand-guessed typed form
 would test the reader against a shape nix does not emit.
 
-- [ ] T001 [P] Add `waybill-cli/tests/fixtures/nix_closure_structured_attrs/matched_pair.json`: two derivations declaring the same dependency, one through flat `env`, one through `structuredAttrs`, each with a distinct referenced member, modelled on the real `source` derivation shape recorded in `specs/1278-closure-structured-attrs/measurements/README.md`
-- [ ] T002 [P] Add `waybill-cli/tests/fixtures/nix_closure_structured_attrs/awkward_shapes.json` covering every case contract `attribute-resolution.md` P3/P4 names: an empty list, a boolean-valued field (`doCheck`), a nested object (`env`), a map (`outputChecks`), and a dependency field holding a single string rather than a list
-- [ ] T003 [P] Add `waybill-cli/tests/fixtures/nix_closure_structured_attrs/version_unknown.json`: a closure whose top-level `version` is a value the reader has never seen, with attributes in both shapes, for FR-013
-- [ ] T004 [P] Add `waybill-cli/tests/fixtures/nix_closure_structured_attrs/both_shapes_disagree.json`: one derivation carrying the same dependency field in both carriers with different values, for FR-006 — a case measured as absent from both real closures, so it only exists if engineered
+- [X] T001 [P] Add `waybill-cli/tests/fixtures/nix_closure_structured_attrs/matched_pair.json`: two derivations declaring the same dependency, one through flat `env`, one through `structuredAttrs`, each with a distinct referenced member, modelled on the real `source` derivation shape recorded in `specs/1278-closure-structured-attrs/measurements/README.md`
+- [X] T002 [P] Add `waybill-cli/tests/fixtures/nix_closure_structured_attrs/awkward_shapes.json` covering every case contract `attribute-resolution.md` P3/P4 names: an empty list, a boolean-valued field (`doCheck`), a nested object (`env`), a map (`outputChecks`), and a dependency field holding a single string rather than a list
+- [X] T003 [P] Add `waybill-cli/tests/fixtures/nix_closure_structured_attrs/version_unknown.json`: a closure whose top-level `version` is a value the reader has never seen, with attributes in both shapes, for FR-013
+- [X] T004 [P] Add `waybill-cli/tests/fixtures/nix_closure_structured_attrs/both_shapes_disagree.json`: one derivation carrying the same dependency field in both carriers with different values, for FR-006 — a case measured as absent from both real closures, so it only exists if engineered
 
 ---
 
@@ -50,13 +50,13 @@ Keeping it unobservable is what lets US1 be measured on its own.
 
 **⚠️ CRITICAL**: blocks US1 through US4.
 
-- [ ] T005 Add the optional `structured_attrs` field to `RawDerivation` in `waybill-cli/src/scan_fs/package_db/nix/closure/derivation.rs`, typed as an optional `serde_json::Value` because its members are heterogeneous (strings, lists, booleans, nested objects)
-- [ ] T006 Implement the resolution rule of `contracts/attribute-resolution.md` in `RawDerivation::paths_in` in `waybill-cli/src/scan_fs/package_db/nix/closure/derivation.rs`: flat first, then typed array (skipping non-string members individually, never fatally), then typed string split on whitespace, then nothing — total over `Value`, no `.unwrap()` (Principle IV)
-- [ ] T007 Extend `RawDerivation::pname`, `declared_pname` and `version` in `waybill-cli/src/scan_fs/package_db/nix/closure/derivation.rs` with the same precedence, taking string values only and preserving the existing declared-name / own-name distinction
-- [ ] T008 Capture the closure's `version` field on `RawClosure` in `waybill-cli/src/scan_fs/package_db/nix/closure/derivation.rs` — parsed and dropped today, which is how the v3→v4 move went unnoticed (research R5)
-- [ ] T009 Add the `ReadOutcome` record per `data-model.md` in `waybill-cli/src/scan_fs/package_db/nix/closure/derivation.rs`: format version, sorted set of unconsulted field names, declaration count, affected-derivation count — sorted and integer-valued so the emitted value is byte-stable
-- [ ] T010 Assemble `ReadOutcome` while reading the closure in `waybill-cli/src/scan_fs/package_db/nix/closure/mod.rs` and thread it to the emission path alongside the existing closure result, without any emitter reading it yet
-- [ ] T011 [P] Unit-test the resolution rule against T001–T004 in `waybill-cli/src/scan_fs/package_db/nix/closure/derivation.rs`'s test module, including the `#[cfg_attr(test, allow(clippy::unwrap_used))]` guard the crate requires
+- [X] T005 Add the optional `structured_attrs` field to `RawDerivation` in `waybill-cli/src/scan_fs/package_db/nix/closure/derivation.rs`, typed as an optional `serde_json::Value` because its members are heterogeneous (strings, lists, booleans, nested objects)
+- [X] T006 Implement the resolution rule of `contracts/attribute-resolution.md` in `RawDerivation::paths_in` in `waybill-cli/src/scan_fs/package_db/nix/closure/derivation.rs`: flat first, then typed array (skipping non-string members individually, never fatally), then typed string split on whitespace, then nothing — total over `Value`, no `.unwrap()` (Principle IV)
+- [X] T007 Extend `RawDerivation::pname`, `declared_pname` and `version` in `waybill-cli/src/scan_fs/package_db/nix/closure/derivation.rs` with the same precedence, taking string values only and preserving the existing declared-name / own-name distinction
+- [X] T008 Capture the closure's `version` field on `RawClosure` in `waybill-cli/src/scan_fs/package_db/nix/closure/derivation.rs` — parsed and dropped today, which is how the v3→v4 move went unnoticed (research R5)
+- [X] T009 Add the `ReadOutcome` record per `data-model.md` in `waybill-cli/src/scan_fs/package_db/nix/closure/derivation.rs`: format version, sorted set of unconsulted field names, declaration count, affected-derivation count — sorted and integer-valued so the emitted value is byte-stable
+- [X] T010 Assemble `ReadOutcome` while reading the closure in `waybill-cli/src/scan_fs/package_db/nix/closure/mod.rs` and thread it to the emission path alongside the existing closure result, without any emitter reading it yet
+- [X] T011 [P] Unit-test the resolution rule against T001–T004 in `waybill-cli/src/scan_fs/package_db/nix/closure/derivation.rs`'s test module, including the `#[cfg_attr(test, allow(clippy::unwrap_used))]` guard the crate requires
 
 ---
 
@@ -71,13 +71,13 @@ role and no absent-from-artifact marker; the derivation census matches SC-004.
 
 ### Tests for User Story 1
 
-- [ ] T012 [P] [US1] Create `waybill-cli/tests/closure_structured_attrs.rs` with the crate-level attributes its sibling `waybill-cli/tests/closure_role_scope.rs` carries — `#![allow(clippy::unwrap_used)]`, and `#![cfg(unix)]` only if the tests genuinely need it, gating the whole file rather than shimming a non-unix early return — then test contract property P2 in it: the typed-form derivation of T001's matched pair resolves to the **same role** as its flat twin. Assert on the role, never on the parsed field — the store-path basename join is a second, silent failure, and a field-level assertion passes while the feature is broken
+- [X] T012 [P] [US1] Create `waybill-cli/tests/closure_structured_attrs.rs` with the crate-level attributes its sibling `waybill-cli/tests/closure_role_scope.rs` carries — `#![allow(clippy::unwrap_used)]`, and `#![cfg(unix)]` only if the tests genuinely need it, gating the whole file rather than shimming a non-unix early return — then test contract property P2 in it: the typed-form derivation of T001's matched pair resolves to the **same role** as its flat twin. Assert on the role, never on the parsed field — the store-path basename join is a second, silent failure, and a field-level assertion passes while the feature is broken
 - [ ] T013 [P] [US1] Test contract property P1 in `waybill-cli/tests/closure_structured_attrs.rs`: every existing flat-form fixture classifies byte-identically to `main`, pinned as a regression
-- [ ] T014 [P] [US1] Test contract property P3 in `waybill-cli/tests/closure_structured_attrs.rs`: an empty typed list credits no member. Load-bearing — `buildInputs: []` is on all 56 `source` derivations in the pinned closure, and crediting it would manufacture edges that read as an improvement
-- [ ] T015 [P] [US1] Test contract property P4 in `waybill-cli/tests/closure_structured_attrs.rs`: each awkward shape in T002 yields no paths and does not panic
-- [ ] T016 [P] [US1] Test contract property P6 in `waybill-cli/tests/closure_structured_attrs.rs`: T004's disagreement resolves from the flat map and is reported
-- [ ] T017 [P] [US1] Test FR-013 in `waybill-cli/tests/closure_structured_attrs.rs`: T003's unknown-version closure classifies exactly as a known-version one, and does not degrade the tier
-- [ ] T018 [US1] Add the CONTROL each classifier test needs, in `waybill-cli/tests/closure_structured_attrs.rs`: assert the fixture holds the derivations it claims and that something is referenced — a parse that produced nothing would satisfy every "not wrongly classified" assertion vacuously
+- [X] T014 [P] [US1] Test contract property P3 in `waybill-cli/tests/closure_structured_attrs.rs`: an empty typed list credits no member. Load-bearing — `buildInputs: []` is on all 56 `source` derivations in the pinned closure, and crediting it would manufacture edges that read as an improvement
+- [X] T015 [P] [US1] Test contract property P4 in `waybill-cli/tests/closure_structured_attrs.rs`: each awkward shape in T002 yields no paths and does not panic
+- [X] T016 [P] [US1] Test contract property P6 in `waybill-cli/tests/closure_structured_attrs.rs`: T004's disagreement resolves from the flat map and is reported
+- [X] T017 [P] [US1] Test FR-013 in `waybill-cli/tests/closure_structured_attrs.rs`: T003's unknown-version closure classifies exactly as a known-version one, and does not degrade the tier
+- [X] T018 [US1] Add the CONTROL each classifier test needs, in `waybill-cli/tests/closure_structured_attrs.rs`: assert the fixture holds the derivations it claims and that something is referenced — a parse that produced nothing would satisfy every "not wrongly classified" assertion vacuously
 
 ### Implementation for User Story 1
 
@@ -97,8 +97,8 @@ role and no absent-from-artifact marker; the derivation census matches SC-004.
 
 ### Tests for User Story 2
 
-- [ ] T022 [P] [US2] Test in `waybill-cli/tests/closure_structured_attrs.rs`: a typed-form `patches` list produces one patch record per listed patch against the right component
-- [ ] T023 [P] [US2] Test in `waybill-cli/tests/closure_structured_attrs.rs`: a CVE-naming filename in a typed-form patch list reaches the distinct-CVE record
+- [X] T022 [P] [US2] Test in `waybill-cli/tests/closure_structured_attrs.rs`: a typed-form `patches` list produces one patch record per listed patch against the right component
+- [X] T023 [P] [US2] Test in `waybill-cli/tests/closure_structured_attrs.rs`: a CVE-naming filename in a typed-form patch list reaches the distinct-CVE record
 
 ### Implementation for User Story 2
 
@@ -117,7 +117,7 @@ role and no absent-from-artifact marker; the derivation census matches SC-004.
 
 ### Tests for User Story 3
 
-- [ ] T026 [P] [US3] Test in `waybill-cli/tests/closure_structured_attrs.rs`: a derivation declaring `pname` and `version` only in the typed form is emitted under that name and version
+- [X] T026 [P] [US3] Test in `waybill-cli/tests/closure_structured_attrs.rs`: a derivation declaring `pname` and `version` only in the typed form is emitted under that name and version
 - [ ] T027 [P] [US3] Test in `waybill-cli/tests/closure_structured_attrs.rs`: a derivation declaring a name in neither shape is still skipped — this story adds a source for the name, it does not invent one
 
 ### Implementation for User Story 3
@@ -140,20 +140,20 @@ reads makes the guard fail.
 
 ### Tests for User Story 4
 
-- [ ] T030 [P] [US4] Test SC-015 in `waybill-cli/tests/closure_structured_attrs.rs`: a document whose closure had an unconsulted declaration carries no native claim that its dependency relationships are complete. **This is the test for the defect research R1 found in the committed golden**, so it must fail before T032 lands
-- [ ] T031 [P] [US4] Test the emission-gating matrix of `contracts/read-outcome.md` in `waybill-cli/tests/closure_structured_attrs.rs`: absent without `--nix-closure`, absent when no closure was recorded (C190's case — a zero-valued disclosure would claim a closure was read where none was), absent when fully read, present when partially read
+- [X] T030 [P] [US4] Test SC-015 in `waybill-cli/tests/closure_structured_attrs.rs`: a document whose closure had an unconsulted declaration carries no native claim that its dependency relationships are complete. **This is the test for the defect research R1 found in the committed golden**, so it must fail before T032 lands
+- [X] T031 [P] [US4] Test the emission-gating matrix of `contracts/read-outcome.md` in `waybill-cli/tests/closure_structured_attrs.rs`: absent without `--nix-closure`, absent when no closure was recorded (C190's case — a zero-valued disclosure would claim a closure was read where none was), absent when fully read, present when partially read
 
 ### Implementation for User Story 4
 
-- [ ] T032 [US4] Add the partial read as a demotion input to `dependency_claims` in `waybill-cli/src/generate/cyclonedx/compositions.rs`, affecting **both** claims it produces: the ecosystem claim over nix-derived components and the root dependency claim that `target_aggregate` derives from trace integrity — the latter being the record measured as false today (research R2)
-- [ ] T033 [US4] Confirm SPDX 3's `Relationship.completeness` follows from the same helper in `waybill-cli/src/generate/spdx/`, adding no second demotion path — a parallel path would reintroduce the cross-format drift m1069 removed
-- [ ] T034 [US4] Emit the disclosure annotation in all three formats from `waybill-cli/src/generate/`, carrying the fact as well in SPDX 2.3, whose schema has no completeness field at all
-- [ ] T035 [US4] Add the catalog row to `docs/reference/sbom-format-mapping.md` (C204, confirming it is still the next free number) with the JSON-object shape of `contracts/read-outcome.md` and the per-row Principle V audit
-- [ ] T036 [US4] Add the three parity extractors in `waybill-cli/src/parity/extractors/` **in the same change as T035** — a documented row with no extractor fails `every_catalog_row_has_an_extractor`, so the two are not separable
-- [ ] T037 [US4] Implement the unconsulted-field detector feeding `ReadOutcome`, reporting every store-path-holding field classification does not consult, not only the seven it does (FR-014), in `waybill-cli/src/scan_fs/package_db/nix/closure/mod.rs`
-- [ ] T038 [US4] Test SC-014 in `waybill-cli/tests/closure_structured_attrs.rs`: every member's role is identical with and without the T037 diagnostic. This is what keeps SC-004's census attributable to the shape fix alone
+- [X] T032 [US4] Add the partial read as a demotion input to `dependency_claims` in `waybill-cli/src/generate/cyclonedx/compositions.rs`, affecting **both** claims it produces: the ecosystem claim over nix-derived components and the root dependency claim that `target_aggregate` derives from trace integrity — the latter being the record measured as false today (research R2)
+- [X] T033 [US4] Confirm SPDX 3's `Relationship.completeness` follows from the same helper in `waybill-cli/src/generate/spdx/`, adding no second demotion path — a parallel path would reintroduce the cross-format drift m1069 removed
+- [X] T034 [US4] Emit the disclosure annotation in all three formats from `waybill-cli/src/generate/`, carrying the fact as well in SPDX 2.3, whose schema has no completeness field at all
+- [X] T035 [US4] Add the catalog row to `docs/reference/sbom-format-mapping.md` (C204, confirming it is still the next free number) with the JSON-object shape of `contracts/read-outcome.md` and the per-row Principle V audit
+- [X] T036 [US4] Add the three parity extractors in `waybill-cli/src/parity/extractors/` **in the same change as T035** — a documented row with no extractor fails `every_catalog_row_has_an_extractor`, so the two are not separable
+- [X] T037 [US4] Implement the unconsulted-field detector feeding `ReadOutcome`, reporting every store-path-holding field classification does not consult, not only the seven it does (FR-014), in `waybill-cli/src/scan_fs/package_db/nix/closure/mod.rs`
+- [X] T038 [US4] Test SC-014 in `waybill-cli/tests/closure_structured_attrs.rs`: every member's role is identical with and without the T037 diagnostic. This is what keeps SC-004's census attributable to the shape fix alone
 - [ ] T039 [US4] Test SC-010 in `waybill-cli/tests/closure_structured_attrs.rs` as a **mutation**: with the typed-form reads removed, the guard goes red. A guard that only passes after the fix is no evidence it can fail
-- [ ] T051 [P] [US4] Test SC-012 and FR-012 in `waybill-cli/tests/closure_structured_attrs.rs`: the disclosure records the format version the closure was read from, asserted on the emitted value and not inferred, covering US4's third acceptance scenario. Runs with T031; numbered last so no existing task ID moved
+- [X] T051 [P] [US4] Test SC-012 and FR-012 in `waybill-cli/tests/closure_structured_attrs.rs`: the disclosure records the format version the closure was read from, asserted on the emitted value and not inferred, covering US4's third acceptance scenario. Runs with T031; numbered last so no existing task ID moved
 
 **Checkpoint**: the disclosure is live and proven able to fail.
 

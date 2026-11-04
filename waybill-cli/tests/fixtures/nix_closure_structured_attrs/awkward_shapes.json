@@ -1,0 +1,74 @@
+{
+  "derivations": {
+    "aaa-waybill-fixture-libalpha-1.0.drv": {
+      "name": "waybill-fixture-libalpha-1.0",
+      "env": { "pname": "waybill-fixture-libalpha", "version": "1.0" },
+      "outputs": { "out": { "path": "h1-waybill-fixture-libalpha-1.0" } }
+    },
+    "bbb-waybill-fixture-emptylist-1.0.drv": {
+      "name": "waybill-fixture-emptylist-1.0",
+      "env": { "out": "/nix/store/h2-waybill-fixture-emptylist-1.0" },
+      "structuredAttrs": {
+        "pname": "waybill-fixture-emptylist",
+        "version": "1.0",
+        "buildInputs": [],
+        "nativeBuildInputs": []
+      },
+      "outputs": { "out": { "path": "h2-waybill-fixture-emptylist-1.0" } }
+    },
+    "ccc-waybill-fixture-boolfield-1.0.drv": {
+      "name": "waybill-fixture-boolfield-1.0",
+      "env": { "out": "/nix/store/h3-waybill-fixture-boolfield-1.0" },
+      "structuredAttrs": {
+        "pname": "waybill-fixture-boolfield",
+        "version": "1.0",
+        "buildInputs": true,
+        "nativeBuildInputs": 7
+      },
+      "outputs": { "out": { "path": "h3-waybill-fixture-boolfield-1.0" } }
+    },
+    "ddd-waybill-fixture-nestedobject-1.0.drv": {
+      "name": "waybill-fixture-nestedobject-1.0",
+      "env": { "out": "/nix/store/h4-waybill-fixture-nestedobject-1.0" },
+      "structuredAttrs": {
+        "pname": "waybill-fixture-nestedobject",
+        "version": "1.0",
+        "buildInputs": { "nested": "/nix/store/h1-waybill-fixture-libalpha-1.0" },
+        "outputChecks": { "out": { "disallowedReferences": [] } },
+        "env": { "SSL_CERT_FILE": "/no-cert-file.crt" }
+      },
+      "outputs": { "out": { "path": "h4-waybill-fixture-nestedobject-1.0" } }
+    },
+    "eee-waybill-fixture-nullfield-1.0.drv": {
+      "name": "waybill-fixture-nullfield-1.0",
+      "env": { "out": "/nix/store/h5-waybill-fixture-nullfield-1.0" },
+      "structuredAttrs": {
+        "pname": "waybill-fixture-nullfield",
+        "version": "1.0",
+        "buildInputs": null
+      },
+      "outputs": { "out": { "path": "h5-waybill-fixture-nullfield-1.0" } }
+    },
+    "fff-waybill-fixture-singlestring-1.0.drv": {
+      "name": "waybill-fixture-singlestring-1.0",
+      "env": { "out": "/nix/store/h6-waybill-fixture-singlestring-1.0" },
+      "structuredAttrs": {
+        "pname": "waybill-fixture-singlestring",
+        "version": "1.0",
+        "buildInputs": "/nix/store/h1-waybill-fixture-libalpha-1.0"
+      },
+      "outputs": { "out": { "path": "h6-waybill-fixture-singlestring-1.0" } }
+    },
+    "ggg-waybill-fixture-mixedlist-1.0.drv": {
+      "name": "waybill-fixture-mixedlist-1.0",
+      "env": { "out": "/nix/store/h7-waybill-fixture-mixedlist-1.0" },
+      "structuredAttrs": {
+        "pname": "waybill-fixture-mixedlist",
+        "version": "1.0",
+        "buildInputs": ["/nix/store/h1-waybill-fixture-libalpha-1.0", 42, null, { "a": 1 }]
+      },
+      "outputs": { "out": { "path": "h7-waybill-fixture-mixedlist-1.0" } }
+    }
+  },
+  "version": 4
+}

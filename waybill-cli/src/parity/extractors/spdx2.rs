@@ -706,6 +706,8 @@ spdx23_anno!(c181_spdx23, "waybill:nix-eval-origin", component);
 spdx23_anno!(c182_spdx23, "waybill:closure-role", component);
 spdx23_anno!(c183_spdx23, "waybill:patch-evidence-grade", document);
 spdx23_anno!(c184_spdx23, "waybill:nix-closure", document);
+// Milestone 1278 (#1348): C204 -- what the closure reader did not consult.
+spdx23_anno!(c204_spdx23, "waybill:nix-closure-read", document);
 spdx23_anno!(c190_spdx23, "waybill:nix-closure-degraded", document);
 spdx23_anno!(c185_spdx23, "waybill:closure-patches", component);
 spdx23_anno!(c186_spdx23, "waybill:nixpkgs-declaration", component);

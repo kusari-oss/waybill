@@ -73,10 +73,27 @@ pub(crate) fn dependency_claims(
     reachable_set: Option<&std::collections::HashSet<String>>,
     degraded_ecosystems: &std::collections::HashSet<String>,
     integrity: &TraceIntegrity,
+    // Milestone 1278 (#1348). Whether the nix closure reader saw a dependency
+    // declaration it did not consult.
+    //
+    // It demotes the **root** claim and nothing else, deliberately. The root
+    // claim is the document-level one — "no further dependencies are known to
+    // exist" — and an unconsulted declaration is precisely a dependency that
+    // may exist and was not looked at, so the root claim is the one the
+    // measurement contradicts.
+    //
+    // The per-ecosystem claims are left to reachability and
+    // `degraded_ecosystems`, because **we cannot know which ecosystem the
+    // unread declarations would have touched.** A field the reader never
+    // resolved names store paths whose members were never identified; naming
+    // an ecosystem for them would be invention, and inventing a degradation is
+    // no better than inventing a dependency.
+    closure_read_partial: bool,
 ) -> DependencyClaims {
     let mut claims = DependencyClaims {
         root_complete: target_aggregate(integrity) == "incomplete_first_party_only"
-            && !components.is_empty(),
+            && !components.is_empty()
+            && !closure_read_partial,
         ..Default::default()
     };
     for eco in complete_ecosystems {
@@ -175,6 +192,8 @@ pub fn build_compositions(
     // document reports `partial`, which is the contradiction #871 is
     // about, one reason-code removed.
     degraded_ecosystems: &std::collections::HashSet<String>,
+    // Milestone 1278 (#1348): see `dependency_claims`.
+    closure_read_partial: bool,
 ) -> serde_json::Value {
     let target_aggregate = target_aggregate(integrity);
     let claims = dependency_claims(
@@ -183,6 +202,7 @@ pub fn build_compositions(
         reachable_set,
         degraded_ecosystems,
         integrity,
+        closure_read_partial,
     );
 
     let mut out: Vec<serde_json::Value> = Vec::new();
@@ -291,7 +311,16 @@ pub fn build_compositions(
     // were observed and at least one outbound dep edge will be
     // synthesized for the primary (build_dependencies handles the
     // synthesis when no real edges exist).
-    if target_aggregate == "incomplete_first_party_only" && !components.is_empty() {
+    //
+    // **Milestone 1278 (#1348): read from `claims.root_complete` rather than
+    // recomputed here.** This condition used to be an inline copy of the same
+    // predicate `dependency_claims` computes, which meant CycloneDX and
+    // SPDX 3 decided the root's dependency-completeness claim twice, from two
+    // pieces of code, and could disagree. m1069 routed the per-ecosystem
+    // claims through one helper for exactly that reason and left this one
+    // behind. It was found by a test that demoted the claim and watched only
+    // SPDX 3 change.
+    if claims.root_complete {
         out.push(json!({
             "aggregate": "complete",
             "dependencies": [target_ref],
@@ -378,7 +407,7 @@ mod tests {
     fn a_resolved_ecosystem_is_complete() {
         let cs = [make_component("pkg:cargo/a@1"), make_component("pkg:cargo/b@1")];
         let reach = set(&["pkg:cargo/a@1", "pkg:cargo/b@1"]);
-        let c = dependency_claims(&cs, &["cargo".into()], Some(&reach), &set(&[]), &clean_integrity());
+        let c = dependency_claims(&cs, &["cargo".into()], Some(&reach), &set(&[]), &clean_integrity(), false);
         assert_eq!(c.complete, set(&["pkg:cargo/a@1", "pkg:cargo/b@1"]));
         assert!(c.unknown.is_empty());
     }
@@ -387,7 +416,7 @@ mod tests {
     fn one_unreachable_component_makes_the_whole_ecosystem_unknown() {
         let cs = [make_component("pkg:cargo/a@1"), make_component("pkg:cargo/b@1")];
         let reach = set(&["pkg:cargo/a@1"]);
-        let c = dependency_claims(&cs, &["cargo".into()], Some(&reach), &set(&[]), &clean_integrity());
+        let c = dependency_claims(&cs, &["cargo".into()], Some(&reach), &set(&[]), &clean_integrity(), false);
         assert!(c.complete.is_empty());
         assert_eq!(c.unknown, set(&["pkg:cargo/a@1", "pkg:cargo/b@1"]));
     }
@@ -401,7 +430,7 @@ mod tests {
         gc.reason_codes.push(ReasonCode::GoTransitiveCoverageDegraded { missing_count: 1 });
         let degraded = degraded_ecosystems(&gc);
         assert_eq!(degraded, set(&["golang"]));
-        let c = dependency_claims(&cs, &["golang".into()], Some(&reach), &degraded, &clean_integrity());
+        let c = dependency_claims(&cs, &["golang".into()], Some(&reach), &degraded, &clean_integrity(), false);
         assert!(c.complete.is_empty());
         assert_eq!(c.unknown.len(), 1);
     }
@@ -409,24 +438,24 @@ mod tests {
     #[test]
     fn an_ecosystem_not_enumerated_completely_carries_no_claim() {
         let cs = [make_component("pkg:pypi/requests@2.0.0")];
-        let c = dependency_claims(&cs, &["cargo".into()], None, &set(&[]), &clean_integrity());
+        let c = dependency_claims(&cs, &["cargo".into()], None, &set(&[]), &clean_integrity(), false);
         assert!(c.complete.is_empty() && c.unknown.is_empty());
     }
 
     #[test]
     fn the_root_claim_follows_trace_integrity_and_needs_components() {
         let cs = [make_component("pkg:cargo/a@1")];
-        assert!(dependency_claims(&cs, &[], None, &set(&[]), &clean_integrity()).root_complete);
-        assert!(!dependency_claims(&[], &[], None, &set(&[]), &clean_integrity()).root_complete);
+        assert!(dependency_claims(&cs, &[], None, &set(&[]), &clean_integrity(), false).root_complete);
+        assert!(!dependency_claims(&[], &[], None, &set(&[]), &clean_integrity(), false).root_complete);
         let mut failed = clean_integrity();
         failed.uprobe_attach_failures.push("libssl.so:SSL_write".to_string());
-        assert!(!dependency_claims(&cs, &[], None, &set(&[]), &failed).root_complete);
+        assert!(!dependency_claims(&cs, &[], None, &set(&[]), &failed, false).root_complete);
     }
 
     #[test]
     fn clean_trace_with_no_complete_ecosystems_emits_single_record() {
         let integrity = clean_integrity();
-        let result = build_compositions(&integrity, "myapp@0.1.0", &[], &[], None, &Default::default());
+        let result = build_compositions(&integrity, "myapp@0.1.0", &[], &[], None, &Default::default(), false);
         let arr = result.as_array().expect("array");
         assert_eq!(arr.len(), 1);
         assert_eq!(arr[0]["aggregate"], "incomplete_first_party_only");
@@ -436,12 +465,12 @@ mod tests {
     fn data_loss_maps_to_incomplete() {
         let mut integrity = clean_integrity();
         integrity.ring_buffer_overflows = 5;
-        let result = build_compositions(&integrity, "myapp@0.1.0", &[], &[], None, &Default::default());
+        let result = build_compositions(&integrity, "myapp@0.1.0", &[], &[], None, &Default::default(), false);
         assert_eq!(result[0]["aggregate"], "incomplete");
 
         let mut integrity2 = clean_integrity();
         integrity2.events_dropped = 3;
-        let result2 = build_compositions(&integrity2, "myapp@0.1.0", &[], &[], None, &Default::default());
+        let result2 = build_compositions(&integrity2, "myapp@0.1.0", &[], &[], None, &Default::default(), false);
         assert_eq!(result2[0]["aggregate"], "incomplete");
     }
 
@@ -449,7 +478,7 @@ mod tests {
     fn probe_failures_map_to_unknown() {
         let mut integrity = clean_integrity();
         integrity.uprobe_attach_failures = vec!["libssl.so:SSL_write".to_string()];
-        let result = build_compositions(&integrity, "myapp@0.1.0", &[], &[], None, &Default::default());
+        let result = build_compositions(&integrity, "myapp@0.1.0", &[], &[], None, &Default::default(), false);
         assert_eq!(result[0]["aggregate"], "unknown");
     }
 
@@ -458,14 +487,14 @@ mod tests {
         let mut integrity = clean_integrity();
         integrity.ring_buffer_overflows = 10;
         integrity.kprobe_attach_failures = vec!["sys_connect".to_string()];
-        let result = build_compositions(&integrity, "myapp@0.1.0", &[], &[], None, &Default::default());
+        let result = build_compositions(&integrity, "myapp@0.1.0", &[], &[], None, &Default::default(), false);
         assert_eq!(result[0]["aggregate"], "unknown");
     }
 
     #[test]
     fn target_ref_appears_in_assemblies() {
         let integrity = clean_integrity();
-        let result = build_compositions(&integrity, "myapp@0.1.0", &[], &[], None, &Default::default());
+        let result = build_compositions(&integrity, "myapp@0.1.0", &[], &[], None, &Default::default(), false);
         assert_eq!(result[0]["assemblies"][0], "myapp@0.1.0");
     }
 
@@ -479,7 +508,7 @@ mod tests {
         let mut integrity = clean_integrity();
         integrity.ring_buffer_overflows = 2;
         integrity.events_dropped = 3;
-        let result = build_compositions(&integrity, "myapp@0.1.0", &[], &[], None, &Default::default());
+        let result = build_compositions(&integrity, "myapp@0.1.0", &[], &[], None, &Default::default(), false);
         assert!(
             result[0].get("properties").is_none(),
             "composition records must not carry properties (CDX 1.6 schema): {:?}",
@@ -505,6 +534,7 @@ mod tests {
             &ecosystems,
             None,
             &Default::default(),
+            false,
         );
         let arr = result.as_array().expect("array");
         // Two per-ecosystem complete records, the target-integrity
@@ -526,7 +556,7 @@ mod tests {
         let integrity = clean_integrity();
         let ecosystems = vec!["deb".to_string()];
         let result =
-            build_compositions(&integrity, "myapp@0.1.0", &[], &ecosystems, None, &Default::default());
+            build_compositions(&integrity, "myapp@0.1.0", &[], &ecosystems, None, &Default::default(), false);
         let arr = result.as_array().expect("array");
         assert_eq!(arr.len(), 1);
         assert_eq!(arr[0]["aggregate"], "incomplete_first_party_only");
@@ -547,6 +577,7 @@ mod tests {
             &ecosystems,
             None,
             &Default::default(),
+            false,
         );
         let arr = result.as_array().expect("array");
         // 1 deb-complete + 1 target-integrity + 1 primary-dep-complete = 3.

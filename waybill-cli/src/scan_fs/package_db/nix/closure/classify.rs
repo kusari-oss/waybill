@@ -20,6 +20,22 @@ const TOOLING_FIELDS: &[&str] = &[
     "nativeCheckInputs",
 ];
 
+/// Every field the closure reader consults, for the FR-014 diagnostic.
+///
+/// Derived from the same two constants classification reads, plus `patches`,
+/// which the patch collector reads. Assembled here rather than written out a
+/// second time: a hand-maintained copy would drift, and the drift would show
+/// up as the disclosure naming a field that *is* read — a false alarm in the
+/// mechanism whose whole job is to be trustworthy when it stays silent.
+pub(crate) fn consulted_fields() -> Vec<&'static str> {
+    ARTIFACT_FIELDS
+        .iter()
+        .chain(TOOLING_FIELDS)
+        .copied()
+        .chain(std::iter::once("patches"))
+        .collect()
+}
+
 /// How nix referenced a member.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) enum DerivationRole {
@@ -377,6 +393,7 @@ mod tests {
             attribute: "default".to_string(),
             raw: closure,
             roles,
+            read_outcome: Default::default(),
         });
         eprintln!("emitted components after variant merge: {}", emitted.len());
         assert!(

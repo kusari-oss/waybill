@@ -17,6 +17,17 @@ pub const ANN_PATCH_EVIDENCE_GRADE: &str = "waybill:patch-evidence-grade";
 /// C184 — what the closure query saw.
 pub const ANN_NIX_CLOSURE: &str = "waybill:nix-closure";
 
+/// C204 — what the closure reader saw but did not consult (#1348).
+///
+/// A sibling of C184 rather than a field inside it, because the two have
+/// different emission gating: C184 is emitted whenever a closure was read,
+/// and this is emitted only when something went unconsulted. Folding a
+/// sometimes-absent fact into an always-present object would mean either a
+/// zero-valued field on every document — whose presence then says nothing —
+/// or a key that comes and goes inside one value, which the parity extractors
+/// would have to special-case.
+pub const ANN_NIX_CLOSURE_READ: &str = "waybill:nix-closure-read";
+
 /// What one closure query contributed, as emitted at document scope.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct NixClosureSummary {
@@ -34,6 +45,8 @@ pub struct NixClosureSummary {
     /// the CVE count for coverage.
     pub patches_without_cve: usize,
     pub distinct_cves: usize,
+    /// What the reader saw but did not consult (#1348).
+    pub read_outcome: super::derivation::ReadOutcome,
 }
 
 impl NixClosureSummary {
@@ -50,6 +63,7 @@ impl NixClosureSummary {
             patches: totals.patches,
             patches_without_cve: totals.without_cve,
             distinct_cves: totals.distinct_cves,
+            read_outcome: closure.read_outcome.clone(),
         }
     }
 
@@ -74,6 +88,63 @@ impl NixClosureSummary {
             "patches-without-cve": self.patches_without_cve,
             "distinct-cves": self.distinct_cves,
         })
+    }
+
+    /// The C204 annotation value, and `None` when there is nothing to
+    /// disclose.
+    ///
+    /// **Absence means "nothing went unconsulted", never "not checked".** That
+    /// is the whole distinction this milestone exists to make, so the gating
+    /// is on a positive signal — something was seen and skipped — and not on
+    /// the closure having been read at all. A closure that was never read is
+    /// C190's case.
+    ///
+    /// The format version is carried here rather than in C184 because it is
+    /// evidence about *this* record: it says which output shape the reader was
+    /// looking at when it failed to consult something.
+    pub fn nix_closure_read_value(&self) -> Option<Value> {
+        if !self.read_outcome.has_gap() {
+            return None;
+        }
+        let mut obj = serde_json::Map::new();
+        if let Some(v) = self.read_outcome.format_version {
+            obj.insert("format-version".into(), json!(v));
+        }
+        obj.insert(
+            "fields-unconsulted".into(),
+            json!(self
+                .read_outcome
+                .fields_unconsulted
+                .iter()
+                .cloned()
+                .collect::<Vec<String>>()),
+        );
+        obj.insert(
+            "declarations-unconsulted".into(),
+            json!(self.read_outcome.declarations_unconsulted),
+        );
+        obj.insert(
+            "derivations-affected".into(),
+            json!(self.read_outcome.derivations_affected),
+        );
+        if !self.read_outcome.carrier_disagreements.is_empty() {
+            obj.insert(
+                "carrier-disagreements".into(),
+                json!(self
+                    .read_outcome
+                    .carrier_disagreements
+                    .iter()
+                    .cloned()
+                    .collect::<Vec<String>>()),
+            );
+        }
+        Some(Value::Object(obj))
+    }
+
+    /// The C204 wire value — one canonical string, identical in all three
+    /// formats, for the reason C184's own doc comment gives.
+    pub fn nix_closure_read_wire(&self) -> Option<String> {
+        self.nix_closure_read_value().map(|v| v.to_string())
     }
 
     /// The C183 annotation value.
@@ -114,6 +185,7 @@ mod tests {
             attribute: "packages.x86_64-linux.thing".into(),
             raw,
             roles,
+            read_outcome: Default::default(),
         };
         let patched = attribute(&closure.raw);
         NixClosureSummary::build(&closure, &patched)
@@ -152,7 +224,12 @@ mod tests {
         }"#;
         let raw = RawClosure::parse(NO_CVE).unwrap();
         let roles = classify(&raw);
-        let closure = ClassifiedClosure { attribute: "default".into(), raw, roles };
+        let closure = ClassifiedClosure {
+            attribute: "default".into(),
+            raw,
+            roles,
+            read_outcome: Default::default(),
+        };
         let patched = attribute(&closure.raw);
         let s = NixClosureSummary::build(&closure, &patched);
         // CONTROL: a patch was seen, so absence of the grade is about the
