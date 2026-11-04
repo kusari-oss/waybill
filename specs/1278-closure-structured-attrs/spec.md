@@ -3,6 +3,7 @@
 **Feature Branch**: `1278-closure-structured-attrs`
 **Created**: 2026-11-04
 **Status**: Draft
+**Issue**: #1348
 **Input**: The nix closure reader reads only a derivation's flat `env`, so every
 attribute declared under `structuredAttrs` in Determinate Nix's format-v4 output
 is invisible: 554 dependency entries across 421 of 1,749 derivations, which

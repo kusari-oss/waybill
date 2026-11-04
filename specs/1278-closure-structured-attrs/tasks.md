@@ -6,6 +6,7 @@ description: "Task list for 1278-closure-structured-attrs"
 
 **Input**: Design documents in `/specs/1278-closure-structured-attrs/`
 **Prerequisites**: `plan.md`, `spec.md`, `research.md`, `data-model.md`, `contracts/`, `quickstart.md`
+**Issue**: #1348
 
 **Tests are included.** Not by default — because SC-010 requires a mutation
 that proves the guard can fail, and because the repository's gate is the

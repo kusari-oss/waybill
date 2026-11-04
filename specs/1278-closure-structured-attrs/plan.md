@@ -2,6 +2,7 @@
 
 **Branch**: `1278-closure-structured-attrs` | **Date**: 2026-11-04 | **Spec**: [spec.md](./spec.md)
 **Input**: Feature specification from `/specs/1278-closure-structured-attrs/spec.md`
+**Issue**: #1348
 
 ## Summary
 
