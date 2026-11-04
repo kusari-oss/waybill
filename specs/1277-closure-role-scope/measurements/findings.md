@@ -373,7 +373,7 @@ nix --extra-experimental-features 'nix-command flakes' \
     derivation show -r '.#packages.aarch64-darwin.default'
 ```
 
-on the cached `nix-closure-moat` (`MercuryTechnologies/moat`) checkout —
+on the cached `nix-closure-moat` (`nix-closure-moat`) checkout —
 1,275 derivations, 6.0 MB.
 
 | | count |

@@ -3,7 +3,7 @@
 ## Reproduce the defect in five minutes
 
 Needs `nix` on the host. The corpus checkout is already cached if the corpus
-harness has run; otherwise clone `MercuryTechnologies/moat` at
+harness has run; otherwise clone `nix-closure-moat` at
 `d06905558ba68b49b17f36c875e97f7234a9c19b`.
 
 ```sh

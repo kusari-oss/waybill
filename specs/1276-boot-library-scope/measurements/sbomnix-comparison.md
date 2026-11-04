@@ -2,8 +2,7 @@
 
 **Date**: 2026-11-03 | **sbomnix**: 1.9.0+g95480c2 | **waybill**: this branch
 (milestone 1275 + 1276 US1)
-**Subject**: the **`MercuryTechnologies/moat`** flake at the
-`nix-closure-moat` corpus pin, nixpkgs
+**Subject**: the **`nix-closure-moat`** corpus target at its pin, nixpkgs
 `a799d3e3886da994fa307f817a6bc705ae538eeb`, 1,290 derivations — the same
 closure every measurement in milestones 1275 and 1276 is taken against.
 

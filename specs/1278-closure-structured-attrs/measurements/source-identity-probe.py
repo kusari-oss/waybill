@@ -11,7 +11,7 @@ Input: the output of the SAME invocation waybill uses --
 
 Usage: python3 -I source-identity-probe.py closure.json [closure.json ...]
 
-Measured 2026-11-04 against MercuryTechnologies/moat @ d0690555 (the
+Measured 2026-11-04 against the `nix-closure-moat` corpus target @ d0690555 (the
 `nix-closure-moat` corpus pin), nixpkgs a799d3e3, Determinate Nix 3.20.0
 (derivation-show format version 4).
 """
