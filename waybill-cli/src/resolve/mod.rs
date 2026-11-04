@@ -1,3 +1,4 @@
+pub mod closure_role_scope;
 pub mod component_role;
 pub mod deduplicator;
 pub mod hash_resolver;

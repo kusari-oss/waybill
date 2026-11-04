@@ -1210,6 +1210,7 @@ mod tests {
         let purl = waybill_common::types::purl::Purl::new("pkg:npm/test@1.0.0").unwrap();
         ResolvedComponent {
             build_inclusion: None,
+            artifact_presence: None,
             name: "test".to_string(),
             version: "1.0.0".to_string(),
             purl,

@@ -1504,6 +1504,7 @@ mod tests {
         use waybill_common::types::purl::Purl;
         ResolvedComponent {
             build_inclusion: None,
+            artifact_presence: None,
             purl: Purl::new(purl).unwrap(),
             name: "demo".to_string(),
             version: "1".to_string(),

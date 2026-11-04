@@ -26,17 +26,17 @@ pass, the emitters and the tests. `waybill-ebpf` untouched.
 
 ## Phase 1: Setup
 
-- [ ] T001 Verify `1277-closure-role-scope` is checked out and current with `main` (`5a0fa58` or later), and that `git log --oneline main..HEAD` shows only this feature's spec/plan commits, in the repo root.
-- [ ] T002 Re-run the committed baseline harness `python3 -I specs/1277-closure-role-scope/measurements/roles-and-scopes.py` and confirm it still reports 231/34/80/17, ten already-scoped components, and 1 target with roles / 16 without. A figure that has moved means `main` changed under the spec and every success criterion needs re-deriving before any code is written.
-- [ ] T003 [P] Record the pre-feature `scope` census per corpus target into `specs/1277-closure-role-scope/measurements/baseline.md` as a committed table — target, components, components with a `scope`, and the value — so US1's byte-identity control (FR-008) has a stated before rather than an implied one.
+- [X] T001 Verify `1277-closure-role-scope` is checked out and current with `main` (`5a0fa58` or later), and that `git log --oneline main..HEAD` shows only this feature's spec/plan commits, in the repo root.
+- [X] T002 Re-run the committed baseline harness `python3 -I specs/1277-closure-role-scope/measurements/roles-and-scopes.py` and confirm it still reports 231/34/80/17, ten already-scoped components, and 1 target with roles / 16 without. A figure that has moved means `main` changed under the spec and every success criterion needs re-deriving before any code is written.
+- [X] T003 [P] Record the pre-feature `scope` census per corpus target into `specs/1277-closure-role-scope/measurements/baseline.md` as a committed table — target, components, components with a `scope`, and the value — so US1's byte-identity control (FR-008) has a stated before rather than an implied one.
 
 ---
 
 ## Phase 2: Foundational (blocking prerequisites)
 
-- [ ] T004 Add the two-state signal to `waybill_common::resolution::ResolvedComponent` in `waybill-common/src/resolution.rs` per `data-model.md`: a closed enum with one meaningful variant (`NotInArtifact`) plus `Option` absence, `serde`-derived, documented with why `lifecycle_scope` and `build_inclusion` were both rejected (research R1, R2).
-- [ ] T005 Update every `ResolvedComponent` literal in the tree to initialise the new field, by building with `cargo build --all-targets` — not `cargo build -p waybill`, which compiles only the bin and silently skips literal test helpers (`feedback_build_check_all_targets`).
-- [ ] T006 Create `waybill-cli/src/resolve/closure_role_scope.rs` with the pass signature taking `&mut [ResolvedComponent]` and `&Option<BTreeSet<String>>` (the m1276 boot set), returning a summary struct carrying the per-role assigned counts and the exempted count, and register the module in `waybill-cli/src/resolve/mod.rs`.
+- [X] T004 Add the two-state signal to `waybill_common::resolution::ResolvedComponent` in `waybill-common/src/resolution.rs` per `data-model.md`: a closed enum with one meaningful variant (`NotInArtifact`) plus `Option` absence, `serde`-derived, documented with why `lifecycle_scope` and `build_inclusion` were both rejected (research R1, R2).
+- [X] T005 Update every `ResolvedComponent` literal in the tree to initialise the new field, by building with `cargo build --all-targets` — not `cargo build -p waybill`, which compiles only the bin and silently skips literal test helpers (`feedback_build_check_all_targets`).
+- [X] T006 Create `waybill-cli/src/resolve/closure_role_scope.rs` with the pass signature taking `&mut [ResolvedComponent]` and `&Option<BTreeSet<String>>` (the m1276 boot set), returning a summary struct carrying the per-role assigned counts and the exempted count, and register the module in `waybill-cli/src/resolve/mod.rs`.
 
 **Checkpoint**: the type exists and the workspace builds `--all-targets`. No behaviour has changed yet.
 
@@ -54,14 +54,14 @@ non-`--nix-closure` document is byte-identical.
 
 ### Tests for User Story 1
 
-- [ ] T007 [P] [US1] Write the role→scope mapping tests in `waybill-cli/src/resolve/closure_role_scope.rs`'s test module, one per row of `contracts/role-scope.md`: `build-tooling` → set, `unreferenced` → set, `artifact-input` → unset, `both` → unset, absent role → unset. Tests precede the implementation and MUST fail first.
-- [ ] T008 [P] [US1] Write the unioned-role test asserting the scope derives from the union and never from a single variant (FR-003), using a component whose variants disagree the way `flex 2.6.4` does in a real closure (`Both` as one variant, `Unreferenced` as another).
-- [ ] T009 [P] [US1] Write the fail-closed tests (FR-007): a degraded closure tier and an absent role each assign nothing, and an absent role is never treated as `build-tooling`.
+- [X] T007 [P] [US1] Write the role→scope mapping tests in `waybill-cli/src/resolve/closure_role_scope.rs`'s test module, one per row of `contracts/role-scope.md`: `build-tooling` → set, `unreferenced` → set, `artifact-input` → unset, `both` → unset, absent role → unset. Tests precede the implementation and MUST fail first.
+- [X] T008 [P] [US1] **Resolved upstream, not here — see the test's doc comment.** Write the unioned-role test asserting the scope derives from the union and never from a single variant (FR-003), using a component whose variants disagree the way `flex 2.6.4` does in a real closure (`Both` as one variant, `Unreferenced` as another).
+- [X] T009 [P] [US1] Write the fail-closed tests (FR-007): a degraded closure tier and an absent role each assign nothing, and an absent role is never treated as `build-tooling`.
 - [ ] T010 [US1] Write `waybill-cli/tests/closure_role_scope.rs` as an end-to-end test driving the closure tier through the stub `nix` that `nix_config_closure.rs` established, with a seeded package-set cache. **Point `WAYBILL_NIXPKGS_CACHE` at a *seeded* tempdir, not an empty one** — an empty directory does not make the test offline, it makes `enrich` fetch 16 MB (m1275 F8, m1276 F8; the same error twice).
 
 ### Implementation for User Story 1
 
-- [ ] T011 [US1] (FR-001, FR-003, FR-004) Implement the pass body in `waybill-cli/src/resolve/closure_role_scope.rs`: read `extra_annotations["waybill:closure-role"]` per component, match the role exhaustively, set the signal for `build-tooling` and `unreferenced`, and leave `artifact-input`, `both` and absent untouched.
+- [X] T011 [US1] (FR-001, FR-003, FR-004) Implement the pass body in `waybill-cli/src/resolve/closure_role_scope.rs`: read `extra_annotations["waybill:closure-role"]` per component, match the role exhaustively, set the signal for `build-tooling` and `unreferenced`, and leave `artifact-input`, `both` and absent untouched.
 - [ ] T012 [US1] Wire the single call site in `waybill-cli/src/cli/scan_cmd.rs`, immediately after `propagate_non_runtime_scope`, passing the `boot_libraries` m1276 already threads there. Emit one INFO line naming the per-role counts and the exempted count.
 - [ ] T013 [US1] (FR-001, FR-004, SC-001, SC-001a) Emit the native CDX `scope: "excluded"` in `waybill-cli/src/generate/cyclonedx/builder.rs` from the new signal, **outside the `include_dev` gate**, placed beside the m112 `BuildInclusion::NotNeeded` block it mirrors, with a comment stating the rationale: nix's dependency fields are a build-graph fact, not a lifecycle-scope preference the operator can toggle (research R2).
 - [ ] T014 [US1] (FR-002, SC-002) Verify FR-002 holds on real data: the ten components that already carry a scope — nine `artifact-input` and one `both`, all test frameworks — keep it byte-identical. Assert in `waybill-cli/tests/closure_role_scope.rs` against a fixture that reproduces that shape, not only against the corpus.
@@ -84,9 +84,9 @@ package in `nativeBuildInputs`. **Without** the rule the component acquires
 `build-tooling` role and no scope.
 
 - [ ] T016 [US2] Build the fixture under `waybill-cli/tests/fixtures/closure_role_scope/exempt/` so the exemption is the **only** thing preventing the scope. This is the task most likely to be done wrong: m1275's F7 found that the test its spec called most important could not fail, because two independent rules protected the same case. Before writing the assertion, **delete the exemption locally and confirm the test fails**; if it still passes, the fixture is not exercising FR-005 and must be rebuilt.
-- [ ] T017 [US2] (FR-005) Implement the exemption in `closure_role_scope.rs`: skip any component that is Haskell and whose name is in the boot set, reading the **boot set** rather than the C170 annotation (research R3 — I9 reads C170 off the emitted document, so two readers of one fact catch each other's disagreement rather than agreeing by construction).
-- [ ] T018 [US2] Assert `None` boot set exempts nothing (FR-005, m1276's posture): unearned exclusion is as dangerous as unearned immunity. Include a negative control — a tooling-role member that is *not* compiler-supplied still carries `excluded`, so the exemption is narrow rather than blanket.
-- [ ] T019 [US2] Assert FR-005a **and FR-006**: an exempt member keeps its C182 `waybill:closure-role` annotation reading `build-tooling` — the exemption withholds the classification's native expression, not the role — and every C182 value is preserved unchanged across **all four roles**, not only the exempt one. FR-006 says "every"; asserting it for one role would leave three untested.
+- [X] T017 [US2] (FR-005) Implement the exemption in `closure_role_scope.rs`: skip any component that is Haskell and whose name is in the boot set, reading the **boot set** rather than the C170 annotation (research R3 — I9 reads C170 off the emitted document, so two readers of one fact catch each other's disagreement rather than agreeing by construction).
+- [X] T018 [US2] Assert `None` boot set exempts nothing (FR-005, m1276's posture): unearned exclusion is as dangerous as unearned immunity. Include a negative control — a tooling-role member that is *not* compiler-supplied still carries `excluded`, so the exemption is narrow rather than blanket.
+- [ ] T019 [US2] *(FR-005a done at unit level; FR-006's all-four-roles assertion needs T010's end-to-end test)* Assert FR-005a **and FR-006**: an exempt member keeps its C182 `waybill:closure-role` annotation reading `build-tooling` — the exemption withholds the classification's native expression, not the role — and every C182 value is preserved unchanged across **all four roles**, not only the exempt one. FR-006 says "every"; asserting it for one role would leave three untested.
 - [ ] T020 [US2] Run the m1276 suite `cargo test -p waybill --test scope_exemption_record` and the m1275 suite `--test nix_closure_hackage_identity` and confirm both stay green; neither may be edited to accommodate this feature.
 
 **Checkpoint**: the overlap is handled, demonstrated on a fixture that can
