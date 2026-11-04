@@ -25,17 +25,36 @@ carriers follow for free.
 
 **Two measured consequences rule it out.**
 
-1. **The CDX emission is gated on `include_dev`** —
-   `if self.config.include_dev { if let Some(scope) = … }` at
-   `builder.rs:1400`. A default scan sets no scope, so the feature would not
-   fire at all in the configuration the defect was reported against.
+1. ~~**The CDX emission is gated on `include_dev`.**~~ **WITHDRAWN — this
+   reason was wrong, and mutant M5 is how it surfaced.** The gate at
+   `builder.rs:1400` is real, but `include_dev` is hard-coded `true` at the
+   `sbom scan` call site (`scan_cmd.rs:5427`, and `:3783`): the
+   `--include-dev` flag was removed in milestone 052/part-3, and the opt-out
+   became `--exclude-scope` applied post-resolution. So the gate is always
+   open on the only path that produces closure roles, and a
+   `lifecycle_scope` route would **not** have been suppressed by it.
+
+   M5 — moving this feature's emission back inside that gate — changed no
+   output and survived the whole suite. It is an equivalent mutant on the
+   scan path, and its survival is what sent me back to read the call site
+   rather than the gate. Reason 2 below is sufficient on its own; this one
+   was asserted from the gate's existence without checking what feeds it.
 2. **`--exclude-scope build` would then drop the 97 components.** The flag
    maps straight onto `LifecycleScope` (`main.rs:417`) and
-   `apply_exclude_scope_filter` (`scan_cmd.rs:3081`) removes matching
-   components. That destroys the reason those members are emitted at all:
-   m1035 measured `jq` and `lua` in the `unreferenced` role carrying 6 of
-   one project's 18 CVEs, and the spec's FR-004 rationale depends on
-   `excluded` **keeping them in the document**.
+   `apply_exclude_scope_filter` (`scan_cmd.rs:3081`) removes any component
+   whose `lifecycle_scope` is in the exclude set. That destroys the reason
+   those members are emitted at all: m1035 measured `jq` and `lua` in the
+   `unreferenced` role carrying 6 of one project's 18 CVEs, and the spec's
+   FR-004 rationale depends on `excluded` **keeping them in the document**.
+
+   **This is now the whole of the argument, so it has a control.**
+   `m1277_the_classification_survives_exclude_scope_build` scans with
+   `--exclude-scope build` and asserts the three classified members survive
+   with their markers — and, as its own inner control, that `nixpkgs` (which
+   the propagation scoped `build`) *is* dropped, so a run where the flag was
+   silently ignored cannot pass. Mutant M10 implements the rejected design
+   and this test catches it. Nothing tested this until M5's survival exposed
+   that reason 1 was carrying weight it could not bear.
 
 **Decision**: do **not** route through `lifecycle_scope`.
 

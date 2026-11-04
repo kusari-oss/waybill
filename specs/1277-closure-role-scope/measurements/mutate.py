@@ -51,6 +51,11 @@ MUTANTS = [
     ("M7 SPDX 2.3 BUILD_TOOL_OF omitted", SPDX23,
      "                    kind: SpdxRelationshipType::BuildToolOf,",
      "                    kind: SpdxRelationshipType::Contains,"),
+    ("M10 classification ALSO carried on lifecycle_scope (the design R1 rejected)", CRS,
+     "        component.artifact_presence = Some(ArtifactPresence::NotInArtifact);",
+     """        component.artifact_presence = Some(ArtifactPresence::NotInArtifact);
+        component.lifecycle_scope =
+            Some(waybill_common::resolution::LifecycleScope::Build);"""),
     ("M8 exemption ignored in SPDX 2.3 only", SPDX23,
      """            if !c
                 .artifact_presence

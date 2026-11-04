@@ -358,6 +358,11 @@ fn prop<'a>(component: &'a Value, key: &str) -> Option<&'a str> {
 
 /// Scan the fixture with `--nix-closure` through the stub `nix`.
 fn scan() -> Scan {
+    scan_with(&[])
+}
+
+/// As `scan`, with extra CLI arguments.
+fn scan_with(extra: &[&str]) -> Scan {
     let dir = tempfile::tempdir().unwrap();
     let cache = seed_cache();
     let bin = dir.path().join("bin");
@@ -394,6 +399,7 @@ fn scan() -> Scan {
         .arg(format!("spdx-2.3-json={}", spdx23_path.display()))
         .arg("--output")
         .arg(format!("spdx-3-json={}", spdx3_path.display()))
+        .args(extra)
         .env("PATH", format!("{}:{}", bin.display(), std::env::var("PATH").unwrap()))
         .env("WAYBILL_NIXPKGS_CACHE", cache.path())
         .output()
@@ -1114,4 +1120,62 @@ fn m1277_the_tool_edges_do_not_disturb_cross_format_dependency_parity() {
     // And the tool edges are genuinely present, so the agreement above is
     // not the agreement of two documents that both lack them.
     assert_eq!(s.spdx23_build_tools().len(), 3);
+}
+
+/// The control research R1's design decision actually rests on, and which
+/// nothing tested until mutant M5 survived.
+///
+/// Routing the classification through `LifecycleScope::Build` would have
+/// reached the native carrier in all three formats for free. It was rejected
+/// for two measured reasons. **One of them was wrong**: `include_dev` is
+/// hard-coded `true` at the `sbom scan` call site — the `--include-dev` flag
+/// was removed in milestone 052/part-3 — so the CycloneDX gate is always
+/// open on the only path that produces closure roles, and a
+/// `lifecycle_scope` route would not have been suppressed by it. M5 moving
+/// the emission back inside that gate changed no output, which is how the
+/// error surfaced.
+///
+/// The second reason is the real one, and this test is it: `--exclude-scope`
+/// drops components by `lifecycle_scope` (`apply_exclude_scope_filter`), so
+/// a classification carried there would make `--exclude-scope build` **delete**
+/// these components from the document. That is the opposite of the intent —
+/// the `unreferenced` ones exist in the output precisely because m1035
+/// measured `jq` and `lua` in that role carrying 6 of one project's 18 CVEs.
+#[test]
+fn m1277_the_classification_survives_exclude_scope_build() {
+    let s = scan_with(&["--exclude-scope", "build"]);
+
+    for name in [
+        "waybill-fixture-roletool",
+        "waybill-fixture-rolepatch",
+        "waybill-fixture-roletoolhask",
+    ] {
+        assert!(
+            s.component(name).is_some(),
+            "{name} was dropped by `--exclude-scope build`; a classification carried \
+             on `lifecycle_scope` would be deletable, which is why this feature does \
+             not carry it there"
+        );
+        assert_eq!(
+            s.scope(name),
+            Some("excluded"),
+            "{name} kept its component but lost the marker"
+        );
+    }
+
+    // The exempt member survives too, with its record intact.
+    assert_eq!(
+        s.source("waybill-fixture-roletoolboot"),
+        Some("exempt-compiler-supplied")
+    );
+
+    // And the control on the control: a component the propagation scoped
+    // `build` IS droppable, which is what makes the flag meaningful and
+    // proves the scan actually applied it rather than ignoring the argument.
+    assert!(
+        s.component("nixpkgs").is_none(),
+        "`--exclude-scope build` must still drop a component the propagation \
+         scoped `build` -- if nothing is dropped, the flag was not applied and \
+         the assertions above prove nothing"
+    );
 }
