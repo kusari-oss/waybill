@@ -1,0 +1,38 @@
+{
+  "derivations": {
+    "aaa-waybill-fixture-libalpha-1.0.drv": {
+      "name": "waybill-fixture-libalpha-1.0",
+      "env": {
+        "pname": "waybill-fixture-libalpha",
+        "version": "1.0"
+      },
+      "outputs": {
+        "out": {
+          "path": "h1-waybill-fixture-libalpha-1.0"
+        }
+      }
+    },
+    "bbb-waybill-fixture-noisy-1.0.drv": {
+      "name": "waybill-fixture-noisy-1.0",
+      "env": {
+        "pname": "waybill-fixture-noisy",
+        "version": "1.0",
+        "PATH": "/nix/store/hb-bash/bin:/nix/store/hc-coreutils/bin",
+        "SHELL": "/nix/store/hb-bash/bin/bash",
+        "builder": "/nix/store/hb-bash/bin/bash",
+        "buildPhase": "cp /nix/store/hd-helper.sh .",
+        "src": "/nix/store/he-source",
+        "mkdir": "/nix/store/hc-coreutils/bin/mkdir",
+        "LD_LIBRARY_PATH": "/nix/store/hf-lib/lib",
+        "stdenv": "/nix/store/hg-stdenv",
+        "depsBuildTarget": "/nix/store/h1-waybill-fixture-libalpha-1.0"
+      },
+      "outputs": {
+        "out": {
+          "path": "h2-waybill-fixture-noisy-1.0"
+        }
+      }
+    }
+  },
+  "version": 4
+}

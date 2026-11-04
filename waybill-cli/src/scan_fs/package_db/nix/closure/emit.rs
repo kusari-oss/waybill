@@ -212,6 +212,7 @@ mod tests {
             attribute: "default".into(),
             raw,
             roles,
+            read_outcome: Default::default(),
         })
     }
 
@@ -273,6 +274,7 @@ mod tests {
             attribute: "default".into(),
             raw,
             roles,
+            read_outcome: Default::default(),
         });
         let dups: Vec<_> = c.iter().filter(|x| x.name == "dup").collect();
         assert_eq!(dups.len(), 1, "two variants, one component");
@@ -322,6 +324,7 @@ mod tests {
             attribute: "default".into(),
             raw,
             roles,
+            read_outcome: Default::default(),
         })
         .iter()
         .map(|c| c.name.clone())

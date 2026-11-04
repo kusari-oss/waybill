@@ -103,7 +103,12 @@ discard the entire Haskell standard distribution.
 ## R3 — What the closure contains, and what of it belongs in a document
 
 **MEASURED** (classifier committed at
-`specs/1034-nix-eval-tier/measurements/classify-derivation-closure.py`):
+`specs/1034-nix-eval-tier/measurements/classify-derivation-closure.py`), on
+**aarch64-darwin**. The system was not stated when this was written and is
+added by milestone 1278 (#1348): the x86_64-linux closure the corpus goldens
+pin is a different and larger closure — 1,749 derivations for moat against
+the 1,275 below — so these figures cannot be compared with a golden without
+knowing which system produced them.
 
 | | moat | slack-web |
 |---|---|---|

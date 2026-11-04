@@ -1002,6 +1002,11 @@ fn push_document_fields(
         if let Some(grade) = summary.patch_evidence_grade_value() {
             push(out, closure_summary::ANN_PATCH_EVIDENCE_GRADE, grade);
         }
+        // Milestone 1278 (#1348): C204, same canonical string as the other
+        // two formats.
+        if let Some(read) = summary.nix_closure_read_wire() {
+            push(out, closure_summary::ANN_NIX_CLOSURE_READ, json!(read));
+        }
     }
 
     // Milestone 235 US4: C146 doc-scope Gradle-resolution-tier

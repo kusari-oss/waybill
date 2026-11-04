@@ -3598,6 +3598,60 @@
       "version": "1.0.0"
     },
     {
+      "bom-ref": "pkg:hackage/alex@3.5.4.2",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "df481dc960e2c59a30395f7335031fd4ef8773b8a42894a4f2320e00ff474418"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
+      "name": "alex",
+      "properties": [
+        {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:closure-identity",
+          "value": "confirmed"
+        },
+        {
+          "name": "waybill:closure-role",
+          "value": "build-tooling"
+        }
+      ],
+      "purl": "pkg:hackage/alex@3.5.4.2",
+      "scope": "excluded",
+      "type": "library",
+      "version": "3.5.4.2"
+    },
+    {
       "bom-ref": "pkg:hackage/ansi-wl-pprint@1.0.2",
       "evidence": {
         "identity": [
@@ -4042,7 +4096,7 @@
         },
         {
           "name": "waybill:closure-role",
-          "value": "unreferenced"
+          "value": "build-tooling"
         }
       ],
       "purl": "pkg:generic/autoconf-archive@2024.10.16",
@@ -4518,10 +4572,6 @@
       },
       "properties": [
         {
-          "name": "waybill:scope-classification-source",
-          "value": "closure-role"
-        },
-        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -4531,11 +4581,10 @@
         },
         {
           "name": "waybill:closure-role",
-          "value": "unreferenced"
+          "value": "artifact-input"
         }
       ],
       "purl": "pkg:generic/bash-interactive@5.3p9",
-      "scope": "excluded",
       "type": "library",
       "version": "5.3p9"
     },
@@ -4909,6 +4958,41 @@
       "version": "0.8.3.0"
     },
     {
+      "bom-ref": "pkg:generic/bluez-headers@5.86",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "bluez-headers",
+      "properties": [
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:closure-identity",
+          "value": "not-in-package-set"
+        },
+        {
+          "name": "waybill:closure-role",
+          "value": "artifact-input"
+        }
+      ],
+      "purl": "pkg:generic/bluez-headers@5.86",
+      "type": "library",
+      "version": "5.86"
+    },
+    {
       "bom-ref": "pkg:generic/bootstrap-stage-xgcc-gcc-wrapper@15.2.0",
       "evidence": {
         "identity": [
@@ -5224,6 +5308,46 @@
       "scope": "excluded",
       "type": "library",
       "version": "0.5.1"
+    },
+    {
+      "bom-ref": "pkg:generic/byacc@20241231",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "byacc",
+      "properties": [
+        {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:closure-identity",
+          "value": "not-in-package-set"
+        },
+        {
+          "name": "waybill:closure-role",
+          "value": "build-tooling"
+        }
+      ],
+      "purl": "pkg:generic/byacc@20241231",
+      "scope": "excluded",
+      "type": "library",
+      "version": "20241231"
     },
     {
       "bom-ref": "pkg:generic/bzip2@1.0.8",
@@ -5971,7 +6095,7 @@
         },
         {
           "name": "waybill:closure-role",
-          "value": "artifact-input"
+          "value": "both"
         }
       ],
       "purl": "pkg:generic/curl@8.20.0",
@@ -6709,10 +6833,6 @@
       },
       "properties": [
         {
-          "name": "waybill:scope-classification-source",
-          "value": "closure-role"
-        },
-        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -6722,11 +6842,10 @@
         },
         {
           "name": "waybill:closure-role",
-          "value": "unreferenced"
+          "value": "artifact-input"
         }
       ],
       "purl": "pkg:generic/elfutils@0.194",
-      "scope": "excluded",
       "type": "library",
       "version": "0.194"
     },
@@ -7389,6 +7508,71 @@
       "version": "1.5.5"
     },
     {
+      "bom-ref": "pkg:generic/gcc@15.2.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "gcc",
+      "pedigree": {
+        "patches": [
+          {
+            "type": "backport"
+          },
+          {
+            "type": "backport"
+          },
+          {
+            "type": "backport"
+          },
+          {
+            "type": "backport"
+          },
+          {
+            "type": "backport"
+          },
+          {
+            "type": "backport"
+          },
+          {
+            "type": "backport"
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:closure-identity",
+          "value": "not-in-package-set"
+        },
+        {
+          "name": "waybill:closure-role",
+          "value": "unreferenced"
+        }
+      ],
+      "purl": "pkg:generic/gcc@15.2.0",
+      "scope": "excluded",
+      "type": "library",
+      "version": "15.2.0"
+    },
+    {
       "bom-ref": "pkg:generic/gcc-wrapper@15.2.0",
       "evidence": {
         "identity": [
@@ -7427,6 +7611,41 @@
       "scope": "excluded",
       "type": "library",
       "version": "15.2.0"
+    },
+    {
+      "bom-ref": "pkg:generic/gdbm@1.26",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "gdbm",
+      "properties": [
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:closure-identity",
+          "value": "not-in-package-set"
+        },
+        {
+          "name": "waybill:closure-role",
+          "value": "artifact-input"
+        }
+      ],
+      "purl": "pkg:generic/gdbm@1.26",
+      "type": "library",
+      "version": "1.26"
     },
     {
       "bom-ref": "pkg:hackage/generic-deriving@1.14.7",
@@ -7647,7 +7866,7 @@
       "version": "25.9.1"
     },
     {
-      "bom-ref": "pkg:generic/ghc-9.10.3",
+      "bom-ref": "pkg:generic/ghc@9.10.3",
       "evidence": {
         "identity": [
           {
@@ -7662,7 +7881,7 @@
           }
         ]
       },
-      "name": "ghc-9.10.3",
+      "name": "ghc",
       "properties": [
         {
           "name": "waybill:sbom-tier",
@@ -7670,15 +7889,16 @@
         },
         {
           "name": "waybill:closure-identity",
-          "value": "no-version-recorded"
+          "value": "not-in-package-set"
         },
         {
           "name": "waybill:closure-role",
           "value": "both"
         }
       ],
-      "purl": "pkg:generic/ghc-9.10.3",
-      "type": "library"
+      "purl": "pkg:generic/ghc@9.10.3",
+      "type": "library",
+      "version": "9.10.3"
     },
     {
       "bom-ref": "pkg:generic/ghc-9.10.3-source",
@@ -7888,6 +8108,46 @@
       "version": "9.10.3"
     },
     {
+      "bom-ref": "pkg:generic/ghc-settings-edit@0.1.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "ghc-settings-edit",
+      "properties": [
+        {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:closure-identity",
+          "value": "not-in-package-set"
+        },
+        {
+          "name": "waybill:closure-role",
+          "value": "build-tooling"
+        }
+      ],
+      "purl": "pkg:generic/ghc-settings-edit@0.1.0",
+      "scope": "excluded",
+      "type": "library",
+      "version": "0.1.0"
+    },
+    {
       "bom-ref": "pkg:generic/ghc-toolchain@9.10.3",
       "evidence": {
         "identity": [
@@ -7923,7 +8183,7 @@
       "version": "9.10.3"
     },
     {
-      "bom-ref": "pkg:generic/git-minimal-2.54.0",
+      "bom-ref": "pkg:generic/git-minimal@2.54.0",
       "evidence": {
         "identity": [
           {
@@ -7938,7 +8198,26 @@
           }
         ]
       },
-      "name": "git-minimal-2.54.0",
+      "name": "git-minimal",
+      "pedigree": {
+        "patches": [
+          {
+            "type": "backport"
+          },
+          {
+            "type": "backport"
+          },
+          {
+            "type": "backport"
+          },
+          {
+            "type": "backport"
+          },
+          {
+            "type": "backport"
+          }
+        ]
+      },
       "properties": [
         {
           "name": "waybill:scope-classification-source",
@@ -7950,16 +8229,17 @@
         },
         {
           "name": "waybill:closure-identity",
-          "value": "no-version-recorded"
+          "value": "not-in-package-set"
         },
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
         }
       ],
-      "purl": "pkg:generic/git-minimal-2.54.0",
+      "purl": "pkg:generic/git-minimal@2.54.0",
       "scope": "excluded",
-      "type": "library"
+      "type": "library",
+      "version": "2.54.0"
     },
     {
       "bom-ref": "pkg:generic/glibc@2.42-61",
@@ -8574,6 +8854,46 @@
       "version": "1.35.1"
     },
     {
+      "bom-ref": "pkg:generic/hadrian@9.10.3",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "hadrian",
+      "properties": [
+        {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:closure-identity",
+          "value": "not-in-package-set"
+        },
+        {
+          "name": "waybill:closure-role",
+          "value": "build-tooling"
+        }
+      ],
+      "purl": "pkg:generic/hadrian@9.10.3",
+      "scope": "excluded",
+      "type": "library",
+      "version": "9.10.3"
+    },
+    {
       "bom-ref": "pkg:hackage/happy@2.1.7",
       "evidence": {
         "identity": [
@@ -8888,6 +9208,60 @@
       "purl": "pkg:hackage/hostname@1.0",
       "type": "library",
       "version": "1.0"
+    },
+    {
+      "bom-ref": "pkg:hackage/hscolour@1.25",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "54ce30da55599e872fd38d927aa518369e2971b284acc67ed0caac6ae14cc77c"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "acknowledgement": "declared",
+            "name": "LicenseRef-LGPL"
+          }
+        }
+      ],
+      "name": "hscolour",
+      "properties": [
+        {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:closure-identity",
+          "value": "confirmed"
+        },
+        {
+          "name": "waybill:closure-role",
+          "value": "build-tooling"
+        }
+      ],
+      "purl": "pkg:hackage/hscolour@1.25",
+      "scope": "excluded",
+      "type": "library",
+      "version": "1.25"
     },
     {
       "bom-ref": "pkg:hackage/hspec-meta@2.11.17",
@@ -9455,6 +9829,41 @@
       "version": "0.6.5"
     },
     {
+      "bom-ref": "pkg:generic/isl@0.20",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "isl",
+      "properties": [
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:closure-identity",
+          "value": "not-in-package-set"
+        },
+        {
+          "name": "waybill:closure-role",
+          "value": "artifact-input"
+        }
+      ],
+      "purl": "pkg:generic/isl@0.20",
+      "type": "library",
+      "version": "0.20"
+    },
+    {
       "bom-ref": "pkg:generic/jinja2@3.1.6",
       "evidence": {
         "identity": [
@@ -9755,10 +10164,6 @@
       },
       "properties": [
         {
-          "name": "waybill:scope-classification-source",
-          "value": "closure-role"
-        },
-        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -9768,16 +10173,15 @@
         },
         {
           "name": "waybill:closure-role",
-          "value": "unreferenced"
+          "value": "artifact-input"
         }
       ],
       "purl": "pkg:generic/keyutils@1.6.3",
-      "scope": "excluded",
       "type": "library",
       "version": "1.6.3"
     },
     {
-      "bom-ref": "pkg:generic/krb5-1.22.1",
+      "bom-ref": "pkg:generic/krb5@1.22.1",
       "evidence": {
         "identity": [
           {
@@ -9792,7 +10196,7 @@
           }
         ]
       },
-      "name": "krb5-1.22.1",
+      "name": "krb5",
       "properties": [
         {
           "name": "waybill:sbom-tier",
@@ -9800,15 +10204,16 @@
         },
         {
           "name": "waybill:closure-identity",
-          "value": "no-version-recorded"
+          "value": "not-in-package-set"
         },
         {
           "name": "waybill:closure-role",
           "value": "artifact-input"
         }
       ],
-      "purl": "pkg:generic/krb5-1.22.1",
-      "type": "library"
+      "purl": "pkg:generic/krb5@1.22.1",
+      "type": "library",
+      "version": "1.22.1"
     },
     {
       "bom-ref": "pkg:hackage/lens@5.3.6",
@@ -9955,10 +10360,6 @@
       },
       "properties": [
         {
-          "name": "waybill:scope-classification-source",
-          "value": "closure-role"
-        },
-        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -9968,11 +10369,10 @@
         },
         {
           "name": "waybill:closure-role",
-          "value": "unreferenced"
+          "value": "artifact-input"
         }
       ],
       "purl": "pkg:generic/libedit@20251016-3.1",
-      "scope": "excluded",
       "type": "library",
       "version": "20251016-3.1"
     },
@@ -10241,6 +10641,41 @@
       "purl": "pkg:generic/libmicrohttpd@1.0.2",
       "type": "library",
       "version": "1.0.2"
+    },
+    {
+      "bom-ref": "pkg:generic/libmpc@1.4.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "libmpc",
+      "properties": [
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:closure-identity",
+          "value": "not-in-package-set"
+        },
+        {
+          "name": "waybill:closure-role",
+          "value": "artifact-input"
+        }
+      ],
+      "purl": "pkg:generic/libmpc@1.4.0",
+      "type": "library",
+      "version": "1.4.0"
     },
     {
       "bom-ref": "pkg:generic/libpsl@0.21.5",
@@ -11096,6 +11531,41 @@
       "version": "0.3.5"
     },
     {
+      "bom-ref": "pkg:generic/mpdecimal@4.0.1",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "mpdecimal",
+      "properties": [
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:closure-identity",
+          "value": "not-in-package-set"
+        },
+        {
+          "name": "waybill:closure-role",
+          "value": "artifact-input"
+        }
+      ],
+      "purl": "pkg:generic/mpdecimal@4.0.1",
+      "type": "library",
+      "version": "4.0.1"
+    },
+    {
       "bom-ref": "pkg:generic/mpfr@4.2.2",
       "evidence": {
         "identity": [
@@ -11282,7 +11752,7 @@
         },
         {
           "name": "waybill:closure-role",
-          "value": "artifact-input"
+          "value": "both"
         }
       ],
       "purl": "pkg:generic/ncurses@6.6",
@@ -11626,6 +12096,85 @@
       "purl": "pkg:hackage/nothunks@0.3.1",
       "type": "library",
       "version": "0.3.1"
+    },
+    {
+      "bom-ref": "pkg:generic/nss-cacert@3.123",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "nss-cacert",
+      "properties": [
+        {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:closure-identity",
+          "value": "not-in-package-set"
+        },
+        {
+          "name": "waybill:closure-role",
+          "value": "build-tooling"
+        }
+      ],
+      "purl": "pkg:generic/nss-cacert@3.123",
+      "scope": "excluded",
+      "type": "library",
+      "version": "3.123"
+    },
+    {
+      "bom-ref": "pkg:generic/nuke-refs",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "nuke-refs",
+      "properties": [
+        {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:closure-identity",
+          "value": "no-version-recorded"
+        },
+        {
+          "name": "waybill:closure-role",
+          "value": "build-tooling"
+        }
+      ],
+      "purl": "pkg:generic/nuke-refs",
+      "scope": "excluded",
+      "type": "library"
     },
     {
       "bom-ref": "pkg:generic/numactl@2.0.18",
@@ -12065,7 +12614,7 @@
         },
         {
           "name": "waybill:closure-role",
-          "value": "unreferenced"
+          "value": "build-tooling"
         }
       ],
       "purl": "pkg:generic/patchutils@0.3.3",
@@ -12115,7 +12664,7 @@
         },
         {
           "name": "waybill:closure-role",
-          "value": "unreferenced"
+          "value": "build-tooling"
         }
       ],
       "purl": "pkg:generic/patchutils@0.4.2",
@@ -12844,6 +13393,41 @@
       "version": "1.7.1"
     },
     {
+      "bom-ref": "pkg:generic/pystemmer@3.0.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "pystemmer",
+      "properties": [
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:closure-identity",
+          "value": "not-in-package-set"
+        },
+        {
+          "name": "waybill:closure-role",
+          "value": "artifact-input"
+        }
+      ],
+      "purl": "pkg:generic/pystemmer@3.0.0",
+      "type": "library",
+      "version": "3.0.0"
+    },
+    {
       "bom-ref": "pkg:generic/pytest@9.0.3",
       "evidence": {
         "identity": [
@@ -13484,7 +14068,7 @@
       "version": "26.05pre-git"
     },
     {
-      "bom-ref": "pkg:generic/python3-3.13.13",
+      "bom-ref": "pkg:generic/python3@3.13.13",
       "evidence": {
         "identity": [
           {
@@ -13499,7 +14083,20 @@
           }
         ]
       },
-      "name": "python3-3.13.13",
+      "name": "python3",
+      "pedigree": {
+        "patches": [
+          {
+            "type": "backport"
+          },
+          {
+            "type": "backport"
+          },
+          {
+            "type": "backport"
+          }
+        ]
+      },
       "properties": [
         {
           "name": "waybill:sbom-tier",
@@ -13507,18 +14104,19 @@
         },
         {
           "name": "waybill:closure-identity",
-          "value": "no-version-recorded"
+          "value": "not-in-package-set"
         },
         {
           "name": "waybill:closure-role",
           "value": "both"
         }
       ],
-      "purl": "pkg:generic/python3-3.13.13",
-      "type": "library"
+      "purl": "pkg:generic/python3@3.13.13",
+      "type": "library",
+      "version": "3.13.13"
     },
     {
-      "bom-ref": "pkg:generic/python3-minimal-3.13.13",
+      "bom-ref": "pkg:generic/python3-minimal@3.13.13",
       "evidence": {
         "identity": [
           {
@@ -13533,7 +14131,17 @@
           }
         ]
       },
-      "name": "python3-minimal-3.13.13",
+      "name": "python3-minimal",
+      "pedigree": {
+        "patches": [
+          {
+            "type": "backport"
+          },
+          {
+            "type": "backport"
+          }
+        ]
+      },
       "properties": [
         {
           "name": "waybill:scope-classification-source",
@@ -13545,16 +14153,17 @@
         },
         {
           "name": "waybill:closure-identity",
-          "value": "no-version-recorded"
+          "value": "not-in-package-set"
         },
         {
           "name": "waybill:closure-role",
           "value": "build-tooling"
         }
       ],
-      "purl": "pkg:generic/python3-minimal-3.13.13",
+      "purl": "pkg:generic/python3-minimal@3.13.13",
       "scope": "excluded",
-      "type": "library"
+      "type": "library",
+      "version": "3.13.13"
     },
     {
       "bom-ref": "pkg:generic/python3.13-bootstrap-installer@1.0.0",
@@ -13632,40 +14241,6 @@
       "purl": "pkg:generic/python3.13-bootstrap-packaging@26.1",
       "type": "library",
       "version": "26.1"
-    },
-    {
-      "bom-ref": "pkg:generic/python3.13-pystemmer-3.0.0",
-      "evidence": {
-        "identity": [
-          {
-            "confidence": 0.95,
-            "field": "purl",
-            "methods": [
-              {
-                "confidence": 0.95,
-                "technique": "instrumentation"
-              }
-            ]
-          }
-        ]
-      },
-      "name": "python3.13-pystemmer-3.0.0",
-      "properties": [
-        {
-          "name": "waybill:sbom-tier",
-          "value": "build"
-        },
-        {
-          "name": "waybill:closure-identity",
-          "value": "no-version-recorded"
-        },
-        {
-          "name": "waybill:closure-role",
-          "value": "artifact-input"
-        }
-      ],
-      "purl": "pkg:generic/python3.13-pystemmer-3.0.0",
-      "type": "library"
     },
     {
       "bom-ref": "pkg:generic/pytz@2026.1.post1",
@@ -14768,6 +15343,46 @@
       "purl": "pkg:generic/snowballstemmer@3.0.1",
       "type": "library",
       "version": "3.0.1"
+    },
+    {
+      "bom-ref": "pkg:generic/sphinx@9.1.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "sphinx",
+      "properties": [
+        {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:closure-identity",
+          "value": "version-disagrees"
+        },
+        {
+          "name": "waybill:closure-role",
+          "value": "build-tooling"
+        }
+      ],
+      "purl": "pkg:generic/sphinx@9.1.0",
+      "scope": "excluded",
+      "type": "library",
+      "version": "9.1.0"
     },
     {
       "bom-ref": "pkg:generic/sphinxcontrib-applehelp@2.0.0",
@@ -16463,10 +17078,6 @@
       "name": "tzdata",
       "properties": [
         {
-          "name": "waybill:scope-classification-source",
-          "value": "closure-role"
-        },
-        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -16476,13 +17087,51 @@
         },
         {
           "name": "waybill:closure-role",
-          "value": "build-tooling"
+          "value": "both"
         }
       ],
       "purl": "pkg:generic/tzdata@2026b",
-      "scope": "excluded",
       "type": "library",
       "version": "2026b"
+    },
+    {
+      "bom-ref": "pkg:generic/uname",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "uname",
+      "properties": [
+        {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:closure-identity",
+          "value": "no-version-recorded"
+        },
+        {
+          "name": "waybill:closure-role",
+          "value": "build-tooling"
+        }
+      ],
+      "purl": "pkg:generic/uname",
+      "scope": "excluded",
+      "type": "library"
     },
     {
       "bom-ref": "pkg:generic/unbound@1.25.0",
@@ -16938,10 +17587,6 @@
       },
       "properties": [
         {
-          "name": "waybill:scope-classification-source",
-          "value": "closure-role"
-        },
-        {
           "name": "waybill:sbom-tier",
           "value": "build"
         },
@@ -16951,11 +17596,10 @@
         },
         {
           "name": "waybill:closure-role",
-          "value": "build-tooling"
+          "value": "both"
         }
       ],
       "purl": "pkg:generic/util-linux-minimal@2.42",
-      "scope": "excluded",
       "type": "library",
       "version": "2.42"
     },
@@ -17260,6 +17904,71 @@
       "version": "26.05pre-git"
     },
     {
+      "bom-ref": "pkg:generic/xgcc@15.2.0",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "xgcc",
+      "pedigree": {
+        "patches": [
+          {
+            "type": "backport"
+          },
+          {
+            "type": "backport"
+          },
+          {
+            "type": "backport"
+          },
+          {
+            "type": "backport"
+          },
+          {
+            "type": "backport"
+          },
+          {
+            "type": "backport"
+          },
+          {
+            "type": "backport"
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "waybill:scope-classification-source",
+          "value": "closure-role"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:closure-identity",
+          "value": "not-in-package-set"
+        },
+        {
+          "name": "waybill:closure-role",
+          "value": "unreferenced"
+        }
+      ],
+      "purl": "pkg:generic/xgcc@15.2.0",
+      "scope": "excluded",
+      "type": "library",
+      "version": "15.2.0"
+    },
+    {
       "bom-ref": "pkg:hackage/xml@1.3.14",
       "evidence": {
         "identity": [
@@ -17419,6 +18128,41 @@
       "purl": "pkg:generic/zlib@1.3.2",
       "type": "library",
       "version": "1.3.2"
+    },
+    {
+      "bom-ref": "pkg:generic/zlib-ng@2.3.3",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.95,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.95,
+                "technique": "instrumentation"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "zlib-ng",
+      "properties": [
+        {
+          "name": "waybill:sbom-tier",
+          "value": "build"
+        },
+        {
+          "name": "waybill:closure-identity",
+          "value": "not-in-package-set"
+        },
+        {
+          "name": "waybill:closure-role",
+          "value": "artifact-input"
+        }
+      ],
+      "purl": "pkg:generic/zlib-ng@2.3.3",
+      "type": "library",
+      "version": "2.3.3"
     },
     {
       "bom-ref": "pkg:generic/zope-event@6.1",
@@ -17632,12 +18376,6 @@
       "assemblies": [
         "nix-closure-moat@d069055"
       ]
-    },
-    {
-      "aggregate": "complete",
-      "dependencies": [
-        "nix-closure-moat@d069055"
-      ]
     }
   ],
   "dependencies": [
@@ -17726,6 +18464,10 @@
     },
     {
       "dependsOn": [],
+      "ref": "pkg:generic/bluez-headers@5.86"
+    },
+    {
+      "dependsOn": [],
       "ref": "pkg:generic/bootstrap-stage-xgcc-gcc-wrapper@15.2.0"
     },
     {
@@ -17755,6 +18497,10 @@
     {
       "dependsOn": [],
       "ref": "pkg:generic/buildcatrust@0.5.1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/byacc@20241231"
     },
     {
       "dependsOn": [],
@@ -17898,6 +18644,14 @@
     },
     {
       "dependsOn": [],
+      "ref": "pkg:generic/gcc@15.2.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/gdbm@1.26"
+    },
+    {
+      "dependsOn": [],
       "ref": "pkg:generic/gettext@1.0"
     },
     {
@@ -17907,10 +18661,6 @@
     {
       "dependsOn": [],
       "ref": "pkg:generic/gevent@25.9.1"
-    },
-    {
-      "dependsOn": [],
-      "ref": "pkg:generic/ghc-9.10.3"
     },
     {
       "dependsOn": [],
@@ -17926,11 +18676,19 @@
     },
     {
       "dependsOn": [],
+      "ref": "pkg:generic/ghc-settings-edit@0.1.0"
+    },
+    {
+      "dependsOn": [],
       "ref": "pkg:generic/ghc-toolchain@9.10.3"
     },
     {
       "dependsOn": [],
-      "ref": "pkg:generic/git-minimal-2.54.0"
+      "ref": "pkg:generic/ghc@9.10.3"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/git-minimal@2.54.0"
     },
     {
       "dependsOn": [],
@@ -17986,6 +18744,10 @@
     },
     {
       "dependsOn": [],
+      "ref": "pkg:generic/hadrian@9.10.3"
+    },
+    {
+      "dependsOn": [],
       "ref": "pkg:generic/hatch-vcs@0.5.0"
     },
     {
@@ -18022,6 +18784,10 @@
     },
     {
       "dependsOn": [],
+      "ref": "pkg:generic/isl@0.20"
+    },
+    {
+      "dependsOn": [],
       "ref": "pkg:generic/jinja2@3.1.6"
     },
     {
@@ -18034,7 +18800,7 @@
     },
     {
       "dependsOn": [],
-      "ref": "pkg:generic/krb5-1.22.1"
+      "ref": "pkg:generic/krb5@1.22.1"
     },
     {
       "dependsOn": [],
@@ -18075,6 +18841,10 @@
     {
       "dependsOn": [],
       "ref": "pkg:generic/libmicrohttpd@1.0.2"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/libmpc@1.4.0"
     },
     {
       "dependsOn": [],
@@ -18150,6 +18920,10 @@
     },
     {
       "dependsOn": [],
+      "ref": "pkg:generic/mpdecimal@4.0.1"
+    },
+    {
+      "dependsOn": [],
       "ref": "pkg:generic/mpfr@4.2.2"
     },
     {
@@ -18187,6 +18961,14 @@
     {
       "dependsOn": [],
       "ref": "pkg:generic/ninja@1.13.2"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/nss-cacert@3.123"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/nuke-refs"
     },
     {
       "dependsOn": [],
@@ -18282,6 +19064,10 @@
     },
     {
       "dependsOn": [],
+      "ref": "pkg:generic/pystemmer@3.0.0"
+    },
+    {
+      "dependsOn": [],
       "ref": "pkg:generic/pytest-asyncio@1.3.0"
     },
     {
@@ -18346,11 +19132,7 @@
     },
     {
       "dependsOn": [],
-      "ref": "pkg:generic/python3-3.13.13"
-    },
-    {
-      "dependsOn": [],
-      "ref": "pkg:generic/python3-minimal-3.13.13"
+      "ref": "pkg:generic/python3-minimal@3.13.13"
     },
     {
       "dependsOn": [],
@@ -18362,7 +19144,7 @@
     },
     {
       "dependsOn": [],
-      "ref": "pkg:generic/python3.13-pystemmer-3.0.0"
+      "ref": "pkg:generic/python3@3.13.13"
     },
     {
       "dependsOn": [],
@@ -18411,6 +19193,10 @@
     {
       "dependsOn": [],
       "ref": "pkg:generic/snowballstemmer@3.0.1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/sphinx@9.1.0"
     },
     {
       "dependsOn": [],
@@ -18494,6 +19280,10 @@
     },
     {
       "dependsOn": [],
+      "ref": "pkg:generic/uname"
+    },
+    {
+      "dependsOn": [],
       "ref": "pkg:generic/unbound@1.25.0"
     },
     {
@@ -18538,11 +19328,19 @@
     },
     {
       "dependsOn": [],
+      "ref": "pkg:generic/xgcc@15.2.0"
+    },
+    {
+      "dependsOn": [],
       "ref": "pkg:generic/xz@5.8.3"
     },
     {
       "dependsOn": [],
       "ref": "pkg:generic/zipp@3.23.1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/zlib-ng@2.3.3"
     },
     {
       "dependsOn": [],
@@ -18670,6 +19468,15 @@
         "pkg:hackage/witherable@0.5"
       ],
       "ref": "pkg:hackage/aeson@2.2.4.1"
+    },
+    {
+      "dependsOn": [
+        "pkg:hackage/array",
+        "pkg:hackage/base",
+        "pkg:hackage/containers",
+        "pkg:hackage/directory"
+      ],
+      "ref": "pkg:hackage/alex@3.5.4.2"
     },
     {
       "dependsOn": [
@@ -18926,6 +19733,7 @@
     },
     {
       "dependsOn": [
+        "pkg:generic/ghc@9.10.3",
         "pkg:hackage/base",
         "pkg:hackage/code-page@0.2.1",
         "pkg:hackage/containers",
@@ -19085,6 +19893,13 @@
     },
     {
       "dependsOn": [
+        "pkg:hackage/base",
+        "pkg:hackage/containers"
+      ],
+      "ref": "pkg:hackage/hscolour@1.25"
+    },
+    {
+      "dependsOn": [
         "pkg:hackage/HUnit@1.6.2.0",
         "pkg:hackage/QuickCheck@2.15.0.1",
         "pkg:hackage/ansi-terminal@1.1.5",
@@ -19188,6 +20003,7 @@
     },
     {
       "dependsOn": [
+        "pkg:generic/ghc@9.10.3",
         "pkg:hackage/base",
         "pkg:hackage/containers",
         "pkg:hackage/template-haskell",
@@ -19776,6 +20592,7 @@
     },
     {
       "dependsOn": [
+        "pkg:generic/ghc@9.10.3",
         "pkg:hackage/base",
         "pkg:hackage/inspection-testing@0.6.3",
         "pkg:hackage/tasty@1.5.4",
@@ -20201,7 +21018,7 @@
       },
       {
         "name": "waybill:graph-completeness-reason",
-        "value": "orphaned-components-detected: 333 component(s) not reachable from root; transitive-edges-unresolvable: hackage"
+        "value": "orphaned-components-detected: 350 component(s) not reachable from root; transitive-edges-unresolvable: hackage"
       },
       {
         "name": "waybill:workspaces-detected",
@@ -20221,15 +21038,19 @@
       },
       {
         "name": "waybill:nixpkgs-security",
-        "value": "{\"accepted-insecure\":0,\"confirmed-by-set\":{\"haskell\":124,\"python3\":71,\"top-level\":99},\"declarations\":0,\"declarations-without-cve\":0,\"declarations-without-identifier\":0,\"distinct-cves\":0,\"distinct-identifiers\":0,\"members-checked\":294,\"members-unchecked\":184,\"reconciliations-withheld\":0}"
+        "value": "{\"accepted-insecure\":0,\"confirmed-by-set\":{\"haskell\":124,\"python3\":72,\"top-level\":102},\"declarations\":0,\"declarations-without-cve\":0,\"declarations-without-identifier\":0,\"distinct-cves\":0,\"distinct-identifiers\":0,\"members-checked\":298,\"members-unchecked\":187,\"reconciliations-withheld\":0}"
       },
       {
         "name": "waybill:nix-closure",
-        "value": "{\"attribute\":\"default\",\"components-emitted\":362,\"derivations\":1749,\"distinct-cves\":13,\"patches\":188,\"patches-without-cve\":173,\"roles\":{\"artifact-input\":256,\"both\":39,\"build-tooling\":101,\"unreferenced\":1353}}"
+        "value": "{\"attribute\":\"default\",\"components-emitted\":379,\"derivations\":1749,\"distinct-cves\":13,\"patches\":212,\"patches-without-cve\":197,\"roles\":{\"artifact-input\":270,\"both\":42,\"build-tooling\":118,\"unreferenced\":1319}}"
       },
       {
         "name": "waybill:patch-evidence-grade",
         "value": "filename-derived"
+      },
+      {
+        "name": "waybill:nix-closure-read",
+        "value": "{\"declarations-unconsulted\":230,\"derivations-affected\":23,\"fields-unconsulted\":[\"defaultNativeBuildInputs\",\"depsBuildTarget\",\"depsTargetTarget\",\"depsTargetTargetPropagated\",\"extraNativeBuildInputs\",\"propagatedNativeBuildInputs\"],\"format-version\":4}"
       }
     ],
     "supplier": {

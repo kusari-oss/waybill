@@ -62,7 +62,12 @@ mod tests {
     fn components() -> Vec<waybill_common::resolution::ResolvedComponent> {
         let raw = RawClosure::parse(CLOSURE).unwrap();
         let roles = classify(&raw);
-        emit::components(&ClassifiedClosure { attribute: "default".into(), raw, roles })
+        emit::components(&ClassifiedClosure {
+            attribute: "default".into(),
+            raw,
+            roles,
+            read_outcome: Default::default(),
+        })
     }
 
     #[test]

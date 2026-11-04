@@ -444,6 +444,113 @@ pub fn nix_closure_moat_expectations(sboms: &EmittedSboms) -> Result<(), Asserti
             "the m1050 declaration pass degraded or checked nothing",
         ));
     }
+    // ---------------------------------------------------------------
+    // Milestone 1278 (#1348) — attributes are read from either carrier.
+    //
+    // Asserted here rather than only in the unit and integration tests
+    // because this is the one place the real closure is read. The synthetic
+    // fixtures were what let a shape-only field filter report 98,342
+    // "unconsulted declarations" while every test stayed green: they held
+    // only tidy fields. These assertions see what nix actually emits.
+    // ---------------------------------------------------------------
+
+    // SC-003. Six components carried CDX `scope: "excluded"` on the strength
+    // of a role that was wrong, because the declaration referencing them
+    // lived in `structuredAttrs`. nix references all six into the artifact,
+    // so no format may now report them absent from it — and m1277's rule
+    // asserts no scope at all for `artifact-input` or `both`, because that is
+    // exactly the case waybill cannot call.
+    for name in [
+        "bash-interactive",
+        "elfutils",
+        "keyutils",
+        "libedit",
+        "tzdata",
+        "util-linux-minimal",
+    ] {
+        let Some(c) = sboms.cdx["components"].as_array().and_then(|cs| {
+            cs.iter().find(|c| c["name"].as_str() == Some(name))
+        }) else {
+            return Err(nix_fail(
+                "m1278-retracted-exclusion-present",
+                format!("component `{name}` is absent"),
+                "the component to exist, so its scope can be checked",
+                "a member nix references into the artifact vanished from the document",
+            ));
+        };
+        if c.get("scope").and_then(|v| v.as_str()) == Some("excluded") {
+            return Err(nix_fail(
+                "m1278-no-false-exclusion",
+                format!("`{name}` carries scope=excluded"),
+                "no scope: nix references it into the artifact, and the rule \
+                 declines to assert for that case",
+                "the closure reader is back to reading only `env`, so the \
+                 referencing declaration is invisible again (#1348)",
+            ));
+        }
+    }
+
+    // SC-011 / SC-012. The disclosure of what the reader did not consult.
+    // Present on this target because nixpkgs declares dependencies in
+    // attributes the classifier does not read (#1346), and its counts must
+    // agree with its own field list.
+    let Some(read) = doc("waybill:nix-closure-read") else {
+        return Err(nix_fail(
+            "m1278-read-outcome-present",
+            "no waybill:nix-closure-read document property".to_string(),
+            "the C204 record: this closure declares dependencies in \
+             attributes classification does not consult",
+            "either the FR-014 diagnostic stopped reporting, or the \
+             classifier silently started consulting every attribute",
+        ));
+    };
+    let fields = read["fields-unconsulted"].as_array().map(Vec::len).unwrap_or(0);
+    let decls = read["declarations-unconsulted"].as_u64().unwrap_or(0);
+    if fields == 0 || decls == 0 || read["format-version"].as_u64().is_none() {
+        return Err(nix_fail(
+            "m1278-read-outcome-coherent",
+            read.to_string(),
+            "a nonzero field count, a nonzero declaration count, and a \
+             recorded format version",
+            "the disclosure is present but says nothing, which is worse than \
+             absent: absence is defined to mean nothing was skipped",
+        ));
+    }
+    // A sanity bound, not a pinned figure. The measured value is 6 fields;
+    // if this ever reports dozens, the filter has gone back to matching any
+    // attribute that merely mentions a store path, which reported 113 fields
+    // and 98,342 declarations and would tell a reader the document is
+    // worthless.
+    if fields > 25 {
+        return Err(nix_fail(
+            "m1278-read-outcome-not-noise",
+            format!("{fields} fields reported unconsulted"),
+            "a handful: nixpkgs dependency attributes, not every attribute \
+             that mentions a store path",
+            "the FR-014 field filter stopped testing the nixpkgs naming \
+             convention and went back to a pure shape test",
+        ));
+    }
+
+    // SC-015. A document that skipped a declaration must not claim, in
+    // CycloneDX's own vocabulary, that its dependency relationships are
+    // complete. `complete` means "no further dependencies are known to
+    // exist", and a consumer that has never heard of waybill believes it.
+    let claims_complete = sboms.cdx["compositions"].as_array().is_some_and(|cs| {
+        cs.iter().any(|c| {
+            c.get("dependencies").is_some() && c["aggregate"].as_str() == Some("complete")
+        })
+    });
+    if claims_complete {
+        return Err(nix_fail(
+            "m1278-no-native-completeness-claim",
+            "a compositions record with aggregate=complete over dependencies".to_string(),
+            "no such record while the C204 disclosure is present",
+            "the root dependency-completeness claim stopped reading \
+             claims.root_complete, so CycloneDX and SPDX 3 can disagree again",
+        ));
+    }
+
     Ok(())
 }
 

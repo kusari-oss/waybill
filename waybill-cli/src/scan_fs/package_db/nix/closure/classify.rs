@@ -4,6 +4,16 @@
 //! `buildInputs` is what goes into the thing being built, `nativeBuildInputs`
 //! is what builds it. Reading those fields means no name heuristic, and no
 //! list of "things that look like compilers" to maintain.
+//!
+//! **Nothing in this file knows where those fields live.** It asks the
+//! derivation record for them, and that record resolves from either of nix's
+//! two attribute carriers. That is the design, not an accident of layering:
+//! milestone 1278 (#1348) fixed a defect in which one carrier was never read,
+//! and fixing it required no change here at all. Four consumers depend on
+//! that resolution — this classifier, component emission, patch collection
+//! and the nixpkgs declaration pass — and two of them resolving attributes
+//! differently would disagree about the same derivation. So the resolution
+//! belongs to the record and nowhere else (FR-007).
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -19,6 +29,22 @@ const TOOLING_FIELDS: &[&str] = &[
     "depsBuildHost",
     "nativeCheckInputs",
 ];
+
+/// Every field the closure reader consults, for the FR-014 diagnostic.
+///
+/// Derived from the same two constants classification reads, plus `patches`,
+/// which the patch collector reads. Assembled here rather than written out a
+/// second time: a hand-maintained copy would drift, and the drift would show
+/// up as the disclosure naming a field that *is* read — a false alarm in the
+/// mechanism whose whole job is to be trustworthy when it stays silent.
+pub(crate) fn consulted_fields() -> Vec<&'static str> {
+    ARTIFACT_FIELDS
+        .iter()
+        .chain(TOOLING_FIELDS)
+        .copied()
+        .chain(std::iter::once("patches"))
+        .collect()
+}
 
 /// How nix referenced a member.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -377,6 +403,7 @@ mod tests {
             attribute: "default".to_string(),
             raw: closure,
             roles,
+            read_outcome: Default::default(),
         });
         eprintln!("emitted components after variant merge: {}", emitted.len());
         assert!(

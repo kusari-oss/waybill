@@ -214,7 +214,7 @@ mod tests {
     fn drv_with_native(paths: &[&str]) -> RawDerivation {
         let mut env = BTreeMap::new();
         env.insert("nativeBuildInputs".to_string(), paths.join(" "));
-        RawDerivation { name: None, env, outputs: BTreeMap::new() }
+        RawDerivation { name: None, env, structured_attrs: None, outputs: BTreeMap::new() }
     }
 
     fn set_of(pairs: &[(&str, &str)]) -> PackageSet {
@@ -266,7 +266,7 @@ mod tests {
 
     #[test]
     fn an_absent_field_is_not_the_signal() {
-        let d = RawDerivation { name: None, env: BTreeMap::new(), outputs: BTreeMap::new() };
+        let d = RawDerivation { name: None, env: BTreeMap::new(), structured_attrs: None, outputs: BTreeMap::new() };
         assert!(!built_by_ghc(&d));
     }
 
@@ -445,6 +445,7 @@ mod t009_agreement_probe {
             attribute: "probe".to_string(),
             raw: closure,
             roles,
+            read_outcome: Default::default(),
         };
         let emitted = crate::scan_fs::package_db::nix::closure::emit::components(&classified);
 

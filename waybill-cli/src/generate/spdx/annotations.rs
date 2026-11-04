@@ -1053,6 +1053,15 @@ pub fn annotate_document(
         if let Some(grade) = summary.patch_evidence_grade_value() {{
             push(&mut out, closure_summary::ANN_PATCH_EVIDENCE_GRADE, grade);
         }}
+        // Milestone 1278 (#1348): C204. SPDX 2.3 has no native completeness
+        // field -- zero occurrences of `completeness` in its schema -- so here
+        // the annotation's PRESENCE is the fact, and its payload is the same
+        // canonical string the other two formats carry. Nothing is added to
+        // compensate for the missing native field, because an unequal payload
+        // would cost the cross-format equal-content check.
+        if let Some(read) = summary.nix_closure_read_wire() {{
+            push(&mut out, closure_summary::ANN_NIX_CLOSURE_READ, json!(read));
+        }}
     }}
 
     // Milestone 235 US4: C146 doc-scope Gradle-resolution-tier

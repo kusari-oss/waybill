@@ -693,6 +693,13 @@ pub fn build_document(
         Some(&m158_graph_completeness.reachable_set),
         &crate::generate::cyclonedx::compositions::degraded_ecosystems(&m158_graph_completeness),
         scan.integrity,
+        // Milestone 1278 (#1348). Read from the same helper CycloneDX reads,
+        // which is the whole point of m1069 routing both formats through it:
+        // a second computation here could disagree, and the two formats would
+        // then make different completeness claims about one scan.
+        scan.nix_closure_summary
+            .as_ref()
+            .is_some_and(|s| s.read_outcome.has_gap()),
     );
 
     // 7. Relationship elements — dependency edges, containment edges,

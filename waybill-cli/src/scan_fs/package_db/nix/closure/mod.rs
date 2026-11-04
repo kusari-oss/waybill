@@ -204,6 +204,11 @@ pub(crate) struct ClassifiedClosure {
     pub(crate) attribute: String,
     pub(crate) raw: RawClosure,
     pub(crate) roles: std::collections::BTreeMap<String, DerivationRole>,
+    /// What the reader saw but did not consult (#1348, FR-009).
+    ///
+    /// Computed beside the roles and carried alongside them, never consulted
+    /// while deciding one — the separation SC-014 asserts.
+    pub(crate) read_outcome: super::closure::derivation::ReadOutcome,
 }
 
 impl ClassifiedClosure {
@@ -325,15 +330,34 @@ pub(crate) fn resolve(
         DegradationReason::EvaluationFailed(format!("closure json unparseable: {e}"))
     })?;
     let roles = classify::classify(&raw);
+    let read_outcome = raw.read_outcome(&classify::consulted_fields());
     tracing::info!(
         attribute = %attribute,
         derivations = raw.derivations.len(),
+        format_version = ?read_outcome.format_version,
         "nix-closure: closure classified"
     );
+    if read_outcome.has_gap() {
+        // Logged as well as disclosed. The document is what a consumer reads
+        // (Constitution XII.3), but an operator watching a scan should not
+        // have to open the output to learn the reader skipped something.
+        tracing::warn!(
+            fields = %read_outcome
+                .fields_unconsulted
+                .iter()
+                .cloned()
+                .collect::<Vec<String>>()
+                .join(", "),
+            declarations = read_outcome.declarations_unconsulted,
+            derivations = read_outcome.derivations_affected,
+            "nix-closure: declarations were seen but not consulted"
+        );
+    }
     Ok(ClassifiedClosure {
         attribute,
         raw,
         roles,
+        read_outcome,
     })
 }
 

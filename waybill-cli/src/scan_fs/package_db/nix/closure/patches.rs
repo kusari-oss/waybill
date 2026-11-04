@@ -141,7 +141,10 @@ pub(crate) fn cves_in_filename(name: &str) -> Vec<GradedCve> {
 
 /// Attribute every patch in the closure to the component applying it.
 ///
-/// Reads `env.patches`, which lists store paths. Scanning derivation *names*
+/// Reads the `patches` field — from either attribute carrier, since milestone
+/// 1278 (#1348); it said `env.patches` when only one was read, and 7
+/// derivations carrying 28 patch entries in the other one contributed nothing.
+/// The field lists store paths. Scanning derivation *names*
 /// for CVE-shaped strings instead recovers roughly a fifth as many: measured,
 /// 3 and 4 against 18 and 14 on the same two closures, because many patches
 /// are files referenced by path rather than separate CVE-named derivations.
