@@ -150,6 +150,45 @@ enum Role {
     Unreferenced,
 }
 
+/// The C203 annotation key.
+pub(crate) const CLASSIFICATION_SOURCE: &str = "waybill:scope-classification-source";
+
+/// The C203 value for a component, or `None` when this feature did not
+/// classify it.
+///
+/// One function for all three emitters rather than three copies, so the
+/// formats agree by construction. C19 is the lesson: when one format's value
+/// drifted in shape from the others, its parity extractor was quietly
+/// hand-written to compensate, and the difference only surfaced on Go CPEs.
+///
+/// Absence means "the closure role did not classify this". It deliberately
+/// does **not** report the propagation acting alone: C62
+/// `waybill:lifecycle-scope-derivation` already carries that, and repeating
+/// it would put a row on every dev-scoped component in every ecosystem —
+/// measured at 35 golden byte-identity failures when milestone 1276 did the
+/// equivalent thing (spec FR-009's scope correction).
+pub(crate) fn classification_source(
+    component: &ResolvedComponent,
+) -> Option<&'static str> {
+    if !component
+        .artifact_presence
+        .is_some_and(|p| p.is_absent_from_artifact())
+    {
+        return None;
+    }
+    // The propagation reached the same conclusion independently. Worth
+    // distinguishing: a reader deciding whether to trust one analysis wants
+    // to know the other agreed.
+    let also_propagated = component
+        .lifecycle_scope
+        .is_some_and(|s| s.is_non_runtime());
+    Some(if also_propagated {
+        "closure-role+lifecycle-propagation"
+    } else {
+        "closure-role"
+    })
+}
+
 /// Whether a PURL names a Hackage package.
 ///
 /// Duplicated deliberately from `scope_propagation`: see the module header

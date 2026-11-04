@@ -127,3 +127,73 @@ site would have stayed `None` silently — the feature would have worked in
 every unit test and done nothing on a real scan. `closure_identity.rs:792`
 already says why it does not derive it: "a component with every field
 defaulted is a component nobody decided anything about."
+
+## F7 — the propagation's provenance was already carried, which cut C203 down (T021, T023)
+
+FR-009's first draft required the provenance recorded on **every**
+non-runtime component. Measured against the catalog, that is redundant: C62
+`waybill:lifecycle-scope-derivation` already records it, and `transitive` is
+precisely "the m1269 propagation derived this".
+
+Emitting a second annotation saying the same thing would have put a row on
+every dev-scoped component in every ecosystem — 569 scoped components across
+the corpus, by T003's census. That is the shape milestone 1276 measured at
+**35 golden byte-identity failures across 11 ecosystems**, for a row that
+outside Haskell could only ever say one thing.
+
+So C203 is emitted only where the closure role concluded something, and the
+spec's FR-009 carries the correction with the measurement behind it. The
+regression suites confirm the gating: cdx/spdx/spdx3 11/11 each, zero
+non-Nix goldens moved.
+
+**SC-008 was wrong too, and for a related reason.** It asked that "every
+scoped component names the mechanism that scoped it". Measured on
+`nix-closure-moat`: 11 scoped components, **7 carry C62**, and four carry no
+provenance at all — `nixpkgs`, `hspec`, `hspec-discover`, `hspec-golden`.
+C62 fires only where waybill *derived* the scope rather than reading it from
+a manifest, which is C62's existing rule and not this feature's business. The
+criterion now asks what is achievable and says what the four are.
+
+**A reuse option was considered and rejected.** C62's value set is an
+open-enum naming how waybill derived a non-runtime scope
+(`test-only-closure` / `go-mod-why` / `transitive`), and `closure-role`
+would fit that vocabulary exactly. But C62 is C42's companion, and emitting
+C42 means setting `lifecycle_scope` — which research R1 rejects on
+measurement, because it puts the CycloneDX emission inside the
+`--include-dev` gate and makes `--exclude-scope build` able to delete the
+components. The rejection is recorded in C203's catalog row.
+
+## F8 — two tests failed against correct code, and both were the test's fault
+
+Worth recording together, because the shape is the same: an assertion
+written from what a format was *assumed* to look like.
+
+**The `optional`/`development` one** (F4 above) assumed a `buildable: False`
+stanza yields `Development`. It yields m179's `Optional`.
+
+**The envelope decoder** looked for a nested `waybill:annotation` object with
+a `name` key. The real milestone-071 envelope is flat:
+
+```json
+{"schema":"waybill-annotation/v1","field":"waybill:…","value":"…"}
+```
+
+so the decoder returned `None` for every annotation and the cross-format
+test failed against an emission that was already correct. Had it been
+written the other way round — asserting absence — it would have **passed**
+while reading nothing, which is the failure mode that costs a milestone
+rather than five minutes.
+
+Both were found by dumping the real document. `m1277_raw_spdx_annotation_shapes`
+is kept, `#[ignore]`d, for the next person who needs to decode one of these.
+
+## F9 — the bin/lib test-target split runs the opposite way for `parity`
+
+The quickstart's note said `scan_fs` and `resolve` tests live in the bin
+target, which is true. `parity` is declared in `lib.rs`, so its tests live in
+the **lib** target, and `--bin waybill` reports `0 passed; 4571 filtered out`
+for `extractors_table_is_sorted_by_row_id` — a test that exists and passes
+under `--lib`.
+
+The filtered-out count reads like a filter typo in both directions. The
+quickstart now carries the table rather than the one-directional warning.

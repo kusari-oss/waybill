@@ -1587,6 +1587,18 @@ impl CycloneDxBuilder {
                     "value": inclusion.as_str()
                 }));
             }
+            // C203 — milestone 1277: which analysis concluded the component
+            // is not in the artifact. Emitted only where the closure role
+            // concluded it, so absence is a claim about this feature rather
+            // than about the component (FR-009).
+            if let Some(src) =
+                crate::resolve::closure_role_scope::classification_source(component)
+            {
+                properties.push(json!({
+                    "name": crate::resolve::closure_role_scope::CLASSIFICATION_SOURCE,
+                    "value": src
+                }));
+            }
             // Milestone 199 — always-array shape. CDX `properties[].value`
             // is a string; the JSON array is serialized-into-string per
             // the m197 contracts/annotation-shapes.md wire contract.

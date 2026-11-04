@@ -64,10 +64,18 @@ cargo test -p waybill --test scope_exemption_record        # m1276, must stay gr
 
 No `+toolchain` argument (#1189).
 
-**`scan_fs` and `resolve` unit tests live in the BIN target, not the lib.**
-`cargo test -p waybill --lib <filter>` reports `0 passed; … N filtered out`
-for a test that exists and runs perfectly well under `--bin waybill`. The
-filtered-out count looks like a filter typo rather than the wrong target.
+**The two targets split, and the split is not where you would guess.**
+
+| module | target | filter that works |
+|---|---|---|
+| `resolve`, `scan_fs`, `cli`, `generate` | **bin** (declared in `main.rs`) | `--bin waybill` |
+| `parity`, and anything else in `lib.rs` | **lib** | `--lib` |
+
+Either way the wrong target reports `0 passed; … N filtered out` for a test
+that exists and runs perfectly well in the other — a count that reads like a
+filter typo rather than the wrong target. This bit twice while building
+milestone 1277: once on `resolve::closure_role_scope` (bin) and once on
+`parity::extractors` (lib), in opposite directions.
 
 ## The committed probe
 

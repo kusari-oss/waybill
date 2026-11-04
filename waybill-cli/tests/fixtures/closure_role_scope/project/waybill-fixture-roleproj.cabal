@@ -21,6 +21,12 @@ license:       MIT
 -- builder routes test dependencies through `buildInputs`, and already
 -- carrying `excluded` from the milestone-1269 propagation. This feature must
 -- leave that scope byte-identical.
+--
+-- `waybill-fixture-roletoolhask` is declared in the same non-buildable stanza
+-- *and* sits in a `build-tooling` role, which puts it in both classifying
+-- populations at once -- the only way the C203 value
+-- `closure-role+lifecycle-propagation` becomes reachable. Without it that
+-- value is dead code asserted to be correct, which is what T025 forbids.
 
 flag cli
   description: Build the optional CLI.
@@ -43,3 +49,4 @@ executable waybill-fixture-roleproj-cli
     buildable: False
   build-depends:
       waybill-fixture-roletest
+    , waybill-fixture-roletoolhask

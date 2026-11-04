@@ -772,6 +772,10 @@ spdx23_anno!(c201_spdx23, "waybill:closure-identity", component);
 // C202 — milestone 1276: the scope-exemption record.
 spdx23_anno!(c202_spdx23, "waybill:scope-exemptions", document);
 
+// C203 — milestone 1277: which analysis concluded the component is not
+// in the artifact. Per-component, unlike C202.
+spdx23_anno!(c203_spdx23, "waybill:scope-classification-source", component);
+
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.
 spdx23_anno!(c113_spdx23, "waybill:synthetic-built-in",               component);

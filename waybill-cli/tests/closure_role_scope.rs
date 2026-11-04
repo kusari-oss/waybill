@@ -224,6 +224,8 @@ esac
 
 struct Scan {
     cdx: Value,
+    spdx23: Value,
+    spdx3: Value,
     _dir: tempfile::TempDir,
     _cache: tempfile::TempDir,
 }
@@ -249,9 +251,100 @@ impl Scan {
         prop(self.require(name), "waybill:closure-role")
     }
 
+    fn source(&self, name: &str) -> Option<&str> {
+        prop(self.require(name), "waybill:scope-classification-source")
+    }
+
     fn scope(&self, name: &str) -> Option<&str> {
         self.require(name)["scope"].as_str()
     }
+}
+
+impl Scan {
+    /// C203 as CycloneDX spells it.
+    fn cdx_source(&self, name: &str) -> Option<String> {
+        self.source(name).map(str::to_string)
+    }
+
+    /// C203 as SPDX 2.3 spells it: a `waybill:*` annotation whose comment
+    /// holds the milestone-071 envelope.
+    fn spdx23_source(&self, name: &str) -> Option<String> {
+        envelope_value(
+            self.spdx23["packages"].as_array()?,
+            |p| p["name"].as_str() == Some(name),
+            "annotations",
+            "comment",
+        )
+    }
+
+    /// C203 as SPDX 3 spells it: an `Annotation` element whose `statement`
+    /// holds the envelope, subject to the element for this component.
+    fn spdx3_source(&self, name: &str) -> Option<String> {
+        let graph = self.spdx3["@graph"].as_array()?;
+        let subject = graph
+            .iter()
+            .find(|e| e["name"].as_str() == Some(name))?["spdxId"]
+            .as_str()?
+            .to_string();
+        graph
+            .iter()
+            .filter(|e| e["type"] == "Annotation")
+            .filter(|e| {
+                e["subject"].as_str() == Some(subject.as_str())
+                    || e["subject"]["@id"].as_str() == Some(subject.as_str())
+            })
+            .filter_map(|e| e["statement"].as_str())
+            .find_map(|st| envelope_field(st))
+    }
+
+    /// Dispatch by format name, for the loop that asserts absence in all
+    /// three.
+    fn source_in(&self, format: &str, name: &str) -> Option<String> {
+        match format {
+            "cdx" => self.cdx_source(name),
+            "spdx23" => self.spdx23_source(name),
+            "spdx3" => self.spdx3_source(name),
+            other => panic!("unknown format {other}"),
+        }
+    }
+}
+
+/// Pull the C203 value out of a milestone-071 annotation envelope.
+///
+/// The envelope's shape, read off a real document rather than assumed:
+///
+/// ```json
+/// {"schema":"waybill-annotation/v1","field":"waybill:…","value":"…"}
+/// ```
+///
+/// The first draft of this decoder looked for a nested `waybill:annotation`
+/// object with a `name` key and returned `None` for every annotation, which
+/// made the cross-format test fail against a *correct* emission. The
+/// diagnostic beside it (`m1277_raw_spdx_annotation_shapes`) is kept for
+/// exactly that reason.
+fn envelope_field(raw: &str) -> Option<String> {
+    let v: Value = serde_json::from_str(raw).ok()?;
+    if v.get("field")?.as_str()? != "waybill:scope-classification-source" {
+        return None;
+    }
+    Some(v.get("value")?.as_str()?.to_string())
+}
+
+/// Find the annotation on the matching package and decode its envelope.
+fn envelope_value(
+    items: &[Value],
+    matches: impl Fn(&Value) -> bool,
+    list: &str,
+    field: &str,
+) -> Option<String> {
+    items
+        .iter()
+        .find(|i| matches(i))?
+        .get(list)?
+        .as_array()?
+        .iter()
+        .filter_map(|a| a.get(field)?.as_str())
+        .find_map(envelope_field)
 }
 
 fn prop<'a>(component: &'a Value, key: &str) -> Option<&'a str> {
@@ -277,6 +370,8 @@ fn scan() -> Scan {
     }
 
     let cdx_path = dir.path().join("out.cdx.json");
+    let spdx23_path = dir.path().join("out.spdx23.json");
+    let spdx3_path = dir.path().join("out.spdx3.json");
     let out = Command::new(binary_path())
         .args([
             "sbom",
@@ -287,9 +382,17 @@ fn scan() -> Scan {
             "--nix-closure",
             "--format",
             "cyclonedx-json",
+            "--format",
+            "spdx-2.3-json",
+            "--format",
+            "spdx-3-json",
             "--output",
         ])
         .arg(format!("cyclonedx-json={}", cdx_path.display()))
+        .arg("--output")
+        .arg(format!("spdx-2.3-json={}", spdx23_path.display()))
+        .arg("--output")
+        .arg(format!("spdx-3-json={}", spdx3_path.display()))
         .env("PATH", format!("{}:{}", bin.display(), std::env::var("PATH").unwrap()))
         .env("WAYBILL_NIXPKGS_CACHE", cache.path())
         .output()
@@ -300,9 +403,22 @@ fn scan() -> Scan {
         String::from_utf8_lossy(&out.stdout),
         String::from_utf8_lossy(&out.stderr)
     );
-    let cdx: Value =
-        serde_json::from_slice(&std::fs::read(&cdx_path).unwrap()).unwrap();
-    Scan { cdx, _dir: dir, _cache: cache }
+    let read = |p: &Path| -> Value {
+        serde_json::from_slice(&std::fs::read(p).unwrap()).unwrap()
+    };
+    Scan {
+        cdx: read(&cdx_path),
+        spdx23: read(&spdx23_path),
+        spdx3: read(&spdx3_path),
+        _dir: dir,
+        _cache: cache,
+    }
+}
+
+/// All three documents from one scan. The same thing `scan()` returns — the
+/// alias exists so the cross-format test reads as what it is.
+fn scan_all() -> Scan {
+    scan()
 }
 
 /// A diagnostic, not an assertion. Run it with `--ignored --nocapture` to see
@@ -312,17 +428,47 @@ fn scan() -> Scan {
 /// fixture was *intended* to produce, and milestone 1275's F7 is what that
 /// costs: a fixture whose collision was protected by two rules at once, so
 /// the test could not fail and nobody noticed for a milestone.
+/// A second diagnostic: the raw SPDX annotation shapes, so the decoding in
+/// this file is written from what the emitters produce rather than from what
+/// the envelope is assumed to look like.
+#[test]
+#[ignore = "diagnostic; run with --ignored --nocapture"]
+fn m1277_raw_spdx_annotation_shapes() {
+    let s = scan();
+    println!("\n--- SPDX 2.3: package `waybill-fixture-roletool` ---");
+    let pkg = s.spdx23["packages"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|p| p["name"] == "waybill-fixture-roletool")
+        .unwrap();
+    println!("{}", serde_json::to_string_pretty(&pkg["annotations"]).unwrap());
+    println!("\n--- SPDX 3: Annotation elements mentioning the row ---");
+    for e in s.spdx3["@graph"].as_array().unwrap() {
+        let st = e["statement"].as_str().unwrap_or("");
+        if st.contains("scope-classification-source") {
+            println!("{}", serde_json::to_string_pretty(e).unwrap());
+            break;
+        }
+    }
+    println!();
+}
+
 #[test]
 #[ignore = "diagnostic; run with --ignored --nocapture"]
 fn m1277_what_the_fixture_actually_produces() {
     let s = scan();
-    println!("\n{:<34} {:<16} {:<10} {}", "name", "role", "scope", "purl");
+    println!(
+        "\n{:<30} {:<15} {:<9} {:<36} {}",
+        "name", "role", "scope", "classification-source", "purl"
+    );
     for c in s.components() {
         println!(
-            "{:<34} {:<16} {:<10} {}",
+            "{:<30} {:<15} {:<9} {:<36} {}",
             c["name"].as_str().unwrap_or("?"),
             prop(c, "waybill:closure-role").unwrap_or("-"),
             c["scope"].as_str().unwrap_or("-"),
+            prop(c, "waybill:scope-classification-source").unwrap_or("-"),
             c["purl"].as_str().unwrap_or("-"),
         );
     }
@@ -491,5 +637,111 @@ fn m1277_every_closure_role_annotation_survives_unchanged() {
         ("waybill-fixture-rolepatch", "unreferenced"),
     ] {
         assert_eq!(s.role(name), Some(role), "C182 changed on {name}");
+    }
+}
+
+// ---- US3: FR-009, C203 ----
+
+/// T024. All three states of C203 on one document, including the **absent**
+/// one, which is the state that silently passes if the annotation is emitted
+/// unconditionally.
+///
+/// Milestone 1276's US3 shipped exactly that defect: it emitted its record on
+/// every document, and the gate caught it as 35 byte-identity failures across
+/// 11 ecosystems. The absence assertions below are the cheap version of that
+/// gate, and they run in 1.5 seconds rather than 25 minutes.
+#[test]
+fn m1277_the_classification_source_has_three_states_and_absence_is_one() {
+    let s = scan();
+
+    // (1) the closure role alone.
+    assert_eq!(s.source("waybill-fixture-roletool"), Some("closure-role"));
+    assert_eq!(s.source("waybill-fixture-rolepatch"), Some("closure-role"));
+
+    // (2) both analyses, independently. See T025's test for why this value
+    // has to be reachable at all.
+    assert_eq!(
+        s.source("waybill-fixture-roletoolhask"),
+        Some("closure-role+lifecycle-propagation")
+    );
+
+    // (3) absent — and for four distinct reasons, each of which would be a
+    // separate defect if the record appeared.
+    assert_eq!(
+        s.source("waybill-fixture-roletoolboot"),
+        None,
+        "exempt: the feature declined to classify it, so it must not claim to have"
+    );
+    assert_eq!(
+        s.source("waybill-fixture-roletest"),
+        None,
+        "scoped by the propagation alone -- C62 carries that provenance, and \
+         repeating it here would put this row on every dev-scoped component in \
+         every ecosystem (FR-009's measured scope correction)"
+    );
+    assert_eq!(
+        s.source("waybill-fixture-roletext"),
+        None,
+        "artifact-input and unscoped: nothing classified it"
+    );
+    assert_eq!(s.source("nixpkgs"), None, "carries no closure role at all");
+}
+
+/// T025. The `closure-role+lifecycle-propagation` value is reachable by
+/// construction, not merely asserted to be correct.
+///
+/// `roletoolhask` sits in a `build-tooling` role **and** is declared only in
+/// a `buildable: False` stanza, so both analyses reach it independently. That
+/// combination had to be engineered: the first draft of this fixture produced
+/// the value nowhere, which would have made the arm above dead code with a
+/// passing test over it.
+///
+/// On the corpus the population is **zero** today — the ten already-scoped
+/// components on `nix-closure-moat` are all in roles this feature skips — so
+/// the corpus cannot stand in for this fixture.
+#[test]
+fn m1277_the_both_analyses_value_is_reachable_and_not_dead_code() {
+    let s = scan();
+    let c = s.require("waybill-fixture-roletoolhask");
+    assert_eq!(s.role("waybill-fixture-roletoolhask"), Some("build-tooling"));
+    assert_eq!(
+        prop(c, "waybill:lifecycle-scope"),
+        Some("optional"),
+        "the propagation classified it too, through the non-buildable stanza"
+    );
+    assert_eq!(
+        s.source("waybill-fixture-roletoolhask"),
+        Some("closure-role+lifecycle-propagation"),
+        "so the combined value is produced by a real configuration, not a literal"
+    );
+}
+
+/// FR-010's local half: the value is identical in all three formats.
+///
+/// One shared helper computes it, so this cannot drift — but C19 is the
+/// precedent for checking anyway. There, one format's value drifted in shape
+/// from the other two and its parity extractor was hand-written to
+/// compensate, so the catalog looked consistent while the documents were not,
+/// and it surfaced only on Go CPEs.
+#[test]
+fn m1277_the_classification_source_agrees_across_all_three_formats() {
+    let s = scan_all();
+    for name in [
+        "waybill-fixture-roletool",
+        "waybill-fixture-rolepatch",
+        "waybill-fixture-roletoolhask",
+    ] {
+        let cdx = s.cdx_source(name);
+        assert!(cdx.is_some(), "{name} carries no C203 in CycloneDX");
+        assert_eq!(cdx, s.spdx23_source(name), "{name}: CDX vs SPDX 2.3");
+        assert_eq!(cdx, s.spdx3_source(name), "{name}: CDX vs SPDX 3");
+    }
+    // And the exempt member carries it in none of the three.
+    for f in ["cdx", "spdx23", "spdx3"] {
+        assert_eq!(
+            s.source_in(f, "waybill-fixture-roletoolboot"),
+            None,
+            "the exempt member must carry no C203 in {f} either"
+        );
     }
 }
