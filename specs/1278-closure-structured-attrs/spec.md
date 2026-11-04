@@ -342,10 +342,15 @@ are the invariants, and the rest are the figures observed on 2026-11-04.
   roles, or reported as uninterpretable. No declared field is silently skipped.
   **Measured today: 554 dependency entries across 421 of 1,749 derivations are
   silently skipped.**
-- **SC-003**: The nine named components — `autoconf`, `automake`,
-  `bash-interactive`, `docbook-xml`, `elfutils`, `keyutils`, `libedit`,
-  `tzdata`, `util-linux-minimal` — carry the corrected role and no
-  absent-from-artifact marker.
+- **SC-003**: The six components that genuinely carried a false exclusion —
+  `bash-interactive`, `elfutils`, `keyutils`, `libedit`, `tzdata`,
+  `util-linux-minimal` — carry the corrected role and no absent-from-artifact
+  marker. **Measured at nine before implementation; the count was wrong.**
+  `autoconf` and `automake` already carried no scope in the golden, and
+  `docbook-xml`'s role does not change there. The error came from reading
+  `scope` from the golden while computing roles from a local closure and
+  joining by name; see `measurements/findings.md` F1 and the P4 section of
+  `measurements/refresh-prediction.md`.
 - **SC-004**: The derivation-level role census moves from 256 / 101 / 39 / 1,353
   (artifact-input / build-tooling / both / unreferenced) to 270 / 118 / 42 /
   1,319. The `unreferenced` population falls by 34 derivations and by no fewer.

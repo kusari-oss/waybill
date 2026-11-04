@@ -192,3 +192,38 @@ one word — and it is a different and much smaller thing than a wrong label.
 
 To be confirmed against the refreshed goldens, not asserted from here — that
 is what T043's prediction and T045's scoring are for.
+
+
+## T048 — #1346's first measured figure
+
+SC-013 asked the disclosure to name every nixpkgs dependency attribute
+classification does not consult, and deliberately predicted no value for it,
+because the figure is this milestone's output rather than its input. Measured
+on the refreshed `nix-closure-moat` golden:
+
+```json
+{
+  "format-version": 4,
+  "fields-unconsulted": ["defaultNativeBuildInputs", "depsBuildTarget",
+                         "depsTargetTarget", "depsTargetTargetPropagated",
+                         "extraNativeBuildInputs", "propagatedNativeBuildInputs"],
+  "declarations-unconsulted": 230,
+  "derivations-affected": 23
+}
+```
+
+So #1346's gap on this closure is **6 dependency attributes carrying 230
+declarations across 23 derivations**, against the 7 the classifier does read.
+The issue estimated "7 of ~20"; the measured answer is that 6 of the unread
+ones are actually populated here.
+
+`propagatedNativeBuildInputs` is the one worth noticing: it propagates build
+tooling transitively, so members reachable only through it are currently
+unreferenced for the same reason the typed-carrier members were — a
+declaration that exists and is not read.
+
+**This is a count of declarations, not of members.** How many components would
+change role if those six were classified is a separate measurement, and it
+belongs to #1346 rather than here: widening the classified set in this
+milestone would have moved the census for two reasons at once and made SC-004
+uncheckable.

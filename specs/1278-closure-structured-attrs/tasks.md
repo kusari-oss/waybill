@@ -83,7 +83,7 @@ role and no absent-from-artifact marker; the derivation census matches SC-004.
 
 - [X] T019 [US1] Confirm `classify` in `waybill-cli/src/scan_fs/package_db/nix/closure/classify.rs` needs no change because it reads through the accessors, and record that in its module doc — the seam is the design (FR-007), not an accident
 - [X] T020 [US1] Verify that `assign_role_scope` in `waybill-cli/src/resolve/closure_role_scope.rs` asserts no scope for a corrected `artifact-input` or `both` role, and add the assertion if it rests on an unexercised path — FR-008 follows from m1277's existing rule and must not become a new one
-- [ ] T021 [US1] Update the `nix-closure-moat` expectations in `waybill-cli/tests/corpus_harness_195/expectations.rs` for the corrected role census, the nine components of SC-003, and SC-005's transition table **per direction** (5 `build-tooling`→`both`, 4 `unreferenced`→`artifact-input`, 3 `unreferenced`→`build-tooling`, 2 `artifact-input`→`both`), plus the assertion that nothing moves toward `unreferenced` — a total that matches by the wrong transitions must fail
+- [X] T021 [US1] Update the `nix-closure-moat` expectations in `waybill-cli/tests/corpus_harness_195/expectations.rs` for the corrected role census, the nine components of SC-003, and SC-005's transition table **per direction** (5 `build-tooling`→`both`, 4 `unreferenced`→`artifact-input`, 3 `unreferenced`→`build-tooling`, 2 `artifact-input`→`both`), plus the assertion that nothing moves toward `unreferenced` — a total that matches by the wrong transitions must fail
 
 **Checkpoint**: the nine false exclusions are retracted. US1 delivers value with nothing else landed.
 
@@ -103,7 +103,7 @@ role and no absent-from-artifact marker; the derivation census matches SC-004.
 ### Implementation for User Story 2
 
 - [X] T024 [US2] Confirm `patches.rs` in `waybill-cli/src/scan_fs/package_db/nix/closure/` is corrected by T006 alone, and correct its module doc, which currently says it "reads `env.patches`"
-- [ ] T025 [US2] Update the patch and CVE expectations for `nix-closure-moat` in `waybill-cli/tests/corpus_harness_195/expectations.rs`
+- [X] T025 [US2] Update the patch and CVE expectations for `nix-closure-moat` in `waybill-cli/tests/corpus_harness_195/expectations.rs`
 
 **Checkpoint**: patch evidence complete; US1 unaffected.
 
@@ -122,8 +122,8 @@ role and no absent-from-artifact marker; the derivation census matches SC-004.
 
 ### Implementation for User Story 3
 
-- [ ] T028 [US3] Confirm `emit.rs` in `waybill-cli/src/scan_fs/package_db/nix/closure/` is corrected by T007 alone, and that the component count change is confined to the identities of SC-006 and SC-008
-- [ ] T029 [US3] Update the component-count expectations for `nix-closure-moat` in `waybill-cli/tests/corpus_harness_195/expectations.rs`
+- [X] T028 [US3] Confirm `emit.rs` in `waybill-cli/src/scan_fs/package_db/nix/closure/` is corrected by T007 alone, and that the component count change is confined to the identities of SC-006 and SC-008
+- [X] T029 [US3] Update the component-count expectations for `nix-closure-moat` in `waybill-cli/tests/corpus_harness_195/expectations.rs`
 
 **Checkpoint**: all three correctness stories independently functional.
 
@@ -165,11 +165,11 @@ reads makes the guard fail.
 - [X] T041 [P] Per FR-011, give the census its system where it lacks one: `specs/1035-nix-closure-sbom/research.md` R3 states its figures without naming a system, now recorded as aarch64-darwin. **`waybill-cli/tests/corpus_harness_195/manifest.rs` needed no change** — it already states its system and warns the counts differ from the CI closure; the claim that it was mislabelled was wrong and is retracted in `measurements/findings.md` F0
 - [X] T042 Run the local gate: `./scripts/gate.sh --expect '>>> all pre-PR checks passed\.' prepr -- ./scripts/pre-pr.sh`, with **no `+toolchain` argument** (#1189). Assert on `GATE_RESULT`, the expect line, and the per-target `test result: ok. N passed; 0 failed` lines — the absence of FAILED is not evidence
 - [X] T043 Satisfy FR-016's first half: commit the refresh prediction **before** dispatching it, in `specs/1278-closure-structured-attrs/measurements/refresh-prediction.md` — which targets move, which do not, and the expected role, component, patch and disclosure deltas
-- [ ] T044 Refresh the corpus goldens through the `public-corpus.yml` workflow dispatch. **Never** set `WAYBILL_UPDATE_PUBLIC_CORPUS_GOLDENS=1` locally
-- [ ] T045 Satisfy FR-016's second half: score the T043 prediction against the refresh diff in `specs/1278-closure-structured-attrs/measurements/refresh-prediction.md`, including any miss and what it corrected
-- [ ] T046 Check every target under `waybill-cli/tests/fixtures/public_corpus/` for movement outside `nix-closure-moat` beyond the disclosure appearing on closure-scanning targets — a non-closure target that moved means the widening leaked past the type it is confined to (research R6)
+- [X] T044 Refresh the corpus goldens through the `public-corpus.yml` workflow dispatch. **Never** set `WAYBILL_UPDATE_PUBLIC_CORPUS_GOLDENS=1` locally
+- [X] T045 Satisfy FR-016's second half: score the T043 prediction against the refresh diff in `specs/1278-closure-structured-attrs/measurements/refresh-prediction.md`, including any miss and what it corrected
+- [X] T046 Check every target under `waybill-cli/tests/fixtures/public_corpus/` for movement outside `nix-closure-moat` beyond the disclosure appearing on closure-scanning targets — a non-closure target that moved means the widening leaked past the type it is confined to (research R6)
 - [ ] T047 Satisfy FR-017: reconcile `waybill-cli/tests/corpus_harness_195/invariant-declarations.toml` with the refreshed goldens — retire declarations the fix makes stale, and declare any new offender with its reason and count
-- [ ] T048 [P] Record the measured `fields-unconsulted` population as the first measurement of #1346's coverage gap in `specs/1278-closure-structured-attrs/measurements/README.md` — the output SC-013 deliberately did not predict
+- [X] T048 [P] Record the measured `fields-unconsulted` population as the first measurement of #1346's coverage gap in `specs/1278-closure-structured-attrs/measurements/README.md` — the output SC-013 deliberately did not predict
 - [ ] T049 Run the `quickstart.md` validation end to end, including the control that the env-only arm still reproduces the goldens and the five traps
 - [X] T050 [P] Record anything the milestone corrected about its own research in `specs/1278-closure-structured-attrs/measurements/findings.md`, including the 16→9 false-exclusion count fixed during spec writing
 
