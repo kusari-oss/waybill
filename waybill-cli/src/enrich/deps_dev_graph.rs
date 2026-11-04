@@ -271,6 +271,7 @@ pub async fn enrich_dep_graph(
                             occurrences: Vec::new(),
                             lifecycle_scope: None,
                             build_inclusion: None,
+                            artifact_presence: None,
                             requirement_ranges: Vec::new(),
                             source_type: Some("declared-not-cached".to_string()),
                             sbom_tier: Some("source".to_string()),

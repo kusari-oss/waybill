@@ -291,6 +291,7 @@ mod tests {
     ) -> ResolvedComponent {
         ResolvedComponent {
             build_inclusion: None,
+            artifact_presence: None,
             purl: Purl::new(purl).unwrap(),
             name: purl.to_string(),
             version: "0.0.0".to_string(),

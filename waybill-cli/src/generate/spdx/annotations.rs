@@ -259,6 +259,16 @@ pub fn annotate_component(
     if let Some(inclusion) = c.build_inclusion {
         push(&mut out, "waybill:build-inclusion", json!(inclusion.as_str()));
     }
+    // C203 — milestone 1277: see the CycloneDX site and
+    // `resolve::closure_role_scope::classification_source`, which all three
+    // formats share so they cannot drift in shape.
+    if let Some(src) = crate::resolve::closure_role_scope::classification_source(c) {
+        push(
+            &mut out,
+            crate::resolve::closure_role_scope::CLASSIFICATION_SOURCE,
+            json!(src),
+        );
+    }
     // C7 co-owned-by
     if let Some(ref v) = c.co_owned_by {
         push(&mut out, "waybill:co-owned-by", json!(v));
@@ -1504,6 +1514,7 @@ mod tests {
         use waybill_common::types::purl::Purl;
         ResolvedComponent {
             build_inclusion: None,
+            artifact_presence: None,
             purl: Purl::new(purl).unwrap(),
             name: "demo".to_string(),
             version: "1".to_string(),

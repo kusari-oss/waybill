@@ -148,6 +148,7 @@ mod tests {
         let purl_str = format!("pkg:cargo/{name}@{version}");
         ResolvedComponent {
             build_inclusion: None,
+            artifact_presence: None,
             purl: Purl::new(&purl_str).expect("valid purl"),
             name: name.to_string(),
             version: version.to_string(),

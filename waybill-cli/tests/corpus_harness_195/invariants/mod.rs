@@ -185,6 +185,18 @@ pub static REGISTRY: &[Invariant] = &[
         kinds: checks::compiler_supplied_scope::KINDS,
         checker: checks::compiler_supplied_scope::check,
     },
+    Invariant {
+        id: "I10",
+        statement: "A closure member whose role says it does not ship carries a non-runtime marker, \
+                    or says it was exempted",
+        // Reports n/a rather than passing vacuously on the 16 corpus targets
+        // that emit no closure roles at all. A row that passes where it
+        // cannot apply is indistinguishable from one that passes where it
+        // can.
+        precondition: "at least one component carries a non-shipping closure role",
+        kinds: checks::closure_role_scope::KINDS,
+        checker: checks::closure_role_scope::check,
+    },
 ];
 
 pub fn invariant(id: &str) -> Option<&'static Invariant> {

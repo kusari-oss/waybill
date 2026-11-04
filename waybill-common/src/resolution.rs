@@ -73,6 +73,20 @@ pub struct ResolvedComponent {
     /// has a native excluded-scope construct).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub build_inclusion: Option<BuildInclusion>,
+    /// Milestone 1277 — what the nix closure role established about this
+    /// component's presence in the artifact. `None` means the role
+    /// established nothing; `Some(NotInArtifact)` drives the native
+    /// construct in each format: CDX `scope: "excluded"`, SPDX 2.3
+    /// `BUILD_TOOL_OF`, SPDX 3 `LifecycleScopedRelationship` with
+    /// `LifecycleScopeType/build`. Every one of those is the format's own
+    /// construct, not a `waybill:*` annotation (Principle V).
+    ///
+    /// Emitted **unconditionally**, outside the `--include-dev` gate, for
+    /// the reason milestone 112 gives for `BuildInclusion::NotNeeded`: how
+    /// nix referenced a derivation is a build-graph fact, not a
+    /// lifecycle-scope preference the operator can toggle.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub artifact_presence: Option<ArtifactPresence>,
     /// Original unresolved requirement specifications for fallback-tier
     /// entries (`requirements.txt` range specs, root `package.json`
     /// dependency declarations without a lockfile). Strings preserved
@@ -611,6 +625,87 @@ impl BuildInclusion {
     }
 }
 
+/// Milestone 1277 — what the nix closure role established about a
+/// member's presence in the artifact. `None` means the role established
+/// nothing, which is every component outside a `--nix-closure` scan and
+/// every member whose role is `artifact-input` or `both`.
+///
+/// **Three states, not four.** This deliberately does not mirror the
+/// four-way `waybill:closure-role`: `artifact-input` and `both` produce no
+/// state at all, because `ARTIFACT_FIELDS` is `buildInputs`,
+/// `propagatedBuildInputs`, `depsHostHost` and nixpkgs' Haskell builder
+/// passes test dependencies through `buildInputs` — so the role means "nix
+/// referenced it as an input to the thing being built", not "it is in the
+/// artifact at runtime". `hspec` is the measured counterexample:
+/// `artifact-input`, and not in the shipped binary. This feature may
+/// therefore only ever *add* a non-runtime classification, never assert
+/// presence (spec FR-002).
+///
+/// **Why not `lifecycle_scope`.** `LifecycleScope::Build` would reach the
+/// native carrier in all three formats for free, but the CycloneDX emission
+/// is gated on `--include-dev`, so the feature would not fire by default;
+/// and `--exclude-scope build` would then *drop* the affected components,
+/// which is the opposite of the intent — the `unreferenced` ones are
+/// emitted precisely because `jq` and `lua` there carried 6 of one
+/// project's 18 CVEs. See `specs/1277-closure-role-scope/research.md` R1.
+///
+/// **Why not `build_inclusion`.** That carries `go mod why`'s semantic and
+/// its own catalog row; reusing it would make one field mean two things in
+/// two ecosystems. Its *shape* is the model — unconditional emission,
+/// `lifecycle_scope` untouched — not its value (research R2).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum ArtifactPresence {
+    /// nix referenced this member only in ways that do not put it in the
+    /// artifact: a tooling field, or no dependency field at all.
+    NotInArtifact,
+    /// The role said the same thing, but the pinned revision's compiler
+    /// supplies this package, so nothing is asserted about its presence
+    /// (spec FR-005).
+    ///
+    /// **A distinct state rather than `None`, because the document has to
+    /// say so.** With the exemption collapsed into absence, a reader — and
+    /// any invariant — cannot tell a member the rule deliberately left
+    /// alone from a member the rule failed to reach. Milestone 1276 learned
+    /// the same thing at document scope: "the rule applied and exempted
+    /// nothing" and "the rule did not apply" are different facts, which is
+    /// why C202 has three states. This is that lesson per component.
+    ///
+    /// Found by trying to write invariant I10. The exempt member carries no
+    /// C170 `waybill:haskell-version-unresolved-reason`, so I9's signal does
+    /// not identify it, and an I10 that reused that signal would have failed
+    /// on correct output.
+    ExemptCompilerSupplied,
+}
+
+impl ArtifactPresence {
+    /// Whether this state is a claim that the member is absent from the
+    /// artifact.
+    ///
+    /// Matched exhaustively rather than with `matches!`, so a variant added
+    /// later cannot be silently excluded — #892 was exactly that defect
+    /// behind a `matches!` allowlist and survived about two years.
+    pub fn is_absent_from_artifact(&self) -> bool {
+        match self {
+            ArtifactPresence::NotInArtifact => true,
+            // The whole point of the state: the role would have said this,
+            // and the exemption means nothing is asserted.
+            ArtifactPresence::ExemptCompilerSupplied => false,
+        }
+    }
+
+    /// The C203 wire value — what this feature decided about the component.
+    ///
+    /// Exhaustive, so a state added later is a compile error here rather
+    /// than a silently missing annotation.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            ArtifactPresence::NotInArtifact => "closure-role",
+            ArtifactPresence::ExemptCompilerSupplied => "exempt-compiler-supplied",
+        }
+    }
+}
+
 /// Backward-compat helper bridging the milestone-052 lifecycle_scope
 /// field to the pre-052 `is_dev: Option<bool>` semantic. Returns true
 /// when the component is `Development`, `Build`, or `Test` scoped —
@@ -751,6 +846,7 @@ mod tests {
             occurrences: vec![],
             lifecycle_scope: None,
             build_inclusion: None,
+            artifact_presence: None,
             requirement_ranges: Vec::new(),
             source_type: None,
             sbom_tier: None,
@@ -872,6 +968,7 @@ mod tests {
             occurrences: vec![],
             lifecycle_scope: None,
             build_inclusion: None,
+            artifact_presence: None,
             requirement_ranges: Vec::new(),
             source_type: None,
             sbom_tier: None,

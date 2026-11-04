@@ -4958,6 +4958,40 @@ pub async fn execute(
         // already typed — which is why it is re-run here rather than
         // moved from `scan_fs`.
         crate::scan_fs::apply_lifecycle_scope_to_edges(&components, &mut relationships);
+
+        // Milestone 1277 (#1342) — the non-runtime classification the nix
+        // closure role establishes.
+        //
+        // Placed beside the propagation because both inputs are already here
+        // and nothing else needs plumbing: `boot_libraries` is the set
+        // milestone 1276 threads out of the nixpkgs-haskell pass, and the
+        // C182 role is on each component's `extra_annotations` by now.
+        //
+        // Runs for every scan, like the propagation does, and is a no-op when
+        // no component carries a closure role — which is every scan without
+        // `--nix-closure` and every scan whose closure tier degraded
+        // (FR-007, FR-008).
+        //
+        // Order against the propagation does not matter: the two write
+        // disjoint fields, `lifecycle_scope` and `artifact_presence`, and
+        // neither ever asserts runtime presence. Every combination of the
+        // two is enumerated in `contracts/role-scope.md`; none requires a
+        // precedence rule. Should a future mechanism assert `required`, that
+        // stops being true.
+        let role_scope_summary = crate::resolve::closure_role_scope::assign_role_scope(
+            &mut components,
+            &boot_libraries,
+        );
+        if role_scope_summary.roles_seen > 0 {
+            tracing::info!(
+                roles_seen = role_scope_summary.roles_seen,
+                classified = role_scope_summary.assigned(),
+                build_tooling = role_scope_summary.assigned_build_tooling,
+                unreferenced = role_scope_summary.assigned_unreferenced,
+                exempt_compiler_supplied = role_scope_summary.exempt_compiler_supplied,
+                "nix-closure: role-derived artifact-presence classification"
+            );
+        }
     }
     // The document-scope record (FR-018). Built only on the success path, so
     // a degraded tier emits no counts rather than zeros -- a zero would read
@@ -8025,6 +8059,7 @@ mod tests {
         let purl = Purl::new(purl_str).unwrap();
         ResolvedComponent {
             build_inclusion: None,
+            artifact_presence: None,
             name: purl.name().to_string(),
             version: purl.version().unwrap_or("0.0.0").to_string(),
             purl,

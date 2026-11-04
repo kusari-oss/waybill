@@ -1,0 +1,52 @@
+cabal-version: 2.4
+name:          waybill-fixture-roleproj
+version:       0.1.0
+license:       MIT
+
+-- Milestone 1277 — the closure-role case.
+--
+-- The library's declared dependency is what engages the nixpkgs-haskell
+-- enrichment, which loads the pinned revision's package set and hands its
+-- boot set out through `EnrichmentSummary`. That set is what the FR-005
+-- exemption reads; with no `.cabal` here the boot set is empty, the
+-- exemption could not fire at all, and T016's fixture would be silently
+-- vacuous.
+--
+-- `waybill-fixture-roletest` is reachable ONLY through a stanza that is
+-- `buildable: False` by default, so the Haskell reader marks it non-runtime
+-- and milestone 1269 propagates that. It is ALSO an `artifact-input` closure
+-- member, which makes it the one shape FR-002 exists to protect: on real
+-- data ten components are in exactly this position -- `hspec`, `QuickCheck`
+-- and their family, `artifact-input` by role because nixpkgs' Haskell
+-- builder routes test dependencies through `buildInputs`, and already
+-- carrying `excluded` from the milestone-1269 propagation. This feature must
+-- leave that scope byte-identical.
+--
+-- `waybill-fixture-roletoolhask` is declared in the same non-buildable stanza
+-- *and* sits in a `build-tooling` role, which puts it in both classifying
+-- populations at once -- the only way the C203 value
+-- `closure-role+lifecycle-propagation` becomes reachable. Without it that
+-- value is dead code asserted to be correct, which is what T025 forbids.
+
+flag cli
+  description: Build the optional CLI.
+  default:     False
+  manual:      True
+
+library
+  build-depends:    base, waybill-fixture-roletext
+  exposed-modules:  Lib
+  hs-source-dirs:   src
+  default-language: Haskell2010
+
+executable waybill-fixture-roleproj-cli
+  main-is:          Main.hs
+  hs-source-dirs:   src
+  default-language: Haskell2010
+  if flag(cli)
+    buildable: True
+  else
+    buildable: False
+  build-depends:
+      waybill-fixture-roletest
+    , waybill-fixture-roletoolhask

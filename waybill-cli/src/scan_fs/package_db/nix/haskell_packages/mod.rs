@@ -1340,6 +1340,7 @@ fn new_closure_component(name: &str) -> ResolvedComponent {
         });
     ResolvedComponent {
         build_inclusion: None,
+        artifact_presence: None,
         name: name.to_string(),
         version: String::new(),
         purl,
@@ -2008,6 +2009,7 @@ mod enrich_tests {
             waybill_common::types::purl::Purl::new(&format!("pkg:hackage/{name}")).unwrap();
         ResolvedComponent {
             build_inclusion: None,
+            artifact_presence: None,
             name: name.to_string(),
             version: String::new(),
             purl,

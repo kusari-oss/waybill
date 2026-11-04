@@ -794,6 +794,7 @@ fn compiler_supplied_component(name: &str) -> Option<ResolvedComponent> {
     // component nobody decided anything about.
     let mut c = ResolvedComponent {
         build_inclusion: None,
+        artifact_presence: None,
         name: name.to_string(),
         version: String::new(),
         purl,

@@ -192,6 +192,7 @@ mod tests {
             occurrences,
             lifecycle_scope: None,
             build_inclusion: None,
+            artifact_presence: None,
             requirement_ranges: Vec::new(),
             source_type: None,
             sbom_tier: None,

@@ -329,6 +329,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
             // "analyzed" per R13. No dev/prod info, no range spec.
             lifecycle_scope: None,
             build_inclusion: None,
+            artifact_presence: None,
             requirement_ranges: Vec::new(),
             source_type: None,
             sbom_tier: Some("analyzed".to_string()),
@@ -1051,6 +1052,9 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
                 // Milestone 104 — propagate role from PackageDbEntry
                 // (set by the binary reader's `make_file_level_component`).
                 binary_role: entry.binary_role,
+                // Milestone 1277 — the closure-role pass runs at the resolve
+                // stage, after this construction, so nothing is known here.
+                artifact_presence: None,
             });
             // Milestone 867 (#886) — index of the component just pushed, so
             // declared names that resolve to nothing can be localised on it
@@ -2633,6 +2637,7 @@ mod m179_dispatch_tests {
             occurrences: Vec::new(),
             lifecycle_scope: None,
             build_inclusion: None,
+            artifact_presence: None,
             requirement_ranges: Vec::new(),
             source_type: None,
             sbom_tier: None,
@@ -3126,6 +3131,7 @@ Architecture: amd64
         let purl = waybill_common::types::purl::Purl::new("pkg:cargo/test@1.0.0").unwrap();
         ResolvedComponent {
             build_inclusion: None,
+            artifact_presence: None,
             name: purl.name().to_string(),
             version: purl.version().unwrap_or("0.0.0").to_string(),
             purl,
@@ -3261,6 +3267,7 @@ Architecture: amd64
             occurrences: Vec::new(),
             lifecycle_scope: None,
             build_inclusion: None,
+            artifact_presence: None,
             requirement_ranges: Vec::new(),
             source_type: None,
             sbom_tier: None,

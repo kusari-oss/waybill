@@ -398,6 +398,7 @@ mod tests {
             occurrences: Vec::new(),
             lifecycle_scope: Some(LifecycleScope::Runtime),
             build_inclusion: None,
+            artifact_presence: None,
             requirement_ranges: range.map(|r| vec![r.to_string()]).unwrap_or_default(),
             source_type: None,
             sbom_tier: sbom_tier.map(str::to_string),

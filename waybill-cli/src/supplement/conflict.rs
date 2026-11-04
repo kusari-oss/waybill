@@ -476,6 +476,7 @@ mod tests {
             occurrences: Vec::new(),
             lifecycle_scope: None,
             build_inclusion: None,
+            artifact_presence: None,
             requirement_ranges: Vec::new(),
             source_type: None,
             sbom_tier: Some("source".to_string()),

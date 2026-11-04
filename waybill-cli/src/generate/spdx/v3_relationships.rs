@@ -184,6 +184,68 @@ pub(crate) fn group_dependency_relationships(
 /// emits `scope` for `Dev`/`Build`/`TestDependsOn` variants and
 /// omits it for plain `DependsOn` (default = scope-unspecified
 /// per the spec).
+/// Milestone 1277 (#1342) — the SPDX 3.0.1 native carrier for "builds the
+/// artifact and is not in it".
+///
+/// `usesTool` is the vocabulary match, and the right one: SPDX 3.0.1's
+/// `RelationshipType` has 59 values, of which `usesTool` means the artifact
+/// employs this element as a tool, while `dependsOn` would assert a
+/// dependency the artifact does not have. Qualified with
+/// `LifecycleScopedRelationship` and `scope: "build"` — the counterpart of
+/// SPDX 2.3's `BUILD_TOOL_OF`, which carries the "build" sense in the
+/// relationship name where SPDX 3 carries it in the scope field.
+///
+/// Direction is `root usesTool member`: the root is the thing using the
+/// tool. That is the opposite of SPDX 2.3's `member BUILD_TOOL_OF root`,
+/// because the two spellings put the subject on opposite sides — the same
+/// reversal m228's convention already documents for the dependency types.
+///
+/// **Not a dependency edge.** Nothing that compares dependency sets across
+/// formats will see it, which is what keeps CycloneDX and SPDX agreeing
+/// about the subject's direct dependencies while both describe the tooling.
+pub fn build_tool_relationships(
+    components: &[waybill_common::resolution::ResolvedComponent],
+    package_iri_by_purl: &BTreeMap<String, String>,
+    root_iris: &[String],
+    doc_iri: &str,
+    creation_info_id: &str,
+) -> Vec<Value> {
+    let mut out: Vec<Value> = Vec::new();
+    for c in components {
+        if !c
+            .artifact_presence
+            .is_some_and(|p| p.is_absent_from_artifact())
+        {
+            continue;
+        }
+        let Some(member_iri) = package_iri_by_purl.get(c.purl.as_str()) else {
+            continue;
+        };
+        for root_iri in root_iris {
+            if root_iri == member_iri {
+                continue; // a root is not a tool of itself
+            }
+            let mut element = build_relationship(
+                root_iri,
+                "usesTool",
+                member_iri,
+                doc_iri,
+                creation_info_id,
+            );
+            // `scope` is valid only on `LifecycleScopedRelationship`, a
+            // subtype of `Relationship`. Milestone 085 learned that the
+            // hard way: `scope` on a plain `Relationship` round-trips
+            // fine and fails JSON-Schema validation, because the
+            // `LifecycleScopedRelationship_props` allOf branch is not
+            // selected and `scope` becomes an unknown property.
+            element["type"] = json!("LifecycleScopedRelationship");
+            element["scope"] = json!("build");
+            out.push(element);
+        }
+    }
+    out
+}
+
 pub fn build_dependency_relationships(
     relationships: &[Relationship],
     package_iri_by_purl: &BTreeMap<String, String>,

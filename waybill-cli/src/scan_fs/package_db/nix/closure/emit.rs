@@ -101,6 +101,7 @@ pub(crate) fn components(closure: &ClassifiedClosure) -> Vec<ResolvedComponent> 
 
         let component = ResolvedComponent {
             build_inclusion: None,
+            artifact_presence: None,
             name: name.to_string(),
             version: version.to_string(),
             purl,
