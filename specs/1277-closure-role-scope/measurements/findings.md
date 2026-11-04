@@ -257,3 +257,107 @@ Neither is interesting in itself. The point is the interval: a green
 would have put both into a pushed branch. Worth running
 `cargo clippy -p waybill --all-targets -- -D warnings` after each phase
 rather than once at T041.
+
+## F13 — writing the invariant forced a change to the feature's output (T026)
+
+I10 could not be written as the spec described it, and the reason is the
+most useful thing this milestone found.
+
+The spec said the exemption "withholds the native scope; it does not
+withhold the classification", and the implementation did exactly that: an
+exempt member kept its C182 role and acquired nothing else. So in the
+emitted document, a member the rule deliberately left alone and a member the
+rule failed to reach are **the same component**. No invariant can tell them
+apart, and neither can a reader.
+
+The first attempt reused I9's signal — C170
+`waybill:haskell-version-unresolved-reason == "compiler-supplied"` — and
+measurement killed it:
+
+```
+--- waybill-fixture-roletoolboot ---
+  scope = None
+  waybill:sbom-tier = build
+  waybill:closure-identity = confirmed
+  waybill:closure-role = build-tooling
+```
+
+No C170. m1275 sets that property on the **synthetic** components it emits
+for declared edges to boot libraries the closure does not contain; a closure
+member that happens to be a boot library carries nothing of the kind. An
+I10 reading C170 would have reported correct output as a defect.
+
+So `ArtifactPresence` gained a third state, `ExemptCompilerSupplied`, and
+C203 a third value, `exempt-compiler-supplied`. FR-005a was amended to
+require it. This is milestone 1276's lesson arriving one level down: C202
+has three states because "the rule applied and exempted nothing" and "the
+rule did not apply" are different facts, and the same is true per component.
+
+**The general shape**: writing the check is what revealed the output was
+not auditable. A feature whose correctness nothing can observe is not
+finished, however well it behaves.
+
+## F14 — the first I10 would have failed on a correct refresh (T026)
+
+`cdx_is_non_runtime`, the harness's shared helper, reads **only** C42
+`waybill:lifecycle-scope`:
+
+```rust
+cdx_prop(component, "waybill:lifecycle-scope")
+    .map(|s| NON_RUNTIME_SCOPES.contains(&s))
+    .unwrap_or(false)
+```
+
+Milestone 1277's marker is the **native** CycloneDX `scope` field, set
+deliberately without C42 so the emission stays outside the `--include-dev`
+gate and `--exclude-scope build` cannot delete the components (R1–R2). So
+the first draft of I10 would have reported 95 of the 97 classified
+components as offenders *after* a correct refresh — passing today for the
+wrong reason and failing tomorrow for a worse one.
+
+Caught by predicting the row against the committed goldens before the
+refresh rather than after:
+
+| | population | already marked | offenders |
+|---|---|---|---|
+| committed goldens | 97 | 0 | **97** |
+
+The 97 are the defect, which is the declaration's content. The fix is a
+local predicate accepting either spelling, and the shared helper is
+deliberately **not** widened: I3 uses it to define its own population, and
+changing it would alter a different row's behaviour as a side effect of this
+one. Milestone 1277 adds no C42, so I3 is unaffected either way.
+
+## F15 — the declarations file sorts lexicographically, so I10 goes between I1 and I2
+
+`sort_unstable()` over `(invariant, target)` string tuples, so `"I10"` <
+`"I2"`. Appending the entry at the end failed three tests — the validity
+check, the line-stability check and the golden-matrix check — with one
+message about sort order. Worth knowing before adding `I11`.
+
+## F16 — I lost clippy's exit status to a pipeline, and the absence read as success
+
+Run as
+
+```sh
+cargo test ... | grep -E 'test result' | head -8 && cargo clippy --workspace --all-targets -- -D warnings 2>&1 | grep -E '^error' | head -6; echo CLIPPY_DONE
+```
+
+`head -8` closes the pipe, the left side of the `&&` exits non-zero, and
+**clippy never runs**. My grep for `^error` then found nothing — because
+there was no output at all — and the result looked exactly like a clean
+lint.
+
+Caught only because `CLIPPY_DONE` was absent from the log, which is the
+positive signal the project's own gate discipline insists on: *assert on a
+positive signal, never on absence*, because a check that did not run is
+indistinguishable from one that passed. The same reasoning produced
+`scripts/gate.sh`, which exists precisely so a caller who pipes the gate and
+loses `$?` can still recover the verdict.
+
+Recorded because the lesson is written down in `CLAUDE.md`, I had quoted it
+earlier in this very milestone (F12), and I still made the mistake inside a
+command whose purpose was verification. The fix is mechanical: run the gate
+standalone, redirect to a log, and read its own exit status —
+`cargo clippy ... > log 2>&1; echo "EXIT=$?"` — never chained behind a
+pipeline whose status is something else's.

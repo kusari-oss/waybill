@@ -630,7 +630,7 @@ impl BuildInclusion {
 /// nothing, which is every component outside a `--nix-closure` scan and
 /// every member whose role is `artifact-input` or `both`.
 ///
-/// **Two states, not four.** This deliberately does not mirror the
+/// **Three states, not four.** This deliberately does not mirror the
 /// four-way `waybill:closure-role`: `artifact-input` and `both` produce no
 /// state at all, because `ARTIFACT_FIELDS` is `buildInputs`,
 /// `propagatedBuildInputs`, `depsHostHost` and nixpkgs' Haskell builder
@@ -659,6 +659,23 @@ pub enum ArtifactPresence {
     /// nix referenced this member only in ways that do not put it in the
     /// artifact: a tooling field, or no dependency field at all.
     NotInArtifact,
+    /// The role said the same thing, but the pinned revision's compiler
+    /// supplies this package, so nothing is asserted about its presence
+    /// (spec FR-005).
+    ///
+    /// **A distinct state rather than `None`, because the document has to
+    /// say so.** With the exemption collapsed into absence, a reader — and
+    /// any invariant — cannot tell a member the rule deliberately left
+    /// alone from a member the rule failed to reach. Milestone 1276 learned
+    /// the same thing at document scope: "the rule applied and exempted
+    /// nothing" and "the rule did not apply" are different facts, which is
+    /// why C202 has three states. This is that lesson per component.
+    ///
+    /// Found by trying to write invariant I10. The exempt member carries no
+    /// C170 `waybill:haskell-version-unresolved-reason`, so I9's signal does
+    /// not identify it, and an I10 that reused that signal would have failed
+    /// on correct output.
+    ExemptCompilerSupplied,
 }
 
 impl ArtifactPresence {
@@ -671,6 +688,20 @@ impl ArtifactPresence {
     pub fn is_absent_from_artifact(&self) -> bool {
         match self {
             ArtifactPresence::NotInArtifact => true,
+            // The whole point of the state: the role would have said this,
+            // and the exemption means nothing is asserted.
+            ArtifactPresence::ExemptCompilerSupplied => false,
+        }
+    }
+
+    /// The C203 wire value — what this feature decided about the component.
+    ///
+    /// Exhaustive, so a state added later is a compile error here rather
+    /// than a silently missing annotation.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            ArtifactPresence::NotInArtifact => "closure-role",
+            ArtifactPresence::ExemptCompilerSupplied => "exempt-compiler-supplied",
         }
     }
 }

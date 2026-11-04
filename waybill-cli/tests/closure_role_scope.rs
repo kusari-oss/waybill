@@ -435,6 +435,32 @@ fn scan_all() -> Scan {
 /// A third diagnostic: the SPDX native relationships this feature adds, in
 /// both formats, so T043/T044's assertions are written from the emission
 /// rather than from the vocabulary.
+/// A fourth diagnostic: every property on the members that matter, so an
+/// invariant written against this document is written against what it holds.
+#[test]
+#[ignore = "diagnostic; run with --ignored --nocapture"]
+fn m1277_properties_on_the_decisive_members() {
+    let s = scan();
+    for name in [
+        "waybill-fixture-roletoolboot",
+        "waybill-fixture-roletoolhask",
+        "waybill-fixture-rolepatch",
+        "base",
+    ] {
+        println!("\n--- {name} ---");
+        let c = s.require(name);
+        println!("  scope = {:?}", c["scope"].as_str());
+        for p in c["properties"].as_array().into_iter().flatten() {
+            println!(
+                "  {} = {}",
+                p["name"].as_str().unwrap_or("?"),
+                p["value"].as_str().unwrap_or("?")
+            );
+        }
+    }
+    println!();
+}
+
 #[test]
 #[ignore = "diagnostic; run with --ignored --nocapture"]
 fn m1277_raw_spdx_tool_relationships() {
@@ -676,7 +702,7 @@ fn m1277_every_closure_role_annotation_survives_unchanged() {
 
 // ---- US3: FR-009, C203 ----
 
-/// T024. All three states of C203 on one document, including the **absent**
+/// T024. All four states of C203 on one document, including the **absent**
 /// one, which is the state that silently passes if the annotation is emitted
 /// unconditionally.
 ///
@@ -701,10 +727,18 @@ fn m1277_the_classification_source_has_three_states_and_absence_is_one() {
 
     // (3) absent — and for four distinct reasons, each of which would be a
     // separate defect if the record appeared.
+    // (4) exempt — reported as itself, not as absence. "The rule exempted
+    // this" and "the rule did not reach this" are different facts, and
+    // absence can only mean one of them. Invariant I10 reads exactly this
+    // value to tell a deliberate omission from a defect.
     assert_eq!(
         s.source("waybill-fixture-roletoolboot"),
+        Some("exempt-compiler-supplied")
+    );
+    assert_eq!(
+        s.scope("waybill-fixture-roletoolboot"),
         None,
-        "exempt: the feature declined to classify it, so it must not claim to have"
+        "and it still carries no scope -- the record says why, it does not undo it"
     );
     assert_eq!(
         s.source("waybill-fixture-roletest"),
@@ -770,12 +804,15 @@ fn m1277_the_classification_source_agrees_across_all_three_formats() {
         assert_eq!(cdx, s.spdx23_source(name), "{name}: CDX vs SPDX 2.3");
         assert_eq!(cdx, s.spdx3_source(name), "{name}: CDX vs SPDX 3");
     }
-    // And the exempt member carries it in none of the three.
+    // And the exempt member's record agrees across the three too — it is
+    // the value most likely to be emitted in one format and forgotten in
+    // another, because it was added after the first two emitters were
+    // already written and passing.
     for f in ["cdx", "spdx23", "spdx3"] {
         assert_eq!(
-            s.source_in(f, "waybill-fixture-roletoolboot"),
-            None,
-            "the exempt member must carry no C203 in {f} either"
+            s.source_in(f, "waybill-fixture-roletoolboot").as_deref(),
+            Some("exempt-compiler-supplied"),
+            "the exempt member's record must agree in {f} too"
         );
     }
 }
@@ -888,9 +925,16 @@ fn m1277_the_exemption_governs_all_three_formats() {
         !s.spdx3_build_tools().contains(exempt),
         "SPDX 3 named the exempt member as a build tool"
     );
-    assert_eq!(s.source_in("cdx", exempt), None);
-    assert_eq!(s.source_in("spdx23", exempt), None);
-    assert_eq!(s.source_in("spdx3", exempt), None);
+    // The exemption is *recorded* in all three formats, and recorded as an
+    // exemption rather than as silence — otherwise a reader cannot tell this
+    // member from one the rule failed to reach, and neither can I10.
+    for f in ["cdx", "spdx23", "spdx3"] {
+        assert_eq!(
+            s.source_in(f, exempt).as_deref(),
+            Some("exempt-compiler-supplied"),
+            "{f} must say why the member carries no marker"
+        );
+    }
 }
 
 /// An `artifact-input` member is named as a build tool by neither format.

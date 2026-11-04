@@ -86,6 +86,64 @@ For the per-annotation wire shapes these invariants read, see
 | I7 | A component not reachable from the subject by any dependency edge carries a marker explaining why | subject resolvable and at least one non-subject component | `unreachable-and-unexplained` | Active |
 | I8 | A component with no version carries an annotation explaining why it has none | at least one component has an absent or empty version | `versionless-and-unexplained` | Active |
 | I9 | A component the compiler supplies carries no non-runtime scope | at least one component is marked compiler-supplied | `compiler-supplied-non-runtime` | Active |
+| I10 | A closure member whose role says it does not ship carries a non-runtime marker, or says it was exempted | at least one component carries a non-shipping closure role | `closure-tooling-without-non-runtime-marker` | Active |
+
+### I10
+
+**Catches**: a closure member nix referenced only through a tooling field,
+or through no dependency field at all, carrying no marker that says it does
+not ship. Milestone 1277 (#1342).
+
+The claim is a conformance one, and it is the mirror of I9's. CycloneDX 1.6
+states that "if scope is not specified, `required` scope SHOULD be assumed
+by the consumer of the BOM", and defines `required` as "The component is
+required for runtime". A derivation reached only through
+`nativeBuildInputs`, `depsBuildBuild`, `depsBuildHost` or
+`nativeCheckInputs` builds the artifact and is not in it, so `required` —
+which is what an absent scope means — is false of it. I9: a component that
+**is** in the artifact scoped as absent. This: a component that is **not**
+in the artifact reading as present.
+
+**The population** is the components carrying C182
+`waybill:closure-role` with a value of `build-tooling` or `unreferenced`.
+`artifact-input` and `both` are deliberately excluded: `ARTIFACT_FIELDS` is
+`buildInputs`, `propagatedBuildInputs` and `depsHostHost`, and nixpkgs'
+Haskell builder passes test dependencies through `buildInputs`, so the role
+does not establish runtime presence either way. Measured, `hspec` is
+`artifact-input` and does not ship. The row reports n/a where no such role
+exists, which is every target that does not run `--nix-closure` — 16 of 17
+on the corpus.
+
+**The exemption, and why it is read from C203.** A package the pinned
+revision's compiler supplies is installed in every build, so milestone 1277
+asserts nothing about it even in a tooling role, and I9 asserts the same
+thing from the other side. This row honours that by accepting a C203
+`waybill:scope-classification-source` of `exempt-compiler-supplied`.
+
+It does **not** reuse I9's own signal, and the reason is worth recording:
+I9 identifies compiler-supplied components by C170
+`waybill:haskell-version-unresolved-reason == "compiler-supplied"`, which
+milestone 1275 sets on the *synthetic* components it emits for declared
+edges to boot libraries the closure does not contain. A closure member that
+happens to be a boot library carries no such property — measured, the exempt
+member in milestone 1277's fixture carries only `waybill:closure-identity`
+and `waybill:closure-role`. An invariant reusing C170 would therefore not
+recognise the exemption and would report correct output as a defect.
+
+That discovery is why the exemption is recorded in the document at all.
+Milestone 1277's FR-005a was amended during implementation: with an
+exemption collapsed into absence, a component the rule deliberately left
+alone and a component the rule failed to reach are the same document, and
+neither a reader nor this row can tell them apart. Milestone 1276 learned
+the same thing at document scope, which is why C202 has three states.
+
+**Boundary with I3 and I9.** The three partition. I3: reachable only
+through non-runtime edges → carries a non-runtime marker, unless
+compiler-supplied. I9: compiler-supplied → carries no such marker. I10:
+non-shipping closure role → carries one, unless compiler-supplied. The
+exemption is the seam where all three meet, which is why each states it.
+I3's own entry records getting a boundary wrong once, when a loose one put
+two instances of a single defect class under the wrong number.
 
 ### I1
 

@@ -129,6 +129,11 @@ pub(crate) fn assign_role_scope(
         // facts.
         if compiler_supplied(component, boot_libraries) {
             summary.exempt_compiler_supplied += 1;
+            // Recorded rather than skipped. An exemption that leaves no
+            // trace is indistinguishable from a rule that never ran, which
+            // is the shape invariant I10 cannot check and a reader cannot
+            // audit. See `ArtifactPresence::ExemptCompilerSupplied`.
+            component.artifact_presence = Some(ArtifactPresence::ExemptCompilerSupplied);
             continue;
         }
 
@@ -170,11 +175,12 @@ pub(crate) const CLASSIFICATION_SOURCE: &str = "waybill:scope-classification-sou
 pub(crate) fn classification_source(
     component: &ResolvedComponent,
 ) -> Option<&'static str> {
-    if !component
-        .artifact_presence
-        .is_some_and(|p| p.is_absent_from_artifact())
-    {
-        return None;
+    let presence = component.artifact_presence?;
+    if !presence.is_absent_from_artifact() {
+        // The exempt state. Reported as itself, because "the rule exempted
+        // this" and "the rule did not reach this" are different facts and
+        // absence can only mean one of them.
+        return Some(presence.as_str());
     }
     // The propagation reached the same conclusion independently. Worth
     // distinguishing: a reader deciding whether to trust one analysis wants
@@ -185,7 +191,7 @@ pub(crate) fn classification_source(
     Some(if also_propagated {
         "closure-role+lifecycle-propagation"
     } else {
-        "closure-role"
+        presence.as_str()
     })
 }
 
