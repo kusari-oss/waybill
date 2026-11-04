@@ -705,6 +705,14 @@ pub fn build_document(
         &doc_iri,
         CREATION_INFO_ID,
     ));
+    // Milestone 1277 (#1342) — the SPDX 3 native carrier for build tooling.
+    all_relationships.extend(super::v3_relationships::build_tool_relationships(
+        scan.components,
+        &package_iri_by_purl,
+        &root_iris,
+        &doc_iri,
+        CREATION_INFO_ID,
+    ));
     all_relationships.extend(super::v3_relationships::build_containment_relationships(
         scan.components,
         &package_iri_by_purl,

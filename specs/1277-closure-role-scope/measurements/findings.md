@@ -197,3 +197,63 @@ under `--lib`.
 
 The filtered-out count reads like a filter typo in both directions. The
 quickstart now carries the table rather than the one-directional warning.
+
+## F10 — the SPDX 3 vocabulary has a better answer than `dependsOn` (T046)
+
+SPDX 3.0.1's `RelationshipType` has 59 values. The obvious reach is
+`dependsOn` with `scope: "build"`, by analogy with what milestone 052
+already emits for `BuildDependsOn` — and it would be wrong: it asserts a
+dependency the artifact does not have. Enumerating the vocabulary instead
+found **`usesTool`**, which says the artifact *employs* this element as a
+tool.
+
+So the two formats carry the same claim with the subject on opposite sides:
+
+| format | construct | direction |
+|---|---|---|
+| SPDX 2.3 | `BUILD_TOOL_OF` | `member → root` |
+| SPDX 3.0.1 | `usesTool` + `LifecycleScopedRelationship`, `scope: build` | `root → member` |
+
+That reversal is not an inconsistency; it is the same one m228's convention
+documents for the dependency types, because each vocabulary puts the subject
+where its own wording reads correctly.
+
+## F11 — the risk T048 was written for was already handled, by someone else's list (T048)
+
+Adding 97 relationships to SPDX while adding none to CycloneDX's dependency
+graph is the obvious way to break invariant I4, which asserts the two
+formats agree on the subject's direct dependency set.
+
+It does not break, because **`BUILD_TOOL_OF` is absent from the harness's
+`SPDX_INVERSE_DEPENDENCY_TYPES`** (`invariants/checks/mod.rs:140`), so
+`spdx_dependency_edges` ignores it. That list was written before this
+feature existed and is correct now for the same reason it was then: a build
+tool is not something the artifact depends on. Had `BUILD_TOOL_OF` been
+included, SPDX would report 97 direct dependencies CycloneDX does not, and
+I4 would fail on a pair of documents that are both right.
+
+The local test transcribes the harness's normalisation rather than
+re-implementing it. A re-implementation that happened to be laxer would pass
+while the corpus failed, which is the inverse of a useful check.
+
+## F12 — `-D warnings` caught two things `cargo test` was happy with, twice (T013, T046)
+
+`scripts/pre-pr.sh:51` runs
+
+```
+cargo clippy --workspace --all-targets ${feature_args[*]:-} -- -D warnings
+```
+
+Both times the code compiled, all tests passed, and the gate would have
+failed:
+
+| | lint | cause |
+|---|---|---|
+| T013 | `method is never used` | `RoleScopeSummary::assigned` used only in tests |
+| T046 | `redundant_closure`, `print_literal` | `.find_map(\|st\| envelope_field(st))` and a trailing `"purl"` argument to `println!` |
+
+Neither is interesting in itself. The point is the interval: a green
+`cargo test` says nothing about the gate, and running clippy only at the end
+would have put both into a pushed branch. Worth running
+`cargo clippy -p waybill --all-targets -- -D warnings` after each phase
+rather than once at T041.

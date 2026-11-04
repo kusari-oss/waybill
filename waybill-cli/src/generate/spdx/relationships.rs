@@ -57,6 +57,24 @@ pub enum SpdxRelationshipType {
     /// `compileOnly`, Erlang `optional_applications`. See
     /// specs/179-spdx23-transitive-devscope for full context.
     OptionalDependencyOf,
+    /// Milestone 1277 — SPDX 2.3 §11.1 native semantic for a closure
+    /// member that builds the artifact and is not in it: "Is to be used
+    /// as a build tool of". Emitted `member BUILD_TOOL_OF root`, which is
+    /// the direction the spec's own wording gives.
+    ///
+    /// **Not a dependency edge, and deliberately not treated as one.** It
+    /// is absent from the corpus harness's
+    /// `SPDX_INVERSE_DEPENDENCY_TYPES`, so invariant I4's root-edge parity
+    /// does not see it — correctly, because a build tool is not something
+    /// the artifact depends on, and counting it would make SPDX disagree
+    /// with CycloneDX about the subject's direct dependency set when both
+    /// are right.
+    ///
+    /// Gated on `Spdx2RelationshipCompat::Full`, following m178 and m179:
+    /// `Basic` exists for consumers that want only the basic vocabulary,
+    /// and in that mode the classification is carried by the target
+    /// package's C203 annotation instead.
+    BuildToolOf,
     Contains,
     ContainedBy,
     /// Milestone 072 / T012 — the `--bind-to-source` cross-tier edge:
@@ -141,6 +159,7 @@ impl SpdxRelationshipType {
             Self::TestDependencyOf => "TEST_DEPENDENCY_OF",
             Self::ProvidedDependencyOf => "PROVIDED_DEPENDENCY_OF",
             Self::OptionalDependencyOf => "OPTIONAL_DEPENDENCY_OF",
+            Self::BuildToolOf => "BUILD_TOOL_OF",
             Self::Contains => "CONTAINS",
             Self::ContainedBy => "CONTAINED_BY",
             Self::DescendantOf => "DESCENDANT_OF",
@@ -428,6 +447,42 @@ pub fn build_relationships(
             kind: SpdxRelationshipType::Contains,
             comment: None,
         });
+    }
+
+    // Milestone 1277 (#1342) — the SPDX 2.3 native carrier for "builds the
+    // artifact and is not in it".
+    //
+    // Principle V requires the native construct where one exists, and
+    // `BUILD_TOOL_OF` is it. The alternative the plan first recommended —
+    // CycloneDX only, SPDX silent — is not licensed by the parity-bridge
+    // carve-out, which covers a `waybill:*` substitute only "when one format
+    // has the native field but another doesn't". SPDX has one.
+    //
+    // One edge per root. Measured, every affected corpus target has exactly
+    // one, and a closure is computed for a single flake output, so the
+    // multi-root case is hypothetical here — but DESCRIBES is already
+    // per-root and this follows it rather than inventing a rule.
+    if artifacts.spdx2_relationship_compat == crate::generate::Spdx2RelationshipCompat::Full {
+        for c in artifacts.components {
+            if !c
+                .artifact_presence
+                .is_some_and(|p| p.is_absent_from_artifact())
+            {
+                continue;
+            }
+            let member = SpdxId::for_purl(&c.purl);
+            for root in roots {
+                if &member == root {
+                    continue; // a root is not a build tool of itself
+                }
+                out.push(SpdxRelationship {
+                    source: member.clone(),
+                    target: root.clone(),
+                    kind: SpdxRelationshipType::BuildToolOf,
+                    comment: None,
+                });
+            }
+        }
     }
 
     out

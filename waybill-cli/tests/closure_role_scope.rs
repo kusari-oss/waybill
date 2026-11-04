@@ -42,6 +42,7 @@
 #![cfg(unix)]
 #![allow(clippy::unwrap_used)]
 
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -226,7 +227,7 @@ struct Scan {
     cdx: Value,
     spdx23: Value,
     spdx3: Value,
-    _dir: tempfile::TempDir,
+    dir: tempfile::TempDir,
     _cache: tempfile::TempDir,
 }
 
@@ -294,7 +295,7 @@ impl Scan {
                     || e["subject"]["@id"].as_str() == Some(subject.as_str())
             })
             .filter_map(|e| e["statement"].as_str())
-            .find_map(|st| envelope_field(st))
+            .find_map(envelope_field)
     }
 
     /// Dispatch by format name, for the loop that asserts absence in all
@@ -410,7 +411,7 @@ fn scan() -> Scan {
         cdx: read(&cdx_path),
         spdx23: read(&spdx23_path),
         spdx3: read(&spdx3_path),
-        _dir: dir,
+        dir,
         _cache: cache,
     }
 }
@@ -431,6 +432,39 @@ fn scan_all() -> Scan {
 /// A second diagnostic: the raw SPDX annotation shapes, so the decoding in
 /// this file is written from what the emitters produce rather than from what
 /// the envelope is assumed to look like.
+/// A third diagnostic: the SPDX native relationships this feature adds, in
+/// both formats, so T043/T044's assertions are written from the emission
+/// rather than from the vocabulary.
+#[test]
+#[ignore = "diagnostic; run with --ignored --nocapture"]
+fn m1277_raw_spdx_tool_relationships() {
+    let s = scan();
+    println!("\n--- SPDX 2.3 BUILD_TOOL_OF ---");
+    for r in s.spdx23["relationships"].as_array().unwrap() {
+        if r["relationshipType"] == "BUILD_TOOL_OF" {
+            println!(
+                "  {} {} {}",
+                r["spdxElementId"].as_str().unwrap_or("?"),
+                r["relationshipType"].as_str().unwrap_or("?"),
+                r["relatedSpdxElement"].as_str().unwrap_or("?")
+            );
+        }
+    }
+    println!("\n--- SPDX 3 usesTool / LifecycleScopedRelationship ---");
+    for e in s.spdx3["@graph"].as_array().unwrap() {
+        if e["relationshipType"] == "usesTool" {
+            println!(
+                "  type={} scope={} from={} to={}",
+                e["type"].as_str().unwrap_or("?"),
+                e["scope"].as_str().unwrap_or("-"),
+                e["from"].as_str().unwrap_or("?"),
+                e["to"][0].as_str().unwrap_or("?")
+            );
+        }
+    }
+    println!();
+}
+
 #[test]
 #[ignore = "diagnostic; run with --ignored --nocapture"]
 fn m1277_raw_spdx_annotation_shapes() {
@@ -459,8 +493,8 @@ fn m1277_raw_spdx_annotation_shapes() {
 fn m1277_what_the_fixture_actually_produces() {
     let s = scan();
     println!(
-        "\n{:<30} {:<15} {:<9} {:<36} {}",
-        "name", "role", "scope", "classification-source", "purl"
+        "\n{:<30} {:<15} {:<9} {:<36} purl",
+        "name", "role", "scope", "classification-source"
     );
     for c in s.components() {
         println!(
@@ -744,4 +778,296 @@ fn m1277_the_classification_source_agrees_across_all_three_formats() {
             "the exempt member must carry no C203 in {f} either"
         );
     }
+}
+
+// ---- US4: FR-012, FR-013, FR-014 ----
+
+impl Scan {
+    /// SPDX 2.3 package id → name.
+    fn spdx23_names(&self) -> std::collections::HashMap<String, String> {
+        self.spdx23["packages"]
+            .as_array()
+            .map(|ps| {
+                ps.iter()
+                    .filter_map(|p| {
+                        Some((
+                            p["SPDXID"].as_str()?.to_string(),
+                            p["name"].as_str()?.to_string(),
+                        ))
+                    })
+                    .collect()
+            })
+            .unwrap_or_default()
+    }
+
+    /// Names on the member side of every `BUILD_TOOL_OF` edge.
+    fn spdx23_build_tools(&self) -> BTreeSet<String> {
+        let names = self.spdx23_names();
+        self.spdx23["relationships"]
+            .as_array()
+            .map(|rs| {
+                rs.iter()
+                    .filter(|r| r["relationshipType"] == "BUILD_TOOL_OF")
+                    .filter_map(|r| names.get(r["spdxElementId"].as_str()?).cloned())
+                    .collect()
+            })
+            .unwrap_or_default()
+    }
+
+    /// Names on the target side of every `usesTool` relationship whose
+    /// scope is `build`.
+    fn spdx3_build_tools(&self) -> BTreeSet<String> {
+        let graph = match self.spdx3["@graph"].as_array() {
+            Some(g) => g,
+            None => return BTreeSet::new(),
+        };
+        let name_by_iri: std::collections::HashMap<&str, &str> = graph
+            .iter()
+            .filter_map(|e| Some((e["spdxId"].as_str()?, e["name"].as_str()?)))
+            .collect();
+        graph
+            .iter()
+            .filter(|e| e["relationshipType"] == "usesTool")
+            .filter(|e| e["type"] == "LifecycleScopedRelationship")
+            .filter(|e| e["scope"] == "build")
+            .filter_map(|e| name_by_iri.get(e["to"][0].as_str()?).map(|n| (*n).to_string()))
+            .collect()
+    }
+}
+
+/// FR-012 and FR-013 together, because the thing worth asserting is that the
+/// two formats name the **same set** — not merely that each emits something.
+///
+/// The directions differ on purpose and the test does not care: SPDX 2.3
+/// spells it `member BUILD_TOOL_OF root` and SPDX 3 spells it
+/// `root usesTool member`, because the two vocabularies put the subject on
+/// opposite sides. Both accessors normalise to "the member that is a tool",
+/// which is the claim.
+#[test]
+fn m1277_both_spdx_formats_name_the_same_build_tools() {
+    let s = scan();
+    let expected: BTreeSet<String> = [
+        "waybill-fixture-roletool",
+        "waybill-fixture-rolepatch",
+        "waybill-fixture-roletoolhask",
+    ]
+    .iter()
+    .map(|n| (*n).to_string())
+    .collect();
+
+    assert_eq!(
+        s.spdx23_build_tools(),
+        expected,
+        "SPDX 2.3 BUILD_TOOL_OF set"
+    );
+    assert_eq!(
+        s.spdx3_build_tools(),
+        expected,
+        "SPDX 3 usesTool/build set"
+    );
+}
+
+/// FR-014. The exemption governs every format, not only CycloneDX.
+///
+/// This is the assertion that would catch an implementation honouring the
+/// exemption where it was first written and forgetting it in the two
+/// emitters added later — which is the likeliest way this feature breaks,
+/// since the exemption lives in the resolve stage and the emitters read a
+/// field they could each have interpreted for themselves.
+#[test]
+fn m1277_the_exemption_governs_all_three_formats() {
+    let s = scan();
+    let exempt = "waybill-fixture-roletoolboot";
+
+    assert_eq!(s.scope(exempt), None, "CycloneDX");
+    assert!(
+        !s.spdx23_build_tools().contains(exempt),
+        "SPDX 2.3 named the exempt member as a build tool"
+    );
+    assert!(
+        !s.spdx3_build_tools().contains(exempt),
+        "SPDX 3 named the exempt member as a build tool"
+    );
+    assert_eq!(s.source_in("cdx", exempt), None);
+    assert_eq!(s.source_in("spdx23", exempt), None);
+    assert_eq!(s.source_in("spdx3", exempt), None);
+}
+
+/// An `artifact-input` member is named as a build tool by neither format.
+///
+/// The complement of the test above, and the one that fails if the emitters
+/// key off the closure role directly rather than off the classification the
+/// pass made — a plausible shortcut, and wrong, because it would skip both
+/// the exemption and FR-002.
+#[test]
+fn m1277_an_artifact_member_is_not_named_a_build_tool_in_either_format() {
+    let s = scan();
+    for name in ["waybill-fixture-roletext", "waybill-fixture-roledual"] {
+        assert!(!s.spdx23_build_tools().contains(name), "SPDX 2.3 named {name}");
+        assert!(!s.spdx3_build_tools().contains(name), "SPDX 3 named {name}");
+    }
+}
+
+/// T046's second half — FR-013 against the pinned conformance validator,
+/// not against the schema as I read it.
+///
+/// A new relationship class is exactly the change that round-trips cleanly
+/// and fails conformance. Milestone 085 is the case: `scope` on a plain
+/// `Relationship` serialises and parses fine, and fails JSON-Schema
+/// validation, because the `LifecycleScopedRelationship_props` allOf branch
+/// is not selected and `scope` becomes an unknown property. That defect was
+/// invisible for several milestones because no fixture with a typed
+/// dependency edge also ran the SPDX 3 gate.
+///
+/// Skips with a warning when the validator is absent, and fails hard under
+/// `WAYBILL_REQUIRE_SPDX3_VALIDATOR=1`, which is how CI runs it — the
+/// milestone-078 pattern, copied rather than reinvented.
+#[test]
+fn m1277_spdx3_validate_accepts_the_tool_relationships() {
+    let s = scan();
+    // Written where the validator can read it; `scan()`'s tempdir is alive
+    // for the lifetime of `s`, so the path stays valid.
+    let out = s.dir.path().join("conformance.spdx3.json");
+    std::fs::write(&out, serde_json::to_vec_pretty(&s.spdx3).unwrap()).unwrap();
+
+    // The emission must actually be present, or this gate passes vacuously.
+    // A document with no `usesTool` element validates perfectly and proves
+    // nothing about FR-013.
+    assert_eq!(
+        s.spdx3_build_tools().len(),
+        3,
+        "no tool relationships to validate -- this gate would have passed on an empty document"
+    );
+
+    let bin = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .unwrap()
+        .join(".venv/spdx3-validate/bin/spdx3-validate");
+    if !bin.exists() {
+        if std::env::var("WAYBILL_REQUIRE_SPDX3_VALIDATOR").ok().as_deref() == Some("1") {
+            panic!(
+                "spdx3-validate not found at {} and WAYBILL_REQUIRE_SPDX3_VALIDATOR=1 is set; \
+                 run scripts/install-spdx3-validate.sh before re-running CI.",
+                bin.display()
+            );
+        }
+        eprintln!(
+            "[closure_role_scope] WARN: spdx3-validate not found at {}; skipping the \
+             conformance gate (set WAYBILL_REQUIRE_SPDX3_VALIDATOR=1 to fail hard).",
+            bin.display()
+        );
+        return;
+    }
+    let output = Command::new(&bin)
+        .arg("--quiet")
+        .arg("-j")
+        .arg(&out)
+        .output()
+        .expect("spdx3-validate must run when the binary exists");
+    let combined = format!(
+        "{}{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(
+        output.status.success() && !combined.contains("Violation of type"),
+        "spdx3-validate reported violations:\n{combined}"
+    );
+}
+
+/// T048 / SC-011 — invariant I4's rule, applied to this fixture.
+///
+/// I4 asserts CycloneDX and SPDX 2.3 agree on the subject's direct
+/// dependency set. This feature adds 97 SPDX relationships on the corpus and
+/// none to CycloneDX's dependency graph, so it is the obvious way to break
+/// I4 — and the reason it does not is worth pinning here rather than
+/// discovering in a corpus refresh.
+///
+/// `BUILD_TOOL_OF` is **not** in the harness's
+/// `SPDX_INVERSE_DEPENDENCY_TYPES`, so `spdx_dependency_edges` ignores it.
+/// That list was right before this feature existed and is right now: a build
+/// tool is not something the artifact depends on. Had `BUILD_TOOL_OF` been
+/// added to it, SPDX would report 97 direct dependencies CycloneDX does not,
+/// and I4 would fail on a document where both formats are correct.
+///
+/// The normalisation below is a transcription of the harness's own, because
+/// a local re-implementation that happened to be laxer would pass while the
+/// corpus failed.
+#[test]
+fn m1277_the_tool_edges_do_not_disturb_cross_format_dependency_parity() {
+    let s = scan();
+
+    // The inverse types the harness normalises, verbatim from
+    // `corpus_harness_195/invariants/checks/mod.rs`.
+    const INVERSE: &[&str] = &[
+        "DEV_DEPENDENCY_OF",
+        "OPTIONAL_DEPENDENCY_OF",
+        "TEST_DEPENDENCY_OF",
+        "BUILD_DEPENDENCY_OF",
+        "PROVIDED_DEPENDENCY_OF",
+        "RUNTIME_DEPENDENCY_OF",
+        "DEPENDENCY_OF",
+    ];
+
+    let names = s.spdx23_names();
+    let subject = s.spdx23["documentDescribes"][0]
+        .as_str()
+        .or_else(|| {
+            s.spdx23["relationships"]
+                .as_array()?
+                .iter()
+                .find(|r| r["relationshipType"] == "DESCRIBES")?["relatedSpdxElement"]
+                .as_str()
+        })
+        .expect("SPDX 2.3 subject");
+
+    let mut spdx_direct: BTreeSet<String> = BTreeSet::new();
+    for r in s.spdx23["relationships"].as_array().unwrap() {
+        let ty = r["relationshipType"].as_str().unwrap_or("");
+        let from = r["spdxElementId"].as_str().unwrap_or("");
+        let to = r["relatedSpdxElement"].as_str().unwrap_or("");
+        let (src, dst) = if ty == "DEPENDS_ON" {
+            (from, to)
+        } else if INVERSE.contains(&ty) {
+            (to, from)
+        } else {
+            continue; // BUILD_TOOL_OF lands here, which is the point
+        };
+        if src == subject {
+            if let Some(n) = names.get(dst) {
+                spdx_direct.insert(n.clone());
+            }
+        }
+    }
+
+    // CycloneDX side: the subject's `dependsOn` set, by name.
+    let ref_to_name: std::collections::HashMap<&str, &str> = s
+        .components()
+        .iter()
+        .filter_map(|c| Some((c["bom-ref"].as_str()?, c["name"].as_str()?)))
+        .collect();
+    let cdx_subject_ref = s.cdx["metadata"]["component"]["bom-ref"]
+        .as_str()
+        .expect("CDX subject");
+    let mut cdx_direct: BTreeSet<String> = BTreeSet::new();
+    for d in s.cdx["dependencies"].as_array().into_iter().flatten() {
+        if d["ref"].as_str() != Some(cdx_subject_ref) {
+            continue;
+        }
+        for t in d["dependsOn"].as_array().into_iter().flatten() {
+            if let Some(n) = t.as_str().and_then(|r| ref_to_name.get(r)) {
+                cdx_direct.insert((*n).to_string());
+            }
+        }
+    }
+
+    assert_eq!(
+        cdx_direct, spdx_direct,
+        "the subject's direct dependency set must be the same in both formats; \
+         a BUILD_TOOL_OF edge counted as a dependency is how this breaks"
+    );
+
+    // And the tool edges are genuinely present, so the agreement above is
+    // not the agreement of two documents that both lack them.
+    assert_eq!(s.spdx23_build_tools().len(), 3);
 }
