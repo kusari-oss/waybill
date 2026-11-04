@@ -47,15 +47,42 @@ If the agreement is much lower when you run it, stop. Either the goldens have
 been refreshed since, or nixpkgs has moved, and every count in the spec needs
 re-measuring before it is used.
 
-## See the false native claim
+## The native claim, before and after
 
 ```sh
 python3 -c "import json;print(json.load(open('waybill-cli/tests/fixtures/public_corpus/nix-closure-moat/cdx.json'))['compositions'])"
 ```
 
-The `{"aggregate": "complete", "dependencies": [...]}` record is CycloneDX's
-own way of saying "no further dependencies are known to exist", in a document
-that skipped 554 declarations. This record is what the disclosure demotes.
+**Before the fix** this printed a
+`{"aggregate": "complete", "dependencies": ["nix-closure-moat@d069055"]}`
+record — CycloneDX's own way of saying "no further dependencies are known to
+exist" — in a document that skipped 554 declarations. **After**, that record
+is gone and only the integrity-driven `assemblies` record remains.
+
+To see the claim as it was, read the golden at `HEAD` before the refresh
+commit:
+
+```sh
+git show a7b6fff3~1:waybill-cli/tests/fixtures/public_corpus/nix-closure-moat/cdx.json \
+  | python3 -c "import json,sys;print(json.load(sys.stdin)['compositions'])"
+```
+
+And the disclosure that replaced it:
+
+```sh
+python3 - <<'EOF'
+import json
+d=json.load(open('waybill-cli/tests/fixtures/public_corpus/nix-closure-moat/cdx.json'))
+p={x['name']:x['value'] for x in d['metadata']['properties'] if 'name' in x}
+print(json.dumps(json.loads(p['waybill:nix-closure-read']), indent=2))
+EOF
+```
+
+Expect 6 fields, 230 declarations, 23 derivations, `format-version: 4`. **If
+it reports dozens of fields and tens of thousands of declarations**, the
+FR-014 filter has gone back to a pure shape test — see `findings.md` F6, where
+that read 113 fields and 98,342 declarations by counting `PATH` and `mkdir` as
+dependency declarations.
 
 ## Verify an implementation
 
@@ -70,9 +97,15 @@ that skipped 554 declarations. This record is what the disclosure demotes.
    `test result: ok. N passed; 0 failed` lines. The absence of the word FAILED
    is not evidence: a build that never compiled contains no failures either.
 
-2. **The corpus goldens are not in that gate.** All of them are `#[ignore]`d
-   locally, so a green local run says nothing about them. Refresh through the
-   `public-corpus.yml` dispatch and read the diff. **Never** set
+2. **The corpus goldens are not in that gate, and running them locally is
+   worse than not running them.** All are `#[ignore]`d, and even with
+   `--ignored` the target prints
+   `skipping nix-closure-moat: WAYBILL_RUN_PUBLIC_CORPUS not set` and then
+   reports `test result: ok` **in 0.00s** — a pass that checked nothing. That
+   happened during this milestone. The only real check is a corpus run:
+   refresh with `regen_goldens=true`, install, then dispatch again with
+   `regen_goldens=false` and confirm the regen count in the log is **0**, so
+   you know it compared rather than rewrote. **Never** set
    `WAYBILL_UPDATE_PUBLIC_CORPUS_GOLDENS=1` locally.
 
 3. **Check the refresh changed what it should and nothing else.** Expect
@@ -101,6 +134,10 @@ that skipped 554 declarations. This record is what the disclosure demotes.
 - **Don't widen the field list while you are here.** Reading all ~20 nixpkgs
   dependency attributes is #1346. Doing both at once moves the census for two
   reasons and makes SC-004 uncheckable.
+- **A net count is the wrong instrument for two populations.** Predicting the
+  `excluded` total to fall by 9 missed by 14, because 23 new components
+  arrived carrying 13 exclusions of their own. Retractions and arrivals move
+  independently; predict each, then add.
 - **The counts are dated, not eternal.** They were measured on 2026-11-04 with
   Determinate Nix 3.20.0 and nixpkgs `a799d3e3`. SC-001 and SC-002 are the
   invariants; re-measure the rest rather than quoting them.

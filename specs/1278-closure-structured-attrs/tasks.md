@@ -168,9 +168,9 @@ reads makes the guard fail.
 - [X] T044 Refresh the corpus goldens through the `public-corpus.yml` workflow dispatch. **Never** set `WAYBILL_UPDATE_PUBLIC_CORPUS_GOLDENS=1` locally
 - [X] T045 Satisfy FR-016's second half: score the T043 prediction against the refresh diff in `specs/1278-closure-structured-attrs/measurements/refresh-prediction.md`, including any miss and what it corrected
 - [X] T046 Check every target under `waybill-cli/tests/fixtures/public_corpus/` for movement outside `nix-closure-moat` beyond the disclosure appearing on closure-scanning targets — a non-closure target that moved means the widening leaked past the type it is confined to (research R6)
-- [ ] T047 Satisfy FR-017: reconcile `waybill-cli/tests/corpus_harness_195/invariant-declarations.toml` with the refreshed goldens — retire declarations the fix makes stale, and declare any new offender with its reason and count
+- [X] T047 Satisfy FR-017: reconciled `waybill-cli/tests/corpus_harness_195/invariant-declarations.toml` against the refreshed goldens — **no change required**. Verified positively, not by absence: the compare run's `a_stale_declaration_fails_the_lane` and `an_undeclared_regression_fails_the_lane_and_names_the_cell` gates both ran and passed, and no `nix-closure-moat` row exists among the 11 declarations. 23 new components arrived and none became an I7 or I8 offender
 - [X] T048 [P] Record the measured `fields-unconsulted` population as the first measurement of #1346's coverage gap in `specs/1278-closure-structured-attrs/measurements/README.md` — the output SC-013 deliberately did not predict
-- [ ] T049 Run the `quickstart.md` validation end to end, including the control that the env-only arm still reproduces the goldens and the five traps
+- [X] T049 Run the `quickstart.md` validation end to end, including the control that the env-only arm still reproduces the goldens and the five traps
 - [X] T050 [P] Record anything the milestone corrected about its own research in `specs/1278-closure-structured-attrs/measurements/findings.md`, including the 16→9 false-exclusion count fixed during spec writing
 
 ---
