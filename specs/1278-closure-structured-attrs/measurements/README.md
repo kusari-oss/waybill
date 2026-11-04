@@ -159,23 +159,27 @@ That settles two things at once:
 The spec's CI-liveness assumption, and the inference labelled as such in
 issue #1348, can be upgraded on this evidence.
 
-### The mislabelled census
+### Two closures, both correctly recorded — and a defect I invented
 
-| source | derivations | artifact / tooling / both / unreferenced |
-|---|---|---|
-| committed **golden** (C184) | 1,749 | 256 / 101 / 39 / 1,353 |
-| probe, env-only, x86_64-linux | 1,749 | 256 / 101 / 39 / 1,353 |
-| probe, env-only, aarch64-darwin | 1,275 | 264 / 134 / 52 / 825 |
-| the prose in `manifest.rs` and `specs/1035-.../research.md` | **1,275** | **264 / 134 / 52 / 825** |
+| source | system | derivations | artifact / tooling / both / unreferenced |
+|---|---|---|---|
+| committed **golden** (C184) | x86_64-linux | 1,749 | 256 / 101 / 39 / 1,353 |
+| probe, env-only | x86_64-linux | 1,749 | 256 / 101 / 39 / 1,353 |
+| probe, env-only | aarch64-darwin | 1,275 | 264 / 134 / 52 / 825 |
+| `manifest.rs` comment | aarch64-darwin, **stated** | 1,275 | 264 / 134 / 52 / 825 |
 
-So the artifact and the measurement agree, and only the **prose** disagrees:
-the committed comment describes the darwin closure while labelling itself
-x86_64-linux, "the closure the goldens pin". The goldens pin the linux one.
-Corrected under FR-011 (task T041).
+Every row agrees with every other row describing the same system. There is no
+mislabelling: the manifest comment names its system in the same sentence as
+its figures, and warns that they differ from the CI closure the goldens pin.
 
-The lesson is the one FR-012 encodes: a document that records neither its
-system nor its output shape cannot be audited after the fact, and a prose
-comment is not a record.
+**An earlier revision of this file, of the spec, of `research.md` and of issue
+#1348 claimed otherwise.** That claim was wrong and is retracted; the
+retraction is recorded as finding **F0** below rather than quietly deleted,
+because the way it was produced is the more useful artifact.
+
+What FR-011 is actually for, then: `specs/1035-nix-closure-sbom/research.md`
+R3 states its figures without naming a system. That is a gap worth filling —
+one word — and it is a different and much smaller thing than a wrong label.
 
 ### Expected after the fix
 

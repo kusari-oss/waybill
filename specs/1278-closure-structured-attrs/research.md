@@ -144,11 +144,14 @@ That is how the v3 → v4 move landed unnoticed.
 **Decision**: capture it and put it in the annotation (spec FR-012), while
 resolution stays version-agnostic (FR-013).
 
-**Rationale**: the milestone's own census arrived mislabelled — the committed
-`1,275 / 264 / 134 / 52 / 825` figure is reproduced exactly by an env-only read
-of the **aarch64-darwin** closure while being labelled x86_64-linux. A document
-that records neither its system nor its output shape cannot be audited after
-the fact; this fixes half of that for free.
+**Rationale**: a document that records neither its system nor its output shape
+cannot be audited after the fact. The system half of that is already handled
+where it matters — the corpus manifest's figures state their system explicitly
+(an earlier revision of this document claimed they did not; see
+`measurements/findings.md` F0). The **output shape** is recorded nowhere at
+all, and it is the half that changed under us: the typed carrier arrived with
+format version 4 and nothing in any emitted document says which version it was
+read from.
 
 **Not decided here**: whether the scanned system belongs in the document too.
 Out of scope, and worth its own look.
@@ -199,9 +202,12 @@ widened arm instead.
 typed form, or a nixpkgs bump. The two invariants, SC-001 and SC-002, are
 written to survive both. The counted criteria are dated.
 
-**One loose end, stated rather than explained away**: the local x86_64-linux
-closure has 1,749 derivations where the manifest comment says 1,275, and one
-component (`docbook-xml`) disagrees with the golden while 9 golden names are
-absent locally. Attributed to nix and nixpkgs drift since the goldens were
-cut. Not run down, because every criterion in the spec is either an invariant
-or re-measured at implementation time against the refreshed goldens.
+**The loose end closed itself during implementation.** The local x86_64-linux
+closure has 1,749 derivations where the manifest's darwin figure says 1,275 —
+and the goldens' own `waybill:nix-closure` record says **1,749**, with
+256 / 101 / 39 / 1,353, byte-for-byte the env-only arm. So the two systems were
+never in conflict; they are two different closures, both correctly recorded.
+The remaining per-component residue (`docbook-xml` disagreeing, 9 golden names
+absent locally) is attributed to nix and nixpkgs drift since the goldens were
+cut, and is not run down, because every criterion in the spec is either an
+invariant or re-measured against the refreshed goldens.

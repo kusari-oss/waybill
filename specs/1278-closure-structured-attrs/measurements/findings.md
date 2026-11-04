@@ -3,6 +3,56 @@
 Things this milestone corrected about its own reasoning. Recorded because an
 abandoned or mistaken step that leaves no trace gets repeated.
 
+## F0 — I read a sentence without its opening clause and filed the result
+
+**The error.** Across the spec, `research.md`, this directory and **public
+issue #1348**, I claimed the corpus manifest's closure census was "a darwin
+measurement under a linux label" — that it quoted 1,275 derivations while
+calling them x86_64-linux. It does not. The comment reads:
+
+```
+// moat is the project milestone 1034/1035 measured against. Measured
+// here before adding (aarch64-darwin, so counts differ from CI's
+// x86_64-linux closure, which the goldens pin): 1,275 derivations,
+```
+
+It names its system in the same sentence as its figures and warns about
+exactly the confusion I accused it of causing.
+
+**How it happened, precisely.** I read the manifest with `sed -n 215,265p`.
+Line 215 begins `// x86_64-linux closure, which the goldens pin): 1,275
+derivations,` — mid-sentence. The qualifying clause `(aarch64-darwin, so
+counts differ from CI's` is on line 214, one line above the window. The
+fragment I saw is a grammatical sentence that says the opposite of the real
+one, so nothing looked truncated.
+
+**Why it survived.** It was load-bearing in a story I liked: a milestone about
+a document that fails to record its own provenance, finding a census that
+failed to record its own provenance. The finding fitted the thesis, so I
+stopped testing it — and then cited it four more times, each citation making
+it look better established.
+
+**What it cost.** A false claim about a colleague's work in a public issue,
+filed under someone else's name. Corrected in place, with the retraction left
+visible rather than edited out.
+
+**The rules this earns.**
+
+- A windowed read is not a read. When quoting a comment as evidence, re-read
+  it from its first line — `sed -n 215,...` cannot tell you what line 214
+  said, and a mid-sentence start can produce a well-formed sentence with the
+  opposite meaning.
+- Repetition is not corroboration. The claim appeared in five artifacts
+  because I copied it forward, not because five things attested to it.
+- Suspect the finding that flatters the thesis hardest. This repository
+  already records "a right count can carry a wrong cause"; this is its
+  sibling — a right-looking quote carrying a wrong claim.
+
+**What was actually true**, and did not need the invented defect: the goldens'
+own C184 record states `1,749 / 256 / 101 / 39 / 1,353`, which is byte-for-byte
+the probe's env-only arm. That is the strong control, and it was available
+without accusing anything of being mislabelled.
+
 ## F1 — a count that was right about the wrong population
 
 The first pass at "how many components wrongly claim to be absent from the

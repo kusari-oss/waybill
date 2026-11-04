@@ -257,7 +257,9 @@ milestone fixes, asserted against the pre-fix behaviour, not merely pass after.
   through the existing workflow dispatch, never generated locally.
 - **FR-011**: The milestone MUST record the corrected role census against the
   committed one, so the figures in the earlier closure milestones' research can
-  be read as what they were measured through.
+  be read as what they were measured through. Where an existing figure states
+  no system, it MUST gain one; where it already states its system, it MUST be
+  left alone.
 - **FR-012**: The disclosure of FR-009 MUST additionally record the
   `nix derivation show` output format version the closure was read from, so
   which attribute shapes a document was built from is a fact in the document
@@ -405,11 +407,15 @@ are the invariants, and the rest are the figures observed on 2026-11-04.
 - **The flat map wins a disagreement.** No disagreement occurs on either
   closure measured, so this is a defined default rather than an observed
   preference, and FR-006 requires it be reported if it ever happens.
-- **The committed census in the earlier milestones' research describes a darwin
-  closure, not the x86_64-linux one its comment claims.** The darwin closure
-  measured here reproduces that census exactly — 1,275 derivations, 264 / 134 /
-  52 / 825 — while the x86_64-linux closure yields 1,749 derivations. Treated
-  as a mislabelling to correct in passing under FR-011, not as a second defect.
+- **There is no mislabelled census, and an earlier revision of this spec said
+  there was.** The 1,275-derivation figure in the corpus manifest is an
+  aarch64-darwin measurement, and the comment carrying it says so explicitly,
+  warning that the counts differ from the CI closure the goldens pin. The
+  claim that it was labelled x86_64-linux was wrong: it came from reading the
+  sentence without its opening clause. Retained here rather than deleted
+  because the retraction is the useful part — see `measurements/findings.md`
+  F0. FR-011 is accordingly about *recording* the corrected census, not about
+  fixing a label.
 - **The identity scheme for unreferenced derivations is out of scope.** Keying
   `source`-named members on forge coordinates is decided and recorded, and is
   the subject of separate work. This milestone changes which derivations are
