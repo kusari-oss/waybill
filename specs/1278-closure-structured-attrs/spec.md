@@ -41,12 +41,29 @@ So m1277's defect class is already back, through a different door. It is not a
 regression in m1277 — the rule it encodes is right. The input to that rule is
 wrong.
 
+**And the damage is not confined to a `waybill:` property.** Planning found
+that the same golden carries, in CycloneDX's own vocabulary,
+`{"aggregate": "complete", "dependencies": ["nix-closure-moat@d069055"]}` — a
+schema-blessed assertion that the root's dependency relationships are complete,
+meaning "no further dependencies are known to exist", in a document whose
+closure skipped 554 declarations. A consumer that has never heard of waybill
+reads that field and believes it.
+
 ## Clarifications
 
 ### Session 2026-11-04
 
 - Q: Where must the "a declaration was not interpretable" report be visible? → A: A new document-scope annotation. C190 `waybill:nix-closure-degraded` cannot carry it — it is emitted only when no closure was recorded at all, and this is a closure that *was* read with some declarations unread. Constitution XII.3 requires degraded enrichment be disclosed in the document, not only logged, and #1115 was that defect.
 - Q: What should an unrecognized `nix derivation show` format version do? → A: Nothing to the reads — resolution stays version-agnostic, driven by which attribute shape is present. The observed format version is recorded in the new annotation instead, so the output shape a document was built from is in the document rather than inferred later.
+- Note (Phase 0, R1): the first answer above is **refined, not reversed**, by
+  the native-carrier audit. The *fact* of incompleteness has native carriers in
+  two of the three formats — CycloneDX `compositions[].aggregate` and SPDX
+  3.0.1 `Relationship.completeness`, both verified against the vendored
+  schemas — so Principle V puts it there. The new annotation carries the
+  *detail* no format expresses, and for SPDX 2.3, which has no completeness
+  field at all, it carries the fact too. Choosing the annotation over a log
+  line stands; letting it stand alone beside a native field still claiming
+  `complete` would not.
 - Q: How wide should the uninterpretable-declaration check look? → A: It reports **every** dependency-shaped field a derivation declares that classification does not consult, as a diagnostic. Classification stays on the seven fields, so this milestone's role census remains attributable to the shape fix alone, while the report measures #1346's field-coverage gap for free.
 
 ## User Scenarios & Testing *(mandatory)*
@@ -235,6 +252,14 @@ milestone fixes, asserted against the pre-fix behaviour, not merely pass after.
   otherwise tell a fully-read closure from a partially-read one, which is the
   defect #1115 fixed for total closure degradation and this requirement
   extends to partial.
+- **FR-015**: The **fact** of incompleteness MUST be carried by each format's
+  own completeness vocabulary where one exists, and a document with an
+  unconsulted declaration MUST NOT carry a native claim that its dependency
+  relationships are complete. The disclosure of FR-009 carries the detail
+  those vocabularies cannot express, and carries the fact as well only in the
+  format that has no completeness field. A native field asserting `complete`
+  beside an extension saying otherwise is worse than either alone, because
+  every consumer that does not know waybill believes the native one.
 - **FR-012**: The disclosure of FR-009 MUST additionally record the
   `nix derivation show` output format version the closure was read from, so
   which attribute shapes a document was built from is a fact in the document
@@ -335,6 +360,13 @@ are the invariants, and the rest are the figures observed on 2026-11-04.
   output of this milestone, not an input to it.
 - **SC-014**: Every member's role is identical whether or not the FR-014
   diagnostic is enabled. The census figures in SC-004 hold either way.
+- **SC-015**: No document whose closure had an unconsulted declaration carries
+  a native claim that its dependency relationships are complete. **Measured
+  today: the `nix-closure-moat` golden carries exactly that claim**, as a
+  CycloneDX `aggregate: "complete"` record over the root, while 554
+  declarations went unconsulted. Both the CycloneDX and the SPDX 3 answers
+  must move together, from the one place that decides them, so the two formats
+  cannot disagree.
 - **SC-010**: Removing the typed-form reads makes the US4 guard fail, asserted
   by a test that holds the pre-fix behaviour. A guard that only passes after
   the fix is not evidence that it can fail.
